@@ -19,7 +19,7 @@ Alternatively, to extract the file contents, run in a terminal:
 tar xvjf aion-{@version}.tar.bz2
 ```
 
-3. Navigate to the `aion` folder and continuue by configuring the network:
+3. Navigate to the `aion` folder and continue by configuring the network:
     
 ```
 cd aion
@@ -44,7 +44,7 @@ The [mining wiki](https://github.com/aionnetwork/aion_miner/tree/master/aion_sol
 
 Now you are ready to start the kernel.
 
-**Optional:** Your kernel will have access to the seed nodes by default. To add additional peers (e.g. friends that are also connected to the network) navigate to the `config.xml` file in `[aion_folder]/config/config.xml`:
+**Optional:** Your kernel will have access to the seed nodes by default. To include additional peers (e.g. friends that are also connected to the network) navigate to the `config.xml` file in `[aion_folder]/config/config.xml`:
     
 ```
 cd config
