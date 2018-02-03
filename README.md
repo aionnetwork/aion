@@ -27,12 +27,8 @@ cd aion
 
 ## Aion Network Configuration
 
-To connect to the Aion test network you need to first generate a configuration file.
-In a terminal, run the command below to generate a default configuration: 
-    
-```
-./aion.sh -c
-```
+<!--To connect to the Aion test network you need to first generate a configuration file.
+In a terminal, run the command below to generate a default configuration: `./aion.sh -c`-->
 
 To receive tokens for mining blocks, you first need to create an account using:
     
@@ -67,7 +63,7 @@ Update the `config.xml` by adding nodes using the IP and port of the computers y
     
 **Note:** To allow peers to connect to you, you must also change your configuration IP from **127.0.0.1** to a public IP on your machine. If you are unsure about having a public IP, set it to **0.0.0.0**.
 
-## Launch kernel 
+## Launch Kernel 
 
 In a terminal, from the aion directory, run: 
 
