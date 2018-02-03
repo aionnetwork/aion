@@ -40,7 +40,7 @@ To receive tokens for mining blocks, you first need to create an account using:
 ./aion.sh -a create
 ```
 
-The [mining wiki](https://github.com/aionnetwork/aion_miner/tree/master/aion_solo_pool#6-verify-aion-configuration) illustrates how to set this account to be able to receive tokens for mining.
+The [mining wiki](https://github.com/aionnetwork/aion/wiki/Internal-Miner) illustrates how to set this account to be able to receive tokens for mining.
 
 Now you are ready to start the kernel.
 
