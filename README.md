@@ -30,6 +30,19 @@ cd aion
 ## Aion Network Configuration
 
 To connect to the Aion test network you need to first modify your configuration file to have a new personalized id. 
+
+- Download the ID generation script ***generateId.sh*** [here](https://github.com/aionnetwork/aion/blob/master/generateId.sh).
+- Add executable permissions to the script.
+``` 
+chmod +x generateId.sh
+```
+- Run the script.
+
+```
+./generateId.sh
+```
+- Copy the output.
+
 Navigate to the `config.xml` file in `[aion_folder]/config/config.xml`:
 
 ```
@@ -37,7 +50,7 @@ cd config
 gedit config.xml
 ```
 
-Update the value between the ***id*** tags to a new value maintaining the string length. Only ASCII characters are permited.
+Update the value between the ***id*** tags to the copied ID.
 
 ```
 <id>my-new-id-value-is-set-here-12345678</id>
