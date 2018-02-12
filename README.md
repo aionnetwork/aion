@@ -29,7 +29,7 @@ cd aion
 
 ## Aion Network Configuration
 
-> If you are using **aion-v0.1.8**, to connect to the Aion test network you need to first modify your configuration file to have a new personalized id. 
+> If you are using **aion-v0.1.8** or if you want a **permanent id** (used by peers), to connect to the Aion test network you need to first modify your configuration file to have a new personalized id. 
 >
 > - Download the ID generation script ***generateId.sh*** [here](https://github.com/aionnetwork/aion/blob/master/generateId.sh).
 > - Add executable permissions to the script.
@@ -55,7 +55,7 @@ cd aion
 > ```
 > <id>my-new-id-value-is-set-here-12345678</id>
 > ```
-> Versions **aion-v0.1.9** and later do not require generating an id.
+> Versions **aion-v0.1.9** and later do not require generating an id. A temporary unique id will be assigned to your kernel at runtime.
 <!--In a terminal, run the command below to generate a default configuration: `./aion.sh -c`-->
 
 To receive tokens for mining blocks, you first need to create an account using:
@@ -68,7 +68,7 @@ The [mining wiki](https://github.com/aionnetwork/aion/wiki/Internal-Miner) illus
 
 Now you are ready to start the kernel.
 
-**Optional:** Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network), update the `config.xml` by adding nodes using the IP and port of the computers you wish to connect to:
+**Optional:** Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network), update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown above), IP and port of the computers you wish to connect to:
     
 ```
 <net>
