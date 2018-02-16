@@ -2,6 +2,11 @@
 
 This repository contains the main kernel implementation and releases for the Aion network.
 
+( Full opensource publish is module based and will be available after open public testnet.) 
+Current opensource modules:
+
+..* modP2p 
+
 ## System Requirements
 
 * **Ubuntu 16.04** or a later version
