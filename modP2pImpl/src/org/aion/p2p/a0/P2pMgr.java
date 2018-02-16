@@ -66,10 +66,10 @@ public final class P2pMgr implements IP2pMgr {
     private final static int TIMEOUT_OUTBOUND_NODES = 10000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
-    private final static int TIMEOUT_MSG_READ = 3000;
+    private final static int TIMEOUT_MSG_READ = 10000;
 
     private final static int MAX_BODY_BYTES = 1024 * 1024 * 50;
-    private final static int MAX_TEMP_NODES = 20;
+    private final static int MAX_TEMP_NODES = 128;
 
     private final boolean showStatus;
     private final boolean showLog;

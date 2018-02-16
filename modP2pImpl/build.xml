@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project basedir="." default="build" name="mod-p2p-implementation-0">
-  <property name="dir.lib" value="../lib" />
+<project basedir="." default="build" name="mod-p2p-implementation">
+  <property name="dir.lib" value="../../lib" />
   <property name="dir.dest" value="./build/main" />
   <property name="dir.test" value="./build/test" />
   <property name="src.test" value="./test" />
@@ -31,7 +31,7 @@
     <javac 
       debug="on" 
       debuglevel="source,lines,vars" 
-      includeantruntime="false" 
+      includeantruntime="false"
       release="9"
       srcdir="./test"
       destdir="${dir.test}"
@@ -64,7 +64,7 @@
     <javac 
       debug="true" 
       debuglevel="source,lines,vars" 
-      includeantruntime="false" 
+      includeantruntime="false"
       release="9"
       srcdir="./"
       destdir="${dir.dest}"
