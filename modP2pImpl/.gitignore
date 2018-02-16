@@ -1,4 +1,6 @@
 .project
 .settings/
 bin/
-modP2p0.jar
+build/
+modP2pImpl.jar
+*.class
