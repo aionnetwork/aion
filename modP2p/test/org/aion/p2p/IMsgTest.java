@@ -24,5 +24,11 @@ public class IMsgTest {
         assertEquals(CTRL.UNKNOWN, type);
         type = CTRL.getType(CTRL.MAX + 1);
         assertEquals(CTRL.UNKNOWN, type);
+
+        /*
+         * In range but unregistered
+         */
+        type = CTRL.getType(126);
+        assertEquals(CTRL.UNKNOWN, type);
     }
 }
