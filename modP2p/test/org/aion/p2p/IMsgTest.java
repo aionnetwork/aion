@@ -9,7 +9,6 @@ public class IMsgTest {
 
     @Test
     public void testCTRL() {
-        
         /*
          * getValue 
          */
@@ -19,18 +18,11 @@ public class IMsgTest {
         }
 
         /*
-         * Out range
+         * Out of range
          */
         CTRL type = CTRL.getType(CTRL.MIN - 1);
-        assertNull(type);
+        assertEquals(CTRL.UNKNOWN, type);
         type = CTRL.getType(CTRL.MAX + 1);
-        assertNull(type);
-        
-        /*
-         * Unregistered
-         */
-        type = CTRL.getType(CTRL.MAX);
-        assertNull(type);
-        
+        assertEquals(CTRL.UNKNOWN, type);
     }
 }
