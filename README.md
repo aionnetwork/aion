@@ -5,7 +5,7 @@ This repository contains the main kernel implementation and releases for the Aio
 ( Full opensource publish is module based and will be available after open public testnet.) 
 Current opensource modules:
 
-..* modP2p 
+* **modP2p** 
 
 ## System Requirements
 
