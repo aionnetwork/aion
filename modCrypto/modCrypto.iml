@@ -11,21 +11,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="aion" level="project" />
     <orderEntry type="library" name="test-lib" level="project" />
-    <orderEntry type="module" module-name="libAion" />
-    <orderEntry type="module" module-name="libAionApi" />
-    <orderEntry type="module" module-name="libApibase" />
-    <orderEntry type="module" module-name="libApiPow" />
-    <orderEntry type="module" module-name="modFastVM" />
-    <orderEntry type="module" module-name="libMcf" />
-    <orderEntry type="module" module-name="libPow" />
-    <orderEntry type="module" module-name="main" />
-    <orderEntry type="module" module-name="modAionBase" />
-    <orderEntry type="module" module-name="modDbMgr" />
-    <orderEntry type="module" module-name="modEvtMgr" />
-    <orderEntry type="module" module-name="modEvtMgrImpl" />
-    <orderEntry type="module" module-name="modLogger" />
     <orderEntry type="module" module-name="modRlp" />
-    <orderEntry type="module" module-name="modTxPool" />
-    <orderEntry type="module" module-name="modTxPoolImpl" />
+    <orderEntry type="module" module-name="modAionBase" />
   </component>
 </module>

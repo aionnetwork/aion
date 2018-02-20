@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="Crypto project">
-  <property name="dir.lib" value="../lib" />
+  <property name="dir.lib" value="../../lib" />
   <property name="dir.dest" value="./build" />
   <property name="dir.javaAPIlib" value="../javaAPIlib" />
 
