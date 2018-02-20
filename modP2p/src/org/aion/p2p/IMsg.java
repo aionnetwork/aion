@@ -30,23 +30,25 @@ package org.aion.p2p;
  */
 
 public interface IMsg {
-	
-	/**
-	 * global controls
-	 */
+
+    short getVer();
+
+    /**
+     * global controls
+     */
     /**
      * kernel global unique control code
      */
-    int getCtrl();
-    
+    byte getCtrl();
+
     /**
-     * module local unique action code 
+     * module local unique action code
      */
-    int getAct();
-    
+    byte getAct();
+
     /**
      * serialized data
      */
     byte[] encode();
-    
+
 }

@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 
 import org.aion.p2p.CTRL;
 import org.aion.p2p.IMsg;
+import org.aion.p2p.P2pVer;
 
 /**
  * 
@@ -36,20 +37,24 @@ import org.aion.p2p.IMsg;
  * 
  */
 public final class ReqHandshake implements IMsg {
-    
-    private final static int ctrl = CTRL.NET0.getValue();
-    
-    private final static int act = ACT.REQ_HANDSHAKE.getValue();
 
-    private byte[] nodeId;    // 36 bytes
+    private final static byte ctrl = CTRL.NET0;
 
-    private int version = 0;  // 4 bytes
-    
-    private byte[] ip;        // 8 bytes
-     
-    private int port;         // 4 bytes    
-    
+    private final static byte act = ACT.REQ_HANDSHAKE;
+
+    private byte[] nodeId; // 36 bytes
+
+    private int version = 0; // 4 bytes
+
+    private byte[] ip; // 8 bytes
+
+    private int port; // 4 bytes
+
     private final static int LEN = 36 + 4 + 8 + 4;
+
+    public short getVer() {
+        return P2pVer.VER0;
+    }
 
     public ReqHandshake(final byte[] _nodeId, final int _version, final byte[] _ip, final int _port) {
         this.nodeId = _nodeId;
@@ -65,11 +70,11 @@ public final class ReqHandshake implements IMsg {
     public int getVersion() {
         return this.version;
     }
-    
+
     public byte[] getIp() {
         return this.ip;
     }
-    
+
     public int getPort() {
         return this.port;
     }
@@ -91,10 +96,10 @@ public final class ReqHandshake implements IMsg {
 
     @Override
     public byte[] encode() {
-        if(this.nodeId.length != 36)
+        if (this.nodeId.length != 36)
             return null;
         else {
-            ByteBuffer buf = ByteBuffer.allocate(LEN); 
+            ByteBuffer buf = ByteBuffer.allocate(LEN);
             buf.put(this.nodeId);
             buf.putInt(this.version);
             buf.put(this.ip);
@@ -104,12 +109,12 @@ public final class ReqHandshake implements IMsg {
     }
 
     @Override
-    public int getCtrl() {
+    public byte getCtrl() {
         return ctrl;
     }
 
     @Override
-    public int getAct() {
+    public byte getAct() {
         return act;
     }
 

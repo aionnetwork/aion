@@ -32,7 +32,7 @@ import java.util.List;
 import org.aion.p2p.IMsg;
 import org.aion.p2p.a0.Node;
 import org.aion.p2p.CTRL;
-
+import org.aion.p2p.P2pVer;
 /**
  * 
  * @author chris
@@ -40,9 +40,9 @@ import org.aion.p2p.CTRL;
  */
 public final class ResActiveNodes implements IMsg {
 
-    private final static int ctrl = CTRL.NET0.getValue();
+    private final static byte ctrl = CTRL.NET0;
 
-    private final static int act = ACT.RES_ACTIVE_NODES.getValue();
+    private final static byte act = ACT.RES_ACTIVE_NODES;
 
     private final List<Node> nodes;
 
@@ -54,6 +54,10 @@ public final class ResActiveNodes implements IMsg {
     private final static int NODE_BYTES_LENGTH = 36 + 8 + 4;
 
     private final static int MAX_NODES = 40;
+    
+    public short getVer() {
+        return P2pVer.VER0;
+    }
 
     public ResActiveNodes(final List<Node> _nodes) {
         this.count = Math.min(MAX_NODES, _nodes.size());
@@ -100,12 +104,12 @@ public final class ResActiveNodes implements IMsg {
     }
 
     @Override
-    public int getCtrl() {
+    public byte getCtrl() {
         return ctrl;
     }
 
     @Override
-    public int getAct() {
+    public byte getAct() {
         return act;
     }
 

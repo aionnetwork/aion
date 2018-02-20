@@ -31,75 +31,73 @@ import java.nio.ByteBuffer;
  * 
  * @author chris
  * 
- * [0,1,2] ctrl code   -> ctrl
- * [3]     action code -> action 
- *  
+ *         [0,1,2] ctrl code -> ctrl [3] action code -> action
+ * 
  */
 
 public final class Codec {
-    
+
     final static int MAX_BYTES = 2 * 200 * 1024 * 1024;
-    
+
     final static int FRAME_BYTES = 256;
-    
-    final static class Header{
-        
+
+    final static class Header {
+
         public final static int SIZE = 8; // bytes
-        
-        private int ctrl;
-        
-        private int action;
-        
+
+        private short ver;
+        private byte ctrl;
+        private byte action;
         private int len;
-        
-        Header(final int _ctrl, final int _action, final int _len) {
-            this.ctrl = _ctrl < 0 ? 0 : _ctrl;
-            this.action = _action < 0 || _action > 127 ? 0 : _action;
+
+        Header(short _ver, byte _ctrl, byte _action, int _len) {
+            this.ver = _ver;
+            this.ctrl = _ctrl;
+            this.action = _action;
             this.len = _len < 0 ? 0 : _len;
-        } 
-        
+        }
+
+        public int getVer() {
+            return this.ver;
+        }
+
         public int getCtrl() {
             return this.ctrl;
         }
-        
+
         public int getAction() {
             return this.action;
         }
-        
+
         public int getLen() {
             return this.len;
-        }   
-        
-        public byte[] encode() {
-            return
-                ByteBuffer.allocate(8)
-                .putInt(this.ctrl << 8 | this.action)
-                .putInt(this.len)
-                .array();   
         }
-        
+
+        public byte[] encode() {
+            return ByteBuffer.allocate(8).putInt((ver << 16) | (ctrl << 8) | action).putInt(len).array();
+        }
+
         public static Header decode(final byte[] _headerBytes) {
-            if(_headerBytes == null || _headerBytes.length != 8)
+            if (_headerBytes == null || _headerBytes.length != 8)
                 return null;
             else {
                 ByteBuffer bb1 = ByteBuffer.wrap(_headerBytes);
-                byte[] ctrlBytes = new byte[3];
-                bb1.get(ctrlBytes);
-                int _ctrl = ctrlBytes[0] << 16 | ctrlBytes[1] << 8 | ctrlBytes[2];
-                int _action = bb1.get();
-                int _len = bb1.getInt();
-                return new Header(_ctrl, _action, _len);
-            } 
+                short ver = bb1.getShort();
+                byte ctrl = bb1.get();
+                byte action = bb1.get();
+                int len = bb1.getInt();
+                return new Header(ver, ctrl, action, len);
+            }
         }
     }
-    
-    static class Frame{
-        
+
+    static class Frame {
+
         public final static int CHUNK = 256; // mb
-        
+
         public int contextId;
-        
+
         public int padding;
-        
+
     }
 }

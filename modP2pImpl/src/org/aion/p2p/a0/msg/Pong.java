@@ -27,6 +27,7 @@ package org.aion.p2p.a0.msg;
 
 import org.aion.p2p.CTRL;
 import org.aion.p2p.IMsg;
+import org.aion.p2p.P2pVer;
 
 /**
  * 
@@ -34,23 +35,27 @@ import org.aion.p2p.IMsg;
  *
  */
 public final class Pong implements IMsg {
-    
-    private final static int ctrl = CTRL.NET0.getValue();
-    
-    private final static int act = ACT.PONG.getValue();
-    
+
+    private final static byte ctrl = CTRL.NET0;
+
+    private final static byte act = ACT.PONG;
+
+    public short getVer() {
+        return P2pVer.VER0;
+    }
+
     @Override
     public byte[] encode() {
         return null;
     }
 
     @Override
-    public int getCtrl() {
+    public byte getCtrl() {
         return ctrl;
     }
 
     @Override
-    public int getAct() {
+    public byte getAct() {
         return act;
     }
 }

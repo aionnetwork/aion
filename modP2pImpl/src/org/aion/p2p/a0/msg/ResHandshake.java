@@ -27,48 +27,53 @@ package org.aion.p2p.a0.msg;
 
 import org.aion.p2p.CTRL;
 import org.aion.p2p.IMsg;
+import org.aion.p2p.P2pVer;
 
 /**
  * 
  * @author chris
  *
  */
-public final class ResHandshake implements IMsg{
-    
-    private final static int ctrl = CTRL.NET0.getValue();
-    
-    private final static int act = ACT.RES_HANDSHAKE.getValue();
-    
+public final class ResHandshake implements IMsg {
+
+    private final static byte ctrl = CTRL.NET0;
+
+    private final static byte act = ACT.RES_HANDSHAKE;
+
     private final boolean success;
-    
-    public ResHandshake(final boolean _success){
+
+    public short getVer() {
+        return P2pVer.VER0;
+    }
+
+    public ResHandshake(final boolean _success) {
         this.success = _success;
     }
-    
+
     public boolean getSuccess() {
         return this.success;
     }
-    
+
     public static ResHandshake decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length != 1)
             return null;
-        else 
+        else
             return new ResHandshake(_bytes[0] == 0x01);
-    }
-    
-    @Override
-    public byte[] encode() {
-        return this.success ? new byte[] {0x01} : new byte[] {0x00};
     }
 
     @Override
-    public int getCtrl() {
+    public byte[] encode() {
+        return this.success ? new byte[] { 0x01 } : new byte[] { 0x00 };
+    }
+
+    @Override
+    public byte getCtrl() {
         return ctrl;
     }
 
     @Override
-    public int getAct() {
+    public byte getAct() {
         return act;
     }
-    
+
 }

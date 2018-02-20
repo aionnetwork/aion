@@ -31,41 +31,32 @@ package org.aion.p2p;
  * @author chris
  *
  */
-public enum CTRL {
+public class CTRL {
 
     /**
      * module specific controllers
      */
-    NET0(0), SYNC0(1), UNKNOWN(127);
+    public static final byte NET0 = 0;
+    public static final byte SYNC0 = 1;
+    public static final byte UNKNOWN = 2;
+    public static final byte MAX0 = 3;
 
-    final static int MAX = 127;
+    private byte value;
 
-    final static int MIN = 0;
+    static CTRL ctrls[] = new CTRL[] { new CTRL(NET0), new CTRL(SYNC0), new CTRL(UNKNOWN) };
 
-    private int value;
-
-    private final static CTRL[] intMapType = new CTRL[MAX + 1];
-
-    static {
-        for (CTRL type : CTRL.values()) {
-            intMapType[0xff & type.value] = type;
-        }
-    }
-
-    CTRL(final int _value) {
+    CTRL(byte _value) {
         this.value = _value;
     }
 
-    public int getValue() {
-        return this.value;
+    public byte getValue() {
+        return value;
     }
 
-    public static CTRL getType(final int _ctrlInt) {
-        if (_ctrlInt < MIN || _ctrlInt > MAX)
-            return UNKNOWN;
-        else {
-            CTRL ctrl = intMapType[0xff & _ctrlInt];
-            return ctrl == null ? UNKNOWN : ctrl;
+    public static CTRL getType(byte _ctrlInt) {
+        if (_ctrlInt >= MAX0) {
+            return ctrls[UNKNOWN];
         }
+        return ctrls[_ctrlInt];
     }
 }

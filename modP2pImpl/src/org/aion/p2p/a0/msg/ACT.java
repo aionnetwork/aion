@@ -30,38 +30,33 @@ package org.aion.p2p.a0.msg;
  * @author chris
  *
  */
-public enum ACT {
+public class ACT {
 
-    DISCONNECT(0),
-
-    REQ_HANDSHAKE(1),
-    RES_HANDSHAKE(2),
+    public static final byte DISCONNECT = 0;
+    public static final byte REQ_HANDSHAKE = 1;
+    public static final byte RES_HANDSHAKE = 2;
 
     @Deprecated
-    PING(3),
+    public static final byte PING = 3;
     @Deprecated
-    PONG(4),
+    public static final byte PONG = 4;
 
-    REQ_ACTIVE_NODES(5),
-    RES_ACTIVE_NODES(6),
+    public static final byte REQ_ACTIVE_NODES = 5;
+    public static final byte RES_ACTIVE_NODES = 6;
+    public static final byte UNKNOWN = 7;
+    public static final byte MAX = 8;
 
-    UNKNOWN(127);
+    private byte value;
 
-    public final static int MAX = 127;
-
-    public final static int MIN = 0;
-
-    private int value;
-
-    private static final ACT[] intMapType = new ACT[MAX + 1];
+    private static final ACT[] acts = new ACT[MAX];
 
     static {
-        for (ACT type : ACT.values()) {
-            intMapType[0xff & type.value] = type;
+        for (byte i = 0; i < MAX; i++) {
+            acts[i] = new ACT(i);
         }
     }
 
-    ACT(final int _value) {
+    ACT(byte _value) {
         this.value = _value;
     }
 
@@ -70,12 +65,9 @@ public enum ACT {
     }
 
     public static ACT getType(final int _actInt) {
-        if(_actInt < MIN || _actInt > MAX)
-            return UNKNOWN;
-        else {
-            ACT act = intMapType[0xff & _actInt];
-            return act == null ? UNKNOWN : act;
-        }
+        if (_actInt >= MAX)
+            return acts[UNKNOWN];
+        return acts[_actInt];
     }
 
 }
