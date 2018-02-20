@@ -6,6 +6,7 @@ This repository contains the main kernel implementation and releases for the Aio
 Current opensource modules:
 
 * **modP2p** 
+* **modCrypto** 
 
 ## System Requirements
 

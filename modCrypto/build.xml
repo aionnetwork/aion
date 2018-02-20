@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="Crypto project">
+  <property name="dir.lib" value="../lib" />
+  <property name="dir.dest" value="./build" />
+  <property name="dir.javaAPIlib" value="../javaAPIlib" />
+
+  <!-- Not native tests, Java tests -->
+  <property name="test.src.dir" value="test" />
+  <property name="test.build.dir" value="test_build" />
+  <property name="test.report.dir" value="report" />
+  <property name="native.src.dir" value="../native" />
+  <property name="native.dir" value="native" />
+
+  <path id="classpath.dependency">
+    <pathelement location="${dir.lib}/libnsc.jar"/>
+    <pathelement location="${dir.lib}/modAionBase.jar"/>
+    <pathelement location="${dir.lib}/modRlp.jar"/>
+    <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+  </path>
+
+  <path id="classpath.dependency_v8">
+    <pathelement location="${dir.javaAPIlib}/libnsc.jar"/>
+    <pathelement location="${dir.javaAPIlib}/libAionBase.jar"/>
+    <pathelement location="${dir.javaAPIlib}/libRlp.jar"/>
+    <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+  </path>
+
+  <path id="classpath.test">
+    <pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
+    <pathelement location="${dir.lib}/hamcrest/hamcrest-core-1.3.jar"/>
+    <pathelement location="${dir.lib}/modAionBase.jar"/>
+    <pathelement location="${dir.lib}/modLogger.jar"/>
+    <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+    <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
+    <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
+    <pathelement location="${dir.dest}"/> 
+  </path>
+
+  <target name="clean_build" depends="clean, build" />
+
+  <target name="clean">
+    <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
+    <delete dir="${test.build.dir}" includeEmptyDirs="true" />
+    <delete dir="${test.report.dir}" includeEmptyDirs="true" />
+    <delete dir="${native.dir}" />
+    <delete file="modCrypto.jar" />
+    <delete file="${dir.lib}/modCrypto.jar" />
+  </target>
+
+  <target name="build">
+    <mkdir dir="${dir.dest}"/>
+    <javac
+      debug="true"
+      debuglevel="source,lines,vars"
+      includeantruntime="false"
+      release="9"
+      srcdir="./"
+      destdir="${dir.dest}"
+      includes="src/**/*.java,module-info.java">
+        <modulepath>
+          <path refid="classpath.dependency" />
+        </modulepath>
+    </javac>
+
+    <jar
+      destfile="modCrypto.jar"
+      filesetmanifest="mergewithoutmain"
+      basedir="${dir.dest}"
+    />
+    <copy includeemptydirs="false" todir="${dir.lib}">
+      <file file="modCrypto.jar"/>
+    </copy>
+  </target>
+
+
+  <target name="clean_build_v8" depends="clean_v8, build_v8" />
+
+  <target name="clean_v8">
+    <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
+    <delete dir="${test.build.dir}" includeEmptyDirs="true" />
+    <delete dir="${test.report.dir}" includeEmptyDirs="true" />
+    <delete dir="${native.dir}" />
+    <delete file="libCrypto.jar" />
+    <delete file="${dir.javaAPIlib}/libCrypto.jar" />
+  </target>
+
+  <target name="build_v8">
+    <mkdir dir="${dir.dest}"/>
+    <javac
+      debug="true"
+      debuglevel="source,lines,vars"
+      includeantruntime="false"
+      srcdir="./src"
+      destdir="${dir.dest}"
+      includes="**/*.java">
+        <classpath>
+          <path refid="classpath.dependency_v8" />
+        </classpath>
+    </javac>
+
+    <jar
+      destfile="libCrypto.jar"
+      filesetmanifest="mergewithoutmain"
+      basedir="${dir.dest}"
+    />
+    <copy includeemptydirs="false" todir="${dir.javaAPIlib}">
+      <file file="libCrypto.jar"/>
+    </copy>
+  </target>
+
+  <!-- Testing Compilation & Run Targets -->
+
+  <target name="test-compile" depends="build">
+    <mkdir dir="${test.build.dir}" />
+    <javac
+      debug="true"
+      debuglevel="source,lines,vars"
+      includeantruntime="false"
+      release="9"
+      srcdir="${test.src.dir}"
+      destdir="${test.build.dir}"
+      includes="**/*Test.java"
+      >
+      <classpath>
+        <path refid="classpath.test" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="test-compile">
+    <mkdir dir="${test.report.dir}" />
+    <mkdir dir="${native.dir}" />
+    <copy todir="${native.dir}">
+      <fileset dir="${native.src.dir}" />
+    </copy>
+    <junit
+      printsummary="yes"
+      haltonfailure="no"
+      fork="true"
+      >
+
+      <classpath>
+        <path refid="classpath.dependency"/>
+        <path refid="classpath.test"/>
+        <pathelement location="${test.build.dir}"/>
+      </classpath>
+
+      <formatter type="plain" usefile="false" />
+      <formatter type="xml" />
+      <batchtest todir="${test.report.dir}" >
+        <fileset dir="${test.src.dir}" includes="**/*Test.java"/>
+      </batchtest>
+    </junit>
+  </target>
+</project>

@@ -1,0 +1,4 @@
+*.jar
+build/
+native/
+test_build/
