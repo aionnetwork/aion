@@ -32,9 +32,9 @@ package org.aion.p2p;
  */
 public interface ICallback {
 
-    int getCtrl();
+    byte getCtrl();
 
-    int getAct();
+    byte getAct();
 
     void receive(final byte[] _nodeId, final byte[] _msg);
 

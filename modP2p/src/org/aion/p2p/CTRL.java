@@ -54,7 +54,7 @@ public class CTRL {
     }
 
     public static CTRL getType(byte _ctrlInt) {
-        if (_ctrlInt >= MAX0) {
+        if (_ctrlInt >= MAX0 || _ctrlInt < 0) {
             return ctrls[UNKNOWN];
         }
         return ctrls[_ctrlInt];

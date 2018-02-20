@@ -501,12 +501,12 @@ public final class P2pMgr implements IP2pMgr {
         rb.refreshHeader();
         rb.refreshBody();
 
-        int intCtrl = h.getCtrl();
-        int intAct = h.getAction();
+        byte intCtrl = h.getCtrl();
+        byte intAct = h.getAction();
         CTRL ctrl = CTRL.getType(intCtrl);
         ACT act = ACT.getType(h.getAction());
-        switch (ctrl) {
-        case NET0:
+        switch (intCtrl) {
+        case CTRL.NET0:
             handleP2pMsg(_sk, act, bodyBytes);
             break;
         default:
@@ -578,9 +578,9 @@ public final class P2pMgr implements IP2pMgr {
     private void handleP2pMsg(final SelectionKey _sk, final ACT _act, final byte[] _msgBytes) {
         ReadBuffer rb = (ReadBuffer) _sk.attachment();
 
-        switch (_act) {
+        switch (_act.getValue()) {
 
-        case REQ_HANDSHAKE:
+        case ACT.REQ_HANDSHAKE:
             ReqHandshake reqHandshake = ReqHandshake.decode(_msgBytes);
             if (reqHandshake != null) {
                 Node node = inboundNodes.get(_sk.channel().hashCode());
@@ -602,7 +602,7 @@ public final class P2pMgr implements IP2pMgr {
             }
             break;
 
-        case RES_HANDSHAKE:
+        case ACT.RES_HANDSHAKE:
             ResHandshake resHandshake = ResHandshake.decode(_msgBytes);
             if (resHandshake != null && rb.nodeIdHash != 0 && resHandshake.getSuccess()) {
                 Node node = outboundNodes.get(rb.nodeIdHash);
@@ -613,7 +613,7 @@ public final class P2pMgr implements IP2pMgr {
             }
             break;
 
-        case REQ_ACTIVE_NODES:
+        case ACT.REQ_ACTIVE_NODES:
             if (rb.nodeIdHash != 0) {
                 Node node = (Node) activeNodes.get(rb.nodeIdHash);
                 if (node != null)
@@ -629,7 +629,7 @@ public final class P2pMgr implements IP2pMgr {
             }
             break;
 
-        case RES_ACTIVE_NODES:
+        case ACT.RES_ACTIVE_NODES:
             if (rb.nodeIdHash != 0) {
                 Node node = (Node) activeNodes.get(rb.nodeIdHash);
                 if (node != null) {
@@ -784,7 +784,7 @@ public final class P2pMgr implements IP2pMgr {
     public void register(final List<ICallback> _cbs) {
         for (ICallback _cb : _cbs) {
             int intCtrl = _cb.getCtrl();
-            if (!CTRL.getType(intCtrl).equals(CTRL.UNKNOWN)) {
+            if (intCtrl != CTRL.UNKNOWN) {
                 int intAct = _cb.getAct();
                 int route = toRoute(intCtrl, intAct);
                 List<ICallback> routeCallbacks = callbacks.get(route);

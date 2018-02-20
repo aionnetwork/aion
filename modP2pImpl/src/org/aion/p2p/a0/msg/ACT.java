@@ -65,7 +65,7 @@ public class ACT {
     }
 
     public static ACT getType(final int _actInt) {
-        if (_actInt >= MAX)
+        if (_actInt >= MAX || _actInt < 0)
             return acts[UNKNOWN];
         return acts[_actInt];
     }

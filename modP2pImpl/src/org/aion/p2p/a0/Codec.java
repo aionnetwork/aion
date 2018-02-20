@@ -57,15 +57,15 @@ public final class Codec {
             this.len = _len < 0 ? 0 : _len;
         }
 
-        public int getVer() {
+        public short getVer() {
             return this.ver;
         }
 
-        public int getCtrl() {
+        public byte getCtrl() {
             return this.ctrl;
         }
 
-        public int getAction() {
+        public byte getAction() {
             return this.action;
         }
 
