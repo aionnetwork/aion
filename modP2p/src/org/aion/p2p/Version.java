@@ -35,7 +35,7 @@ public class Version {
 
     public static final short V0 = 0;
 
-    public static final short V1 = 1;
+    private static final short V1 = 1;
 
     public static final short UNKNOWN = Short.MAX_VALUE;
 

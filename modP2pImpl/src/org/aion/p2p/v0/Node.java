@@ -28,6 +28,7 @@ package org.aion.p2p.v0;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import org.aion.p2p.INode;
 
@@ -67,6 +68,10 @@ public final class Node implements INode{
     
     private SocketChannel channel;
 
+    private static final Pattern IPV4 = Pattern.compile(
+            "^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
+
+
     /**
      *  constructor for initial stage of connections from network
      */
@@ -92,12 +97,13 @@ public final class Node implements INode{
             this.idHash = Arrays.hashCode(_id);
         this.version = -1;
         this.ip = _ip;
+        this.ipStr = ipBytesToStr(_ip);
         this.port = _port;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
     }
 
-    static byte[] ipStrToBytes(final String _ip) {
+    public static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
         for(String frag : frags) {
@@ -144,13 +150,21 @@ public final class Node implements INode{
         }
     }
 
-    static Node parseEnode(String _enode) {
-        String[] arrs = _enode.split("@");
+    /**
+     * @param _p2p String
+     * @return Node
+     * TODO: ugly
+     */
+    static Node parseP2p(String _p2p) {
+        String[] arrs = _p2p.split("@");
         byte[] _tempBytes = arrs[0].getBytes();
         if(_tempBytes.length != 42)
             return null;
         byte[] _id = Arrays.copyOfRange(_tempBytes, 6, 42);
         String[] subArrs = arrs[1].split(":");
+
+        if(!IPV4.matcher(subArrs[0]).matches())
+            return null;
 
         byte[] _ip = ipStrToBytes(subArrs[0]);
         int _port =  Integer.parseInt(subArrs[1]);

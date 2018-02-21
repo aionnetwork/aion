@@ -38,7 +38,7 @@ import org.aion.p2p.v0.Act;
 public final class ReqActiveNodes extends Msg {
 
     public ReqActiveNodes(){
-        super(Version.V1, Ctrl.NET, Act.REQ_ACTIVE_NODES);
+        super(Version.V0, Ctrl.NET, Act.REQ_ACTIVE_NODES);
     }
 
     @Override

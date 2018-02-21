@@ -1,57 +1,51 @@
-//package org.aion.p2p.v0;
-//
-//import static org.junit.Assert.*;
-//
-//import org.aion.p2p.a0.Helper;
-//import org.aion.p2p.a0.Node;
-//import org.junit.Test;
-//
-///**
-// *
-// * @author chris
-// * TODO: not completed
-// *
-// */
-//
-//public class NodeTest {
-//
-//    String validId   = "b9b28261-7d9c-47ed-9851-07703496a89c";
-//    String invalidId = "b9b28261-7d9c-47ed-9851-07703496a89";
-//    String ip1 = "255.255.255.255";
-//    String ip2 = "0.0.0.0";
-//    String port = "30303";
-//
-//    @Test
-//    public void testParseFromEnode() {
-//
-//        Node n = Node.parseEnode(false,"p2p://" + validId + "@" + ip1 + ":" + port);
-//        assertEquals(n.getId().length, 36);
-//        assertEquals(n.getIp().length, 8);
-//        assertTrue(n.getPort() <= Short.MAX_VALUE);
-//        System.out.println("id " + new String(n.getId()));
-//        assertTrue(validId.equals(new String(n.getId())));
-//        System.out.println("ip " + Helper.ipBytesToStr(n.getIp()));
-//        assertTrue(ip1.equals(Helper.ipBytesToStr(n.getIp())));
-//        System.out.println("port " + n.getPort());
-//        assertEquals(Short.parseShort(port), n.getPort());
-//
-//
-//
-//        n = Node.parseEnode(false,"p2p://" + validId + "@" + ip2 + ":" + port);
-//        assertEquals(n.getId().length, 36);
-//        assertEquals(n.getIp().length, 8);
-//        assertTrue(n.getPort() <= Short.MAX_VALUE);
-//        System.out.println("id " + new String(n.getId()));
-//        assertTrue(validId.equals(new String(n.getId())));
-//        System.out.println("ip " + Helper.ipBytesToStr(n.getIp()));
-//        assertTrue(ip2.equals(Helper.ipBytesToStr(n.getIp())));
-//        System.out.println("port " + n.getPort());
-//        assertEquals(Short.parseShort(port), n.getPort());
-//
-//
-//        n = Node.parseEnode(false,"p2p://" + invalidId + "@" + ip1 + ":" + port);
-//        assertNull(n);
-//
-//    }
-//
-//}
+package org.aion.p2p.v0;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ *
+ * @author chris
+ *
+ */
+
+public class NodeTest {
+
+    private String validId = UUID.randomUUID().toString();
+
+    private String invalidId = UUID.randomUUID().toString().substring(0, 34);
+
+    private String validIp =
+            ThreadLocalRandom.current().nextInt(0,256) + "." +
+                    ThreadLocalRandom.current().nextInt(0,256) + "." +
+                    ThreadLocalRandom.current().nextInt(0,256) + "." +
+                    ThreadLocalRandom.current().nextInt(0,256);
+
+    @Test
+    public void testParseFromEnode() {
+
+        int port = 30303;
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + port);
+
+        assertTrue(n.getId().length == 36);
+
+        String targetIdStr = new String(n.getId());
+        assertTrue(validId.equals(new String(n.getId())));
+        assertTrue(n.getIp().length == 8);
+        assertTrue(validIp.equals(n.getIpStr()));
+        assertTrue(n.getPort() == port);
+
+        n = Node.parseP2p("p2p://" + invalidId + "@" + validIp + ":" + port);
+        assertNull(n);
+
+        String invalidIp = "256.0.0.0";
+        n = Node.parseP2p("p2p://" + validId + "@" + invalidIp + ":" + port);
+        assertNull(n);
+
+    }
+
+}

@@ -24,7 +24,7 @@ public class TempListTest {
     });
     
     @Test
-    public void testParseFromEnode(){
+    public void testParseFromP2p(){
         ExecutorService executor = Executors.newFixedThreadPool(8);
         for(int t = 0; t < 8; t++) {
             executor.submit(() -> {

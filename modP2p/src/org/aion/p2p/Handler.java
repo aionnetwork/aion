@@ -33,10 +33,12 @@ public abstract class Handler {
     private Header header;
 
     /**
-     * @param _header Header
+     * @param _ver short
+     * @param _ctrl byte
+     * @param _act byte
      */
-    public Handler(final Header _header){
-        this.header = header;
+    public Handler(short _ver, byte _ctrl, byte _act){
+        this.header = new Header(_ver, _ctrl, _act, 0);
     }
 
     /**

@@ -47,7 +47,7 @@ public final class Header {
      * @param _action byte
      * @param _len byte
      */
-    public Header(short _ver, byte _ctrl, byte _action, int _len) {
+    Header(short _ver, byte _ctrl, byte _action, int _len) {
         this.ver = _ver;
         this.ctrl = _ctrl;
         this.action = _action;

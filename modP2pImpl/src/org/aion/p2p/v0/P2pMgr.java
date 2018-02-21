@@ -286,7 +286,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _showStatus flag to show status
      * @param _showLog flag to show log
      */
-    public P2pMgr(final String _nodeId, final String _ip, final int _port, final String[] _bootNodes,
+    P2pMgr(final String _nodeId, final String _ip, final int _port, final String[] _bootNodes,
             final boolean _upnpEnable, final boolean _showStatus, final boolean _showLog) {
         byte[] selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
@@ -298,7 +298,7 @@ public final class P2pMgr implements IP2pMgr {
         this.showLog = _showLog;
 
         for (String _bootNode : _bootNodes) {
-            Node node = Node.parseEnode(_bootNode);
+            Node node = Node.parseP2p(_bootNode);
             if (validateNode(node)) {
                 tempNodes.add(node);
             }
@@ -730,6 +730,13 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public Map getActiveNodes() {
         return this.activeNodes;
+    }
+
+    /**
+     * @return int
+     */
+    int getTempNodesCount() {
+        return this.tempNodes.size();
     }
 
     @Override

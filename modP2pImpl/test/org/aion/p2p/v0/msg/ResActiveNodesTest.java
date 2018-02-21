@@ -1,48 +1,69 @@
-//
-//package org.aion.p2p.a0.msg;
-//
-//import static org.junit.Assert.*;
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.UUID;
-//
-//import org.aion.p2p.a0.Helper;
-//import org.aion.p2p.a0.Node;
-//import org.aion.p2p.a0.ACT;
-//import org.junit.Test;
-//
-//public class ResActiveNodesTest {
-//
-//    byte[] id = UUID.randomUUID().toString().getBytes();
-//    String ipStr = "192.168.2.2";
-//    int port = 30303;
-//
-//    @Test
-//    public void testAct() {
-//        List<Node> nodes = new ArrayList<Node>();
-//        ResActiveNodes mh1 = new ResActiveNodes(nodes);
-//        assertEquals(mh1.getAct(), ACT.RES_ACTIVE_NODES);
-//    }
-//
-//    @Test
-//    public void testEncodeDecode() {
-//        List<Node> nodes = new ArrayList<Node>();
-//        ResActiveNodes ran = new ResActiveNodes(nodes);
-//        byte[] ranBytes = ran.encode();
-//        assertEquals(1, ranBytes.length);
-//        assertEquals(0, ranBytes[0]);
-//
-//        byte[] ip = Helper.ipStrToBytes(ipStr);
-//        Node n0 = new Node(false, id, ip, port);
-//        nodes.add(n0);
-//        ran = new ResActiveNodes(nodes);
-//        ranBytes = ran.encode();
-//        ran = ResActiveNodes.decode(ranBytes);
-//        assertTrue(ranBytes.length > 1);
-//        assertEquals(1, ran.getNodes().size());
-//        assertEquals(ipStr, Helper.ipBytesToStr(ran.getNodes().get(0).getIp()));
-//        assertEquals(port, ran.getNodes().get(0).getPort());
-//
-//    }
-//}
-//
+package org.aion.p2p.v0.msg;
+
+import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Version;
+import org.aion.p2p.v0.Node;
+import org.aion.p2p.v0.Act;
+import org.junit.Assert;
+import org.junit.Test;
+
+public class ResActiveNodesTest {
+
+    private Node randomNode(){
+        return new Node(
+            ThreadLocalRandom.current().nextBoolean(),
+            UUID.randomUUID().toString().getBytes(),
+            Node.ipStrToBytes(
+                ThreadLocalRandom.current().nextInt(0,256) + "." +
+                ThreadLocalRandom.current().nextInt(0,256) + "." +
+                ThreadLocalRandom.current().nextInt(0,256) + "." +
+                ThreadLocalRandom.current().nextInt(0,256)
+            ),
+            ThreadLocalRandom.current().nextInt()
+        );
+    }
+
+
+    @Test
+    public void testRoute() {
+
+        ResActiveNodes res = new ResActiveNodes(new ArrayList<>());
+        assertEquals(Version.V0, res.getHeader().getVer());
+        assertEquals(Ctrl.NET, res.getHeader().getCtrl());
+        assertEquals(Act.RES_ACTIVE_NODES, res.getHeader().getAction());
+
+    }
+
+    @Test
+    public void testEncodeDecode() {
+
+        int m = ThreadLocalRandom.current().nextInt(0, 20);
+        List<Node> srcNodes = new ArrayList<>();
+        for(int i = 0; i < m; i++){
+            srcNodes.add(randomNode());
+        }
+
+        ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
+        assertEquals(res.getNodes().size(), m);
+        List<Node> tarNodes = res.getNodes();
+        for(int i = 0; i < m; i++){
+
+            Node srcNode = srcNodes.get(i);
+            Node tarNode = tarNodes.get(i);
+
+            Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
+            Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
+            Assert.assertArrayEquals(srcNode.getIp(), tarNode.getIp());
+
+            Assert.assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
+            Assert.assertEquals(srcNode.getPort(), tarNode.getPort());
+
+        }
+    }
+}

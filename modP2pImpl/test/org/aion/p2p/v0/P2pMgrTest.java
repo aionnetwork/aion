@@ -1,31 +1,58 @@
-//package org.aion.p2p.a0;
-//
-//import org.junit.Test;
-//
-//import java.util.Arrays;
-//import java.util.Map;
-//
-//import static org.junit.Assert.assertTrue;
-//
-//public class P2pMgrTest {
-//
-//    @Test
-//    public void testIgnoreBothIpAndPortSameFromAddingToBootList() {
-//        String _nodeId1 = "8d63cba9-0b21-4024-953f-7285073ac313";
-//        String _nodeId2 = "caed7fa5-d2a9-4f59-99d2-289172562863";
-//        String _ip = "127.0.0.1";
-//        int _port = 30303;
-//        String[] _nodes = new String[2];
-//        _nodes[0] = "p2p://" + _nodeId2 + "@" + _ip + ":" + _port;
-//        _nodes[1] = "p2p://" + _nodeId2 + "@192.168.0.100:" + _port;
-//        P2pMgr p2p = new P2pMgr(_nodeId1, _ip, _port, _nodes, false, false, false);
-//
-////        // expecting _node[0] should not be added
-////        Map<Integer, Node> tempNodes = p2p.getTempNodes();
-////        assertTrue(tempNodes.size() == 1);
-////        Map.Entry<Integer, Node> entry = tempNodes.entrySet().iterator().next();
-////        assertTrue(entry.getValue().getPort() == _port);
-////        assertTrue(Arrays.equals(entry.getValue().getIp(), Helper.ipStrToBytes("192.168.0.100")));
-//    }
-//
-//}
+package org.aion.p2p.v0;
+
+import org.junit.Test;
+
+import java.util.UUID;
+
+import static org.junit.Assert.assertEquals;
+
+public class P2pMgrTest {
+
+    private String nodeId1 = UUID.randomUUID().toString();
+    private String nodeId2 = UUID.randomUUID().toString();
+    private String ip1 = "127.0.0.1";
+    private String ip2 = "192.168.0.11";
+    private int port1 = 30303;
+    private int port2 = 30304;
+
+    @Test
+    public void testIgnoreSameNodeIdAsSelf() {
+
+        String[] nodes = new String[]{
+                "p2p://" + nodeId1 + "@" + ip2+ ":" + port2
+        };
+
+        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, false, false);
+        assertEquals(p2p.getTempNodesCount(), 0);
+
+    }
+
+    @Test
+    public void testIgnoreSameIpAndPortAsSelf(){
+
+        String[] nodes = new String[]{
+                "p2p://" + nodeId2 + "@" + ip1+ ":" + port1
+        };
+
+        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, false, false);
+        assertEquals(p2p.getTempNodesCount(), 0);
+
+    }
+
+    @Test
+    public void testTempNodes(){
+
+        String[] nodes = new String[]{
+                "p2p://" + nodeId2 + "@" + ip1+ ":" + port2,
+                "p2p://" + nodeId2 + "@" + ip2+ ":" + port1,
+                "p2p://" + nodeId2 + "@" + ip2+ ":" + port2,
+        };
+
+        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, false, false);
+        assertEquals(p2p.getTempNodesCount(), 3);
+
+    }
+
+
+
+}

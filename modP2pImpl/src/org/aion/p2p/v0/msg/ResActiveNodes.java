@@ -57,7 +57,7 @@ public final class ResActiveNodes extends Msg {
     /**
      * @param _nodes List
      */
-    public ResActiveNodes(final ArrayList<Node> _nodes) {
+    public ResActiveNodes(final List<Node> _nodes) {
         super(Version.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
         this.count = Math.min(MAX_NODES, _nodes.size());
         if (this.count > 0)

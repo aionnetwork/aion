@@ -50,9 +50,9 @@ public final class ReqHandshake extends Msg {
     private final static int LEN = 36 + 4 + 8 + 4;
 
     public ReqHandshake(final byte[] _nodeId, final int _version, final byte[] _ip, final int _port) {
-        super(Version.V1, Ctrl.NET, Act.REQ_ACTIVE_NODES);
+        super(Version.V0, Ctrl.NET, Act.REQ_HANDSHAKE);
         this.nodeId = _nodeId;
-        this.version = this.getHeader().getVer();
+        this.version = _version;
         this.ip = _ip;
         this.port = _port;
     }

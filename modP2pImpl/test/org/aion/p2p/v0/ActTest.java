@@ -1,9 +1,6 @@
 package org.aion.p2p.v0;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
-
-import org.aion.p2p.Version;
 import org.junit.Test;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,7 +25,11 @@ public class ActTest {
         assertEquals(Act.UNKNOWN, Act.filter(Act.PONG));
 
         byte a1 = (byte)ThreadLocalRandom.current().nextInt(7, Byte.MAX_VALUE + 1);
-        assertEquals(Act.UNKNOWN, Version.filter(a1));
+
+        System.out.println(a1);
+        System.out.println(Act.UNKNOWN);
+
+        assertEquals(Act.UNKNOWN, Act.filter(a1));
 
     }
 }

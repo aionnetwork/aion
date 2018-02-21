@@ -40,7 +40,7 @@ public final class ResHandshake extends Msg {
     private final boolean success;
 
     public ResHandshake(final boolean _success) {
-        super(Version.V1, Ctrl.NET, Act.RES_HANDSHAKE);
+        super(Version.V0, Ctrl.NET, Act.RES_HANDSHAKE);
         this.success = _success;
     }
 
