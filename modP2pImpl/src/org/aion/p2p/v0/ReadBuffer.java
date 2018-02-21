@@ -23,7 +23,9 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0;
+package org.aion.p2p.v0;
+
+import org.aion.p2p.Header;
 
 import java.nio.ByteBuffer;
 
@@ -36,11 +38,11 @@ public class ReadBuffer {
 
     int nodeIdHash = 0;
 
-    ByteBuffer headerBuf = ByteBuffer.allocate(Codec.Header.SIZE);
+    ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
 
     ByteBuffer bodyBuf = null;
 
-    Codec.Header header = null;
+    Header header = null;
 
     byte[] body = null;
 

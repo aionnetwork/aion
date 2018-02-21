@@ -33,28 +33,24 @@ import java.util.Set;
  */
 public class Version {
 
-    private static final short V0 = 0;
+    public static final short V0 = 0;
 
-    private static final short V1 = 1;
+    public static final short V1 = 1;
 
-    static final short MIN = 0;
+    public static final short UNKNOWN = Short.MAX_VALUE;
 
-    static final short MAX = 1;
-
-    static final short UNKNOWN = Short.MAX_VALUE;
-
-    private static Set<Short> activeVers = new HashSet<>(){{
+    private static Set<Short> active = new HashSet<>(){{
         this.add(V0);
         this.add(V1);
     }};
 
     /**
-     * @param _ver short
+     * @param _version short
      * @return short
      * method provided to filter any decoded version (short)
      */
-    public static short filter(short _ver){
-        return activeVers.contains(_ver) ? _ver : UNKNOWN;
+    public static short filter(short _version){
+        return active.contains(_version) ? _version : UNKNOWN;
     }
 
 }

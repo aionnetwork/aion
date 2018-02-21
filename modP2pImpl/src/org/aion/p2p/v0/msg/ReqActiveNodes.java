@@ -23,12 +23,12 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0.msg;
+package org.aion.p2p.v0.msg;
 
-import org.aion.p2p.Header;
+import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Version;
-import org.aion.p2p.a0.ACT;
+import org.aion.p2p.v0.Act;
 
 /**
  * 
@@ -38,17 +38,9 @@ import org.aion.p2p.a0.ACT;
 public final class ReqActiveNodes extends Msg {
 
     public ReqActiveNodes(){
-        super(new Header(Version));
+        super(Version.V1, Ctrl.NET, Act.REQ_ACTIVE_NODES);
     }
 
-    private final static byte ctrl = CTRL.NET0;
-    
-    private final static byte act = ACT.REQ_ACTIVE_NODES;
-    
-    public short getVer() {
-        return Version.ZERO;
-    }
-    
     @Override
     public byte[] encode() {
         return null;

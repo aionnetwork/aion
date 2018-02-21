@@ -23,31 +23,24 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0.msg;
+package org.aion.p2p.v0.msg;
 
-import org.aion.p2p.CTRL;
-import org.aion.p2p.IMsg;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Msg;
 import org.aion.p2p.Version;
-import org.aion.p2p.a0.ACT;
+import org.aion.p2p.v0.Act;
 
 /**
  * 
  * @author chris
  *
  */
-public final class ResHandshake implements IMsg {
-
-    private final static byte ctrl = CTRL.NET0;
-
-    private final static byte act = ACT.RES_HANDSHAKE;
+public final class ResHandshake extends Msg {
 
     private final boolean success;
 
-    public short getVer() {
-        return Version.ZERO;
-    }
-
     public ResHandshake(final boolean _success) {
+        super(Version.V1, Ctrl.NET, Act.RES_HANDSHAKE);
         this.success = _success;
     }
 
@@ -65,16 +58,6 @@ public final class ResHandshake implements IMsg {
     @Override
     public byte[] encode() {
         return this.success ? new byte[] { 0x01 } : new byte[] { 0x00 };
-    }
-
-    @Override
-    public byte getCtrl() {
-        return ctrl;
-    }
-
-    @Override
-    public byte getAct() {
-        return act;
     }
 
 }

@@ -55,24 +55,23 @@ public interface INode {
     byte[] getIp();
 
     /**
+     * @return String
+     */
+    String getIpStr();
+
+    /**
+     * @return int
+     */
+    int getPort();
+
+    /**
      * @return byte[]
      */
     byte[] getBestBlockHash();
 
     /**
-     * @return byte[]
+     * @return long
      */
-    byte[] getTotalDifficulty();
-
-    /**
-     * @return SocketChannel
-     */
-    SocketChannel getChannel();
-
-    /**
-     * @param _bestBlockNumber long
-     * @param _bestBlockHash byte[]
-     */
-    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash);
+    long getTotalDifficulty();
 
 }

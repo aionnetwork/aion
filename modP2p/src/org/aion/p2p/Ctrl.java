@@ -33,17 +33,13 @@ import java.util.Set;
  */
 public class Ctrl {
 
-    private static final byte NET = 0;
+    public static final byte NET = 0;
 
-    private static final byte SYNC = 1;
+    public static final byte SYNC = 1;
 
-    static final byte MIN = 0;
+    public static final byte UNKNOWN = Byte.MAX_VALUE;
 
-    static final byte MAX = 1;
-
-    static final byte UNKNOWN = Byte.MAX_VALUE;
-
-    private static Set<Byte> activeCtrls = new HashSet<>() {{
+    private static Set<Byte> active = new HashSet<>() {{
         add(NET);
         add(SYNC);
     }};
@@ -54,7 +50,7 @@ public class Ctrl {
      * method provided to filter any decoded ctrl (byte)
      */
     public static byte filter(byte _ctrl){
-        return activeCtrls.contains(_ctrl) ? _ctrl : UNKNOWN;
+        return active.contains(_ctrl) ? _ctrl : UNKNOWN;
     }
 
 }

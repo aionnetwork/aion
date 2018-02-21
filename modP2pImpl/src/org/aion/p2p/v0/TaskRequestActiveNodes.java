@@ -22,12 +22,12 @@
  *     Aion foundation.
  *     
  ******************************************************************************/
-package org.aion.p2p.a0;
+package org.aion.p2p.v0;
 
 import java.util.Map;
 
 import org.aion.p2p.INode;
-import org.aion.p2p.a0.msg.ReqActiveNodes;
+import org.aion.p2p.v0.msg.ReqActiveNodes;
 
 /**
  * 
@@ -45,10 +45,8 @@ public final class TaskRequestActiveNodes implements Runnable {
     @Override
     public void run() {
         Map<Integer, INode> activeNodes = this.mgr.getActiveNodes();
-        synchronized(activeNodes) {
-            for (int key : activeNodes.keySet()) {
-                this.mgr.send(activeNodes.get(key).getId(), new ReqActiveNodes());
-            }     
+        for (int key : activeNodes.keySet()) {
+            this.mgr.send(activeNodes.get(key).getIdHash(), new ReqActiveNodes());
         }
     }    
 }

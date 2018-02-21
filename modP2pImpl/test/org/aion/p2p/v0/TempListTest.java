@@ -1,4 +1,4 @@
-package org.aion.p2p.a0;
+package org.aion.p2p.v0;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

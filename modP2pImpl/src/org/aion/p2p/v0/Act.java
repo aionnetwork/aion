@@ -25,48 +25,46 @@
 
 package org.aion.p2p.v0;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  *
  * @author chris
  *
  */
-public final class ACT {
+public final class Act {
 
-    // public static final byte DISCONNECT = 0;
+    static final byte DISCONNECT = 0;
+
     public static final byte REQ_HANDSHAKE = 1;
-    public static final byte RES_HANDSHAKE = 2;
 
-    // public static final byte PING = 3;
-    // public static final byte PONG = 4;
+    public  static final byte RES_HANDSHAKE = 2;
+
+    static final byte PING = 3;
+
+    static final byte PONG = 4;
+
     public static final byte REQ_ACTIVE_NODES = 5;
+
     public static final byte RES_ACTIVE_NODES = 6;
-    static final byte UNKNOWN = 7;
 
-    static final byte MIN = 0;
-    static final byte MAX = 8;
+    public static final byte UNKNOWN = Byte.MAX_VALUE;
 
-    private byte value;
+    private static Set<Byte> active= new HashSet<>() {{
+        add(REQ_HANDSHAKE);
+        add(RES_HANDSHAKE);
+        add(REQ_ACTIVE_NODES);
+        add(RES_ACTIVE_NODES);
+    }};
 
-    private static final ACT[] acts = new ACT[MAX];
-
-    static {
-        for (byte i = 0; i < MAX; i++) {
-            acts[i] = new ACT(i);
-        }
-    }
-
-    private ACT(byte _value) {
-        this.value = _value;
-    }
-
-    public int getValue() {
-        return this.value;
-    }
-
-    static ACT getType(int _actInt) {
-        if (_actInt >= MAX || _actInt < 0)
-            return acts[UNKNOWN];
-        return acts[_actInt];
+    /**
+     * @param _act byte
+     * @return byte
+     * method provided to filter any decoded action (byte)
+     */
+    public static byte filter(byte _act){
+        return active.contains(_act) ? _act : UNKNOWN;
     }
 
 }

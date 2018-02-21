@@ -17,13 +17,13 @@ public class VersionTest {
         /*
          * active versions
          */
-        short v0 = (byte)ThreadLocalRandom.current().nextInt(Version.MIN, Version.MAX + 1);
+        short v0 = (byte)ThreadLocalRandom.current().nextInt(0, 2);
         assertEquals(v0, Version.filter(v0));
 
         /*
          * inactive versions
          */
-        byte b1 = (byte)ThreadLocalRandom.current().nextInt(Version.MAX + 1, Short.MAX_VALUE);
+        byte b1 = (byte)ThreadLocalRandom.current().nextInt(2, Short.MAX_VALUE);
         assertEquals(Version.UNKNOWN, Version.filter(b1));
 
     }

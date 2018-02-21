@@ -23,29 +23,25 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0.msg;
+package org.aion.p2p.v0.msg;
 
 import java.nio.ByteBuffer;
 
-import org.aion.p2p.CTRL;
-import org.aion.p2p.IMsg;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Msg;
 import org.aion.p2p.Version;
-import org.aion.p2p.a0.ACT;
+import org.aion.p2p.v0.Act;
 
 /**
  * 
  * @author chris
  * 
  */
-public final class ReqHandshake implements IMsg {
-
-    private final static byte ctrl = CTRL.NET0;
-
-    private final static byte act = ACT.REQ_HANDSHAKE;
+public final class ReqHandshake extends Msg {
 
     private byte[] nodeId; // 36 bytes
 
-    private int version = 0; // 4 bytes
+    private int version; // 4 bytes
 
     private byte[] ip; // 8 bytes
 
@@ -53,13 +49,10 @@ public final class ReqHandshake implements IMsg {
 
     private final static int LEN = 36 + 4 + 8 + 4;
 
-    public short getVer() {
-        return Version.ZERO;
-    }
-
     public ReqHandshake(final byte[] _nodeId, final int _version, final byte[] _ip, final int _port) {
+        super(Version.V1, Ctrl.NET, Act.REQ_ACTIVE_NODES);
         this.nodeId = _nodeId;
-        this.version = _version;
+        this.version = this.getHeader().getVer();
         this.ip = _ip;
         this.port = _port;
     }
@@ -80,6 +73,11 @@ public final class ReqHandshake implements IMsg {
         return this.port;
     }
 
+    /**
+     * @param _bytes byte[]
+     * @return ReqHandshake
+     * decode body
+     */
     public static ReqHandshake decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length != LEN)
             return null;
@@ -108,15 +106,4 @@ public final class ReqHandshake implements IMsg {
             return buf.array();
         }
     }
-
-    @Override
-    public byte getCtrl() {
-        return ctrl;
-    }
-
-    @Override
-    public byte getAct() {
-        return act;
-    }
-
 }
