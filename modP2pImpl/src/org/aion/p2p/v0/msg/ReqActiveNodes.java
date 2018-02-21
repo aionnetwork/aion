@@ -25,8 +25,8 @@
 
 package org.aion.p2p.a0.msg;
 
-import org.aion.p2p.CTRL;
-import org.aion.p2p.IMsg;
+import org.aion.p2p.Header;
+import org.aion.p2p.Msg;
 import org.aion.p2p.Version;
 import org.aion.p2p.a0.ACT;
 
@@ -35,7 +35,11 @@ import org.aion.p2p.a0.ACT;
  * @author chris
  *
  */
-public final class ReqActiveNodes implements IMsg {
+public final class ReqActiveNodes extends Msg {
+
+    public ReqActiveNodes(){
+        super(new Header(Version));
+    }
 
     private final static byte ctrl = CTRL.NET0;
     
@@ -48,16 +52,6 @@ public final class ReqActiveNodes implements IMsg {
     @Override
     public byte[] encode() {
         return null;
-    }
-
-    @Override
-    public byte getCtrl() {
-        return ctrl;
-    }
-
-    @Override
-    public byte getAct() {
-        return act;
     }
     
 }

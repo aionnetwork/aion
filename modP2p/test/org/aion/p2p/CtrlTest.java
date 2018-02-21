@@ -6,6 +6,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * @author  chris
+ */
 public class CtrlTest {
 
     @Test

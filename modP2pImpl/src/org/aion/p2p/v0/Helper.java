@@ -18,9 +18,9 @@
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
- * 
+ *
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.p2p.a0;
@@ -28,32 +28,32 @@ package org.aion.p2p.a0;
 import java.nio.ByteBuffer;
 
 /**
- * 
+ *
  * @author chris
  *
  */
 public final class Helper {
 
     protected final static char[] decimalArray = "0123456789".toCharArray();
-    
+
     /**
      * TODO: need interface to cover these 2 methods
      */
     public static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
-        String[] frags = _ip.split("\\.");          
+        String[] frags = _ip.split("\\.");
         for(String frag : frags) {
             short ipFrag = 0;
             try {
                 ipFrag = Short.parseShort(frag);
             } catch (NumberFormatException e) {
-                
+
             }
-            bb8.putShort(ipFrag); 
+            bb8.putShort(ipFrag);
         }
         return bb8.array();
     }
-    
+
     public static String ipBytesToStr(final byte[] _ip) {
         ByteBuffer bb2 = ByteBuffer.allocate(2);
         if(_ip == null || _ip.length != 8)
@@ -66,20 +66,20 @@ public final class Helper {
             bb2.put(_ip[0]);
             bb2.put(_ip[1]);
             bb2.flip();
-            ip += bb2.getShort() + "."; 
-            
+            ip += bb2.getShort() + ".";
+
             bb2.clear();
             bb2.put(_ip[2]);
             bb2.put(_ip[3]);
             bb2.flip();
             ip += bb2.getShort() + ".";
-            
+
             bb2.clear();
             bb2.put(_ip[4]);
             bb2.put(_ip[5]);
             bb2.flip();
             ip += bb2.getShort() + ".";
-            
+
             bb2.clear();
             bb2.put(_ip[6]);
             bb2.put(_ip[7]);
@@ -88,7 +88,7 @@ public final class Helper {
             return ip;
         }
     }
-   
+
     public static String bytesToDecimal(byte[] bytes) {
         char[] decimalChars = new char[bytes.length * 4];
         for ( int j = 0; j < bytes.length; j++ ) {

@@ -23,7 +23,7 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0;
+package org.aion.p2p.v0;
 
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -193,8 +193,11 @@ public final class Node implements INode{
     }
     
     @Override
-    public void setBestBlockNumber(final long _bestBlockNumber) {
-        this.bestBlockNumber = _bestBlockNumber > 0 ? _bestBlockNumber : 0;
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash) {
+        if(_bestBlockNumber > this.bestBlockNumber){
+            this.bestBlockNumber = _bestBlockNumber;
+            this.bestBlockHash = _bestBlockHash;
+        }
     }
 
     public static Node parseEnode(final boolean fromBootList, final String _enode) {
