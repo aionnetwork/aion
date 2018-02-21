@@ -28,22 +28,33 @@ package org.aion.p2p;
 import java.util.List;
 import java.util.Map;
 
-import org.aion.p2p.ICallback;
-
 /**
  * 
  * @author chris
  *
  */
 public interface IP2pMgr{
-    
+
+    /**
+     * @return Map
+     */
     Map<Integer, INode> getActiveNodes();
-    
-    void register(final List<ICallback> _cbs);
-    
+
+    /**
+     * @param _hs List<Handler>
+     */
+    void register(final List<Handler> _hs);
+
+    /**
+     * @return INode
+     */
     INode getRandom();
-    
-    void send(final byte[] _nodeId, final IMsg _msg);
+
+    /**
+     * @param _nodeIdHashcode int
+     * @param _msg Msg
+     */
+    void send(final int _nodeIdHashcode, final Msg _msg);
     
     /**
      * Used to hook up with kernel
@@ -52,7 +63,11 @@ public interface IP2pMgr{
      */
     void shutdown();
 
+    /**
+     * start all p2p process
+     */
     void run();
+
 
     String version();
 }
