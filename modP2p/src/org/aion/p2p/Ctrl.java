@@ -23,51 +23,37 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0.msg;
+package org.aion.p2p;
 
 /**
- *
  * @author chris
- *
  */
-public class ACT {
+public final class Ctrl {
 
-    public static final byte DISCONNECT = 0;
-    public static final byte REQ_HANDSHAKE = 1;
-    public static final byte RES_HANDSHAKE = 2;
-
-    @Deprecated
-    public static final byte PING = 3;
-    @Deprecated
-    public static final byte PONG = 4;
-
-    public static final byte REQ_ACTIVE_NODES = 5;
-    public static final byte RES_ACTIVE_NODES = 6;
-    public static final byte UNKNOWN = 7;
-    public static final byte MAX = 8;
+    /**
+     * module specific controllers
+     */
+    public static final byte NET0 = 0;
+    public static final byte SYNC0 = 1;
+    public static final byte UNKNOWN = 2;
+    public static final byte MAX0 = 3;
 
     private byte value;
 
-    private static final ACT[] acts = new ACT[MAX];
+    static Ctrl ctrls[] = new Ctrl[] { new Ctrl(NET0), new Ctrl(SYNC0), new Ctrl(UNKNOWN) };
 
-    static {
-        for (byte i = 0; i < MAX; i++) {
-            acts[i] = new ACT(i);
-        }
-    }
-
-    ACT(byte _value) {
+    Ctrl(byte _value) {
         this.value = _value;
     }
 
-    public int getValue() {
-        return this.value;
+    public byte getValue() {
+        return value;
     }
 
-    public static ACT getType(final int _actInt) {
-        if (_actInt >= MAX || _actInt < 0)
-            return acts[UNKNOWN];
-        return acts[_actInt];
+    public static Ctrl getType(byte _ctrlInt) {
+        if (_ctrlInt >= MAX0 || _ctrlInt < 0) {
+            return ctrls[UNKNOWN];
+        }
+        return ctrls[_ctrlInt];
     }
-
 }

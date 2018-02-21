@@ -26,7 +26,8 @@ package org.aion.p2p.a0.msg;
 
 import org.aion.p2p.CTRL;
 import org.aion.p2p.IMsg;
-import org.aion.p2p.P2pVer;
+import org.aion.p2p.Version;
+import org.aion.p2p.a0.ACT;
 
 /**
  * 
@@ -40,7 +41,7 @@ public final class Ping implements IMsg {
     private final static byte act = ACT.PING;
 
     public short getVer() {
-        return P2pVer.VER0;
+        return Version.ZERO;
     }
 
     @Override

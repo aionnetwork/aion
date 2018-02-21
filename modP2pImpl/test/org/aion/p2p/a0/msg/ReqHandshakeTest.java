@@ -6,8 +6,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.aion.p2p.a0.Helper;
-import org.aion.p2p.a0.msg.ACT;
-import org.aion.p2p.a0.msg.ReqHandshake;
+import org.aion.p2p.a0.ACT;
 import org.junit.Test;
 
 public class ReqHandshakeTest {
@@ -23,7 +22,7 @@ public class ReqHandshakeTest {
     @Test 
     public void testAct() {
         ReqHandshake mh1 = new ReqHandshake(id, 0, ip, port);
-        assertEquals(ACT.REQ_HANDSHAKE.getValue(), mh1.getAct());
+        assertEquals(ACT.REQ_HANDSHAKE, mh1.getAct());
     }
     
     @Test

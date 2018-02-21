@@ -32,7 +32,7 @@ package org.aion.p2p;
  */
 public interface ICallback {
 
-    byte getCtrl();
+    Ctrl getCtrl();
 
     byte getAct();
 

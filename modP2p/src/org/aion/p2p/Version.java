@@ -18,45 +18,20 @@
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
- * 
+ *
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.p2p;
 
 /**
- * 
- * 
- * @author chris
- *
+ * jin
  */
-public class CTRL {
+public class Version {
 
-    /**
-     * module specific controllers
-     */
-    public static final byte NET0 = 0;
-    public static final byte SYNC0 = 1;
-    public static final byte UNKNOWN = 2;
-    public static final byte MAX0 = 3;
+    public static final short ZERO = 0;
 
-    private byte value;
+    public static final short ONE = 1;
 
-    static CTRL ctrls[] = new CTRL[] { new CTRL(NET0), new CTRL(SYNC0), new CTRL(UNKNOWN) };
-
-    CTRL(byte _value) {
-        this.value = _value;
-    }
-
-    public byte getValue() {
-        return value;
-    }
-
-    public static CTRL getType(byte _ctrlInt) {
-        if (_ctrlInt >= MAX0 || _ctrlInt < 0) {
-            return ctrls[UNKNOWN];
-        }
-        return ctrls[_ctrlInt];
-    }
 }

@@ -46,7 +46,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.CTRL;
 import org.aion.p2p.a0.Codec.Header;
-import org.aion.p2p.a0.msg.ACT;
 import org.aion.p2p.a0.msg.ReqHandshake;
 import org.aion.p2p.a0.msg.ResActiveNodes;
 import org.aion.p2p.a0.msg.ResHandshake;

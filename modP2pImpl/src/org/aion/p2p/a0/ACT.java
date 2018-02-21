@@ -23,40 +23,49 @@
  *     
  ******************************************************************************/
 
-package org.aion.p2p.a0.msg;
-
-import org.aion.p2p.CTRL;
-import org.aion.p2p.IMsg;
-import org.aion.p2p.Version;
-import org.aion.p2p.a0.ACT;
+package org.aion.p2p.a0;
 
 /**
- * 
+ *
  * @author chris
  *
  */
-public final class Pong implements IMsg {
+public class ACT {
 
-    private final static byte ctrl = CTRL.NET0;
+    public static final byte DISCONNECT = 0;
+    public static final byte REQ_HANDSHAKE = 1;
+    public static final byte RES_HANDSHAKE = 2;
+    public static final byte PING = 3;
+    public static final byte PONG = 4;
+    public static final byte REQ_ACTIVE_NODES = 5;
+    public static final byte RES_ACTIVE_NODES = 6;
+    static final byte UNKNOWN = 7;
 
-    private final static byte act = ACT.PONG;
+    static final byte MIN = 0;
+    static final byte MAX = 8;
 
-    public short getVer() {
-        return Version.ZERO;
+    private byte value;
+
+    private static final ACT[] acts = new ACT[MAX];
+
+    static {
+        for (byte i = 0; i < MAX; i++) {
+            acts[i] = new ACT(i);
+        }
     }
 
-    @Override
-    public byte[] encode() {
-        return null;
+    private ACT(byte _value) {
+        this.value = _value;
     }
 
-    @Override
-    public byte getCtrl() {
-        return ctrl;
+    public int getValue() {
+        return this.value;
     }
 
-    @Override
-    public byte getAct() {
-        return act;
+    static ACT getType(int _actInt) {
+        if (_actInt >= MAX || _actInt < 0)
+            return acts[UNKNOWN];
+        return acts[_actInt];
     }
+
 }

@@ -27,7 +27,9 @@ package org.aion.p2p.a0.msg;
 
 import org.aion.p2p.CTRL;
 import org.aion.p2p.IMsg;
-import org.aion.p2p.P2pVer;
+import org.aion.p2p.Version;
+import org.aion.p2p.a0.ACT;
+
 /**
  * 
  * @author chris
@@ -40,7 +42,7 @@ public final class ReqActiveNodes implements IMsg {
     private final static byte act = ACT.REQ_ACTIVE_NODES;
     
     public short getVer() {
-        return P2pVer.VER0;
+        return Version.ZERO;
     }
     
     @Override

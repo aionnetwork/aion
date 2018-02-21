@@ -2,8 +2,7 @@ package org.aion.p2p.a0.msg;
 
 import static org.junit.Assert.*;
 
-import org.aion.p2p.a0.msg.ACT;
-import org.aion.p2p.a0.msg.ResHandshake;
+import org.aion.p2p.a0.ACT;
 import org.junit.Test;
 
 public class ResHandshakeTest {
@@ -11,7 +10,7 @@ public class ResHandshakeTest {
     @Test 
     public void testAct() {
         ResHandshake mh1 = new ResHandshake(true);
-        assertEquals(ACT.RES_HANDSHAKE.ordinal(), mh1.getAct());
+        assertEquals(ACT.RES_HANDSHAKE, mh1.getAct());
     }
     
     @Test

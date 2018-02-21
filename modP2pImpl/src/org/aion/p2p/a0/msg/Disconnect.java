@@ -29,7 +29,9 @@ import java.nio.ByteBuffer;
 
 import org.aion.p2p.CTRL;
 import org.aion.p2p.IMsg;
-import org.aion.p2p.P2pVer;
+import org.aion.p2p.Version;
+import org.aion.p2p.a0.ACT;
+
 /**
  * 
  * @author chris
@@ -46,7 +48,7 @@ public final class Disconnect implements IMsg {
     private final byte[] reason;
     
     public short getVer() {
-        return P2pVer.VER0;
+        return Version.ZERO;
     }
     
     public Disconnect(final byte[] _reason) {

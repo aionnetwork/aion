@@ -8,8 +8,7 @@ import java.util.UUID;
 
 import org.aion.p2p.a0.Helper;
 import org.aion.p2p.a0.Node;
-import org.aion.p2p.a0.msg.ACT;
-import org.aion.p2p.a0.msg.ResActiveNodes;
+import org.aion.p2p.a0.ACT;
 import org.junit.Test;
 
 public class ResActiveNodesTest {
@@ -22,7 +21,7 @@ public class ResActiveNodesTest {
     public void testAct() {
         List<Node> nodes = new ArrayList<Node>();
         ResActiveNodes mh1 = new ResActiveNodes(nodes);
-        assertEquals(mh1.getAct(), ACT.RES_ACTIVE_NODES.ordinal());
+        assertEquals(mh1.getAct(), ACT.RES_ACTIVE_NODES);
     }
     
     @Test
