@@ -33,27 +33,46 @@ import java.nio.channels.SocketChannel;
  *
  */
 public interface INode {
-    
+
     /**
-     * Getters
+     * @return byte[]
      */
     byte[] getId();
-    
+
+    /**
+     * @return int
+     */
     int getIdHash();
-    
+
+    /**
+     * @return long
+     */
     long getBestBlockNumber();
 
+    /**
+     * @return byte[]
+     */
     byte[] getIp();
-    
+
+    /**
+     * @return byte[]
+     */
     byte[] getBestBlockHash();
-    
+
+    /**
+     * @return byte[]
+     */
     byte[] getTotalDifficulty();
 
-    SocketChannel getChannel();
-    
     /**
-     * Setters
+     * @return SocketChannel
      */
-    void setBestBlockNumber(final long _bestBlockNumber);
+    SocketChannel getChannel();
+
+    /**
+     * @param _bestBlockNumber long
+     * @param _bestBlockHash byte[]
+     */
+    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash);
 
 }
