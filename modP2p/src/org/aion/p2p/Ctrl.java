@@ -31,21 +31,30 @@ import java.util.Set;
 /**
  * @author chris
  */
-public final class Ctrl {
+public class Ctrl {
 
-    static final byte NET0 = 0;
+    private static final byte NET = 0;
 
-    static final byte SYNC0 = 1;
+    private static final byte SYNC = 1;
 
-    static final byte UNKNOWN = 127;
+    static final byte MIN = 0;
 
-    private static Set<Byte> routableCtrls = new HashSet<>() {{
-        add(NET0);
-        add(SYNC0);
+    static final byte MAX = 1;
+
+    static final byte UNKNOWN = Byte.MAX_VALUE;
+
+    private static Set<Byte> activeCtrls = new HashSet<>() {{
+        add(NET);
+        add(SYNC);
     }};
 
-    public static final byte check(final byte _ctrl){
-        return routableCtrls.contains(_ctrl) ? _ctrl : UNKNOWN;
+    /**
+     * @param _ctrl byte
+     * @return byte
+     * method provided to filter any decoded ctrl (byte)
+     */
+    public static byte filter(byte _ctrl){
+        return activeCtrls.contains(_ctrl) ? _ctrl : UNKNOWN;
     }
 
 }

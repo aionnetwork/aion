@@ -100,7 +100,7 @@ public final class Header {
      */
     public static Header decode(final byte[] _headerBytes) throws IOException {
         if (_headerBytes == null || _headerBytes.length != LEN)
-            return null;
+            throw new IOException("invalid-header-bytes");
         else {
             ByteBuffer bb1 = ByteBuffer.wrap(_headerBytes);
             short ver = bb1.getShort();
