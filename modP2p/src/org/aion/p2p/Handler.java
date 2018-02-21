@@ -26,16 +26,30 @@
 package org.aion.p2p;
 
 /**
- * 
  * @author chris
- *
  */
-public interface ICallback {
+public abstract class Handler {
 
-    Ctrl getCtrl();
+    private Header header;
 
-    byte getAct();
+    /**
+     * @param _header Header
+     */
+    public Handler(final Header _header){
+        this.header = header;
+    }
 
-    void receive(final byte[] _nodeId, final byte[] _msg);
+    /**
+     * @return Header
+     */
+    public Header getHeader(){
+        return this.header;
+    }
+
+    /**
+     * @param _id int - node id hashcode
+     * @param _msg byte[]
+     */
+    abstract void receive(int _id, final byte[] _msg);
 
 }

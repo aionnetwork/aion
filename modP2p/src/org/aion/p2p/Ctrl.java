@@ -25,35 +25,27 @@
 
 package org.aion.p2p;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author chris
  */
 public final class Ctrl {
 
-    /**
-     * module specific controllers
-     */
-    public static final byte NET0 = 0;
-    public static final byte SYNC0 = 1;
-    public static final byte UNKNOWN = 2;
-    public static final byte MAX0 = 3;
+    static final byte NET0 = 0;
 
-    private byte value;
+    static final byte SYNC0 = 1;
 
-    static Ctrl ctrls[] = new Ctrl[] { new Ctrl(NET0), new Ctrl(SYNC0), new Ctrl(UNKNOWN) };
+    static final byte UNKNOWN = 127;
 
-    Ctrl(byte _value) {
-        this.value = _value;
+    private static Set<Byte> routableCtrls = new HashSet<>() {{
+        add(NET0);
+        add(SYNC0);
+    }};
+
+    public static final byte check(final byte _ctrl){
+        return routableCtrls.contains(_ctrl) ? _ctrl : UNKNOWN;
     }
 
-    public byte getValue() {
-        return value;
-    }
-
-    public static Ctrl getType(byte _ctrlInt) {
-        if (_ctrlInt >= MAX0 || _ctrlInt < 0) {
-            return ctrls[UNKNOWN];
-        }
-        return ctrls[_ctrlInt];
-    }
 }

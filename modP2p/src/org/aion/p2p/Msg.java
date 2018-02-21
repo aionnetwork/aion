@@ -28,27 +28,27 @@ package org.aion.p2p;
 /**
  * @author chris
  */
+public abstract class Msg {
 
-public interface IMsg {
-
-    short getVer();
-
-    /**
-     * global controls
-     */
-    /**
-     * kernel global unique control code
-     */
-    byte getCtrl();
+    private Header header;
 
     /**
-     * module local unique action code
+     * @param _header Header
      */
-    byte getAct();
+    public Msg(final Header _header){
+        this.header = header;
+    }
 
     /**
-     * serialized data
+     * @return Header
      */
-    byte[] encode();
+    public Header getHeader(){
+        return this.header;
+    }
+
+    /**
+     * @return byte[]
+     */
+    public abstract byte[] encode();
 
 }
