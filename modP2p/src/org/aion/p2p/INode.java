@@ -45,11 +45,6 @@ public interface INode {
     int getIdHash();
 
     /**
-     * @return long
-     */
-    long getBestBlockNumber();
-
-    /**
      * @return byte[]
      */
     byte[] getIp();
@@ -65,6 +60,11 @@ public interface INode {
     int getPort();
 
     /**
+     * @return long
+     */
+    long getBestBlockNumber();
+
+    /**
      * @return byte[]
      */
     byte[] getBestBlockHash();
@@ -73,5 +73,12 @@ public interface INode {
      * @return long
      */
     long getTotalDifficulty();
+
+    /**
+     * @param _bestBlockNumber long
+     * @param _bestBlockHash byte[]
+     * @param _totalDifficulty long
+     */
+    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, long _totalDifficulty);
 
 }

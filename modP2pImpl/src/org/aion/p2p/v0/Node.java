@@ -228,20 +228,32 @@ public final class Node implements INode{
     public int getPort() {
         return this.port;
     }
-    
+
+    /**
+     * @return long
+     */
     long getTimestamp() {
         return this.timestamp;
-    }  
-    
+    }
+
+    /**
+     * @return SocketChannel
+     */
     SocketChannel getChannel() {
         return this.channel;
     }
-        
+
+    /**
+     * @return byte[]
+     */
     @Override
     public byte[] getId() {
         return this.id;
-    }  
+    }
 
+    /**
+     * @return
+     */
     @Override
     public int getIdHash() {
         return this.idHash;
@@ -262,7 +274,8 @@ public final class Node implements INode{
         return this.totalDifficulty;
     }
 
-    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, long _totalDifficulty) {
+    @Override
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, long _totalDifficulty) {
         if(_bestBlockNumber > this.bestBlockNumber){
             this.bestBlockNumber = _bestBlockNumber;
             this.bestBlockHash = _bestBlockHash;

@@ -49,9 +49,9 @@ public final class Act {
 
     public static final byte RES_ACTIVE_NODES = 6;
 
-    public static final byte UNKNOWN = Byte.MAX_VALUE;
+    static final byte UNKNOWN = Byte.MAX_VALUE;
 
-    private static Set<Byte> active= new HashSet<>() {{
+    private static Set<Byte> active = new HashSet<>() {{
         add(REQ_HANDSHAKE);
         add(RES_HANDSHAKE);
         add(REQ_ACTIVE_NODES);
@@ -61,9 +61,9 @@ public final class Act {
     /**
      * @param _act byte
      * @return byte
-     * method provided to filter any decoded action (byte)
+     * method provided to filter any decoded p2p action (byte)
      */
-    public static byte filter(byte _act){
+    static byte filter(byte _act){
         return active.contains(_act) ? _act : UNKNOWN;
     }
 
