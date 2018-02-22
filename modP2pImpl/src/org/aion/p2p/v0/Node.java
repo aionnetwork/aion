@@ -1,27 +1,27 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
- * 
- *     Aion foundation.
- *     
- ******************************************************************************/
+ *
+ * Aion foundation.
+ *
+ */
 
 package org.aion.p2p.v0;
 
@@ -103,6 +103,10 @@ public final class Node implements INode{
         this.bestBlockNumber = 0L;
     }
 
+    /**
+     * @param _ip String
+     * @return byte[]
+     */
     public static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
@@ -118,6 +122,10 @@ public final class Node implements INode{
         return bb8.array();
     }
 
+    /**
+     * @param _ip byte[]
+     * @return String
+     */
     static String ipBytesToStr(final byte[] _ip) {
         ByteBuffer bb2 = ByteBuffer.allocate(2);
         if(_ip == null || _ip.length != 8)
@@ -170,17 +178,26 @@ public final class Node implements INode{
         int _port =  Integer.parseInt(subArrs[1]);
         return new Node(true, _id, _ip, _port);
     }
-    
+
+    /**
+     * @param _id byte[]
+     */
     void setId(final byte[] _id) {
         this.id = _id;
         if(_id != null && _id.length == 36)
             this.idHash = Arrays.hashCode(_id);
     }
-    
+
+    /**
+     * @param _version int
+     */
     void setVersion(final int _version) {
         this.version = _version;
     }
 
+    /**
+     * @param _port int
+     */
     void setPort(final int _port) {
         this.port = _port;
     }
@@ -193,6 +210,9 @@ public final class Node implements INode{
         this.timestamp = System.currentTimeMillis();
     }
 
+    /**
+     * @param _channel SocketChannel
+     */
     void setChannel(final SocketChannel _channel) {
         this.channel = _channel;
     }
@@ -204,26 +224,21 @@ public final class Node implements INode{
         return this.fromBootList;
     }
 
+    /**
+     * @return int
+     */
     int getVersion() {
         return this.version;
     }
-    /**
-     * @return byte[]
-     */
+
     @Override
     public byte[] getIp() {
         return this.ip;
     }
 
-    /**
-     * @return String
-     */
     @Override
     public String getIpStr(){ return this.ipStr; }
 
-    /**
-     * @return int
-     */
     @Override
     public int getPort() {
         return this.port;
@@ -243,29 +258,22 @@ public final class Node implements INode{
         return this.channel;
     }
 
-    /**
-     * @return byte[]
-     */
     @Override
     public byte[] getId() {
         return this.id;
     }
 
-    /**
-     * @return
-     */
     @Override
     public int getIdHash() {
         return this.idHash;
     }
-    
+
     @Override
     public long getBestBlockNumber() {
         return this.bestBlockNumber;
     }
-    
-    @Override
-    public byte[] getBestBlockHash() {
+
+    byte[] getBestBlockHash() {
         return this.bestBlockHash;
     }
 
