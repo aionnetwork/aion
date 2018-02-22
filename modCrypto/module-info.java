@@ -1,7 +1,8 @@
-module org.aion.crypto {
+module aion.crypto {
     requires slf4j.api;
-    requires org.aion.base;
-    requires libnsc;
-    requires org.aion.rlp;
+    requires aion.base;
+    requires aion.rlp;
     exports org.aion.crypto;
+    exports org.aion.crypto.hash;
+    exports org.aion.crypto.ed25519;
 }

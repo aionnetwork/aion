@@ -1,4 +1,4 @@
-module org.aion.base {
+module aion.base {
     exports org.aion.base.timer;
     exports org.aion.base.type;
     exports org.aion.base.util;
