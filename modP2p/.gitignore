@@ -2,5 +2,7 @@
 .settings/
 bin/
 build/
-modP2p.jar
+report/
+*.jar
 *.class
+

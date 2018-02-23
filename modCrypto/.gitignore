@@ -1,4 +1,8 @@
-*.jar
+.project
+.settings/
+bin/
 build/
-native/
-test_build/
+report/
+*.jar
+*.class
+

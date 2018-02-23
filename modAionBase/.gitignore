@@ -1,2 +1,8 @@
-*.jar
+.project
+.settings/
+bin/
 build/
+report/
+*.jar
+*.class
+

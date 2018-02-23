@@ -5,19 +5,19 @@
     <property name="src.build" value="./build/src" />
     <property name="test" value="./test" />
     <property name="test.build" value="./build/test" />
-    <property name="test.report" value="report" />
+    <property name="test.report" value="./report" />
 
     <path id="test.cp">
         <pathelement location="${lib}/junit_4/junit-4.12.jar"/>
         <pathelement location="${lib}/hamcrest/hamcrest-core-1.3.jar"/>
-        <pathelement location="${src.build}"/>
+        <pathelement location="${lib}/modAionBase.jar"/>
+        <pathelement location="${test.build}"/>
     </path>
 
     <target name="clean">
         <delete dir="./build" includeEmptyDirs="true" />
         <delete dir="${test.report}" includeEmptyDirs="true" />
         <delete file="${lib}/modAionBase.jar" />
-        <delete file="modAionBase.jar" />
     </target>
 
     <target name="build" depends="clean">
@@ -26,7 +26,6 @@
             debug="true"
             debuglevel="source,lines,vars"
             includeantruntime="false"
-            release="9"
             srcdir="${src}"
             destdir="${src.build}"
             includes="**/*.java, module-info.java"
@@ -34,11 +33,8 @@
         <jar
             filesetmanifest="mergewithoutmain"
             basedir="${src.build}"
-            destfile="modAionBase.jar"
-            />
-        <copy includeemptydirs="false" todir="${lib}">
-            <file file="modAionBase.jar"/>
-        </copy>
+            destfile="${lib}/modAionBase.jar"
+        />
     </target>
 
     <target name="test">
@@ -48,27 +44,17 @@
             debug="true"
             debuglevel="source,lines,vars"
             includeantruntime="false"
-            release="9"
             srcdir="${test}"
             destdir="${test.build}"
-        >
-            <classpath refid="test.cp" />
-        </javac>
-        <junit
-            printsummary="yes"
-            haltonfailure="no"
-            fork="true"
-            >
-        <classpath>
-            <path refid="test.cp" />
-            <pathelement location="${test.build}" />
-        </classpath>
-        <formatter type="plain" usefile="false"/>
-        <formatter type="xml" />
-        <batchtest todir="${test.report}">
-            <fileset dir="${test}" includes="**/*Test.java"/>
-        </batchtest>
+            classpathref="test.cp"
+        />
+        <junit printsummary="yes" haltonfailure="no" fork="true">
+            <classpath refid="test.cp"/>
+            <formatter type="plain" usefile="false"/>
+            <formatter type="xml" />
+            <batchtest todir="${test.report}">
+                <fileset dir="${test}" includes="**/*Test.java"/>
+            </batchtest>
         </junit>
     </target>
-
 </project>

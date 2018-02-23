@@ -1,4 +1,4 @@
-module org.aion.p2p.v0 {
-	requires transitive org.aion.p2p;
+module aion.p2p.zero {
+	requires aion.p2p;
 	exports org.aion.p2p.v0;
 }

@@ -8,7 +8,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="aion" level="project" />
     <orderEntry type="library" name="test-lib" level="project" />
   </component>
 </module>
