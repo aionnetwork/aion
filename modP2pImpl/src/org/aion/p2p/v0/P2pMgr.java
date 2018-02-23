@@ -393,7 +393,7 @@ public final class P2pMgr implements IP2pMgr {
                 closeSocket(node.getChannel());
             else {
                 if (showLog)
-                    System.out.println("<p2p action=move-outbound-to-active node-id=" + _nodeIdHash + ">");
+                    System.out.println("<p2p action=move-outbound-to-active node-id=" + Integer.toHexString(_nodeIdHash) + ">");
             }
         }
     }
@@ -664,7 +664,7 @@ public final class P2pMgr implements IP2pMgr {
                     System.out.println("<p2p write-msg-io-exception>");
             } finally {
                 if (buf.hasRemaining())
-                    dropActive(_nodeIdHash, "timeout-write-msg node-id=" + _nodeIdHash);
+                    dropActive(_nodeIdHash, "timeout-write-msg node-id=" + Integer.toHexString(_nodeIdHash));
             }
         });
     }
@@ -775,7 +775,7 @@ public final class P2pMgr implements IP2pMgr {
                 dropActive(_nodeIdHashcode, "<p2p-write-exception>");
             }
         } else if (showLog)
-            System.out.println("<p2p-send node-not-found-for=" + _nodeIdHashcode + ">");
+            System.out.println("<p2p-send node-not-found-for=" + Integer.toHexString(_nodeIdHashcode) + ">");
     }
 
     @Override
