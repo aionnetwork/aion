@@ -10,5 +10,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="modP2p" />
     <orderEntry type="library" name="test-lib" level="project" />
+    <orderEntry type="library" name="miniupnpc_linux" level="project" />
   </component>
 </module>

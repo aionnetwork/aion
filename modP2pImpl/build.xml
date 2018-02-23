@@ -17,6 +17,10 @@
     <pathelement location="${dir.lib}/modP2p.jar" />
   </path>
 
+  <path id="classpath.dependency">
+    <pathelement location="${dir.lib}/libminiupnp/miniupnpc_linux.jar"/>
+  </path>
+
   <target name="clean_build" depends="clean, build"/>
 
   <target name="clean">
@@ -70,6 +74,7 @@
       destdir="${dir.dest}"
       includes="src/**/*.java,module-info.java"
       >
+      <modulepath refid="classpath.dependency"/>
       <modulepath refid="cp" />
     </javac>
     <jar 
