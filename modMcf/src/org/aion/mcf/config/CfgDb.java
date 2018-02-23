@@ -42,8 +42,8 @@ public class CfgDb {
         this.path = "database";
 
         this.enable_auto_commit = false;
-        this.enable_db_cache = false;
-        this.enable_db_compression = false;
+        this.enable_db_cache = true;
+        this.enable_db_compression = true;
         this.enable_heap_cache = true;
         // size 0 means unbound
         this.max_heap_cache_size = "0";
