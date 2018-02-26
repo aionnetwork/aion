@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="modAionImpl">
-	<property name="dir.lib" value="../../lib" />
+	<property name="dir.lib" value="../lib" />
 	<property name="dir.dest" value="./build/main" />
 	<property name="dir.native" value="./build/native" />
 	<property name="dir.test" value="./build/test" />
@@ -59,7 +59,7 @@
 		<mkdir dir="${dir.dest}" />
 		<mkdir dir="${dir.native}" />
 		<javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
-			<src path="../../aion_fastvm/java/" />
+			<src path="../aion_fastvm/java/" />
 			<compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
 			<modulepath>
 				<pathelement location="${dir.lib}/modRlp.jar" />

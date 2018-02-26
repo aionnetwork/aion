@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="modAionBase">  
-    <property name="dir.lib" value="../../lib" />
+    <property name="dir.lib" value="../lib" />
     <property name="dir.javaAPIlib" value="../javaAPIlib" />
     <property name="main.build.dir" value="build/main" />
     <property name="main.src.dir" value="src" />

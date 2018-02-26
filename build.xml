@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="pack_build" name="Create modulized runnable JAR for Project aion0">
+	<!--this file was created by Eclipse Runnable JAR Export Wizard-->
+	<!--ANT 1.10 is required                                        -->
+	<!--define folder properties-->
+	<property name="project.name" value="aion" />
+	<property name="dir.srcfile" value="./src" />
+	<property name="dir.libfile" value="./lib" />
+	<property name="dir.workspace" value="./" />
+	<property name="dir.buildfile" value="./build/main" />
+	<property name="dir.build.native" value="./build/main/native" />
+	<property name="dir.test" value="./build/test" />
+	<property name="dir.jarfile" value="${dir.workspace}/build" />
+	<property name="dir.native" value="./native" />
+	<property name="dir.pack" value="./pack" />
+	<property name="test.report.dir" value="report" />
+	<property name="compile.debug" value="on" />
+
+	<path id="cp">
+		<pathelement location="${dir.libfile}/slf4j-api-1.7.25.jar" />
+		<pathelement location="${dir.libfile}/commons-codec-1.10.jar" />
+		<pathelement location="${dir.libfile}/commons-collections4-4.0.jar" />
+		<pathelement location="${dir.libfile}/commons-lang3-3.4.jar" />
+		<pathelement location="${dir.libfile}/guava-19.0.jar" />
+		<pathelement location="${dir.libfile}/h2-mvstore-1.4.196.jar" />
+		<pathelement location="${dir.libfile}/jctools-core-1.2.1.jar" />
+		<pathelement location="${dir.libfile}/leveldb-api-0.9.jar" />
+		<pathelement location="${dir.libfile}/leveldbjni-all-1.18.3.jar" />
+		<pathelement location="${dir.libfile}/libnmapdb.jar" />
+		<pathelement location="${dir.libfile}/libnsc.jar" />
+		<pathelement location="${dir.libfile}/libnzmq.jar" />
+		<pathelement location="${dir.libfile}/protobuf-java-3.5.0.jar" />
+		<pathelement location="${dir.libfile}/libJson.jar" />
+		<pathelement location="${dir.libfile}/logback-classic-1.2.3.jar" />
+		<pathelement location="${dir.libfile}/logback-core-1.2.3.jar" />
+		<pathelement location="${dir.libfile}/modEvtMgr.jar" />
+		<pathelement location="${dir.libfile}/modEvtMgrImpl.jar" />
+		<pathelement location="${dir.libfile}/modLogger.jar" />
+		<pathelement location="${dir.libfile}/modP2p.jar" />
+		<pathelement location="${dir.libfile}/modP2pImpl.jar" />
+		<pathelement location="${dir.libfile}/modAionBase.jar" />
+		<pathelement location="${dir.libfile}/modTxPool.jar" />
+		<pathelement location="${dir.libfile}/modTxPoolImpl.jar" />
+		<pathelement location="${dir.libfile}/modDbImpl.jar" />
+		<pathelement location="${dir.libfile}/modRlp.jar" />
+		<pathelement location="${dir.libfile}/modCrypto.jar" />
+	</path>
+
+	<path id="test.lib">
+		<pathelement location="${dir.libfile}/hamcrest/hamcrest-all-1.3.jar" />
+		<pathelement location="${dir.libfile}/hamcrest/hamcrest-core-1.3.jar" />
+		<pathelement location="${dir.libfile}/junit_4/junit-4.12.jar" />
+		<pathelement location="${dir.libfile}/junit_4/system-rules-1.16.0.jar" />
+		<pathelement location="${dir.libfile}/mockito-core-2.12.0.jar" />
+		<pathelement location="${dir.libfile}/truth-0.36.jar" />
+		<pathelement location="${dir.libfile}/byte-buddy-1.7.9.jar" />
+		<pathelement location="${dir.libfile}/byte-buddy-agent-1.7.9.jar" />
+		<pathelement location="${dir.libfile}/objenesis-2.6.jar" />
+		<pathelement location="${dir.libfile}/JUnitParams-1.1.1.jar" />
+	</path>
+
+	<target name="test_modules">
+		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modRlp/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modDbImpl/build.xml" target="test" />
+	</target>
+
+	<target name="test_build" depends="build">
+		<mkdir dir="${dir.test}" />
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" destdir="${dir.test}" includes="**/*.java" excludes="libNc/, libRecycle/, libPoi/">
+			<src path="./src" />
+			<src path="./aion_fastvm/java/src" />
+			<src path="./aion_fastvm/java/test" />
+			<classpath>
+				<path refid="cp" />
+				<path refid="test.lib" />
+				<pathelement location="${dir.buildfile}" />
+			</classpath>
+		</javac>
+
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="system-integration/kernel/**/*Test.java">
+			<classpath>
+				<path refid="cp" />
+				<path refid="test.lib" />
+				<pathelement location="${dir.test}" />
+				<pathelement location="./aion.jar" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="test" depends="test_build">
+		<mkdir dir="${test.report.dir}" />
+		<junit printsummary="on" haltonfailure="no" fork="true">
+			<jvmarg line="--add-modules java.xml.bind" />
+			<classpath>
+				<path refid="test.lib" />
+				<path refid="cp" />
+				<pathelement location="${dir.buildfile}" />
+				<pathelement location="${dir.test}" />
+				<pathelement location="./src/main/resource" />
+				<pathelement location="aion_fastvm/java/test" />
+				<pathelement location="./native" />
+			</classpath>
+
+			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
+			<batchtest todir="${test.report.dir}">
+				<fileset dir="src/libMcf/test" includes="**/*Test.java" />
+				<fileset dir="src/libPow/test" includes="**/*Test.java" />
+				<fileset dir="src/libAion/test" includes="**/*Test.java" />
+				<fileset dir="src/libAionApi/test" includes="**/*Test.java" />
+				<fileset dir="aion_fastvm/java/test" includes="**/*Test.java" />
+				<fileset dir="test/system-integration/kernel" includes="**/*Test.java" />
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="test_all" depends="clean, build, test, test_modules_collect_reports" />
+
+	<macrodef name="macro_collect_reports">
+		<attribute name="src" />
+		<attribute name="dest" />
+		<sequential>
+			<copy todir="@{dest}">
+				<fileset dir="@{src}" />
+			</copy>
+		</sequential>
+	</macrodef>
+
+	<target name="test_modules_collect_reports" depends="test_modules">
+		<mkdir dir="${test.report.dir}" />
+		<macro_collect_reports src="modAionBase/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="aion_kernel/modCrypto/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="aion_kernel/modP2pImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modTxPoolImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modRlp/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modDbImpl/report" dest="${test.report.dir}" />
+	</target>
+
+	<target name="clean_build" depends="clean, mod_build, build" />
+
+	<target name="clean_build_fatjar" depends="clean, mod_build, build_fatjar" />
+
+	<target name="build_test" depends="build, test" />
+
+	<target name="mod_build">
+		<echo message="compile debug is ${compile.debug}" />
+		<echo message="building modAionBase" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modLogger" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modLogger/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modRlp" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modRlp/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modP2p" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modP2p/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modP2pImpl" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modCrypto" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modTxPool" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modTxPool/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modTxPoolImpl" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modEvtMgr" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modEvtMgr/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modEvtMgrImpl" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modEvtMgrImpl/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modDbImpl" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modDbImpl/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modMcf" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modAion" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAion/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modAionImpl" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modApiServer" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modApiServer/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modBoot" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modBoot/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<!-- echo message="building fastvm" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modFastVM/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant -->
+	</target>
+
+	<target name="build_fatjar" depends="mod_build">
+
+		<mkdir dir="${dir.buildfile}" />
+		<mkdir dir="${dir.native}/linux/equihash" />
+		<mkdir dir="${dir.build.native}/linux/equihash" />
+
+		<copy includeemptydirs="false" todir="./build/native">
+			<fileset dir="./src/libPow/src/org/aion/equihash/native" />
+		</copy>
+
+		<javac debug="true" debuglevel="source,lines,vars" destdir="${dir.buildfile}" includeantruntime="false">
+			<compilerarg line="--add-modules=java.xml.bind -h ${dir.buildfile}/native" />
+			<src path="./src/libApibase/src" />
+			<src path="./src/libApiPow/src" />
+			<src path="./src/libMcf/src" />
+			<src path="./src/libAion/src" />
+			<src path="./src/libAionApi/src" />
+			<src path="./src/libPow/src" />
+			<src path="./src/main/src" />
+			<src path="./aion_fastvm/java/src" />
+			<classpath refid="cp" />
+		</javac>
+		<jar destfile="${dir.libfile}/aion.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<attribute name="Main-Class" value="org.aion.Aion" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="${dir.buildfile}" />
+
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/slf4j-api-1.7.25.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/commons-codec-1.10.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/commons-collections4-4.0.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/commons-lang3-3.4.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/guava-19.0.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/h2-mvstore-1.4.196.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/jctools-core-1.2.1.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/leveldb-api-0.9.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/leveldbjni-all-1.18.3.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/logback-core-1.2.3.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/logback-classic-1.2.3.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnmapdb.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnsc.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnzmq.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/protobuf-java-3.5.0.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libJson.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modEvtMgr.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modEvtMgrImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modLogger.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modP2p.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modP2pImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modAionBase.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modTxPool.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modTxPoolImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modDbImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modRlp.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modCrypto.jar" />
+		</jar>
+
+
+		<property environment="env" />
+		<fail unless="env.JAVA_HOME" message="JAVA_HOME not set" />
+
+		<!-- Set environment variable for LD_LIBRARY_PATH-->
+
+
+		<exec executable="g++" failonerror="true">
+			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -lsodium -o ./build/native/equiMiner.so "/> -->
+			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -I${dir.native}/linux/sodium -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ./build/native/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium"/> -->
+			<arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I${dir.build.native} -I${dir.native}/linux/sodium -mtune=generic -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ${dir.native}/linux/equihash/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium" />
+		</exec>
+
+	</target>
+
+	<target name="build" depends="mod_build">
+
+		<mkdir dir="${dir.buildfile}" />
+		<mkdir dir="${dir.native}/linux/equihash" />
+		<mkdir dir="${dir.build.native}/linux/equihash" />
+
+		<copy includeemptydirs="false" todir="./build/native">
+			<fileset dir="./modAionImpl/src/org/aion/equihash/native" />
+		</copy>
+
+		<copy includeemptydirs="false" todir="./build/native">
+			<fileset dir="./modAionImpl/build/native" />
+		</copy>
+
+		<property environment="env" />
+		<fail unless="env.JAVA_HOME" message="JAVA_HOME not set" />
+
+		<!-- Set environment variable for LD_LIBRARY_PATH-->
+
+
+		<exec executable="g++" failonerror="true">
+			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -lsodium -o ./build/native/equiMiner.so "/> -->
+			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -I${dir.native}/linux/sodium -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ./build/native/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium"/> -->
+			<arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I${dir.build.native} -I${dir.native}/linux/sodium -mtune=generic -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ${dir.native}/linux/equihash/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium" />
+		</exec>
+
+	</target>
+
+	<target name="clean">
+		<delete dir="./build" />
+		<delete dir="${test.report.dir}" />
+		<delete dir="${dir.pack}/config" />
+		<delete dir="${dir.pack}/web3" />
+		<delete file="${dir.pack}/aion.tar.bz2" />
+		<delete file="${dir.libfile}/aion.jar" />
+		<delete>
+			<fileset dir="${dir.libfile}" includes="**/mod*.jar" />
+		</delete>
+	</target>
+
+	<target name="pack_build">
+		<antcall target="clean_build">
+			<param name="compile.debug" value="off" />
+		</antcall>
+		<antcall target="pack" />
+	</target>
+
+	<target name="pack">
+		<mkdir dir="${dir.pack}" />
+		<delete file="${dir.pack}/aion.tar.gz" />
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/prepack.sh" />
+		</exec>
+		<tar destfile="${dir.pack}/aion.tar.bz2" compression="bzip2" longfile="gnu">
+			<tarfileset dir="${dir.libfile}" filemode="755" prefix="aion/lib">
+				<include name="*.jar" />
+				<exclude name="byte-buddy-*.jar" />
+				<exclude name="JUnitParams-*.jar" />
+				<exclude name="mockito-*.jar" />
+				<exclude name="objenesis-*.jar" />
+				<exclude name="truth-*.jar" />
+			</tarfileset>
+			<tarfileset dir="${dir.native}" filemode="755" prefix="${project.name}/native">
+				<include name="**" />
+			</tarfileset>
+			<tarfileset dir="${dir.workspace}/script" filemode="755" prefix="${project.name}">
+				<include name="aion.sh" />
+			</tarfileset>
+			<tarfileset dir="${dir.pack}/config" filemode="755" prefix="${project.name}/config">
+				<include name="**" />
+			</tarfileset>
+			<tarfileset dir="${dir.pack}/rt" filemode="755" prefix="${project.name}/rt">
+				<include name="**" />
+			</tarfileset>
+			<tarfileset dir="${dir.pack}/web3" filemode="755" prefix="${project.name}/web3">
+				<include name="**" />
+			</tarfileset>
+		</tar>
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/postpack.sh" />
+		</exec>
+	</target>
+</project>

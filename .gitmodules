@@ -1,0 +1,3 @@
+[submodule "aion_fastvm"]
+	path = aion_fastvm
+	url = https://github.com/aionnetwork/aion_fastvm
