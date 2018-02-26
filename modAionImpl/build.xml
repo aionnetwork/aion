@@ -84,9 +84,9 @@
 		</javac>
 
 		<jar destfile="modAionImpl.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
-		<move includeemptydirs="false" todir="${dir.lib}">
+		<copy includeemptydirs="false" todir="${dir.lib}">
 			<file file="modAionImpl.jar" />
-		</move>
+		</copy>
 	</target>
 
 
