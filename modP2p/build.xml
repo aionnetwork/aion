@@ -11,7 +11,11 @@
                 <pathelement location="${dir.lib}/modP2p.jar"/>
         </path>
 
-        <target name="clean_build" depends="clean, build"/>
+        <target name="clean_build" depends="clean">
+	        <antcall target="build">
+	            <param name="compile.debug" value="${compile.debug}"/>
+        	</antcall>
+	</target>
 
 	<target name="clean">
 		<delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
@@ -54,7 +58,7 @@
                 <mkdir dir="${dir.dest}"/>
                 <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/" />
 		<javac 
-			debug="true" 
+			debug="${compile.debug}"
 			debuglevel="source,lines,vars" 
 			includeAntRuntime="false" 
 			release="9"

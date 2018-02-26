@@ -36,7 +36,11 @@
     <pathelement location="${dir.dest}"/> 
   </path>
 
-  <target name="clean_build" depends="clean, build" />
+  <target name="clean_build" depends="clean">
+    <antcall target="build">
+      <param name="compile.debug" value="${compile.debug}"/>
+    </antcall>
+  </target>
 
   <target name="clean">
     <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
@@ -50,7 +54,7 @@
   <target name="build">
     <mkdir dir="${dir.dest}"/>
     <javac
-      debug="true"
+      debug="${compile.debug}"
       debuglevel="source,lines,vars"
       includeantruntime="false"
       release="9"
