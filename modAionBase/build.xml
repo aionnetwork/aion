@@ -31,7 +31,7 @@
             <file file="module-info.java" />
         </copy>
         <javac
-            debug="true"
+            debug="${compile.debug}"
             debuglevel="source,lines,vars"
             includeantruntime="false"
             release="9"
@@ -42,7 +42,11 @@
         <delete file="src/module-info.java" />
     </target>
 
-    <target name="build" depends="compile">
+    <target name="build">
+        <antcall target="compile">
+            <param name="compile.debug" value="${compile.debug}"/>
+        </antcall>
+
         <jar
             destfile="modAionBase.jar"
             filesetmanifest="mergewithoutmain"
@@ -53,7 +57,11 @@
         </copy>
     </target>
 
-    <target name="clean_build" depends="clean, build" />
+    <target name="clean_build" depends="clean" >
+        <antcall target="build">
+            <param name="compile.debug" value="${compile.debug}"/>
+        </antcall>
+    </target>
 
     <target name="test-compile" depends="compile">
         <mkdir dir="${test.build.dir}" />
@@ -72,7 +80,7 @@
     <target name="compile_v8">
         <mkdir dir="${main.build.dir}" />
         <javac
-            debug="true"
+            debug="${compile.debug}"
             debuglevel="source,lines,vars"
             includeantruntime="false"
             srcdir="${main.src.dir}"

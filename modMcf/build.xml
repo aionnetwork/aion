@@ -22,7 +22,11 @@
 		<pathelement location="${dir.lib}/modRlp.jar" />
 	</path>
 
-	<target name="clean_build" depends="clean, build" />
+	<target name="clean_build" depends="clean">
+	        <antcall target="build">
+            		<param name="compile.debug" value="${compile.debug}"/>
+	        </antcall>
+        </target>
 
 	<target name="clean">
 		<delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
@@ -60,7 +64,7 @@
 
 	<target name="build">
 		<mkdir dir="${dir.dest}" />
-		<javac failonerror="true" debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
+		<javac failonerror="true" debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
 			<compilerarg line="--add-modules java.xml"/>
 			<modulepath>
 				<!-- pathelement location="${dir.lib}/libnsc.jar" / -->
