@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import org.aion.mcf.valid.BlockNumberRule;
-import org.aion.a0.types.A0BlockHeader;
+import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

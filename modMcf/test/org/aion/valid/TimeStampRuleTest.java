@@ -4,8 +4,8 @@ package org.aion.valid;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
-import org.aion.valid.a0.TimeStampRule;
-import org.aion.a0.types.A0BlockHeader;
+import org.aion.zero.impl.valid.TimeStampRule;
+import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
