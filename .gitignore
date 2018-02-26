@@ -1,0 +1,4 @@
+# IntelliJ files
+.idea/
+mod*/.idea/
+mod*/*.iml
