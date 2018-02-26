@@ -25,49 +25,29 @@
 
 package org.aion.p2p;
 
-import java.util.List;
-import java.util.Map;
+import org.junit.Test;
+import java.util.concurrent.ThreadLocalRandom;
+import static junit.framework.Assert.assertEquals;
 
 /**
- *
- * @author chris
- *
+ * @author  chris
  */
-public interface IP2pMgr{
+public class CtrlTest {
 
-    /**
-     * @return Map
-     */
-    Map<Integer, INode> getActiveNodes();
+    @Test
+    public void testFilter() {
 
-    /**
-     * @param _hs List<Handler>
-     */
-    void register(final List<Handler> _hs);
+        /*
+         * active ctrls
+         */
+        byte c0 = (byte)ThreadLocalRandom.current().nextInt(0, 2);
+        assertEquals(c0, Ctrl.filter(c0));
 
-    /**
-     * @return INode
-     */
-    INode getRandom();
+        /*
+         * inactive ctrls
+         */
+        byte c1 = (byte)ThreadLocalRandom.current().nextInt(2, Byte.MAX_VALUE + 1);
+        assertEquals(Ctrl.UNKNOWN, Ctrl.filter(c1));
 
-    /**
-     * @param _nodeIdHashcode int
-     * @param _msg Msg
-     */
-    void send(final int _nodeIdHashcode, final Msg _msg);
-
-    /**
-     * Used to hook up with kernel
-     * to shutdown threads in network
-     * module
-     */
-    void shutdown();
-
-    /**
-     * start all p2p process
-     */
-    void run();
-
-
-    String version();
+    }
 }

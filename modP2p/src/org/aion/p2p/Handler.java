@@ -25,49 +25,33 @@
 
 package org.aion.p2p;
 
-import java.util.List;
-import java.util.Map;
-
 /**
- *
  * @author chris
- *
  */
-public interface IP2pMgr{
+public abstract class Handler {
+
+    private Header header;
 
     /**
-     * @return Map
+     * @param _ver short
+     * @param _ctrl byte
+     * @param _act byte
      */
-    Map<Integer, INode> getActiveNodes();
+    public Handler(short _ver, byte _ctrl, byte _act){
+        this.header = new Header(_ver, _ctrl, _act, 0);
+    }
 
     /**
-     * @param _hs List<Handler>
+     * @return Header
      */
-    void register(final List<Handler> _hs);
+    public Header getHeader(){
+        return this.header;
+    }
 
     /**
-     * @return INode
+     * @param _id int - node id hashcode
+     * @param _msg byte[]
      */
-    INode getRandom();
+    public abstract void receive(int _id, final byte[] _msg);
 
-    /**
-     * @param _nodeIdHashcode int
-     * @param _msg Msg
-     */
-    void send(final int _nodeIdHashcode, final Msg _msg);
-
-    /**
-     * Used to hook up with kernel
-     * to shutdown threads in network
-     * module
-     */
-    void shutdown();
-
-    /**
-     * start all p2p process
-     */
-    void run();
-
-
-    String version();
 }
