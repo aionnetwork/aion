@@ -1,0 +1,381 @@
+/*******************************************************************************
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ *     
+ ******************************************************************************/
+
+package org.aion.zero.impl;
+
+import org.aion.base.db.IRepository;
+import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
+import org.aion.mcf.blockchain.IPendingStateInternal;
+import org.aion.mcf.config.CfgNetP2p;
+import org.aion.mcf.db.IBlockStorePow;
+import org.aion.evtmgr.EventMgrModule;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.IEventMgr;
+import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.vm.PrecompiledContracts;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.blockchain.NonceMgr;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.pow.AionPoW;
+import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.sync.callback.*;
+import org.aion.zero.impl.tx.AionTransactionExecThread;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.AionTransaction;
+import org.aion.mcf.vm.types.DataWord;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogUtil;
+import org.aion.p2p.ICallback;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.a0.P2pMgr;
+import org.aion.mcf.tx.ITransactionExecThread;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+import java.util.*;
+
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+
+public class AionHub {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
+
+    private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
+    public static final String VERSION = "0.1.12";
+
+    private IP2pMgr p2pMgr;
+
+    private CfgAion cfg;
+
+    private SyncMgr syncMgr;
+
+    private IPendingStateInternal<AionBlock, AionTransaction> mempool;
+
+    private IAionBlockchain blockchain;
+
+    // TODO: Refactor to interface later
+    private AionRepositoryImpl repository;
+
+    private ITransactionExecThread<AionTransaction> txThread;
+
+    private IEventMgr eventMgr;
+
+    private AionPoW pow;
+
+    /**
+     * A "cached" block that represents our local best block when the
+     * application is first booted.
+     */
+    private volatile AionBlock startingBlock;
+
+    static private AionHub inst;
+
+    /**
+     * Initialize as per the <a href=
+     * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
+     * holder pattern
+     */
+    private static class Holder {
+        static final AionHub INSTANCE = new AionHub();
+    }
+
+    public static AionHub inst() {
+        return Holder.INSTANCE;
+    }
+
+    public AionHub() {
+
+        this.cfg = CfgAion.inst();
+
+        // load event manager before init blockchain instance
+        loadEventMgr();
+
+        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+        blockchain.setEventManager(this.eventMgr);
+        this.blockchain = blockchain;
+
+        this.repository = AionRepositoryImpl.inst();
+
+        this.mempool = AionPendingStateImpl.inst();
+
+        // nonceMgr init after the repo and the tx pending pool were inited!
+        blockchain.setNonceMgr(NonceMgr.inst());
+
+        this.txThread = AionTransactionExecThread.getInstance();
+
+        loadBlockchain();
+
+        this.startingBlock = this.blockchain.getBestBlock();
+
+        /*
+         * p2p hook up start sync mgr needs to be initialed after
+         * loadBlockchain() method
+         */
+        CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
+        this.p2pMgr = new P2pMgr(this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
+                cfgNetP2p.getDiscover(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog());
+        this.syncMgr = SyncMgr.inst();
+        this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
+                this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus());
+        registerCallback();
+        this.p2pMgr.run();
+
+        this.pow = new AionPoW();
+        this.pow.init(blockchain, mempool, eventMgr);
+    }
+
+    private void registerCallback() {
+        List<ICallback> cbs = new ArrayList<>();
+        cbs.add(new ReqStatusCallback(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
+        cbs.add(new ResStatusCallback(syncLog, this.p2pMgr, this.syncMgr));
+        cbs.add(new ReqBlocksHeadersCallback(syncLog, this.blockchain, this.p2pMgr));
+        cbs.add(new ResBlocksHeadersCallback(syncLog, this.syncMgr));
+        cbs.add(new ReqBlocksBodiesCallback(syncLog, this.blockchain, this.p2pMgr));
+        cbs.add(new ResBlocksBodiesCallback(syncLog, this.syncMgr));
+        cbs.add(new BroadcastTxCallback(syncLog, this.mempool, this.p2pMgr));
+        cbs.add(new BroadcastNewBlockCallback(syncLog, this.syncMgr));
+        this.p2pMgr.register(cbs);
+    }
+
+    /**
+     */
+    private void loadEventMgr() {
+
+        try {
+            ServiceLoader.load(EventMgrModule.class);
+        } catch (Exception e) {
+            LOG.error("load EventMgr service fail!" + e.toString());
+            throw e;
+        }
+
+        Properties prop = new Properties();
+        // TODO : move module name to config file
+        prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
+        try {
+            this.eventMgr = EventMgrModule.getSingleton(prop).getEventMgr();
+        } catch (Throwable e) {
+            LOG.error("Can not load the Event Manager Module", e.getMessage());
+        }
+
+        if (eventMgr == null) {
+            throw new NullPointerException();
+        }
+
+        this.eventMgr.start();
+    }
+
+    public IRepository getRepository() {
+        return repository;
+    }
+
+    public IAionBlockchain getBlockchain() {
+        return blockchain;
+    }
+
+    public IBlockStorePow<AionBlock, A0BlockHeader> getBlockStore() {
+        return this.repository.getBlockStore();
+    }
+
+    public IPendingStateInternal<AionBlock, AionTransaction> getPendingState() {
+        return mempool;
+    }
+
+    public IEventMgr getEventMgr() {
+        return this.eventMgr;
+    }
+
+    public ITransactionExecThread<AionTransaction> getTxThread() {
+        return this.txThread;
+    }
+
+    private void loadBlockchain() {
+
+        this.repository.getBlockStore().load();
+
+        AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
+
+        boolean recovered = true;
+        boolean bestBlockShifted = true;
+        int countRecoveryAttempts = 0;
+
+        // fix the trie if necessary
+        while (bestBlockShifted && // the best block was updated after recovery
+                                   // attempt
+                (countRecoveryAttempts < 5) && // allow 5 recovery attempts
+                bestBlock != null && // recover only for non-null blocks
+                !this.repository.isValidRoot(bestBlock.getStateRoot())) {
+
+            long bestBlockNumber = bestBlock.getNumber();
+            byte[] bestBlockRoot = bestBlock.getStateRoot();
+
+            recovered = this.blockchain.recoverWorldState(this.repository, bestBlockNumber);
+
+            if (recovered) {
+                bestBlock = this.repository.getBlockStore().getBestBlock();
+
+                // checking is the best block has changed since attempting
+                // recovery
+                if (bestBlock == null) {
+                    bestBlockShifted = true;
+                } else {
+                    bestBlockShifted = !(bestBlockNumber == bestBlock.getNumber()) || // block
+                                                                                      // number
+                                                                                      // changed
+                            !(Arrays.equals(bestBlockRoot, bestBlock.getStateRoot())); // root
+                                                                                       // hash
+                                                                                       // changed
+                }
+
+                if (bestBlockShifted) {
+                    LOG.info("Rebuilding world state SUCCEEDED. However, the best block CHANGED.");
+                    // reinitializing recovery flag in case this is the last
+                    // attempt
+                    recovered = false;
+                } else {
+                    LOG.info("Rebuilding world state SUCCEEDED.");
+                }
+            } else {
+                LOG.info("Rebuilding world state FAILED.");
+            }
+
+            countRecoveryAttempts++;
+        }
+
+        // rebuild from genesis if (1) no best block (2) recovery failed (3)
+        // best block changed
+        if (bestBlock == null || !recovered) {
+            if (bestBlock == null) {
+                LOG.info("DB is empty - adding Genesis");
+            } else {
+                LOG.info("DB could not be recovered - adding Genesis");
+            }
+
+            AionGenesis genesis = cfg.getGenesis();
+
+            // initialization section for network balance contract
+            IRepositoryCache track = repository.startTracking();
+
+            Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
+            track.createAccount(networkBalanceAddress);
+
+            for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
+                track.addStorageRow(networkBalanceAddress, new DataWord(addr.getKey()), new DataWord(addr.getValue()));
+            }
+
+            for (Address addr : genesis.getPremine().keySet()) {
+                track.createAccount(addr);
+                track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
+            }
+            track.flush();
+
+            repository.commitBlock(genesis.getHeader());
+            this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+            blockchain.setBestBlock(genesis);
+            blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+
+            if (this.eventMgr != null) {
+                List<IEvent> evts = new ArrayList<>();
+                evts.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
+                evts.add(new EventBlock(EventBlock.CALLBACK.ONTRACE0));
+
+                this.eventMgr.registerEvent(evts);
+            } else {
+                LOG.error("Event manager is null !!!");
+                System.exit(-1);
+            }
+
+            LOG.info("loaded genesis block <num={}, root={}>", 0, ByteUtil.toHexString(genesis.getStateRoot()));
+
+        } else {
+
+            blockchain.setBestBlock(bestBlock);
+            BigInteger totalDifficulty = this.repository.getBlockStore().getTotalDifficulty();
+            blockchain.setTotalDifficulty(totalDifficulty);
+            LOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
+                    LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
+        }
+
+        if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
+            this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
+        }
+
+        this.repository.getBlockStore().load();
+    }
+
+    public void close() {
+        LOG.info("<KERNEL SHUTDOWN SEQUENCE>");
+
+        if (syncMgr != null) {
+            LOG.info("<SYNC> shutting down syncMgr...");
+            syncMgr.shutdown();
+            LOG.info("<SYNC> shutdown syncMgr... Done!");
+        }
+
+        if (txThread != null) {
+            txThread.shutdown();
+            LOG.info("<shutdown-tx>");
+        }
+
+        if (eventMgr != null) {
+            try {
+                eventMgr.shutDown();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        LOG.info("shutting down consensus...");
+        pow.shutdown();
+        LOG.info("shutdown consensus... Done!");
+
+        if (repository != null) {
+            LOG.info("shutting down DB...");
+            repository.close();
+            LOG.info("shutdown DB... Done!");
+        }
+    }
+
+    public SyncMgr getSyncMgr() {
+        return this.syncMgr;
+    }
+
+    public IP2pMgr getP2pMgr() {
+        return this.p2pMgr;
+    }
+
+    public static String getRepoVersion() {
+        return AionRepositoryImpl.VERSION;
+    }
+
+    public AionBlock getStartingBlock() {
+        return this.startingBlock;
+    }
+}
