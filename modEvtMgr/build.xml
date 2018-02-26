@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="mod-event-manager">
 	<property name="dir.lib" value="../lib" />
+        <property name="dir.mod" value="../mod" />
 	<property name="dir.dest" value="./build" />
 
 	<target name="clean_build" depends="clean">
@@ -11,14 +12,13 @@
 
 	<target name="clean">
 		<delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
-		<delete file="modEvtMgr.jar" />
-		<delete file="${dir.lib}/modEvtMgr.jar" />
+		<delete file="${dir.mod}/modEvtMgr.jar" />
 	</target>
 	<target name="build">
 		<mkdir dir="${dir.dest}" />
 		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java" />
 		<jar destfile="modEvtMgr.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
-		<move includeemptydirs="false" todir="${dir.lib}">
+		<move includeemptydirs="false" todir="${dir.mod}">
 			<file file="modEvtMgr.jar" />
 		</move>
 	</target>

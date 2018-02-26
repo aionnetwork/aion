@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="modAionImpl">
 	<property name="dir.lib" value="../lib" />
+        <property name="dir.mod" value="../mod" />
 	<property name="dir.dest" value="./build/main" />
 	<property name="dir.native" value="./build/native" />
 	<property name="dir.test" value="./build/test" />
@@ -62,29 +63,29 @@
 			<src path="../aion_fastvm/java/" />
 			<compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
 			<modulepath>
-				<pathelement location="${dir.lib}/modRlp.jar" />
-				<pathelement location="${dir.lib}/modAionBase.jar" />
-				<pathelement location="${dir.lib}/modCrypto.jar" />
-				<pathelement location="${dir.lib}/modMcf.jar" />
-				<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
-				<pathelement location="${dir.lib}/modLogger.jar" />
-				<pathelement location="${dir.lib}/modP2pImpl.jar" />
-				<pathelement location="${dir.lib}/modP2p.jar" />
-				<pathelement location="${dir.lib}/modEvtMgr.jar" />
-				<pathelement location="${dir.lib}/modEvtMgrImpl.jar" />
-				<pathelement location="${dir.lib}/modDbImpl.jar" />
-				<pathelement location="${dir.lib}/modAion.jar" />
-				<pathelement location="${dir.lib}/modTxPool.jar" />
+				<pathelement location="${dir.mod}/modRlp.jar" />
+				<pathelement location="${dir.mod}/modAionBase.jar" />
+				<pathelement location="${dir.mod}/modCrypto.jar" />
+				<pathelement location="${dir.mod}/modMcf.jar" />
+				<pathelement location="${dir.mod}/modLogger.jar" />
+				<pathelement location="${dir.mod}/modP2pImpl.jar" />
+				<pathelement location="${dir.mod}/modP2p.jar" />
+				<pathelement location="${dir.mod}/modEvtMgr.jar" />
+				<pathelement location="${dir.mod}/modEvtMgrImpl.jar" />
+				<pathelement location="${dir.mod}/modDbImpl.jar" />
+				<pathelement location="${dir.mod}/modAion.jar" />
+				<pathelement location="${dir.mod}/modTxPool.jar" />
 				<pathelement location="${dir.lib}/libJson.jar" />
 				<pathelement location="${dir.lib}/commons-lang3-3.4.jar" />
 				<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
 				<pathelement location="${dir.lib}/guava-19.0.jar" />
 				<pathelement location="${dir.lib}/libnsc.jar" />
+                                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 			</modulepath>
 		</javac>
 
 		<jar destfile="modAionImpl.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
-		<copy includeemptydirs="false" todir="${dir.lib}">
+		<copy includeemptydirs="false" todir="${dir.mod}">
 			<file file="modAionImpl.jar" />
 		</copy>
 	</target>

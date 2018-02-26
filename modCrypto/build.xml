@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="Crypto project">
 	<property name="dir.lib" value="../lib" />
+        <property name="dir.mod" value="../mod" />
 	<property name="dir.dest" value="./build" />
 	<property name="dir.javaAPIlib" value="../javaAPIlib" />
 
@@ -13,8 +14,8 @@
 
 	<path id="classpath.dependency">
 		<pathelement location="${dir.lib}/libnsc.jar" />
-		<pathelement location="${dir.lib}/modAionBase.jar" />
-		<pathelement location="${dir.lib}/modRlp.jar" />
+		<pathelement location="${dir.mod}/modAionBase.jar" />
+		<pathelement location="${dir.mod}/modRlp.jar" />
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 	</path>
 
@@ -47,8 +48,7 @@
 		<delete dir="${test.build.dir}" includeEmptyDirs="true" />
 		<delete dir="${test.report.dir}" includeEmptyDirs="true" />
 		<delete dir="${native.dir}" />
-		<delete file="modCrypto.jar" />
-		<delete file="${dir.lib}/modCrypto.jar" />
+		<delete file="${dir.mod}/modCrypto.jar" />
 	</target>
 
 	<target name="build">
@@ -60,7 +60,7 @@
 		</javac>
 
 		<jar destfile="modCrypto.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
-		<copy includeemptydirs="false" todir="${dir.lib}">
+		<copy includeemptydirs="false" todir="${dir.mod}">
 			<file file="modCrypto.jar" />
 		</copy>
 
