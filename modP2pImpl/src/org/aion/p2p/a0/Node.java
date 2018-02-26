@@ -39,11 +39,11 @@ import org.aion.p2p.INode;
  */
 
 public final class Node implements INode{
-    
-    private static final String PATTERN_P2P = 
-        "^p2p://[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" + 
-        "@([01]?\\d\\d?|2[0-4]\\d|25[0-5]).([01]?\\d\\d?|2[0-4]\\d|25[0-5]).([01]?\\d\\d?|2[0-4]\\d|25[0-5]).([01]?\\d\\d?|2[0-4]\\d|25[0-5])" + 
-        ":$";
+
+    private static final String PATTERN_P2P =
+        "^p2p:\\/\\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" +
+        "@(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])" +
+        ":[0-9]+$";
     
     private static Pattern regexP2p = Pattern.compile(PATTERN_P2P);
     
@@ -199,7 +199,7 @@ public final class Node implements INode{
 
     public static Node parseEnode(final boolean fromBootList, final String _enode) {
         Node node = null;
-        if(regexP2p.matcher(_enode) != null) {
+        if (regexP2p.matcher(_enode).find()) {
             String[] arrs = _enode.split("@");
             byte[] _tempBytes = arrs[0].getBytes();
             if(_tempBytes.length != 42)
