@@ -435,7 +435,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         public BlockInfo() {};
 
         public BlockInfo(byte[] ser) {
-            RLPList list = (RLPList) RLP.decode2(ser).get(0);
+            RLPList outerList = RLP.decode2(ser);
+
+            // should we throw?
+            if (outerList.isEmpty())
+                return;
+
+            RLPList list = (RLPList) outerList.get(0);
             this.hash = list.get(0).getRLPData();
             this.cummDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
 
@@ -484,6 +490,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     private static class MigrationRedirectingInputStream extends ObjectInputStream {
+
         public MigrationRedirectingInputStream(InputStream in) throws IOException {
             super(in);
         }
