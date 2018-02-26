@@ -33,58 +33,39 @@ import java.nio.ByteBuffer;
  *
  */
 public final class Helper {
-
     protected final static char[] decimalArray = "0123456789".toCharArray();
-    
+    private static final int SIZE_BYTES_IPV4 = 8;
+
     /**
      * TODO: need interface to cover these 2 methods
      */
     public static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
-        String[] frags = _ip.split("\\.");          
+        String[] frags = _ip.split("\\.");
         for(String frag : frags) {
             short ipFrag = 0;
             try {
                 ipFrag = Short.parseShort(frag);
             } catch (NumberFormatException e) {
-                
+
             }
-            bb8.putShort(ipFrag); 
+            bb8.putShort(ipFrag);
         }
         return bb8.array();
     }
-    
+
     public static String ipBytesToStr(final byte[] _ip) {
-        ByteBuffer bb2 = ByteBuffer.allocate(2);
-        if(_ip == null || _ip.length != 8)
+        if(_ip == null || _ip.length != SIZE_BYTES_IPV4)
             return "";
         else {
-            /**
-             * TODO: ugly
-             */
+            short[] shorts = new short[_ip.length/2];
+            ByteBuffer.wrap(_ip).asShortBuffer().get(shorts);
+
             String ip = "";
-            bb2.put(_ip[0]);
-            bb2.put(_ip[1]);
-            bb2.flip();
-            ip += bb2.getShort() + "."; 
-            
-            bb2.clear();
-            bb2.put(_ip[2]);
-            bb2.put(_ip[3]);
-            bb2.flip();
-            ip += bb2.getShort() + ".";
-            
-            bb2.clear();
-            bb2.put(_ip[4]);
-            bb2.put(_ip[5]);
-            bb2.flip();
-            ip += bb2.getShort() + ".";
-            
-            bb2.clear();
-            bb2.put(_ip[6]);
-            bb2.put(_ip[7]);
-            bb2.flip();
-            ip += bb2.getShort();
+            for (int i = 0; i < shorts.length; i++) {
+                ip += shorts[i] + (i < shorts.length - 1 ? "." : "");
+            }
+
             return ip;
         }
     }
