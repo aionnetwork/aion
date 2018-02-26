@@ -22,12 +22,13 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
-import org.aion.dbmgr.common.DBVendor;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import org.aion.db.impl.DBVendor;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;

@@ -26,11 +26,11 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
+import org.aion.db.impl.DBVendor;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.exception.InvalidFilePathException;
-import org.aion.dbmgr.common.DBVendor;
-import org.aion.dbmgr.common.DatabaseFactory;
-import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
+import org.aion.db.impl.DatabaseFactory;
+//import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.trie.JournalPruneDataSource;
@@ -146,10 +146,10 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             for (String v : this.cfg.getVendorList()) {
                 vendorListString.add("\"" + v + "\"");
             }
-            throw new DriverManagerNoSuitableDriverRegisteredException(
-                    "Please check the vendor name field in /config/config.xml.\n"
-                            + "No suitable driver found with name \"" + this.cfg.getActiveVendor()
-                            + "\".\nPlease select a driver from the following vendor list: " + vendorListString);
+//            throw new DriverManagerNoSuitableDriverRegisteredException(
+//                    "Please check the vendor name field in /config/config.xml.\n"
+//                            + "No suitable driver found with name \"" + this.cfg.getActiveVendor()
+//                            + "\".\nPlease select a driver from the following vendor list: " + vendorListString);
         }
 
         Properties sharedProps = new Properties();

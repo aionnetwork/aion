@@ -1,4 +1,4 @@
-module aion.zero {
+module aion.zero.impl {
 
     requires aion.base;
     requires aion.mcf;
@@ -12,8 +12,8 @@ module aion.zero {
     requires aion.evtmgr.impl;
     requires aion.txpool;
     requires aion.crypto;
-    requires aion.dbmgr;
-    requires aion.zero.api;
+    requires aion.db.impl;
+    requires aion.zero;
 
     exports org.aion.zero.impl.blockchain;
     exports org.aion.solidity;

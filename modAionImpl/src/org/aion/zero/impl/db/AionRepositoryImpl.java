@@ -549,8 +549,8 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     /**
      * Retrieves the underlying state database that sits below all caches. This
-     * is usually provided by {@link org.aion.dbmgr.driver.leveldb.LevelDB} or
-     * {@link org.aion.dbmgr.driver.leveldb.LevelDB}.
+     * is usually provided by {@link org.aion.db.impl.leveldb.LevelDB} or
+     * {@link org.aion.db.impl.leveldb.LevelDB}.
      * <p>
      * Note that referencing the state database directly is unsafe, and should
      * only be used for debugging and testing purposes.
@@ -563,8 +563,8 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     /**
      * Retrieves the underlying details database that sits below all caches.
-     * This is usually provided by {@link org.aion.dbmgr.driver.mockdb.MockDB}
-     * or {@link org.aion.dbmgr.driver.mockdb.MockDB}.
+     * This is usually provided by {@link org.aion.db.impl.mockdb.MockDB}
+     * or {@link org.aion.db.impl.mockdb.MockDB}.
      * <p>
      * Note that referencing the state database directly is unsafe, and should
      * only be used for debugging and testing purposes.

@@ -32,7 +32,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.dbmgr.common.DBVendor;
+import org.aion.db.impl.DBVendor;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.ChainConfiguration;

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aion>
+	<mode>aion</mode>
+	<id>[NODE-ID-PLACEHOLDER]</id>
+	<version>0.0.1</version>
+	<api>
+		<rpc active="true" ip="127.0.0.1" port="8545"></rpc>
+		<java active="true" ip="127.0.0.1" port="8547"></java>
+	</api>
+	<net>
+		<nodes>
+			<node>p2p://2da62542-999f-4405-bdb3-50d8c61bed61@52.237.31.69:30303</node>
+			<node>p2p://c1f42646-279a-441e-bba7-bfebfc1eec63@52.179.100.107:30303</node>
+			<node>p2p://d9242b38-cf4e-4654-9995-2727fee3dd9d@13.95.218.95:30303</node>
+			<node>p2p://0466a78b-814b-4a5d-844e-7054e48f0d28@191.232.176.213:30303</node>
+		</nodes>
+		<p2p>
+			<ip>127.0.0.1</ip>
+			<port>30303</port>
+			<discover>false</discover>
+			<show-status>false</show-status>
+		</p2p>
+	</net>
+	<sync>
+		<blocks-import-max>192</blocks-import-max>
+		<blocks-queue-max>2000</blocks-queue-max>
+		<show-status>false</show-status>
+	</sync>
+	<consensus>
+		<mining>true</mining>
+		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
+		<cpu-mine-threads>2</cpu-mine-threads>
+		<extra-data>AION</extra-data>
+	</consensus>
+	<db>
+		<path>database</path>
+		<vendor>leveldb</vendor>
+		<enable_db_cache>true</enable_db_cache>
+		<enable_db_compression>true</enable_db_compression>
+	</db>
+	<log>
+		<GEN>INFO</GEN>
+		<VM>ERROR</VM>
+		<SYNC>INFO</SYNC>
+		<CONS>INFO</CONS>
+		<DB>ERROR</DB>
+	</log>
+</aion>

@@ -6,7 +6,7 @@ module aion.mcf {
     requires aion.log;
     requires java.xml;
     requires aion.rlp;
-    requires aion.dbmgr;
+    requires aion.db.impl;
     requires slf4j.api;
     
 

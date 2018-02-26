@@ -1,4 +1,4 @@
-module aion.zero.api {
+module aion.zero {
 
     requires aion.base;
     requires aion.rlp;

@@ -2,7 +2,7 @@ package org.aion.trie;
 
 import junitparams.JUnitParamsRunner;
 import org.aion.crypto.HashUtil;
-import org.aion.dbmgr.driver.mockdb.MockDB;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;

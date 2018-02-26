@@ -72,7 +72,7 @@
 				<pathelement location="${dir.lib}/modP2p.jar" />
 				<pathelement location="${dir.lib}/modEvtMgr.jar" />
 				<pathelement location="${dir.lib}/modEvtMgrImpl.jar" />
-				<pathelement location="${dir.lib}/modDbMgr.jar" />
+				<pathelement location="${dir.lib}/modDbImpl.jar" />
 				<pathelement location="${dir.lib}/modAion.jar" />
 				<pathelement location="${dir.lib}/modTxPool.jar" />
 				<pathelement location="${dir.lib}/libJson.jar" />

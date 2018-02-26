@@ -3,7 +3,7 @@ package org.aion.trie;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.crypto.HashUtil;
-import org.aion.dbmgr.driver.mockdb.MockDB;
+import org.aion.db.impl.mockdb.MockDB;
 import org.aion.mcf.trie.TrieImpl;
 import org.junit.Assert;
 import org.junit.Test;
