@@ -25,12 +25,15 @@
 package org.aion.zero.impl.db;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.util.ByteUtil;
 import org.aion.mcf.db.AbstractPowBlockstore;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.rlp.RLP;
+import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
@@ -429,6 +432,17 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     public static class BlockInfo implements Serializable {
 
+        public BlockInfo() {};
+
+        public BlockInfo(byte[] ser) {
+            RLPList list = (RLPList) RLP.decode2(ser).get(0);
+            this.hash = list.get(0).getRLPData();
+            this.cummDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
+
+            byte[] boolData = list.get(2).getRLPData();
+            this.mainChain = !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
+        }
+
         private static final long serialVersionUID = 7279277944605144671L;
 
         public byte[] hash;
@@ -460,32 +474,77 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         public void setMainChain(boolean mainChain) {
             this.mainChain = mainChain;
         }
+
+        public byte[] getEncoded() {
+            byte[] hashElement = RLP.encodeElement(hash);
+            byte[] cumulativeDiffElement = RLP.encodeElement(cummDifficulty.toByteArray());
+            byte[] mainChainElement = RLP.encodeByte(mainChain ? (byte) 0x1 : (byte) 0x0);
+            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement);
+        }
     }
+
+    private static class MigrationRedirectingInputStream extends ObjectInputStream {
+        public MigrationRedirectingInputStream(InputStream in) throws IOException {
+            super(in);
+        }
+
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+            if (desc.getName().equals("org.aion.db.a0.AionBlockStore$BlockInfo"))
+                return BlockInfo.class;
+            return super.resolveClass(desc);
+        }
+    }
+
+    /**
+     * Called by {@link AionBlockStore#BLOCK_INFO_SERIALIZER} for now, on main-net launch
+     * we should default to this class.
+     */
+    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_RLP_SERIALIZER = new Serializer<List<BlockInfo>,byte[]>() {
+        @Override
+        public byte[] serialize(List<BlockInfo> object) {
+            byte[][] infoList = new byte[object.size()][];
+            int i = 0;
+            for (BlockInfo b : object) {
+                infoList[i] = b.getEncoded();
+                i++;
+            }
+            return RLP.encodeList(infoList);
+        }
+
+        @Override
+        public List<BlockInfo> deserialize(byte[] stream) {
+            RLPList list = (RLPList) RLP.decode2(stream).get(0);
+            List<BlockInfo> res = new ArrayList<>(list.size());
+
+            for (int i = 0; i < list.size(); i++) {
+                res.add(new BlockInfo(list.get(i).getRLPData()));
+            }
+            return res;
+        }
+    };
 
     public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<List<BlockInfo>, byte[]>() {
 
         @Override
         public byte[] serialize(List<BlockInfo> value) {
-            try {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.writeObject(value);
-
-                byte[] data = bos.toByteArray();
-                return data;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return BLOCK_INFO_RLP_SERIALIZER.serialize(value);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public List<BlockInfo> deserialize(byte[] bytes) {
             try {
-                ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
-                ObjectInputStream ois = new ObjectInputStream(bis);
-                return (List<BlockInfo>) ois.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                throw new RuntimeException(e);
+                return BLOCK_INFO_RLP_SERIALIZER.deserialize(bytes);
+            } catch (Exception e) {
+                // fallback logic for old block infos
+                try {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
+                    ObjectInputStream ois = new MigrationRedirectingInputStream(bis);
+                    return (List<BlockInfo>) ois.readObject();
+                } catch (IOException | ClassNotFoundException e2) {
+                    throw new RuntimeException(e2);
+                }
             }
         }
     };
