@@ -379,7 +379,7 @@
 			<tarfileset dir="${dir.native}" filemode="755" prefix="${project.name}/native">
 				<include name="**" />
 			</tarfileset>
-			<tarfileset dir="./" filemode="755" prefix="${project.name}">
+			<tarfileset dir="${dir.workspace}" filemode="755" prefix="${project.name}">
 				<include name="aion.sh" />
 			</tarfileset>
 			<tarfileset dir="${dir.pack}/config" filemode="755" prefix="${project.name}/config">

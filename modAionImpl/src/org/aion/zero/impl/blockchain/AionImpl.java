@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
@@ -276,8 +277,8 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address, long blockNumber) {
         try {
-            byte[] bestBlockHash = this.aionHub.getBlockStore().getBlockHashByNumber(blockNumber);
-            AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(bestBlockHash)
+            byte[] stateRoot = this.aionHub.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot();
+            AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 
             if (account == null)
@@ -294,7 +295,8 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address, byte[] blockHash) {
         try {
-            AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(blockHash)
+            byte[] stateRoot = this.aionHub.getBlockchain().getBlockByHash(blockHash).getStateRoot();
+            AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 
             if (account == null)
@@ -310,8 +312,8 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address) {
         try {
-            byte[] blockHash = this.aionHub.getBlockchain().getBestBlock().getHash();
-            AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(blockHash)
+            byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
+            AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 
             if (account == null)
@@ -322,5 +324,13 @@ public class AionImpl implements IAionChain {
             LOG.debug("query request failed", e);
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<ByteArrayWrapper> getCode(Address address) {
+        byte[] code = this.aionHub.getRepository().getCode(address);
+        if (code == null)
+            return Optional.empty();
+        return Optional.of(new ByteArrayWrapper(code));
     }
 }

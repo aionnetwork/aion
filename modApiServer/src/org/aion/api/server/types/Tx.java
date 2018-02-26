@@ -59,11 +59,12 @@ public class Tx {
 
     public NumericalValue blockNumber;
 
-    public Tx(String address, String hash, NumericalValue nonce, String from, String to, NumericalValue timestamp,
+    public Tx(String address, String hash, String blockHash, NumericalValue nonce, String from, String to, NumericalValue timestamp,
             NumericalValue value, String input, NumericalValue blockNumber, NumericalValue gas, NumericalValue gasPrice,
             NumericalValue transactionIndex) {
         this.address = address;
         this.transactionHash = hash;
+        this.blockHash =  blockHash;
         this.nonce = nonce;
         this.from = TypeConverter.toJsonHex(from);
         this.to = to == null ? null : TypeConverter.toJsonHex(to);
