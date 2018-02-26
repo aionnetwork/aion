@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="mod-txpool">
+	<property name="dir.lib" value="../../lib" />
+	<property name="dir.dest" value="./build" />
+
+	<target name="clean_build" depends="clean">
+		<antcall target="build">
+			<param name="compile.debug" value="${compile.debug}" />
+		</antcall>
+	</target>
+
+	<target name="clean">
+		<delete dir="bin" includeEmptyDirs="true" includes="**/*/" />
+		<delete file="modTxPool.jar" />
+		<delete file="${dir.lib}/modTxPool.jar" />
+	</target>
+
+	<target name="build">
+		<mkdir dir="${dir.dest}" />
+		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java, module-info.java">
+			<modulepath>
+				<pathelement location="${dir.lib}/modAionBase.jar" />
+			</modulepath>
+		</javac>
+		<jar destfile="modTxPool.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
+		<move includeemptydirs="false" todir="${dir.lib}">
+			<file file="modTxPool.jar" />
+		</move>
+	</target>
+</project>

@@ -140,7 +140,7 @@ public class AionPendingStateImpl
 
         Properties prop = new Properties();
 
-        prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.a0.TxPoolA0");
+        prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
         // The BlockEnergyLimit will be updated when the best block found.
         prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, "1000000");
         prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, "16000000");

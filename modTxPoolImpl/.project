@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>modTxPoolImpl</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>libAionApi</name>
+			<type>2</type>
+			<location>/home/jay/workspace2/aion0/src/libAionApi/src</location>
+		</link>
+		<link>
+			<name>libFvm</name>
+			<type>2</type>
+			<location>/home/jay/workspace2/aion0/src/libFvm/src</location>
+		</link>
+		<link>
+			<name>libMcf</name>
+			<type>2</type>
+			<location>/home/jay/workspace2/aion0/src/libMcf/src</location>
+		</link>
+	</linkedResources>
+</projectDescription>
