@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project basedir="." default="build" name="mod-p2p-interface">	
+<project basedir="." default="build" name="mod-p2p-interface">
         <property name="dir.lib" value="../../lib" />
         <property name="dir.dest" value="./build/main" />
         <property name="dir.test" value="./build/test" />
@@ -26,10 +26,10 @@
 
         <target name="test_build" depends="build">
                 <mkdir dir="${dir.test}"/>
-                <javac 
-                        debug="on" 
-                        debuglevel="source,lines,vars" 
-                        includeantruntime="false" 
+                <javac
+                        debug="on"
+                        debuglevel="source,lines,vars"
+                        includeantruntime="false"
                         release="9"
                         srcdir="./test"
                         destdir="${dir.test}"
@@ -57,22 +57,22 @@
 	<target name="build">
                 <mkdir dir="${dir.dest}"/>
                 <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/" />
-		<javac 
+		<javac
 			debug="${compile.debug}"
-			debuglevel="source,lines,vars" 
-			includeAntRuntime="false" 
+			debuglevel="source,lines,vars"
+			includeAntRuntime="false"
 			release="9"
 			srcdir="./"
 			destdir="${dir.dest}"
 			includes="src/**/*.java,module-info.java"
 		/>
-		<jar 
-			destfile="modP2p.jar" 
+		<jar
+			destfile="modP2p.jar"
 			filesetmanifest="mergewithoutmain"
-			basedir="${dir.dest}" 
+			basedir="${dir.dest}"
 		/>
-		<move includeemptydirs="false" todir="${dir.lib}">
+		<copy includeemptydirs="false" todir="${dir.lib}">
 			<file file="modP2p.jar"/>
-		</move>
+		</copy>
 	</target>
 </project>

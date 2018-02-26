@@ -82,8 +82,8 @@
 		</javac>
 
 		<jar destfile="modMcf.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
-		<move includeemptydirs="false" todir="${dir.lib}">
+		<copy includeemptydirs="false" todir="${dir.lib}">
 			<file file="modMcf.jar" />
-		</move>
+		</copy>
 	</target>
 </project>
