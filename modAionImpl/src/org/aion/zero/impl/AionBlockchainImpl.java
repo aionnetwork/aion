@@ -128,7 +128,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     long exitOn = Long.MAX_VALUE;
 
-    public boolean byTest = false;
     private boolean fork = false;
 
     private Address minerCoinbase;
@@ -146,8 +145,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * us different configurations.
      */
     private ChainConfiguration chainConfiguration;
-
-    private AtomicInteger flushCounter = new AtomicInteger(0);
 
     /**
      * Helper method for generating the adapter between this class and
@@ -413,9 +410,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             this.repository.syncToRoot(block.getStateRoot());
 
             // flushing
-            if (!byTest) {
-                flush();
-            }
+            flush();
 
             dropState();
         } else {
@@ -559,13 +554,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             summary.setTotalDifficulty(getTotalDifficulty());
 
             storeBlock(block, receipts);
-
-            flushCounter.getAndIncrement();
-            // TODO: change back to every block after testing
-            if (!byTest && flushCounter.get() == config.getFlushInterval()) {
-                flushCounter.set(0);
-                flush();
-            }
         }
 
         return summary;
