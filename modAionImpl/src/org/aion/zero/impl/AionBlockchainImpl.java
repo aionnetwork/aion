@@ -735,6 +735,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     private boolean isValid(AionBlock block) {
 
+        if (block == null) {
+            return false;
+        }
+
         boolean isValid = true;
 
         if (!block.isGenesis()) {
@@ -750,7 +754,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             List<AionTransaction> txs = block.getTransactionsList();
-            if (!txs.isEmpty()) {
+            if (txs != null && !txs.isEmpty()) {
                 IRepository parentRepo = repository;
                 if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
                     parentRepo = repository.getSnapshotTo(getBlockByHash(block.getParentHash()).getStateRoot());
