@@ -52,9 +52,9 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
-import org.aion.p2p.ICallback;
+import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.a0.P2pMgr;
+import org.aion.p2p.impl.P2pMgr;
 import org.aion.mcf.tx.ITransactionExecThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +153,7 @@ public class AionHub {
     }
 
     private void registerCallback() {
-        List<ICallback> cbs = new ArrayList<>();
+        List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusCallback(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusCallback(syncLog, this.p2pMgr, this.syncMgr));
         cbs.add(new ReqBlocksHeadersCallback(syncLog, this.blockchain, this.p2pMgr));

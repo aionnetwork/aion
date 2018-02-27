@@ -51,10 +51,10 @@ public interface IP2pMgr{
     INode getRandom();
 
     /**
-     * @param _channelId int
+     * @param _id int
      * @param _msg Msg
      */
-    void send(int _channelId, final Msg _msg);
+    void send(int _id, final Msg _msg);
 
     /**
      * Used to hook up with kernel

@@ -33,25 +33,52 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.zero.impl.sync;
 
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author chris
  */
-public final class ReqStatus extends Msg {
+public final class Act {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
-    }
+    public static final byte REQ_STATUS = 0;
 
-    @Override
-    public byte[] encode() {
-        return null;
+    public static final byte RES_STATUS = 1;
+
+    public static final byte REQ_BLOCKS_HEADERS = 2;
+
+    public static final byte RES_BLOCKS_HEADERS = 3;
+
+    public static final byte REQ_BLOCKS_BODIES = 4;
+
+    public static final byte RES_BLOCKS_BODIES = 5;
+
+    public static final byte BROADCAST_TX = 6;
+
+    public static final byte BROADCAST_NEWBLOCK = 7;
+
+    public static final byte UNKNOWN = Byte.MAX_VALUE;
+
+    private static Set<Byte> active = new HashSet<>() {{
+        add(REQ_STATUS);
+        add(RES_STATUS);
+        add(REQ_BLOCKS_HEADERS);
+        add(RES_BLOCKS_HEADERS);
+        add(REQ_BLOCKS_BODIES);
+        add(RES_BLOCKS_BODIES);
+        add(BROADCAST_TX);
+        add(BROADCAST_NEWBLOCK);
+    }};
+
+    /**
+     * @param _act byte
+     * @return byte
+     * method provided to filter any decoded sync action (byte)
+     */
+    static byte filter(byte _act){
+        return active.contains(_act) ? _act : UNKNOWN;
     }
 
 }

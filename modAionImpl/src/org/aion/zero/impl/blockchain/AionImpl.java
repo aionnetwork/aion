@@ -93,7 +93,7 @@ public class AionImpl implements IAionChain {
             Map<Integer, INode> activeNodes = this.aionHub.getP2pMgr().getActiveNodes();
             synchronized (activeNodes) {
                 for (Map.Entry<Integer, INode> e : activeNodes.entrySet()) {
-                    this.aionHub.getP2pMgr().send(e.getValue().getId(), new BroadcastNewBlock(block));
+                    this.aionHub.getP2pMgr().send(e.getKey(), new BroadcastNewBlock(block));
                 }
             }
         }

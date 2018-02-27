@@ -287,7 +287,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _showStatus flag to show status
      * @param _showLog flag to show log
      */
-    P2pMgr(final String _nodeId, final String _ip, final int _port, final String[] _bootNodes,
+    public P2pMgr(final String _nodeId, final String _ip, final int _port, final String[] _bootNodes,
            final boolean _upnpEnable, final boolean _showStatus, final boolean _showLog) {
         byte[] selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
