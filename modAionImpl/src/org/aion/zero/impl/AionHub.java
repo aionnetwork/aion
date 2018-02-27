@@ -334,9 +334,13 @@ public class AionHub {
         LOG.info("<KERNEL SHUTDOWN SEQUENCE>");
 
         if (syncMgr != null) {
-            LOG.info("<SYNC> shutting down syncMgr...");
             syncMgr.shutdown();
-            LOG.info("<SYNC> shutdown syncMgr... Done!");
+            LOG.info("<shutdown-sync-mgr>");
+        }
+
+        if (p2pMgr != null) {
+            p2pMgr.shutdown();
+            LOG.info("<shutdown-p2p-mgr>");
         }
 
         if (txThread != null) {

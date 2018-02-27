@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
+import org.apache.commons.collections4.map.LRUMap;
+import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -51,8 +52,6 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.apache.commons.collections4.map.LRUMap;
-import org.slf4j.Logger;
 import org.aion.mcf.valid.BlockHeaderValidator;
 
 /**
@@ -61,15 +60,8 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 public final class SyncMgr {
 
     private static final long SYNC_HEADER_FETCH_INTERVAL = 4000;
-
-    /**
-     * Debugs
-     */
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    /**
-     * Configurations
-     */
     private boolean showStatus = false;
     private int syncBackwardMax = 128;
     private int syncForwardMax = 192;
@@ -77,17 +69,11 @@ public final class SyncMgr {
     private AtomicBoolean start = new AtomicBoolean(true);
     private AtomicBoolean newBlockUpdated = new AtomicBoolean(false);
 
-    /**
-     * References
-     */
     private AionBlockchainImpl blockchain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
     private BlockHeaderValidator blockHeaderValidator;
 
-    /**
-     * Queues
-     */
     private AtomicInteger selectedNodeIdHashcode = new AtomicInteger(0);
     private AtomicLong longestHeaders = new AtomicLong(0);
     private AtomicLong networkBestBlockNumber = new AtomicLong(0);
@@ -99,8 +85,7 @@ public final class SyncMgr {
     private ConcurrentHashMap<Integer, List<A0BlockHeader>> sentHeaders = new ConcurrentHashMap<>();
     private final BlockingQueue<AionBlock> importedBlocksQueue = new LinkedBlockingQueue<>();
 
-    private LRUMap<ByteArrayWrapper, Object> cache = new LRUMap<>(1024);
-
+    private LRUMap<ByteArrayWrapper, Object> importedBlocksCache = new LRUMap<>(1024);
     private LRUMap<ByteArrayWrapper, Object> boradcastNewBlockCache = new LRUMap<>(32);
 
     /**
@@ -311,19 +296,9 @@ public final class SyncMgr {
                 long remoteBest = node.getBestBlockNumber();
                 long diff = remoteBest - selfBest;
                 if (diff > 0) {
-                    long from = Math.max(1, selfBest - syncBackwardMax); // (selfBest
-                    // >=
-                    // syncBackwardMax
-                    // ?
-                    // selfBest
-                    // -
-                    // syncBackwardMax
-                    // :
-                    // selfBest)
-                    // + 1;
+                    long from = Math.max(1, selfBest - syncBackwardMax);
                     long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
                     this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, (int) (to - from) + 1));
-                    sent = true;
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("<send-get-headers from-node={} from={} to={} self-best={} remote-best={}>",
                                 node.getIdHash(), from, to, selfBest, remoteBest);
@@ -366,7 +341,7 @@ public final class SyncMgr {
 
                 // TODO: is it possible the import result of a block may change
                 // over time?
-                if (cache.containsKey(ByteArrayWrapper.wrap(b.getHash()))) {
+                if (importedBlocksCache.containsKey(ByteArrayWrapper.wrap(b.getHash()))) {
                     continue;
                 }
 
@@ -383,14 +358,14 @@ public final class SyncMgr {
                         LOG.info("<import-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
                                 b.getTransactionsList().size());
                     }
-                    cache.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                    importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
                     break;
                 case IMPORTED_NOT_BEST:
                     if (LOG.isInfoEnabled()) {
                         LOG.info("<import-not-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
                                 b.getTransactionsList().size());
                     }
-                    cache.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                    importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
                     break;
                 case NO_PARENT:
                     if (LOG.isDebugEnabled()) {
@@ -409,7 +384,7 @@ public final class SyncMgr {
                         LOG.debug("<import-unsuccess err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                 b.getShortHash(), b.getTransactionsList().size());
                     }
-                    cache.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                    importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
                     break;
                 default:
                     if (LOG.isDebugEnabled()) {
@@ -426,8 +401,6 @@ public final class SyncMgr {
         scheduledWorkers.shutdown();
         start.set(false);
     }
-
-    // query functionality
 
     public long getNetworkBestBlockNumber() {
         return this.networkBestBlockNumber.get();
