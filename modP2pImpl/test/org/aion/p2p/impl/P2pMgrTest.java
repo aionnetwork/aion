@@ -48,7 +48,7 @@ public class P2pMgrTest {
                 "p2p://" + nodeId1 + "@" + ip2+ ":" + port2
         };
 
-        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, false, false);
+        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, 128, 128, false, false);
         assertEquals(p2p.getTempNodesCount(), 0);
 
     }
@@ -60,7 +60,7 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip1+ ":" + port1
         };
 
-        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, false, false);
+        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, 128, 128, false, false);
         assertEquals(0,p2p.getTempNodesCount());
 
     }
@@ -74,7 +74,7 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip2+ ":" + port2,
         };
 
-        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, false, false);
+        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, 128, 128,false, false);
         assertEquals(p2p.getTempNodesCount(), 3);
 
     }
@@ -94,6 +94,8 @@ public class P2pMgrTest {
                 port1,
                 new String[0],
                 false,
+                128,
+                128,
                 false,
                 false
         );
@@ -107,6 +109,8 @@ public class P2pMgrTest {
                         "p2p://" + id1 + "@" + ip + ":" + port1
                 },
                 false,
+                128,
+                128,
                 false,
                 false
         );

@@ -13,6 +13,9 @@ import org.aion.p2p.impl.Act;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * @author chris
+ */
 public class ResActiveNodesTest {
 
     private Node randomNode(){

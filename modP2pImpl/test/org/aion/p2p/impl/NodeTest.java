@@ -12,7 +12,6 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author chris
  *
  */
-
 public class NodeTest {
 
     private String validId = UUID.randomUUID().toString();
