@@ -24,6 +24,7 @@
 
 package org.aion.zero.impl.valid;
 
+import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
 
@@ -31,7 +32,7 @@ import org.aion.mcf.valid.DependentBlockHeaderRule;
  * Validates whether the timestamp of the current block is > the timestamp of
  * the parent block
  */
-public class TimeStampRule<BH extends AbstractBlockHeader> extends DependentBlockHeaderRule<BH> {
+public class TimeStampRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
 
     @Override
     public boolean validate(BH header, BH dependency) {
