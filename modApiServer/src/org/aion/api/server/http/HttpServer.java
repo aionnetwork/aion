@@ -612,7 +612,7 @@ public final class HttpServer {
                         tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
                         if (log.isDebugEnabled())
-                            log.debug("<rpc action=start bind={}:{}>", "0.0.0.0", port);
+                            log.debug("<rpc action=start bind={}:{}>", ip, port);
 
                         Thread processInbound = new Thread(() -> {
                             // while (start.get()) {
