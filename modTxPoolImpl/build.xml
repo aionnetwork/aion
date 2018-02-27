@@ -15,6 +15,8 @@
 		<pathelement location="${dir.mod}/modTxPoolImpl.jar" />
 		<pathelement location="${dir.mod}/modRlp.jar" />
 		<pathelement location="${dir.mod}/modCrypto.jar" />
+                <pathelement location="${dir.mod}/modAion.jar" />
+                <pathelement location="${dir.mod}/modMcf.jar" />
 		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
 		<pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
 		<pathelement location="../build/main" />
