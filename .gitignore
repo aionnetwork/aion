@@ -2,3 +2,13 @@
 .idea/
 mod*/.idea/
 mod*/*.iml
+
+# Build
+*.jar
+*.class
+
+# Package
+pack
+
+# CI 
+report
