@@ -1,14 +1,19 @@
-# IntelliJ files
+# aion
+config/
+database/
+keystore/
+pack/
+
+# ide
 .idea/
 mod*/.idea/
 mod*/*.iml
 
-# Build
-*.jar
-*.class
+# build
+build/
+mod/
+*/build/
+native/linux/blake2b/libblake2b.so
 
-# Package
-pack
-
-# CI 
-report
+# ci
+*/report

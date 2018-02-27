@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="modAionBase">  
     <property name="dir.lib" value="../lib" />
+    <property name="dir.mod" value="../mod" />
     <property name="dir.javaAPIlib" value="../javaAPIlib" />
     <property name="main.build.dir" value="build/main" />
     <property name="main.src.dir" value="src" />
@@ -20,7 +21,6 @@
         <delete dir="${test.build.dir}" includeEmptyDirs="true" />
         <delete dir="${test.report.dir}" includeEmptyDirs="true" />
         <delete file="${dir.lib}/modAionBase.jar" />
-        <delete file="modAionBase.jar" />
     </target>
 
     <!-- Build Related -->
@@ -52,9 +52,9 @@
             filesetmanifest="mergewithoutmain"
             basedir="${main.build.dir}"
             />
-        <copy includeemptydirs="false" todir="${dir.lib}">
+        <move includeemptydirs="false" todir="${dir.mod}">
             <file file="modAionBase.jar"/>
-        </copy>
+        </move>
     </target>
 
     <target name="clean_build" depends="clean" >

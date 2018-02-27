@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="Logger">	
         <property name="dir.lib" value="../lib" />
+        <property name="dir.mod" value="../mod" />
         <property name="dir.dest" value="./build" />
 
         <target name="clean_build" depends="clean">
@@ -11,8 +12,7 @@
 
 	<target name="clean">
 		<delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
-		<delete file="modLogger.jar" />
-                <delete file="${dir.lib}/modLogger.jar" />
+                <delete file="${dir.mod}/modLogger.jar" />
 	</target>
 
 	<target name="build">
@@ -28,8 +28,8 @@
 		>
 			<modulepath>
 				<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
-                <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/> 
-                <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/> 
+		                <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/> 
+                		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/> 
 			</modulepath>
 		</javac>
 
@@ -39,7 +39,7 @@
 			basedir="${dir.dest}" 
 		>
 		</jar>
-		<move includeemptydirs="false" todir="${dir.lib}">
+		<move includeemptydirs="false" todir="${dir.mod}">
 			<file file="modLogger.jar"/>
 		</move>
 	</target>

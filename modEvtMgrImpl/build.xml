@@ -2,6 +2,7 @@
 
 <project basedir="." default="build" name="modEvtMgrImpl">
 	<property name="dir.lib" value="../lib" />
+        <property name="dir.mod" value="../mod" />
 	<property name="dir.dest" value="./build" />
 
 	<target name="clean_build" depends="clean">
@@ -12,22 +13,21 @@
 
 	<target name="clean">
 		<delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
-		<delete file="modEvtMgrImpl.jar" />
-		<delete file="${dir.lib}/modEvtMgrImpl.jar" />
+		<delete file="${dir.mod}/modEvtMgrImpl.jar" />
 	</target>
 	<target name="build">
 		<mkdir dir="${dir.dest}" />
 		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
 			<modulepath>
 				<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
-				<pathelement location="${dir.lib}/modLogger.jar" />
-				<pathelement location="${dir.lib}/modEvtMgr.jar" />
+				<pathelement location="${dir.mod}/modLogger.jar" />
+				<pathelement location="${dir.mod}/modEvtMgr.jar" />
 			</modulepath>
 		</javac>
 
 		<jar destfile="modEvtMgrImpl.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}">
 		</jar>
-		<move includeemptydirs="false" todir="${dir.lib}">
+		<move includeemptydirs="false" todir="${dir.mod}">
 			<file file="modEvtMgrImpl.jar" />
 		</move>
 	</target>

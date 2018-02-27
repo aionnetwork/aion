@@ -31,53 +31,42 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.rlp;
+package org.aion.db.utils.repeat;
 
-import java.math.BigInteger;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-public class Utils {
+public class RepeatRule implements TestRule {
 
-    static final byte[] encodingTable
-            = {
-                (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7',
-                (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f'
-            };
+    private static class RepeatStatement extends Statement {
+        private final Statement statement;
+        private final int repeat;    
 
-    static byte[] concatenate(byte[] a, byte[] b) {
-        byte[] ret = new byte[a.length + b.length];
-        System.arraycopy(a, 0, ret, 0, a.length);
-        System.arraycopy(b, 0, ret, a.length, b.length);
-        return ret;
+        public RepeatStatement(Statement statement, int repeat) {
+            this.statement = statement;
+            this.repeat = repeat;
+        }
+
+        @Override
+        public void evaluate() throws Throwable {
+            for (int i = 0; i < repeat; i++) {
+                statement.evaluate();
+            }
+        }
+
     }
 
-    static byte[] asUnsignedByteArray(BigInteger bi) {
-        byte[] bytes = bi.toByteArray();
-
-        if (bytes[0] == 0) {
-            byte[] tmp = new byte[bytes.length - 1];
-
-            System.arraycopy(bytes, 1, tmp, 0, tmp.length);
-
-            return tmp;
+    @Override
+    public Statement apply(Statement statement, Description description) {
+        Statement result = statement;
+        Repeat repeat = description.getAnnotation(Repeat.class);
+        if (repeat != null) {
+            int times = repeat.value();
+            result = new RepeatStatement(statement, times);
         }
-
-        return bytes;
-    }
-
-    static byte[] hexEncode(byte[] in) {
-        if (in == null) {
-            return null;
-        }
-        byte[] ret = new byte[in.length * 2];
-
-        for (int i = 0; i < in.length; i++) {
-            int v = in[i] & 0xff;
-            ret[i * 2] = encodingTable[v >>> 4];
-            ret[i * 2 + 1] = encodingTable[v & 0xf];
-        }
-
-        return ret;
-
+        return result;
     }
 }

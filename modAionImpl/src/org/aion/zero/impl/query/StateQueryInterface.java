@@ -25,6 +25,7 @@
 package org.aion.zero.impl.query;
 
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 
 import java.util.Optional;
@@ -35,4 +36,6 @@ public interface StateQueryInterface {
     Optional<AccountState> getAccountState(Address address, byte[] blockHash);
 
     Optional<AccountState> getAccountState(Address address);
+
+    Optional<ByteArrayWrapper> getCode(Address address);
 }

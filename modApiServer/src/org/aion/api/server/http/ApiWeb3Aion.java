@@ -348,8 +348,14 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return this.getTransactionReceipt(TypeConverter.StringHexToByteArray(txHash));
     }
 
+    private static final ByteArrayWrapper EMPTY = new ByteArrayWrapper(new byte[0]);
     String eth_getCode(String address) throws Exception {
-        return TypeConverter.toJsonHex(this.getCode(Address.wrap(address)));
+        Address addr = new Address(address);
+        ByteArrayWrapper state = this.ac.getCode(addr).orElse(EMPTY);
+
+        if (state == EMPTY)
+            return "";
+        return "0x" + state.toString();
     }
 
     boolean eth_uninstallFilter(String id) {
@@ -365,11 +371,17 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         AionTransaction transaction = this.getTransactionByHash(transactionHash);
         TxRecpt transactionReceipt = this.getTransactionReceipt(ByteUtil.hexStringToBytes(txHash));
         if (transaction != null && transactionReceipt != null)
-            return new Tx(transactionReceipt.contractAddress, transactionReceipt.transactionHash,
-                    new NumericalValue(transactionReceipt.txNonce), transactionReceipt.from, transactionReceipt.to,
-                    new NumericalValue(transactionReceipt.txTimeStamp), new NumericalValue(transactionReceipt.txValue),
-                    transactionReceipt.txData, new NumericalValue(transactionReceipt.blockNumber),
-                    new NumericalValue(transaction.getNrg()), new NumericalValue(transaction.getNrgPrice()),
+            return new Tx(transactionReceipt.contractAddress,
+                    transactionReceipt.transactionHash,
+                    transactionReceipt.blockHash,
+                    new NumericalValue(transactionReceipt.txNonce),
+                    transactionReceipt.from, transactionReceipt.to,
+                    new NumericalValue(transactionReceipt.txTimeStamp),
+                    new NumericalValue(transactionReceipt.txValue),
+                    transactionReceipt.txData,
+                    new NumericalValue(transactionReceipt.blockNumber),
+                    new NumericalValue(transaction.getNrg()),
+                    new NumericalValue(transaction.getNrgPrice()),
                     new NumericalValue(transaction.getTxIndexInBlock()));
         else
             return null;
