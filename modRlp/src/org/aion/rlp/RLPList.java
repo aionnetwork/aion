@@ -38,6 +38,11 @@ import java.util.ArrayList;
 
 import org.aion.base.util.ByteUtil;
 
+/**
+ * @author Roman Mandeleil
+ * @since 21.04.14
+ */
+
 public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 
     /**

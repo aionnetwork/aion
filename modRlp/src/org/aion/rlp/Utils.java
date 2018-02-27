@@ -36,10 +36,6 @@ package org.aion.rlp;
 
 import java.math.BigInteger;
 
-/**
- *
- * @author jin
- */
 public class Utils {
 
     static final byte[] encodingTable
