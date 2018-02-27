@@ -51,10 +51,10 @@ public interface IP2pMgr{
     INode getRandom();
 
     /**
-     * @param _nodeIdHashcode int
+     * @param _channelId int
      * @param _msg Msg
      */
-    void send(final int _nodeIdHashcode, final Msg _msg);
+    void send(int _channelId, final Msg _msg);
 
     /**
      * Used to hook up with kernel
@@ -67,7 +67,6 @@ public interface IP2pMgr{
      * start all p2p process
      */
     void run();
-
 
     String version();
 }
