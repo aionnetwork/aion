@@ -43,6 +43,11 @@ public interface INode {
     int getIdHash();
 
     /**
+     * @return String
+     */
+    String getIdShort();
+
+    /**
      * @return byte[]
      */
     byte[] getIp();

@@ -88,7 +88,6 @@ public final class SyncMgr {
     /**
      * Queues
      */
-    //private AtomicReference<byte[]> selectedNodeId = new AtomicReference<>(new byte[0]);
     private AtomicInteger selectedNodeIdHashcode = new AtomicInteger(0);
     private AtomicLong longestHeaders = new AtomicLong(0);
     private AtomicLong networkBestBlockNumber = new AtomicLong(0);

@@ -50,6 +50,11 @@ public final class Node implements INode{
 
     private int idHash;
 
+    /**
+     * for display only
+     */
+    private String idShort;
+
     private int version;
 
     private byte[] ip;
@@ -93,8 +98,10 @@ public final class Node implements INode{
     public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, final int _port) {
         this.fromBootList = fromBootList;
         this.id = _id;
-        if(_id != null && _id.length == 36)
+        if(_id != null && _id.length == 36) {
             this.idHash = Arrays.hashCode(_id);
+            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        }
         this.version = -1;
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
@@ -184,8 +191,10 @@ public final class Node implements INode{
      */
     void setId(final byte[] _id) {
         this.id = _id;
-        if(_id != null && _id.length == 36)
+        if(_id != null && _id.length == 36) {
             this.idHash = Arrays.hashCode(_id);
+            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        }
     }
 
     /**
@@ -269,13 +278,16 @@ public final class Node implements INode{
     }
 
     @Override
+    public String getIdShort() {return this.idShort == null ? "" : this.idShort; }
+
+    @Override
     public long getBestBlockNumber() {
         return this.bestBlockNumber;
     }
 
-    byte[] getBestBlockHash() {
-        return this.bestBlockHash;
-    }
+//    byte[] getBestBlockHash() {
+//        return this.bestBlockHash;
+//    }
 
     @Override
     public long getTotalDifficulty() {

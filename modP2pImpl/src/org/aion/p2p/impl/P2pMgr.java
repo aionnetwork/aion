@@ -66,7 +66,8 @@ public final class P2pMgr implements IP2pMgr {
     private final static int TIMEOUT_MSG_READ = 10000;
 
     private final static int MAX_BODY_BYTES = 1024 * 1024 * 50;
-    private final static int MAX_TEMP_NODES = 128;
+    private final int maxTempNodes;
+    private final int maxActiveNodes;
 
     private final boolean showStatus;
     private final boolean showLog;
@@ -145,8 +146,8 @@ public final class P2pMgr implements IP2pMgr {
             System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
             System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
             System.out.println("[active-nodes(nodeIdHash)=[" + activeNodes.entrySet().stream()
-                    .map((entry) -> "\n" + entry.getValue().getBestBlockNumber() + "-" + entry.getValue().getIdHash()
-                            + "-" + entry.getValue().getIpStr())
+                    .map((entry) -> "\n" + entry.getValue().getBestBlockNumber() + "-" + entry.getValue().getIdShort()
+                            + "-" + entry.getValue().getIpStr() + (entry.getValue().getIfFromBootList() ? "-seed" : ""))
                     .collect(Collectors.joining(",")) + "]]");
         }
     }
@@ -162,6 +163,13 @@ public final class P2pMgr implements IP2pMgr {
                     if (showLog)
                         System.out.println("<p2p-tcp interrupted>");
                 }
+
+                if(P2pMgr.this.activeNodes.size() >= P2pMgr.this.maxActiveNodes){
+                    if (showLog)
+                        System.out.println("<p2p-tcp-connect-peer pass max-active-nodes>");
+                    return;
+                }
+
                 Node node;
                 try {
                     node = tempNodes.take();
@@ -279,22 +287,36 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _nodeId node id - uuid
-     * @param _ip p2p binding ip
-     * @param _port p2p binding port
-     * @param _bootNodes pre-configed nodes
-     * @param _upnpEnable flag to turn on local auto discover
-     * @param _showStatus flag to show status
-     * @param _showLog flag to show log
+     * @param _nodeId byte[36]
+     * @param _ip String
+     * @param _port int
+     * @param _bootNodes String[]
+     * @param _upnpEnable boolean
+     * @param _maxTempNodes int
+     * @param _maxActiveNodes int
+     * @param _showStatus boolean
+     * @param _showLog boolean
+     *
      */
-    public P2pMgr(final String _nodeId, final String _ip, final int _port, final String[] _bootNodes,
-           final boolean _upnpEnable, final boolean _showStatus, final boolean _showLog) {
+    public P2pMgr(
+        String _nodeId,
+        String _ip,
+        int _port,
+        final String[] _bootNodes,
+        boolean _upnpEnable,
+        int _maxTempNodes,
+        int _maxActiveNodes,
+        boolean _showStatus,
+        boolean _showLog
+    ) {
         byte[] selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
         int selfNetId = 0;
         this.selfIp = Node.ipStrToBytes(_ip);
         this.selfPort = _port;
         this.upnpEnable = _upnpEnable;
+        this.maxTempNodes = _maxTempNodes;
+        this.maxActiveNodes = _maxActiveNodes;
         this.showStatus = _showStatus;
         this.showLog = _showLog;
 
@@ -597,7 +619,7 @@ public final class P2pMgr implements IP2pMgr {
                         if (resActiveNodes != null) {
                             List<Node> incomingNodes = resActiveNodes.getNodes();
                             for (Node incomingNode : incomingNodes) {
-                                if (tempNodes.size() >= MAX_TEMP_NODES)
+                                if (tempNodes.size() >= this.maxTempNodes)
                                     return;
                                 if (validateNode(incomingNode))
                                     tempNodes.add(incomingNode);
