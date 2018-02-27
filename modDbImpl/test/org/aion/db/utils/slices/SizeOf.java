@@ -31,19 +31,18 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.dbmgr.utils.slices;
+package org.aion.db.utils.slices;
 
-import java.util.Comparator;
-
-public final class SliceComparator
-        implements Comparator<Slice>
+public final class SizeOf
 {
-    public static final SliceComparator SLICE_COMPARATOR = new SliceComparator();
+    public static final byte SIZE_OF_BYTE = 1;
+    public static final byte SIZE_OF_SHORT = 2;
+    public static final byte SIZE_OF_INT = 4;
+    public static final byte SIZE_OF_LONG = 8;
 
-    @Override
-    public int compare(Slice sliceA, Slice sliceB)
+    private SizeOf()
     {
-        return sliceA.compareTo(sliceB);
     }
 }

@@ -31,8 +31,9 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.dbmgr.utils.repeat;
+package org.aion.db.utils.repeat;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.METHOD;

@@ -31,8 +31,9 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.dbmgr.driver.base;
+package org.aion.db.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -40,14 +41,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.dbmgr.utils.FileUtils;
-import org.aion.dbmgr.utils.repeat.Repeat;
-import org.aion.dbmgr.utils.repeat.RepeatRule;
-import org.aion.dbmgr.utils.slices.Slice;
-import org.aion.dbmgr.utils.slices.SliceOutput;
-import org.aion.dbmgr.utils.slices.Slices;
-import org.aion.dbmgr.driver.h2.H2MVMap;
-import org.aion.dbmgr.driver.leveldb.LevelDB;
+import org.aion.db.impl.h2.H2MVMap;
+import org.aion.db.impl.leveldb.LevelDB;
+import org.aion.db.utils.FileUtils;
+import org.aion.db.utils.repeat.Repeat;
+import org.aion.db.utils.repeat.RepeatRule;
+import org.aion.db.utils.slices.Slice;
+import org.aion.db.utils.slices.SliceOutput;
+import org.aion.db.utils.slices.Slices;
 import org.junit.*;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;

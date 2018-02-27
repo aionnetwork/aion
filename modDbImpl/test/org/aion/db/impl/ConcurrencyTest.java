@@ -32,12 +32,13 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.dbmgr.common;
+package org.aion.db.impl;
 
+import com.google.common.truth.Truth;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.dbmgr.utils.FileUtils;
+import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -52,7 +53,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.dbmgr.common.DatabaseTestUtils.*;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitParamsRunner.class)
@@ -81,15 +81,15 @@ public class ConcurrencyTest {
     @AfterClass
     public static void teardown() {
         // clean out the tmp directory
-        assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
-        assertThat(testDir.mkdirs()).isTrue();
+        Truth.assertThat(FileUtils.deleteRecursively(DatabaseTestUtils.testDir)).isTrue();
+        Truth.assertThat(DatabaseTestUtils.testDir.mkdirs()).isTrue();
     }
 
     @Before
     public void deleteFromDisk() {
         // clean out the tmp directory
-        assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
-        assertThat(testDir.mkdirs()).isTrue();
+        assertThat(FileUtils.deleteRecursively(DatabaseTestUtils.testDir)).isTrue();
+        Truth.assertThat(DatabaseTestUtils.testDir.mkdirs()).isTrue();
     }
 
     /**
@@ -131,7 +131,7 @@ public class ConcurrencyTest {
 
     private void addThread4Put(List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
         threads.add(() -> {
-            db.put(key.getBytes(), randomBytes(32));
+            db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
             if (DISPLAY_MESSAGES) { System.out.println(Thread.currentThread().getName() + ": " + key + " ADDED");}
         });
     }
@@ -146,9 +146,9 @@ public class ConcurrencyTest {
     private void addThread4PutBatch(List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
         threads.add(() -> {
             Map<byte[], byte[]> map = new HashMap<>();
-            map.put((key + 1).getBytes(), randomBytes(32));
-            map.put((key + 2).getBytes(), randomBytes(32));
-            map.put((key + 3).getBytes(), randomBytes(32));
+            map.put((key + 1).getBytes(), DatabaseTestUtils.randomBytes(32));
+            map.put((key + 2).getBytes(), DatabaseTestUtils.randomBytes(32));
+            map.put((key + 3).getBytes(), DatabaseTestUtils.randomBytes(32));
             db.putBatch(map);
             if (DISPLAY_MESSAGES) {
                 System.out.println(
@@ -207,7 +207,7 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentAccessOnOpenDatabase(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
         // open database
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
@@ -260,7 +260,7 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPut(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -285,7 +285,7 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPutBatch(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -310,7 +310,7 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentUpdate(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
         // open database
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
