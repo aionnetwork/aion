@@ -24,10 +24,9 @@
  ******************************************************************************/
 package org.aion.mcf.valid;
 
-import org.aion.mcf.types.AbstractBlock;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.base.type.IBlockHeader;
 
-public class BlockNumberRule<BH extends AbstractBlockHeader> extends DependentBlockHeaderRule<BH> {
+public class BlockNumberRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
 
     @Override
     public boolean validate(BH header, BH parent) {
