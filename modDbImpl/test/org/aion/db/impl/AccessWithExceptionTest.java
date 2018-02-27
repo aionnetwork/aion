@@ -32,12 +32,13 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.dbmgr.common;
+package org.aion.db.impl;
 
+import com.google.common.truth.Truth;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.dbmgr.utils.FileUtils;
+import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -48,7 +49,6 @@ import org.junit.runner.RunWith;
 import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.dbmgr.common.DatabaseTestUtils.*;
 
 @RunWith(JUnitParamsRunner.class)
 public class AccessWithExceptionTest {
@@ -65,15 +65,15 @@ public class AccessWithExceptionTest {
     @AfterClass
     public static void teardown() {
         // clean out the tmp directory
-        assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
-        assertThat(testDir.mkdirs()).isTrue();
+        Truth.assertThat(FileUtils.deleteRecursively(DatabaseTestUtils.testDir)).isTrue();
+        Truth.assertThat(DatabaseTestUtils.testDir.mkdirs()).isTrue();
     }
 
     @Before
     public void deleteFromDisk() {
         // clean out the tmp directory
-        assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
-        assertThat(testDir.mkdirs()).isTrue();
+        assertThat(FileUtils.deleteRecursively(DatabaseTestUtils.testDir)).isTrue();
+        Truth.assertThat(DatabaseTestUtils.testDir.mkdirs()).isTrue();
     }
 
     /**
@@ -89,7 +89,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testIsEmptyWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -101,7 +101,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testKeysWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -113,50 +113,50 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testGetWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
         // attempt get on closed db
-        db.get(randomBytes(32));
+        db.get(DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
         // attempt put on closed db
-        db.put(randomBytes(32), randomBytes(32));
+        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
         // attempt delete on closed db
-        db.delete(randomBytes(32));
+        db.delete(DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutBatchWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
         Map<byte[], byte[]> map = new HashMap<>();
-        map.put(randomBytes(32), randomBytes(32));
-        map.put(randomBytes(32), randomBytes(32));
-        map.put(randomBytes(32), randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -166,14 +166,14 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteBatchWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
         List<byte[]> list = new ArrayList<>();
-        list.add(randomBytes(32));
-        list.add(randomBytes(32));
-        list.add(randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
 
         // attempt deleteBatch on closed db
         db.deleteBatch(list);
@@ -183,7 +183,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testCommitWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -196,7 +196,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testSizeWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -208,7 +208,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testGetWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -220,19 +220,19 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         // attempt put with null key
-        db.put(null, randomBytes(32));
+        db.put(null, DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = IllegalArgumentException.class)
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -244,14 +244,14 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutBatchWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         Map<byte[], byte[]> map = new HashMap<>();
-        map.put(randomBytes(32), randomBytes(32));
-        map.put(randomBytes(32), randomBytes(32));
-        map.put(null, randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(null, DatabaseTestUtils.randomBytes(32));
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -261,13 +261,13 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteBatchWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", dbName + getNext());
+        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         List<byte[]> list = new ArrayList<>();
-        list.add(randomBytes(32));
-        list.add(randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
         list.add(null);
 
         // attempt deleteBatch on closed db

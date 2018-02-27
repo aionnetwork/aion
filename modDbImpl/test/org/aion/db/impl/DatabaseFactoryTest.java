@@ -32,11 +32,13 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.dbmgr.common;
+package org.aion.db.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.dbmgr.driver.mockdb.MockDB;
-import org.aion.dbmgr.driver.mockdb.MockDBDriver;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.mockdb.MockDBDriver;
 import org.junit.Test;
 
 import java.io.File;

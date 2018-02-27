@@ -31,13 +31,14 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.dbmgr.utils.slices;
+package org.aion.db.utils.slices;
 
-import static org.aion.dbmgr.utils.slices.SizeOf.SIZE_OF_BYTE;
-import static org.aion.dbmgr.utils.slices.SizeOf.SIZE_OF_INT;
-import static org.aion.dbmgr.utils.slices.SizeOf.SIZE_OF_LONG;
-import static org.aion.dbmgr.utils.slices.SizeOf.SIZE_OF_SHORT;
+import static org.aion.db.utils.slices.SizeOf.SIZE_OF_BYTE;
+import static org.aion.db.utils.slices.SizeOf.SIZE_OF_INT;
+import static org.aion.db.utils.slices.SizeOf.SIZE_OF_LONG;
+import static org.aion.db.utils.slices.SizeOf.SIZE_OF_SHORT;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 import java.io.IOException;

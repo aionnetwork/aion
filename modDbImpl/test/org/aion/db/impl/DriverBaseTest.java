@@ -32,16 +32,17 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.dbmgr.driver.base;
+package org.aion.db.impl;
 
+import com.google.common.truth.Truth;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.dbmgr.utils.FileUtils;
-import org.aion.dbmgr.driver.h2.H2MVMap;
-import org.aion.dbmgr.driver.h2.H2MVMapWithCache;
-import org.aion.dbmgr.driver.leveldb.LevelDB;
-import org.aion.dbmgr.driver.leveldb.LevelDBWithCache;
-import org.aion.dbmgr.driver.mockdb.MockDB;
-import org.aion.dbmgr.driver.mockdb.MockDBWithCache;
+import org.aion.db.impl.h2.H2MVMap;
+import org.aion.db.impl.h2.H2MVMapWithCache;
+import org.aion.db.impl.leveldb.LevelDB;
+import org.aion.db.impl.leveldb.LevelDBWithCache;
+import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.mockdb.MockDBWithCache;
+import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -51,7 +52,10 @@ import org.junit.runners.Parameterized.Parameters;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -181,7 +185,7 @@ public class DriverBaseTest {
     @BeforeClass
     public static void setup() {
         // clean out the tmp directory
-        assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
+        Truth.assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
         assertThat(testDir.mkdirs()).isTrue();
     }
 

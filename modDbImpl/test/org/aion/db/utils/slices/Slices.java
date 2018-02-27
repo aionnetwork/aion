@@ -31,8 +31,9 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.dbmgr.utils.slices;
+package org.aion.db.utils.slices;
 
 import com.google.common.base.Preconditions;
 

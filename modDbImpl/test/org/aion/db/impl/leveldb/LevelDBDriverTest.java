@@ -32,12 +32,12 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.dbmgr.driver.h2mvmap;
+package org.aion.db.impl.leveldb;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.dbmgr.common.DBVendor;
-import org.aion.dbmgr.common.DatabaseFactory;
-import org.aion.dbmgr.driver.h2.H2MVMap;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.db.impl.leveldb.LevelDB;
 import org.junit.Test;
 
 import java.io.File;
@@ -46,13 +46,13 @@ import java.util.Properties;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class H2MVMapDriverTest {
+public class LevelDBDriverTest {
 
     public static String dbPath = new File(System.getProperty("user.dir"), "tmp").getAbsolutePath();
-    public static String dbVendor = DBVendor.H2.toValue();
+    public static String dbVendor = DBVendor.LEVELDB.toValue();
     public static String dbName = "test";
 
-    private DBVendor driver = DBVendor.H2;
+    private DBVendor driver = DBVendor.LEVELDB;
 
     // It should return an instance of the DB given the correct properties
     @Test
@@ -80,27 +80,21 @@ public class H2MVMapDriverTest {
         assertNull(db);
     }
 
+    // TODO: parametrize tests with null inputs
+
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullName() {
-        new H2MVMap(null, dbPath, false, false);
+        new LevelDB(null, dbPath, false, false);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullPath() {
-        new H2MVMap(dbName, null, false, false);
+        new LevelDB(dbName, null, false, false);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullNameAndPath() {
-        new H2MVMap(null, null, false, false);
+        new LevelDB(null, null, false, false);
     }
+
 }
-
-
-
-
-
-
-
-
-

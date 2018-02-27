@@ -32,7 +32,9 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.dbmgr.common;
+package org.aion.db.impl;
+
+import org.aion.db.impl.DBVendor;
 
 import java.io.File;
 import java.util.*;
