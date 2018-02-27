@@ -805,6 +805,15 @@ public final class P2pMgr implements IP2pMgr {
         start.set(false);
         scheduledWorkers.shutdownNow();
         workers.shutdown();
+        activeNodes.forEach((k,n)->{
+            closeSocket(n.getChannel());
+        });
+        outboundNodes.forEach((k,n)->{
+            closeSocket(n.getChannel());
+        });
+        inboundNodes.forEach((k,n)->{
+            closeSocket(n.getChannel());
+        });
     }
 
     @Override
