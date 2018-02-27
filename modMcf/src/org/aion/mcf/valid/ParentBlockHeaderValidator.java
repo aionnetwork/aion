@@ -24,15 +24,15 @@
  ******************************************************************************/
 package org.aion.mcf.valid;
 
-import java.util.List;
-
+import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
-import org.aion.mcf.types.AbstractBlockHeader;
+
+import java.util.List;
 
 /**
  * validation rules depending on parent's block header
  */
-public class ParentBlockHeaderValidator<BH extends AbstractBlockHeader> extends DependentBlockHeaderRule<BH> {
+public class ParentBlockHeaderValidator<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
 
     private List<DependentBlockHeaderRule<BH>> rules;
 

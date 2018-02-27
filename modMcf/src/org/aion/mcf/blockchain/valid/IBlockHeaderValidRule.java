@@ -34,14 +34,14 @@
  ******************************************************************************/
 package org.aion.mcf.blockchain.valid;
 
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.base.type.IBlockHeader;
 
 /**
  * Block header validation rules.
  *
  * @param <BH>
  */
-public interface IBlockHeaderValidRule<BH extends AbstractBlockHeader> extends IValidRule {
+public interface IBlockHeaderValidRule<BH extends IBlockHeader> extends IValidRule {
 
     boolean validate(BH header, BH dependency);
 
