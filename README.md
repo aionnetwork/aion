@@ -49,7 +49,9 @@ The [mining wiki](https://github.com/aionnetwork/aion/wiki/Internal-Miner) illus
 
 Now you are ready to start the kernel.
 
-**Optional:** Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network) or get added by peers, update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown above), IP and port of the computers you wish to connect to:
+**Optional:** 
+
+Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network) or get added by peers, update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown above), IP and port of the computers you wish to connect to:
     
 ```
 <net>
