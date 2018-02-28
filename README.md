@@ -116,28 +116,13 @@ Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for furt
 
 [Initial Codebase Contributors](https://github.com/aionnetwork/aion/wiki/Contributors)
 
+## Contact
 
 [Aion Forum](https://forum.aion.network/)
 
 [Aion Gitter](https://gitter.im/aionnetwork)
 
 [Aion Reddit](https://www.reddit.com/r/AionNetwork/)
-
-
-The Aion Foundation repository layout includes the following: 
-
-[Aion Core](https://github.com/aionnetwork/aion)
-
-[Aion FastVM](https://github.com/aionnetwork/aion_fastvm)
-
-[Aion Miner](https://github.com/aionnetwork/aion_miner)
-
-[Aion Interchain](https://github.com/aionnetwork/aion_interchain)
-
-[Aion Compatible Web3 API](https://github.com/aionnetwork/aion_web3)
-
-[Aion Java API](https://github.com/aionnetwork/aion_api)
-
 
 
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->
