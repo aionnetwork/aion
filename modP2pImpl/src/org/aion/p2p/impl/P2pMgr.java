@@ -653,34 +653,36 @@ public final class P2pMgr implements IP2pMgr {
     private void write(int _nodeIdHash, String _nodeShortId, final SocketChannel _sc, final Msg _msg) {
 
         workers.submit(()->{
-            /*
-             * @warning header set len (body len) before header encode
-             */
-            byte[] bodyBytes = _msg.encode();
-            int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-            Header h = _msg.getHeader();
-            h.setLen(bodyLen);
-            byte[] headerBytes = h.encode();
+            synchronized(_sc) {
+                /*
+                 * @warning header set len (body len) before header encode
+                 */
+                byte[] bodyBytes = _msg.encode();
+                int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
+                Header h = _msg.getHeader();
+                h.setLen(bodyLen);
+                byte[] headerBytes = h.encode();
 
-            //System.out.println("out " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+                //System.out.println("out " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
 
-            ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
-            buf.put(headerBytes);
-            if (bodyBytes != null)
-                buf.put(bodyBytes);
-            buf.flip();
+                ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
+                buf.put(headerBytes);
+                if (bodyBytes != null)
+                    buf.put(bodyBytes);
+                buf.flip();
 
-            try {
-                while (buf.hasRemaining()) {
-                    _sc.write(buf);
+                try {
+                    while (buf.hasRemaining()) {
+                        _sc.write(buf);
+                    }
+                } catch (IOException e) {
+                    if (showLog)
+                        System.out.println("<p2p write-msg-io-exception>");
+                    e.printStackTrace();
+                } finally {
+                    if (buf.hasRemaining())
+                        dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
                 }
-            } catch (IOException e) {
-                if (showLog)
-                    System.out.println("<p2p write-msg-io-exception>");
-                e.printStackTrace();
-            } finally {
-                if (buf.hasRemaining())
-                    dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
             }
         });
     }
