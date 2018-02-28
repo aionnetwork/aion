@@ -77,14 +77,17 @@ public final class BroadcastNewBlockCallback extends Handler {
         if (rawdata == null)
             return;
 
+        if (log.isDebugEnabled()) {
+
+        }
+
         AionBlock block = new AionBlock(rawdata);
         BlockPropagationHandler.Status status = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
-        if (!(status == BlockPropagationHandler.Status.CONNECTED)) {
-            if (this.log.isDebugEnabled()) {
-                String hash = block.getShortHash();
-                hash = hash != null ? hash : "null";
-                this.log.debug("block propagation status: [" + hash + " / " + status.name() + "]");
-            }
+
+        if (this.log.isDebugEnabled()) {
+            String hash = block.getShortHash();
+            hash = hash != null ? hash : "null";
+            this.log.debug("block propagation status: [node: " + _nodeIdHashcode + " / " + "hash: " + hash + " / " + status.name() + "]");
         }
     }
 }
