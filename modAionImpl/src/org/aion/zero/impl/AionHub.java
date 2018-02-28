@@ -28,13 +28,21 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
-import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.mcf.config.CfgNetP2p;
-import org.aion.mcf.db.IBlockStorePow;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogUtil;
+import org.aion.mcf.blockchain.IPendingStateInternal;
+import org.aion.mcf.config.CfgNetP2p;
+import org.aion.mcf.db.IBlockStorePow;
+import org.aion.mcf.tx.ITransactionExecThread;
+import org.aion.mcf.vm.types.DataWord;
+import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.impl.P2pMgr;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -51,14 +59,6 @@ import org.aion.zero.impl.tx.AionTransactionExecThread;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
-import org.aion.mcf.vm.types.DataWord;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogUtil;
-import org.aion.p2p.ICallback;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.a0.P2pMgr;
-import org.aion.mcf.tx.ITransactionExecThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +146,7 @@ public class AionHub {
          */
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
         this.p2pMgr = new P2pMgr(this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
-                cfgNetP2p.getDiscover(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog());
+                cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog());
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
                 this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus());
@@ -165,7 +165,7 @@ public class AionHub {
     }
 
     private void registerCallback() {
-        List<ICallback> cbs = new ArrayList<>();
+        List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusCallback(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusCallback(syncLog, this.p2pMgr, this.syncMgr));
         cbs.add(new ReqBlocksHeadersCallback(syncLog, this.blockchain, this.p2pMgr));
@@ -243,8 +243,7 @@ public class AionHub {
         int countRecoveryAttempts = 0;
 
         // fix the trie if necessary
-        while (bestBlockShifted && // the best block was updated after recovery
-                                   // attempt
+        while (bestBlockShifted && // the best block was updated after recovery attempt
                 (countRecoveryAttempts < 5) && // allow 5 recovery attempts
                 bestBlock != null && // recover only for non-null blocks
                 !this.repository.isValidRoot(bestBlock.getStateRoot())) {
@@ -257,36 +256,29 @@ public class AionHub {
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
 
-                // checking is the best block has changed since attempting
-                // recovery
+                // checking is the best block has changed since attempting recovery
                 if (bestBlock == null) {
                     bestBlockShifted = true;
                 } else {
-                    bestBlockShifted = !(bestBlockNumber == bestBlock.getNumber()) || // block
-                                                                                      // number
-                                                                                      // changed
-                            !(Arrays.equals(bestBlockRoot, bestBlock.getStateRoot())); // root
-                                                                                       // hash
-                                                                                       // changed
+                    bestBlockShifted = !(bestBlockNumber == bestBlock.getNumber()) || // block number changed
+                            !(Arrays.equals(bestBlockRoot, bestBlock.getStateRoot())); // root hash changed
                 }
 
                 if (bestBlockShifted) {
-                    LOG.info("Rebuilding world state SUCCEEDED. However, the best block CHANGED.");
-                    // reinitializing recovery flag in case this is the last
-                    // attempt
-                    recovered = false;
+                    LOG.info("Rebuilding world state SUCCEEDED by REVERTING to a previous block.");
                 } else {
                     LOG.info("Rebuilding world state SUCCEEDED.");
                 }
             } else {
-                LOG.info("Rebuilding world state FAILED.");
+                LOG.error("Rebuilding world state FAILED. "
+                        + "Stop the kernel (Ctrl+C) and use the command line revert option to move back to a valid block. "
+                        + "Check the Aion wiki for recommendations on choosing the block number.");
             }
 
             countRecoveryAttempts++;
         }
 
-        // rebuild from genesis if (1) no best block (2) recovery failed (3)
-        // best block changed
+        // rebuild from genesis if (1) no best block (2) recovery failed
         if (bestBlock == null || !recovered) {
             if (bestBlock == null) {
                 LOG.info("DB is empty - adding Genesis");
@@ -350,9 +342,13 @@ public class AionHub {
         LOG.info("<KERNEL SHUTDOWN SEQUENCE>");
 
         if (syncMgr != null) {
-            LOG.info("<SYNC> shutting down syncMgr...");
             syncMgr.shutdown();
-            LOG.info("<SYNC> shutdown syncMgr... Done!");
+            LOG.info("<shutdown-sync-mgr>");
+        }
+
+        if (p2pMgr != null) {
+            p2pMgr.shutdown();
+            LOG.info("<shutdown-p2p-mgr>");
         }
 
         if (txThread != null) {

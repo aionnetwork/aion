@@ -85,18 +85,19 @@ public class BlockPropagationHandler {
         this.p2pManager.getActiveNodes().values().forEach(n -> {
             if (log.isDebugEnabled())
                 log.debug("sending new block" + block.getShortHash() + " to: " + n.getIdHash());
-            this.p2pManager.send(n.getId(), new BroadcastNewBlock(block));
+            this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
         });
     }
 
-    public Status processIncomingBlock(final byte[] nodeId, final AionBlock block) {
-        if (nodeId == null)
-            return Status.DROPPED;
-
+    public Status processIncomingBlock(final int nodeId, final AionBlock block) {
         if (block == null)
             return Status.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
+
+        // prevent cache from overflowing with well formed but invalid block headers
+        if (!this.blockHeaderValidator.validate(block.getHeader()))
+            return Status.DROPPED;
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized(this.cacheMap) {
@@ -112,9 +113,6 @@ public class BlockPropagationHandler {
         if (bestBlock.getNumber() > block.getNumber())
             return Status.DROPPED;
 
-        if (!this.blockHeaderValidator.validate(block.getHeader()))
-            return Status.DROPPED;
-
         // do a very simple check to verify parent child relationship
         // this implies we only propagate blocks from our own chain
         if (!bestBlock.isParentOf(block))
@@ -128,16 +126,17 @@ public class BlockPropagationHandler {
         return result.isSuccessful() ? Status.CONNECTED : Status.PROPAGATED;
     }
 
-    private void send(AionBlock block, byte[] nodeId) {
+    private void send(AionBlock block, int
+            nodeId) {
         // current proposal is to send to all peers with lower blockNumbers
         this.p2pManager.getActiveNodes().values()
                 .stream()
-                .filter(n -> !Arrays.equals(n.getId(), nodeId))
+                .filter(n -> n.getIdHash() != nodeId)
                 .filter(n -> n.getBestBlockNumber() <= block.getNumber())
                 .forEach(n -> {
                     if (log.isDebugEnabled())
                         log.debug("sending new block" + block.getShortHash() + " to: " + n.getIdHash());
-                    this.p2pManager.send(n.getId(), new BroadcastNewBlock(block));
+                    this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
                 });
     }
 

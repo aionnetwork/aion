@@ -14,3 +14,6 @@ mod/
 */build/
 native/linux/blake2b/libblake2b.so
 pack/
+
+# ci
+*/report

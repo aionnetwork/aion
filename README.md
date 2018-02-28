@@ -1,5 +1,12 @@
 # Aion
 
+Mainstream adoption of blockchains has been limited because of scalability, privacy, and interoperability challenges. Aion is the first multi-tier blockchain network designed to address these challenges. 
+
+Core to our hypothesis is the idea that many blockchains will be created to solve unique business challenges within unique industries. As such, the Aion network is designed to support custom blockchain architectures while providing a trustless mechanism for cross-chain interoperability. At the root of the Aion network is the first dedicated, public, enterprise blockchain: Aion-1.
+
+Aion-1 is a state-of-the-art, third-generation blockchain that introduces a new paradigm of security and fair, representative, cryptoeconomic
+incentives.
+
 This repository contains the main kernel implementation and releases for the Aion network.
 
 ## System Requirements
@@ -33,33 +40,6 @@ cd aion
 
 ## Aion Network Configuration
 
-> If you are using **aion-v0.1.8** or if you want a **permanent id** (used by peers), to connect to the Aion test network you need to first modify your configuration file to have a new personalized id. 
->
-> - Download the ID generation script ***generateId.sh*** [here](https://github.com/aionnetwork/aion/blob/master/generateId.sh).
-> - Add executable permissions to the script.
-> ``` 
-> chmod +x generateId.sh
-> ```
-> - Run the script.
->
-> ```
-> ./generateId.sh
-> ```
-> - Copy the output.
->
-> Navigate to the `config.xml` file in `[aion_folder]/config/config.xml`:
->
-> ```
-> cd config
-> gedit config.xml
-> ```
->
-> Update the value between the ***id*** tags to the copied ID.
->
-> ```
-> <id>my-new-id-value-is-set-here-12345678</id>
-> ```
-> Versions **aion-v0.1.9** and later do not require generating an id. A temporary unique id will be assigned to your kernel at runtime.
 <!--In a terminal, run the command below to generate a default configuration: `./aion.sh -c`-->
 
 To receive tokens for mining blocks, you first need to create an account using:
@@ -102,8 +82,27 @@ In a terminal, from the aion directory, run:
 netstat -antp | grep java
 ```
 
+Please check the [owner's manual wiki](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) for further instructions on working with the kernel. 
+
 ## Documentation
 
 Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
+
+[Aion White Papers](https://aion.network/whitepapers.html)
+
+[Aion Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual)
+
+[Releases](https://github.com/aionnetwork/aion/releases)
+
+[Initial Codebase Contributors](https://github.com/aionnetwork/aion/wiki/Contributors)
+
+## Contact
+
+[Aion Forum](https://forum.aion.network/)
+
+[Aion Gitter](https://gitter.im/aionnetwork)
+
+[Aion Reddit](https://www.reddit.com/r/AionNetwork/)
+
 
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->

@@ -3,15 +3,14 @@ package org.aion.zero.impl.sync;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.p2p.ICallback;
-import org.aion.p2p.IMsg;
+import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Msg;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
-import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,7 +38,7 @@ public class BlockPropagationTest {
 
         @Override
         public int getIdHash() {
-            return 0;
+            return Arrays.hashCode(nodeId);
         }
 
         @Override
@@ -53,22 +52,27 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public byte[] getBestBlockHash() {
-            return new byte[0];
-        }
-
-        @Override
-        public byte[] getTotalDifficulty() {
-            return new byte[0];
-        }
-
-        @Override
-        public SocketChannel getChannel() {
+        public String getIdShort() {
             return null;
         }
 
         @Override
-        public void setBestBlockNumber(long _bestBlockNumber) {
+        public String getIpStr() {
+            return null;
+        }
+
+        @Override
+        public int getPort() {
+            return 0;
+        }
+
+        @Override
+        public long getTotalDifficulty() {
+            return 0;
+        }
+
+        @Override
+        public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, long _totalDifficulty) {
 
         }
     }
@@ -87,18 +91,8 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void register(List<ICallback> _cbs) {
-
-        }
-
-        @Override
         public INode getRandom() {
             return null;
-        }
-
-        @Override
-        public void send(byte[] _nodeId, IMsg _msg) {
-
         }
 
         @Override
@@ -114,6 +108,16 @@ public class BlockPropagationTest {
         @Override
         public String version() {
             return null;
+        }
+
+        @Override
+        public void register(List<Handler> _hs) {
+
+        }
+
+        @Override
+        public void send(int _id, Msg _msg) {
+
         }
     }
 
@@ -141,13 +145,14 @@ public class BlockPropagationTest {
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
+        NodeMock senderNode = new NodeMock(sender, 1);
 
         Map<Integer, INode> node = new HashMap<>();
-        node.put(1, new NodeMock(sender, 1));
+        node.put(1, senderNode);
 
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(byte[] _nodeId, IMsg _msg) {
+            public void send(int nodeId, Msg _msg) {
                 throw new RuntimeException("should not have called send");
             }
         };
@@ -163,7 +168,7 @@ public class BlockPropagationTest {
                 p2pMock,
                 anotherBundle.bc.getBlockHeaderValidator());
 
-        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
+        assertThat(handler.processIncomingBlock(senderNode.getIdHash(), block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
     }
 
     // given two peers, and one sends you a new block, propagate to the other
@@ -182,15 +187,18 @@ public class BlockPropagationTest {
         byte[] sender = HashUtil.h256("node1".getBytes());
         byte[] receiver = HashUtil.h256("receiver".getBytes());
 
+        NodeMock senderMock = new NodeMock(sender, 1);
+        NodeMock receiverMock = new NodeMock(receiver, 0);
+
         Map<Integer, INode> node = new HashMap<>();
-        node.put(1, new NodeMock(sender, 1));
-        node.put(2, new NodeMock(receiver, 0));
+        node.put(1, senderMock);
+        node.put(2, receiverMock);
 
         AtomicInteger times = new AtomicInteger();
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(byte[] _nodeId, IMsg _msg) {
-                if (!Arrays.equals(_nodeId, receiver))
+            public void send(int _nodeId, Msg _msg) {
+                if (_nodeId != receiverMock.getIdHash())
                     throw new RuntimeException("should only send to receiver");
                 times.getAndIncrement();
             }
@@ -215,7 +223,8 @@ public class BlockPropagationTest {
                 anotherBundle.bc.getBlockHeaderValidator());
 
         // block is processed
-        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block))
+                .isEqualTo(BlockPropagationHandler.Status.CONNECTED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -234,15 +243,18 @@ public class BlockPropagationTest {
         byte[] sender = HashUtil.h256("node1".getBytes());
         byte[] receiver = HashUtil.h256("receiver".getBytes());
 
+        NodeMock senderMock = new NodeMock(sender, 1);
+        NodeMock receiverMock = new NodeMock(receiver, 0);
+
         Map<Integer, INode> node = new HashMap<>();
-        node.put(1, new NodeMock(sender, 1));
-        node.put(2, new NodeMock(receiver, 0));
+        node.put(1, senderMock);
+        node.put(2, receiverMock);
 
         AtomicInteger times = new AtomicInteger();
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(byte[] _nodeId, IMsg _msg) {
-                if (!Arrays.equals(_nodeId, receiver))
+            public void send(int _nodeId, Msg _msg) {
+                if (_nodeId != receiverMock.getIdHash())
                     throw new RuntimeException("should only send to receiver");
                 times.getAndIncrement();
             }
@@ -262,8 +274,8 @@ public class BlockPropagationTest {
                 anotherBundle.bc.getBlockHeaderValidator());
 
         // block is processed
-        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
-        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.DROPPED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.Status.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
 }

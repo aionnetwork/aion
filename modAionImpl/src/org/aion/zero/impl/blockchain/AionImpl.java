@@ -87,7 +87,6 @@ public class AionImpl implements IAionChain {
         return aionHub.getBlockchain();
     }
 
-
     public synchronized ImportResult addNewMinedBlock(AionBlock block) {
         ImportResult importResult = this.aionHub.getBlockchain().tryToConnect(block);
 
