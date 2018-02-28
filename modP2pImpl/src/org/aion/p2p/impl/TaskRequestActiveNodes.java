@@ -17,41 +17,37 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.p2p.impl;
 
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+import java.util.Map;
+
+import org.aion.p2p.INode;
+import org.aion.p2p.impl.msg.ReqActiveNodes;
 
 /**
+ *
  * @author chris
+ *
  */
-public final class ReqStatus extends Msg {
+public final class TaskRequestActiveNodes implements Runnable {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+    private P2pMgr mgr;
+
+    TaskRequestActiveNodes(final P2pMgr _mgr){
+        this.mgr = _mgr;
     }
 
     @Override
-    public byte[] encode() {
-        return null;
+    public void run() {
+        Map<Integer, INode> activeNodes = this.mgr.getActiveNodes();
+        for (int key : activeNodes.keySet()) {
+            this.mgr.send(activeNodes.get(key).getIdHash(), new ReqActiveNodes());
+        }
     }
-
 }
