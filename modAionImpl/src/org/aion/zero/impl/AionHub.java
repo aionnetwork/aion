@@ -255,7 +255,8 @@ public class AionHub {
                 }
             } else {
                 LOG.error("Rebuilding world state FAILED. "
-                        + "Stop the kernel (Ctrl+C) and use the command line --revert option to move back to a valid block.");
+                        + "Stop the kernel (Ctrl+C) and use the command line revert option to move back to a valid block. "
+                        + "Check the Aion wiki for recommendations on choosing the block number.");
             }
 
             countRecoveryAttempts++;
