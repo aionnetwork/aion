@@ -17,32 +17,34 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
+package org.aion.db.utils.slices;
 
-package org.aion.zero.impl.valid;
+import java.util.Comparator;
 
-import org.aion.base.type.IBlockHeader;
-import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.valid.DependentBlockHeaderRule;
-
-/**
- * Validates whether the timestamp of the current block is > the timestamp of
- * the parent block
- */
-public class TimeStampRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
+public final class SliceComparator
+        implements Comparator<Slice>
+{
+    public static final SliceComparator SLICE_COMPARATOR = new SliceComparator();
 
     @Override
-    public boolean validate(BH header, BH dependency) {
-        errors.clear();
-        if (header.getTimestamp() <= dependency.getTimestamp()) {
-            errors.add(String.format("#%d: the block timestamp is not less than the parentBlock's timestamp",
-                    header.getTimestamp()));
-            return false;
-        }
-
-        return true;
+    public int compare(Slice sliceA, Slice sliceB)
+    {
+        return sliceA.compareTo(sliceB);
     }
 }

@@ -31,18 +31,18 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
+ *     H2 Group.
  ******************************************************************************/
-package org.aion.mcf.blockchain.valid;
+package org.aion.db.utils.repeat;
 
-import org.aion.base.type.IBlockHeader;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.METHOD;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * Block header validation rules.
- *
- * @param <BH>
- */
-public interface IBlockHeaderValidRule<BH extends IBlockHeader> extends IValidRule {
-
-    boolean validate(BH header, BH dependency);
-
+@Retention( RetentionPolicy.RUNTIME )
+@Target({ METHOD, ANNOTATION_TYPE })
+public @interface Repeat {
+    int value() default 1;
 }
