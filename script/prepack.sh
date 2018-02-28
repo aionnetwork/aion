@@ -4,6 +4,7 @@ JDK_PATH="${PACK_PATH}/jdk"
 JDK_RT="${PACK_PATH}/rt"
 WEB3JS_PATH="${PACK_PATH}/web3"
 CONFIG_PATH="${PACK_PATH}/config"
+DOCS_PATH="${PACK_PATH}/docs"
 
 if [ ! -d "$PACK_PATH" ]; then
   mkdir $PACK_PATH
@@ -35,3 +36,10 @@ if [ ! -d "$CONFIG_PATH" ]; then
   cp ./modBoot/resource/** $CONFIG_PATH
   mv $CONFIG_PATH/testnet.json $CONFIG_PATH/genesis.json
 fi
+
+# copy the doc files if can't find the docs env
+if [ ! -d "$DOCS_PATH" ]; then
+  mkdir $DOCS_PATH
+  cp -r ./docs/** $DOCS_PATH
+fi
+
