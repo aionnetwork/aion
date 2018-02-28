@@ -143,8 +143,8 @@ public final class P2pMgr implements IP2pMgr {
             Thread.currentThread().setName("p2p-ts");
             System.out.println("[p2p-status " + selfNodeIdHash + "]");
             System.out.println("[temp-nodes-size=" + tempNodes.size() + "]");
-            System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
-            System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
+            //System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
+            //System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
             System.out.println("[active-nodes(nodeIdHash)=[" + activeNodes.entrySet().stream()
                     .map((entry) -> "\n" + entry.getValue().getBestBlockNumber() + "-" + entry.getValue().getIdShort()
                             + "-" + entry.getValue().getIpStr() + (entry.getValue().getIfFromBootList() ? "-seed" : ""))
@@ -629,8 +629,6 @@ public final class P2pMgr implements IP2pMgr {
                 }
                 break;
             default:
-                if (showLog)
-                    System.out.println("<p2p-msg unhandled-action=" + _act + ">");
                 break;
         }
     }
@@ -796,24 +794,28 @@ public final class P2pMgr implements IP2pMgr {
             } catch (IOException e) {
                 dropActive(_nodeIdHashcode, "<p2p-write-exception>");
             }
-        } else if (showLog)
-            System.out.println("<p2p-send node-not-found-for=" + _nodeIdHashcode + ">");
+        }
+//        else if (showLog)
+//            System.out.println("<p2p-send node-not-found-for=" + _nodeIdHashcode + ">");
     }
 
     @Override
     public void shutdown() {
         start.set(false);
         scheduledWorkers.shutdownNow();
-        workers.shutdown();
         activeNodes.forEach((k,n)->{
             closeSocket(n.getChannel());
         });
+        activeNodes.clear();
         outboundNodes.forEach((k,n)->{
             closeSocket(n.getChannel());
         });
+        outboundNodes.clear();
         inboundNodes.forEach((k,n)->{
             closeSocket(n.getChannel());
         });
+        inboundNodes.clear();
+        workers.shutdownNow();
     }
 
     @Override
