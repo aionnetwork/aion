@@ -13,6 +13,8 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
+                
+                sh "git submodule init" 
 
                 sh "git submodule foreach git pull origin master"
 
