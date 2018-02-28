@@ -194,7 +194,7 @@ public final class P2pMgr implements IP2pMgr {
                         if (channel.finishConnect() && channel.isConnected()) {
                             selectorLock.lock();
                             SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
-                            ReadBuffer rb = new ReadBuffer();
+                            ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
                             sk.attach(rb);
                             node.setChannel(channel);
@@ -280,6 +280,7 @@ public final class P2pMgr implements IP2pMgr {
                         }
                     }
                 } catch (Exception e) {
+                    //e.printStackTrace();
                 }
             }
         }
@@ -441,7 +442,7 @@ public final class P2pMgr implements IP2pMgr {
             configChannel(channel);
 
             SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
-            sk.attach(new ReadBuffer());
+            sk.attach(new ChannelBuffer());
 
             String ip = channel.socket().getInetAddress().getHostAddress();
             Node node = new Node(false, ip);
@@ -465,12 +466,10 @@ public final class P2pMgr implements IP2pMgr {
 
         if (_sk.attachment() == null)
             throw new IOException();
-        ReadBuffer rb = (ReadBuffer) _sk.attachment();
+        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         // read header
         if (!rb.isHeaderCompleted()) {
-            rb.refreshHeader();
-            rb.refreshBody();
             readHeader(_sk);
         }
 
@@ -508,7 +507,7 @@ public final class P2pMgr implements IP2pMgr {
     private void readHeader(final SelectionKey _sk) throws IOException {
 
         SocketChannel sc = (SocketChannel) _sk.channel();
-        ReadBuffer rb = (ReadBuffer) _sk.attachment();
+        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         while (sc.read(rb.headerBuf) > 0) {
             // continue read if has data, break on timeout
@@ -516,8 +515,10 @@ public final class P2pMgr implements IP2pMgr {
         if (rb.headerBuf.hasRemaining())
             return;
         rb.header = Header.decode(rb.headerBuf.array());
-        if (rb.header.getLen() > MAX_BODY_BYTES)
+
+        if (rb.header.getLen() > MAX_BODY_BYTES) {
             throw new IOException("over-max-body-bytes");
+        }
     }
 
     /**
@@ -527,7 +528,7 @@ public final class P2pMgr implements IP2pMgr {
     private void readBody(final SelectionKey _sk) throws IOException {
 
         SocketChannel sc = (SocketChannel) _sk.channel();
-        ReadBuffer rb = (ReadBuffer) _sk.attachment();
+        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         int read;
         if (rb.bodyBuf == null)
@@ -553,7 +554,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _msgBytes byte[]
      */
     private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes) {
-        ReadBuffer rb = (ReadBuffer) _sk.attachment();
+        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         switch (_act) {
 
@@ -567,14 +568,7 @@ public final class P2pMgr implements IP2pMgr {
                         node.setVersion(reqHandshake.getVersion());
                         node.setPort(reqHandshake.getPort());
                         moveInboundToActive(node.getChannel().hashCode());
-
-                        try {
-                            write(rb.nodeIdHash, (SocketChannel) _sk.channel(), new ResHandshake(true));
-                        } catch (IOException ex) {
-                            if (showLog)
-                                System.out.println("<p2p write-res-handshake-io-exception>");
-                        }
-
+                        write(rb.nodeIdHash, (SocketChannel) _sk.channel(), new ResHandshake(true));
                     }
                 }
                 break;
@@ -594,18 +588,11 @@ public final class P2pMgr implements IP2pMgr {
                 if (rb.nodeIdHash != 0) {
                     Node node = activeNodes.get(rb.nodeIdHash);
                     if (node != null)
-
-                        try {
-                            write(
-                                    rb.nodeIdHash,
-                                    (SocketChannel) _sk.channel(),
-                                    new ResActiveNodes(new ArrayList(activeNodes.values()))
-                            );
-                        } catch (IOException e) {
-                            if (showLog)
-                                System.out.println("<p2p write-res-active-nodes-io-exception>");
-                        }
-
+                        write(
+                                rb.nodeIdHash,
+                                (SocketChannel) _sk.channel(),
+                                new ResActiveNodes(new ArrayList(activeNodes.values()))
+                        );
                 }
                 break;
 
@@ -646,6 +633,7 @@ public final class P2pMgr implements IP2pMgr {
             for (Handler h : hs) {
                 if (h == null)
                     continue;
+                //System.out.println("in1 " + h.getHeader().getVer() + "-" + h.getHeader().getCtrl() + "-" + h.getHeader().getAction());
                 workers.submit(() -> h.receive(node.getIdHash(), _msgBytes));
             }
         }
@@ -657,9 +645,9 @@ public final class P2pMgr implements IP2pMgr {
      * @param _msg IMsg
      * @throws IOException IOException
      */
-    private void write(final int _nodeIdHash, final SocketChannel _sc, final Msg _msg) throws IOException {
-        workers.submit(() -> {
+    private void write(final int _nodeIdHash, final SocketChannel _sc, final Msg _msg) {
 
+        workers.submit(()->{
             /*
              * @warning header set len (body len) before header encode
              */
@@ -669,11 +657,14 @@ public final class P2pMgr implements IP2pMgr {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
+            //System.out.println("out " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
             if (bodyBytes != null)
                 buf.put(bodyBytes);
             buf.flip();
+
             try {
                 while (buf.hasRemaining()) {
                     _sc.write(buf);
@@ -732,7 +723,7 @@ public final class P2pMgr implements IP2pMgr {
     public INode getRandom() {
         int nodesCount = this.activeNodes.size();
         if (nodesCount > 0) {
-            Random r = new Random();
+            Random r = new Random(System.currentTimeMillis());
             List<Integer> keysArr = new ArrayList<>(this.activeNodes.keySet());
             try {
                 int randomNodeKeyIndex = r.nextInt(keysArr.size());
@@ -765,12 +756,7 @@ public final class P2pMgr implements IP2pMgr {
             Header h = _cb.getHeader();
             short ver = h.getVer();
             byte ctrl = h.getCtrl();
-            byte act = h.getAction();
-            if(
-                    Ver.filter(ver) != Ver.UNKNOWN &&
-                            Ctrl.filter(ctrl) != Ctrl.UNKNOWN &&
-                            Act.filter(act) != Act.UNKNOWN
-                    ){
+            if(Ver.filter(ver) != Ver.UNKNOWN && Ctrl.filter(ctrl) != Ctrl.UNKNOWN){
                 int route = h.getRoute();
                 List<Handler> routeHandlers = handlers.get(route);
                 if (routeHandlers == null) {
@@ -787,15 +773,8 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public void send(int _nodeIdHashcode, final Msg _msg) {
         Node node = this.activeNodes.get(_nodeIdHashcode);
-        if (node != null) {
-            try {
-                write(_nodeIdHashcode, node.getChannel(), _msg);
-            } catch (IOException e) {
-                dropActive(_nodeIdHashcode, "<p2p-write-exception>");
-            }
-        }
-//        else if (showLog)
-//            System.out.println("<p2p-send node-not-found-for=" + _nodeIdHashcode + ">");
+        if (node != null)
+            write(_nodeIdHashcode, node.getChannel(), _msg);
     }
 
     @Override

@@ -281,7 +281,7 @@ public final class SyncMgr {
             long ts = System.currentTimeMillis();
             while (((System.currentTimeMillis() - ts) < SYNC_HEADER_FETCH_INTERVAL)) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (Exception e) {
                 }
             }
@@ -290,7 +290,7 @@ public final class SyncMgr {
             long selfBest = selfBlock.getNumber();
 
             INode node = p2pMgr.getRandom();
-            boolean sent = false;
+
             if (node != null) {
                 long remoteBest = node.getBestBlockNumber();
                 long diff = remoteBest - selfBest;

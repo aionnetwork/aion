@@ -27,13 +27,15 @@ package org.aion.p2p.impl;
 
 import org.aion.p2p.Header;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  * @author chris
  *
  */
-class ReadBuffer {
+class ChannelBuffer {
 
     int nodeIdHash = 0;
 
@@ -59,7 +61,7 @@ class ReadBuffer {
      * @return boolean
      */
     boolean isHeaderCompleted(){
-        return header != null && body == null;
+        return header != null;
     }
 
     /**
@@ -68,5 +70,6 @@ class ReadBuffer {
     boolean isBodyCompleted() {
         return header != null && body != null && body.length == header.getLen();
     }
+
 
 }
