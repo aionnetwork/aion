@@ -17,41 +17,42 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.p2p.impl.msg;
 
+import static org.junit.Assert.*;
 import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+import org.aion.p2p.impl.Act;
+import org.junit.Test;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author chris
  */
-public final class ReqStatus extends Msg {
+public class ResHandshakeTest {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+    @Test
+    public void testRoute(){
+        ResHandshake mh1 = new ResHandshake(true);
+        assertEquals(Ver.V0, mh1.getHeader().getVer());
+        assertEquals(Ctrl.NET, mh1.getHeader().getCtrl());
+        assertEquals(Act.RES_HANDSHAKE, mh1.getHeader().getAction());
     }
 
-    @Override
-    public byte[] encode() {
-        return null;
+    @Test
+    public void testEncodeDecode() {
+
+        ResHandshake mh1 = new ResHandshake(ThreadLocalRandom.current().nextBoolean());
+        byte[] mhBytes = mh1.encode();
+        ResHandshake mh2 = ResHandshake.decode(mhBytes);
+        assertEquals(mh1.getSuccess(), mh2.getSuccess());
+
     }
 
 }

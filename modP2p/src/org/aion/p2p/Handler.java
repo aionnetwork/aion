@@ -17,41 +17,42 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
-package org.aion.zero.impl.sync.msg;
-
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+package org.aion.p2p;
 
 /**
  * @author chris
  */
-public final class ReqStatus extends Msg {
+public abstract class Handler {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+    private Header header;
+
+    /**
+     * @param _ver short
+     * @param _ctrl byte
+     * @param _act byte
+     */
+    public Handler(short _ver, byte _ctrl, byte _act){
+        this.header = new Header(_ver, _ctrl, _act, 0);
     }
 
-    @Override
-    public byte[] encode() {
-        return null;
+    /**
+     * @return Header
+     */
+    public Header getHeader(){
+        return this.header;
     }
+
+    /**
+     * @param _id int - node id hashcode
+     * @param _displayId
+     * @param _msg byte[]
+     */
+    public abstract void receive(int _id, String _displayId, final byte[] _msg);
 
 }

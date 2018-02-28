@@ -17,41 +17,59 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.p2p.impl;
 
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+import org.aion.p2p.Header;
+import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ *
  * @author chris
+ *
  */
-public final class ReqStatus extends Msg {
+class ChannelBuffer {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+    int nodeIdHash = 0;
+
+    ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
+
+    ByteBuffer bodyBuf = null;
+
+    Header header = null;
+
+    byte[] body = null;
+
+    void refreshHeader(){
+        headerBuf.clear();
+        header = null;
     }
 
-    @Override
-    public byte[] encode() {
-        return null;
+    void refreshBody(){
+        bodyBuf = null;
+        body = null;
     }
+
+    /**
+     * @return boolean
+     */
+    boolean isHeaderCompleted(){
+        return header != null;
+    }
+
+    /**
+     * @return boolean
+     */
+    boolean isBodyCompleted() {
+        return header != null && body != null && body.length == header.getLen();
+    }
+
 
 }
