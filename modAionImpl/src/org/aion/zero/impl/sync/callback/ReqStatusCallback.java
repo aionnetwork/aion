@@ -63,10 +63,10 @@ public final class ReqStatusCallback extends Handler {
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, byte[] _msg) {
+    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
         this.log.debug(
                 "<req-status from-node={}>",
-                _nodeIdHashcode
+                _displayId
         );
         this.mgr.send(
                 _nodeIdHashcode,

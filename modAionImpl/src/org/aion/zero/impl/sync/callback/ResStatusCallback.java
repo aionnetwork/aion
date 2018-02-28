@@ -60,7 +60,7 @@ public final class ResStatusCallback extends Handler {
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode,String _displayId, final byte[] _msgBytes) {
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
         ResStatus rs = ResStatus.decode(_msgBytes);
@@ -69,7 +69,7 @@ public final class ResStatusCallback extends Handler {
             this.log.debug(
                     "<res-status best-block={} from-node={}>",
                     rs.getBestBlockNumber(),
-                    _nodeIdHashcode
+                    _displayId
             );
             long nodeBestBlockNumber = rs.getBestBlockNumber();
             byte[] nodeBestBlockHash = rs.getBestHash();

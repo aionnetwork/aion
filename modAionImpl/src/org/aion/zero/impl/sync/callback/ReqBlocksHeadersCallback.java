@@ -74,13 +74,13 @@ public final class ReqBlocksHeadersCallback extends Handler {
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ReqBlocksHeaders reqHeaders = ReqBlocksHeaders.decode(_msgBytes);
         if (reqHeaders != null) {
             long fromBlock = reqHeaders.getFromBlock();
             int take = reqHeaders.getTake();
             this.log.debug("<req-headers from-block={} take={} from-node={}>", fromBlock, take,
-                    _nodeIdHashcode);
+                    _displayId);
             List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
                     new BlockIdentifier(null, fromBlock), 0, Math.min(take, max_headers), false);
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);

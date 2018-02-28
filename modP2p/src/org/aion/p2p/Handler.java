@@ -50,8 +50,9 @@ public abstract class Handler {
 
     /**
      * @param _id int - node id hashcode
+     * @param _displayId
      * @param _msg byte[]
      */
-    public abstract void receive(int _id, final byte[] _msg);
+    public abstract void receive(int _id, String _displayId, final byte[] _msg);
 
 }

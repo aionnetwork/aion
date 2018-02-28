@@ -73,7 +73,7 @@ public final class BroadcastTxCallback extends Handler {
     }
 
     @Override
-    public final void receive(int _nodeIdHashcode, final byte[] _msgBytes) {
+    public final void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
 
@@ -92,8 +92,7 @@ public final class BroadcastTxCallback extends Handler {
 
         // new pending tx, broadcast out to the active nodes
         if (newPendingTx != null && !newPendingTx.isEmpty()) {
-            this.log.debug("<broadcast-txs txs={} from-node={}>", newPendingTx.size(),
-                    _nodeIdHashcode);
+            this.log.debug("<broadcast-txs txs={} from-node={}>", newPendingTx.size(), _displayId);
 
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
 

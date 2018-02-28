@@ -322,6 +322,7 @@ public final class SyncMgr {
                         LOG.debug("<req-blocks from={} take={}>", headers.get(0).getNumber(), blockHashes.size());
                     }
                     importedHeaders.clear();
+                    System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     this.p2pMgr.send(selectedNodeIdHashcode.get(), new ReqBlocksBodies(blockHashes));
                 }
             }

@@ -69,7 +69,7 @@ public final class BroadcastNewBlockCallback extends Handler {
 
 
     @Override
-    public void receive(int _nodeIdHashcode, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         if (_msgBytes == null)
             return;
         byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
@@ -77,12 +77,6 @@ public final class BroadcastNewBlockCallback extends Handler {
             return;
 
         AionBlock block = new AionBlock(rawdata);
-        this.log.info(
-                "<receive-broadcast-new-block num={} hash={} from-node={}>",
-                block.getNumber(),
-                block.getShortHash(),
-                _nodeIdHashcode
-        );
         this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, Collections.singletonList(block), true);
     }
 }

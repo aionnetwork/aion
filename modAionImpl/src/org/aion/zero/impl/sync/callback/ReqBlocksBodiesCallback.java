@@ -66,13 +66,13 @@ public final class ReqBlocksBodiesCallback extends Handler {
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
             List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(reqBlocks.getBlocksHashes());
             this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
             this.log.debug("<req-bodies req-take={} res-take={} from-node={}>", reqBlocks.getBlocksHashes().size(),
-                    blockBodies.size(), _nodeIdHashcode);
+                    blockBodies.size(), _displayId);
 
         } else
             this.log.error("<req-bodies decode-msg>");
