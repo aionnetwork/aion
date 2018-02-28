@@ -41,6 +41,8 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
+
+import org.aion.zero.impl.sync.BlockPropagationHandler;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
@@ -53,7 +55,7 @@ public final class BroadcastNewBlockCallback extends Handler {
 
     private final Logger log;
 
-    private final SyncMgr syncMgr;
+    private final BlockPropagationHandler propHandler;
 
     /*
      * (non-Javadoc)
@@ -61,10 +63,10 @@ public final class BroadcastNewBlockCallback extends Handler {
      * @see org.aion.net.nio.ICallback#getCtrl() change param
      * IPendingStateInternal later
      */
-    public BroadcastNewBlockCallback(final Logger _log, final SyncMgr _syncMgr) {
+    public BroadcastNewBlockCallback(final Logger _log, final BlockPropagationHandler propHandler) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
         this.log = _log;
-        this.syncMgr = _syncMgr;
+        this.propHandler = propHandler;
     }
 
 
@@ -77,6 +79,13 @@ public final class BroadcastNewBlockCallback extends Handler {
             return;
 
         AionBlock block = new AionBlock(rawdata);
-        this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, Collections.singletonList(block), true);
+
+        boolean result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
+
+        if (this.log.isDebugEnabled()) {
+            String hash = block.getShortHash();
+            hash = hash != null ? hash : "null";
+            this.log.debug("blockProp: [node: " + _nodeIdHashcode + " | " + "hash: " + hash + " | status: " + result + "]");
+        }
     }
 }
