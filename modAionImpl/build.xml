@@ -64,13 +64,13 @@
 	<target name="test" depends="test_build">
 		<mkdir dir="${test.report.dir}" />
 		<copy includeemptydirs="false" todir="./native/linux/sodium">
-                        <fileset dir="../../native/linux/sodium"/>
+                        <fileset dir="../native/linux/sodium"/>
                 </copy>
                 <copy includeemptydirs="false" todir="./native/linux/blake2b">
-                        <fileset dir="../../native/linux/blake2b"/>
+                        <fileset dir="../native/linux/blake2b"/>
                 </copy>
                 <copy includeemptydirs="false" todir="./native/linux/equihash">
-                        <fileset dir="../../native/linux/equihash"/>
+                        <fileset dir="../native/linux/equihash"/>
                 </copy>
 
 		<junit printsummary="on" haltonfailure="no" fork="true">
