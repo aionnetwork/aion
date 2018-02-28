@@ -24,29 +24,6 @@
 
 package org.aion.zero.impl;
 
-import static java.lang.Math.max;
-import static java.lang.Runtime.getRuntime;
-import static java.math.BigInteger.ZERO;
-import static java.util.Collections.emptyList;
-import static org.aion.base.util.BIUtil.isMoreThan;
-import static org.aion.mcf.core.ImportResult.EXIST;
-import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
-import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
-import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
-import static org.aion.mcf.core.ImportResult.NO_PARENT;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -56,43 +33,56 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
-import org.aion.zero.impl.blockchain.AionTxExecSummary;
-import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.blockchain.NonceMgr;
-import org.aion.zero.impl.config.CfgAion;
-import org.aion.mcf.core.ImportResult;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.db.IBlockStorePow;
-import org.aion.mcf.db.TransactionStore;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.vm.TransactionExecutor;
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.db.AionBlockStore;
-import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.types.*;
-import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
-import org.aion.mcf.vm.types.Bloom;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.db.IBlockStorePow;
+import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.manager.ChainStatistics;
-import org.aion.rlp.RLP;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.BlockIdentifier;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
+import org.aion.mcf.vm.types.Bloom;
+import org.aion.rlp.RLP;
+import org.aion.vm.TransactionExecutor;
+import org.aion.zero.impl.blockchain.AionTxExecSummary;
+import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.blockchain.NonceMgr;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.RecoveryUtils;
+import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.impl.types.RetValidPreBlock;
+import org.aion.zero.impl.valid.TXValidator;
+import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.Math.max;
+import static java.lang.Runtime.getRuntime;
+import static java.math.BigInteger.ZERO;
+import static java.util.Collections.emptyList;
+import static org.aion.base.util.BIUtil.isMoreThan;
+import static org.aion.mcf.core.ImportResult.*;
 
 /**
  * Core blockchain consensus algorithms, the rule within this class decide
@@ -554,6 +544,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             summary.setTotalDifficulty(getTotalDifficulty());
 
             storeBlock(block, receipts);
+
+            flush();
         }
 
         return summary;
@@ -756,7 +748,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             List<AionTransaction> txs = block.getTransactionsList();
             if (txs != null && !txs.isEmpty()) {
                 IRepository parentRepo = repository;
-                if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
+                if (!Arrays.equals(getBlockStore().getBestBlock().getHash(), block.getParentHash())) {
                     parentRepo = repository.getSnapshotTo(getBlockByHash(block.getParentHash()).getStateRoot());
                 }
 
@@ -1261,7 +1253,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
         repo.flush();
 
         // return a flag indicating if the recovery worked
-        return repo.isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot());
+        if (repo.isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot())) {
+            return true;
+        } else {
+            // reverting back one block
+            LOG.info("Rebuild FAILED. Reverting to previous block.");
+            RecoveryUtils.Status status = RecoveryUtils.revertTo(this, blockNumber - 1);
+
+            return (status == RecoveryUtils.Status.SUCCESS) && repo
+                    .isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber - 1).getStateRoot());
+        }
     }
 
     @Override
