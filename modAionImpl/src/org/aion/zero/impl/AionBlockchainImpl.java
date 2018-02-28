@@ -134,7 +134,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * future we may have to create a "chain configuration provider" to provide
      * us different configurations.
      */
-    private ChainConfiguration chainConfiguration;
+    protected ChainConfiguration chainConfiguration;
 
     /**
      * Helper method for generating the adapter between this class and

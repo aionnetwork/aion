@@ -135,6 +135,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     }
 
+    public BlockHeaderValidator getBlockHeaderValidator() {
+        return this.chainConfiguration.createBlockHeaderValidator();
+    }
+
     public static class Bundle {
         public final List<ECKey> privateKeys;
         public final StandaloneBlockchain bc;
@@ -174,12 +178,22 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         }
 
         public Builder withDefaultAccounts() {
+            if (this.defaultKeys != null)
+                throw new RuntimeException();
+
             for (int i = 0; i < INITIAL_ACC_LEN; i++) {
                 ECKey pk = ECKeyFac.inst().create();
                 this.defaultKeys.add(pk);
                 initialState.put(new ByteArrayWrapper(pk.getAddress()),
                         new AccountState(BigInteger.ZERO, DEFAULT_BALANCE));
             }
+            return this;
+        }
+
+        public Builder withDefaultAccounts(List<ECKey> defaultAccounts) {
+            this.defaultKeys.addAll(defaultAccounts);
+            this.defaultKeys.forEach(k -> initialState.put(new ByteArrayWrapper(k.getAddress()),
+                    new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
             return this;
         }
 

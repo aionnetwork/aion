@@ -45,11 +45,14 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.P2pMgr;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.blockchain.NonceMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.pow.AionPoW;
+import org.aion.zero.impl.sync.BlockPropagationHandler;
+import org.aion.zero.impl.sync.callback.BroadcastNewBlockCallback;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.callback.*;
 import org.aion.zero.impl.tx.AionTransactionExecThread;
@@ -76,6 +79,8 @@ public class AionHub {
     private CfgAion cfg;
 
     private SyncMgr syncMgr;
+
+    private BlockPropagationHandler propHandler;
 
     private IPendingStateInternal<AionBlock, AionTransaction> mempool;
 
@@ -145,6 +150,13 @@ public class AionHub {
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
                 this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus());
+
+        ChainConfiguration chainConfig = new ChainConfiguration();
+        this.propHandler = new BlockPropagationHandler(1024,
+                this.blockchain,
+                this.p2pMgr,
+                chainConfig.createBlockHeaderValidator());
+
         registerCallback();
         this.p2pMgr.run();
 
@@ -161,7 +173,7 @@ public class AionHub {
         cbs.add(new ReqBlocksBodiesCallback(syncLog, this.blockchain, this.p2pMgr));
         cbs.add(new ResBlocksBodiesCallback(syncLog, this.syncMgr));
         cbs.add(new BroadcastTxCallback(syncLog, this.mempool, this.p2pMgr));
-        cbs.add(new BroadcastNewBlockCallback(syncLog, this.syncMgr));
+        cbs.add(new BroadcastNewBlockCallback(syncLog, this.propHandler));
         this.p2pMgr.register(cbs);
     }
 
@@ -214,6 +226,10 @@ public class AionHub {
 
     public ITransactionExecThread<AionTransaction> getTxThread() {
         return this.txThread;
+    }
+
+    public BlockPropagationHandler getPropHandler() {
+        return propHandler;
     }
 
     private void loadBlockchain() {
