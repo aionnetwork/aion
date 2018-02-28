@@ -8,7 +8,7 @@ This repository contains the main kernel implementation and releases for the Aio
 
 ## Build the Aion network
 
-Please see the details in this wiki page [Build your Aion network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network)
+Please see the details in this wiki page [Build your Aion network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network).
 
 ## Aion Installation
 
