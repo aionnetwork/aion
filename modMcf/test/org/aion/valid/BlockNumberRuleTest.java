@@ -1,29 +1,29 @@
 package org.aion.valid;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
-
+import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.valid.BlockNumberRule;
-import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
+
 /**
  * Unit tests for {@link BlockNumberRule}.
- * 
+ *
  * @author Alexandra Roatis
  */
 public class BlockNumberRuleTest {
 
     @Mock
-    A0BlockHeader mockChildBH;
+    IBlockHeader mockChildBH;
     @Mock
-    A0BlockHeader mockParentBH;
+    IBlockHeader mockParentBH;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
@@ -38,7 +38,7 @@ public class BlockNumberRuleTest {
         when(mockParentBH.getNumber()).thenReturn(661987L);
 
         // generate output
-        boolean actual = new BlockNumberRule<A0BlockHeader>().validate(mockChildBH, mockParentBH);
+        boolean actual = new BlockNumberRule<>().validate(mockChildBH, mockParentBH);
 
         // test output
         assertThat(actual).isTrue();
@@ -55,7 +55,7 @@ public class BlockNumberRuleTest {
         when(mockParentBH.getNumber()).thenReturn(661988L);
 
         // generate output
-        boolean actual = new BlockNumberRule<A0BlockHeader>().validate(mockChildBH, mockParentBH);
+        boolean actual = new BlockNumberRule<>().validate(mockChildBH, mockParentBH);
 
         // test output
         assertThat(actual).isFalse();
@@ -73,7 +73,7 @@ public class BlockNumberRuleTest {
         when(mockParentBH.getNumber()).thenReturn(661987L);
 
         // generate output
-        boolean actual = new BlockNumberRule<A0BlockHeader>().validate(mockChildBH, mockParentBH);
+        boolean actual = new BlockNumberRule<>().validate(mockChildBH, mockParentBH);
 
         // test output
         assertThat(actual).isFalse();
