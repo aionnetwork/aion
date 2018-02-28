@@ -80,12 +80,12 @@ public final class BroadcastNewBlockCallback extends Handler {
 
         AionBlock block = new AionBlock(rawdata);
 
-        boolean result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
+        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
 
         if (this.log.isDebugEnabled()) {
             String hash = block.getShortHash();
             hash = hash != null ? hash : "null";
-            this.log.debug("blockProp: [node: " + _nodeIdHashcode + " | " + "hash: " + hash + " | status: " + result + "]");
+            this.log.debug("blockProp: [node: " + _nodeIdHashcode + " | " + "hash: " + hash + " | status: " + result.name() + "]");
         }
     }
 }

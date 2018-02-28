@@ -11,7 +11,6 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
-import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -169,7 +168,7 @@ public class BlockPropagationTest {
                 p2pMock,
                 anotherBundle.bc.getBlockHeaderValidator());
 
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isFalse();
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
     }
 
     // given two peers, and one sends you a new block, propagate to the other
@@ -224,7 +223,7 @@ public class BlockPropagationTest {
                 anotherBundle.bc.getBlockHeaderValidator());
 
         // block is processed
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isTrue();
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -274,8 +273,8 @@ public class BlockPropagationTest {
                 anotherBundle.bc.getBlockHeaderValidator());
 
         // block is processed
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isTrue();
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isFalse();
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
 }
