@@ -6,7 +6,7 @@ module aion.zero.impl {
     requires java.xml;
     requires slf4j.api;
     requires aion.p2p;
-    requires aion.p2p.a0;
+    requires aion.p2p.impl;
     requires aion.rlp;
     requires aion.evtmgr;
     requires aion.evtmgr.impl;

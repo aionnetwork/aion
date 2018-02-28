@@ -25,48 +25,32 @@
 
 package org.aion.p2p;
 
-import java.util.List;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- *
- * @author chris
- *
+ * @author  chris
  */
-public interface IP2pMgr{
+public class Ver {
+
+    public static final short V0 = 0;
+
+    private static final short V1 = 1;
+
+    public static final short UNKNOWN = Short.MAX_VALUE;
+
+    private static Set<Short> active = new HashSet<>(){{
+        this.add(V0);
+        this.add(V1);
+    }};
 
     /**
-     * @return Map
+     * @param _version short
+     * @return short
+     * method provided to filter any decoded version (short)
      */
-    Map<Integer, INode> getActiveNodes();
+    public static short filter(short _version){
+        return active.contains(_version) ? _version : UNKNOWN;
+    }
 
-    /**
-     * @param _hs List<Handler>
-     */
-    void register(final List<Handler> _hs);
-
-    /**
-     * @return INode
-     */
-    INode getRandom();
-
-    /**
-     * @param _id int
-     * @param _msg Msg
-     */
-    void send(int _id, final Msg _msg);
-
-    /**
-     * Used to hook up with kernel
-     * to shutdown threads in network
-     * module
-     */
-    void shutdown();
-
-    /**
-     * start all p2p process
-     */
-    void run();
-
-    String version();
 }

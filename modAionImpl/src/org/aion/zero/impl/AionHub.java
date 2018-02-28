@@ -40,9 +40,9 @@ import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.p2p.ICallback;
+import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.a0.P2pMgr;
+import org.aion.p2p.impl.P2pMgr;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.NonceMgr;
@@ -141,7 +141,7 @@ public class AionHub {
          */
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
         this.p2pMgr = new P2pMgr(this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
-                cfgNetP2p.getDiscover(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog());
+                cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog());
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
                 this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus());
@@ -153,7 +153,7 @@ public class AionHub {
     }
 
     private void registerCallback() {
-        List<ICallback> cbs = new ArrayList<>();
+        List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusCallback(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusCallback(syncLog, this.p2pMgr, this.syncMgr));
         cbs.add(new ReqBlocksHeadersCallback(syncLog, this.blockchain, this.p2pMgr));
@@ -326,9 +326,13 @@ public class AionHub {
         LOG.info("<KERNEL SHUTDOWN SEQUENCE>");
 
         if (syncMgr != null) {
-            LOG.info("<SYNC> shutting down syncMgr...");
             syncMgr.shutdown();
-            LOG.info("<SYNC> shutdown syncMgr... Done!");
+            LOG.info("<shutdown-sync-mgr>");
+        }
+
+        if (p2pMgr != null) {
+            p2pMgr.shutdown();
+            LOG.info("<shutdown-p2p-mgr>");
         }
 
         if (txThread != null) {

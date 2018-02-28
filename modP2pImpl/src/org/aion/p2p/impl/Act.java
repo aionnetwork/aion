@@ -17,41 +17,54 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.p2p.impl;
 
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
+ *
  * @author chris
+ *
  */
-public final class ReqStatus extends Msg {
+public final class Act {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
-    }
+    static final byte DISCONNECT = 0;
 
-    @Override
-    public byte[] encode() {
-        return null;
+    public static final byte REQ_HANDSHAKE = 1;
+
+    public  static final byte RES_HANDSHAKE = 2;
+
+    static final byte PING = 3;
+
+    static final byte PONG = 4;
+
+    public static final byte REQ_ACTIVE_NODES = 5;
+
+    public static final byte RES_ACTIVE_NODES = 6;
+
+    static final byte UNKNOWN = Byte.MAX_VALUE;
+
+    private static Set<Byte> active = new HashSet<>() {{
+        add(REQ_HANDSHAKE);
+        add(RES_HANDSHAKE);
+        add(REQ_ACTIVE_NODES);
+        add(RES_ACTIVE_NODES);
+    }};
+
+    /**
+     * @param _act byte
+     * @return byte
+     * method provided to filter any decoded p2p action (byte)
+     */
+    static byte filter(byte _act){
+        return active.contains(_act) ? _act : UNKNOWN;
     }
 
 }

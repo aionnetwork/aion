@@ -17,41 +17,40 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.p2p;
 
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author chris
  */
-public final class ReqStatus extends Msg {
+public class Ctrl {
 
-    public ReqStatus(){
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
-    }
+    public static final byte NET = 0;
 
-    @Override
-    public byte[] encode() {
-        return null;
+    public static final byte SYNC = 1;
+
+    public static final byte UNKNOWN = Byte.MAX_VALUE;
+
+    private static Set<Byte> active = new HashSet<>() {{
+        add(NET);
+        add(SYNC);
+    }};
+
+    /**
+     * @param _ctrl byte
+     * @return byte
+     * method provided to filter any decoded ctrl (byte)
+     */
+    public static byte filter(byte _ctrl){
+        return active.contains(_ctrl) ? _ctrl : UNKNOWN;
     }
 
 }
