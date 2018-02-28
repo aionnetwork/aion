@@ -1284,7 +1284,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                 // clip start block to 0 at the bottom
                 Long endBlock = this.getBestBlock().getNumber();
-                Long startBlock = (endBlock - count) >= 0 ? endBlock - count : 0;
+                Long startBlock = (endBlock - count + 1) >= 0 ? (endBlock - count + 1) : 0;
 
                 List<Long> numbers = LongStream.rangeClosed(startBlock, endBlock)
                         .boxed().collect(Collectors.toList());
@@ -1332,7 +1332,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                 // clip start block to 0 at the bottom
                 Long endBlock = this.getBestBlock().getNumber();
-                Long startBlock = (endBlock - count) >= 0 ? endBlock - count : 0;
+                Long startBlock = (endBlock - count + 1) >= 0 ? (endBlock - count + 1) : 0;
 
                 List<Long> numbers = LongStream.rangeClosed(startBlock, endBlock)
                         .boxed().collect(Collectors.toList());
