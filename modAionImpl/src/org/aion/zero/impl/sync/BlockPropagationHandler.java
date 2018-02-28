@@ -71,6 +71,23 @@ public class BlockPropagationHandler {
         this.blockHeaderValidator = headerValidator;
     }
 
+    // assumption here is that blocks propagated have unique hashes
+    public void propagateNewBlock(final AionBlock block) {
+        if (block == null)
+            return;
+        ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
+
+        synchronized(this.cacheMap) {
+            this.cacheMap.put(hashWrapped, true);
+        }
+
+        this.p2pManager.getActiveNodes().values().forEach(n -> {
+            if (log.isDebugEnabled())
+                log.debug("sending new block" + block.getShortHash() + " to: " + n.getIdHash());
+            this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
+        });
+    }
+
     public PropStatus processIncomingBlock(final int nodeId, final AionBlock block) {
 
         if (block == null)

@@ -277,4 +277,54 @@ public class BlockPropagationTest {
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
+
+    // this test scenario: we propagate a block out, and someone propagates back
+    @Test
+    public void testIgnoreSelfBlock() {
+        List<ECKey> accounts = generateDefaultAccounts();
+
+        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts(accounts)
+                .build();
+
+        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST);
+        assertThat(block.getNumber()).isEqualTo(1);
+
+        byte[] sender = HashUtil.h256("node1".getBytes());
+        NodeMock senderMock = new NodeMock(sender, 1);
+
+        Map<Integer, INode> node = new HashMap<>();
+        node.put(1, senderMock);
+
+        AtomicInteger sendCount = new AtomicInteger();
+        P2pMock p2pMock = new P2pMock(node) {
+            @Override
+            public void send(int _nodeId, Msg _msg) {
+                sendCount.getAndIncrement();
+            }
+        };
+
+        StandaloneBlockchain.Bundle anotherBundle = new StandaloneBlockchain.Builder()
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts(accounts)
+                .build();
+
+        BlockPropagationHandler handler = new BlockPropagationHandler(
+                1024,
+                anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                p2pMock,
+                anotherBundle.bc.getBlockHeaderValidator());
+
+        // pretend that we propagate the new block
+        handler.propagateNewBlock(block); // send counter incremented
+
+        // recall that we're using another blockchain and faked the propagation
+        // so our blockchain should view this block as a new block
+        // therefore if the filter fails, this block will actually be CONNECTED
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+
+        // we expect the counter to be incremented once (on propagation)
+        assertThat(sendCount.get()).isEqualTo(1);
+    }
 }
