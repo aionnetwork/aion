@@ -37,7 +37,7 @@ cd aion
 
 > If you are using **aion-v0.1.8** or if you want a **permanent id** (used by peers), to connect to the Aion test network you need to first modify your configuration file to have a new personalized id. 
 >
-> - Download the ID generation script ***generateId.sh*** [here](https://github.com/aionnetwork/aion/blob/master/generateId.sh).
+> - Download the ID generation script ***generateId.sh*** [here](https://github.com/aionnetwork/aion/blob/master/script/generateId.sh).
 > - Add executable permissions to the script.
 > ``` 
 > chmod +x generateId.sh
