@@ -299,15 +299,15 @@ public final class P2pMgr implements IP2pMgr {
      *
      */
     public P2pMgr(
-        String _nodeId,
-        String _ip,
-        int _port,
-        final String[] _bootNodes,
-        boolean _upnpEnable,
-        int _maxTempNodes,
-        int _maxActiveNodes,
-        boolean _showStatus,
-        boolean _showLog
+            String _nodeId,
+            String _ip,
+            int _port,
+            final String[] _bootNodes,
+            boolean _upnpEnable,
+            int _maxTempNodes,
+            int _maxActiveNodes,
+            boolean _showStatus,
+            boolean _showLog
     ) {
         byte[] selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
@@ -635,6 +635,7 @@ public final class P2pMgr implements IP2pMgr {
             for (Handler h : hs) {
                 if (h == null)
                     continue;
+                node.refreshTimestamp();
                 //System.out.println("in1 " + h.getHeader().getVer() + "-" + h.getHeader().getCtrl() + "-" + h.getHeader().getAction());
                 workers.submit(() -> h.receive(node.getIdHash(), node.getIdShort(), _msgBytes));
             }
@@ -674,10 +675,11 @@ public final class P2pMgr implements IP2pMgr {
             } catch (IOException e) {
                 if (showLog)
                     System.out.println("<p2p write-msg-io-exception>");
-            } finally {
-                if (buf.hasRemaining())
-                    dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
             }
+//            finally {
+//                if (buf.hasRemaining())
+//                    dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
+//            }
         });
     }
 
