@@ -677,9 +677,10 @@ public final class P2pMgr implements IP2pMgr {
                         _sc.write(buf);
                     }
                 } catch (IOException e) {
-                    if (showLog)
+                    if (showLog) {
                         System.out.println("<p2p write-msg-io-exception>");
-                    e.printStackTrace();
+                        e.printStackTrace();
+                    }
                 }
 //            finally {
 //                if (buf.hasRemaining())
