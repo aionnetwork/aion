@@ -368,10 +368,18 @@
 	</target>
 
 	<target name="pack_build">
+		<antcall target="pre_build" />
 		<antcall target="clean_build">
 			<param name="compile.debug" value="off" />
 		</antcall>
 		<antcall target="pack" />
+	</target>
+
+	<target name="pre_build">
+	        <echo message="execute prebuild script"/>
+                <exec executable="/bin/bash">
+                        <arg value="${dir.workspace}/script/prebuild.sh" />
+                </exec>
 	</target>
 
 	<target name="pack">
@@ -407,6 +415,9 @@
 			<tarfileset dir="${dir.pack}/web3" filemode="755" prefix="${project.name}/web3">
 				<include name="**" />
 			</tarfileset>
+                        <tarfileset dir="${dir.pack}/docs" filemode="755" prefix="${project.name}/docs">
+                                <include name="**" />
+                        </tarfileset>
 		</tar>
 		<exec executable="/bin/bash">
 			<arg value="${dir.workspace}/script/postpack.sh" />
