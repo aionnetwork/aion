@@ -251,18 +251,27 @@
 		<mkdir dir="${dir.build.native}/linux/equihash" />
 
 		<copy includeemptydirs="false" todir="./build/native">
-			<fileset dir="./src/libPow/src/org/aion/equihash/native" />
+			<fileset dir="./modAionImpl/src/org/aion/equihash/native" />
 		</copy>
 
 		<javac debug="true" debuglevel="source,lines,vars" destdir="${dir.buildfile}" includeantruntime="false">
 			<compilerarg line="--add-modules=java.xml.bind -h ${dir.buildfile}/native" />
-			<src path="./src/libApibase/src" />
-			<src path="./src/libApiPow/src" />
-			<src path="./src/libMcf/src" />
-			<src path="./src/libAion/src" />
-			<src path="./src/libAionApi/src" />
-			<src path="./src/libPow/src" />
-			<src path="./src/main/src" />
+			<src path="./modAion/src" />
+			<src path="./modAionBase/src" />
+			<src path="./modMcf/src" />
+			<src path="./modAionImpl/src" />
+			<src path="./modApiServer/src" />
+			<src path="./modBoot/src" />
+			<src path="./modCrypto/src" />
+			<src path="./modDbImpl/src" />
+			<src path="./modEvtMgr/src" />
+			<src path="./modEvtMgrImpl/src" />
+			<src path="./modLogger/src" />
+			<src path="./modP2p/src" />
+			<src path="./modP2pImpl/src" />
+			<src path="./modRlp/src" />
+			<src path="./modTxPool/src" />
+			<src path="./modTxPoolImpl/src" />
 			<src path="./aion_fastvm/java/src" />
 			<classpath refid="cp" />
 		</javac>
@@ -289,17 +298,22 @@
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnzmq.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/protobuf-java-3.5.0.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libJson.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modEvtMgr.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modEvtMgrImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modLogger.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modP2p.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modP2pImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modAionBase.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modTxPool.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modTxPoolImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modDbImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modRlp.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/modCrypto.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modEvtMgr.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modEvtMgrImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modLogger.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modP2p.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modP2pImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modAionBase.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modTxPool.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modTxPoolImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modDbImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modRlp.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modCrypto.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modAion.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modAionImpl.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modApiServer.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modBoot.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modMcf.jar" />
 		</jar>
 
 
