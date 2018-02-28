@@ -49,7 +49,7 @@ The [mining wiki](https://github.com/aionnetwork/aion/wiki/Internal-Miner) illus
 
 Now you are ready to start the kernel.
 
-**Optional:** Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network), update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown above), IP and port of the computers you wish to connect to:
+**Optional:** Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network) or get added by peers, update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown above), IP and port of the computers you wish to connect to:
     
 ```
 <net>
@@ -65,13 +65,13 @@ Now you are ready to start the kernel.
     
 **Note:** To allow peers to connect to you, you must also change your configuration IP from **127.0.0.1** to a public IP on your machine. If you are unsure about having a public IP, set it to **0.0.0.0**.
 
-To create a brand new configuration, you need to run: 
+An alternative way to get a permanent peer id is by creating a new configuration: 
 
 ```
 ./aion.sh -c
 ```
 
-This newly made configuration will not have access to seed nodes by default. In order to connect to it, you will need to edit the `config.xml` file by adding nodes as listed from [here](https://github.com/aionnetwork/aion/wiki/Aion-Seed-nodes):
+This newly made configuration will not have access to seed nodes by default. In order to connect to seed nodes, you will need to edit the `config.xml` file by adding nodes as listed from [here](https://github.com/aionnetwork/aion/wiki/Aion-Seed-nodes):
 
 ```
 <nodes>
@@ -82,6 +82,8 @@ This newly made configuration will not have access to seed nodes by default. In 
   <node>p2p://d9242b38-cf4e-4654-9995-2727fee3dd9d@13.95.218.95:30303</node>
 </nodes>
 ```
+
+You are welcome to add other seed nodes (not solely restricted to what is shown above).
 
 ## Launch Kernel 
 
