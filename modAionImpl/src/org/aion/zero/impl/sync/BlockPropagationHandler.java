@@ -60,7 +60,9 @@ public class BlockPropagationHandler {
                                    final IP2pMgr p2pManager,
                                    BlockHeaderValidator headerValidator) {
         this.cacheSize = cacheSize;
-        this.cacheMap = Collections.synchronizedMap(new LRUMap<>(this.cacheSize));
+
+        // all accesses to cacheMap are guarded by instance
+        this.cacheMap = new LRUMap<>(this.cacheSize);
 
         // the expectation is that we will not have as many peers as we have blocks
         this.blockchain = blockchain;
