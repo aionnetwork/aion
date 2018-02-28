@@ -12,9 +12,6 @@ pipeline {
     agent any
     stages {
         stage('Setup') {
-	    when {
-                expression { GIT_BRANCH == 'master' }
-            }
             steps {
 
                 sh "git submodule foreach git pull origin master"
