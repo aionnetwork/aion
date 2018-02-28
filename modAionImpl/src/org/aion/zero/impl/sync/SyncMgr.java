@@ -67,7 +67,7 @@ public final class SyncMgr {
     private int syncForwardMax = 192;
     private int blocksQueueMax = 2000;
     private AtomicBoolean start = new AtomicBoolean(true);
-    private AtomicBoolean newBlockUpdated = new AtomicBoolean(false);
+    //private AtomicBoolean newBlockUpdated = new AtomicBoolean(false);
 
     private AionBlockchainImpl blockchain;
     private IP2pMgr p2pMgr;
@@ -115,7 +115,7 @@ public final class SyncMgr {
             // fire the init push
             // if(headersLatch != null)
             // headersLatch.countDown();
-            newBlockUpdated.set(true);
+            //newBlockUpdated.set(true);
 
         }
 
@@ -279,8 +279,7 @@ public final class SyncMgr {
         while (start.get()) {
 
             long ts = System.currentTimeMillis();
-
-            while (((System.currentTimeMillis() - ts) < SYNC_HEADER_FETCH_INTERVAL) && !newBlockUpdated.get()) {
+            while (((System.currentTimeMillis() - ts) < SYNC_HEADER_FETCH_INTERVAL)) {
                 try {
                     Thread.sleep(1000);
                 } catch (Exception e) {
@@ -305,7 +304,6 @@ public final class SyncMgr {
                     }
                 }
             }
-            newBlockUpdated.set(false);
         }
     }
 

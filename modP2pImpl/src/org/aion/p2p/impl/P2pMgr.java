@@ -280,7 +280,6 @@ public final class P2pMgr implements IP2pMgr {
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         }
