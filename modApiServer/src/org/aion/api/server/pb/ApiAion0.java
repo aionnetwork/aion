@@ -30,6 +30,7 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import org.aion.mcf.account.Keystore;
 import org.aion.api.server.ApiAion;
@@ -1321,18 +1322,19 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             try {
                 req = Message.req_getBlocksByLatest.parseFrom(data);
+
+                // clip the requested count up to 1000
                 Long count = req.getCount();
                 if (count > 1000) {
                     count = 1000L;
                 }
 
-                Long latest = this.getBestBlock().getNumber();
-                List<Long> numbers = new ArrayList<>();
-                long i = Long.valueOf(latest);
-                while (i > Long.valueOf(latest)-Long.valueOf(count) && i >= 0) {
-                    numbers.add(i);
-                    i--;
-                }
+                // clip start block to 0 at the bottom
+                Long endBlock = this.getBestBlock().getNumber();
+                Long startBlock = (endBlock - count) >= 0 ? endBlock - count : 0;
+
+                List<Long> numbers = LongStream.rangeClosed(startBlock, endBlock)
+                        .boxed().collect(Collectors.toList());
 
                 List<Map.Entry<AionBlock, BigInteger>> blks =
                         numbers.parallelStream()
