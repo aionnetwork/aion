@@ -86,7 +86,6 @@ public final class SyncMgr {
     private final BlockingQueue<AionBlock> importedBlocksQueue = new LinkedBlockingQueue<>();
 
     private LRUMap<ByteArrayWrapper, Object> importedBlocksCache = new LRUMap<>(1024);
-    private LRUMap<ByteArrayWrapper, Object> boradcastNewBlockCache = new LRUMap<>(32);
 
     /**
      * Threads
@@ -233,32 +232,11 @@ public final class SyncMgr {
         }
     }
 
+    // TODO: remove ifNewBlockBroadcast if block propagation stable
     public void validateAndAddBlocks(int _nodeIdHashcode, final List<AionBlock> _blocks, boolean ifNewBlockBroadcast) {
         if (_blocks == null || _blocks.isEmpty())
             return;
         int m = _blocks.size();
-        if (ifNewBlockBroadcast) {
-
-            // new block propagation suppose only have 1 blk inside list!
-            if (_blocks.size() > 1) {
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("<invalid-new-block-msg blocks-size={}>", _blocks.size());
-                }
-                return;
-            }
-
-            AionBlock block = _blocks.get(0);
-            boolean isCached = boradcastNewBlockCache.containsKey(new ByteArrayWrapper(block.getHash()));
-            if (block != null && !isCached) {
-                Map<Integer, INode> allnodes = p2pMgr.getActiveNodes();
-                for (Integer nid : allnodes.keySet()) {
-                    p2pMgr.send(_nodeIdHashcode, new BroadcastNewBlock(block));
-                }
-
-                boradcastNewBlockCache.put(new ByteArrayWrapper(block.getHash()), null);
-            }
-            return;
-        }
         /*
          * sort if sync batch
          */

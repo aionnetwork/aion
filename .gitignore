@@ -2,18 +2,18 @@
 config/
 database/
 keystore/
-pack/
 
-# ide
+# IntelliJ files
 .idea/
 mod*/.idea/
 mod*/*.iml
 
-# build
+# ant build
 build/
 mod/
 */build/
 native/linux/blake2b/libblake2b.so
+pack/
 
 # ci
 */report
