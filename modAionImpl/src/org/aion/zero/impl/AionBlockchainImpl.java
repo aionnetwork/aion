@@ -145,7 +145,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * future we may have to create a "chain configuration provider" to provide
      * us different configurations.
      */
-    private ChainConfiguration chainConfiguration;
+    protected ChainConfiguration chainConfiguration;
 
     private AtomicInteger flushCounter = new AtomicInteger(0);
 

@@ -29,6 +29,7 @@ import java.util.Collections;
 import org.aion.p2p.ICallback;
 import org.aion.p2p.CTRL;
 import org.aion.zero.impl.sync.ACT;
+import org.aion.zero.impl.sync.BlockPropagationHandler;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
@@ -45,7 +46,7 @@ public final class BroadcastNewBlockCallback implements ICallback {
 
     private final Logger log;
 
-    private final SyncMgr syncMgr;
+    private final BlockPropagationHandler propHandler;
 
     /*
      * (non-Javadoc)
@@ -53,9 +54,9 @@ public final class BroadcastNewBlockCallback implements ICallback {
      * @see org.aion.net.nio.ICallback#getCtrl() change param
      * IPendingStateInternal later
      */
-    public BroadcastNewBlockCallback(final Logger _log, final SyncMgr _syncMgr) {
+    public BroadcastNewBlockCallback(final Logger _log, final BlockPropagationHandler _propHandler) {
         this.log = _log;
-        this.syncMgr = _syncMgr;
+        this.propHandler = _propHandler;
     }
 
     @Override
@@ -77,8 +78,19 @@ public final class BroadcastNewBlockCallback implements ICallback {
             return;
 
         AionBlock block = new AionBlock(rawdata);
-        this.log.info("<receive-broadcast-new-block num={} hash={} from-node={}>", block.getNumber(),
-                block.getShortHash(), java.util.Arrays.hashCode(_nodeId));
-        this.syncMgr.validateAndAddBlocks(_nodeId, Collections.singletonList(block), true);
+
+        if (this.log.isInfoEnabled()) {
+            this.log.info("<receive-broadcast-new-block num={} hash={} from-node={}>", block.getNumber(),
+                    block.getShortHash(), java.util.Arrays.hashCode(_nodeId));
+        }
+        boolean success = this.propHandler.processIncomingBlock(_nodeId, block);
+        if (!success) {
+            if (this.log.isDebugEnabled()) {
+                String hash = block.getShortHash();
+                hash = hash != null ? hash : "null";
+
+                this.log.debug("block " + hash + " dropped");
+            }
+        }
     }
 }
