@@ -228,6 +228,10 @@ public class AionHub {
         return this.txThread;
     }
 
+    public BlockPropagationHandler getPropHandler() {
+        return propHandler;
+    }
+
     private void loadBlockchain() {
 
         this.repository.getBlockStore().load();
