@@ -127,6 +127,7 @@ public final class P2pMgr implements IP2pMgr {
                         try {
                             read(sk);
                         } catch (IOException | NullPointerException e) {
+                            e.printStackTrace();
                             closeSocket((SocketChannel) sk.channel());
                         }
                 }
@@ -463,8 +464,9 @@ public final class P2pMgr implements IP2pMgr {
      */
     private void read(final SelectionKey _sk) throws IOException {
 
-        if (_sk.attachment() == null)
-            throw new IOException();
+        if (_sk.attachment() == null) {
+            throw new IOException("attachment is null");
+        }
         ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         // read header
@@ -475,9 +477,10 @@ public final class P2pMgr implements IP2pMgr {
         // read body
         if (rb.isHeaderCompleted() && !rb.isBodyCompleted()) {
             readBody(_sk);
-            if (!rb.isBodyCompleted())
-                return;
         }
+
+        if (!rb.isBodyCompleted())
+            return;
 
         Header h = rb.header;
         byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
@@ -538,12 +541,12 @@ public final class P2pMgr implements IP2pMgr {
 
             // 0 | -1 means all done or body in multi-selector
             if (read <= 0) {
-                if (!rb.bodyBuf.hasRemaining()) {
-                    rb.body = rb.bodyBuf.array();
-                }
-                // back to selector events queue
-                return;
+                break;
             }
+        }
+
+        if (!rb.bodyBuf.hasRemaining()) {
+            rb.body = rb.bodyBuf.array();
         }
     }
 
@@ -674,6 +677,7 @@ public final class P2pMgr implements IP2pMgr {
             } catch (IOException e) {
                 if (showLog)
                     System.out.println("<p2p write-msg-io-exception>");
+                e.printStackTrace();
             } finally {
                 if (buf.hasRemaining())
                     dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
