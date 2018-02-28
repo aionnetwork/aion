@@ -83,13 +83,12 @@ public final class BroadcastNewBlockCallback implements ICallback {
             this.log.info("<receive-broadcast-new-block num={} hash={} from-node={}>", block.getNumber(),
                     block.getShortHash(), java.util.Arrays.hashCode(_nodeId));
         }
-        boolean success = this.propHandler.processIncomingBlock(_nodeId, block);
-        if (!success) {
+        BlockPropagationHandler.Status status = this.propHandler.processIncomingBlock(_nodeId, block);
+        if (!(status == BlockPropagationHandler.Status.CONNECTED)) {
             if (this.log.isDebugEnabled()) {
                 String hash = block.getShortHash();
                 hash = hash != null ? hash : "null";
-
-                this.log.debug("block " + hash + " dropped");
+                this.log.debug("block propagation status: [" + hash + " / " + status.name() + "]");
             }
         }
     }

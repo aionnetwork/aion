@@ -27,6 +27,12 @@ import java.util.Map;
  */
 public class BlockPropagationHandler {
 
+    public enum Status {
+        DROPPED,
+        PROPAGATED,
+        CONNECTED
+    }
+
     /**
      * Size of the cache maintained within the map, a lower cacheSize
      * saves space, but indicates we may "forget" about a block sooner.
@@ -57,7 +63,9 @@ public class BlockPropagationHandler {
                                    final IP2pMgr p2pManager,
                                    BlockHeaderValidator headerValidator) {
         this.cacheSize = cacheSize;
-        this.cacheMap = Collections.synchronizedMap(new LRUMap<>(this.cacheSize));
+
+        // guarded by self
+        this.cacheMap = new LRUMap<>(this.cacheSize);
 
         // the expectation is that we will not have as many peers as we have blocks
         this.blockchain = blockchain;
@@ -68,19 +76,32 @@ public class BlockPropagationHandler {
         this.blockHeaderValidator = headerValidator;
     }
 
-    public boolean processIncomingBlock(final byte[] nodeId, final AionBlock block) {
+    // propagate a new block, send without discrimination to maximize chances
+    public void sendNewBlock(final AionBlock block) {
+        synchronized (this.cacheMap) {
+            this.cacheMap.put(new ByteArrayWrapper(block.getHash()), true);
+        }
+
+        this.p2pManager.getActiveNodes().values().forEach(n -> {
+            if (log.isDebugEnabled())
+                log.debug("sending new block" + block.getShortHash() + " to: " + n.getIdHash());
+            this.p2pManager.send(n.getId(), new BroadcastNewBlock(block));
+        });
+    }
+
+    public Status processIncomingBlock(final byte[] nodeId, final AionBlock block) {
         if (nodeId == null)
-            return false;
+            return Status.DROPPED;
 
         if (block == null)
-            return false;
+            return Status.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized(this.cacheMap) {
             if (this.cacheMap.containsKey(hashWrapped))
-                return false;
+                return Status.DROPPED;
             // regardless if block processing is successful, place into cache
             this.cacheMap.put(hashWrapped, true);
         }
@@ -89,22 +110,22 @@ public class BlockPropagationHandler {
 
         // assumption is that we are on the correct chain
         if (bestBlock.getNumber() > block.getNumber())
-            return false;
+            return Status.DROPPED;
 
         if (!this.blockHeaderValidator.validate(block.getHeader()))
-            return false;
+            return Status.DROPPED;
 
         // do a very simple check to verify parent child relationship
         // this implies we only propagate blocks from our own chain
         if (!bestBlock.isParentOf(block))
-            return false;
+            return Status.DROPPED;
 
         // send
         send(block, nodeId);
 
         // process
         ImportResult result = this.blockchain.tryToConnect(block);
-        return result.isSuccessful();
+        return result.isSuccessful() ? Status.CONNECTED : Status.PROPAGATED;
     }
 
     private void send(AionBlock block, byte[] nodeId) {

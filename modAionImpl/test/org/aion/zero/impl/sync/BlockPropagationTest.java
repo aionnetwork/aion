@@ -163,7 +163,7 @@ public class BlockPropagationTest {
                 p2pMock,
                 anotherBundle.bc.getBlockHeaderValidator());
 
-        assertThat(handler.processIncomingBlock(sender, block)).isFalse();
+        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
     }
 
     // given two peers, and one sends you a new block, propagate to the other
@@ -215,7 +215,7 @@ public class BlockPropagationTest {
                 anotherBundle.bc.getBlockHeaderValidator());
 
         // block is processed
-        assertThat(handler.processIncomingBlock(sender, block)).isTrue();
+        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -262,8 +262,8 @@ public class BlockPropagationTest {
                 anotherBundle.bc.getBlockHeaderValidator());
 
         // block is processed
-        assertThat(handler.processIncomingBlock(sender, block)).isTrue();
-        assertThat(handler.processIncomingBlock(sender, block)).isFalse();
+        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.CONNECTED);
+        assertThat(handler.processIncomingBlock(sender, block)).isEqualTo(BlockPropagationHandler.Status.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
 }
