@@ -238,7 +238,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             worldState.sync();
 
             // Flush all necessary caches.
-            LOG.info("flushCacheGroup.flushAllCaches()");
+            LOG.info("flush all databases");
 
             if (databaseGroup != null) {
                 for (IByteArrayKeyValueDatabase db : databaseGroup) {
@@ -247,7 +247,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                     }
                 }
             } else {
-                LOG.warn("flushCacheGroup is null");
+                LOG.warn("databaseGroup is null");
             }
 
             LOG.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");

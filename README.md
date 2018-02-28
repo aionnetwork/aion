@@ -102,8 +102,27 @@ In a terminal, from the aion directory, run:
 netstat -antp | grep java
 ```
 
+Please check the [owner's manual wiki](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) for further instructions on working with the kernel. 
+
 ## Documentation
 
 Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
+
+[Aion White Papers](https://aion.network/whitepapers.html)
+
+[Aion Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual)
+
+[Releases](https://github.com/aionnetwork/aion/releases)
+
+[Initial Codebase Contributors](https://github.com/aionnetwork/aion/wiki/Contributors)
+
+## Contact
+
+[Aion Forum](https://forum.aion.network/)
+
+[Aion Gitter](https://gitter.im/aionnetwork)
+
+[Aion Reddit](https://www.reddit.com/r/AionNetwork/)
+
 
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->
