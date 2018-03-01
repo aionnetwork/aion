@@ -71,5 +71,6 @@ class ChannelBuffer {
         return header != null && body != null && body.length == header.getLen();
     }
 
+    public AtomicBoolean onWrite = new AtomicBoolean(false);
 
 }
