@@ -106,28 +106,29 @@ public final class SyncMgr {
     public void updateNetworkBestBlock(final long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
 
-        // switch to new selected node event on equal highest block
         if (_nodeBestBlockNumber > this.networkBestBlockNumber.get()) {
             this.networkBestBlockNumber.set(_nodeBestBlockNumber);
             this.networkBestBlockHash.set(_nodeBestBlockHash);
-
-            // fire the init push
-            // if(headersLatch != null)
-            // headersLatch.countDown();
-            //newBlockUpdated.set(true);
-
         }
 
         if (this.networkBestBlockNumber.get() <= selfBestBlockNumber) {
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<network-best-block-updated num={} self-num={} send-on-sync-done>", _nodeBestBlockNumber,
-                        selfBestBlockNumber);
+                LOG.debug(
+                    "<network-best-block-updated remote-num={} self-num={} known-network-num={} send-on-sync-done>",
+                    _nodeBestBlockNumber,
+                    selfBestBlockNumber,
+                    this.networkBestBlockNumber.get()
+                );
             }
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<network-best-block-updated num={} self-num={} continue-on-sync>", _nodeBestBlockNumber,
-                        selfBestBlockNumber);
+                LOG.debug(
+                    "<network-best-block-updated remote-num={} self-num={} known-network-num={} continue-on-sync>",
+                    _nodeBestBlockNumber,
+                    selfBestBlockNumber,
+                    this.networkBestBlockNumber.get()
+                );
             }
         }
     }
@@ -265,6 +266,8 @@ public final class SyncMgr {
 
             INode node = p2pMgr.getRandom();
 
+            System.out.println("selfBlock " + selfBlock.getNumber() + "");
+
             if (node != null) {
                 long remoteBest = node.getBestBlockNumber();
                 long diff = remoteBest - selfBest;
@@ -274,7 +277,7 @@ public final class SyncMgr {
                     this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, (int) (to - from) + 1));
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("<send-get-headers from-node={} from={} to={} self-best={} remote-best={}>",
-                                node.getIdHash(), from, to, selfBest, remoteBest);
+                                node.getIdShort(), from, to, selfBest, remoteBest);
                     }
                 }
             }
