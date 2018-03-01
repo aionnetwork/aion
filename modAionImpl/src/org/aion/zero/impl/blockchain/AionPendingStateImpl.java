@@ -109,7 +109,7 @@ public class AionPendingStateImpl
     // to filter out the transactions we have already processed
     // transactions could be sent by peers even if they were already included
     // into blocks
-    private final Map<ByteArrayWrapper, Object> receivedTxs = new LRUMap<>(100000);
+    private final Map<ByteArrayWrapper, Object> receivedTxs = Collections.synchronizedMap(new LRUMap<>(100000));
     private final Object dummyObject = new Object();
 
     private IRepositoryCache pendingState;
