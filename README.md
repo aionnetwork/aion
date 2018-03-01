@@ -117,5 +117,9 @@ Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for furt
 
 [Aion Reddit](https://www.reddit.com/r/AionNetwork/)
 
+## License
+
+Aion is released under the [LGPL-V3 license](https://github.com/aionnetwork/aion/blob/dev/LICENSE)
+
 
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->
