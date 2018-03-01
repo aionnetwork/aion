@@ -85,7 +85,7 @@ public final class SyncMgr {
     private ConcurrentHashMap<Integer, List<A0BlockHeader>> sentHeaders = new ConcurrentHashMap<>();
     private final BlockingQueue<AionBlock> importedBlocksQueue = new LinkedBlockingQueue<>();
 
-    private LRUMap<ByteArrayWrapper, Object> importedBlocksCache = new LRUMap<>(1024);
+    private Map<ByteArrayWrapper, Object> importedBlocksCache = Collections.synchronizedMap(new LRUMap<>(1024));
 
     /**
      * Threads
