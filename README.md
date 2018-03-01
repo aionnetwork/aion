@@ -51,7 +51,7 @@ Now you are ready to start the kernel.
 
 **Optional:** 
 
-Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network) or get added by peers, update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown above), IP and port of the computers you wish to connect to:
+Your kernel will have access to the seed nodes by default. Do not remove these nodes from the configuration. To include additional peers (e.g. friends that are also connected to the network) or get added by peers, update the `config.xml` by adding nodes using the **permanent peer id** (generated as shown below), IP and port of the computers you wish to connect to:
     
 ```
 <net>
@@ -108,10 +108,6 @@ Please check the [owner's manual wiki](https://github.com/aionnetwork/aion/wiki/
 ## Documentation
 
 Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
-
-[Releases](https://github.com/aionnetwork/aion/releases)
-
-[Initial Codebase Contributors](https://github.com/aionnetwork/aion/wiki/Contributors)
 
 ## Contact
 
