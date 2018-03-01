@@ -66,7 +66,6 @@ public final class P2pMgr implements IP2pMgr {
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_MSG_READ = 10000;
 
-    private final static int MAX_BODY_BYTES = 1024 * 1024 * 50;
     private final int maxTempNodes;
     private final int maxActiveNodes;
 
@@ -514,15 +513,17 @@ public final class P2pMgr implements IP2pMgr {
      */
     private void readHeader(final SocketChannel _sc, final ChannelBuffer _cb) throws IOException {
 
-        while (_sc.read(_cb.headerBuf) > 0) {
+        int ret = 0;
+        while ((ret = _sc.read(_cb.headerBuf)) > 0) {
             // continue read if has data, break on timeout
         }
-        if (_cb.headerBuf.hasRemaining())
-            return;
-        _cb.header = Header.decode(_cb.headerBuf.array());
 
-        if (_cb.header.getLen() > MAX_BODY_BYTES) {
-            throw new IOException("over-max-body-bytes");
+        if (!_cb.headerBuf.hasRemaining()) {
+            _cb.header = Header.decode(_cb.headerBuf.array());
+        } else {
+            if (ret == -1) {
+                 throw new IOException("read-header-eof");
+            }
         }
     }
 
@@ -532,21 +533,20 @@ public final class P2pMgr implements IP2pMgr {
      */
     private void readBody(final SocketChannel _sc, final ChannelBuffer _cb) throws IOException {
 
-        int read;
         if (_cb.bodyBuf == null)
             _cb.bodyBuf = ByteBuffer.allocate(_cb.header.getLen());
 
-        while (true) {
-            read = _sc.read(_cb.bodyBuf);
+        int ret;
+        while ((ret = _sc.read(_cb.bodyBuf)) > 0) {
 
-            // 0 | -1 means all done or body in multi-selector
-            if (read <= 0) {
-                break;
-            }
         }
 
         if (!_cb.bodyBuf.hasRemaining()) {
             _cb.body = _cb.bodyBuf.array();
+        } else {
+            if (ret == -1) {
+                throw new IOException("read-body-eof");
+            }
         }
     }
 
@@ -682,10 +682,10 @@ public final class P2pMgr implements IP2pMgr {
                         e.printStackTrace();
                     }
                 }
-//            finally {
-//                if (buf.hasRemaining())
-//                    dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
-//            }
+//                finally {
+//                    if (buf.hasRemaining())
+//                        dropActive(_nodeIdHash, _nodeShortId, "timeout-write-msg");
+//                }
         }
         });
     }
