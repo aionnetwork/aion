@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -35,6 +35,9 @@ public class RecoveryUtils {
         SUCCESS, FAILURE, ILLEGAL_ARGUMENT
     }
 
+    /**
+     * Used by the CLI call.
+     */
     public static Status revertTo(long nbBlock) {
         // ensure mining is disabled
         CfgAion cfg = CfgAion.inst();
@@ -43,6 +46,19 @@ public class RecoveryUtils {
 
         // get the current blockchain
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+
+        Status status = revertTo(blockchain, nbBlock);
+
+        blockchain.getRepository().close();
+
+        // ok if we managed to get down to the expected block
+        return status;
+    }
+
+    /**
+     * Used my internal world state recovery method.
+     */
+    public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock) {
         IBlockStoreBase store = blockchain.getBlockStore();
 
         IBlock bestBlock = store.getBestBlock();
@@ -83,10 +99,7 @@ public class RecoveryUtils {
 
         nbBestBlock = store.getBestBlock().getNumber();
 
-        blockchain.getRepository().close();
-
         // ok if we managed to get down to the expected block
         return (nbBestBlock == nbBlock) ? Status.SUCCESS : Status.FAILURE;
     }
-
 }
