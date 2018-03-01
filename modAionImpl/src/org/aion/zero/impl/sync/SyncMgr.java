@@ -59,7 +59,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
  */
 public final class SyncMgr {
 
-    private static final long SYNC_HEADER_FETCH_INTERVAL = 4000;
+    private static final long FETCH_INTERVAL = 1000;
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private boolean showStatus = false;
@@ -255,12 +255,9 @@ public final class SyncMgr {
     private void processGetHeaders() {
         while (start.get()) {
 
-            long ts = System.currentTimeMillis();
-            while (((System.currentTimeMillis() - ts) < SYNC_HEADER_FETCH_INTERVAL)) {
-                try {
-                    Thread.sleep(2000);
-                } catch (Exception e) {
-                }
+            try {
+                Thread.sleep(FETCH_INTERVAL);
+            } catch (InterruptedException e) {
             }
 
             AionBlock selfBlock = this.blockchain.getBestBlock();
@@ -286,6 +283,12 @@ public final class SyncMgr {
 
     private void processGetBlocks() {
         while (start.get()) {
+
+            try {
+                Thread.sleep(FETCH_INTERVAL * 2);
+            } catch (InterruptedException e) {
+            }
+
             List<A0BlockHeader> headers = importedHeaders.get(selectedNodeIdHashcode.get());
             if (importedBlocksQueue.size() < blocksQueueMax && headers != null) {
                 List<byte[]> blockHashes = new ArrayList<>();
@@ -301,10 +304,6 @@ public final class SyncMgr {
                     importedHeaders.clear();
                     this.p2pMgr.send(selectedNodeIdHashcode.get(), new ReqBlocksBodies(blockHashes));
                 }
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
             }
         }
     }

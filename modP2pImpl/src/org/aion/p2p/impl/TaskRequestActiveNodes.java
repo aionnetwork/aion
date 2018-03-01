@@ -45,9 +45,7 @@ public final class TaskRequestActiveNodes implements Runnable {
 
     @Override
     public void run() {
-        Map<Integer, INode> activeNodes = this.mgr.getActiveNodes();
-        for (int key : activeNodes.keySet()) {
-            this.mgr.send(activeNodes.get(key).getIdHash(), new ReqActiveNodes());
-        }
+        INode node = mgr.getRandom();
+        this.mgr.send(node.getIdHash(), new ReqActiveNodes());
     }
 }
