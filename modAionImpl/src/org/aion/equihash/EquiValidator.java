@@ -54,6 +54,8 @@ public class EquiValidator {
     private int indicesHashLength;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
+    private Param initState;
+
     public EquiValidator(int n, int k) {
         this.n = n;
         this.k = k;
@@ -65,6 +67,7 @@ public class EquiValidator {
         this.hashLength = (k + 1) * collisionByteLength;
         this.finalFullWidth = 2 * collisionByteLength + (Integer.BYTES * (1 << k));
         this.solutionWidth = (1 << k) * (collisionBitLength + 1) / 8;
+        this.initState = this.InitialiseState();
     }
 
     /**
@@ -110,14 +113,22 @@ public class EquiValidator {
             LOG.debug("Invalid solution width: {}", solution.length);
             return false;
         }
+
+        // blake instance can be reused inside 512 indiecs loop.
+        // it save both blake and initState mem cost.
+        // if use blake in Equivalidator instance level, as it's multi-threaded,
+        // have to pay a lock cost.
+        // so still keep it in function level.
+        Blake2b blake = Blake2b.Digest.newInstance(initState);
+
         // Create array with 2^k slots
         FullStepRow[] X = new FullStepRow[1 << k];
         byte[] tmpHash;
         int j = 0;
         for (int i : getIndicesFromMinimal(solution, collisionBitLength)) {
 
-            // Initialize blake2b digest with personalization params
-            Blake2b blake = Blake2b.Digest.newInstance(InitialiseState());
+            // as reuse blake instance, need reset before every round.
+            blake.reset();
 
             // Build H(I | V ...
 
