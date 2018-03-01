@@ -129,8 +129,8 @@ public final class P2pMgr implements IP2pMgr {
                             read(sk);
                         } catch (IOException | NullPointerException e) {
                             if (showLog) {
-                                //System.out.println("<p2p read-msg-io-exception>");
-                                e.printStackTrace();
+                                System.out.println("<p2p read-msg-io-exception>");
+                                //e.printStackTrace();
                             }
                             closeSocket((SocketChannel) sk.channel());
                         }
@@ -284,8 +284,8 @@ public final class P2pMgr implements IP2pMgr {
                         }
                     }
                 } catch (Exception e) {
-                    if(showLog)
-                        e.printStackTrace();
+//                    if(showLog)
+//                        e.printStackTrace();
                 }
             }
         }
@@ -334,7 +334,7 @@ public final class P2pMgr implements IP2pMgr {
                 } catch (IOException e) {
                     if (showLog) {
                         System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + ">");
-                        e.printStackTrace();
+                        // e.printStackTrace();
                     }
                 }
                 finally {
@@ -788,23 +788,17 @@ public final class P2pMgr implements IP2pMgr {
     public void send(int _nodeIdHashcode, final Msg _msg) {
         Node node = this.activeNodes.get(_nodeIdHashcode);
         if (node != null) {
-            try{
-                SelectionKey sk = node.getChannel().keyFor(selector);
+            SelectionKey sk = node.getChannel().keyFor(selector);
 
-                if (sk != null) {
-                    Object attachment = sk.attachment();
-                    if (attachment != null)
-                        workers.submit(new TaskWrite(
-                                node.getIdShort(),
-                                node.getChannel(),
-                                _msg,
-                                (ChannelBuffer) attachment
-                        ));
-                }
-            } catch(Exception ex){
-                if(showLog)
-                    // TODO: chris check
-                    ex.printStackTrace();
+            if (sk != null) {
+                Object attachment = sk.attachment();
+                if (attachment != null)
+                    workers.submit(new TaskWrite(
+                            node.getIdShort(),
+                            node.getChannel(),
+                            _msg,
+                            (ChannelBuffer) attachment
+                    ));
             }
         }
     }
