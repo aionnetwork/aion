@@ -183,11 +183,22 @@ public final class SyncMgr {
                             importedBlocksQueue.size());
                 }
             }, 0, 5, TimeUnit.SECONDS);
-        scheduledWorkers.scheduleWithFixedDelay(() -> {
-            INode node = p2pMgr.getRandom();
-            if (node != null)
-                p2pMgr.send(node.getIdHash(), new ReqStatus());
-        }, 2, GET_STATUS_SLEEP, TimeUnit.MILLISECONDS);
+
+
+            final AtomicInteger prevId = new AtomicInteger(0);
+
+            scheduledWorkers.scheduleWithFixedDelay(() -> {
+                for(int i = 0; i < 3; i++){
+                    INode node = p2pMgr.getRandom();
+                    if(node != null && node.getIdHash() != prevId.get()){
+                        prevId.set(node.getIdHash());
+                        p2pMgr.send(node.getIdHash(), new ReqStatus());
+                        System.out.println(prevId.get() + "/" + p2pMgr.getActiveNodes().size());
+                        break;
+                    }
+                }
+            }, 2, GET_STATUS_SLEEP, TimeUnit.MILLISECONDS);
+
     }
 
     /**
