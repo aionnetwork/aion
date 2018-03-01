@@ -43,7 +43,7 @@ public class BlockConstants implements IBlockConstants {
      * The lower bound of difficulty, this value is currently set to 32 to
      * accomodate for single node testing.
      */
-    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(1);
+    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(16);
 
     /**
      * Divisor for the maximum increase or decrease in energyLimit from one
