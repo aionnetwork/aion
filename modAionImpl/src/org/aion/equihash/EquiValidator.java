@@ -123,6 +123,7 @@ public class EquiValidator {
 
         // Create array with 2^k slots
         FullStepRow[] X = new FullStepRow[1 << k];
+
         byte[] tmpHash;
         int j = 0;
         for (int i : getIndicesFromMinimal(solution, collisionBitLength)) {
@@ -154,40 +155,58 @@ public class EquiValidator {
 
         int hashLen = hashLength;
         int lenIndices = Integer.BYTES;
-        while (X.length > 1) {
-            ArrayList<FullStepRow> Xc = new ArrayList<>();
-            for (int i = 0; i < X.length; i = i + 2) {
 
-                if (!hasCollision(X[i], X[i + 1], collisionByteLength)) {
+        // for this specific algo , for looping is 256, fix side alloc ArrayList
+        // will prevent
+        // multiple ArrayList increase space cost, with 256, the default
+        // arraylist size is 10.
+        // move out from 512 round while loop also helps avoid looping alloc.
+        // ArrayList<FullStepRow> Xc = new ArrayList<>(256);
+
+        int loopLen = 512;
+
+        // use X, Y as swap container for this algo to avoid 512 round memory
+        // alloc and copy.
+        FullStepRow[] Y = new FullStepRow[1 << k];
+
+        for (int loopIdx = 0; loopIdx < 9; loopIdx++, loopLen >>= 1) {
+
+            for (int i = 0; i < loopLen / 2; i++) {
+
+                if (!hasCollision(X[i * 2], X[i * 2 + 1], collisionByteLength)) {
                     LOG.error("Invalid Solution: Collision not present");
                     return false;
                 }
 
-                if (EquiUtils.indicesBefore(X[i + 1], X[i], hashLen, lenIndices)) {
+                if (EquiUtils.indicesBefore(X[i * 2 + 1], X[i * 2], hashLen, lenIndices)) {
                     LOG.error("Invalid Solution: Index tree incorrecly ordered");
                     return false;
                 }
-                if (!distinctIndices(X[i + 1], X[i], hashLen, lenIndices)) {
+                if (!distinctIndices(X[i * 2 + 1], X[i * 2], hashLen, lenIndices)) {
                     LOG.error("Invalid solution: duplicate indices");
                     return false;
                 }
 
                 // Check order of X[i] and X[i+1] in because indices before is
                 // called in the constructor
-                Xc.add(new FullStepRow(finalFullWidth, X[i], X[i + 1], hashLen, lenIndices, collisionByteLength));
+                // Xc.add(new FullStepRow(finalFullWidth, X[i], X[i + 1],
+                // hashLen, lenIndices, collisionByteLength));
+                Y[i] = new FullStepRow(finalFullWidth, X[i * 2], X[i * 2 + 1], hashLen, lenIndices,
+                        collisionByteLength);
 
             }
-            FullStepRow[] temp = new FullStepRow[Xc.size()];
 
-            for (int i = 0; i < Xc.size(); i++) {
-                temp[i] = Xc.get(i);
-            }
-            X = temp;
             hashLen -= collisionByteLength;
             lenIndices *= 2;
+
+            // swap X, Y
+            FullStepRow[] swap = X;
+            X = Y;
+            Y = swap;
         }
 
         return X[0].isZero(hashLen);
+
     }
 
     /**
