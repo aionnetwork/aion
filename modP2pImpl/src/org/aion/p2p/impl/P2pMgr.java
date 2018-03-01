@@ -129,7 +129,10 @@ public final class P2pMgr implements IP2pMgr {
                         try {
                             read(sk);
                         } catch (IOException | NullPointerException e) {
-                            e.printStackTrace();
+                            if (showLog) {
+                                System.out.println("<p2p read-msg-io-exception>");
+                                e.printStackTrace();
+                            }
                             closeSocket((SocketChannel) sk.channel());
                         }
                 }
