@@ -307,8 +307,10 @@ public final class P2pMgr implements IP2pMgr {
 
         @Override
         public void run() {
-            if(this.channelBuffer != null && !this.channelBuffer.onWrite.get()) {
-                this.channelBuffer.onWrite.set(true);
+            Thread.currentThread().setName("p2p-write");
+
+            // NOTE: the following logic may cause message loss
+            if(this.channelBuffer != null && this.channelBuffer.onWrite.compareAndSet(false, true)) {
                 /*
                  * @warning header set len (body len) before header encode
                  */
@@ -786,9 +788,11 @@ public final class P2pMgr implements IP2pMgr {
     public void send(int _nodeIdHashcode, final Msg _msg) {
         Node node = this.activeNodes.get(_nodeIdHashcode);
         if (node != null) {
-            synchronized (node) {
-                try{
-                    Object attachment = node.getChannel().keyFor(selector).attachment();
+            try{
+                SelectionKey sk = node.getChannel().keyFor(selector);
+
+                if (sk != null) {
+                    Object attachment = sk.attachment();
                     if (attachment != null)
                         workers.submit(new TaskWrite(
                                 node.getIdShort(),
@@ -796,12 +800,11 @@ public final class P2pMgr implements IP2pMgr {
                                 _msg,
                                 (ChannelBuffer) attachment
                         ));
-
-                } catch(Exception ex){
-                    if(showLog)
-                        // TODO: chris check
-                        ex.printStackTrace();
                 }
+            } catch(Exception ex){
+                if(showLog)
+                    // TODO: chris check
+                    ex.printStackTrace();
             }
         }
     }
