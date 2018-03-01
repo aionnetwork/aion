@@ -150,9 +150,12 @@ public final class P2pMgr implements IP2pMgr {
             System.out.println("[temp-nodes-size=" + tempNodes.size() + "]");
             //System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
             //System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
-            System.out.println("[active-nodes(nodeIdHash)=[" + activeNodes.entrySet().stream()
-                    .map((entry) -> "\n" + entry.getValue().getBestBlockNumber() + "-" + entry.getValue().getIdShort()
-                            + "-" + entry.getValue().getIpStr() + (entry.getValue().getIfFromBootList() ? "-seed" : ""))
+
+            List<Node> list = new ArrayList<>(activeNodes.values());
+            list.sort((e1, e2) -> Long.compare(e2.getBestBlockNumber(), e1.getBestBlockNumber()));
+            System.out.println("[active-nodes(nodeIdHash)=[" + list.stream()
+                    .map((entry) -> "\n" + entry.getBestBlockNumber() + "-" + entry.getIdShort()
+                            + "-" + entry.getIpStr() + (entry.getIfFromBootList() ? "-seed" : ""))
                     .collect(Collectors.joining(",")) + "]]");
         }
     }
