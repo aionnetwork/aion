@@ -59,27 +59,25 @@ import org.aion.mcf.valid.BlockHeaderValidator;
  */
 public final class SyncMgr {
 
-    private static final long FETCH_INTERVAL = 1000;
+    private static final int FETCH_INTERVAL = 1000;
+    private static final int GET_STATUS_SLEEP = 1000;
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private boolean showStatus = false;
     private int syncBackwardMax = 128;
     private int syncForwardMax = 192;
     private int blocksQueueMax = 2000;
-    private AtomicBoolean start = new AtomicBoolean(true);
-    //private AtomicBoolean newBlockUpdated = new AtomicBoolean(false);
 
     private AionBlockchainImpl blockchain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
     private BlockHeaderValidator blockHeaderValidator;
 
+    private AtomicBoolean start = new AtomicBoolean(true);
     private AtomicInteger selectedNodeIdHashcode = new AtomicInteger(0);
     private AtomicLong longestHeaders = new AtomicLong(0);
     private AtomicLong networkBestBlockNumber = new AtomicLong(0);
     private AtomicReference<byte[]> networkBestBlockHash = new AtomicReference<>(new byte[0]);
-
-    private static final int GET_STATUS_SLEEP = 1;
 
     private ConcurrentHashMap<Integer, SequentialHeaders<A0BlockHeader>> importedHeaders = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer, List<A0BlockHeader>> sentHeaders = new ConcurrentHashMap<>();
@@ -189,7 +187,7 @@ public final class SyncMgr {
             INode node = p2pMgr.getRandom();
             if (node != null)
                 p2pMgr.send(node.getIdHash(), new ReqStatus());
-        }, 0, GET_STATUS_SLEEP, TimeUnit.SECONDS);
+        }, 2, GET_STATUS_SLEEP, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -202,7 +200,7 @@ public final class SyncMgr {
     }
 
     @SuppressWarnings("unchecked")
-    public void validateAndAddHeaders(int _nodeIdHashcode, final List<A0BlockHeader> _headers) {
+    public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, final List<A0BlockHeader> _headers) {
 
         if (_headers == null || _headers.isEmpty())
             return;
@@ -228,12 +226,18 @@ public final class SyncMgr {
             this.selectedNodeIdHashcode.set(_nodeIdHashcode);
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<incoming-headers size={} from={} to={} imported-headers={}>", _headers.size(),
-                    _headers.get(0).getNumber(), _headers.get(_headers.size() - 1).getNumber(), headers.size());
+            LOG.debug(
+                "<incoming-headers origin-headers={} from-num={} to-num={} imported-headers={} from-node={}>",
+                _headers.size(),
+                _headers.get(0).getNumber(),
+                _headers.get(_headers.size() - 1).getNumber(),
+                headers.size(),
+                _displayId
+            );
         }
     }
 
-    public void validateAndAddBlocks(int _nodeIdHashcode, final List<AionBlock> _blocks, boolean ifNewBlockBroadcast) {
+    public void validateAndAddBlocks(String _displayId, final List<AionBlock> _blocks) {
         if (_blocks == null || _blocks.isEmpty())
             return;
         int m = _blocks.size();
@@ -243,8 +247,13 @@ public final class SyncMgr {
         if (m > 1)
             _blocks.sort((b1, b2) -> b1.getNumber() > b2.getNumber() ? 1 : 0);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<validate-incoming-blocks size={} from={} to={}>", _blocks.size(), _blocks.get(0).getNumber(),
-                    _blocks.get(_blocks.size() - 1).getNumber());
+            LOG.debug(
+                "<validate-incoming-blocks size={} from-num={} to-num={} from-node={}>",
+                _blocks.size(),
+                _blocks.get(0).getNumber(),
+                _blocks.get(_blocks.size() - 1).getNumber(),
+                _displayId
+            );
         }
 
         for (AionBlock b : _blocks) {
@@ -266,8 +275,6 @@ public final class SyncMgr {
 
             INode node = p2pMgr.getRandom();
 
-            System.out.println("selfBlock " + selfBlock.getNumber() + "");
-
             if (node != null) {
                 long remoteBest = node.getBestBlockNumber();
                 long diff = remoteBest - selfBest;
@@ -276,8 +283,14 @@ public final class SyncMgr {
                     long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
                     this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, (int) (to - from) + 1));
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("<send-get-headers from-node={} from={} to={} self-best={} remote-best={}>",
-                                node.getIdShort(), from, to, selfBest, remoteBest);
+                        LOG.debug(
+                            "<send-get-headers from-node={} from-num={} to-num={} self-best={} remote-best={}>",
+                            node.getIdShort(),
+                            from,
+                            to,
+                            selfBest,
+                            remoteBest
+                        );
                     }
                 }
             }
@@ -302,7 +315,7 @@ public final class SyncMgr {
                 updateSentHeaders(selectedNodeIdHashcode.get(), headers);
                 if (headers.size() > 0) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("<req-blocks from={} take={}>", headers.get(0).getNumber(), blockHashes.size());
+                        LOG.debug("<req-blocks from-num={} take={}>", headers.get(0).getNumber(), blockHashes.size());
                     }
                     importedHeaders.clear();
                     this.p2pMgr.send(selectedNodeIdHashcode.get(), new ReqBlocksBodies(blockHashes));

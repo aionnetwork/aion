@@ -243,7 +243,7 @@ public final class P2pMgr implements IP2pMgr {
                             inboundIt.remove();
 
                             if (showLog)
-                                System.out.println("<p2p-clear inbound-timeout>");
+                                System.out.println("<p2p-clear inbound-timeout node-id=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
                         }
                     }
 
@@ -301,7 +301,7 @@ public final class P2pMgr implements IP2pMgr {
         private Msg msg;
         private ChannelBuffer channelBuffer;
 
-        public TaskWrite(String _nodeShortId, final SocketChannel _sc, final Msg _msg, final ChannelBuffer _cb){
+        TaskWrite(String _nodeShortId, final SocketChannel _sc, final Msg _msg, final ChannelBuffer _cb){
             this.nodeShortId = _nodeShortId;
             this.sc = _sc;
             this.msg = _msg;
@@ -562,7 +562,7 @@ public final class P2pMgr implements IP2pMgr {
                 if (rb.nodeIdHash != 0 || handlers.containsKey(route))
                     handleKernelMsg(rb.nodeIdHash, route, bodyBytes);
                 break;
-        }
+         }
     }
 
     /**
@@ -591,6 +591,7 @@ public final class P2pMgr implements IP2pMgr {
 
         if (_cb.bodyBuf == null)
             _cb.bodyBuf = ByteBuffer.allocate(_cb.header.getLen());
+
 
         int ret;
         while ((ret = _sc.read(_cb.bodyBuf)) > 0) {}

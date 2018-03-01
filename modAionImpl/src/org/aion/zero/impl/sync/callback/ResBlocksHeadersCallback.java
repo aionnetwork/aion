@@ -63,7 +63,7 @@ public final class ResBlocksHeadersCallback extends Handler {
     }
 
     @Override
-    public void receive(int _nodeIdHashcode,String _displayId, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         if(_msgBytes == null || _msgBytes.length == 0)
             return;
         ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
@@ -76,7 +76,7 @@ public final class ResBlocksHeadersCallback extends Handler {
                         headers.size(),
                         _displayId
                 );
-                this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, headers);
+                this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, _displayId, headers);
             }
         } else
             this.log.error(
