@@ -34,6 +34,8 @@ import java.util.concurrent.ConcurrentMap;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.core.FileAppender;
+import ch.qos.logback.core.rolling.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +84,7 @@ public class AionLoggerFactory {
         appender.setEncoder(encoder);
         appender.start();
 
-        ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger("ROOT");
+        ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootlogger.detachAndStopAllAppenders();
     }
 
