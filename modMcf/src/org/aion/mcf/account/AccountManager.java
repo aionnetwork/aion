@@ -84,7 +84,12 @@ public class AccountManager {
 
     public boolean unlockAccount(Address _address, String _password, int _timeout) {
 
-        int timeout = _timeout <= 0 || _timeout > UNLOCK_MAX ? UNLOCK_DEFAULT : _timeout;
+        int timeout = UNLOCK_DEFAULT;
+        if (_timeout > UNLOCK_MAX) {
+            timeout = UNLOCK_MAX;
+        } else if (_timeout > 0) {
+            timeout = _timeout;
+        }
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
