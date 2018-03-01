@@ -67,7 +67,7 @@ Your kernel will have access to the seed nodes by default. Do not remove these n
     
 **Note:** To allow peers to connect to you, you must also change your configuration IP from **127.0.0.1** to a public IP on your machine. If you are unsure about having a public IP, set it to **0.0.0.0**.
 
-An alternative way to get a permanent peer id is by creating a new configuration: 
+To get a permanent peer id create a new configuration: 
 
 ```
 ./aion.sh -c
@@ -116,6 +116,10 @@ Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for furt
 [Aion Gitter](https://gitter.im/aionnetwork)
 
 [Aion Reddit](https://www.reddit.com/r/AionNetwork/)
+
+## License
+
+Aion is released under the [LGPL-V3 license](https://github.com/aionnetwork/aion/blob/dev/LICENSE)
 
 
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->
