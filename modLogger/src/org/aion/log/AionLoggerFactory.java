@@ -61,7 +61,6 @@ public class AionLoggerFactory {
     private static Map<String, String> logModules;
     private static LoggerContext loggerContext;
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
-    private static RollingFileAppender<ILoggingEvent> fileAppender = new RollingFileAppender<>();
     private final static PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     static {
         logModules = new HashMap<>();
@@ -85,18 +84,6 @@ public class AionLoggerFactory {
         appender.setEncoder(encoder);
         appender.start();
 
-        // setup rolling policy
-        TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<>();
-        policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH-mm}.gzip");
-        policy.setContext(loggerContext);
-        policy.setParent(fileAppender);
-        policy.start();
-
-        fileAppender.setContext(loggerContext);
-        fileAppender.setEncoder(encoder);
-        fileAppender.setRollingPolicy(policy);
-        fileAppender.start();
-
         ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootlogger.detachAndStopAllAppenders();
     }
@@ -119,7 +106,6 @@ public class AionLoggerFactory {
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
-        newlogger.addAppender(fileAppender);
 
         boolean flag = false;
         Iterator<Entry<String, String>> it = logModules.entrySet().iterator();
