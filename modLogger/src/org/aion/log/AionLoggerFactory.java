@@ -36,6 +36,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.*;
+import ch.qos.logback.core.util.FileSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public class AionLoggerFactory {
         }
     }
 
-    public static void init(final Map<String, String> _logModules) {
+    public static void init(final Map<String, String> _logModules, boolean logFile) {
 
         logModules = _logModules;
 
@@ -85,16 +86,28 @@ public class AionLoggerFactory {
         appender.setEncoder(encoder);
         appender.start();
 
-        // setup rolling policy
-        TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<>();
-        policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH-mm}.gzip");
-        policy.setContext(loggerContext);
-        policy.setParent(fileAppender);
-        policy.start();
+        if (logFile) {
+            // setup rolling policy
+            TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<>();
+            policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH-mm}.gzip");
+            policy.setContext(loggerContext);
+            policy.setParent(fileAppender);
+            policy.start();
+
+            // setup inner policy to govern size
+            SizeAndTimeBasedFNATP<ILoggingEvent> sizePolicy = new SizeAndTimeBasedFNATP<>();
+            sizePolicy.setContext(loggerContext);
+            sizePolicy.setMaxFileSize(FileSize.valueOf("64mb"));
+            sizePolicy.setTimeBasedRollingPolicy(policy);
+            sizePolicy.start();
+
+            policy.setTimeBasedFileNamingAndTriggeringPolicy(sizePolicy);
+            policy.start();
+            fileAppender.setRollingPolicy(policy);
+        }
 
         fileAppender.setContext(loggerContext);
         fileAppender.setEncoder(encoder);
-        fileAppender.setRollingPolicy(policy);
         fileAppender.start();
 
         ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -114,7 +127,7 @@ public class AionLoggerFactory {
         if (loggerContext == null) {
             // System.out.println("If you see this line, meaning you are under
             // the unit test!!! If you are not. should report an issue.");
-            init(new HashMap<>());
+            init(new HashMap<>(), false);
         }
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
