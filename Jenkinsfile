@@ -16,7 +16,7 @@ pipeline {
                 
                 sh "git submodule init" 
 
-                sh "git submodule foreach git pull origin master"
+                sh "git submodule update --recursive --remote --merge"
 
                 sh "${env.ANT_HOME} pack_build"
                 
