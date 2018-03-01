@@ -176,7 +176,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                 lhs.add(e.getKey());
 
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Put txHash into timeMap: ts:[{}] size:[{}]", timestamp, lhs.size());
+                    LOG.trace("AbstractTxPool.sortTxn Put txHash into timeMap: ts:[{}] size:[{}]", timestamp, lhs.size());
                 }
 
                 timeMap.put(timestamp, lhs);
@@ -198,14 +198,14 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                         .multiply(BigInteger.valueOf(tx.getNrgConsume()));
 
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Put tx into nonceMap: nonce:[{}] ts:[{}] nrgCharge:[{}]", nonce,
+                    LOG.trace("AbstractTxPool.sortTxn Put tx into nonceMap: nonce:[{}] ts:[{}] nrgCharge:[{}]", nonce,
                             ByteUtils.toHexString(e.getKey().getData()), nrgCharge.toString());
                 }
 
                 nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
 
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Put tx into accMap: acc:[{}] ", tx.getFrom().toString());
+                    LOG.trace("AbstractTxPool.sortTxn Put tx into accMap: acc:[{}] mapsize[{}] ", tx.getFrom().toString(), nonceMap.size());
                 }
 
                 accMap.put(tx.getFrom(), nonceMap);
@@ -262,7 +262,6 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("AbstractTxPool.updateAccPoolState fn [{}]", txNonceStart.toString());
                     }
-
                     for (PoolState ps : psl) {
                         // check the previous txn status in the old PoolState
                         if (ps.firstNonce.equals(txNonceStart) && ps.combo == SEQUENTAILTXNCOUNT_MAX) {
@@ -292,6 +291,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                 BigInteger totalFee = BigInteger.ZERO;
 
                 for (Entry<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> en : as.getMap().entrySet()) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace(
+                                "AbstractTxPool.updateAccPoolState mapsize[{}] nonce:[{}] cnt[{}] txNonceStart[{}]", as.getMap().size(), en.getKey().toString(), cnt, txNonceStart.toString());
+                    }
                     if (en.getKey().equals(txNonceStart != null ? txNonceStart.add(BigInteger.valueOf(cnt)) : null)) {
                         if (en.getValue().getValue().compareTo(fee) > -1) {
                             fee = en.getValue().getValue();
@@ -328,11 +331,6 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 cnt = 1;
                             }
                         }
-                    } else { // Can't find next sequential nonce
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("AbstractTxPool.updateAccPoolState - Can't find next sequential nonce!");
-                        }
-                        break;
                     }
                 }
 

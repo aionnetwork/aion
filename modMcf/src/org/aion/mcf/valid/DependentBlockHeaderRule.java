@@ -24,6 +24,7 @@
  ******************************************************************************/
 package org.aion.mcf.valid;
 
+import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 import org.aion.mcf.types.AbstractBlockHeader;
@@ -31,7 +32,7 @@ import org.aion.mcf.types.AbstractBlockHeader;
 /**
  *
  */
-public abstract class DependentBlockHeaderRule<BH extends AbstractBlockHeader> extends AbstractValidRule
+public abstract class DependentBlockHeaderRule<BH extends IBlockHeader> extends AbstractValidRule
         implements IBlockHeaderValidRule<BH> {
 
     @Override

@@ -1,28 +1,19 @@
-# IntelliJ files
+# aion
+config/
+database/
+keystore/
+pack/
+
+# ide
 .idea/
 mod*/.idea/
 mod*/*.iml
-    mod/modAion.jar
-    mod/modAionBase.jar
-    mod/modCrypto.jar
-    mod/modDbImpl.jar
-    mod/modEvtMgr.jar
-    mod/modEvtMgrImpl.jar
-    mod/modLogger.jar
-    mod/modMcf.jar
-    mod/modP2p.jar
-    mod/modP2pImpl.jar
-    mod/modRlp.jar
-    mod/modTxPool.jar
-    mod/modTxPoolImpl.jar
-    mod/modAion.jar
-    modDbImpl/build/
-    modEvtMgr/build/
-    modEvtMgrImpl/build/
-    modLogger/build/
-    modMcf/build/
-    mod/modMcf.jar
-    modRlp/build/
-    modTxPool/build/
-    modTxPoolImpl/build/
-    native/linux/blake2b/libblake2b.so
+
+# build
+build/
+mod/
+*/build/
+native/linux/blake2b/libblake2b.so
+
+# ci
+*/report

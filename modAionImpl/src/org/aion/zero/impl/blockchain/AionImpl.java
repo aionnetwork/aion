@@ -91,12 +91,7 @@ public class AionImpl implements IAionChain {
         ImportResult importResult = this.aionHub.getBlockchain().tryToConnect(block);
 
         if (importResult == ImportResult.IMPORTED_BEST) {
-            Map<Integer, INode> activeNodes = this.aionHub.getP2pMgr().getActiveNodes();
-            synchronized (activeNodes) {
-                for (Map.Entry<Integer, INode> e : activeNodes.entrySet()) {
-                    this.aionHub.getP2pMgr().send(e.getValue().getId(), new BroadcastNewBlock(block));
-                }
-            }
+            this.aionHub.getPropHandler().propagateNewBlock(block);
         }
         return importResult;
     }

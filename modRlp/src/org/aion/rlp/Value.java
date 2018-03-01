@@ -43,14 +43,18 @@ import org.aion.base.util.Hex;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion
+ * 
+ * @author ethereumJ 2014
+ * @author modified by aion 2017
+ *
  */
 public class Value {
 
     private Object value;
     private byte[] rlp;
-    
+
     // removed all sha3 logic in rlp
-    //private byte[] sha3;
+    // private byte[] sha3;
 
     private boolean decoded = false;
 
@@ -85,9 +89,9 @@ public class Value {
         }
     }
 
-    /* *****************
-     *      Convert
-     * *****************/
+    /*
+     * ***************** Convert
+     *****************/
     public Object asObj() {
         decode();
         return value;
@@ -171,9 +175,9 @@ public class Value {
         return new Value(null);
     }
 
-    /* *****************
-     *      Utility
-     * *****************/
+    /*
+     * ***************** Utility
+     *****************/
     public void decode() {
         if (!this.decoded) {
             this.value = RLP.decode(rlp, 0).getDecoded();
@@ -191,12 +195,12 @@ public class Value {
     // @REMOVED:
     // @rational:
     // hash is not RLP 's function, decouple from RLP.
-//    public byte[] hash() {
-//        if (sha3 == null) {
-//            sha3 = HashUtil.sha3(encode());
-//        }
-//        return sha3;
-//    }
+    // public byte[] hash() {
+    // if (sha3 == null) {
+    // sha3 = HashUtil.sha3(encode());
+    // }
+    // return sha3;
+    // }
     public boolean cmp(Value o) {
         if (o == null) {
             return false;
@@ -207,12 +211,12 @@ public class Value {
             return Arrays.equals(this.encode(), o.encode());
         }
 
-        //return DeepEquals.deepEquals(this, o);
+        // return DeepEquals.deepEquals(this, o);
     }
 
-    /* *****************
-     *      Checks
-     * *****************/
+    /*
+     * ***************** Checks
+     *****************/
     public boolean isList() {
         decode();
         return value != null && value.getClass().isArray() && !value.getClass().getComponentType().isPrimitive();
@@ -272,8 +276,7 @@ public class Value {
 
         for (byte aData : data) {
 
-            if ((aData >= 48 && aData <= 57)
-                    || (aData >= 97 && aData <= 102)) {
+            if ((aData >= 48 && aData <= 57) || (aData >= 97 && aData <= 102)) {
                 ++hexChars;
             }
         }
