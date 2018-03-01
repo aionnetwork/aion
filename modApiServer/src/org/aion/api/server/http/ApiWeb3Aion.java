@@ -154,7 +154,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     private JSONObject blockToJson(AionBlock block, BigInteger totalDifficulty, boolean fullTransaction) {
         JSONObject obj = new JSONObject();
-        obj.put("blockNumber", block.getNumber());
+        obj.put("number", block.getNumber());
         obj.put("hash", TypeConverter.toJsonHex(block.getHash()));
         obj.put("parentHash", TypeConverter.toJsonHex(block.getParentHash()));
         obj.put("logsBloom", TypeConverter.toJsonHex(block.getLogBloom()));
@@ -172,8 +172,9 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.put("solution", TypeConverter.toJsonHex(block.getHeader().getSolution()));
         obj.put("gasUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
         obj.put("gasLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
-        obj.put("energyConsumed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("energyLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
+        obj.put("nrgUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
+        //
         obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
         obj.put("size", new NumericalValue(block.getEncoded().length).toHexString());
 
@@ -182,8 +183,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         for (AionTransaction _tx : _txs) {
             if (fullTransaction) {
                 JSONObject jsonTx = new JSONObject();
-                jsonTx.put("address", TypeConverter.toJsonHex(_tx.getContractAddress().toString()));
+                jsonTx.put("address", (_tx.getContractAddress() != null)? TypeConverter.toJsonHex(_tx.getContractAddress().toString()):null);
                 jsonTx.put("transactionHash", TypeConverter.toJsonHex(_tx.getHash()));
+                jsonTx.put("transactionIndex", getTransactionReceipt(_tx.getHash()).transactionIndex);
+                jsonTx.put("value", TypeConverter.toJsonHex(_tx.getValue()));
+                jsonTx.put("nrg", _tx.getNrg());
+                jsonTx.put("nrgPrice", TypeConverter.toJsonHex(_tx.getNrgPrice()));
                 jsonTx.put("nonce", ByteUtil.byteArrayToLong(_tx.getNonce()));
                 jsonTx.put("from", TypeConverter.toJsonHex(_tx.getFrom().toString()));
                 jsonTx.put("to", TypeConverter.toJsonHex(_tx.getTo().toString()));

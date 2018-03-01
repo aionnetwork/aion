@@ -155,7 +155,7 @@ public final class HttpServer {
 
         case eth_getBlockByHash: {
             String hashString = (String) params.get(0);
-            boolean fullTransactions = Boolean.parseBoolean((String) params.get(1));
+                boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
             if (hashString == null) {
                 log.debug("eth_getBlockByHash: invalid input");
                 return processResult(_id, null);
@@ -169,8 +169,7 @@ public final class HttpServer {
 
         case eth_getWork:
             // Header without nonce and solution , pool needs add new nonce
-            return processResult(_id, api.getBestBlock().getHeader().getHeaderBytes(true));
-
+                return processResult(_id, toHexString(HashUtil.h256(api.getBestBlock().getHeader().getHeaderBytes(true))));
         case eth_syncing:
             SyncInfo syncInfo = api.getSync();
             if (!syncInfo.done) {
@@ -279,6 +278,9 @@ public final class HttpServer {
                     JSONObject obj = new JSONObject();
                     obj.put("address", txR.logs[i].address);
                     obj.put("data", txR.txData);
+                    obj.put("blockNumber", new NumericalValue(txR.blockNumber).toHexString());
+                    obj.put("transactionIndex", new NumericalValue(txR.transactionIndex).toHexString());
+                    obj.put("logIndex", new NumericalValue(i).toHexString());
 
                     String[] topics = txR.logs[i].topics;
                     JSONArray topicArray = new JSONArray();
