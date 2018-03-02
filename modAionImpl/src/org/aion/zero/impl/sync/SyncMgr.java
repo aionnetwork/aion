@@ -44,6 +44,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.NodeRandPolicy;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
@@ -111,20 +112,14 @@ public final class SyncMgr {
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                    "<network-best-block-updated remote-num={} self-num={} known-network-num={} send-on-sync-done>",
-                    _nodeBestBlockNumber,
-                    selfBestBlockNumber,
-                    this.networkBestBlockNumber.get()
-                );
+                        "<network-best-block-updated remote-num={} self-num={} known-network-num={} send-on-sync-done>",
+                        _nodeBestBlockNumber, selfBestBlockNumber, this.networkBestBlockNumber.get());
             }
         } else {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                    "<network-best-block-updated remote-num={} self-num={} known-network-num={} continue-on-sync>",
-                    _nodeBestBlockNumber,
-                    selfBestBlockNumber,
-                    this.networkBestBlockNumber.get()
-                );
+                        "<network-best-block-updated remote-num={} self-num={} known-network-num={} continue-on-sync>",
+                        _nodeBestBlockNumber, selfBestBlockNumber, this.networkBestBlockNumber.get());
             }
         }
     }
@@ -167,25 +162,25 @@ public final class SyncMgr {
             scheduledWorkers.scheduleWithFixedDelay(() -> {
                 Thread.currentThread().setName("sync-status");
                 AionBlock blk = blockchain.getBestBlock();
-                LOG.info(
-                    "<status self={}/{} network={}/{} blocks-queue-size={}>",
-                    blk.getNumber(),
-                    Hex.toHexString(blk.getHash()).substring(0, 6),
-                    networkBestBlockNumber.get(),
-                    Hex.toHexString(networkBestBlockHash.get()).substring(0, 6),
-                    importedBlocksQueue.size()
-                );
+                LOG.info("<status self={}/{} network={}/{} blocks-queue-size={}>", blk.getNumber(),
+                        Hex.toHexString(blk.getHash()).substring(0, 6), networkBestBlockNumber.get(),
+                        Hex.toHexString(networkBestBlockHash.get()).substring(0, 6), importedBlocksQueue.size());
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
 
             Set<Integer> ids = new HashSet<>();
-            for(int i = 0; i < 3; i++){
-                INode node = p2pMgr.getRandom();
-                if(node != null && !ids.contains(node.getIdHash()))
+            for (int i = 0; i < 3; i++) {
+                
+                
+                INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
+                
+                
+                if (node != null && !ids.contains(node.getIdHash()))
+
                     ids.add(node.getIdHash());
             }
 
-            ids.forEach((k)->{
+            ids.forEach((k) -> {
                 p2pMgr.send(k, reqStatus);
             });
 
@@ -229,14 +224,9 @@ public final class SyncMgr {
             this.selectedNodeIdHashcode.set(_nodeIdHashcode);
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                "<incoming-headers origin-headers={} from-num={} to-num={} imported-headers={} from-node={}>",
-                _headers.size(),
-                _headers.get(0).getNumber(),
-                _headers.get(_headers.size() - 1).getNumber(),
-                headers.size(),
-                _displayId
-            );
+            LOG.debug("<incoming-headers origin-headers={} from-num={} to-num={} imported-headers={} from-node={}>",
+                    _headers.size(), _headers.get(0).getNumber(), _headers.get(_headers.size() - 1).getNumber(),
+                    headers.size(), _displayId);
         }
     }
 
@@ -250,13 +240,8 @@ public final class SyncMgr {
         if (m > 1)
             _blocks.sort((b1, b2) -> b1.getNumber() > b2.getNumber() ? 1 : 0);
         if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                "<validate-incoming-blocks size={} from-num={} to-num={} from-node={}>",
-                _blocks.size(),
-                _blocks.get(0).getNumber(),
-                _blocks.get(_blocks.size() - 1).getNumber(),
-                _displayId
-            );
+            LOG.debug("<validate-incoming-blocks size={} from-num={} to-num={} from-node={}>", _blocks.size(),
+                    _blocks.get(0).getNumber(), _blocks.get(_blocks.size() - 1).getNumber(), _displayId);
         }
 
         for (AionBlock b : _blocks) {
@@ -265,11 +250,12 @@ public final class SyncMgr {
 
     }
 
-    private class HeaderQuery{
+    private class HeaderQuery {
         String fromNode;
         long from;
         int take;
-        HeaderQuery(String _fromNode, long _from, int _take){
+
+        HeaderQuery(String _fromNode, long _from, int _take) {
             this.fromNode = _fromNode;
             this.from = _from;
             this.take = _take;
@@ -287,14 +273,11 @@ public final class SyncMgr {
             long selfBest = Math.max(selfBlock.getNumber(), retargetNumber.get());
 
             Map<Integer, HeaderQuery> ids = new HashMap<>();
-            for(int i = 0; i < 3; i++){
-                INode node = p2pMgr.getRandom();
-                if(node != null){
+            for (int i = 0; i < 3; i++) {
+                INode node = p2pMgr.getRandom(NodeRandPolicy.SYNC, 0);
+                if (node != null) {
                     long diff = node.getBestBlockNumber() - selfBest;
-                    if(
-                        !ids.containsKey(node.getIdHash()) &&
-                        diff > 0
-                    ){
+                    if (!ids.containsKey(node.getIdHash()) && diff > 0) {
                         long from = Math.max(1, selfBest - syncBackwardMax);
                         long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
                         int take = (int) (to - from) + 1;
@@ -303,8 +286,9 @@ public final class SyncMgr {
                 }
             }
 
-            ids.forEach((k, v)->{
-                //System.out.println("head req from " + v.from + " take " + v.take);
+            ids.forEach((k, v) -> {
+                // System.out.println("head req from " + v.from + " take " +
+                // v.take);
                 this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
             });
         }
@@ -344,11 +328,11 @@ public final class SyncMgr {
                 long blockNumberIndex = 0;
                 List<AionBlock> batchBlocks = new ArrayList<>();
 
-                batch: while(System.currentTimeMillis() - start < 10){
+                batch: while (System.currentTimeMillis() - start < 10) {
                     AionBlock b = importedBlocksQueue.peek();
 
                     // break if start of next sorted batch
-                    if(blockNumberIndex > 0 && b.getNumber() != (blockNumberIndex + 1))
+                    if (blockNumberIndex > 0 && b.getNumber() != (blockNumberIndex + 1))
                         break batch;
 
                     b = importedBlocksQueue.take();
@@ -357,7 +341,7 @@ public final class SyncMgr {
                 }
 
                 boolean retargetingTriggerUsed = false;
-                for(AionBlock b : batchBlocks){
+                for (AionBlock b : batchBlocks) {
                     ImportResult importResult = this.blockchain.tryToConnect(b);
                     switch (importResult) {
                     case IMPORTED_BEST:
@@ -367,8 +351,8 @@ public final class SyncMgr {
                         }
                         importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
 
-                        //retargeting for next blocks headers fetch
-                        if(!retargetingTriggerUsed){
+                        // retargeting for next blocks headers fetch
+                        if (!retargetingTriggerUsed) {
                             retargetNumber.set(batchBlocks.get(batchBlocks.size() - 1).getNumber());
                             retargetingTriggerUsed = true;
                         }

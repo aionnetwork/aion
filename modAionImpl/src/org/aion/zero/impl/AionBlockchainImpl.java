@@ -101,7 +101,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final int THOUSAND_MS = 1000;
     private static final int TARGET_BLOCKINTERVAL = 10; // second
     private static final int DIFFICULTY_BYTES = 16;
-
+    
     A0BCConfig config;
 
     private IRepository repository;
