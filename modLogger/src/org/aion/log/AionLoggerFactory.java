@@ -62,7 +62,9 @@ public class AionLoggerFactory {
     private static Map<String, String> logModules;
     private static LoggerContext loggerContext;
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
-    private static RollingFileAppender<ILoggingEvent> fileAppender = new RollingFileAppender<>();
+
+    private static RollingFileAppender<ILoggingEvent> rollingFileAppender = new RollingFileAppender<>();
+
     private final static PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     static {
         logModules = new HashMap<>();
@@ -91,7 +93,7 @@ public class AionLoggerFactory {
             TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<>();
             policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH-mm}.gzip");
             policy.setContext(loggerContext);
-            policy.setParent(fileAppender);
+            policy.setParent(rollingFileAppender);
             policy.start();
 
             // setup inner policy to govern size
@@ -103,12 +105,12 @@ public class AionLoggerFactory {
 
             policy.setTimeBasedFileNamingAndTriggeringPolicy(sizePolicy);
             policy.start();
-            fileAppender.setRollingPolicy(policy);
+            rollingFileAppender.setRollingPolicy(policy);
         }
 
-        fileAppender.setContext(loggerContext);
-        fileAppender.setEncoder(encoder);
-        fileAppender.start();
+        rollingFileAppender.setContext(loggerContext);
+        rollingFileAppender.setEncoder(encoder);
+        rollingFileAppender.start();
 
         ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootlogger.detachAndStopAllAppenders();
@@ -132,7 +134,7 @@ public class AionLoggerFactory {
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
-        newlogger.addAppender(fileAppender);
+        newlogger.addAppender(rollingFileAppender);
 
         boolean flag = false;
         Iterator<Entry<String, String>> it = logModules.entrySet().iterator();
