@@ -37,8 +37,8 @@ package org.aion.zero.impl.blockchain;
 import org.aion.base.type.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
-import org.aion.zero.impl.blockchain.AionTxExecSummary;
 import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
 
