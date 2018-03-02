@@ -166,10 +166,13 @@ public final class HttpServer {
         case eth_getBalance:
             String address = params.get(0) + "";
             return processResult(_id, TypeConverter.toJsonHex(api.getBalance(address)));
-
+        /*
+        // rationale for not supporting this: does not make sense in the context of aion's getWork for minig.
+        // see functions under 'stratum pool' descriptor in IRpc.java for currenly-supported stratum interactions
         case eth_getWork:
             // Header without nonce and solution , pool needs add new nonce
-                return processResult(_id, toHexString(HashUtil.h256(api.getBestBlock().getHeader().getHeaderBytes(true))));
+            return processResult(_id, toHexString(HashUtil.h256(api.getBestBlock().getHeader().getHeaderBytes(true))));
+        */
         case eth_syncing:
             SyncInfo syncInfo = api.getSync();
             if (!syncInfo.done) {
