@@ -12,23 +12,17 @@ This repository contains the main kernel implementation and releases for the Aio
 
 * **Ubuntu 16.04** or a later version
 
-### Build the Aion network
-
-Please see the details in this wiki page [Build your Aion network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network). 
-
-### Aion Installation
-
-To see the Aion installation guide, refer to the [Installation wiki](https://github.com/aionnetwork/aion/wiki/Installation).
-
-### Aion Network Configuration
-
-Please see how to set up your desired network configuration for the kernel as well as how to launch the kernel [here](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration).
-
 ### Documentation
 
-Please check the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
+Please refer to the details in the [Build Your Aion Network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network) wiki to determine how to start setting up and building your Aion Network. 
 
-The [owner's manual wiki](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) will include further instructions on working with the kernel.
+Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for the guide on installing the kernel prior to configuration and launching the kernel.
+
+Please refer to [Aion Network Configuration](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration) wiki to set up your desired network configuration for the kernel as well as how to launch the kernel. 
+
+The [owner's manual wiki](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) will include further instructions and details on working with the kernel.
+
+Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
 
 ### Contact
 
