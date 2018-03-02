@@ -46,7 +46,7 @@ public interface IRpc {
         eth_getTransactionByHash,
         eth_getTransactionReceipt,
         eth_getTransactionCount,
-        eth_getWork,
+        //eth_getWork,
         eth_estimateGas,
         eth_sendTransaction,
         eth_sendRawTransaction,
