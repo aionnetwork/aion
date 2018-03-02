@@ -391,6 +391,7 @@
 		<tar destfile="${dir.pack}/aion.tar.bz2" compression="bzip2" longfile="gnu">
 			<tarfileset dir="${dir.libfile}" filemode="755" prefix="${project.name}/lib">
 				<include name="*.jar" />
+				<include name="libminiupnp/*.jar" />
 				<exclude name="byte-buddy-*.jar" />
 				<exclude name="JUnitParams-*.jar" />
 				<exclude name="mockito-*.jar" />

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<eclipse-userlibraries version="2">
+    <library name="aion-lib" systemlibrary="false">
+        <archive path="/aion0/lib/commons-codec-1.10.jar"/>
+        <archive path="/aion0/lib/commons-collections4-4.0.jar" source="/home/jin/dev/lib/commons-collections4-4.1-src.zip"/>
+        <archive path="/aion0/lib/commons-lang3-3.4.jar"/>
+        <archive path="/aion0/lib/guava-19.0.jar"/>
+        <archive path="/aion0/lib/h2-mvstore-1.4.196.jar"/>
+        <archive path="/aion0/lib/jctools-core-1.2.1.jar"/>
+        <archive path="/aion0/lib/leveldb-api-0.9.jar"/>
+        <archive path="/aion0/lib/leveldbjni-all-1.18.3.jar"/>
+        <archive path="/aion0/lib/libnmapdb.jar"/>
+        <archive path="/aion0/lib/libnsc.jar"/>
+        <archive path="/aion0/lib/netlib-java-0.9.3.jar"/>
+        <archive path="/aion0/lib/libnzmq.jar"/>
+        <archive path="/aion0/lib/protobuf-java-3.5.0.jar"/>
+        <archive path="/aion0/lib/libJson.jar"/>
+        <archive path="/aion0/lib/logback-classic-1.2.3.jar"/>
+        <archive path="/aion0/lib/logback-core-1.2.3.jar"/>
+        <archive path="/aion0/lib/slf4j-api-1.7.25.jar"/>
+        <archive path="/aion0/lib/libminiupnp/miniupnpc_linux.jar"/>
+    </library>
+</eclipse-userlibraries>
