@@ -34,6 +34,7 @@
 		<pathelement location="${dir.libfile}/libJson.jar" />
 		<pathelement location="${dir.libfile}/logback-classic-1.2.3.jar" />
 		<pathelement location="${dir.libfile}/logback-core-1.2.3.jar" />
+                <pathelement location="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgr.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgrImpl.jar" />
 		<pathelement location="${dir.modfile}/modLogger.jar" />
@@ -296,6 +297,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnmapdb.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnsc.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnzmq.jar" />
+                        <zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />			
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/protobuf-java-3.5.0.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libJson.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modEvtMgr.jar" />
