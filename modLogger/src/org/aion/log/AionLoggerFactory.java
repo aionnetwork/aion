@@ -91,7 +91,7 @@ public class AionLoggerFactory {
         if (logFile) {
             // setup rolling policy
             TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<>();
-            policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH-mm}.gzip");
+            policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH-mm}.gz");
             policy.setContext(loggerContext);
             policy.setParent(rollingFileAppender);
             policy.start();
