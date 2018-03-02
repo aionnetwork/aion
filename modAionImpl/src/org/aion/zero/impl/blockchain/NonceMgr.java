@@ -212,7 +212,7 @@ public class NonceMgr {
         }
     }
 
-    public BigInteger getRepoNonce(Address addr) {
+    public synchronized BigInteger getRepoNonce(Address addr) {
         if (map.get(addr) == null) {
             return repo.getNonce(addr);
         } else {
