@@ -132,11 +132,10 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _ip
-     *            String
+     * @param _ip String
      * @return byte[]
      */
-    public static byte[] ipStrToBytes(final String _ip) {
+    static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
         for (String frag : frags) {
@@ -152,8 +151,7 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _ip
-     *            byte[]
+     * @param _ip byte[]
      * @return String
      */
     static String ipBytesToStr(final byte[] _ip) {
@@ -189,8 +187,7 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _p2p
-     *            String
+     * @param _p2p String
      * @return Node TODO: ugly
      */
     static Node parseP2p(String _p2p) {
@@ -210,8 +207,7 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _id
-     *            byte[]
+     * @param _id byte[]
      */
     void setId(final byte[] _id) {
         this.id = _id;
@@ -222,16 +218,14 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _version
-     *            int
+     * @param _version int
      */
     void setVersion(final int _version) {
         this.version = _version;
     }
 
     /**
-     * @param _port
-     *            int
+     * @param _port int
      */
     void setPort(final int _port) {
         this.port = _port;
@@ -246,8 +240,7 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _channel
-     *            SocketChannel
+     * @param _channel SocketChannel
      */
     void setChannel(final SocketChannel _channel) {
         this.channel = _channel;
