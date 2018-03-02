@@ -44,7 +44,7 @@
 		<pathelement location="${dir.modfile}/modTxPoolImpl.jar" />
 		<pathelement location="${dir.modfile}/modDbImpl.jar" />
 		<pathelement location="${dir.modfile}/modRlp.jar" />
-		<pathelement location="${dir.modfile}/modCrypto.jar" />		
+		<pathelement location="${dir.modfile}/modCrypto.jar" />
 		<pathelement location="${dir.modfile}/modAion.jar" />
 		<pathelement location="${dir.modfile}/modAionImpl.jar" />
 		<pathelement location="${dir.modfile}/modApiServer.jar" />
@@ -223,6 +223,11 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
+		<echo message="building modFastVM" />
+		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
 		<echo message="building modAionImpl" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
@@ -237,11 +242,6 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modBoot/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
-
-		<!-- echo message="building fastvm" />
-		<ant inheritAll="false" antfile="${dir.workspace}/modFastVM/build.xml" target="clean_build">
-			<property name="compile.debug" value="${compile.debug}" />
-		</ant -->
 	</target>
 
 	<target name="build_fatjar" depends="mod_build">
@@ -331,7 +331,7 @@
 
 	</target>
 
-	<target name="build" depends="mod_build">	
+	<target name="build" depends="mod_build">
 		<mkdir dir="${dir.buildfile}" />
 		<mkdir dir="${dir.native}/linux/equihash" />
 		<mkdir dir="${dir.build.native}/linux/equihash" />
