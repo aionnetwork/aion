@@ -191,7 +191,10 @@ public final class P2pMgr implements IP2pMgr {
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
                             sk.attach(rb);
+                            
                             node.setChannel(channel);
+                            node.setPortConnected(channel.socket().getLocalPort()); 
+                            
                             addOutboundNode(node);
                             selectorLock.unlock();
                             workers.submit(new TaskWrite(node.getIdShort(), channel, cachedReqHandshake, rb));
@@ -428,7 +431,7 @@ public final class P2pMgr implements IP2pMgr {
             int port = channel.socket().getPort();
 
             // Node node = new Node(false, ip);
-            Node node = nodeMgr.allocNode(ip, port);
+            Node node = nodeMgr.allocNode(ip, 0, port);
 
             node.setChannel(channel);
             nodeMgr.inboundNodeAdd(node);

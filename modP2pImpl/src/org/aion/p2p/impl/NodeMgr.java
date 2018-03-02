@@ -70,8 +70,9 @@ public class NodeMgr {
         int cnt = 0;
         for (Node n : alls) {
             char isSeed = n.getIfFromBootList() ? 'Y' : 'N';
-            sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d FC:%1d BB:%8d  \n", cnt, n.getIdShort(),
-                    isSeed, n.getIpStr(), n.getPort(), n.peerMetric.metricFailedConn, n.getBestBlockNumber()));
+            sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d PORT_CONN:%5d FC:%1d BB:%8d  \n", cnt,
+                    n.getIdShort(), isSeed, n.getIpStr(), n.getPort(), n.getConnectedPort(),
+                    n.peerMetric.metricFailedConn, n.getBestBlockNumber()));
             cnt++;
         }
         System.out.println(sb.toString());
@@ -154,8 +155,8 @@ public class NodeMgr {
         return new Node(b, ip);
     }
 
-    Node allocNode(String ip, int port) {
-        return new Node(ip, port);
+    Node allocNode(String ip, int p0, int p1) {
+        return new Node(ip, p0, p1);
     }
 
     List<Node> getActiveNodesList() {

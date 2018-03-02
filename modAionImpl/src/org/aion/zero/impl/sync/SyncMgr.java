@@ -169,14 +169,17 @@ public final class SyncMgr {
         scheduledWorkers.scheduleWithFixedDelay(() -> {
 
             Set<Integer> ids = new HashSet<>();
-            for (int i = 0; i < 3; i++) {
-                
-                
-                INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
-                
-                
-                if (node != null && !ids.contains(node.getIdHash()))
 
+            // get top nodes to get realtime height.
+            for (int i = 0; i < 3; i++) {
+                INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
+                if (node != null && !ids.contains(node.getIdHash()))
+                    ids.add(node.getIdHash());
+            }
+            // still need pick a rnd node to update their latest sync status.
+            {
+                INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
+                if (node != null && !ids.contains(node.getIdHash()))
                     ids.add(node.getIdHash());
             }
 
