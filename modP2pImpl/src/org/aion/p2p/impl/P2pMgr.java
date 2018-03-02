@@ -61,6 +61,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
     private final static int TIMEOUT_OUTBOUND_NODES = 10000;
+    private final static int PERIOD_UPNP_PORT_MAPPING = 3600000;
 
     private final static int TIMEOUT_MSG_READ = 10000;
 
@@ -678,10 +679,6 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private void runUpnp() {
-        // TODO: implement
-    }
-
     @Override
     public void run() {
         try {
@@ -697,12 +694,12 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            if (this.upnpEnable)
-                runUpnp();
-
             Thread boss = new Thread(new TaskInbound(), "p2p-pi");
             boss.setPriority(Thread.MAX_PRIORITY);
             boss.start();
+
+            if (upnpEnable)
+                scheduledWorkers.scheduleWithFixedDelay(new TaskUPnPManager(selfPort), 1, PERIOD_UPNP_PORT_MAPPING, TimeUnit.MILLISECONDS);
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
