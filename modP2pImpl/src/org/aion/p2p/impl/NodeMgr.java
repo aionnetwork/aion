@@ -36,17 +36,23 @@ public class NodeMgr {
         return outboundNodes;
     }
 
-    public String dumpAllNodeInfo() {
+    public void dumpAllNodeInfo() {
         StringBuffer sb = new StringBuffer();
+        sb.append("   ==================== ALL PEERS METRIC ===========================\n");
 
+        int cnt = 0;
         for (Node n : allNodes.values()) {
-            sb.append(n.getFullHash() + " IP:" + n.getIpStr() + " PORT:" + n.getPort() + " BB:" + n.getBestBlockNumber()
-                    + " FC:" + n.peerMetric.metricFailedConn + "\n");
+            char isSeed = n.getIfFromBootList() ? 'Y' : 'N';
+            sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d FC:%1d BB:%8d  \n", cnt, n.getIdShort(),
+                    isSeed, n.getIpStr(), n.getPort(), n.peerMetric.metricFailedConn, n.getBestBlockNumber()));
+            cnt++;
         }
-        return sb.toString();
+        System.out.println(sb.toString());
     }
 
-    void dumpNodeInfo() {
+    void dumpNodeInfo(String selfShortId) {
+        System.out.println("[p2p-status " + selfShortId + "]");
+        System.out.println("[temp-nodes-size=" + tempNodesSize() + "]");
         System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
         System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
         System.out.println("[active-nodes(nodeIdHash)=[" + activeNodes.entrySet().stream()
@@ -62,15 +68,18 @@ public class NodeMgr {
                 Node orig = allNodes.get(fullHash);
                 // pull out metric.
                 n.peerMetric = orig.peerMetric;
-                // update allnodes list.
-                allNodes.put(fullHash, n);
             }
+            // update allnodes list.
+            allNodes.put(fullHash, n);
         }
     }
 
     void tempNodesAdd(Node n) {
-        updateMetric(n);
-        tempNodes.add(n);
+        if (!tempNodes.contains(n)) {
+            updateMetric(n);
+            tempNodes.add(n);
+            //tempNodes.remove(n);
+        }
     }
 
     void inboundNodeAdd(Node n) {
@@ -170,6 +179,17 @@ public class NodeMgr {
             else {
                 if (pmgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
+            }
+        }
+    }
+
+    void rmMetricFailedNodes() {
+        {
+            Iterator nodesIt = tempNodes.iterator();
+            while (nodesIt.hasNext()) {
+                Node n = (Node) nodesIt.next();
+                if (n.peerMetric.shouldNotConn())
+                    tempNodes.remove(n);
             }
         }
     }
