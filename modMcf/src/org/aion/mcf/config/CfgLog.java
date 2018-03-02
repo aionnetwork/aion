@@ -42,6 +42,7 @@ import javax.xml.stream.XMLStreamWriter;
 public class CfgLog {
 
     private Map<String, String> modules;
+    private boolean logFile = false;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -59,7 +60,14 @@ public class CfgLog {
             int eventType = sr.next();
             switch (eventType) {
             case XMLStreamReader.START_ELEMENT:
+
+                // add a special clause for file
                 String elementName = sr.getLocalName().toUpperCase();
+                if (elementName.equals("APPEND_FILE")) {
+                    logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                }
+
                 if (LogEnum.contains(elementName))
                     this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
                 break;
@@ -106,4 +114,7 @@ public class CfgLog {
         return this.modules;
     }
 
+    public boolean getLogToFileEnabled() {
+        return this.logFile;
+    }
 }

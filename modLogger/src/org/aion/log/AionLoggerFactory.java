@@ -36,6 +36,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.*;
+import ch.qos.logback.core.util.FileSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,9 @@ public class AionLoggerFactory {
     private static Map<String, String> logModules;
     private static LoggerContext loggerContext;
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
+
+    private static RollingFileAppender<ILoggingEvent> rollingFileAppender = new RollingFileAppender<>();
+
     private final static PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     static {
         logModules = new HashMap<>();
@@ -70,7 +74,7 @@ public class AionLoggerFactory {
         }
     }
 
-    public static void init(final Map<String, String> _logModules) {
+    public static void init(final Map<String, String> _logModules, boolean logFile) {
 
         logModules = _logModules;
 
@@ -83,6 +87,30 @@ public class AionLoggerFactory {
         appender.setContext(loggerContext);
         appender.setEncoder(encoder);
         appender.start();
+
+        if (logFile) {
+            // setup rolling policy
+            TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<>();
+            policy.setFileNamePattern("aion.%d{yyyy-MM-dd-HH}.gz");
+            policy.setContext(loggerContext);
+            policy.setParent(rollingFileAppender);
+            policy.start();
+
+            // setup inner policy to govern size
+            SizeAndTimeBasedFNATP<ILoggingEvent> sizePolicy = new SizeAndTimeBasedFNATP<>();
+            sizePolicy.setContext(loggerContext);
+            sizePolicy.setMaxFileSize(FileSize.valueOf("64mb"));
+            sizePolicy.setTimeBasedRollingPolicy(policy);
+            sizePolicy.start();
+
+            policy.setTimeBasedFileNamingAndTriggeringPolicy(sizePolicy);
+            policy.start();
+            rollingFileAppender.setRollingPolicy(policy);
+        }
+
+        rollingFileAppender.setContext(loggerContext);
+        rollingFileAppender.setEncoder(encoder);
+        rollingFileAppender.start();
 
         ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootlogger.detachAndStopAllAppenders();
@@ -101,11 +129,12 @@ public class AionLoggerFactory {
         if (loggerContext == null) {
             // System.out.println("If you see this line, meaning you are under
             // the unit test!!! If you are not. should report an issue.");
-            init(new HashMap<>());
+            init(new HashMap<>(), false);
         }
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
+        newlogger.addAppender(rollingFileAppender);
 
         boolean flag = false;
         Iterator<Entry<String, String>> it = logModules.entrySet().iterator();

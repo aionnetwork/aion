@@ -75,7 +75,7 @@ public class Aion {
 
 
         // If commit this out, the config setting will be ignore. all log module been set to "INFO" Level
-        AionLoggerFactory.init(cfg.getLog().getModules());
+        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogToFileEnabled());
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         System.out.println(                
