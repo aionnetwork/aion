@@ -26,6 +26,8 @@
 package org.aion.p2p.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -57,8 +59,16 @@ public class NodeMgr {
         StringBuffer sb = new StringBuffer();
         sb.append("   ==================== ALL PEERS METRIC ===========================\n");
 
+        List<Node> alls = new ArrayList<>(allNodes.values());
+
+        Collections.sort(alls, new Comparator<Node>() {
+            public int compare(Node a, Node b) {
+                return (int) (b.getBestBlockNumber() - a.getBestBlockNumber());
+            }
+        });
+
         int cnt = 0;
-        for (Node n : allNodes.values()) {
+        for (Node n : alls) {
             char isSeed = n.getIfFromBootList() ? 'Y' : 'N';
             sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d FC:%1d BB:%8d  \n", cnt, n.getIdShort(),
                     isSeed, n.getIpStr(), n.getPort(), n.peerMetric.metricFailedConn, n.getBestBlockNumber()));
@@ -95,7 +105,7 @@ public class NodeMgr {
         if (!tempNodes.contains(n)) {
             updateMetric(n);
             tempNodes.add(n);
-            //tempNodes.remove(n);
+            // tempNodes.remove(n);
         }
     }
 
@@ -161,6 +171,34 @@ public class NodeMgr {
         if (nodesCount > 0) {
             Random r = new Random(System.currentTimeMillis());
             List<Integer> keysArr = new ArrayList<>(activeNodes.keySet());
+            try {
+                int randomNodeKeyIndex = r.nextInt(keysArr.size());
+                int randomNodeKey = keysArr.get(randomNodeKeyIndex);
+                return this.getActiveNode(randomNodeKey);
+            } catch (IllegalArgumentException e) {
+                // if (showLog)
+                // System.out.println("<p2p get-random-exception>");
+                return null;
+            }
+        } else
+            return null;
+    }
+
+    public INode getRandomRealtime(long bbn) {
+
+        List<Integer> keysArr = new ArrayList<>();
+
+        for (Node n : activeNodes.values()) {
+            if ((n.getBestBlockNumber() == 0) || (n.getBestBlockNumber() > bbn - 128)) {
+                keysArr.add(n.getIdHash());
+            }
+        }
+
+        int nodesCount = keysArr.size();
+
+        if (nodesCount > 0) {
+            Random r = new Random(System.currentTimeMillis());
+
             try {
                 int randomNodeKeyIndex = r.nextInt(keysArr.size());
                 int randomNodeKey = keysArr.get(randomNodeKeyIndex);
