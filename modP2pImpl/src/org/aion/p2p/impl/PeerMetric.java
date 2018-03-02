@@ -27,7 +27,7 @@ package org.aion.p2p.impl;
 
 final class PeerMetric {
 
-    private static final int STOP_CONN_AFTER_FAILED_CONN = 3;
+    public static final int STOP_CONN_AFTER_FAILED_CONN = 2;
 
     int metricFailedConn;
 

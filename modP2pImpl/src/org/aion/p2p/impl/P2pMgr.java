@@ -137,9 +137,8 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void run() {
             Thread.currentThread().setName("p2p-ts");
-            System.out.println("[p2p-status " + selfShortId + "]");
-            System.out.println("[temp-nodes-size=" + nodeMgr.tempNodesSize() + "]");
-            nodeMgr.dumpNodeInfo();
+            nodeMgr.dumpNodeInfo(selfShortId);
+            nodeMgr.dumpAllNodeInfo();
         }
     }
 
@@ -229,6 +228,9 @@ public final class P2pMgr implements IP2pMgr {
                     selectorLock.lock();
                     nodeMgr.rmTimeOutInbound(P2pMgr.this);
                     selectorLock.unlock();
+                    
+                    // clean up temp nodes list if metric failed.
+                    nodeMgr.rmMetricFailedNodes();                    
 
                     Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
                     while (outboundIt.hasNext()) {

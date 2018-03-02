@@ -345,4 +345,13 @@ public final class Node implements INode {
             this.totalDifficulty = _totalDifficulty;
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Node) {
+            Node other = (Node) o;
+            return this.getFullHash() == other.getFullHash();
+        }
+        return false;
+    }
 }
