@@ -114,11 +114,6 @@ public class EquiValidator {
             return false;
         }
 
-        // blake instance can be reused inside 512 indiecs loop.
-        // it save both blake and initState mem cost.
-        // if use blake in Equivalidator instance level, as it's multi-threaded,
-        // have to pay a lock cost.
-        // so still keep it in function level.
         Blake2b blake = Blake2b.Digest.newInstance(initState);
 
         // Create array with 2^k slots
