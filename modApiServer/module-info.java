@@ -1,5 +1,4 @@
 module aion.apiserver {
-
     requires aion.base;
     requires aion.zero.impl;
     requires aion.log;
@@ -10,6 +9,7 @@ module aion.apiserver {
     requires slf4j.api;
     requires aion.evtmgr;
     requires aion.evtmgr.impl;
+    requires aion.fastvm;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.http;
