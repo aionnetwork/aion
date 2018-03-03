@@ -43,6 +43,7 @@ public class NodeMgr {
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
 
+    private final set<
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
     private final BlockingQueue<Node> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
@@ -78,16 +79,14 @@ public class NodeMgr {
                 .collect(Collectors.joining(",")) + "]]");
     }
 
-    private void updateMetric(Node n) {
-        if (n.hasFullInfo()) {
-            int fullHash = n.getFullHash();
+    private void updateMetric(final Node _n) {
+        if (_n.hasFullInfo()) {
+            int fullHash = _n.getFullHash();
             if (allNodes.containsKey(fullHash)) {
                 Node orig = allNodes.get(fullHash);
-                // pull out metric.
-                n.peerMetric = orig.peerMetric;
+                _n.peerMetric = orig.peerMetric;
             }
-            // update allnodes list.
-            allNodes.put(fullHash, n);
+            allNodes.put(fullHash, _n);
         }
     }
 

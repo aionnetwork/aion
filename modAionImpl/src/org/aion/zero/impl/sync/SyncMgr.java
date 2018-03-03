@@ -30,11 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.ImportResult;
 import org.aion.evtmgr.IEvent;
@@ -46,7 +44,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ReqStatus;
@@ -59,8 +56,8 @@ import org.aion.mcf.valid.BlockHeaderValidator;
  */
 public final class SyncMgr {
 
-    private static final int FETCH_INTERVAL = 500;
-    private static final int GET_STATUS_SLEEP = 1000;
+    private static final int FETCH_INTERVAL = 1000;
+    private static final int STATUS_INTERVAL = 1000;
 
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -99,7 +96,7 @@ public final class SyncMgr {
         return AionSyncMgrHolder.INSTANCE;
     }
 
-    public void updateNetworkBestBlock(long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
+    public void updateNetworkBestBlock(String _nodeShortId, long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
 
         if (_nodeBestBlockNumber > this.networkBestBlockNumber.get()) {
@@ -111,7 +108,8 @@ public final class SyncMgr {
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                    "<network-best-block-updated remote-num={} self-num={} known-network-num={} send-on-sync-done>",
+                    "<network-best-block-updated from-node={} remote-num={} self-num={} known-network-num={} send-on-sync-done>",
+                    _nodeShortId,
                     _nodeBestBlockNumber,
                     selfBestBlockNumber,
                     this.networkBestBlockNumber.get()
@@ -120,7 +118,8 @@ public final class SyncMgr {
         } else {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                    "<network-best-block-updated remote-num={} self-num={} known-network-num={} continue-on-sync>",
+                    "<network-best-block-updated from-node={} remote-num={} self-num={} known-network-num={} continue-on-sync>",
+                    _nodeShortId,
                     _nodeBestBlockNumber,
                     selfBestBlockNumber,
                     this.networkBestBlockNumber.get()
@@ -167,29 +166,31 @@ public final class SyncMgr {
             scheduledWorkers.scheduleWithFixedDelay(() -> {
                 Thread.currentThread().setName("sync-status");
                 AionBlock blk = blockchain.getBestBlock();
+                byte[] networkBestBlockHashBytes = networkBestBlockHash.get();
                 LOG.info(
                     "<status self={}/{} network={}/{} blocks-queue-size={}>",
                     blk.getNumber(),
-                    Hex.toHexString(blk.getHash()).substring(0, 6),
+                    new String(Arrays.copyOfRange(blk.getHash(), 0, 6)),
                     networkBestBlockNumber.get(),
-                    Hex.toHexString(networkBestBlockHash.get()).substring(0, 6),
+                    networkBestBlockHashBytes.length == 0 ? "" : new String(Arrays.copyOfRange(networkBestBlockHashBytes, 0, 6)),
                     importedBlocksQueue.size()
                 );
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
-
             Set<Integer> ids = new HashSet<>();
             for(int i = 0; i < 3; i++){
                 INode node = p2pMgr.getRandom();
-                if(node != null && !ids.contains(node.getIdHash()))
+                if(
+                    node != null &&
+                    !ids.contains(node.getIdHash())
+
+                ) {
                     ids.add(node.getIdHash());
+                    p2pMgr.send(node.getIdHash(), reqStatus);
+                }
             }
 
-            ids.forEach((k)->{
-                p2pMgr.send(k, reqStatus);
-            });
-
-        }, 2000, GET_STATUS_SLEEP, TimeUnit.MILLISECONDS);
+        }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);
 
     }
 
@@ -251,7 +252,7 @@ public final class SyncMgr {
             _blocks.sort((b1, b2) -> b1.getNumber() > b2.getNumber() ? 1 : 0);
         if (LOG.isDebugEnabled()) {
             LOG.debug(
-                "<validate-incoming-blocks size={} from-num={} to-num={} from-node={}>",
+                "<incoming-bodies size={} from-num={} to-num={} from-node={}>",
                 _blocks.size(),
                 _blocks.get(0).getNumber(),
                 _blocks.get(_blocks.size() - 1).getNumber(),
@@ -303,6 +304,8 @@ public final class SyncMgr {
                 }
             }
 
+            //System.out.println("req headers " + ids.size());
+
             ids.forEach((k, v)->{
                 //System.out.println("head req from " + v.from + " take " + v.take);
                 this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
@@ -320,6 +323,9 @@ public final class SyncMgr {
 
             List<A0BlockHeader> headers = importedHeaders.get(selectedNodeIdHashcode.get());
             if (importedBlocksQueue.size() < blocksQueueMax && headers != null) {
+
+                //System.out.println("req bodies ");
+
                 List<byte[]> blockHashes = new ArrayList<>();
                 for (A0BlockHeader header : headers) {
                     blockHashes.add(header.getHash());
@@ -331,6 +337,7 @@ public final class SyncMgr {
                         LOG.debug("<req-blocks from-num={} take={}>", headers.get(0).getNumber(), blockHashes.size());
                     }
                     importedHeaders.clear();
+                    //System.out.println("req bodies ");
                     this.p2pMgr.send(selectedNodeIdHashcode.get(), new ReqBlocksBodies(blockHashes));
                 }
             }
