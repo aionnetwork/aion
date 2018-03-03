@@ -53,7 +53,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final static int PERIOD_SHOW_STATUS = 10000;
     private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
-    private final static int PERIOD_CONNECT_OUTBOUND = 100;
+    private final static int PERIOD_CONNECT_OUTBOUND = 300;
     private final static int PERIOD_CLEAR = 20000;
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
@@ -318,7 +318,7 @@ public final class P2pMgr implements IP2pMgr {
                         Msg msg = this.channelBuffer.msgs.poll(1, TimeUnit.MILLISECONDS);
 
                         if(msg != null) {
-                            System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                            //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                             workers.submit(new TaskWrite(nodeShortId, sc, msg, channelBuffer));
                         }
                     } catch (InterruptedException e) {
@@ -482,7 +482,7 @@ public final class P2pMgr implements IP2pMgr {
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
 
-        System.out.println("read " + ctrl + "-" + act);
+        //System.out.println("read " + ctrl + "-" + act);
 
         switch (ctrl) {
             case Ctrl.NET:
@@ -558,6 +558,8 @@ public final class P2pMgr implements IP2pMgr {
                         node.setId(reqHandshake.getNodeId());
                         node.setVersion(reqHandshake.getVersion());
                         node.setPort(reqHandshake.getPort());
+                        if(nodeMgr.seedIps.contains(Arrays.hashCode(node.getIp())))
+                            node.setFromBootList(true);
 
                         nodeMgr.moveInboundToActive(node.getChannel().hashCode(), this);
 
@@ -688,6 +690,8 @@ public final class P2pMgr implements IP2pMgr {
     public Map getActiveNodes() {
         return this.nodeMgr.getActiveNodesMap();
     }
+
+    int getTempNodesCount() {  return nodeMgr.tempNodesSize(); }
 
     @Override
     public void register(final List<Handler> _cbs) {

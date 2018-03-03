@@ -135,7 +135,7 @@ public final class Node implements INode {
      * @param _ip String
      * @return byte[]
      */
-    static byte[] ipStrToBytes(final String _ip) {
+    public static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
         for (String frag : frags) {
@@ -190,7 +190,7 @@ public final class Node implements INode {
      * @param _p2p String
      * @return Node TODO: ugly
      */
-    static Node parseP2p(String _p2p) {
+    public static Node parseP2p(String _p2p) {
         String[] arrs = _p2p.split("@");
         byte[] _tempBytes = arrs[0].getBytes();
         if (_tempBytes.length != 42)
@@ -204,6 +204,10 @@ public final class Node implements INode {
         byte[] _ip = ipStrToBytes(subArrs[0]);
         int _port = Integer.parseInt(subArrs[1]);
         return new Node(true, _id, _ip, _port);
+    }
+
+    void setFromBootList(boolean ifBoot){
+        this.fromBootList = ifBoot;
     }
 
     /**

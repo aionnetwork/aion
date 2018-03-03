@@ -25,12 +25,7 @@
 
 package org.aion.p2p.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,7 +38,7 @@ public class NodeMgr {
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
 
-    private final set<
+    final Set<Integer> seedIps = new HashSet<>();
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
     private final BlockingQueue<Node> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
@@ -68,14 +63,22 @@ public class NodeMgr {
         System.out.println(sb.toString());
     }
 
+    /**
+     *
+     * @param selfShortId String
+     */
     void dumpNodeInfo(String selfShortId) {
         System.out.println("[p2p-status " + selfShortId + "]");
         System.out.println("[temp-nodes-size=" + tempNodesSize() + "]");
         System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
         System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
-        System.out.println("[active-nodes(nodeIdHash)=[" + activeNodes.entrySet().stream()
-                .map((entry) -> "\n" + entry.getValue().getBestBlockNumber() + "-" + entry.getValue().getIdShort() + "-"
-                        + entry.getValue().getIpStr() + (entry.getValue().getIfFromBootList() ? "-seed" : ""))
+
+        List<Node> sorted = new ArrayList<>(activeNodes.values());
+        sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
+
+        System.out.println("[active-nodes(nodeIdHash)=[" + sorted.stream()
+                .map((entry) -> "\n" + entry.getBestBlockNumber() + "-" + entry.getIdShort() + "-"
+                        + entry.getIpStr() + (entry.getIfFromBootList() ? "-seed" : ""))
                 .collect(Collectors.joining(",")) + "]]");
     }
 
@@ -90,11 +93,11 @@ public class NodeMgr {
         }
     }
 
-    void tempNodesAdd(Node n) {
+    void tempNodesAdd(final Node n) {
         if (!tempNodes.contains(n)) {
             updateMetric(n);
             tempNodes.add(n);
-            //tempNodes.remove(n);
+            seedIps.add(Arrays.hashCode(n.getIp()));
         }
     }
 
