@@ -85,7 +85,7 @@ public final class BroadcastNewBlockCallback extends Handler {
         if (this.log.isDebugEnabled()) {
             String hash = block.getShortHash();
             hash = hash != null ? hash : "null";
-            this.log.debug("blockProp: [node: " + _nodeIdHashcode + " | " + "hash: " + hash + " | status: " + result.name() + "]");
+            this.log.debug("<block-prop node=" + _displayId + " block-hash=" + hash + " status=" + result.name() + ">");
         }
     }
 }
