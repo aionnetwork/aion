@@ -52,7 +52,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     private void setPoolArgs(Properties config) {
-
         if (Optional.ofNullable(config.get(PROP_TXN_TIMEOUT)).isPresent()) {
             txn_timeout = Integer.valueOf(config.get(PROP_TXN_TIMEOUT).toString());
             if (txn_timeout < TXN_TIMEOUT_MIN) {

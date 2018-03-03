@@ -60,7 +60,7 @@ public final class ResStatusCallback extends Handler {
     }
 
     @Override
-    public void receive(int _nodeIdHashcode,String _displayId, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
         ResStatus rs = ResStatus.decode(_msgBytes);
@@ -73,11 +73,11 @@ public final class ResStatusCallback extends Handler {
             );
             long nodeBestBlockNumber = rs.getBestBlockNumber();
             byte[] nodeBestBlockHash = rs.getBestHash();
-            long nodeTotalDifficulty = 0;//rs.getTotalDifficulty();
+            byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
             node.updateStatus(
-                    nodeBestBlockNumber,
-                    nodeBestBlockHash,
-                    nodeTotalDifficulty
+                nodeBestBlockNumber,
+                nodeBestBlockHash,
+                nodeTotalDifficulty
             );
             syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash());
         }

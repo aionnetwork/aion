@@ -50,7 +50,7 @@ public final class ResStatus extends Msg {
 
     private final long bestBlockNumber; // 8
 
-    private final int totalDifficultyLen; // 1
+    private final byte totalDifficultyLen; // 1
 
     private final byte[] totalDifficulty; // >= 1
 
@@ -58,15 +58,25 @@ public final class ResStatus extends Msg {
 
     private final byte[] genesisHash; // 32
 
-    public ResStatus(final long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash, byte[] _genesisHash) {
+    /**
+     *
+     * @param bestBlockNumber long
+     * @param _totalDifficulty byte[]
+     * @param _bestHash byte[]
+     * @param _genesisHash byte[]
+     */
+    public ResStatus(long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash, final byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.bestBlockNumber = bestBlockNumber;
-        this.totalDifficultyLen = _totalDifficulty.length;
+        this.totalDifficultyLen = _totalDifficulty.length > Byte.MAX_VALUE ? 1 : (byte)_totalDifficulty.length;
         this.totalDifficulty = _totalDifficulty;
         this.bestHash = _bestHash;
         this.genesisHash = _genesisHash;
     }
 
+    /**
+     * @return long
+     */
     public long getBestBlockNumber() {
         return this.bestBlockNumber;
     }
@@ -74,6 +84,10 @@ public final class ResStatus extends Msg {
     public byte[] getBestHash() {
         return this.bestHash;
     }
+
+    public byte[] getTotalDifficulty() { return this.totalDifficulty; }
+
+    public byte[] getGenesisHash() { return this.genesisHash; }
 
     public static ResStatus decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length < minLen)
