@@ -102,8 +102,8 @@ public class NodeMgr {
     }
 
     void inboundNodeAdd(Node n) {
+        inboundNodes.put(n.getChannel().hashCode(), n);
         updateMetric(n);
-        inboundNodes.put(n.getIdHash(), n);
     }
 
     Node tempNodesTake() throws InterruptedException {

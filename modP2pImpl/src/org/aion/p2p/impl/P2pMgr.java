@@ -175,7 +175,6 @@ public final class P2pMgr implements IP2pMgr {
                 }
                 int nodeIdHash = node.getIdHash();
                 if (!nodeMgr.getOutboundNodes().containsKey(nodeIdHash) && !nodeMgr.hasActiveNode(nodeIdHash)) {
-
                     int _port = node.getPort();
                     try {
                         SocketChannel channel = SocketChannel.open();
@@ -318,7 +317,7 @@ public final class P2pMgr implements IP2pMgr {
                         Msg msg = this.channelBuffer.msgs.poll(1, TimeUnit.MILLISECONDS);
 
                         if(msg != null) {
-                            //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                            System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                             workers.submit(new TaskWrite(nodeShortId, sc, msg, channelBuffer));
                         }
                     } catch (InterruptedException e) {
@@ -472,8 +471,6 @@ public final class P2pMgr implements IP2pMgr {
 
         Header h = rb.header;
 
-
-
         byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
 
         rb.refreshHeader();
@@ -482,7 +479,7 @@ public final class P2pMgr implements IP2pMgr {
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
 
-        //System.out.println("read " + ctrl + "-" + act);
+        System.out.println("read " + ctrl + "-" + act);
 
         switch (ctrl) {
             case Ctrl.NET:
