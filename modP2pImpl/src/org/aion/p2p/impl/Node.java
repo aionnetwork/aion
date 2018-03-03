@@ -25,6 +25,7 @@
 
 package org.aion.p2p.impl;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -72,12 +73,11 @@ public final class Node implements INode {
 
     private byte[] bestBlockHash;
 
-    private long totalDifficulty;
+    private byte[] totalDifficulty;
 
     private SocketChannel channel;
 
-    private static final Pattern IPV4 = Pattern
-            .compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
+    private static final Pattern IPV4 = Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
     PeerMetric peerMetric = new PeerMetric();
 
@@ -303,7 +303,7 @@ public final class Node implements INode {
         return (id != null) && (ip != null) && (port > 0);
     }
 
-    public int getFullHash() {
+    int getFullHash() {
         if (fullHash > 0)
             return fullHash;
         else {
@@ -328,17 +328,17 @@ public final class Node implements INode {
         return this.bestBlockNumber;
     }
 
-    // byte[] getBestBlockHash() {
-    // return this.bestBlockHash;
-    // }
+    byte[] getBestBlockHash() {
+        return this.bestBlockHash;
+    }
 
     @Override
-    public long getTotalDifficulty() {
+    public byte[] getTotalDifficulty() {
         return this.totalDifficulty;
     }
 
     @Override
-    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, long _totalDifficulty) {
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, final byte[] _totalDifficulty) {
         if (_bestBlockNumber > this.bestBlockNumber) {
             this.bestBlockNumber = _bestBlockNumber;
             this.bestBlockHash = _bestBlockHash;

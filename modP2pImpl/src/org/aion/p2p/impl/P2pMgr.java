@@ -138,7 +138,7 @@ public final class P2pMgr implements IP2pMgr {
         public void run() {
             Thread.currentThread().setName("p2p-ts");
             nodeMgr.dumpNodeInfo(selfShortId);
-            nodeMgr.dumpAllNodeInfo();
+            //nodeMgr.dumpAllNodeInfo();
         }
     }
 
@@ -286,7 +286,7 @@ public final class P2pMgr implements IP2pMgr {
             Thread.currentThread().setName("p2p-write");
 
             // NOTE: the following logic may cause message loss
-            if (this.channelBuffer != null && this.channelBuffer.onWrite.compareAndSet(false, true)) {
+            if(this.channelBuffer.onWrite.compareAndSet(false, true)){
                 /*
                  * @warning header set len (body len) before header encode
                  */
@@ -296,7 +296,7 @@ public final class P2pMgr implements IP2pMgr {
                 h.setLen(bodyLen);
                 byte[] headerBytes = h.encode();
 
-                // System.out.println("out " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+                System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                 ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
                 buf.put(headerBytes);
                 if (bodyBytes != null)
@@ -313,8 +313,26 @@ public final class P2pMgr implements IP2pMgr {
                     }
                 } finally {
                     this.channelBuffer.onWrite.set(false);
+                    try {
+
+                        Msg msg = this.channelBuffer.msgs.poll(1, TimeUnit.MILLISECONDS);
+
+                        if(msg != null) {
+                            System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                            workers.submit(new TaskWrite(nodeShortId, sc, msg, channelBuffer));
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                try {
+                    this.channelBuffer.msgs.put(msg);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
+
         }
     }
 
@@ -453,6 +471,9 @@ public final class P2pMgr implements IP2pMgr {
             return;
 
         Header h = rb.header;
+
+
+
         byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
 
         rb.refreshHeader();
@@ -460,6 +481,9 @@ public final class P2pMgr implements IP2pMgr {
 
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
+
+        System.out.println("read " + ctrl + "-" + act);
+
         switch (ctrl) {
             case Ctrl.NET:
                 handleP2pMsg(_sk, act, bodyBytes);
@@ -521,6 +545,7 @@ public final class P2pMgr implements IP2pMgr {
      */
     private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes) {
         ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
+        //System.out.println("I am handle p2p msg !!!!!");
 
         switch (_act) {
 
@@ -597,13 +622,12 @@ public final class P2pMgr implements IP2pMgr {
             List<Handler> hs = handlers.get(_route);
             if (hs == null)
                 return;
-            for (Handler h : hs) {
-                if (h == null)
+            for (Handler hlr : hs) {
+                if (hlr == null)
                     continue;
                 node.refreshTimestamp();
-                // System.out.println("in1 " + h.getHeader().getVer() + "-" +
-                // h.getHeader().getCtrl() + "-" + h.getHeader().getAction());
-                workers.submit(() -> h.receive(node.getIdHash(), node.getIdShort(), _msgBytes));
+                //System.out.println("I am handle kernel msg !!!!! " + hlr.getHeader().getCtrl() + "-" + hlr.getHeader().getAction() + "-" + hlr.getHeader().getLen());
+                workers.submit(() -> hlr.receive(node.getIdHash(), node.getIdShort(), _msgBytes));
             }
         }
     }

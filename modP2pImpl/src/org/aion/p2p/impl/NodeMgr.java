@@ -166,8 +166,7 @@ public class NodeMgr {
                 int randomNodeKey = keysArr.get(randomNodeKeyIndex);
                 return this.getActiveNode(randomNodeKey);
             } catch (IllegalArgumentException e) {
-                // if (showLog)
-                // System.out.println("<p2p get-random-exception>");
+                System.out.println("<p2p get-random-exception>");
                 return null;
             }
         } else
