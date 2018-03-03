@@ -79,7 +79,7 @@ public final class ResStatusCallback extends Handler {
                     nodeBestBlockHash,
                     nodeTotalDifficulty
             );
-            syncMgr.updateNetworkBestBlock(nodeBestBlockNumber, rs.getBestHash());
+            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash());
         }
     }
 

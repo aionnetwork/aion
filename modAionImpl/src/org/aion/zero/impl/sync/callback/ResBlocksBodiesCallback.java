@@ -79,6 +79,7 @@ public final class ResBlocksBodiesCallback extends Handler {
             while (headerIt.hasNext() && bodyIt.hasNext()) {
                 AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());
                 if (block == null) {
+                    this.log.error("<res-bodies create-block-from-network>");
                     pass = false;
                     break;
                 } else

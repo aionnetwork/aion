@@ -67,12 +67,12 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public long getTotalDifficulty() {
-            return 0;
+        public byte[] getTotalDifficulty() {
+            return new byte[0];
         }
 
         @Override
-        public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, long _totalDifficulty) {
+        public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, byte[] _totalDifficulty) {
 
         }
     }

@@ -45,7 +45,7 @@ import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
 
-public class TestResBlocksHeaders {
+public class ResBlocksHeadersTest {
 
     private static A0BlockHeader bh1;
 
