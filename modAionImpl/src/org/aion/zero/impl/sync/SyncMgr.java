@@ -154,11 +154,17 @@ public final class SyncMgr {
         setupEventHandler();
 
         getHeadersThread = new Thread(this::processGetHeaders, "sync-headers");
+        getHeadersThread.setPriority(Thread.MAX_PRIORITY);
         getHeadersThread.start();
+
         getBodiesThread = new Thread(this::processGetBlocks, "sync-blocks");
+        getBodiesThread.setPriority(Thread.MAX_PRIORITY);
         getBodiesThread.start();
+
         importBlocksThread = new Thread(this::processImportBlocks, "sync-import");
+        importBlocksThread.setPriority(Thread.MAX_PRIORITY);
         importBlocksThread.start();
+
         scheduledWorkers = new ScheduledThreadPoolExecutor(1);
         scheduledWorkers.allowCoreThreadTimeOut(true);
 
