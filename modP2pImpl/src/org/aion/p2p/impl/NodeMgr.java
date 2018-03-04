@@ -112,10 +112,10 @@ public class NodeMgr {
 
     void inboundNodeAdd(Node n) {
         updateMetric(n);
-        inboundNodes.put(n.getIdHash(), n);
+        inboundNodes.put(n.getChannel().hashCode(), n);
     }
 
-    Node tempNodesTake() throws InterruptedException {
+    synchronized Node tempNodesTake() throws InterruptedException {
         return tempNodes.take();
     }
 
@@ -190,7 +190,7 @@ public class NodeMgr {
         List<Integer> keysArr = new ArrayList<>();
 
         for (Node n : activeNodes.values()) {
-            if ((n.getBestBlockNumber() == 0) || (n.getBestBlockNumber() > bbn )) {
+            if ((n.getBestBlockNumber() == 0) || (n.getBestBlockNumber() > bbn)) {
                 keysArr.add(n.getIdHash());
             }
         }
