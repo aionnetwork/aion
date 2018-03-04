@@ -67,7 +67,7 @@ public final class SyncMgr {
     private final static ReqStatus reqStatus = new ReqStatus();
 
     private int syncBackwardMax = 128;
-    private int syncForwardMax = 192;
+    private int syncForwardMax = 64;
     private int blocksQueueMax = 2000;
 
     private AionBlockchainImpl blockchain;
@@ -84,7 +84,7 @@ public final class SyncMgr {
 
     private ConcurrentHashMap<Integer, SequentialHeaders<A0BlockHeader>> importedHeaders = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer, List<A0BlockHeader>> sentHeaders = new ConcurrentHashMap<>();
-    private final BlockingQueue<AionBlock> importedBlocksQueue = new ArrayBlockingQueue<>(1024000);
+    private final BlockingQueue<AionBlock> importedBlocksQueue = new ArrayBlockingQueue<>(1024);
     private Map<ByteArrayWrapper, Object> importedBlocksCache = Collections.synchronizedMap(new LRUMap<>(1024));
 
     private Thread getHeadersThread;
