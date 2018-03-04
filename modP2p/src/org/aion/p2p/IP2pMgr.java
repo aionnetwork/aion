@@ -33,7 +33,7 @@ import java.util.Map;
  * @author chris
  *
  */
-public interface IP2pMgr{
+public interface IP2pMgr {
 
     /**
      * @return Map
@@ -41,25 +41,26 @@ public interface IP2pMgr{
     Map<Integer, INode> getActiveNodes();
 
     /**
-     * @param _hs List<Handler>
+     * @param _hs
+     *            List<Handler>
      */
     void register(final List<Handler> _hs);
 
     /**
      * @return INode
      */
-    INode getRandom();
+    INode getRandom(NodeRandPolicy nrp, long bbn);
 
     /**
-     * @param _id int
-     * @param _msg Msg
+     * @param _id
+     *            int
+     * @param _msg
+     *            Msg
      */
     void send(int _id, final Msg _msg);
 
     /**
-     * Used to hook up with kernel
-     * to shutdown threads in network
-     * module
+     * Used to hook up with kernel to shutdown threads in network module
      */
     void shutdown();
 

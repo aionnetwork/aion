@@ -65,6 +65,7 @@ public final class Node implements INode {
     private String ipStr;
 
     private int port = -1;
+    private int portConnected = -1;
 
     private long timestamp;
 
@@ -113,6 +114,22 @@ public final class Node implements INode {
         this.bestBlockNumber = 0L;
     }
 
+    Node(String _ipStr, int port, int portConnected) {
+        this.fromBootList = false;
+
+        // if id is not gathered, leave it empty
+        // this.id = new byte[36];
+
+        this.idHash = 0;
+        this.version = 0;
+        this.ip = ipStrToBytes(_ipStr);
+        this.ipStr = _ipStr;
+        this.port = port;
+        this.portConnected = portConnected;
+        this.timestamp = System.currentTimeMillis();
+        this.bestBlockNumber = 0L;
+    }
+
     /**
      * constructor for initial stage of boot nodes from config
      */
@@ -132,7 +149,8 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _ip String
+     * @param _ip
+     *            String
      * @return byte[]
      */
     static byte[] ipStrToBytes(final String _ip) {
@@ -151,7 +169,8 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _ip byte[]
+     * @param _ip
+     *            byte[]
      * @return String
      */
     static String ipBytesToStr(final byte[] _ip) {
@@ -187,7 +206,8 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _p2p String
+     * @param _p2p
+     *            String
      * @return Node TODO: ugly
      */
     static Node parseP2p(String _p2p) {
@@ -207,7 +227,8 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _id byte[]
+     * @param _id
+     *            byte[]
      */
     void setId(final byte[] _id) {
         this.id = _id;
@@ -218,17 +239,23 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _version int
+     * @param _version
+     *            int
      */
     void setVersion(final int _version) {
         this.version = _version;
     }
 
     /**
-     * @param _port int
+     * @param _port
+     *            int
      */
     void setPort(final int _port) {
         this.port = _port;
+    }
+
+    void setPortConnected(final int _port) {
+        this.portConnected = _port;
     }
 
     /**
@@ -240,7 +267,8 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _channel SocketChannel
+     * @param _channel
+     *            SocketChannel
      */
     void setChannel(final SocketChannel _channel) {
         this.channel = _channel;
@@ -273,6 +301,10 @@ public final class Node implements INode {
     @Override
     public int getPort() {
         return this.port;
+    }
+
+    public int getConnectedPort() {
+        return portConnected;
     }
 
     /**
