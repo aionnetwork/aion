@@ -33,49 +33,53 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync;
 
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Handler;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.msg.ResStatus;
-import org.slf4j.Logger;
+import org.aion.zero.types.A0BlockHeader;
+import java.util.List;
 
-public final class ReqStatusCallback extends Handler {
+/**
+ * @author chris
+ */
+final class HeadersWrapper {
 
-    private final Logger log;
+    private int nodeIdHash;
 
-    private IAionBlockchain chain;
+    private long timeout;
 
-    private IP2pMgr mgr;
+    private List<A0BlockHeader> headers;
 
-    private byte[] genesisHash;
-
-    public ReqStatusCallback(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr, final byte[] _genesisHash) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
-        this.log = _log;
-        this.chain = _chain;
-        this.mgr = _mgr;
-        this.genesisHash = _genesisHash;
+    /**
+     *
+     * @param _nodeIdHash int
+     * @param _headers List
+     */
+    HeadersWrapper(int _nodeIdHash, final List<A0BlockHeader> _headers){
+        this.nodeIdHash = _nodeIdHash;
+        this.headers = _headers;
+        this.timeout = System.currentTimeMillis();
     }
 
-    @Override
-    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-        this.log.debug(
-                "<req-status from-node={}>",
-                _displayId
-        );
-        this.mgr.send(
-                _nodeIdHashcode,
-                new ResStatus(
-                        this.chain.getBestBlock().getNumber(),
-                        this.chain.getTotalDifficulty().toByteArray(),
-                        this.chain.getBestBlockHash(),
-                        this.genesisHash
-                )
-        );
+    /**
+     * @return int - node id hash
+     */
+    int getNodeIdHash(){
+        return this.nodeIdHash;
     }
+
+    /**
+     * @return long
+     * used to compare and drop from queue if expired
+     */
+    long getTimeout(){
+        return this.timeout;
+    }
+
+    /**
+     * @return List
+     */
+    List<A0BlockHeader> getHeaders(){
+        return this.headers;
+    }
+
 }

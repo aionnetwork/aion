@@ -50,8 +50,9 @@ import org.slf4j.Logger;
 
 /**
  * @author chris
+ * handler for new transaction broadcasted from network
  */
-public final class BroadcastTxCallback extends Handler {
+public final class BroadcastTxHandler extends Handler {
 
     private final Logger log;
 
@@ -65,7 +66,7 @@ public final class BroadcastTxCallback extends Handler {
      * @see org.aion.net.nio.ICallback#getCtrl() change param
      * IPendingStateInternal later
      */
-    public BroadcastTxCallback(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr) {
+    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
