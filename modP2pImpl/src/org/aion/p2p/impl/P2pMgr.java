@@ -53,7 +53,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final static int PERIOD_SHOW_STATUS = 10000;
     private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
-    private final static int PERIOD_CONNECT_OUTBOUND = 300;
+    private final static int PERIOD_CONNECT_OUTBOUND = 500;
     private final static int PERIOD_CLEAR = 20000;
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
@@ -295,7 +295,7 @@ public final class P2pMgr implements IP2pMgr {
                 h.setLen(bodyLen);
                 byte[] headerBytes = h.encode();
 
-                System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                 ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
                 buf.put(headerBytes);
                 if (bodyBytes != null)
@@ -317,7 +317,7 @@ public final class P2pMgr implements IP2pMgr {
                         Msg msg = this.channelBuffer.msgs.poll(1, TimeUnit.MILLISECONDS);
 
                         if(msg != null) {
-                            System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                            //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                             workers.submit(new TaskWrite(nodeShortId, sc, msg, channelBuffer));
                         }
                     } catch (InterruptedException e) {
@@ -375,10 +375,12 @@ public final class P2pMgr implements IP2pMgr {
      * @return boolean
      */
     private boolean validateNode(final Node _node) {
-        return _node != null && _node.getIdHash() != this.selfNodeIdHash
-                && !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort())
-                && !nodeMgr.hasActiveNode(_node.getIdHash())
-                && !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
+        boolean notNull = _node != null;
+        boolean notSelfId = _node.getIdHash() != this.selfNodeIdHash;
+        boolean notSameIpOrPort = !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
+        boolean notActive = !nodeMgr.hasActiveNode(_node.getIdHash());
+        boolean notOutbound = !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
+        return notNull && notSelfId && notSameIpOrPort && notActive && notOutbound;
     }
 
     /**
@@ -479,7 +481,7 @@ public final class P2pMgr implements IP2pMgr {
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
 
-        System.out.println("read " + ctrl + "-" + act);
+        //System.out.println("read " + ctrl + "-" + act);
 
         switch (ctrl) {
             case Ctrl.NET:
@@ -555,8 +557,6 @@ public final class P2pMgr implements IP2pMgr {
                         node.setId(reqHandshake.getNodeId());
                         node.setVersion(reqHandshake.getVersion());
                         node.setPort(reqHandshake.getPort());
-                        if(nodeMgr.seedIps.contains(Arrays.hashCode(node.getIp())))
-                            node.setFromBootList(true);
 
                         nodeMgr.moveInboundToActive(node.getChannel().hashCode(), this);
 
@@ -643,6 +643,7 @@ public final class P2pMgr implements IP2pMgr {
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
             workers = Executors.newFixedThreadPool(Math.max(Runtime.getRuntime().availableProcessors() * 2, 8));
 
+
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);
@@ -684,8 +685,15 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public Map getActiveNodes() {
+    public Map<Integer, INode> getActiveNodes() {
         return this.nodeMgr.getActiveNodesMap();
+    }
+
+    /**
+     * for test
+     */
+    void clearTempNodes(){
+        this.nodeMgr.clearTempNodes();
     }
 
     int getTempNodesCount() {  return nodeMgr.tempNodesSize(); }

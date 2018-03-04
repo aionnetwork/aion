@@ -38,7 +38,7 @@ public class NodeMgr {
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
 
-    final Set<Integer> seedIps = new HashSet<>();
+    final Set<String> seedIps = new HashSet<>();
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
     private final BlockingQueue<Node> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
@@ -78,7 +78,7 @@ public class NodeMgr {
 
         System.out.println("[active-nodes(nodeIdHash)=[" + sorted.stream()
                 .map((entry) -> "\n" + entry.getBestBlockNumber() + "-" + entry.getIdShort() + "-"
-                        + entry.getIpStr() + (entry.getIfFromBootList() ? "-seed" : ""))
+                        + entry.getIpStr() + "-" + entry.getType() + (entry.getIfFromBootList() ? "-seed" : ""))
                 .collect(Collectors.joining(",")) + "]]");
     }
 
@@ -93,11 +93,14 @@ public class NodeMgr {
         }
     }
 
-    void tempNodesAdd(final Node n) {
-        if (!tempNodes.contains(n)) {
-            updateMetric(n);
-            tempNodes.add(n);
-            seedIps.add(Arrays.hashCode(n.getIp()));
+    /**
+     * @param _n Node
+     */
+    void tempNodesAdd(final Node _n) {
+        if (!tempNodes.contains(_n)) {
+            updateMetric(_n);
+            tempNodes.add(_n);
+            seedIps.add(_n.getIpStr());
         }
     }
 
@@ -112,6 +115,13 @@ public class NodeMgr {
 
     int tempNodesSize() {
         return tempNodes.size();
+    }
+
+    /**
+     * for test
+     */
+    void clearTempNodes(){
+        this.tempNodes.clear();
     }
 
     int activeNodesSize() {
@@ -154,7 +164,7 @@ public class NodeMgr {
         return new ArrayList(activeNodes.values());
     }
 
-    Map getActiveNodesMap() {
+    Map<Integer, INode> getActiveNodesMap() {
         return new HashMap(activeNodes);
     }
 
@@ -175,27 +185,40 @@ public class NodeMgr {
             return null;
     }
 
-    void moveOutboundToActive(int _nodeIdHash, String _shortId, P2pMgr pmgr) {
+    /**
+     * @param _nodeIdHash int
+     * @param _shortId String
+     * @param _p2pMgr P2pMgr
+     */
+    void moveOutboundToActive(int _nodeIdHash, String _shortId, final P2pMgr _p2pMgr) {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
+            node.setType("outbound");
             INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
             if (previous != null)
-                pmgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel());
             else {
-                if (pmgr.showLog)
+                if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
         }
     }
 
-    void moveInboundToActive(int _channelHashCode, P2pMgr pmgr) {
+    /**
+     * @param _channelHashCode int
+     * @param _p2pMgr P2pMgr
+     */
+    void moveInboundToActive(int _channelHashCode, final P2pMgr _p2pMgr) {
         Node node = inboundNodes.remove(_channelHashCode);
         if (node != null) {
+            node.setType("inbound");
+//            if(seedIps.contains(node.getIpStr()))
+//                node.setFromBootList(true);
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
             if (previous != null)
-                pmgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel());
             else {
-                if (pmgr.showLog)
+                if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }
         }

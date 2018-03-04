@@ -77,6 +77,8 @@ public final class Node implements INode {
 
     private SocketChannel channel;
 
+    private String type = "";
+
     private static final Pattern IPV4 = Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
     PeerMetric peerMetric = new PeerMetric();
@@ -100,10 +102,6 @@ public final class Node implements INode {
 
     Node(String _ipStr, int port) {
         this.fromBootList = false;
-
-        // if id is not gathered, leave it empty
-        // this.id = new byte[36];
-
         this.idHash = 0;
         this.version = 0;
         this.ip = ipStrToBytes(_ipStr);
@@ -251,6 +249,13 @@ public final class Node implements INode {
     }
 
     /**
+     * @param _type String
+     */
+    void setType(String _type){
+        this.type = _type;
+    }
+
+    /**
      * @return boolean
      */
     boolean getIfFromBootList() {
@@ -302,6 +307,8 @@ public final class Node implements INode {
     public int getIdHash() {
         return this.idHash;
     }
+
+    String getType() { return this.type;}
 
     boolean hasFullInfo() {
         return (id != null) && (ip != null) && (port > 0);
