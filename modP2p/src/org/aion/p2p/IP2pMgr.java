@@ -28,6 +28,7 @@ package org.aion.p2p;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  *
  * @author chris
@@ -39,6 +40,8 @@ public interface IP2pMgr {
      * @return Map
      */
     Map<Integer, INode> getActiveNodes();
+    
+    INodeMgr getNodeMgr();
 
     /**
      * @param _hs

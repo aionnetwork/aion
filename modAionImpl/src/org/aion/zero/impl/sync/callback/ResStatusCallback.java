@@ -36,6 +36,7 @@
 package org.aion.zero.impl.sync.callback;
 
 import org.aion.p2p.*;
+import org.aion.p2p.impl.NodeMgr;
 import org.slf4j.Logger;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;
@@ -64,7 +65,13 @@ public final class ResStatusCallback extends Handler {
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
         ResStatus rs = ResStatus.decode(_msgBytes);
+        
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
+        
+        INodeMgr nmgr = this.p2pMgr.getNodeMgr();
+        
+        nmgr.updateAllNodesInfo(node);
+
         if (node != null) {
             this.log.debug(
                     "<res-status best-block={} from-node={}>",

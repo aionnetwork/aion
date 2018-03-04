@@ -635,6 +635,11 @@ public final class P2pMgr implements IP2pMgr {
             }
         }
     }
+    
+    
+    public NodeMgr getNodeMgr(){
+        return this.nodeMgr;
+    }
 
     @Override
     public void run() {
