@@ -42,6 +42,9 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 
+/**
+ * @author chris
+ */
 public final class BroadcastNewBlock extends Msg {
 
     @SuppressWarnings("rawtypes")

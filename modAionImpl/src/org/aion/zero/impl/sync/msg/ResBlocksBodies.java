@@ -47,8 +47,9 @@ import org.aion.rlp.RLPList;
 
 /**
  *
- * @author chris TODO: follow same construction, decode & encode rule as
- *         ResBlocksHeaders in future. Need to update INcBlockchain
+ * @author chris
+ * TODO: follow same construction, decode & encode rule as
+ * ResBlocksHeaders in future. Need to update INcBlockchain
  */
 public final class ResBlocksBodies extends Msg {
 

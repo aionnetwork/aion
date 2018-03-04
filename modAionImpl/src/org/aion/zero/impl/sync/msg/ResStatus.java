@@ -107,12 +107,10 @@ public final class ResStatus extends Msg {
 
     @Override
     public byte[] encode() {
-        if (this.totalDifficultyLen > 127)
-            return new byte[0];
         int _len = 8 + 1 + totalDifficultyLen + 32 + 32;
         ByteBuffer bb = ByteBuffer.allocate(_len);
         bb.putLong(this.bestBlockNumber);
-        bb.put((byte) this.totalDifficultyLen);
+        bb.put(this.totalDifficultyLen);
         bb.put(this.totalDifficulty);
         bb.put(this.bestHash);
         bb.put(this.genesisHash);

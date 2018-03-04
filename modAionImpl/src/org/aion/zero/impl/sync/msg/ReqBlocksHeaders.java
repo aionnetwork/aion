@@ -41,6 +41,9 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
+/**
+ * @author chris
+ */
 public final class ReqBlocksHeaders extends Msg {
 
     /**
