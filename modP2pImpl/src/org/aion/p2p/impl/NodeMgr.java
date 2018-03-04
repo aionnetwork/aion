@@ -39,8 +39,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
 
-public class NodeMgr {
+public class NodeMgr implements INodeMgr {
 
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
@@ -96,9 +97,24 @@ public class NodeMgr {
                 Node orig = allNodes.get(fullHash);
                 // pull out metric.
                 n.peerMetric = orig.peerMetric;
+                n.copoyNodeStatus(orig);
+
             }
             // update allnodes list.
             allNodes.put(fullHash, n);
+        }
+    }
+
+    public void updateAllNodesInfo(INode _n) {
+        Node n = (Node) _n;
+
+        if (n.hasFullInfo()) {
+            int fullHash = n.getFullHash();
+            if (allNodes.containsKey(fullHash)) {
+                Node orig = allNodes.get(fullHash);
+                // pull out metric.
+                orig.copoyNodeStatus(n);
+            }
         }
     }
 

@@ -378,6 +378,14 @@ public final class Node implements INode {
         }
     }
 
+    void copoyNodeStatus(Node _n) {
+        if (_n.bestBlockNumber > this.bestBlockNumber) {
+            this.bestBlockNumber = _n.getBestBlockNumber();
+            this.bestBlockHash = _n.bestBlockHash;
+            this.totalDifficulty = _n.getTotalDifficulty();
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Node) {
