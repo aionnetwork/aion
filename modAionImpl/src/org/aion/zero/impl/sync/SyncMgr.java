@@ -66,7 +66,7 @@ public final class SyncMgr {
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private final static ReqStatus reqStatus = new ReqStatus();
 
-    private int syncBackwardMax = 64;
+    private int syncBackwardMax = 128;
     private int syncForwardMax = 192;
     private int blocksQueueMax = 2000;
 
@@ -100,7 +100,7 @@ public final class SyncMgr {
         return AionSyncMgrHolder.INSTANCE;
     }
 
-    public void updateNetworkBestBlock(long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
+    public synchronized  void updateNetworkBestBlock(long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
 
         if (_nodeBestBlockNumber > this.networkBestBlockNumber.get()) {
@@ -165,19 +165,20 @@ public final class SyncMgr {
                 LOG.info("<status self={}/{} network={}/{} blocks-queue-size={}>", blk.getNumber(),
                         Hex.toHexString(blk.getHash()).substring(0, 6), networkBestBlockNumber.get(),
                         Hex.toHexString(networkBestBlockHash.get()).substring(0, 6), importedBlocksQueue.size());
-            }, 0, 1000, TimeUnit.MILLISECONDS);
+            }, 0, 3000, TimeUnit.MILLISECONDS);
+
         scheduledWorkers.scheduleWithFixedDelay(() -> {
 
             Set<Integer> ids = new HashSet<>();
 
             // get top nodes to get realtime height.
-                INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
-                if (node != null && !ids.contains(node.getIdHash()))
-                    ids.add(node.getIdHash());
+            INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
+            if (node != null && !ids.contains(node.getIdHash()))
+                ids.add(node.getIdHash());
             // still need pick a rnd node to update their latest sync status.
-                node = p2pMgr.getRandom(NodeRandPolicy.RND, blockchain.getBestBlock().getNumber());
-                if (node != null && !ids.contains(node.getIdHash()))
-                    ids.add(node.getIdHash());
+            node = p2pMgr.getRandom(NodeRandPolicy.RND, blockchain.getBestBlock().getNumber());
+            if (node != null && !ids.contains(node.getIdHash()))
+                ids.add(node.getIdHash());
 
             ids.forEach((k) -> {
                 p2pMgr.send(k, reqStatus);
@@ -272,16 +273,16 @@ public final class SyncMgr {
             long selfBest = Math.max(selfBlock.getNumber(), retargetNumber.get());
 
             Map<Integer, HeaderQuery> ids = new HashMap<>();
-                INode node = p2pMgr.getRandom(NodeRandPolicy.SYNC, 0);
-                if (node != null) {
-                    long diff = node.getBestBlockNumber() - selfBest;
-                    if (!ids.containsKey(node.getIdHash()) && diff > 0) {
-                        long from = Math.max(1, selfBest - syncBackwardMax);
-                        long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
-                        int take = (int) (to - from) + 1;
-                        ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
-                    }
+            INode node = p2pMgr.getRandom(NodeRandPolicy.SYNC, 0);
+            if (node != null) {
+                long diff = node.getBestBlockNumber() - selfBest;
+                if (!ids.containsKey(node.getIdHash()) && diff > 0) {
+                    long from = Math.max(1, selfBest - syncBackwardMax);
+                    long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
+                    int take = (int) (to - from) + 1;
+                    ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
                 }
+            }
 
             ids.forEach((k, v) -> {
                 // System.out.println("head req from " + v.from + " take " +
@@ -319,11 +320,15 @@ public final class SyncMgr {
     }
 
     private void processImportBlocks() {
+
+        List<AionBlock> batchBlocks = new ArrayList<>(1024);
+
         while (start.get()) {
             try {
                 long start = System.currentTimeMillis();
                 long blockNumberIndex = 0;
-                List<AionBlock> batchBlocks = new ArrayList<>();
+
+                batchBlocks.clear();
 
                 batch: while (System.currentTimeMillis() - start < 10) {
                     AionBlock b = importedBlocksQueue.peek();
@@ -338,6 +343,7 @@ public final class SyncMgr {
                 }
 
                 boolean retargetingTriggerUsed = false;
+                
                 for (AionBlock b : batchBlocks) {
                     ImportResult importResult = this.blockchain.tryToConnect(b);
                     switch (importResult) {
