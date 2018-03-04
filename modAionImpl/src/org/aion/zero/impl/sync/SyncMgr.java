@@ -60,8 +60,8 @@ import org.aion.mcf.valid.BlockHeaderValidator;
  */
 public final class SyncMgr {
 
-    private static final int FETCH_INTERVAL = 500;
-    private static final int GET_STATUS_SLEEP = 1000;
+    private static final int FETCH_INTERVAL = 400;
+    private static final int GET_STATUS_SLEEP = 50;
 
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -84,7 +84,7 @@ public final class SyncMgr {
 
     private ConcurrentHashMap<Integer, SequentialHeaders<A0BlockHeader>> importedHeaders = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer, List<A0BlockHeader>> sentHeaders = new ConcurrentHashMap<>();
-    private final BlockingQueue<AionBlock> importedBlocksQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<AionBlock> importedBlocksQueue = new ArrayBlockingQueue<>(1024000);
     private Map<ByteArrayWrapper, Object> importedBlocksCache = Collections.synchronizedMap(new LRUMap<>(1024));
 
     private Thread getHeadersThread;
@@ -165,23 +165,19 @@ public final class SyncMgr {
                 LOG.info("<status self={}/{} network={}/{} blocks-queue-size={}>", blk.getNumber(),
                         Hex.toHexString(blk.getHash()).substring(0, 6), networkBestBlockNumber.get(),
                         Hex.toHexString(networkBestBlockHash.get()).substring(0, 6), importedBlocksQueue.size());
-            }, 0, 5000, TimeUnit.MILLISECONDS);
+            }, 0, 1000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
 
             Set<Integer> ids = new HashSet<>();
 
             // get top nodes to get realtime height.
-            for (int i = 0; i < 3; i++) {
                 INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
                 if (node != null && !ids.contains(node.getIdHash()))
                     ids.add(node.getIdHash());
-            }
             // still need pick a rnd node to update their latest sync status.
-            {
-                INode node = p2pMgr.getRandom(NodeRandPolicy.REALTIME, blockchain.getBestBlock().getNumber());
+                node = p2pMgr.getRandom(NodeRandPolicy.RND, blockchain.getBestBlock().getNumber());
                 if (node != null && !ids.contains(node.getIdHash()))
                     ids.add(node.getIdHash());
-            }
 
             ids.forEach((k) -> {
                 p2pMgr.send(k, reqStatus);
@@ -276,7 +272,6 @@ public final class SyncMgr {
             long selfBest = Math.max(selfBlock.getNumber(), retargetNumber.get());
 
             Map<Integer, HeaderQuery> ids = new HashMap<>();
-            for (int i = 0; i < 3; i++) {
                 INode node = p2pMgr.getRandom(NodeRandPolicy.SYNC, 0);
                 if (node != null) {
                     long diff = node.getBestBlockNumber() - selfBest;
@@ -287,7 +282,6 @@ public final class SyncMgr {
                         ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
                     }
                 }
-            }
 
             ids.forEach((k, v) -> {
                 // System.out.println("head req from " + v.from + " take " +

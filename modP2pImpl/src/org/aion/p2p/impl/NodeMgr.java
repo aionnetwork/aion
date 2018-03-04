@@ -190,7 +190,7 @@ public class NodeMgr {
         List<Integer> keysArr = new ArrayList<>();
 
         for (Node n : activeNodes.values()) {
-            if ((n.getBestBlockNumber() == 0) || (n.getBestBlockNumber() > bbn - 128)) {
+            if ((n.getBestBlockNumber() == 0) || (n.getBestBlockNumber() > bbn )) {
                 keysArr.add(n.getIdHash());
             }
         }
