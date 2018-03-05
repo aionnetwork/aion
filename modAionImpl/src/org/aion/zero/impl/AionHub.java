@@ -72,7 +72,7 @@ public class AionHub {
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
 
     private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
-    public static final String VERSION = "0.1.13";
+    public static final String VERSION = "0.1.13.e7737b9.e7737b9.e7737b9.e7737b9";
 
     private IP2pMgr p2pMgr;
 

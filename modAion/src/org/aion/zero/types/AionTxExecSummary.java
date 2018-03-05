@@ -21,33 +21,25 @@
  *     Aion foundation.
  *     
  ******************************************************************************/
-package org.aion.zero.impl.blockchain;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
-import static org.aion.base.util.BIUtil.toBI;
-import static org.apache.commons.lang3.ArrayUtils.isEmpty;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-
-import java.math.BigInteger;
-import java.util.*;
+package org.aion.zero.types;
 
 import org.aion.base.type.Address;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
-import org.aion.vm.ExecutionResult;
-import org.aion.vm.VirtualMachine;
-import org.aion.zero.types.AionInternalTx;
-import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.AionTxReceipt;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+
+import java.math.BigInteger;
+import java.util.*;
+
+import static java.util.Collections.*;
+import static org.aion.base.util.BIUtil.toBI;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 public class AionTxExecSummary implements ITxExecSummary {
 
@@ -361,8 +353,7 @@ public class AionTxExecSummary implements ITxExecSummary {
      * creation of the transaction summary. Contains all elements useful for
      * referencing both the transactions and the results of the transaction.
      * This also includes results like which rows of the storage (account
-     * storage {@link DetailsDataStore}) were {@code touched} by
-     * {@link VirtualMachine}.
+     * storage {@link DetailsDataStore}) were {@code touched} by virtual machine.
      *
      * Prefer using this builder, as rules will be enforced and the system will
      * fast fail.

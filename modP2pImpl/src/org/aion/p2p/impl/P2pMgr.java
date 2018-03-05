@@ -45,9 +45,8 @@ import org.aion.p2p.impl.msg.ResActiveNodes;
 import org.aion.p2p.impl.msg.ResHandshake;
 
 /**
- * @author Chris
- * p2p://{uuid}@{ip}:{port}
- * TODO: 1) simplify id bytest to int, ip bytest to str 2) upnp protocal 3) framing
+ * @author Chris p2p://{uuid}@{ip}:{port} TODO: 1) simplify id bytest to int, ip
+ * bytest to str 2) upnp protocal 3) framing
  */
 public final class P2pMgr implements IP2pMgr {
 
@@ -58,6 +57,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
     private final static int TIMEOUT_OUTBOUND_NODES = 10000;
+    private final static int PERIOD_UPNP_PORT_MAPPING = 3600000;
 
     private final static int TIMEOUT_MSG_READ = 10000;
 
@@ -181,8 +181,8 @@ public final class P2pMgr implements IP2pMgr {
                         if (showLog)
                             System.out.println("<p2p try-connect-" + node.getIpStr() + ">");
                         channel.socket().connect(
-                            new InetSocketAddress(node.getIpStr(), _port),
-                            TIMEOUT_OUTBOUND_CONNECT
+                                new InetSocketAddress(node.getIpStr(), _port),
+                                TIMEOUT_OUTBOUND_CONNECT
                         );
                         configChannel(channel);
 
@@ -192,7 +192,10 @@ public final class P2pMgr implements IP2pMgr {
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
                             sk.attach(rb);
+
                             node.setChannel(channel);
+                            node.setPortConnected(channel.socket().getLocalPort());
+
                             addOutboundNode(node);
                             selectorLock.unlock();
                             workers.submit(new TaskWrite(node.getIdShort(), channel, cachedReqHandshake, rb));
@@ -229,9 +232,9 @@ public final class P2pMgr implements IP2pMgr {
                     selectorLock.lock();
                     nodeMgr.rmTimeOutInbound(P2pMgr.this);
                     selectorLock.unlock();
-                    
+
                     // clean up temp nodes list if metric failed.
-                    nodeMgr.rmMetricFailedNodes();                    
+                    nodeMgr.rmMetricFailedNodes();
 
                     Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
                     while (outboundIt.hasNext()) {
@@ -287,7 +290,7 @@ public final class P2pMgr implements IP2pMgr {
             Thread.currentThread().setName("p2p-write");
 
             // NOTE: the following logic may cause message loss
-            if(this.channelBuffer.onWrite.compareAndSet(false, true)){
+            if (this.channelBuffer.onWrite.compareAndSet(false, true)) {
                 /*
                  * @warning header set len (body len) before header encode
                  */
@@ -318,7 +321,7 @@ public final class P2pMgr implements IP2pMgr {
 
                         Msg msg = this.channelBuffer.msgs.poll(1, TimeUnit.MILLISECONDS);
 
-                        if(msg != null) {
+                        if (msg != null) {
                             //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                             workers.submit(new TaskWrite(nodeShortId, sc, msg, channelBuffer));
                         }
@@ -364,7 +367,7 @@ public final class P2pMgr implements IP2pMgr {
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
-            if (validateNode(node)) {
+            if (node != null && validateNode(node)) {
                 nodeMgr.tempNodesAdd(node);
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
@@ -413,9 +416,9 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _node Node
-     * 1) leave outbound timestamp check to outbound connections process
-     * 2) add if no such connection or drop new if connection to target exists
+     * @param _node Node 1) leave outbound timestamp check to outbound connections
+     *              process 2) add if no such connection or drop new if connection
+     *              to target exists
      */
     private void addOutboundNode(final Node _node) {
         Node previous = nodeMgr.getOutboundNodes().putIfAbsent(_node.getIdHash(), _node);
@@ -436,7 +439,7 @@ public final class P2pMgr implements IP2pMgr {
             int port = channel.socket().getPort();
 
             // Node node = new Node(false, ip);
-            Node node = nodeMgr.allocNode(ip, port);
+            Node node = nodeMgr.allocNode(ip, 0, port);
 
             node.setChannel(channel);
             nodeMgr.inboundNodeAdd(node);
@@ -525,7 +528,6 @@ public final class P2pMgr implements IP2pMgr {
 
         if (_cb.bodyBuf == null)
             _cb.bodyBuf = ByteBuffer.allocate(_cb.header.getLen());
-
 
         int ret;
         while ((ret = _sc.read(_cb.bodyBuf)) > 0) {
@@ -634,8 +636,9 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private void runUpnp() {
-        // TODO: implement
+
+    public NodeMgr getNodeMgr() {
+        return this.nodeMgr;
     }
 
     @Override
@@ -644,7 +647,7 @@ public final class P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            workers = Executors.newFixedThreadPool(Math.max(Runtime.getRuntime().availableProcessors() * 2, 8));
+            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
 
 
             tcpServer = ServerSocketChannel.open();
@@ -653,26 +656,18 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            if (this.upnpEnable)
-                runUpnp();
-
             Thread boss = new Thread(new TaskInbound(), "p2p-pi");
             boss.setPriority(Thread.MAX_PRIORITY);
             boss.start();
 
+            if (upnpEnable)
+                scheduledWorkers.scheduleWithFixedDelay(new TaskUPnPManager(selfPort), 1, PERIOD_UPNP_PORT_MAPPING,
+                        TimeUnit.MILLISECONDS);
+
             if (showStatus)
-                scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskStatus(),
-                    2,
-                    PERIOD_SHOW_STATUS,
-                    TimeUnit.MILLISECONDS
-                );
-            scheduledWorkers.scheduleWithFixedDelay(
-                new TaskRequestActiveNodes(this),
-                5000,
-                PERIOD_REQUEST_ACTIVE_NODES,
-                TimeUnit.MILLISECONDS
-            );
+                scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
+            scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
+                    TimeUnit.MILLISECONDS);
 
             workers.submit(new TaskClear());
             workers.submit(new TaskConnectPeers());
@@ -683,7 +678,24 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    public INode getRandom() {
+    @Override
+    public INode getRandom(){
+        return nodeMgr.getRandom();
+    }
+
+    public INode getRandom(NodeRandPolicy nrp, long bbn) {
+        switch (nrp) {
+            case RND:
+                break;
+            case REALTIME:
+
+                // only fetch node with blocknumber > ( highest -128 )
+                return nodeMgr.getRandomRealtime(bbn);
+
+            case SYNC:
+                break;
+        }
+
         return nodeMgr.getRandom();
     }
 
@@ -695,11 +707,13 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * for test
      */
-    void clearTempNodes(){
+    void clearTempNodes() {
         this.nodeMgr.clearTempNodes();
     }
 
-    int getTempNodesCount() {  return nodeMgr.tempNodesSize(); }
+    int getTempNodesCount() {
+        return nodeMgr.tempNodesSize();
+    }
 
     @Override
     public void register(final List<Handler> _cbs) {

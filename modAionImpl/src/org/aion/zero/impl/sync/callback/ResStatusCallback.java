@@ -64,13 +64,15 @@ public final class ResStatusCallback extends Handler {
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
         ResStatus rs = ResStatus.decode(_msgBytes);
+
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
+
+        INodeMgr nmgr = this.p2pMgr.getNodeMgr();
+
+        nmgr.updateAllNodesInfo(node);
+
         if (node != null) {
-            this.log.debug(
-                    "<res-status best-block={} from-node={}>",
-                    rs.getBestBlockNumber(),
-                    _displayId
-            );
+            this.log.debug("<res-status best-block={} from-node={}>", rs.getBestBlockNumber(), _displayId);
             long nodeBestBlockNumber = rs.getBestBlockNumber();
             byte[] nodeBestBlockHash = rs.getBestHash();
             byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
@@ -82,5 +84,4 @@ public final class ResStatusCallback extends Handler {
             syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash());
         }
     }
-
 }

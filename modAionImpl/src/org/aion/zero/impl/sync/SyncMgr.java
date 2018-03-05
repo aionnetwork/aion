@@ -127,10 +127,11 @@ public final class SyncMgr {
         if (_nodeBestBlockNumber > this.networkBestBlockNumber.get()) {
             this.networkBestBlockNumber.set(_nodeBestBlockNumber);
             this.networkBestBlockHash.set(_nodeBestBlockHash);
-
         }
 
-        if (this.networkBestBlockNumber.get() <= selfBestBlockNumber) {
+        if (this.networkBestBlockNumber.get() <= selfBestBlockNumber)
+
+        {
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -151,7 +152,6 @@ public final class SyncMgr {
                     this.networkBestBlockNumber.get()
                 );
             }
-
         }
     }
 
@@ -195,7 +195,6 @@ public final class SyncMgr {
                 if(
                     node != null &&
                     !ids.contains(node.getIdHash())
-
                 ) {
                     ids.add(node.getIdHash());
                     p2pMgr.send(node.getIdHash(), reqStatus);
@@ -205,13 +204,10 @@ public final class SyncMgr {
         }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * Oct 12, 2017 jay void
-     */
     private void setupEventHandler() {
-        List<IEvent> evts = new ArrayList<>();
-        evts.add(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
-        this.evtMgr.registerEvent(evts);
+        List<IEvent> events = new ArrayList<>();
+        events.add(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
+        this.evtMgr.registerEvent(events);
     }
 
     /**
@@ -227,7 +223,6 @@ public final class SyncMgr {
             return;
 
         _headers.sort((h1, h2)-> (int)(h1.getNumber() - h2.getNumber()));
-
         Iterator<A0BlockHeader> it = _headers.iterator();
         while(it.hasNext()){
 
@@ -258,7 +253,6 @@ public final class SyncMgr {
                     _displayId
             );
         }
-
     }
 
     /**
@@ -269,6 +263,9 @@ public final class SyncMgr {
      * from network response blocks bodies
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
+
+        if(importedBlocks.size() > blocksQueueMax)
+            return;
 
         HeadersWrapper hw = this.sentHeaders.remove(_nodeIdHashcode);
         if(hw == null || _bodies == null)
@@ -310,6 +307,7 @@ public final class SyncMgr {
         importedBlocks.addAll(blocks);
     }
 
+
     /**
      * fetch headers routine
      */
@@ -343,6 +341,7 @@ public final class SyncMgr {
             this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
         });
     }
+
 
     private void processGetBlocks(){
         while (start.get()) {
@@ -385,10 +384,12 @@ public final class SyncMgr {
     }
 
     private void processImportBlocks() {
+
         while (start.get()) {
             try {
                 long start = System.currentTimeMillis();
                 long blockNumberIndex = 0;
+
                 List<AionBlock> batch = new ArrayList<>();
 
                 while( (System.currentTimeMillis() - start) < 10){
@@ -418,8 +419,9 @@ public final class SyncMgr {
                     continue;
                 }
 
-                boolean retargetingTriggerUsed = false;
-                batchImport:for(AionBlock b : batch){
+                boolean fetchAheadTriggerUsed = false;
+
+                for(AionBlock b : batch){
                     ImportResult importResult = this.blockchain.tryToConnect(b);
                     switch (importResult) {
                         case IMPORTED_BEST:
@@ -429,9 +431,9 @@ public final class SyncMgr {
                             }
 
                             //re-targeting for next batch blocks headers
-                            if(!retargetingTriggerUsed){
-                                retargetNumber.set(batch.get(batch.size() - 1).getNumber());
-                                retargetingTriggerUsed = true;
+                            if(!fetchAheadTriggerUsed){
+                                retargetNumber.set(batch.get(batch.size() - 1).getNumber() + 128);
+                                fetchAheadTriggerUsed = true;
                                 getHeaders();
                             }
                             break;
@@ -445,13 +447,13 @@ public final class SyncMgr {
                             break;
                         case EXIST:
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("<import-unsuccess err=block-exit num={} hash={} txs={}>", b.getNumber(),
+                                LOG.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                         b.getShortHash(), b.getTransactionsList().size());
                             }
                             break;
                         case NO_PARENT:
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("<import-unsuccess err=no-parent num={} hash={}>", b.getNumber(),
+                                LOG.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(),
                                         b.getShortHash());
                             }
 
@@ -460,7 +462,7 @@ public final class SyncMgr {
                             continue;
                         case INVALID_BLOCK:
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("<import-unsuccess err=invalid-block num={} hash={} txs={}>", b.getNumber(),
+                                LOG.debug("<import-fail err=invalid-block num={} hash={} txs={}>", b.getNumber(),
                                         b.getShortHash(), b.getTransactionsList().size());
                             }
                             break;

@@ -25,8 +25,6 @@
 
 package org.aion.p2p;
 
-import java.math.BigInteger;
-
 /**
  *
  * @author chris

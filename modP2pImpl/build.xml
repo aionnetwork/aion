@@ -16,6 +16,7 @@
 
   <path id="cp">
     <pathelement location="${dir.mod}/modP2p.jar" />
+    <pathelement location="${dir.lib}/libminiupnp/miniupnpc_linux.jar"/>
   </path>
 
   <target name="clean_build" depends="clean">

@@ -25,7 +25,6 @@
 
 package org.aion.p2p.impl;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -66,6 +65,7 @@ public final class Node implements INode {
     private String ipStr;
 
     private int port = -1;
+    private int portConnected = -1;
 
     private long timestamp;
 
@@ -100,13 +100,16 @@ public final class Node implements INode {
         this.bestBlockNumber = 0L;
     }
 
-    Node(String _ipStr, int port) {
+    Node(String _ipStr, int port, int portConnected) {
         this.fromBootList = false;
+        // if id is not gathered, leave it empty
+        // this.id = new byte[36];
         this.idHash = 0;
         this.version = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
         this.port = port;
+        this.portConnected = portConnected;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
     }
@@ -186,7 +189,8 @@ public final class Node implements INode {
 
     /**
      * @param _p2p String
-     * @return Node TODO: ugly
+     * @return Node
+     * TODO: ugly
      */
     public static Node parseP2p(String _p2p) {
         String[] arrs = _p2p.split("@");
@@ -204,8 +208,8 @@ public final class Node implements INode {
         return new Node(true, _id, _ip, _port);
     }
 
-    void setFromBootList(boolean ifBoot){
-        this.fromBootList = ifBoot;
+    void setFromBootList(boolean _ifBoot) {
+        this.fromBootList = _ifBoot;
     }
 
     /**
@@ -233,6 +237,10 @@ public final class Node implements INode {
         this.port = _port;
     }
 
+    void setPortConnected(final int _port) {
+        this.portConnected = _port;
+    }
+
     /**
      * this method used to keep current node stage on either pending list or
      * active list
@@ -251,7 +259,7 @@ public final class Node implements INode {
     /**
      * @param _type String
      */
-    void setType(String _type){
+    void setType(String _type) {
         this.type = _type;
     }
 
@@ -284,6 +292,10 @@ public final class Node implements INode {
         return this.port;
     }
 
+    public int getConnectedPort() {
+        return portConnected;
+    }
+
     /**
      * @return long
      */
@@ -308,7 +320,9 @@ public final class Node implements INode {
         return this.idHash;
     }
 
-    String getType() { return this.type;}
+    String getType() {
+        return this.type;
+    }
 
     boolean hasFullInfo() {
         return (id != null) && (ip != null) && (port > 0);
@@ -354,6 +368,14 @@ public final class Node implements INode {
             this.bestBlockNumber = _bestBlockNumber;
             this.bestBlockHash = _bestBlockHash;
             this.totalDifficulty = _totalDifficulty;
+        }
+    }
+
+    void copyNodeStatus(Node _n) {
+        if (_n.bestBlockNumber > this.bestBlockNumber) {
+            this.bestBlockNumber = _n.getBestBlockNumber();
+            this.bestBlockHash = _n.bestBlockHash;
+            this.totalDifficulty = _n.getTotalDifficulty();
         }
     }
 
