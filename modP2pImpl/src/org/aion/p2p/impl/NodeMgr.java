@@ -26,6 +26,10 @@
 package org.aion.p2p.impl;
 
 import java.math.BigInteger;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,10 +38,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 
+import javax.xml.stream.*;
+
 public class NodeMgr implements INodeMgr {
 
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
+    private static final String BASE_PATH = System.getProperty("user.dir");
+    public static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
 
     private final Set<String> seedIps = new HashSet<>();
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
@@ -336,6 +344,92 @@ public class NodeMgr implements INodeMgr {
             inboundNodes.clear();
         } catch (Exception e) {
 
+        }
+    }
+
+    void persistNodes(){
+        XMLOutputFactory output = XMLOutputFactory.newInstance();
+        output.setProperty("escapeCharacters", false);
+        XMLStreamWriter sw = null;
+        try {
+            sw = output.createXMLStreamWriter(new FileWriter(PEER_LIST_FILE_PATH));
+            sw.writeStartDocument("utf-8", "1.0");
+            sw.writeCharacters("\r\n");
+            sw.writeStartElement("aion-peers");
+
+            for (Node node : allNodes.values()) {
+                sw.writeCharacters(node.toXML());
+            }
+
+            sw.writeCharacters("\r\n");
+            sw.writeEndElement();
+            sw.flush();
+            sw.close();
+
+        } catch (Exception e) {
+            System.out.println("<error on-write-peers-xml-to-file>");
+        } finally {
+            if (sw != null) {
+                try {
+                    sw.close();
+                } catch (XMLStreamException e) {
+                    System.out.println("<error on-close-stream-writer>");
+                }
+            }
+        }
+    }
+
+    void loadPersistedNodes(){
+        File peerFile = new File(PEER_LIST_FILE_PATH);
+        XMLInputFactory input = XMLInputFactory.newInstance();
+        FileInputStream file = null;
+        try {
+            file = new FileInputStream(peerFile);
+            XMLStreamReader sr = input.createXMLStreamReader(file);
+            loop: while (sr.hasNext()) {
+                int eventType = sr.next();
+                switch (eventType) {
+                    case XMLStreamReader.START_ELEMENT:
+                        String elementName = sr.getLocalName().toLowerCase();
+                        switch (elementName) {
+                            case "aion-peers":
+                                loopNode:
+                                while (sr.hasNext()) {
+                                    int eventType1 = sr.next();
+                                    switch (eventType1) {
+                                        case XMLStreamReader.START_ELEMENT:
+                                            Node node = Node.fromXML(sr);
+
+                                            if(node == null)
+                                                break;
+                                            if(!node.peerMetric.shouldNotConn())
+                                                tempNodes.add(node);
+                                            allNodes.put(node.getFullHash(), node);
+                                            break;
+                                        case XMLStreamReader.END_ELEMENT:
+                                            break loopNode;
+                                    }
+                                }
+                                break;
+                        }
+                        break;
+                    case XMLStreamReader.END_ELEMENT:
+                        if (sr.getLocalName().toLowerCase().equals("aion-peers"))
+                            break loop;
+                        else
+                            break;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("<error on-parsing-peers-xml msg=" + e.getLocalizedMessage() + ">");
+        } finally {
+            if (file != null) {
+                try {
+                    file.close();
+                } catch (IOException e) {
+                    System.out.println("<error on-close-file-input-stream>");
+                }
+            }
         }
     }
 

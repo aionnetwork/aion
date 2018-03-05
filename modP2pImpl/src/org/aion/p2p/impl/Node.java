@@ -25,12 +25,20 @@
 
 package org.aion.p2p.impl;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import org.aion.p2p.INode;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
 /*
  *
@@ -377,5 +385,99 @@ public final class Node implements INode {
             return this.getFullHash() == other.getFullHash();
         }
         return false;
+    }
+
+    String toXML(){
+        final XMLOutputFactory output = XMLOutputFactory.newInstance();
+        XMLStreamWriter sw;
+        String xml;
+        try {
+            Writer strWriter = new StringWriter();
+            sw = output.createXMLStreamWriter(strWriter);
+
+            sw.writeCharacters("\r\n\t");
+            sw.writeStartElement("node");
+            sw.writeStartElement("ip");
+            sw.writeCharacters(getIpStr());
+            sw.writeEndElement();
+
+            sw.writeStartElement("port");
+            sw.writeCharacters(String.valueOf(getPort()));
+            sw.writeEndElement();
+
+            sw.writeStartElement("id");
+            sw.writeCharacters(new String(getId()));
+            sw.writeEndElement();
+
+            sw.writeStartElement("failedConn");
+            sw.writeCharacters(String.valueOf(peerMetric.metricFailedConn));
+            sw.writeEndElement();
+            sw.writeEndElement();
+
+            xml = strWriter.toString();
+            strWriter.flush();
+            strWriter.close();
+            sw.flush();
+            sw.close();
+            return xml;
+        } catch (IOException | XMLStreamException e) {
+            return "";
+        }
+    }
+
+    public static Node fromXML(final XMLStreamReader sr) throws XMLStreamException
+    {
+        String id = null;
+        String ip = null;
+        int port = 0;
+        int failedConn = 0;
+
+        loop: while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "ip":
+                            ip = readValue(sr);
+                            break;
+                        case "port":
+                            port = Integer.parseInt(readValue(sr));
+                            break;
+                        case "id":
+                            id =  readValue(sr);
+                            break;
+                        case "failedconn":
+                            failedConn = Integer.parseInt(readValue(sr));
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    Node node = new Node(false, ip);
+                    node.setId(id.getBytes());
+                    node.setPort(port);
+                    node.peerMetric.metricFailedConn = failedConn;
+                    return node;
+            }
+        }
+        return null;
+    }
+
+    public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
+        StringBuilder str = new StringBuilder();
+        readLoop:
+        while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
+                case XMLStreamReader.CHARACTERS:
+                    str.append(sr.getText());
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break readLoop;
+            }
+        }
+        return str.toString();
     }
 }

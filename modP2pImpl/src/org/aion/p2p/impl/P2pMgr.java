@@ -54,6 +54,7 @@ public final class P2pMgr implements IP2pMgr {
     private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private final static int PERIOD_CONNECT_OUTBOUND = 1000;
     private final static int PERIOD_CLEAR = 20000;
+    private final static int PERIOD_PERSIST_NODES = 600000;
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
     private final static int TIMEOUT_OUTBOUND_NODES = 10000;
@@ -373,6 +374,8 @@ public final class P2pMgr implements IP2pMgr {
             }
         }
 
+        nodeMgr.loadPersistedNodes();
+
         cachedReqHandshake = new ReqHandshake(selfNodeId, selfNetId, this.selfIp, this.selfPort);
     }
 
@@ -667,6 +670,8 @@ public final class P2pMgr implements IP2pMgr {
                 scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
             scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
+
+            scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
 
             workers.submit(new TaskClear());
             workers.submit(new TaskConnectPeers());
