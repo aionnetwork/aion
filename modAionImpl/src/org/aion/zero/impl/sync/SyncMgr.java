@@ -413,8 +413,11 @@ public final class SyncMgr {
 
                     b = importedBlocks.take();
                     blockNumberIndex = b.getNumber();
-                    if (!savedHashes.containsKey(ByteArrayWrapper.wrap(b.getHash())))
+                    ByteArrayWrapper hash = new ByteArrayWrapper(b.getHash());
+                    if (!savedHashes.containsKey(hash)) {
                         batch.add(b);
+                        savedHashes.put(hash, null);
+                    }
                 }
 
                 // sleep if no batch empty then continue
@@ -422,6 +425,8 @@ public final class SyncMgr {
                     Thread.sleep(1000);
                     continue;
                 }
+
+
 
                 boolean fetchAheadTriggerUsed = false;
 
