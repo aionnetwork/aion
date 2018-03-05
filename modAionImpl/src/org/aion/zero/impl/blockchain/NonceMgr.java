@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.collections4.map.LRUMap;
 
@@ -128,7 +127,7 @@ public class NonceMgr {
         return super.hashCode();
     }
 
-    public void flush() {
+    public synchronized void flush() {
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("NonceMgr- flush start");
@@ -213,7 +212,7 @@ public class NonceMgr {
         }
     }
 
-    public BigInteger getRepoNonce(Address addr) {
+    public synchronized BigInteger getRepoNonce(Address addr) {
         if (map.get(addr) == null) {
             return repo.getNonce(addr);
         } else {
