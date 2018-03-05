@@ -86,6 +86,8 @@ public final class Node implements INode {
 
     private static final Pattern PATTERN_P2P = Pattern.compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
 
+    private static final int SIZE_BYTES_IPV4 = 8;
+
     PeerMetric peerMetric = new PeerMetric();
 
     /**
@@ -161,33 +163,17 @@ public final class Node implements INode {
      * @return String
      */
     static String ipBytesToStr(final byte[] _ip) {
-        ByteBuffer bb2 = ByteBuffer.allocate(2);
-        if (_ip == null || _ip.length != 8)
+        if(_ip == null || _ip.length != SIZE_BYTES_IPV4)
             return "";
         else {
+            short[] shorts = new short[_ip.length/2];
+            ByteBuffer.wrap(_ip).asShortBuffer().get(shorts);
+
             String ip = "";
-            bb2.put(_ip[0]);
-            bb2.put(_ip[1]);
-            bb2.flip();
-            ip += bb2.getShort() + ".";
+            for (int i = 0; i < shorts.length; i++) {
+                ip += shorts[i] + (i < shorts.length - 1 ? "." : "");
+            }
 
-            bb2.clear();
-            bb2.put(_ip[2]);
-            bb2.put(_ip[3]);
-            bb2.flip();
-            ip += bb2.getShort() + ".";
-
-            bb2.clear();
-            bb2.put(_ip[4]);
-            bb2.put(_ip[5]);
-            bb2.flip();
-            ip += bb2.getShort() + ".";
-
-            bb2.clear();
-            bb2.put(_ip[6]);
-            bb2.put(_ip[7]);
-            bb2.flip();
-            ip += bb2.getShort();
             return ip;
         }
     }

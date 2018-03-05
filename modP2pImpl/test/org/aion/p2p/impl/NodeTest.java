@@ -47,4 +47,33 @@ public class NodeTest {
 
     }
 
+    @Test
+    public void testIpByteStrConversion() {
+        String ipSource, ipVerify;
+        byte[] ipBytes;
+
+        ipSource = "253.253.253.253";
+        ipBytes = Node.ipStrToBytes(ipSource);
+        assertNotNull(ipBytes);
+        assertEquals(ipBytes.length, 8);
+        ipVerify = Node.ipBytesToStr(ipBytes);
+        assertTrue(ipSource.equals(ipVerify));
+
+        ipSource = "000.000.000.000";
+        ipBytes = Node.ipStrToBytes(ipSource);
+        assertNotNull(ipBytes);
+        assertEquals(ipBytes.length, 8);
+        ipVerify = Node.ipBytesToStr(ipBytes);
+        assertFalse(ipSource.equals(ipVerify));
+        assertTrue("0.0.0.0".equals(ipVerify));
+
+        ipSource = "256.256.256.256";
+        ipBytes = Node.ipStrToBytes(ipSource);
+        assertNotNull(ipBytes);
+        assertEquals(ipBytes.length, 8);
+        ipVerify = Node.ipBytesToStr(ipBytes);
+        System.out.println(ipVerify);
+        assertTrue("256.256.256.256".equals(ipVerify));
+    }
+
 }
