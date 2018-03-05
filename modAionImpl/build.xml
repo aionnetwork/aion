@@ -39,6 +39,7 @@
         <pathelement location="${dir.mod}/modRlp.jar"/>
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
+	<pathelement location="${dir.mod}/modP2p.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
