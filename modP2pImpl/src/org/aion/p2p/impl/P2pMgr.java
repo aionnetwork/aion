@@ -53,7 +53,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final static int PERIOD_SHOW_STATUS = 10000;
     private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
-    private final static int PERIOD_CONNECT_OUTBOUND = 500;
+    private final static int PERIOD_CONNECT_OUTBOUND = 1000;
     private final static int PERIOD_CLEAR = 20000;
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
@@ -180,8 +180,10 @@ public final class P2pMgr implements IP2pMgr {
                         SocketChannel channel = SocketChannel.open();
                         if (showLog)
                             System.out.println("<p2p try-connect-" + node.getIpStr() + ">");
-                        channel.socket().connect(new InetSocketAddress(node.getIpStr(), _port),
-                                TIMEOUT_OUTBOUND_CONNECT);
+                        channel.socket().connect(
+                            new InetSocketAddress(node.getIpStr(), _port),
+                            TIMEOUT_OUTBOUND_CONNECT
+                        );
                         configChannel(channel);
 
                         if (channel.finishConnect() && channel.isConnected()) {

@@ -68,18 +68,30 @@ public class NodeMgr {
      * @param selfShortId String
      */
     void dumpNodeInfo(String selfShortId) {
-        System.out.println("[p2p-status " + selfShortId + "]");
-        System.out.println("[temp-nodes-size=" + tempNodesSize() + "]");
-        System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
-        System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
-
+        StringBuffer sb = new StringBuffer();
+        sb.append("\n");
+        sb.append("   ================== p2p-status-" + selfShortId + " ==================\n");
+        sb.append("   temp[" + tempNodesSize() + "] inbound[" + inboundNodes.size() +"] outbound[" + outboundNodes.size() + "]\n");
         List<Node> sorted = new ArrayList<>(activeNodes.values());
-        sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
-
-        System.out.println("[active-nodes(nodeIdHash)=[" + sorted.stream()
-                .map((entry) -> "\n" + entry.getBestBlockNumber() + "-" + entry.getIdShort() + "-"
-                        + entry.getIpStr() + "-" + entry.getType() + (entry.getIfFromBootList() ? "-seed" : ""))
-                .collect(Collectors.joining(",")) + "]]");
+        if(sorted.size() > 0){
+            sb.append("   -------------------------------------------------------\n");
+            sb.append("   seed      blk#      id              ip   port      type\n");
+            sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
+            for (Node n : sorted) {
+                sb.append(
+                    String.format("      %c%10d  %6s %15s  %5d  %8s\n",
+                        n.getIfFromBootList() ? 0x221A : ' ',
+                        n.getBestBlockNumber(),
+                        n.getIdShort(),
+                        n.getIpStr(),
+                        n.getPort(),
+                        n.getType()
+                    )
+                );
+            }
+        }
+        sb.append("\n");
+        System.out.println(sb.toString());
     }
 
     private void updateMetric(final Node _n) {

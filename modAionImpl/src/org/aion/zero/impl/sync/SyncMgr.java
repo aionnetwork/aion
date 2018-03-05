@@ -104,7 +104,7 @@ public final class SyncMgr {
     // store blocks that ready to save to db
     private final BlockingQueue<AionBlock> importedBlocks = new LinkedBlockingQueue<>();
 
-
+    // filter based on imported blocks
     private final Map<ByteArrayWrapper, Object> savedHashes = Collections.synchronizedMap(new LRUMap<>(1024));
 
     private ScheduledThreadPoolExecutor scheduledWorkers;
@@ -186,7 +186,7 @@ public final class SyncMgr {
                 System.out.println(
                     "[sync-status self=" + blk.getNumber() + "/" + new BigInteger(1, Arrays.copyOfRange(blk.getHash(), 0, 6)).toString(16)  +
                     " network=" + networkBestBlockNumber.get() + "/" + (networkBestBlockHashBytes.length == 0 ? "" : new BigInteger(1, Arrays.copyOfRange(networkBestBlockHashBytes, 0, 6)).toString(16)) +
-                    " blocks-queue-size=" + importedBlocks.size());
+                    " blocks-queue-size=" + importedBlocks.size() + "]");
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
             Set<Integer> ids = new HashSet<>();
@@ -203,7 +203,6 @@ public final class SyncMgr {
             }
 
         }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);
-
     }
 
     /**
