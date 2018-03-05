@@ -138,7 +138,7 @@ public final class P2pMgr implements IP2pMgr {
         public void run() {
             Thread.currentThread().setName("p2p-ts");
             nodeMgr.dumpNodeInfo(selfShortId);
-            //nodeMgr.dumpAllNodeInfo();
+            nodeMgr.dumpAllNodeInfo();
         }
     }
 

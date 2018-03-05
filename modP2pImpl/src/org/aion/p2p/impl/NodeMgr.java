@@ -100,7 +100,7 @@ public class NodeMgr {
         if (!tempNodes.contains(_n)) {
             updateMetric(_n);
             tempNodes.add(_n);
-            seedIps.add(_n.getIpStr());
+            this.seedIps.add(_n.getIpStr());
         }
     }
 
@@ -212,8 +212,8 @@ public class NodeMgr {
         Node node = inboundNodes.remove(_channelHashCode);
         if (node != null) {
             node.setType("inbound");
-//            if(seedIps.contains(node.getIpStr()))
-//                node.setFromBootList(true);
+            if(seedIps.contains(node.getIpStr()))
+                node.setFromBootList(true);
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
             if (previous != null)
                 _p2pMgr.closeSocket(node.getChannel());
