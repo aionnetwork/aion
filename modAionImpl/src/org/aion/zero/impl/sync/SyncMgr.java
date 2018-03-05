@@ -33,8 +33,11 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
@@ -127,19 +130,15 @@ public final class SyncMgr {
     // update best block is callback function from p2p thread pool. even the
     // blocknumber and blockhash is atomic, but still need sync to prevent
     // blocknumber link to wrong block hash.
-
     public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,
             final byte[] _nodeBestBlockHash, final byte[] _totalDiff) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
-
         BigInteger totalDiff = new BigInteger(_totalDiff);
-
         if (_nodeBestBlockNumber > this.netBestStatus.get().blockNumber) {
             if (netBestStatus.get().totalDiff.compareTo(totalDiff) < 0) {
                 netBestStatus.get().blockNumber = _nodeBestBlockNumber;
                 netBestStatus.get().blockHash = _nodeBestBlockHash;
                 netBestStatus.get().totalDiff = totalDiff;
-
                 if (_nodeBestBlockNumber > this.blockchain.getBestBlock().getNumber())
                     getHeaders();
 
@@ -156,9 +155,7 @@ public final class SyncMgr {
 
         }
 
-        if (this.netBestStatus.get().blockNumber <= selfBestBlockNumber)
-
-        {
+        if (this.netBestStatus.get().blockNumber <= selfBestBlockNumber){
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -166,51 +163,12 @@ public final class SyncMgr {
                         _nodeBestBlockNumber, selfBestBlockNumber, this.netBestStatus.get().blockNumber);
             }
         } else {
-            if (LOG.isDebugEnabled()) {
+            if (LOG.isDebugEnabled())
                 LOG.debug(
                         "<network-best-block-updated remote-num={} self-num={} known-network-num={} continue-on-sync>",
                         _nodeBestBlockNumber, selfBestBlockNumber, this.netBestStatus.get().blockNumber);
-            }
         }
     }
-
-    // public void updateNetworkBestBlock(String _nodeShortId, long
-    // _nodeBestBlockNumber,
-    // final byte[] _nodeBestBlockHash) {
-    // long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
-    //
-    // if (_nodeBestBlockNumber > this.blockchain.getBestBlock().getNumber())
-    // getHeaders();
-    //
-    // if (_nodeBestBlockNumber >
-    // this.netBestStatus.get().networkBestBlockNumber) {
-    // this.networkBestBlockNumber.set(_nodeBestBlockNumber);
-    // this.networkBestBlockHash.set(_nodeBestBlockHash);
-    // }
-    //
-    // if (this.netBestStatus.get().networkBestBlockNumber <=
-    // selfBestBlockNumber)
-    //
-    // {
-    // this.evtMgr.newEvent(new
-    // EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
-    // if (LOG.isDebugEnabled()) {
-    // LOG.debug(
-    // "<network-best-block-updated from-node={} remote-num={} self-num={}
-    // known-network-num={} send-on-sync-done>",
-    // _nodeShortId, _nodeBestBlockNumber, selfBestBlockNumber,
-    // this.netBestStatus.get().networkBestBlockNumber);
-    // }
-    // } else {
-    // if (LOG.isDebugEnabled()) {
-    // LOG.debug(
-    // "<network-best-block-updated from-node={} remote-num={} self-num={}
-    // known-network-num={} continue-on-sync>",
-    // _nodeShortId, _nodeBestBlockNumber, selfBestBlockNumber,
-    // this.netBestStatus.get().networkBestBlockNumber);
-    // }
-    // }
-    // }
 
     public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncForwardMax,
             final int _blocksQueueMax, final boolean _showStatus) {
@@ -278,8 +236,6 @@ public final class SyncMgr {
     public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, final List<A0BlockHeader> _headers) {
 
         if (_headers == null || _headers.isEmpty()) {
-            if ((jump.get() - blockchain.getBestBlock().getNumber()) > 128)
-                jump.set(0);
             return;
         }
 
@@ -369,23 +325,27 @@ public final class SyncMgr {
         long selfBest = Math.max(selfNum, retargetNum);
 
         Map<Integer, HeaderQuery> ids = new HashMap<>();
+
+        List<INode> filtered = p2pMgr.getActiveNodes().values().stream().filter(
+                (n) -> (new BigInteger(n.getTotalDifficulty())).compareTo(netBestStatus.get().totalDiff) >= 0).collect(Collectors.toList());
+
+        Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < 3; i++) {
-            INode node = p2pMgr.getRandom();
-            if (node != null) {
-                long diff = node.getBestBlockNumber() - selfBest;
-                if (!ids.containsKey(node.getIdHash()) && diff > 0) {
+            if (filtered.size() > 0) {
+                INode node = filtered.get(r.nextInt(filtered.size()));
+
+                if (!ids.containsKey(node.getIdHash())) {
                     long from = Math.max(1, selfBest - 128);
-                    long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
+                    long to = selfBest + this.syncForwardMax;
                     int take = (int) (to - from) + 1;
                     ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
                 }
             }
         }
-        ids.forEach((k, v) -> {
-            // System.out.println("head req from " + v.from + " take " +
-            // v.take);
-            this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
-        });
+//        ids.forEach((k, v) -> {
+//            // System.out.println("head req from " + v.from + " take " + v.take);
+//            this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
+//        });
     }
 
     private void processGetBlocks() {
@@ -477,7 +437,7 @@ public final class SyncMgr {
 
                         // re-targeting for next batch blocks headers
                         if (!fetchAheadTriggerUsed) {
-                            jump.set(batch.get(batch.size() - 1).getNumber() + 128);
+                            jump.set(batch.get(batch.size() - 1).getNumber());
                             fetchAheadTriggerUsed = true;
                             getHeaders();
                         }
