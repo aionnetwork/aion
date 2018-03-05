@@ -3,10 +3,7 @@ package org.aion.zero.impl.sync;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.p2p.Handler;
-import org.aion.p2p.INode;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.Msg;
+import org.aion.p2p.*;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
@@ -47,6 +44,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public byte[] getTotalDifficulty() {
+            return new byte[0];
+        }
+
+        @Override
         public byte[] getIp() {
             return new byte[0];
         }
@@ -64,11 +66,6 @@ public class BlockPropagationTest {
         @Override
         public int getPort() {
             return 0;
-        }
-
-        @Override
-        public byte[] getTotalDifficulty() {
-            return new byte[0];
         }
 
         @Override
@@ -91,7 +88,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public INode getRandom() {
+        public INodeMgr getNodeMgr() {
             return null;
         }
 
@@ -113,6 +110,11 @@ public class BlockPropagationTest {
         @Override
         public void register(List<Handler> _hs) {
 
+        }
+
+        @Override
+        public INode getRandom() {
+            return null;
         }
 
         @Override
