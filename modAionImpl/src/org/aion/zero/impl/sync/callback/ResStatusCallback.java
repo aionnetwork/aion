@@ -76,12 +76,8 @@ public final class ResStatusCallback extends Handler {
             long nodeBestBlockNumber = rs.getBestBlockNumber();
             byte[] nodeBestBlockHash = rs.getBestHash();
             byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
-            node.updateStatus(
-                nodeBestBlockNumber,
-                nodeBestBlockHash,
-                nodeTotalDifficulty
-            );
-            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash());
+            node.updateStatus(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
+            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash(), nodeTotalDifficulty);
         }
     }
 }
