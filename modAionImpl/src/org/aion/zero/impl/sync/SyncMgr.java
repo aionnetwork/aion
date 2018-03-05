@@ -123,10 +123,9 @@ public final class SyncMgr {
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(
-                            "<network-best-block-diff-fail remote-num={} diff={} self-num={} diff={} known-network-num={} send-on-sync-done>",
-                            _nodeBestBlockNumber, networkBestTotalDiff.get().longValue(), selfBestBlockNumber,
-                            this.blockchain.getBestBlock().getCumulativeDifficulty().longValue(),
-                            this.networkBestBlockNumber.get());
+                            "<network-best-block-diff-fail remote-num={} diff={} best-diff={} self-num={}  known-network-num={} send-on-sync-done>",
+                            _nodeBestBlockNumber, totalDiff, networkBestTotalDiff.get().longValue(),
+                            selfBestBlockNumber, this.networkBestBlockNumber.get());
                 }
 
             }
