@@ -27,6 +27,7 @@ package org.aion.zero.impl.db;
 import org.aion.base.db.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.Hex;
+import org.aion.db.impl.AbstractDatabaseWithCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
@@ -242,6 +243,13 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
             if (databaseGroup != null) {
                 for (IByteArrayKeyValueDatabase db : databaseGroup) {
+                    if (db instanceof AbstractDatabaseWithCache) {
+                        // printing heap cache stats when enabled
+                        AbstractDatabaseWithCache dbwc = (AbstractDatabaseWithCache) db;
+                        if (dbwc.isStatsEnabled()) {
+                            LOG.debug(dbwc.getName().get() + ": " + dbwc.getStats().toString());
+                        }
+                    }
                     if (!db.isAutoCommitEnabled()) {
                         db.commit();
                     }
