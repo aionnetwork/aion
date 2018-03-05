@@ -364,6 +364,7 @@ public final class P2pMgr implements IP2pMgr {
             Node node = Node.parseP2p(_bootNode);
             if (validateNode(node)) {
                 nodeMgr.tempNodesAdd(node);
+                nodeMgr.seedIpAdd(node.getIpStr());
             }
         }
 

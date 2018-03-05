@@ -100,8 +100,14 @@ public class NodeMgr {
         if (!tempNodes.contains(_n)) {
             updateMetric(_n);
             tempNodes.add(_n);
-            this.seedIps.add(_n.getIpStr());
         }
+    }
+
+    /**
+     * @param _ip String
+     */
+    void seedIpAdd(String _ip){
+        this.seedIps.add(_ip);
     }
 
     void inboundNodeAdd(Node n) {
@@ -168,7 +174,7 @@ public class NodeMgr {
         return new HashMap(activeNodes);
     }
 
-    public INode getRandom() {
+    INode getRandom() {
         int nodesCount = activeNodes.size();
         if (nodesCount > 0) {
             Random r = new Random(System.currentTimeMillis());
