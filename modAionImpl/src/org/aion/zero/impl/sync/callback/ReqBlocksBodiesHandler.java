@@ -35,65 +35,47 @@
 
 package org.aion.zero.impl.sync.callback;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.aion.p2p.Handler;
 import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
- *
  * @author chris
- *
+ * handler for request block bodies broadcasted from network
  */
-public final class ResBlocksBodiesCallback extends Handler {
+public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
-    private final SyncMgr syncMgr;
+    private final IAionBlockchain blockchain;
 
-    public ResBlocksBodiesCallback(final Logger _log, final SyncMgr _syncMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
+    private final IP2pMgr p2pMgr;
+
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
-        this.syncMgr = _syncMgr;
+        this.blockchain = _blockchain;
+        this.p2pMgr = _p2pMgr;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
-        List<A0BlockHeader> headers = this.syncMgr.getSentHeaders(_nodeIdHashcode);
-        List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if (headers != null && bodies != null && headers.size() == bodies.size()) {
-            List<AionBlock> blocks = new ArrayList<>(bodies.size());
-            Iterator<A0BlockHeader> headerIt = headers.iterator();
-            Iterator<byte[]> bodyIt = bodies.iterator();
-            boolean pass = true;
-            while (headerIt.hasNext() && bodyIt.hasNext()) {
-                AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());
-                if (block == null) {
-                    pass = false;
-                    break;
-                } else
-                    blocks.add(block);
-            }
-            this.syncMgr.clearSentHeaders(_nodeIdHashcode);
-            if (pass) {
-                this.log.debug(
-                        "<res-bodies bodies={} from-node={}>",
-                        blocks.size(),
-                        _displayId
-                );
-                this.syncMgr.validateAndAddBlocks(_displayId, blocks);
-            }
+        ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
+        if (reqBlocks != null) {
+            List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(reqBlocks.getBlocksHashes());
+            this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
+            this.log.debug("<req-bodies req-take={} res-take={} from-node={}>", reqBlocks.getBlocksHashes().size(),
+                    blockBodies.size(), _displayId);
+
         } else
-            this.log.error("<res-bodies decode-msg>");
+            this.log.error("<req-bodies decode-msg>");
     }
 }

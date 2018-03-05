@@ -33,59 +33,53 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.msg;
+package org.aion.zero.impl.sync.callback;
 
-import java.nio.ByteBuffer;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
+import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
+import org.aion.zero.impl.sync.msg.ResStatus;
+import org.slf4j.Logger;
 
 /**
  * @author chris
+ * handler for status request from network
  */
-public final class ReqBlocksHeaders extends Msg {
+public final class ReqStatusHandler extends Handler {
 
-    /**
-     * fromBlock(long), take(int)
-     */
-    private final static int len = 8 + 4;
+    private final Logger log;
 
-    private final long fromBlock;
+    private IAionBlockchain chain;
 
-    private final int take;
+    private IP2pMgr mgr;
 
-    public ReqBlocksHeaders(final long _fromBlock, final int _take) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
-        this.fromBlock = _fromBlock;
-        this.take = _take;
-    }
+    private byte[] genesisHash;
 
-    public long getFromBlock() {
-        return this.fromBlock;
-    }
-
-    public int getTake() {
-        return this.take;
-    }
-
-    public static ReqBlocksHeaders decode(final byte[] _msgBytes) {
-        if (_msgBytes == null || _msgBytes.length != len)
-            return null;
-        else {
-            ByteBuffer bb = ByteBuffer.wrap(_msgBytes);
-            long _fromBlock = bb.getLong();
-            int _take = bb.getInt();
-            return new ReqBlocksHeaders(_fromBlock, _take);
-        }
+    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr, final byte[] _genesisHash) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+        this.log = _log;
+        this.chain = _chain;
+        this.mgr = _mgr;
+        this.genesisHash = _genesisHash;
     }
 
     @Override
-    public byte[] encode() {
-        ByteBuffer bb = ByteBuffer.allocate(len);
-        bb.putLong(this.fromBlock);
-        bb.putInt(this.take);
-        return bb.array();
+    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
+        this.log.debug(
+                "<req-status from-node={}>",
+                _displayId
+        );
+        this.mgr.send(
+                _nodeIdHashcode,
+                new ResStatus(
+                        this.chain.getBestBlock().getNumber(),
+                        this.chain.getTotalDifficulty().toByteArray(),
+                        this.chain.getBestBlockHash(),
+                        this.genesisHash
+                )
+        );
     }
-
 }

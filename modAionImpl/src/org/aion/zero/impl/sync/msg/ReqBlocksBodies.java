@@ -43,6 +43,9 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
+/**
+ * @author chris
+ */
 public final class ReqBlocksBodies extends Msg {
 
     private final List<byte[]> blocksHashes;

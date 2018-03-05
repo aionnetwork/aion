@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 /**
  *
  * @author chris
+ * handler for block headers response from network
  *
  */
 public final class ResBlocksHeadersCallback extends Handler {
@@ -69,7 +70,7 @@ public final class ResBlocksHeadersCallback extends Handler {
         ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
         if(resHeaders != null) {
             List<A0BlockHeader> headers = resHeaders.getHeaders();
-            if(headers.size() > 0){
+            if(headers != null && headers.size() > 0){
                 this.log.debug(
                         "<res-headers from-block={} take={} from-node={}>",
                         headers.get(0).getNumber(),
@@ -77,6 +78,11 @@ public final class ResBlocksHeadersCallback extends Handler {
                         _displayId
                 );
                 this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, _displayId, headers);
+            } else {
+                this.log.error(
+                    "<res-headers empty-headers from-node={} >",
+                    _displayId
+                );
             }
         } else
             this.log.error(

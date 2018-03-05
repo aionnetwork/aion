@@ -36,7 +36,6 @@
 package org.aion.zero.impl.sync.callback;
 
 import org.aion.p2p.*;
-import org.aion.p2p.impl.NodeMgr;
 import org.slf4j.Logger;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;
@@ -76,10 +75,13 @@ public final class ResStatusCallback extends Handler {
             this.log.debug("<res-status best-block={} from-node={}>", rs.getBestBlockNumber(), _displayId);
             long nodeBestBlockNumber = rs.getBestBlockNumber();
             byte[] nodeBestBlockHash = rs.getBestHash();
-            byte[] nodeTotalDifficulty = rs.getTotalDiff();
-            node.updateStatus(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
-            syncMgr.updateNetworkBestBlock(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
+            byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
+            node.updateStatus(
+                nodeBestBlockNumber,
+                nodeBestBlockHash,
+                nodeTotalDifficulty
+            );
+            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash());
         }
     }
-
 }

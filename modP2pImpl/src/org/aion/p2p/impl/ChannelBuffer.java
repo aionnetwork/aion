@@ -26,8 +26,11 @@
 package org.aion.p2p.impl;
 
 import org.aion.p2p.Header;
+import org.aion.p2p.Msg;
+
 import java.nio.ByteBuffer;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,6 +49,11 @@ class ChannelBuffer {
     Header header = null;
 
     byte[] body = null;
+
+    /**
+     * write flag
+     */
+    public AtomicBoolean onWrite = new AtomicBoolean(false);
 
     void refreshHeader(){
         headerBuf.clear();
@@ -71,6 +79,7 @@ class ChannelBuffer {
         return header != null && body != null && body.length == header.getLen();
     }
 
-    public AtomicBoolean onWrite = new AtomicBoolean(false);
+
+    public BlockingQueue<Msg> msgs = new ArrayBlockingQueue<>(10);
 
 }

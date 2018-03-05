@@ -25,18 +25,10 @@
 
 package org.aion.p2p.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
@@ -46,6 +38,7 @@ public class NodeMgr implements INodeMgr {
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
 
+    private final Set<String> seedIps = new HashSet<>();
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
     private final BlockingQueue<Node> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
@@ -57,19 +50,12 @@ public class NodeMgr implements INodeMgr {
     }
 
     public void dumpAllNodeInfo() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("   ==================== ALL PEERS METRIC ===========================\n");
-
-        List<Node> alls = new ArrayList<>(allNodes.values());
-
-        Collections.sort(alls, new Comparator<Node>() {
-            public int compare(Node a, Node b) {
-                return (int) (b.getBestBlockNumber() - a.getBestBlockNumber());
-            }
-        });
-
+        List<Node> all = new ArrayList<>(allNodes.values());
+        all.sort((a, b) -> (int) (b.getBestBlockNumber() - a.getBestBlockNumber()));
         int cnt = 0;
-        for (Node n : alls) {
+        for (Node n : all) {
             char isSeed = n.getIfFromBootList() ? 'Y' : 'N';
             sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d PORT_CONN:%5d FC:%1d BB:%8d  \n", cnt,
                     n.getIdShort(), isSeed, n.getIpStr(), n.getPort(), n.getConnectedPort(),
@@ -79,29 +65,52 @@ public class NodeMgr implements INodeMgr {
         System.out.println(sb.toString());
     }
 
+    /**
+     *
+     * @param selfShortId String
+     */
     void dumpNodeInfo(String selfShortId) {
-        System.out.println("[p2p-status " + selfShortId + "]");
-        System.out.println("[temp-nodes-size=" + tempNodesSize() + "]");
-        System.out.println("[inbound-nodes-size=" + inboundNodes.size() + "]");
-        System.out.println("[outbound-nodes-size=" + outboundNodes.size() + "]");
-        System.out.println("[active-nodes(nodeIdHash)=[" + activeNodes.entrySet().stream()
-                .map((entry) -> "\n" + entry.getValue().getBestBlockNumber() + "-" + entry.getValue().getIdShort() + "-"
-                        + entry.getValue().getIpStr() + (entry.getValue().getIfFromBootList() ? "-seed" : ""))
-                .collect(Collectors.joining(",")) + "]]");
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        sb.append(String.format("   ================== p2p-status-%6s ==================\n", selfShortId));
+        sb.append(String.format("   temp[%d] inbound[%d] outbound[%d]\n",
+            tempNodesSize(),
+            inboundNodes.size(),
+            outboundNodes.size()
+        ));
+        List<Node> sorted = new ArrayList<>(activeNodes.values());
+        if(sorted.size() > 0){
+            sb.append("   -------------------------------------------------------\n");
+            sb.append("   seed      blk#      id              ip   port      type\n");
+            sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
+            for (Node n : sorted) {
+                sb.append(
+                    String.format("      %c%10d  %6s %15s  %5d  %8s\n",
+                        n.getIfFromBootList() ? 0x221A : ' ',
+                        n.getBestBlockNumber(),
+                        n.getIdShort(),
+                        n.getIpStr(),
+                        n.getPort(),
+                        n.getType()
+                    )
+                );
+            }
+        }
+        sb.append("\n");
+        System.out.println(sb.toString());
     }
 
-    private void updateMetric(Node n) {
-        if (n.hasFullInfo()) {
-            int fullHash = n.getFullHash();
+    private void updateMetric(final Node _n) {
+        if (_n.hasFullInfo()) {
+            int fullHash = _n.getFullHash();
             if (allNodes.containsKey(fullHash)) {
                 Node orig = allNodes.get(fullHash);
-                // pull out metric.
-                n.peerMetric = orig.peerMetric;
-                n.copoyNodeStatus(orig);
 
+                // pull out metric.
+                _n.peerMetric = orig.peerMetric;
+                _n.copyNodeStatus(orig);
             }
-            // update allnodes list.
-            allNodes.put(fullHash, n);
+            allNodes.put(fullHash, _n);
         }
     }
 
@@ -113,22 +122,31 @@ public class NodeMgr implements INodeMgr {
             if (allNodes.containsKey(fullHash)) {
                 Node orig = allNodes.get(fullHash);
                 // pull out metric.
-                orig.copoyNodeStatus(n);
+                orig.copyNodeStatus(n);
             }
         }
     }
 
-    void tempNodesAdd(Node n) {
-        if (!tempNodes.contains(n)) {
-            updateMetric(n);
-            tempNodes.add(n);
-            // tempNodes.remove(n);
+    /**
+     * @param _n Node
+     */
+    void tempNodesAdd(final Node _n) {
+        if (!tempNodes.contains(_n)) {
+            updateMetric(_n);
+            tempNodes.add(_n);
         }
     }
 
-    void inboundNodeAdd(Node n) {
-        updateMetric(n);
-        inboundNodes.put(n.getChannel().hashCode(), n);
+    /**
+     * @param _ip String
+     */
+    void seedIpAdd(String _ip){
+        this.seedIps.add(_ip);
+    }
+
+    void inboundNodeAdd(final Node _n) {
+        updateMetric(_n);
+        inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
 
     synchronized Node tempNodesTake() throws InterruptedException {
@@ -139,16 +157,15 @@ public class NodeMgr implements INodeMgr {
         return tempNodes.size();
     }
 
+    /**
+     * for test
+     */
+    void clearTempNodes(){
+        this.tempNodes.clear();
+    }
+
     int activeNodesSize() {
         return activeNodes.size();
-    }
-
-    int outboundNodesSize() {
-        return outboundNodes.size();
-    }
-
-    int inboundNodesSize() {
-        return inboundNodes.size();
     }
 
     boolean hasActiveNode(int k) {
@@ -167,10 +184,6 @@ public class NodeMgr implements INodeMgr {
         return allNodes;
     }
 
-    Node allocNode(boolean b, String ip) {
-        return new Node(b, ip);
-    }
-
     Node allocNode(String ip, int p0, int p1) {
         return new Node(ip, p0, p1);
     }
@@ -179,11 +192,11 @@ public class NodeMgr implements INodeMgr {
         return new ArrayList(activeNodes.values());
     }
 
-    Map getActiveNodesMap() {
+    Map<Integer, INode> getActiveNodesMap() {
         return new HashMap(activeNodes);
     }
 
-    public INode getRandom() {
+    INode getRandom() {
         int nodesCount = activeNodes.size();
         if (nodesCount > 0) {
             Random r = new Random(System.currentTimeMillis());
@@ -193,8 +206,7 @@ public class NodeMgr implements INodeMgr {
                 int randomNodeKey = keysArr.get(randomNodeKeyIndex);
                 return this.getActiveNode(randomNodeKey);
             } catch (IllegalArgumentException e) {
-                // if (showLog)
-                // System.out.println("<p2p get-random-exception>");
+                System.out.println("<p2p get-random-exception>");
                 return null;
             }
         } else
@@ -212,7 +224,6 @@ public class NodeMgr implements INodeMgr {
         }
 
         int nodesCount = keysArr.size();
-
         if (nodesCount > 0) {
             Random r = new Random(System.currentTimeMillis());
 
@@ -221,35 +232,45 @@ public class NodeMgr implements INodeMgr {
                 int randomNodeKey = keysArr.get(randomNodeKeyIndex);
                 return this.getActiveNode(randomNodeKey);
             } catch (IllegalArgumentException e) {
-                // if (showLog)
-                // System.out.println("<p2p get-random-exception>");
                 return null;
             }
         } else
             return null;
     }
 
-    void moveOutboundToActive(int _nodeIdHash, String _shortId, P2pMgr pmgr) {
+    /**
+     * @param _nodeIdHash int
+     * @param _shortId String
+     * @param _p2pMgr P2pMgr
+     */
+    void moveOutboundToActive(int _nodeIdHash, String _shortId, final P2pMgr _p2pMgr) {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
+            node.setType("outbound");
             INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
             if (previous != null)
-                pmgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel());
             else {
-                if (pmgr.showLog)
+                if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
         }
     }
 
-    void moveInboundToActive(int _channelHashCode, P2pMgr pmgr) {
+    /**
+     * @param _channelHashCode int
+     * @param _p2pMgr P2pMgr
+     */
+    void moveInboundToActive(int _channelHashCode, final P2pMgr _p2pMgr) {
         Node node = inboundNodes.remove(_channelHashCode);
         if (node != null) {
+            node.setType("inbound");
+            node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
             if (previous != null)
-                pmgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel());
             else {
-                if (pmgr.showLog)
+                if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }
         }
@@ -300,13 +321,16 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    void shutdown(P2pMgr pmgr) {
+    /**
+     * @param _p2pMgr P2pMgr
+     */
+    void shutdown(final P2pMgr _p2pMgr) {
         try {
-            activeNodes.forEach((k, n) -> pmgr.closeSocket(n.getChannel()));
+            activeNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
             activeNodes.clear();
-            outboundNodes.forEach((k, n) -> pmgr.closeSocket(n.getChannel()));
+            outboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
             outboundNodes.clear();
-            inboundNodes.forEach((k, n) -> pmgr.closeSocket(n.getChannel()));
+            inboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
             inboundNodes.clear();
         } catch (Exception e) {
 
