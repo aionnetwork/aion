@@ -33,7 +33,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -60,12 +59,13 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.valid.BlockHeaderValidator;
 
 /**
- * @author chris TODO: pre selected peers list based on target total difficult
+ * @author chris
+ * TODO: pre selected peers list based on target total difficult
  */
 public final class SyncMgr {
 
     // interval time get peer status
-    private static final int STATUS_INTERVAL = 3000;
+    private static final int STATUS_INTERVAL = 500;
 
     // timeout sent headers
     private static final int SENT_HEADERS_TIMEOUT = 5000;
@@ -102,7 +102,7 @@ public final class SyncMgr {
 
     }
 
-    AtomicReference<NetBestStatus> netBestStatus = new AtomicReference<>(new NetBestStatus());
+    private AtomicReference<NetBestStatus> netBestStatus = new AtomicReference<>(new NetBestStatus());
 
     // store headers that has been sent to fetch block bodies
     private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
@@ -133,7 +133,7 @@ public final class SyncMgr {
     public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,
             final byte[] _nodeBestBlockHash, final byte[] _totalDiff) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
-        BigInteger totalDiff = new BigInteger(_totalDiff);
+        BigInteger totalDiff = new BigInteger(1, _totalDiff);
         if (_nodeBestBlockNumber > this.netBestStatus.get().blockNumber) {
             if (netBestStatus.get().totalDiff.compareTo(totalDiff) < 0) {
                 netBestStatus.get().blockNumber = _nodeBestBlockNumber;
@@ -150,9 +150,7 @@ public final class SyncMgr {
                             _displayId, _nodeBestBlockNumber, totalDiff, netBestStatus.get().totalDiff,
                             selfBestBlockNumber, this.netBestStatus.get().blockNumber);
                 }
-
             }
-
         }
 
         if (this.netBestStatus.get().blockNumber <= selfBestBlockNumber){
@@ -197,12 +195,10 @@ public final class SyncMgr {
             scheduledWorkers.scheduleWithFixedDelay(() -> {
                 Thread.currentThread().setName("sync-status");
                 AionBlock blk = blockchain.getBestBlock();
-                byte[] networkBestBlockHashBytes = this.netBestStatus.get().blockHash;
                 System.out.println("[sync-status self=" + blk.getNumber() + "/"
-                        + new BigInteger(1, Arrays.copyOfRange(blk.getHash(), 0, 6)).toString(16) + " network="
+                        + this.blockchain.getTotalDifficulty().toString(10) + " network="
                         + this.netBestStatus.get().blockNumber + "/"
-                        + (networkBestBlockHashBytes.length == 0 ? ""
-                                : new BigInteger(1, Arrays.copyOfRange(networkBestBlockHashBytes, 0, 6)).toString(16))
+                        + netBestStatus.get().totalDiff.toString(10)
                         + " blocks-queue-size=" + importedBlocks.size() + "]");
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
@@ -324,21 +320,24 @@ public final class SyncMgr {
         // retarget future if its higher than self
         long selfBest = Math.max(selfNum, retargetNum);
 
-        Map<Integer, HeaderQuery> ids = new HashMap<>();
+        Set<Integer> ids = new HashSet<>();
 
         List<INode> filtered = p2pMgr.getActiveNodes().values().stream().filter(
-                (n) -> (new BigInteger(n.getTotalDifficulty())).compareTo(netBestStatus.get().totalDiff) >= 0).collect(Collectors.toList());
+                (n) -> netBestStatus.get().totalDiff != null &&
+                        n.getTotalDifficulty() != null &&
+                    (new BigInteger(1, n.getTotalDifficulty())).compareTo(netBestStatus.get().totalDiff) >= 0).collect(Collectors.toList());
 
         Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < 3; i++) {
             if (filtered.size() > 0) {
                 INode node = filtered.get(r.nextInt(filtered.size()));
-
-                if (!ids.containsKey(node.getIdHash())) {
+                if (!ids.contains(node.getIdHash())) {
                     long from = Math.max(1, selfBest - 128);
                     long to = selfBest + this.syncForwardMax;
                     int take = (int) (to - from) + 1;
-                    ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
+                    ids.add(node.getIdHash());
+                    this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, take));
+                    // ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
                 }
             }
         }
