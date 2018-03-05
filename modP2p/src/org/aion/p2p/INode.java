@@ -70,13 +70,13 @@ public interface INode {
     /**
      * @return long
      */
-    long getTotalDifficulty();
+    byte[] getTotalDifficulty();
 
     /**
      * @param _bestBlockNumber long
      * @param _bestBlockHash byte[]
      * @param _totalDifficulty long
      */
-    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, long _totalDifficulty);
+    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, byte[] _totalDifficulty);
 
 }

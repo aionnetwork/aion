@@ -24,6 +24,7 @@
 
 package org.aion.zero.impl.sync;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -78,8 +79,11 @@ public final class SyncMgr {
     private AtomicBoolean start = new AtomicBoolean(true);
     private AtomicLong retargetNumber = new AtomicLong(0);
     private AtomicInteger selectedNodeIdHashcode = new AtomicInteger(0);
+
     private AtomicLong longestHeaders = new AtomicLong(0);
     private AtomicLong networkBestBlockNumber = new AtomicLong(0);
+    private AtomicReference<BigInteger> networkBestTotalDiff = new AtomicReference<>(BigInteger.ZERO);
+
     private AtomicReference<byte[]> networkBestBlockHash = new AtomicReference<>(new byte[0]);
 
     private ConcurrentHashMap<Integer, SequentialHeaders<A0BlockHeader>> importedHeaders = new ConcurrentHashMap<>();
@@ -104,15 +108,34 @@ public final class SyncMgr {
     // update best block is callback function from p2p thread pool. even the
     // blocknumber and blockhash is atomic, but still need sync to prevent
     // blocknumber link to wrong block hash.
-    public synchronized void updateNetworkBestBlock(long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
+    public synchronized void updateNetworkBestBlock(long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash,
+            final byte[] _totalDiff) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
 
+        BigInteger totalDiff = new BigInteger(_totalDiff);
+
         if (_nodeBestBlockNumber > this.networkBestBlockNumber.get()) {
-            this.networkBestBlockNumber.set(_nodeBestBlockNumber);
-            this.networkBestBlockHash.set(_nodeBestBlockHash);
+            if (networkBestTotalDiff.get().compareTo(totalDiff) < 0) {
+                this.networkBestBlockNumber.set(_nodeBestBlockNumber);
+                this.networkBestBlockHash.set(_nodeBestBlockHash);
+                this.networkBestTotalDiff.set(totalDiff);
+            } else {
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
+                            "<network-best-block-diff-fail remote-num={} diff={} self-num={} diff={} known-network-num={} send-on-sync-done>",
+                            _nodeBestBlockNumber, networkBestTotalDiff.get().longValue(), selfBestBlockNumber,
+                            this.blockchain.getBestBlock().getCumulativeDifficulty().longValue(),
+                            this.networkBestBlockNumber.get());
+                }
+
+            }
+
         }
 
-        if (this.networkBestBlockNumber.get() <= selfBestBlockNumber) {
+        if (this.networkBestBlockNumber.get() <= selfBestBlockNumber)
+
+        {
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
