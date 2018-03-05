@@ -29,6 +29,7 @@
 
 package org.aion.zero.impl.sync;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -82,18 +83,28 @@ public final class SyncMgr {
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
     private BlockHeaderValidator blockHeaderValidator;
-
     private AtomicBoolean start = new AtomicBoolean(true);
 
     // set as last block number within one batch import when first block imported success as best
     // reset to 0 as any block import result as no parent (side chain)
     private AtomicLong retargetNumber = new AtomicLong(0);
+
+    // network best block number for self node perspective
     private AtomicLong networkBestBlockNumber = new AtomicLong(0);
+
+    // network best block hash for self node perspective
     private AtomicReference<byte[]> networkBestBlockHash = new AtomicReference<>(new byte[0]);
 
+    // store headers that has been sent to fetch block bodies
     private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
+
+    // store validated headers from network
     private final BlockingQueue<HeadersWrapper> importedHeaders = new LinkedBlockingQueue<>();
+
+    // store blocks that ready to save to db
     private final BlockingQueue<AionBlock> importedBlocks = new LinkedBlockingQueue<>();
+
+
     private final Map<ByteArrayWrapper, Object> savedHashes = Collections.synchronizedMap(new LRUMap<>(1024));
 
     private ScheduledThreadPoolExecutor scheduledWorkers;
@@ -172,14 +183,10 @@ public final class SyncMgr {
                 Thread.currentThread().setName("sync-status");
                 AionBlock blk = blockchain.getBestBlock();
                 byte[] networkBestBlockHashBytes = networkBestBlockHash.get();
-                LOG.info(
-                    "<status self={}/{} network={}/{} blocks-queue-size={}>",
-                    blk.getNumber(),
-                    new String(Arrays.copyOfRange(blk.getHash(), 0, 6)),
-                    networkBestBlockNumber.get(),
-                    networkBestBlockHashBytes.length == 0 ? "" : new String(Arrays.copyOfRange(networkBestBlockHashBytes, 0, 6)),
-                    importedBlocks.size()
-                );
+                System.out.println(
+                    "[sync-status self=" + blk.getNumber() + "/" + new BigInteger(1, Arrays.copyOfRange(blk.getHash(), 0, 6)).toString(16)  +
+                    " network=" + networkBestBlockNumber.get() + "/" + (networkBestBlockHashBytes.length == 0 ? "" : new BigInteger(1, Arrays.copyOfRange(networkBestBlockHashBytes, 0, 6)).toString(16)) +
+                    " blocks-queue-size=" + importedBlocks.size());
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
             Set<Integer> ids = new HashSet<>();
