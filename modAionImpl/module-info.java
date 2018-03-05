@@ -1,5 +1,4 @@
 module aion.zero.impl {
-
     requires aion.base;
     requires aion.mcf;
     requires aion.log;
@@ -14,13 +13,13 @@ module aion.zero.impl {
     requires aion.crypto;
     requires aion.db.impl;
     requires aion.zero;
+    requires aion.fastvm;
 
+    exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;
-    exports org.aion.solidity;
     exports org.aion.zero.impl;
     exports org.aion.zero.impl.core;
     exports org.aion.zero.impl.types;
     exports org.aion.zero.impl.config;
-    exports org.aion.equihash;
     exports org.aion.zero.impl.cli;
 }

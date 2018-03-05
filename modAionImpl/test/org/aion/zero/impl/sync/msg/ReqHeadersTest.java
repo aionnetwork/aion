@@ -20,34 +20,34 @@
  * Contributors to the aion source files in decreasing order of code volume:
  *
  * Aion foundation.
+ * <ether.camp> team through the ethereumJ library.
+ * Ether.Camp Inc. (US) team through Ethereum Harmony.
+ * John Tromp through the Equihash solver.
+ * Samuel Neves through the BLAKE2 implementation.
+ * Zcash project team.
+ * Bitcoinj team.
  *
  */
 
-package org.aion.p2p.impl;
+package org.aion.zero.impl.sync.msg;
 
-import java.util.Map;
-
-import org.aion.p2p.INode;
-import org.aion.p2p.NodeRandPolicy;
-import org.aion.p2p.impl.msg.ReqActiveNodes;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
- *
  * @author chris
- *
  */
-public final class TaskRequestActiveNodes implements Runnable {
+public class ReqHeadersTest {
 
-    private P2pMgr mgr;
-
-    TaskRequestActiveNodes(final P2pMgr _mgr) {
-        this.mgr = _mgr;
+    @Test
+    public void test() {
+        long from = 7571;
+        int take = 192;
+        
+        ReqBlocksHeaders rh = new ReqBlocksHeaders(from, take);
+        ReqBlocksHeaders rhNew = ReqBlocksHeaders.decode(rh.encode());
+        assertEquals(from, rhNew.getFromBlock());
+        assertEquals(take, rhNew.getTake());
     }
 
-    @Override
-    public void run() {
-        INode node = mgr.getRandom(NodeRandPolicy.RND, 0);
-        if (node != null)
-            this.mgr.send(node.getIdHash(), new ReqActiveNodes());
-    }
 }

@@ -35,65 +35,40 @@
 
 package org.aion.zero.impl.sync.callback;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
  *
  * @author chris
+ * handler for blocks bodies received from network
  *
  */
-public final class ResBlocksBodiesCallback extends Handler {
+public final class ResBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
     private final SyncMgr syncMgr;
 
-    public ResBlocksBodiesCallback(final Logger _log, final SyncMgr _syncMgr) {
+    public ResBlocksBodiesHandler(final Logger _log, final SyncMgr _syncMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
         this.log = _log;
         this.syncMgr = _syncMgr;
     }
 
     @Override
-    public void receive(int _nodeIdHashcode,String _displayId, final byte[] _msgBytes) {
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
-        List<A0BlockHeader> headers = this.syncMgr.getSentHeaders(_nodeIdHashcode);
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if (headers != null && bodies != null && headers.size() == bodies.size()) {
-            List<AionBlock> blocks = new ArrayList<>(bodies.size());
-            Iterator<A0BlockHeader> headerIt = headers.iterator();
-            Iterator<byte[]> bodyIt = bodies.iterator();
-            boolean pass = true;
-            while (headerIt.hasNext() && bodyIt.hasNext()) {
-                AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());
-                if (block == null) {
-                    pass = false;
-                    break;
-                } else
-                    blocks.add(block);
-            }
-            this.syncMgr.clearSentHeaders(_nodeIdHashcode);
-            if (pass) {
-                this.log.debug(
-                        "<res-bodies bodies={} from-node={}>",
-                        blocks.size(),
-                        _displayId
-                );
-                this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, blocks, false);
-            }
-        } else
-            this.log.error("<res-bodies decode-msg>");
+        if(bodies != null && bodies.size() > 0)
+            this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
+        else
+            this.log.error("<res-bodies invalid>");
     }
 }

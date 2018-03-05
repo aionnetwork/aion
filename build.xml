@@ -34,6 +34,7 @@
 		<pathelement location="${dir.libfile}/libJson.jar" />
 		<pathelement location="${dir.libfile}/logback-classic-1.2.3.jar" />
 		<pathelement location="${dir.libfile}/logback-core-1.2.3.jar" />
+		<pathelement location="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgr.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgrImpl.jar" />
 		<pathelement location="${dir.modfile}/modLogger.jar" />
@@ -44,7 +45,7 @@
 		<pathelement location="${dir.modfile}/modTxPoolImpl.jar" />
 		<pathelement location="${dir.modfile}/modDbImpl.jar" />
 		<pathelement location="${dir.modfile}/modRlp.jar" />
-		<pathelement location="${dir.modfile}/modCrypto.jar" />		
+		<pathelement location="${dir.modfile}/modCrypto.jar" />
 		<pathelement location="${dir.modfile}/modAion.jar" />
 		<pathelement location="${dir.modfile}/modAionImpl.jar" />
 		<pathelement location="${dir.modfile}/modApiServer.jar" />
@@ -76,6 +77,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAion/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
@@ -223,6 +225,11 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
+		<echo message="building modFastVM" />
+		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
 		<echo message="building modAionImpl" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
@@ -237,11 +244,6 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modBoot/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
-
-		<!-- echo message="building fastvm" />
-		<ant inheritAll="false" antfile="${dir.workspace}/modFastVM/build.xml" target="clean_build">
-			<property name="compile.debug" value="${compile.debug}" />
-		</ant -->
 	</target>
 
 	<target name="build_fatjar" depends="mod_build">
@@ -296,6 +298,7 @@
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnmapdb.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnsc.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnzmq.jar" />
+                        <zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />			
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/protobuf-java-3.5.0.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libJson.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modEvtMgr.jar" />
@@ -331,7 +334,7 @@
 
 	</target>
 
-	<target name="build" depends="mod_build">	
+	<target name="build" depends="mod_build">
 		<mkdir dir="${dir.buildfile}" />
 		<mkdir dir="${dir.native}/linux/equihash" />
 		<mkdir dir="${dir.build.native}/linux/equihash" />
@@ -391,6 +394,8 @@
 		<tar destfile="${dir.pack}/aion.tar.bz2" compression="bzip2" longfile="gnu">
 			<tarfileset dir="${dir.libfile}" filemode="755" prefix="${project.name}/lib">
 				<include name="*.jar" />
+				<include name="libminiupnp/*.jar" />
+				<include name="libminiupnp/*.so" />
 				<exclude name="byte-buddy-*.jar" />
 				<exclude name="JUnitParams-*.jar" />
 				<exclude name="mockito-*.jar" />

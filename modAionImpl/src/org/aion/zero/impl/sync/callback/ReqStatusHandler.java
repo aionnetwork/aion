@@ -35,49 +35,51 @@
 
 package org.aion.zero.impl.sync.callback;
 
-import org.aion.p2p.*;
-import org.slf4j.Logger;
-import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
+import org.aion.zero.impl.sync.msg.ResStatus;
+import org.slf4j.Logger;
 
 /**
  * @author chris
+ * handler for status request from network
  */
-public final class ResStatusCallback extends Handler {
+public final class ReqStatusHandler extends Handler {
 
     private final Logger log;
 
-    private final IP2pMgr p2pMgr;
+    private IAionBlockchain chain;
 
-    private final SyncMgr syncMgr;
+    private IP2pMgr mgr;
 
-    public ResStatusCallback(final Logger _log, final IP2pMgr _p2pMgr, final SyncMgr _syncMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
+    private byte[] genesisHash;
+
+    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr, final byte[] _genesisHash) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
         this.log = _log;
-        this.p2pMgr = _p2pMgr;
-        this.syncMgr = _syncMgr;
+        this.chain = _chain;
+        this.mgr = _mgr;
+        this.genesisHash = _genesisHash;
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null || _msgBytes.length == 0)
-            return;
-        ResStatus rs = ResStatus.decode(_msgBytes);
-
-        INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
-
-        INodeMgr nmgr = this.p2pMgr.getNodeMgr();
-
-        nmgr.updateAllNodesInfo(node);
-
-        if (node != null) {
-            this.log.debug("<res-status best-block={} from-node={}>", rs.getBestBlockNumber(), _displayId);
-            long nodeBestBlockNumber = rs.getBestBlockNumber();
-            byte[] nodeBestBlockHash = rs.getBestHash();
-            byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
-            node.updateStatus(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
-            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash(), nodeTotalDifficulty);
-        }
+    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
+        this.log.debug(
+                "<req-status from-node={}>",
+                _displayId
+        );
+        this.mgr.send(
+                _nodeIdHashcode,
+                new ResStatus(
+                        this.chain.getBestBlock().getNumber(),
+                        this.chain.getTotalDifficulty().toByteArray(),
+                        this.chain.getBestBlockHash(),
+                        this.genesisHash
+                )
+        );
     }
 }

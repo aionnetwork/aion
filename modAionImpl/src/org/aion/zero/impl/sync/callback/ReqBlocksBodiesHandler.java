@@ -49,8 +49,9 @@ import org.slf4j.Logger;
 
 /**
  * @author chris
+ * handler for request block bodies broadcasted from network
  */
-public final class ReqBlocksBodiesCallback extends Handler {
+public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
@@ -58,7 +59,7 @@ public final class ReqBlocksBodiesCallback extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    public ReqBlocksBodiesCallback(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;

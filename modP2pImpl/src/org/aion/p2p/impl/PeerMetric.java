@@ -25,29 +25,23 @@
 
 package org.aion.p2p.impl;
 
-import java.util.Map;
+final class PeerMetric {
 
-import org.aion.p2p.INode;
-import org.aion.p2p.NodeRandPolicy;
-import org.aion.p2p.impl.msg.ReqActiveNodes;
+    public static final int STOP_CONN_AFTER_FAILED_CONN = 2;
 
-/**
- *
- * @author chris
- *
- */
-public final class TaskRequestActiveNodes implements Runnable {
+    int metricFailedConn;
 
-    private P2pMgr mgr;
-
-    TaskRequestActiveNodes(final P2pMgr _mgr) {
-        this.mgr = _mgr;
+    boolean shouldNotConn() {
+        return metricFailedConn > STOP_CONN_AFTER_FAILED_CONN;
     }
 
-    @Override
-    public void run() {
-        INode node = mgr.getRandom(NodeRandPolicy.RND, 0);
-        if (node != null)
-            this.mgr.send(node.getIdHash(), new ReqActiveNodes());
+    void incFailedCount() {
+        metricFailedConn++;
     }
+
+    void decFailedCount() {
+        if (metricFailedConn > 0)
+            metricFailedConn--;
+    }
+
 }

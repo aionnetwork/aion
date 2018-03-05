@@ -1,40 +1,45 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * The aion network project leverages useful source code from other
+ * open source projects. We greatly appreciate the effort that was
+ * invested in these projects and we thank the individual contributors
+ * for their work. For provenance information and contributors
+ * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
+ * Aion foundation.
+ */
 
 package org.aion.zero.impl.sync;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.ImportResult;
 import org.aion.evtmgr.IEvent;
@@ -46,7 +51,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ReqStatus;
@@ -56,43 +60,62 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 
 /**
  * @author chris
+ * TODO: pre selected peers list based on target total difficult
  */
 public final class SyncMgr {
 
-    private static final long FETCH_INTERVAL = 1000;
+    // interval time get peer status
+    private static final int STATUS_INTERVAL = 500;
+
+    // timeout sent headers
+    private static final int SENT_HEADERS_TIMEOUT = 5000;
+
     private final static Logger LOG = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    private boolean showStatus = false;
-    private int syncBackwardMax = 128;
+    // re-use same req status
+    private final static ReqStatus reqStatus = new ReqStatus();
+
+    // default how many blocks forward to sync based on current block number
     private int syncForwardMax = 192;
+
     private int blocksQueueMax = 2000;
-    private AtomicBoolean start = new AtomicBoolean(true);
-    //private AtomicBoolean newBlockUpdated = new AtomicBoolean(false);
 
     private AionBlockchainImpl blockchain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
     private BlockHeaderValidator blockHeaderValidator;
+    private AtomicBoolean start = new AtomicBoolean(true);
 
-    private AtomicInteger selectedNodeIdHashcode = new AtomicInteger(0);
-    private AtomicLong longestHeaders = new AtomicLong(0);
-    private AtomicLong networkBestBlockNumber = new AtomicLong(0);
-    private AtomicReference<byte[]> networkBestBlockHash = new AtomicReference<>(new byte[0]);
+    // set as last block number within one batch import when first block
+    // imported success as best
+    // reset to 0 as any block import result as no parent (side chain)
+    private AtomicLong jump = new AtomicLong(0);
 
-    private static final int GET_STATUS_SLEEP = 1;
+    class NetBestStatus {
+        // network best block number for self node perspective
+        long blockNumber = 0L;
 
-    private ConcurrentHashMap<Integer, SequentialHeaders<A0BlockHeader>> importedHeaders = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<Integer, List<A0BlockHeader>> sentHeaders = new ConcurrentHashMap<>();
-    private final BlockingQueue<AionBlock> importedBlocksQueue = new LinkedBlockingQueue<>();
+        // network best block hash for self node perspective
+        byte[] blockHash = new byte[0];
 
-    private Map<ByteArrayWrapper, Object> importedBlocksCache = Collections.synchronizedMap(new LRUMap<>(1024));
+        BigInteger totalDiff = BigInteger.ZERO;
 
-    /**
-     * Threads
-     */
-    private Thread getHeadersThread;
-    private Thread getBodiesThread;
-    private Thread importBlocksThread;
+    }
+
+    private AtomicReference<NetBestStatus> netBestStatus = new AtomicReference<>(new NetBestStatus());
+
+    // store headers that has been sent to fetch block bodies
+    private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
+
+    // store validated headers from network
+    private final BlockingQueue<HeadersWrapper> importedHeaders = new LinkedBlockingQueue<>();
+
+    // store blocks that ready to save to db
+    private final BlockingQueue<AionBlock> importedBlocks = new LinkedBlockingQueue<>();
+
+    // filter based on imported blocks
+    private final Map<ByteArrayWrapper, Object> savedHashes = Collections.synchronizedMap(new LRUMap<>(1024));
+
     private ScheduledThreadPoolExecutor scheduledWorkers;
 
     private static final class AionSyncMgrHolder {
@@ -103,51 +126,50 @@ public final class SyncMgr {
         return AionSyncMgrHolder.INSTANCE;
     }
 
-    public void updateNetworkBestBlock(final long _nodeBestBlockNumber, final byte[] _nodeBestBlockHash) {
+    // Attation:
+    // update best block is callback function from p2p thread pool. even the
+    // blocknumber and blockhash is atomic, but still need sync to prevent
+    // blocknumber link to wrong block hash.
+    public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,
+            final byte[] _nodeBestBlockHash, final byte[] _totalDiff) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
+        BigInteger totalDiff = new BigInteger(1, _totalDiff);
+        if (_nodeBestBlockNumber > this.netBestStatus.get().blockNumber) {
+            if (netBestStatus.get().totalDiff.compareTo(totalDiff) < 0) {
+                netBestStatus.get().blockNumber = _nodeBestBlockNumber;
+                netBestStatus.get().blockHash = _nodeBestBlockHash;
+                netBestStatus.get().totalDiff = totalDiff;
+                if (_nodeBestBlockNumber > this.blockchain.getBestBlock().getNumber())
+                    getHeaders();
 
-        // switch to new selected node event on equal highest block
-        if (_nodeBestBlockNumber > this.networkBestBlockNumber.get()) {
-            this.networkBestBlockNumber.set(_nodeBestBlockNumber);
-            this.networkBestBlockHash.set(_nodeBestBlockHash);
+            } else {
 
-            // fire the init push
-            // if(headersLatch != null)
-            // headersLatch.countDown();
-            //newBlockUpdated.set(true);
-
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
+                            "<network-best-block-diff-fail remote-id={} num={} diff={} best-diff={} self-num={}  known-network-num={} send-on-sync-done>",
+                            _displayId, _nodeBestBlockNumber, totalDiff, netBestStatus.get().totalDiff,
+                            selfBestBlockNumber, this.netBestStatus.get().blockNumber);
+                }
+            }
         }
 
-        if (this.networkBestBlockNumber.get() <= selfBestBlockNumber) {
+        if (this.netBestStatus.get().blockNumber <= selfBestBlockNumber){
             this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<network-best-block-updated num={} self-num={} send-on-sync-done>", _nodeBestBlockNumber,
-                        selfBestBlockNumber);
+                LOG.debug(
+                        "<network-best-block-updated remote-num={} self-num={} known-network-num={} send-on-sync-done>",
+                        _nodeBestBlockNumber, selfBestBlockNumber, this.netBestStatus.get().blockNumber);
             }
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<network-best-block-updated num={} self-num={} continue-on-sync>", _nodeBestBlockNumber,
-                        selfBestBlockNumber);
-            }
+            if (LOG.isDebugEnabled())
+                LOG.debug(
+                        "<network-best-block-updated remote-num={} self-num={} known-network-num={} continue-on-sync>",
+                        _nodeBestBlockNumber, selfBestBlockNumber, this.netBestStatus.get().blockNumber);
         }
-    }
-
-    private void updateSentHeaders(int _nodeIdHashcode, final List<A0BlockHeader> _receivedBlocksHeaders) {
-        if (_receivedBlocksHeaders != null && _receivedBlocksHeaders.size() > 0)
-            this.sentHeaders.put(_nodeIdHashcode, _receivedBlocksHeaders);
-    }
-
-    public void clearSentHeaders(int _nodeIdHashcode) {
-        this.sentHeaders.remove(_nodeIdHashcode);
-    }
-
-    public List<A0BlockHeader> getSentHeaders(int _nodeIdHashcode) {
-        return this.sentHeaders.get(_nodeIdHashcode);
     }
 
     public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncForwardMax,
             final int _blocksQueueMax, final boolean _showStatus) {
-        showStatus = _showStatus;
         this.p2pMgr = _p2pMgr;
         this.blockchain = AionBlockchainImpl.inst();
         this.evtMgr = _evtMgr;
@@ -158,215 +180,310 @@ public final class SyncMgr {
 
         setupEventHandler();
 
-        getHeadersThread = new Thread(this::processGetHeaders, "sync-headers");
-        getHeadersThread.start();
-        getBodiesThread = new Thread(this::processGetBlocks, "sync-blocks");
+        Thread getBodiesThread = new Thread(this::processGetBlocks, "sync-blocks");
+        getBodiesThread.setPriority(Thread.MAX_PRIORITY);
         getBodiesThread.start();
-        importBlocksThread = new Thread(this::processImportBlocks, "sync-import");
+
+        Thread importBlocksThread = new Thread(this::processImportBlocks, "sync-import");
+        importBlocksThread.setPriority(Thread.MAX_PRIORITY);
         importBlocksThread.start();
+
         scheduledWorkers = new ScheduledThreadPoolExecutor(1);
         scheduledWorkers.allowCoreThreadTimeOut(true);
 
-        if (showStatus)
+        if (_showStatus)
             scheduledWorkers.scheduleWithFixedDelay(() -> {
                 Thread.currentThread().setName("sync-status");
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(
-                            "<status self-best={} network-best-blk-number={} network-best-blk-hash={} longest-headers={} imported-headers=[{}] sent-headers=[{}] blocks-queue={}>",
-                            blockchain.getBestBlock().getNumber(), networkBestBlockNumber.get(),
-                            Hex.toHexString(networkBestBlockHash.get()).substring(0, 6), longestHeaders.get(),
-                            importedHeaders.entrySet().stream()
-                                    .map((entry) -> entry.getKey() + "-" + entry.getValue().size())
-                                    .collect(Collectors.joining(",")),
-                            sentHeaders.entrySet().stream()
-                                    .map((entry) -> entry.getKey() + "-" + entry.getValue().size())
-                                    .collect(Collectors.joining(",")),
-                            importedBlocksQueue.size());
-                }
-            }, 0, 5, TimeUnit.SECONDS);
+                AionBlock blk = blockchain.getBestBlock();
+                System.out.println("[sync-status self=" + blk.getNumber() + "/"
+                        + this.blockchain.getTotalDifficulty().toString(10) + " network="
+                        + this.netBestStatus.get().blockNumber + "/"
+                        + netBestStatus.get().totalDiff.toString(10)
+                        + " blocks-queue-size=" + importedBlocks.size() + "]");
+            }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
-            INode node = p2pMgr.getRandom();
-            if (node != null)
-                p2pMgr.send(node.getIdHash(), new ReqStatus());
-        }, 0, GET_STATUS_SLEEP, TimeUnit.SECONDS);
+            Set<Integer> ids = new HashSet<>();
+            for (int i = 0; i < 3; i++) {
+                INode node = p2pMgr.getRandom();
+                if (node != null && !ids.contains(node.getIdHash())) {
+                    ids.add(node.getIdHash());
+                    p2pMgr.send(node.getIdHash(), reqStatus);
+                }
+            }
+
+        }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);
+    }
+
+    private void setupEventHandler() {
+        List<IEvent> events = new ArrayList<>();
+        events.add(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
+        this.evtMgr.registerEvent(events);
     }
 
     /**
-     * Oct 12, 2017 jay void
+     *
+     * @param _nodeIdHashcode
+     *            int
+     * @param _displayId
+     *            String
+     * @param _headers
+     *            List validate headers batch and add batch to imported headers
      */
-    private void setupEventHandler() {
-        List<IEvent> evts = new ArrayList<>();
-        evts.add(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
-        this.evtMgr.registerEvent(evts);
+    public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, final List<A0BlockHeader> _headers) {
+
+        if (_headers == null || _headers.isEmpty()) {
+            return;
+        }
+
+        _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
+        Iterator<A0BlockHeader> it = _headers.iterator();
+        while (it.hasNext()) {
+
+            A0BlockHeader h = it.next();
+            boolean valid = this.blockHeaderValidator.validate(h);
+            boolean imported = savedHashes.containsKey(new ByteArrayWrapper(h.getHash()));
+
+            // drop all batch
+            if (!valid) {
+                return;
+            }
+            if (imported) {
+                it.remove();
+            }
+        }
+
+        importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _headers));
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<incoming-headers size={} from-num={} to-num={} from-node={}>", _headers.size(),
+                    _headers.get(0).getNumber(), _headers.get(_headers.size() - 1).getNumber(), _displayId);
+        }
     }
 
-    @SuppressWarnings("unchecked")
-    public void validateAndAddHeaders(int _nodeIdHashcode, final List<A0BlockHeader> _headers) {
+    /**
+     * @param _nodeIdHashcode
+     *            int
+     * @param _displayId
+     *            String
+     * @param _bodies
+     *            List<byte[]> Assemble and validate blocks batch and add batch
+     *            to import queue from network response blocks bodies
+     */
+    public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
-        if (_headers == null || _headers.isEmpty())
+        if (importedBlocks.size() > blocksQueueMax)
             return;
 
-        boolean headersValid = true;
-        for (A0BlockHeader _header : _headers) {
-            if (!this.blockHeaderValidator.validate(_header)) {
-                headersValid = false;
+        HeadersWrapper hw = this.sentHeaders.remove(_nodeIdHashcode);
+        if (hw == null || _bodies == null)
+            return;
+
+        // assemble batch
+        List<A0BlockHeader> headers = hw.getHeaders();
+        List<AionBlock> blocks = new ArrayList<>(_bodies.size());
+        Iterator<A0BlockHeader> headerIt = headers.iterator();
+        Iterator<byte[]> bodyIt = _bodies.iterator();
+        while (headerIt.hasNext() && bodyIt.hasNext()) {
+            AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());
+            if (block == null) {
+                LOG.error("<assemble-and-validate-blocks from-node={}>", _displayId);
                 break;
-            }
+            } else
+                blocks.add(block);
         }
-        if (!headersValid)
-            return;
-        SequentialHeaders<A0BlockHeader> headers = this.importedHeaders.get(_nodeIdHashcode);
-        if (headers == null)
-            headers = new SequentialHeaders<>();
 
-        headers.addAll(_headers);
-        importedHeaders.putIfAbsent(_nodeIdHashcode, headers);
-        int size = headers.size();
-        if (size > this.longestHeaders.get()) {
-            this.longestHeaders.set(size);
-            this.selectedNodeIdHashcode.set(_nodeIdHashcode);
-        }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<incoming-headers size={} from={} to={} imported-headers={}>", _headers.size(),
-                    _headers.get(0).getNumber(), _headers.get(_headers.size() - 1).getNumber(), headers.size());
-        }
-    }
-
-    public void validateAndAddBlocks(int _nodeIdHashcode, final List<AionBlock> _blocks, boolean ifNewBlockBroadcast) {
-        if (_blocks == null || _blocks.isEmpty())
+        int m = blocks.size();
+        if (m == 0)
             return;
-        int m = _blocks.size();
-        /*
-         * sort if sync batch
-         */
+
+        // sort this batch
         if (m > 1)
-            _blocks.sort((b1, b2) -> b1.getNumber() > b2.getNumber() ? 1 : 0);
+            blocks.sort((b1, b2) -> b1.getNumber() > b2.getNumber() ? 1 : 0);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<validate-incoming-blocks size={} from={} to={}>", _blocks.size(), _blocks.get(0).getNumber(),
-                    _blocks.get(_blocks.size() - 1).getNumber());
+            LOG.debug("<incoming-bodies size={} from-num={} to-num={} from-node={}>", m, blocks.get(0).getNumber(),
+                    blocks.get(blocks.size() - 1).getNumber(), _displayId);
         }
 
-        for (AionBlock b : _blocks) {
-            importedBlocksQueue.add(b);
-        }
-
+        // add batch
+        importedBlocks.addAll(blocks);
     }
 
-    private void processGetHeaders() {
-        while (start.get()) {
+    /**
+     * fetch headers routine
+     */
+    private void getHeaders() {
 
-            try {
-                Thread.sleep(FETCH_INTERVAL);
-            } catch (InterruptedException e) {
-            }
+        AionBlock selfBlock = this.blockchain.getBestBlock();
+        long selfNum = selfBlock.getNumber();
+        long retargetNum = jump.get();
 
-            AionBlock selfBlock = this.blockchain.getBestBlock();
-            long selfBest = selfBlock.getNumber();
+        // retarget future if its higher than self
+        long selfBest = Math.max(selfNum, retargetNum);
 
-            INode node = p2pMgr.getRandom();
+        Set<Integer> ids = new HashSet<>();
 
-            if (node != null) {
-                long remoteBest = node.getBestBlockNumber();
-                long diff = remoteBest - selfBest;
-                if (diff > 0) {
-                    long from = Math.max(1, selfBest - syncBackwardMax);
-                    long to = selfBest + (diff > this.syncForwardMax ? this.syncForwardMax : diff);
-                    this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, (int) (to - from) + 1));
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<send-get-headers from-node={} from={} to={} self-best={} remote-best={}>",
-                                node.getIdHash(), from, to, selfBest, remoteBest);
-                    }
+        List<INode> filtered = p2pMgr.getActiveNodes().values().stream().filter(
+                (n) -> netBestStatus.get().totalDiff != null &&
+                        n.getTotalDifficulty() != null &&
+                    (new BigInteger(1, n.getTotalDifficulty())).compareTo(netBestStatus.get().totalDiff) >= 0).collect(Collectors.toList());
+
+        Random r = new Random(System.currentTimeMillis());
+        for (int i = 0; i < 3; i++) {
+            if (filtered.size() > 0) {
+                INode node = filtered.get(r.nextInt(filtered.size()));
+                if (!ids.contains(node.getIdHash())) {
+                    long from = Math.max(1, selfBest - 128);
+                    long to = selfBest + this.syncForwardMax;
+                    int take = (int) (to - from) + 1;
+                    ids.add(node.getIdHash());
+                    this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, take));
+                    // ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
                 }
             }
         }
+//        ids.forEach((k, v) -> {
+//            // System.out.println("head req from " + v.from + " take " + v.take);
+//            this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
+//        });
     }
 
     private void processGetBlocks() {
         while (start.get()) {
-
+            HeadersWrapper hw;
             try {
-                Thread.sleep(FETCH_INTERVAL * 2);
+                hw = importedHeaders.take();
             } catch (InterruptedException e) {
+                return;
             }
 
-            List<A0BlockHeader> headers = importedHeaders.get(selectedNodeIdHashcode.get());
-            if (importedBlocksQueue.size() < blocksQueueMax && headers != null) {
-                List<byte[]> blockHashes = new ArrayList<>();
-                for (A0BlockHeader header : headers) {
-                    blockHashes.add(header.getHash());
-                }
-                clearSentHeaders(selectedNodeIdHashcode.get());
-                updateSentHeaders(selectedNodeIdHashcode.get(), headers);
-                if (headers.size() > 0) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<req-blocks from={} take={}>", headers.get(0).getNumber(), blockHashes.size());
+            int idHash = hw.getNodeIdHash();
+            List<A0BlockHeader> headers = hw.getHeaders();
+            synchronized (sentHeaders) {
+                HeadersWrapper hw1 = sentHeaders.get(idHash);
+                // already sent, check timeout and add it back if not timeout
+                // yet
+                if (hw1 != null) {
+                    // expired
+                    if ((System.currentTimeMillis() - hw1.getTimeout()) > SENT_HEADERS_TIMEOUT) {
+                        sentHeaders.put(idHash, hw);
+                        List<byte[]> headerHashes = new ArrayList<>();
+                        for (A0BlockHeader h : headers) {
+                            headerHashes.add(h.getHash());
+                        }
+                        this.p2pMgr.send(idHash, new ReqBlocksBodies(headerHashes));
                     }
-                    importedHeaders.clear();
-                    this.p2pMgr.send(selectedNodeIdHashcode.get(), new ReqBlocksBodies(blockHashes));
+                } else {
+                    this.sentHeaders.put(idHash, hw);
+                    List<byte[]> headerHashes = new ArrayList<>();
+                    for (A0BlockHeader h : headers) {
+                        headerHashes.add(h.getHash());
+                    }
+                    this.p2pMgr.send(idHash, new ReqBlocksBodies(headerHashes));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("<get-blocks from-num={} take={}>", headers.get(0).getNumber(), headerHashes.size());
+                    }
                 }
             }
         }
     }
 
     private void processImportBlocks() {
+
         while (start.get()) {
             try {
-                AionBlock b = importedBlocksQueue.take();
+                long start = System.currentTimeMillis();
+                long blockNumberIndex = 0;
 
-                // TODO: is it possible the import result of a block may change
-                // over time?
-                if (importedBlocksCache.containsKey(ByteArrayWrapper.wrap(b.getHash()))) {
+                List<AionBlock> batch = new ArrayList<>();
+
+                while ((System.currentTimeMillis() - start) < 10) {
+
+                    AionBlock b = importedBlocks.peek();
+
+                    // continue on batched blocks
+                    if (b == null) {
+                        continue;
+                    }
+
+                    // break if start of next batch
+                    if (blockNumberIndex > 0 && b.getNumber() != (blockNumberIndex + 1)) {
+                        start = 0;
+                        continue;
+                    }
+
+                    b = importedBlocks.take();
+                    blockNumberIndex = b.getNumber();
+                    ByteArrayWrapper hash = new ByteArrayWrapper(b.getHash());
+                    if (!savedHashes.containsKey(hash)) {
+                        batch.add(b);
+                        savedHashes.put(hash, null);
+                    }
+                }
+
+                // sleep if no batch empty then continue
+                if (batch.size() == 0) {
+                    Thread.sleep(1000);
                     continue;
                 }
 
-                if (LOG.isDebugEnabled()) {
 
-                    LOG.debug("<try-import-block num={} hash={} parent={}>", b.getNumber(), b.getShortHash(),
-                            Hex.toHexString(b.getParentHash()).substring(0, 6));
-                }
 
-                ImportResult importResult = this.blockchain.tryToConnect(b);
-                switch (importResult) {
-                case IMPORTED_BEST:
-                    if (LOG.isInfoEnabled()) {
-                        LOG.info("<import-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
-                                b.getTransactionsList().size());
+                boolean fetchAheadTriggerUsed = false;
+
+                for (AionBlock b : batch) {
+                    ImportResult importResult = this.blockchain.tryToConnect(b);
+                    switch (importResult) {
+                    case IMPORTED_BEST:
+                        if (LOG.isInfoEnabled()) {
+                            LOG.info("<import-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
+                                    b.getTransactionsList().size());
+                        }
+
+                        // re-targeting for next batch blocks headers
+                        if (!fetchAheadTriggerUsed) {
+                            jump.set(batch.get(batch.size() - 1).getNumber());
+                            fetchAheadTriggerUsed = true;
+                            getHeaders();
+                        }
+                        break;
+                    case IMPORTED_NOT_BEST:
+                        if (LOG.isInfoEnabled()) {
+                            LOG.info("<import-not-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
+                                    b.getTransactionsList().size());
+                        }
+
+                        savedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                        break;
+                    case EXIST:
+                        // still exist
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
+                                    b.getShortHash(), b.getTransactionsList().size());
+                        }
+                        break;
+                    case NO_PARENT:
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
+                        }
+
+                        // reset and skip current batch
+                        jump.set(0);
+                        continue;
+                    case INVALID_BLOCK:
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("<import-fail err=invalid-block num={} hash={} txs={}>", b.getNumber(),
+                                    b.getShortHash(), b.getTransactionsList().size());
+                        }
+                        break;
+                    default:
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("<import-res-unknown>");
+                        }
+                        break;
                     }
-                    importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                    break;
-                case IMPORTED_NOT_BEST:
-                    if (LOG.isInfoEnabled()) {
-                        LOG.info("<import-not-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
-                                b.getTransactionsList().size());
-                    }
-                    importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                    break;
-                case NO_PARENT:
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<import-unsuccess err=no-parent num={} hash={}>", b.getNumber(),
-                                b.getShortHash());
-                    }
-                    break;
-                case INVALID_BLOCK:
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<import-unsuccess err=invalid-block num={} hash={} txs={}>", b.getNumber(),
-                                b.getShortHash(), b.getTransactionsList().size());
-                    }
-                    break;
-                case EXIST:
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<import-unsuccess err=block-exit num={} hash={} txs={}>", b.getNumber(),
-                                b.getShortHash(), b.getTransactionsList().size());
-                    }
-                    importedBlocksCache.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                    break;
-                default:
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<import-res-unknown>");
-                    }
-                    break;
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception ex) {
+                return;
             }
         }
     }
@@ -377,6 +494,6 @@ public final class SyncMgr {
     }
 
     public long getNetworkBestBlockNumber() {
-        return this.networkBestBlockNumber.get();
+        return this.netBestStatus.get().blockNumber;
     }
 }

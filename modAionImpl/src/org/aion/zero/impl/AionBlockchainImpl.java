@@ -52,7 +52,6 @@ import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.vm.TransactionExecutor;
-import org.aion.zero.impl.blockchain.AionTxExecSummary;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.blockchain.NonceMgr;
 import org.aion.zero.impl.config.CfgAion;
@@ -66,10 +65,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
+import org.aion.zero.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,7 +97,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static final int THOUSAND_MS = 1000;
     private static final int TARGET_BLOCKINTERVAL = 10; // second
     private static final int DIFFICULTY_BYTES = 16;
-
+    
     A0BCConfig config;
 
     private IRepository repository;

@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.aion.base.type.Address;
-import org.aion.zero.impl.blockchain.AionTxExecSummary;
 import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 
 public class RetValidPreBlock {

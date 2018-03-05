@@ -10,6 +10,7 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.Node;
 import org.aion.p2p.impl.Act;
+import org.aion.p2p.impl.P2pMgr;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,6 +18,8 @@ import org.junit.Test;
  * @author chris
  */
 public class ResActiveNodesTest {
+
+
 
     private Node randomNode(){
         return new Node(

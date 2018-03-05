@@ -17,13 +17,8 @@
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
+ *
  * Aion foundation.
  * <ether.camp> team through the ethereumJ library.
  * Ether.Camp Inc. (US) team through Ethereum Harmony.
@@ -31,37 +26,42 @@
  * Samuel Neves through the BLAKE2 implementation.
  * Zcash project team.
  * Bitcoinj team.
+ *
  */
 
 package org.aion.zero.impl.sync.msg;
 
-import org.aion.zero.impl.sync.Act;
-import org.aion.base.type.IBlock;
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
-import org.aion.p2p.Ver;
-import org.aion.rlp.RLP;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author chris
  */
-public final class BroadcastNewBlock extends Msg {
+public class ResStatusTest {
 
-    @SuppressWarnings("rawtypes")
-    private final IBlock block;
+    @Test
+    public void test() {
 
-    public BroadcastNewBlock(@SuppressWarnings("rawtypes") final IBlock __newblock) {
-        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
-        this.block = __newblock;
-    }
+        long bestBlockNumber = ThreadLocalRandom.current().nextLong();
+        byte[] totalDifficulty = new byte[Byte.MAX_VALUE];
+        ThreadLocalRandom.current().nextBytes(totalDifficulty);
+        byte[] bestBlockHash = new byte[32];
+        ThreadLocalRandom.current().nextBytes(bestBlockHash);
+        byte[] genesisHash = new byte[32];
 
-    @Override
-    public byte[] encode() {
-        return this.block.getEncoded();
-    }
+        ResStatus rs1 = new ResStatus(bestBlockNumber, totalDifficulty, bestBlockHash, genesisHash);
+        ResStatus rs2 = ResStatus.decode(rs1.encode());
 
-    public static byte[] decode(final byte[] _msgBytes) {
-        return RLP.decode2OneItem(_msgBytes, 0).getRLPData();
+        assertEquals(bestBlockNumber, rs2.getBestBlockNumber());
+        assertTrue(Arrays.equals(totalDifficulty, rs2.getTotalDifficulty()));
+        assertTrue(Arrays.equals(bestBlockHash, rs2.getBestHash()));
+        assertTrue(Arrays.equals(genesisHash, rs2.getGenesisHash()));
+
     }
 
 }
