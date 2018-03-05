@@ -17,3 +17,6 @@ native/linux/blake2b/libblake2b.so
 
 # ci
 */report
+
+.ant-targets-build.xml
+modTxPoolImpl/native/
