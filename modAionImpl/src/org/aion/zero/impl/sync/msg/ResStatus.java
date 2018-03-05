@@ -50,7 +50,7 @@ public final class ResStatus extends Msg {
 
     private final long bestBlockNumber; // 8
 
-    private final int totalDifficultyLen; // 1
+    private final byte totalDifficultyLen; // 1
 
     private final byte[] totalDifficulty; // >= 1
 
@@ -58,24 +58,49 @@ public final class ResStatus extends Msg {
 
     private final byte[] genesisHash; // 32
 
-    public ResStatus(final long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash,
-            byte[] _genesisHash) {
+    /**
+     *
+     * @param bestBlockNumber long
+     * @param _totalDifficulty byte[]
+     * @param _bestHash byte[]
+     * @param _genesisHash byte[]
+     */
+    public ResStatus(long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash, final byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.bestBlockNumber = bestBlockNumber;
-        this.totalDifficultyLen = _totalDifficulty.length;
+        this.totalDifficultyLen = _totalDifficulty.length > Byte.MAX_VALUE ? 1 : (byte)_totalDifficulty.length;
         this.totalDifficulty = _totalDifficulty;
         this.bestHash = _bestHash;
         this.genesisHash = _genesisHash;
     }
 
+    /**
+     * @return long
+     */
     public long getBestBlockNumber() {
         return this.bestBlockNumber;
     }
 
+    /**
+     * @return byte[]
+     */
     public byte[] getBestHash() {
         return this.bestHash;
     }
 
+    /**
+     * @return byte[]
+     */
+    public byte[] getTotalDifficulty() { return this.totalDifficulty; }
+
+    /**
+     * @return byte[]
+     */
+    public byte[] getGenesisHash() { return this.genesisHash; }
+
+    /**
+     * @return byte[]
+     */
     public byte[] getTotalDiff() {
         return this.totalDifficulty;
     }
@@ -98,12 +123,10 @@ public final class ResStatus extends Msg {
 
     @Override
     public byte[] encode() {
-        if (this.totalDifficultyLen > 127)
-            return new byte[0];
         int _len = 8 + 1 + totalDifficultyLen + 32 + 32;
         ByteBuffer bb = ByteBuffer.allocate(_len);
         bb.putLong(this.bestBlockNumber);
-        bb.put((byte) this.totalDifficultyLen);
+        bb.put(this.totalDifficultyLen);
         bb.put(this.totalDifficulty);
         bb.put(this.bestHash);
         bb.put(this.genesisHash);

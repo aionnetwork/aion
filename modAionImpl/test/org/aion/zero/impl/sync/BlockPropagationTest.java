@@ -68,7 +68,6 @@ public class BlockPropagationTest {
             return 0;
         }
 
-
         @Override
         public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, byte[] _totalDifficulty) {
 
@@ -114,7 +113,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public INode getRandom(NodeRandPolicy nrp, long bbn) {
+        public INode getRandom() {
             return null;
         }
 

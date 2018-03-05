@@ -35,57 +35,40 @@
 
 package org.aion.zero.impl.sync.callback;
 
-import java.util.Collections;
-
-import org.aion.p2p.Ctrl;
+import java.util.List;
 import org.aion.p2p.Handler;
+import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-
-import org.aion.zero.impl.sync.BlockPropagationHandler;
 import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
 
 /**
- * @author jay
+ *
+ * @author chris
+ * handler for blocks bodies received from network
+ *
  */
-public final class BroadcastNewBlockCallback extends Handler {
+public final class ResBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
-    private final BlockPropagationHandler propHandler;
+    private final SyncMgr syncMgr;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.aion.net.nio.ICallback#getCtrl() change param
-     * IPendingStateInternal later
-     */
-    public BroadcastNewBlockCallback(final Logger _log, final BlockPropagationHandler propHandler) {
-        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
+    public ResBlocksBodiesHandler(final Logger _log, final SyncMgr _syncMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
         this.log = _log;
-        this.propHandler = propHandler;
+        this.syncMgr = _syncMgr;
     }
-
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null)
-            return;
-        byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
-        if (rawdata == null)
-            return;
-
-        AionBlock block = new AionBlock(rawdata);
-
-        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
-
-        if (this.log.isDebugEnabled()) {
-            String hash = block.getShortHash();
-            hash = hash != null ? hash : "null";
-            this.log.debug("blockProp: [node: " + _nodeIdHashcode + " | " + "hash: " + hash + " | status: " + result.name() + "]");
-        }
+        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
+        List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
+        if(bodies != null && bodies.size() > 0)
+            this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
+        else
+            this.log.error("<res-bodies invalid>");
     }
 }

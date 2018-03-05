@@ -20,57 +20,34 @@
  * Contributors to the aion source files in decreasing order of code volume:
  *
  * Aion foundation.
+ * <ether.camp> team through the ethereumJ library.
+ * Ether.Camp Inc. (US) team through Ethereum Harmony.
+ * John Tromp through the Equihash solver.
+ * Samuel Neves through the BLAKE2 implementation.
+ * Zcash project team.
+ * Bitcoinj team.
  *
  */
 
-package org.aion.p2p;
+package org.aion.zero.impl.sync.msg;
 
-import java.util.List;
-import java.util.Map;
-
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
- *
  * @author chris
- *
  */
-public interface IP2pMgr {
+public class ReqHeadersTest {
 
-    /**
-     * @return Map
-     */
-    Map<Integer, INode> getActiveNodes();
-    
-    INodeMgr getNodeMgr();
+    @Test
+    public void test() {
+        long from = 7571;
+        int take = 192;
+        
+        ReqBlocksHeaders rh = new ReqBlocksHeaders(from, take);
+        ReqBlocksHeaders rhNew = ReqBlocksHeaders.decode(rh.encode());
+        assertEquals(from, rhNew.getFromBlock());
+        assertEquals(take, rhNew.getTake());
+    }
 
-    /**
-     * @param _hs
-     *            List<Handler>
-     */
-    void register(final List<Handler> _hs);
-
-    /**
-     * @return INode
-     */
-    INode getRandom();
-
-    /**
-     * @param _id
-     *            int
-     * @param _msg
-     *            Msg
-     */
-    void send(int _id, final Msg _msg);
-
-    /**
-     * Used to hook up with kernel to shutdown threads in network module
-     */
-    void shutdown();
-
-    /**
-     * start all p2p process
-     */
-    void run();
-
-    String version();
 }

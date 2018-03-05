@@ -68,7 +68,7 @@ public interface INode {
     long getBestBlockNumber();
 
     /**
-     * @return long
+     * @return BigInteger
      */
     byte[] getTotalDifficulty();
 
@@ -77,6 +77,6 @@ public interface INode {
      * @param _bestBlockHash byte[]
      * @param _totalDifficulty long
      */
-    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, byte[] _totalDifficulty);
+    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, final byte[] _totalDifficulty);
 
 }

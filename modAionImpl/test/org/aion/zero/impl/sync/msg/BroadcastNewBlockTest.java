@@ -40,7 +40,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestBroadcastNewBlock {
+public class BroadcastNewBlockTest {
     @Test
     public void test() {
 

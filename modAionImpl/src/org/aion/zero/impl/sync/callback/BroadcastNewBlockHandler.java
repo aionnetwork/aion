@@ -35,58 +35,54 @@
 
 package org.aion.zero.impl.sync.callback;
 
-import java.util.List;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
-import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
-import org.aion.mcf.types.BlockIdentifier;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.sync.BlockPropagationHandler;
+import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
+import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
- *
- * @author chris
- *
+ * @author jay
+ * handler for new block broadcasted from network
  */
-public final class ReqBlocksHeadersCallback extends Handler {
-
-    /**
-     * self guardian
-     */
-    private final static int max_headers = 2000;
+public final class BroadcastNewBlockHandler extends Handler {
 
     private final Logger log;
 
-    private final IAionBlockchain blockchain;
+    private final BlockPropagationHandler propHandler;
 
-    private final IP2pMgr p2pMgr;
-
-    public ReqBlocksHeadersCallback(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.aion.net.nio.ICallback#getCtrl() change param
+     * IPendingStateInternal later
+     */
+    public BroadcastNewBlockHandler(final Logger _log, final BlockPropagationHandler propHandler) {
+        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
         this.log = _log;
-        this.blockchain = _blockchain;
-        this.p2pMgr = _p2pMgr;
+        this.propHandler = propHandler;
     }
+
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        ReqBlocksHeaders reqHeaders = ReqBlocksHeaders.decode(_msgBytes);
-        if (reqHeaders != null) {
-            long fromBlock = reqHeaders.getFromBlock();
-            int take = reqHeaders.getTake();
-            this.log.debug("<req-headers from-block={} take={} from-node={}>", fromBlock, take,
-                    _displayId);
-            List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
-                    new BlockIdentifier(null, fromBlock), 0, Math.min(take, max_headers), false);
-            ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
-            this.p2pMgr.send(_nodeIdHashcode, rbhs);
-        } else
-            this.log.error("<req-headers decode-msg msg-bytes={} from-node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length, _nodeIdHashcode);
+        if (_msgBytes == null)
+            return;
+        byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
+        if (rawdata == null)
+            return;
+
+        AionBlock block = new AionBlock(rawdata);
+
+        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
+
+        if (this.log.isDebugEnabled()) {
+            String hash = block.getShortHash();
+            hash = hash != null ? hash : "null";
+            this.log.debug("<block-prop node=" + _displayId + " block-hash=" + hash + " status=" + result.name() + ">");
+        }
     }
 }

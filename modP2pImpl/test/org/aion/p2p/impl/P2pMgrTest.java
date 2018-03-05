@@ -25,8 +25,13 @@
 
 package org.aion.p2p.impl;
 
+import org.aion.p2p.INode;
 import org.junit.Test;
+import java.util.Map;
 import java.util.UUID;
+
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -88,20 +93,25 @@ public class P2pMgrTest {
         int port1 = 30303;
         int port2 = 30304;
 
-        P2pMgr node1 = new P2pMgr(
+        P2pMgr receiver = new P2pMgr(
                 id1,
                 ip,
                 port1,
-                new String[0],
+                new String[]{
+                        "p2p://" + id2 + "@" + ip + ":" + port2
+                },
                 false,
                 128,
                 128,
                 false,
                 false
         );
-        node1.run();
 
-        P2pMgr node2 = new P2pMgr(
+        // clear temp nodes list but keep seed ips list
+        receiver.clearTempNodes();
+        receiver.run();
+
+        P2pMgr connector = new P2pMgr(
                 id2,
                 ip,
                 port2,
@@ -114,10 +124,18 @@ public class P2pMgrTest {
                 false,
                 false
         );
-        node2.run();
+        connector.run();
         Thread.sleep(5000);
-        assertEquals(1, node1.getActiveNodes().size());
-        assertEquals(1, node2.getActiveNodes().size());
+        assertEquals(1, receiver.getActiveNodes().size());
+        assertEquals(1, connector.getActiveNodes().size());
+
+        // check seed ips contains ip as incoming node
+        Map<Integer, INode> ns = receiver.getActiveNodes();
+        Map.Entry<Integer, INode> entry = ns.entrySet().iterator().next();
+        assertNotNull(entry);
+        assertTrue(((Node)entry.getValue()).getIfFromBootList());
+        receiver.shutdown();
+        connector.shutdown();
 
     }
 

@@ -85,7 +85,7 @@ public class BlockPropagationHandler {
 
         this.p2pManager.getActiveNodes().values().forEach(n -> {
             if (log.isDebugEnabled())
-                log.debug("sending new block" + block.getShortHash() + " to: " + n.getIdHash());
+                log.debug("<sending-new-block=" + block.getShortHash() + " to=" + n.getIdShort() + ">");
             this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
         });
     }
@@ -148,7 +148,7 @@ public class BlockPropagationHandler {
                 .filter(n -> n.getBestBlockNumber() <= block.getNumber())
                 .forEach(n -> {
                     if (log.isDebugEnabled())
-                        log.debug("sending new block" + block.getShortHash() + " to: " + n.getIdHash());
+                        log.debug("<sending-new-block hash=" + block.getShortHash() + " to-node=" + n.getIdShort() + ">");
                     this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
                     sent.getAndSet(true);
                 });

@@ -77,8 +77,9 @@ public final class Node implements INode {
 
     private SocketChannel channel;
 
-    private static final Pattern IPV4 = Pattern
-            .compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
+    private String type = "";
+
+    private static final Pattern IPV4 = Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
     PeerMetric peerMetric = new PeerMetric();
 
@@ -99,27 +100,10 @@ public final class Node implements INode {
         this.bestBlockNumber = 0L;
     }
 
-    Node(String _ipStr, int port) {
-        this.fromBootList = false;
-
-        // if id is not gathered, leave it empty
-        // this.id = new byte[36];
-
-        this.idHash = 0;
-        this.version = 0;
-        this.ip = ipStrToBytes(_ipStr);
-        this.ipStr = _ipStr;
-        this.port = port;
-        this.timestamp = System.currentTimeMillis();
-        this.bestBlockNumber = 0L;
-    }
-
     Node(String _ipStr, int port, int portConnected) {
         this.fromBootList = false;
-
         // if id is not gathered, leave it empty
         // this.id = new byte[36];
-
         this.idHash = 0;
         this.version = 0;
         this.ip = ipStrToBytes(_ipStr);
@@ -149,11 +133,10 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _ip
-     *            String
+     * @param _ip String
      * @return byte[]
      */
-    static byte[] ipStrToBytes(final String _ip) {
+    public static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
         for (String frag : frags) {
@@ -169,8 +152,7 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _ip
-     *            byte[]
+     * @param _ip byte[]
      * @return String
      */
     static String ipBytesToStr(final byte[] _ip) {
@@ -206,11 +188,11 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _p2p
-     *            String
-     * @return Node TODO: ugly
+     * @param _p2p String
+     * @return Node
+     * TODO: ugly
      */
-    static Node parseP2p(String _p2p) {
+    public static Node parseP2p(String _p2p) {
         String[] arrs = _p2p.split("@");
         byte[] _tempBytes = arrs[0].getBytes();
         if (_tempBytes.length != 42)
@@ -226,9 +208,12 @@ public final class Node implements INode {
         return new Node(true, _id, _ip, _port);
     }
 
+    void setFromBootList(boolean _ifBoot) {
+        this.fromBootList = _ifBoot;
+    }
+
     /**
-     * @param _id
-     *            byte[]
+     * @param _id byte[]
      */
     void setId(final byte[] _id) {
         this.id = _id;
@@ -239,16 +224,14 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _version
-     *            int
+     * @param _version int
      */
     void setVersion(final int _version) {
         this.version = _version;
     }
 
     /**
-     * @param _port
-     *            int
+     * @param _port int
      */
     void setPort(final int _port) {
         this.port = _port;
@@ -267,11 +250,17 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _channel
-     *            SocketChannel
+     * @param _channel SocketChannel
      */
     void setChannel(final SocketChannel _channel) {
         this.channel = _channel;
+    }
+
+    /**
+     * @param _type String
+     */
+    void setType(String _type) {
+        this.type = _type;
     }
 
     /**
@@ -331,11 +320,15 @@ public final class Node implements INode {
         return this.idHash;
     }
 
+    String getType() {
+        return this.type;
+    }
+
     boolean hasFullInfo() {
         return (id != null) && (ip != null) && (port > 0);
     }
 
-    public int getFullHash() {
+    int getFullHash() {
         if (fullHash > 0)
             return fullHash;
         else {
@@ -360,9 +353,9 @@ public final class Node implements INode {
         return this.bestBlockNumber;
     }
 
-    // byte[] getBestBlockHash() {
-    // return this.bestBlockHash;
-    // }
+    byte[] getBestBlockHash() {
+        return this.bestBlockHash;
+    }
 
     @Override
     public byte[] getTotalDifficulty() {
@@ -370,7 +363,7 @@ public final class Node implements INode {
     }
 
     @Override
-    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, byte[] _totalDifficulty) {
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, final byte[] _totalDifficulty) {
         if (_bestBlockNumber > this.bestBlockNumber) {
             this.bestBlockNumber = _bestBlockNumber;
             this.bestBlockHash = _bestBlockHash;
@@ -378,7 +371,7 @@ public final class Node implements INode {
         }
     }
 
-    void copoyNodeStatus(Node _n) {
+    void copyNodeStatus(Node _n) {
         if (_n.bestBlockNumber > this.bestBlockNumber) {
             this.bestBlockNumber = _n.getBestBlockNumber();
             this.bestBlockHash = _n.bestBlockHash;
