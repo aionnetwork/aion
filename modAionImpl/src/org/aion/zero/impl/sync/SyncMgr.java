@@ -379,9 +379,6 @@ public final class SyncMgr {
                         headerHashes.add(h.getHash());
                     }
                     this.p2pMgr.send(idHash, new ReqBlocksBodies(headerHashes));
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("<get-blocks from-num={} take={}>", headers.get(0).getNumber(), headerHashes.size());
-                    }
                 }
             }
         }
