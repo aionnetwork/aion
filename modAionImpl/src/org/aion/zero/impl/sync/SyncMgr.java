@@ -64,7 +64,7 @@ public final class SyncMgr {
 
 
     // interval time get peer status
-    private static final int STATUS_INTERVAL = 1000;
+    private static final int STATUS_INTERVAL = 3000;
 
     // timeout sent headers
     private static final int SENT_HEADERS_TIMEOUT = 5000;
@@ -87,7 +87,7 @@ public final class SyncMgr {
 
     // set as last block number within one batch import when first block imported success as best
     // reset to 0 as any block import result as no parent (side chain)
-    private AtomicLong retargetNumber = new AtomicLong(0);
+    private AtomicLong jump = new AtomicLong(0);
 
     // network best block number for self node perspective
     private AtomicLong networkBestBlockNumber = new AtomicLong(0);
@@ -219,8 +219,11 @@ public final class SyncMgr {
      */
     public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, final List<A0BlockHeader> _headers) {
 
-        if (_headers == null || _headers.isEmpty())
+        if (_headers == null || _headers.isEmpty()) {
+            if((jump.get() - blockchain.getBestBlock().getNumber()) >  128)
+                jump.set(0);
             return;
+        }
 
         _headers.sort((h1, h2)-> (int)(h1.getNumber() - h2.getNumber()));
         Iterator<A0BlockHeader> it = _headers.iterator();
@@ -307,7 +310,6 @@ public final class SyncMgr {
         importedBlocks.addAll(blocks);
     }
 
-
     /**
      * fetch headers routine
      */
@@ -315,7 +317,7 @@ public final class SyncMgr {
 
         AionBlock selfBlock = this.blockchain.getBestBlock();
         long selfNum = selfBlock.getNumber();
-        long retargetNum = retargetNumber.get();
+        long retargetNum = jump.get();
 
         // retarget future if its higher than self
         long selfBest = Math.max(selfNum, retargetNum);
@@ -341,7 +343,6 @@ public final class SyncMgr {
             this.p2pMgr.send(k, new ReqBlocksHeaders(v.from, v.take));
         });
     }
-
 
     private void processGetBlocks(){
         while (start.get()) {
@@ -432,7 +433,7 @@ public final class SyncMgr {
 
                             //re-targeting for next batch blocks headers
                             if(!fetchAheadTriggerUsed){
-                                retargetNumber.set(batch.get(batch.size() - 1).getNumber() + 128);
+                                jump.set(batch.get(batch.size() - 1).getNumber() + 128);
                                 fetchAheadTriggerUsed = true;
                                 getHeaders();
                             }
@@ -446,6 +447,7 @@ public final class SyncMgr {
                             savedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                             break;
                         case EXIST:
+                            // still exist
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                         b.getShortHash(), b.getTransactionsList().size());
@@ -457,8 +459,8 @@ public final class SyncMgr {
                                         b.getShortHash());
                             }
 
-                            // skip current batch
-                            retargetNumber.set(0);
+                            // reset and skip current batch
+                            jump.set(0);
                             continue;
                         case INVALID_BLOCK:
                             if (LOG.isDebugEnabled()) {
