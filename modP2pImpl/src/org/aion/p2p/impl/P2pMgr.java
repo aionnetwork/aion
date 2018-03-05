@@ -649,7 +649,6 @@ public final class P2pMgr implements IP2pMgr {
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
             workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
 
-
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);

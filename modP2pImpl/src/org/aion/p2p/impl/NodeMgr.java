@@ -25,6 +25,7 @@
 
 package org.aion.p2p.impl;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,13 +82,14 @@ public class NodeMgr implements INodeMgr {
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
             sb.append("   -------------------------------------------------------\n");
-            sb.append("   seed      blk#      id              ip   port      type\n");
+            sb.append("   seed       blk               td      id              ip   port      type\n");
             sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
             for (Node n : sorted) {
                 sb.append(
-                    String.format("      %c%10d  %6s %15s  %5d  %8s\n",
+                    String.format("      %c%10d %16s  %6s %15s  %5d  %8s\n",
                         n.getIfFromBootList() ? 0x221A : ' ',
                         n.getBestBlockNumber(),
+                        n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
                         n.getIdShort(),
                         n.getIpStr(),
                         n.getPort(),
