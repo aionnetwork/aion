@@ -58,7 +58,8 @@ public final class ResStatus extends Msg {
 
     private final byte[] genesisHash; // 32
 
-    public ResStatus(final long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash, byte[] _genesisHash) {
+    public ResStatus(final long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash,
+            byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.bestBlockNumber = bestBlockNumber;
         this.totalDifficultyLen = _totalDifficulty.length;
@@ -73,6 +74,10 @@ public final class ResStatus extends Msg {
 
     public byte[] getBestHash() {
         return this.bestHash;
+    }
+
+    public byte[] getTotalDiff() {
+        return this.totalDifficulty;
     }
 
     public static ResStatus decode(final byte[] _bytes) {

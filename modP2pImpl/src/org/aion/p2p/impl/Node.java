@@ -73,7 +73,7 @@ public final class Node implements INode {
 
     private byte[] bestBlockHash;
 
-    private long totalDifficulty;
+    private byte[] totalDifficulty;
 
     private SocketChannel channel;
 
@@ -365,12 +365,12 @@ public final class Node implements INode {
     // }
 
     @Override
-    public long getTotalDifficulty() {
+    public byte[] getTotalDifficulty() {
         return this.totalDifficulty;
     }
 
     @Override
-    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, long _totalDifficulty) {
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, byte[] _totalDifficulty) {
         if (_bestBlockNumber > this.bestBlockNumber) {
             this.bestBlockNumber = _bestBlockNumber;
             this.bestBlockHash = _bestBlockHash;
