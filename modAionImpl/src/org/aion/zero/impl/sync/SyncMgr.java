@@ -185,7 +185,7 @@ public final class SyncMgr {
         getBodiesThread.start();
 
         Thread importBlocksThread = new Thread(this::processImportBlocks, "sync-import");
-        importBlocksThread.setPriority(Thread.NORM_PRIORITY);
+        importBlocksThread.setPriority(Thread.MAX_PRIORITY);
         importBlocksThread.start();
 
         scheduledWorkers = new ScheduledThreadPoolExecutor(1);
