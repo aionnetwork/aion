@@ -1,26 +1,27 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * Contributors to the aion source files in decreasing order of code volume:
+ *
+ * Aion foundation.
+ *
+ */
 
 package org.aion.zero.impl.config;
 
@@ -29,9 +30,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import javax.xml.stream.*;
-
 import org.aion.mcf.config.*;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.AionHub;
@@ -43,8 +42,11 @@ import org.aion.zero.impl.GenesisBlockLoader;
 public final class CfgAion extends Cfg {
 
     protected AionGenesis genesis;
+
     protected static final int N = 210;
+
     private static final int K = 9;
+
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
 
     private CfgAion() {
@@ -65,10 +67,6 @@ public final class CfgAion extends Cfg {
 
     public static CfgAion inst() {
         return CfgAionHolder.inst;
-    }
-
-    public void setConsensus(CfgConsensusPow _consensus) {
-        this.consensus = _consensus;
     }
 
     @Override
@@ -92,6 +90,17 @@ public final class CfgAion extends Cfg {
 
     public static int getK() {
         return K;
+    }
+
+    private void closeFileInputStream(final FileInputStream fis){
+        if (fis != null) {
+            try {
+                fis.close();
+            } catch (IOException e) {
+                System.out.println("<error on-close-file-input-stream>");
+                System.exit(1);
+            }
+        }
     }
 
     public void dbFromXML() {
@@ -126,22 +135,18 @@ public final class CfgAion extends Cfg {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
             System.exit(1);
         } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    System.out.println("<error on-close-file-input-stream>");
-                    System.exit(1);
-                }
-            }
+            closeFileInputStream(fis);
         }
     }
 
     @Override
-    public void fromXML() {
+    public boolean fromXML() {
+        boolean shouldWriteBackToFile = false;
         File cfgFile = new File(CONF_FILE_PATH);
+        if(!cfgFile.exists())
+            return false;
         XMLInputFactory input = XMLInputFactory.newInstance();
-        FileInputStream fis = null;
+        FileInputStream fis;
         try {
             fis = new FileInputStream(cfgFile);
             XMLStreamReader sr = input.createXMLStreamReader(fis);
@@ -153,7 +158,12 @@ public final class CfgAion extends Cfg {
                     switch (elementName) {
                     case "id":
                         String nodeId = readValue(sr);
-                        this.id = NODE_ID_PLACEHOLDER.equals(nodeId) ? UUID.randomUUID().toString() : nodeId;
+                        if(NODE_ID_PLACEHOLDER.equals(nodeId)) {
+                            this.id = UUID.randomUUID().toString();
+                            shouldWriteBackToFile = true;
+                        } else {
+                            this.id = nodeId;
+                        }
                         break;
                     case "mode":
                         this.mode = readValue(sr);
@@ -191,26 +201,18 @@ public final class CfgAion extends Cfg {
                         break;
                 }
             }
+            closeFileInputStream(fis);
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
             System.exit(1);
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    System.out.println("<error on-close-file-input-stream>");
-                    System.exit(1);
-                }
-            }
         }
+        return shouldWriteBackToFile;
     }
 
     @Override
     public void toXML(final String[] args) {
         if (args != null) {
             boolean override = false;
-            this.fromXML();
             for (String arg : args) {
                 arg = arg.toLowerCase();
                 if (arg.startsWith("--id=")) {
@@ -263,6 +265,7 @@ public final class CfgAion extends Cfg {
         XMLOutputFactory output = XMLOutputFactory.newInstance();
         output.setProperty("escapeCharacters", false);
         XMLStreamWriter sw = null;
+
         try {
 
             sw = output.createXMLStreamWriter(new FileWriter(CONF_FILE_PATH));
