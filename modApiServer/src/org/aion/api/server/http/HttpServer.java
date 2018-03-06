@@ -139,7 +139,7 @@ public final class HttpServer {
         case personal_unlockAccount:
             String account = (String) params.get(0);
             String password = (String) params.get(1);
-            int duration = new BigInteger(params.get(2) == null ? "300" : params.get(2) + "").intValue();
+            int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
             return processResult(_id, api.unlockAccount(account, password, duration));
 
         case eth_getBlockByNumber: {
