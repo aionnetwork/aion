@@ -55,7 +55,7 @@
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}"/>
         <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test"
-               destdir="${dir.test}" includes="**/*Test.java" excludes="**/BlockPropagationTest.java">
+               destdir="${dir.test}" includes="**/*Test.java">
             <classpath>
                 <path refid="classpath.test"/>
                 <path refid="classpath.dependency"/>
