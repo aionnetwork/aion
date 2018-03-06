@@ -29,7 +29,7 @@ pipeline {
         
         stage('Archive build output') {
             when {
-                expression { GIT_BRANCH == 'master' || GIT_BRANCH == 'dev' }
+                expression { GIT_BRANCH == 'master' || GIT_BRANCH == 'dev' || GIT_BRANCH == 'ci' }
             }
             steps {                
                 archiveArtifacts artifacts: 'aion-v*.tar.bz2'
