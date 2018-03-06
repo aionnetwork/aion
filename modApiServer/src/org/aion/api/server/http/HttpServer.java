@@ -334,6 +334,15 @@ public final class HttpServer {
             return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
 
         /*
+         * net
+         */
+        case net_listening:
+            return processResult(_id, true);
+
+        case net_peerCount:
+            return processResult(_id, api.peerCount());
+
+        /*
          * stratum pool
          */
         case getinfo:
@@ -557,13 +566,6 @@ public final class HttpServer {
             }
 
             return processResult(_id, jsonObj);
-
-        /*
-         * extends
-         */
-        case net_listening:
-            return processResult(_id, true);
-
         case ping:
             return processResult(_id, "pong");
         default:

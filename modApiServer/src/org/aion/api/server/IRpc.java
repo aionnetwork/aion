@@ -29,7 +29,7 @@ public interface IRpc {
     enum Method {
         
         /**
-         * web3
+         * eth
          */
         eth_accounts,                
         eth_blockNumber,
@@ -42,28 +42,30 @@ public interface IRpc {
         eth_getCode,
         eth_getFilterChanges,
         eth_getFilterLogs,
-        eth_getLogs,
         eth_getTransactionByHash,
         eth_getTransactionReceipt,
         eth_getTransactionCount,
-        //eth_getWork,
         eth_estimateGas,
         eth_sendTransaction,
         eth_sendRawTransaction,
         eth_newBlockFilter,
         eth_newFilter,
         eth_syncing,
-        eth_mining,
-        eth_hashrate,
-        eth_gasPrice,
-        eth_protocolVersion,
         eth_uninstallFilter,
+
+        /**
+         * net
+         */
         net_listening,
-        personal_newAccount,
+        net_peerCount,
+
+        /**
+         * personal
+         */
         personal_unlockAccount,
         
         /**
-         * stratum pool
+         * stratum pool - custom json-rpc endpoints
          */
         validateaddress,
         dumpprivkey,
@@ -73,15 +75,7 @@ public interface IRpc {
         submitblock,
         getblocktemplate,
         getHeaderByBlockNumber,
-        
-        /**
-         * extended
-         */
-        ping,
-        admin_accountNew,
-        admin_peers,
-        admin_staticPeers,
-        admin_memoryStats;
+        ping;
         
         public static boolean contains(String target) {
             for (Method c : Method.values()) {
