@@ -390,8 +390,19 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         // walk back removing blocks greater than the given level value
         IAionBlock bestLine = bestBlock;
         while (currentLevel > previousLevel) {
+
+            // remove all the blocks at that level
+            List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
+            if (currentLevelBlocks.size() == 0){
+                blocks.delete(bestLine.getHash());
+            } else {
+                for (BlockInfo bk_info : currentLevelBlocks) {
+                    blocks.delete(bk_info.getHash());
+                }
+            }
+
+            // remove the level
             index.remove((int) currentLevel);
-            blocks.delete(bestLine.getHash());
             bestLine = getBlockByHash(bestLine.getParentHash());
             --currentLevel;
         }
