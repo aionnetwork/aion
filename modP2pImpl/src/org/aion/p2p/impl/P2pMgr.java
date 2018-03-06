@@ -167,7 +167,7 @@ public final class P2pMgr implements IP2pMgr {
                     node = nodeMgr.tempNodesTake();
                     if (node.getIfFromBootList())
                         nodeMgr.tempNodesAdd(node);
-                    if (node.peerMetric.shouldNotConn() || (bootlistSyncOnly == true && !node.getIfFromBootList())) {
+                    if (node.peerMetric.shouldNotConn()) {
                         continue;
                     }
                 } catch (InterruptedException e) {
@@ -596,6 +596,9 @@ public final class P2pMgr implements IP2pMgr {
                 break;
 
             case Act.RES_ACTIVE_NODES:
+                if (bootlistSyncOnly)
+                    break;
+
                 if (rb.nodeIdHash != 0) {
                     Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null) {
@@ -670,7 +673,9 @@ public final class P2pMgr implements IP2pMgr {
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
-            scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
+
+            if(!bootlistSyncOnly)
+                scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
 
             scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
