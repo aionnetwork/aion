@@ -661,7 +661,7 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread boss = new Thread(new TaskInbound(), "p2p-pi");
-            boss.setPriority(Thread.MAX_PRIORITY);
+            boss.setPriority(Thread.NORM_PRIORITY);
             boss.start();
 
             if (upnpEnable)
