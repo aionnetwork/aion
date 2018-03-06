@@ -329,6 +329,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 if (blockInfo != null) {
                     blockInfo.setMainChain(true);
                     setBlockInfoForLevel(currentLevel, blocks);
+                } else {
+                    LOG.error("Null block information found at " + currentLevel + " when information should exist.");
                 }
                 forkLine = getBlockByHash(forkLine.getParentHash());
                 --currentLevel;
@@ -345,6 +347,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 if (blockInfo != null) {
                     blockInfo.setMainChain(false);
                     setBlockInfoForLevel(currentLevel, blocks);
+                } else {
+                    LOG.error("Null block information found at " + currentLevel + " when information should exist.");
                 }
                 bestLine = getBlockByHash(bestLine.getParentHash());
                 --currentLevel;
@@ -359,12 +363,16 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             if (bestInfo != null) {
                 bestInfo.setMainChain(false);
                 setBlockInfoForLevel(currentLevel, levelBlocks);
+            } else {
+                LOG.error("Null block information found at " + currentLevel + " when information should exist.");
             }
 
             BlockInfo forkInfo = getBlockInfoForHash(levelBlocks, forkLine.getHash());
             if (forkInfo != null) {
                 forkInfo.setMainChain(true);
                 setBlockInfoForLevel(currentLevel, levelBlocks);
+            } else {
+                LOG.error("Null block information found at " + currentLevel + " when information should exist.");
             }
 
             bestLine = getBlockByHash(bestLine.getParentHash());
@@ -393,8 +401,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             // remove all the blocks at that level
             List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
-            if (currentLevelBlocks.size() == 0){
+            if (currentLevelBlocks == null || currentLevelBlocks.size() == 0) {
                 blocks.delete(bestLine.getHash());
+                LOG.error("Null block information found at " + currentLevel + " when information should exist.");
             } else {
                 for (BlockInfo bk_info : currentLevelBlocks) {
                     blocks.delete(bk_info.getHash());
@@ -413,6 +422,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         if (blockInfo != null) {
             blockInfo.setMainChain(true);
             setBlockInfoForLevel(previousLevel, blocks);
+        } else {
+            LOG.error("Null block information found at " + previousLevel + " when information should exist.");
         }
     }
 
