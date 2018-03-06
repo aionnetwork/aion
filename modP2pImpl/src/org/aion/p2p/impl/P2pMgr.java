@@ -64,6 +64,7 @@ public final class P2pMgr implements IP2pMgr {
     private final int maxTempNodes;
     private final int maxActiveNodes;
 
+    private final boolean bootlistSyncOnly;
     private final boolean showStatus;
     final boolean showLog;
     private final int selfNodeIdHash;
@@ -165,7 +166,7 @@ public final class P2pMgr implements IP2pMgr {
                     node = nodeMgr.tempNodesTake();
                     if (node.getIfFromBootList())
                         nodeMgr.tempNodesAdd(node);
-                    if (node.peerMetric.shouldNotConn()) {
+                    if (node.peerMetric.shouldNotConn() || (bootlistSyncOnly == true && !node.getIfFromBootList())) {
                         continue;
                     }
                 } catch (InterruptedException e) {
@@ -352,7 +353,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _showLog        boolean
      */
     public P2pMgr(String _nodeId, String _ip, int _port, final String[] _bootNodes, boolean _upnpEnable,
-                  int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog) {
+                  int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog, boolean _bootlistSyncOnly) {
         byte[] selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
         this.selfShortId = new String(Arrays.copyOfRange(selfNodeId, 0, 6));
@@ -364,6 +365,7 @@ public final class P2pMgr implements IP2pMgr {
         this.maxActiveNodes = _maxActiveNodes;
         this.showStatus = _showStatus;
         this.showLog = _showLog;
+        this.bootlistSyncOnly = _bootlistSyncOnly;
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
