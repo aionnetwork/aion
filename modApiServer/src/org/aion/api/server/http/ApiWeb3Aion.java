@@ -36,6 +36,7 @@ import org.aion.api.server.types.*;
 import org.aion.base.type.*;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.apache.commons.collections4.map.LRUMap;
 import org.aion.base.util.TypeConverter;
 import org.aion.mcf.core.AccountState;
@@ -432,7 +433,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     JSONArray debug_getBlocksByNumber(String _bnOrId, boolean _fullTransactions) {
         long bn = this.parseBnOrId(_bnOrId);
-        List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks = this.ac.getAionHub().getBlockchain().getBlockStore().getBlocksByNumber(bn);
+        List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks = ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore()).getBlocksByNumber(bn);
         JSONArray response = new JSONArray();
         for (Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>> block : blocks) {
             JSONObject b = blockToJson(block.getKey(), block.getValue().getKey(), _fullTransactions);
