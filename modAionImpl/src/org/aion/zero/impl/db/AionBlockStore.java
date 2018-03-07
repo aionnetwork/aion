@@ -19,7 +19,6 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -405,80 +404,82 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    @Override
     public void pruneAndCorrect() {
-        IAionBlock bestBlock = getBestBlock();
-        clearAndRepair(bestBlock);
+        IAionBlock block = getBestBlock();
+        long initialLevel = block.getNumber();
+        long level = initialLevel;
+
+        // top down pruning of nodes on side chains
+        while (level > 0) {
+            pruneSideChains(block);
+            block = getBlockByHash(block.getParentHash());
+            level = block.getNumber();
+        }
+
+        // prune genesis
+        pruneSideChains(block);
+
+        // bottom up repair of information
+        BigInteger parentTotalDifficulty = block.getCumulativeDifficulty();
+        level = 1;
+        while (level <= initialLevel) {
+            parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
+            System.out.println("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
+            level++;
+        }
     }
 
-    private BlockInfo clearAndRepair(IAionBlock block) {
+    private void pruneSideChains(IAionBlock block) {
         // current level
         long level = block.getNumber();
         byte[] blockHash = block.getHash();
 
-        // stop recursion at genesis
-        if (level == 0) {
-            List<BlockInfo> genBlocks = getBlockInfoForLevel(level);
-            BlockInfo blockInfo = clearParallelBlocks(genBlocks, blockHash);
+        System.out.println("Pruning side chains on level " + level + ".");
 
-            // correct block info
-            blockInfo.setCummDifficulty(block.getCumulativeDifficulty());
-            blockInfo.setHash(blockHash);
-            blockInfo.setMainChain(true);
-
-            // rebuilding the info with the single correct block
-            genBlocks = new ArrayList<>();
-            genBlocks.add(blockInfo);
-
-            setBlockInfoForLevel(level, genBlocks);
-
-            return blockInfo;
-        } else {
-            // get correct parent block info
-            BlockInfo parentInfo = clearAndRepair(getBlockByHash(block.getParentHash()));
-
-            List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
-            BlockInfo blockInfo = clearParallelBlocks(levelBlocks, blockHash);
-
-            // correct block info
-            blockInfo.setCummDifficulty(parentInfo.getCummDifficulty().add(block.getHeader().getDifficultyBI()));
-            blockInfo.setHash(blockHash);
-            blockInfo.setMainChain(true);
-
-            // rebuilding the info with the single correct block
-            levelBlocks = new ArrayList<>();
-            levelBlocks.add(blockInfo);
-
-            setBlockInfoForLevel(level, levelBlocks);
-
-            return blockInfo;
-        }
-
-    }
-
-    private BlockInfo clearParallelBlocks(List<BlockInfo> levelBlocks, byte[] blockHash) {
+        List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
         BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
 
         // check if info was there
-        if (blockInfo != null) {
-            // multiple blocks exist at this level
-            if (levelBlocks.size() > 1) {
-                levelBlocks.remove(blockInfo);
-
-                // delete incorrect parallel blocks
-                for (BlockInfo wrongBlock : levelBlocks) {
-                    blocks.delete(wrongBlock.getHash());
-                }
-            }
-        } else {
-            blockInfo = new BlockInfo();
-
-            // deleting incorrect blocks
-            for (BlockInfo wrongBlock : levelBlocks) {
-                blocks.delete(wrongBlock.getHash());
-            }
+        while (blockInfo != null) {
+            levelBlocks.remove(blockInfo);
+            // checking multiple times due to the duplicate info issue
+            blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
         }
 
-        return blockInfo;
+        // deleting incorrect parallel blocks
+        for (BlockInfo wrongBlock : levelBlocks) {
+            blocks.delete(wrongBlock.getHash());
+        }
+
+        // set new block info without total difficulty
+        blockInfo = new BlockInfo();
+        blockInfo.setCummDifficulty(block.getHeader().getDifficultyBI());
+        blockInfo.setHash(blockHash);
+        blockInfo.setMainChain(true);
+
+        levelBlocks = new ArrayList<>();
+        levelBlocks.add(blockInfo);
+
+        setBlockInfoForLevel(level, levelBlocks);
+    }
+
+    private BigInteger correctTotalDifficulty(long level, BigInteger parentTotalDifficulty) {
+        List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
+
+        if (levelBlocks.size() != 1) {
+            // something went awry
+            System.out.println("Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
+            return null;
+        } else {
+            // correct block info
+            BlockInfo blockInfo = levelBlocks.remove(0);
+            blockInfo.setCummDifficulty(blockInfo.getCummDifficulty().add(parentTotalDifficulty));
+            levelBlocks.add(blockInfo);
+            setBlockInfoForLevel(level, levelBlocks);
+
+            return blockInfo.getCummDifficulty();
+        }
     }
 
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {

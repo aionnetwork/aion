@@ -72,6 +72,7 @@ public class RecoveryUtils {
         IBlock bestBlock = store.getBestBlock();
         if (bestBlock == null) {
             System.out.println("Empty database. Nothing to do.");
+            return;
         }
 
         // revert to block number and flush changes
