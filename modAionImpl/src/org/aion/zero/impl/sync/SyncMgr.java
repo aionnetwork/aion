@@ -127,7 +127,7 @@ public final class SyncMgr {
     }
 
     // Attation:
-    // update best block is callback function from p2p thread pool. even the
+    // update best block is handler function from p2p thread pool. even the
     // blocknumber and blockhash is atomic, but still need sync to prevent
     // blocknumber link to wrong block hash.
     public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,

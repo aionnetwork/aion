@@ -52,9 +52,9 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.BlockPropagationHandler;
-import org.aion.zero.impl.sync.callback.BroadcastNewBlockHandler;
+import org.aion.zero.impl.sync.handler.BroadcastNewBlockHandler;
 import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.callback.*;
+import org.aion.zero.impl.sync.handler.*;
 import org.aion.zero.impl.tx.AionTransactionExecThread;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -167,9 +167,9 @@ public class AionHub {
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
-        cbs.add(new ResStatusCallback(syncLog, this.p2pMgr, this.syncMgr));
+        cbs.add(new ResStatusHandler(syncLog, this.p2pMgr, this.syncMgr));
         cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr));
-        cbs.add(new ResBlocksHeadersCallback(syncLog, this.syncMgr));
+        cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr));
         cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr));
         cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr));
