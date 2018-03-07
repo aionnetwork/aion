@@ -35,7 +35,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.aion.base.util.Hex;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 
@@ -75,6 +74,17 @@ public class NodeMgr implements INodeMgr {
         System.out.println(sb.toString());
     }
 
+    private final static char[] hexArray = "0123456789abcdef".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     /**
      *
      * @param selfShortId String
@@ -98,7 +108,7 @@ public class NodeMgr implements INodeMgr {
                     String.format("      %c%10d %64s %16s  %6s %15s  %5d  %8s\n",
                         n.getIfFromBootList() ? 0x221A : ' ',
                         n.getBestBlockNumber(),
-                        n.getBestBlockHash() == null ? "" : Hex.toHexString(n.getBestBlockHash()),
+                        n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
                         n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
                         n.getIdShort(),
                         n.getIpStr(),
