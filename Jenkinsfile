@@ -32,7 +32,7 @@ pipeline {
                 expression { GIT_BRANCH == 'master' || GIT_BRANCH == 'dev' || GIT_BRANCH == 'ci' }
             }
             steps {                
-                archiveArtifacts artifacts: 'pack/aion-v*.tar.bz2'
+                archiveArtifacts artifacts: '*/pack/aion-v*.tar.bz2'
             }
         }
         
