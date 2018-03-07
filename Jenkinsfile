@@ -50,8 +50,8 @@ pipeline {
     	}
     }
     post {
+        cleanWs()
 	success {
-        	cleanWs()
 		slackSend channel: '#ci',
 			  color: 'good',
 			  message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
