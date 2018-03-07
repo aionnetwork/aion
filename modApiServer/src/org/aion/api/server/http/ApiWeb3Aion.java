@@ -28,6 +28,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.IRpc;
@@ -427,5 +428,17 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
         // This can be improved
         return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();
+    }
+
+    JSONArray debug_getBlocksByNumber(String _bnOrId, boolean _fullTransactions) {
+        long bn = this.parseBnOrId(_bnOrId);
+        List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks = this.ac.getAionHub().getBlockchain().getBlockStore().getBlocksByNumber(bn);
+        JSONArray response = new JSONArray();
+        for (Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>> block : blocks) {
+            JSONObject b = blockToJson(block.getKey(), block.getValue().getKey(), _fullTransactions);
+            b.put("mainchain", block.getValue().getValue());
+            response.put(b);
+        }
+        return response;
     }
 }

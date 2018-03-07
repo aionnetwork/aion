@@ -60,6 +60,11 @@ public interface IRpc {
         net_peerCount,
 
         /**
+         * debug
+         */
+        debug_getBlocksByNumber,
+
+        /**
          * personal
          */
         personal_unlockAccount,

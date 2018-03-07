@@ -24,10 +24,13 @@
  ******************************************************************************/
 package org.aion.mcf.db;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.impl.types.AionBlock;
 
 /**
  * BlockStore interface base.
@@ -40,6 +43,9 @@ public interface IBlockStoreBase<BLK extends IBlock<?, ?>, BH extends AbstractBl
     byte[] getBlockHashByNumber(long blockNumber);
 
     byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash);
+
+    // get all block at given block height in blockstore. returns a 'map of map': block -> totalDiff, isMainChain
+    List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number);
 
     BLK getChainBlockByNumber(long blockNumber);
 

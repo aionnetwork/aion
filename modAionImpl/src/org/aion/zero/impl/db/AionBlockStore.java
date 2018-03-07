@@ -44,6 +44,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static java.math.BigInteger.ZERO;
 import static org.aion.crypto.HashUtil.shortHash;
@@ -161,9 +162,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         blocks.put(block.getHash(), block);
     }
 
-    public List<IAionBlock> getBlocksByNumber(long number) {
+    public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number) {
 
-        List<IAionBlock> result = new ArrayList<>();
+        List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> result = new ArrayList<>();
 
         if (number >= index.size()) {
             return result;
@@ -174,9 +175,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         for (BlockInfo blockInfo : blockInfos) {
 
             byte[] hash = blockInfo.getHash();
-            IAionBlock block = blocks.get(hash);
+            AionBlock block = blocks.get(hash);
 
-            result.add(block);
+            result.add(Map.entry(block, Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
         }
         return result;
     }

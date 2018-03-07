@@ -343,6 +343,21 @@ public final class HttpServer {
             return processResult(_id, api.peerCount());
 
         /*
+         * debug
+         */
+        case debug_getBlocksByNumber:
+            String number = params.get(0) + "";
+            boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
+
+            if (number == null) {
+                log.debug("debug_getBlockInfoByHeight: invalid input");
+                return processResult(_id, null);
+            }
+
+            JSONArray response = api.debug_getBlocksByNumber(number, fullTransactions);
+            return processResult(_id, response);
+
+        /*
          * stratum pool
          */
         case getinfo:
