@@ -35,6 +35,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.aion.base.util.Hex;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 
@@ -90,13 +91,14 @@ public class NodeMgr implements INodeMgr {
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
             sb.append("   -------------------------------------------------------\n");
-            sb.append("   seed       blk               td      id              ip   port      type\n");
-            sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
+            sb.append("   seed       blk                                                           header               td      id              ip   port      type\n");
+            sorted.sort((n1, n2) -> Arrays.compare(n2.getTotalDifficulty(), n1.getTotalDifficulty()));
             for (Node n : sorted) {
                 sb.append(
-                    String.format("      %c%10d %16s  %6s %15s  %5d  %8s\n",
+                    String.format("      %c%10d %64s %16s  %6s %15s  %5d  %8s\n",
                         n.getIfFromBootList() ? 0x221A : ' ',
                         n.getBestBlockNumber(),
+                        n.getBestBlockHash() == null ? "" : Hex.toHexString(n.getBestBlockHash()),
                         n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
                         n.getIdShort(),
                         n.getIpStr(),
