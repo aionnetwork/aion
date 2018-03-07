@@ -22,4 +22,5 @@ module aion.zero.impl {
     exports org.aion.zero.impl.types;
     exports org.aion.zero.impl.config;
     exports org.aion.zero.impl.cli;
+    exports org.aion.zero.impl.db;
 }
