@@ -35,6 +35,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.AionHub;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -112,8 +113,9 @@ public final class Cli {
                     break;
                 case "-r":
                     if (args.length < 2) {
-                        System.out.println("Please provide the block number you want to revert to as an argument.");
-                        return 1;
+                        System.out.println("Starting database clean-up.");
+                        RecoveryUtils.pruneAndCorrect();
+                        System.out.println("Finished database clean-up.");
                     } else {
                         switch (revertTo(args[1])) {
                         case SUCCESS:
@@ -131,10 +133,9 @@ public final class Cli {
                 case "-v":
                     System.out.println("\nVersion");
                     System.out.println("--------------------------------------------");
-                    System.out.println(AionHub.VERSION);
-                    break;
+                    // Don't put break here!!
                 case "--version":
-                    System.out.println(AionHub.VERSION);
+                    System.out.println(Version.KERNEL_VERSION);
                     break;
                 default:
                     System.out.println("Unable to parse the input arguments");
@@ -144,6 +145,7 @@ public final class Cli {
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
+            e.printStackTrace();
             return 1;
         }
 
@@ -167,6 +169,7 @@ public final class Cli {
         System.out.println();
         System.out.println("  -i                           show information");
         System.out.println();
+        System.out.println("  -r                           remove blocks on side chains and correct block info");
         System.out.println("  -r [block_number]            revert db up to specific block number");
         System.out.println();
         System.out.println("  -v                           show version");

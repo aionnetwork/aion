@@ -19,7 +19,6 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -44,6 +43,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static java.math.BigInteger.ZERO;
 import static org.aion.crypto.HashUtil.shortHash;
@@ -161,9 +161,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         blocks.put(block.getHash(), block);
     }
 
-    public List<IAionBlock> getBlocksByNumber(long number) {
+    public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number) {
 
-        List<IAionBlock> result = new ArrayList<>();
+        List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> result = new ArrayList<>();
 
         if (number >= index.size()) {
             return result;
@@ -174,9 +174,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         for (BlockInfo blockInfo : blockInfos) {
 
             byte[] hash = blockInfo.getHash();
-            IAionBlock block = blocks.get(hash);
+            AionBlock block = blocks.get(hash);
 
-            result.add(block);
+            result.add(Map.entry(block, Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
         }
         return result;
     }
@@ -424,6 +424,84 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             setBlockInfoForLevel(previousLevel, blocks);
         } else {
             LOG.error("Null block information found at " + previousLevel + " when information should exist.");
+        }
+    }
+
+    @Override
+    public void pruneAndCorrect() {
+        IAionBlock block = getBestBlock();
+        long initialLevel = block.getNumber();
+        long level = initialLevel;
+
+        // top down pruning of nodes on side chains
+        while (level > 0) {
+            pruneSideChains(block);
+            block = getBlockByHash(block.getParentHash());
+            level = block.getNumber();
+        }
+
+        // prune genesis
+        pruneSideChains(block);
+
+        // bottom up repair of information
+        BigInteger parentTotalDifficulty = block.getCumulativeDifficulty();
+        level = 1;
+        while (level <= initialLevel) {
+            parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
+            System.out.println("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
+            level++;
+        }
+    }
+
+    private void pruneSideChains(IAionBlock block) {
+        // current level
+        long level = block.getNumber();
+        byte[] blockHash = block.getHash();
+
+        System.out.println("Pruning side chains on level " + level + ".");
+
+        List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
+        BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
+
+        // check if info was there
+        while (blockInfo != null) {
+            levelBlocks.remove(blockInfo);
+            // checking multiple times due to the duplicate info issue
+            blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
+        }
+
+        // deleting incorrect parallel blocks
+        for (BlockInfo wrongBlock : levelBlocks) {
+            blocks.delete(wrongBlock.getHash());
+        }
+
+        // set new block info without total difficulty
+        blockInfo = new BlockInfo();
+        blockInfo.setCummDifficulty(block.getHeader().getDifficultyBI());
+        blockInfo.setHash(blockHash);
+        blockInfo.setMainChain(true);
+
+        levelBlocks = new ArrayList<>();
+        levelBlocks.add(blockInfo);
+
+        setBlockInfoForLevel(level, levelBlocks);
+    }
+
+    private BigInteger correctTotalDifficulty(long level, BigInteger parentTotalDifficulty) {
+        List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
+
+        if (levelBlocks.size() != 1) {
+            // something went awry
+            System.out.println("Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
+            return null;
+        } else {
+            // correct block info
+            BlockInfo blockInfo = levelBlocks.remove(0);
+            blockInfo.setCummDifficulty(blockInfo.getCummDifficulty().add(parentTotalDifficulty));
+            levelBlocks.add(blockInfo);
+            setBlockInfoForLevel(level, levelBlocks);
+
+            return blockInfo.getCummDifficulty();
         }
     }
 

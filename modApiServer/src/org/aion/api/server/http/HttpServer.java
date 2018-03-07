@@ -334,6 +334,30 @@ public final class HttpServer {
             return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
 
         /*
+         * net
+         */
+        case net_listening:
+            return processResult(_id, true);
+
+        case net_peerCount:
+            return processResult(_id, api.peerCount());
+
+        /*
+         * debug
+         */
+        case debug_getBlocksByNumber:
+            String number = params.get(0) + "";
+            boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
+
+            if (number == null) {
+                log.debug("debug_getBlockInfoByHeight: invalid input");
+                return processResult(_id, null);
+            }
+
+            JSONArray response = api.debug_getBlocksByNumber(number, fullTransactions);
+            return processResult(_id, response);
+
+        /*
          * stratum pool
          */
         case getinfo:
@@ -557,13 +581,6 @@ public final class HttpServer {
             }
 
             return processResult(_id, jsonObj);
-
-        /*
-         * extends
-         */
-        case net_listening:
-            return processResult(_id, true);
-
         case ping:
             return processResult(_id, "pong");
         default:
