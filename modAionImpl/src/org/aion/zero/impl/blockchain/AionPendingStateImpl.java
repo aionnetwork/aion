@@ -401,9 +401,19 @@ public class AionPendingStateImpl
 
         best = newBlock;
 
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("PendingStateImpl.processBest: updateState");
+        }
         updateState(best);
 
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("PendingStateImpl.processBest: nonceMgr.flush()");
+        }
         nonceMgr.flush();
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");
+        }
 
         txPool.updateBlkNrgLimit(best.getNrgLimit());
 
