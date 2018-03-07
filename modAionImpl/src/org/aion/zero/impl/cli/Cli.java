@@ -112,8 +112,9 @@ public final class Cli {
                     break;
                 case "-r":
                     if (args.length < 2) {
-                        System.out.println("Please provide the block number you want to revert to as an argument.");
-                        return 1;
+                        System.out.println("Starting database clean-up.");
+                        RecoveryUtils.pruneAndCorrect();
+                        System.out.println("Finished database clean-up.");
                     } else {
                         switch (revertTo(args[1])) {
                         case SUCCESS:
@@ -144,6 +145,7 @@ public final class Cli {
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
+            e.printStackTrace();
             return 1;
         }
 
@@ -167,6 +169,7 @@ public final class Cli {
         System.out.println();
         System.out.println("  -i                           show information");
         System.out.println();
+        System.out.println("  -r                           remove blocks on side chains and correct block info");
         System.out.println("  -r [block_number]            revert db up to specific block number");
         System.out.println();
         System.out.println("  -v                           show version");
