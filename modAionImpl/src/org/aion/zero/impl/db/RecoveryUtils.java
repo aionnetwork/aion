@@ -56,6 +56,32 @@ public class RecoveryUtils {
     }
 
     /**
+     * Used by the CLI call.
+     */
+    public static void pruneAndCorrect() {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        // get the current blockchain
+        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+
+        IBlockStoreBase store = blockchain.getBlockStore();
+
+        IBlock bestBlock = store.getBestBlock();
+        if (bestBlock == null) {
+            System.out.println("Empty database. Nothing to do.");
+        }
+
+        // revert to block number and flush changes
+        store.pruneAndCorrect();
+        store.flush();
+
+        blockchain.getRepository().close();
+    }
+
+    /**
      * Used my internal world state recovery method.
      */
     public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock) {

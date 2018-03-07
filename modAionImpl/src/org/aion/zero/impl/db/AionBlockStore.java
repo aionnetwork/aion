@@ -405,6 +405,82 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public void pruneAndCorrect() {
+        IAionBlock bestBlock = getBestBlock();
+        clearAndRepair(bestBlock);
+    }
+
+    private BlockInfo clearAndRepair(IAionBlock block) {
+        // current level
+        long level = block.getNumber();
+        byte[] blockHash = block.getHash();
+
+        // stop recursion at genesis
+        if (level == 0) {
+            List<BlockInfo> genBlocks = getBlockInfoForLevel(level);
+            BlockInfo blockInfo = clearParallelBlocks(genBlocks, blockHash);
+
+            // correct block info
+            blockInfo.setCummDifficulty(block.getCumulativeDifficulty());
+            blockInfo.setHash(blockHash);
+            blockInfo.setMainChain(true);
+
+            // rebuilding the info with the single correct block
+            genBlocks = new ArrayList<>();
+            genBlocks.add(blockInfo);
+
+            setBlockInfoForLevel(level, genBlocks);
+
+            return blockInfo;
+        } else {
+            // get correct parent block info
+            BlockInfo parentInfo = clearAndRepair(getBlockByHash(block.getParentHash()));
+
+            List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
+            BlockInfo blockInfo = clearParallelBlocks(levelBlocks, blockHash);
+
+            // correct block info
+            blockInfo.setCummDifficulty(parentInfo.getCummDifficulty().add(block.getHeader().getDifficultyBI()));
+            blockInfo.setHash(blockHash);
+            blockInfo.setMainChain(true);
+
+            // rebuilding the info with the single correct block
+            levelBlocks = new ArrayList<>();
+            levelBlocks.add(blockInfo);
+
+            setBlockInfoForLevel(level, levelBlocks);
+
+            return blockInfo;
+        }
+
+    }
+
+    private BlockInfo clearParallelBlocks(List<BlockInfo> levelBlocks, byte[] blockHash) {
+        BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
+
+        // check if info was there
+        if (blockInfo != null) {
+            // multiple blocks exist at this level
+            if (levelBlocks.size() > 1) {
+                levelBlocks.remove(blockInfo);
+
+                // delete incorrect parallel blocks
+                for (BlockInfo wrongBlock : levelBlocks) {
+                    blocks.delete(wrongBlock.getHash());
+                }
+            }
+        } else {
+            blockInfo = new BlockInfo();
+
+            // deleting incorrect blocks
+            for (BlockInfo wrongBlock : levelBlocks) {
+                blocks.delete(wrongBlock.getHash());
+            }
+        }
+
+        return blockInfo;
+    }
+
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {
 
         List<byte[]> result = new ArrayList<>();

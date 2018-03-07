@@ -63,6 +63,8 @@ public interface IBlockStoreBase<BLK extends IBlock<?, ?>, BH extends AbstractBl
 
     void revert(long previousLevel);
 
+    void pruneAndCorrect();
+
     void load();
 
     void close();
