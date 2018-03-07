@@ -45,8 +45,7 @@ import org.aion.zero.impl.sync.msg.ResStatus;
 import org.slf4j.Logger;
 
 /**
- * @author chris
- * handler for status request from network
+ * @author chris handler for status request from network
  */
 public final class ReqStatusHandler extends Handler {
 
@@ -58,7 +57,8 @@ public final class ReqStatusHandler extends Handler {
 
     private byte[] genesisHash;
 
-    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr, final byte[] _genesisHash) {
+    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
+            final byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
         this.log = _log;
         this.chain = _chain;
@@ -68,18 +68,12 @@ public final class ReqStatusHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-        this.log.debug(
-                "<req-status from-node={}>",
-                _displayId
-        );
-        this.mgr.send(
-                _nodeIdHashcode,
-                new ResStatus(
-                        this.chain.getBestBlock().getNumber(),
-                        this.chain.getTotalDifficulty().toByteArray(),
-                        this.chain.getBestBlockHash(),
-                        this.genesisHash
-                )
-        );
+        this.log.debug("<req-status from-node={}>", _displayId);
+        ResStatus res = null;
+        synchronized (this.chain) {
+            res = new ResStatus(this.chain.getBestBlock().getNumber(), this.chain.getTotalDifficulty().toByteArray(),
+                    this.chain.getBestBlockHash(), this.genesisHash);
+        }
+        this.mgr.send(_nodeIdHashcode, res);
     }
 }

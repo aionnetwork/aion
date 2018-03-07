@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="aion_fastvm/modFastVM/src"/>
 	<classpathentry kind="src" path="modRlp/src"/>
 	<classpathentry kind="src" path="modCrypto/src_native"/>
 	<classpathentry kind="src" path="modTxPoolImpl/src"/>
