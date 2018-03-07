@@ -102,7 +102,8 @@ public class NodeMgr implements INodeMgr {
         if(sorted.size() > 0){
             sb.append("   -------------------------------------------------------\n");
             sb.append("   seed       blk                                                           header               td      id              ip   port      type\n");
-            sorted.sort((n1, n2) -> Arrays.compare(n2.getTotalDifficulty(), n1.getTotalDifficulty()));
+            sorted.sort((n1, n2) -> new BigInteger(1, n2.getTotalDifficulty() == null ? new byte[0] : n2.getTotalDifficulty())
+                    .compareTo(new BigInteger(1, n1.getTotalDifficulty() == null ? new byte[0] : n1.getTotalDifficulty())));
             for (Node n : sorted) {
                 sb.append(
                     String.format("      %c%10d %64s %16s  %6s %15s  %5d  %8s\n",
