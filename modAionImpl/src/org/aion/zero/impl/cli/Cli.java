@@ -145,7 +145,6 @@ public final class Cli {
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
-            e.printStackTrace();
             return 1;
         }
 

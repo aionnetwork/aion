@@ -356,6 +356,17 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
 
         // 2. Loop back on each level until common block
+        loopBackToCommonBlock(bestLine, forkLine);
+    }
+
+    private void loopBackToCommonBlock(IAionBlock bestLine, IAionBlock forkLine) {
+        long currentLevel = bestLine.getNumber();
+
+        if (forkLine.getNumber() != currentLevel) {
+            LOG.error("Illegal parameters for loopBackToCommonBlock method.");
+            return;
+        }
+
         while (!bestLine.isEqual(forkLine)) {
 
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(currentLevel);
@@ -380,7 +391,6 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             --currentLevel;
         }
-
     }
 
     @Override
@@ -412,18 +422,54 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             // remove the level
             index.remove((int) currentLevel);
-            bestLine = getBlockByHash(bestLine.getParentHash());
+            if (bestLine != null) {
+                bestLine = getBlockByHash(bestLine.getParentHash());
+            } else {
+                // attempt to find another block at the parent level
+                bestLine = getChainBlockByNumber(currentLevel - 1);
+            }
             --currentLevel;
         }
 
-        // set the block at the given level as the main chain
-        List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
-        BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
-        if (blockInfo != null) {
-            blockInfo.setMainChain(true);
-            setBlockInfoForLevel(previousLevel, blocks);
+        if (bestLine == null) {
+            LOG.error("Block at level #" + previousLevel + " is null. Reverting further back may be required.");
+            return;
         } else {
-            LOG.error("Null block information found at " + previousLevel + " when information should exist.");
+            // update the main chain based on difficulty, if needed
+            List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
+            BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
+
+            // no side chains at this level
+            if (blocks.size() == 1 && blockInfo != null) {
+                if (!blockInfo.isMainChain()) {
+                    blockInfo.setMainChain(true);
+                    setBlockInfoForLevel(previousLevel, blocks);
+                }
+            } else {
+                if (blockInfo == null) {
+                    LOG.error("Null block information found at " + previousLevel + " when information should exist. "
+                            + "Rebuilding information.");
+
+                    // recreate missing block info
+                    blockInfo = new BlockInfo();
+                    blockInfo.setCummDifficulty(getTotalDifficultyForHash(bestLine.getParentHash())
+                            .add(bestLine.getHeader().getDifficultyBI()));
+                    blockInfo.setHash(bestLine.getHash());
+                    blocks.add(blockInfo);
+                }
+
+                // check for max total difficulty
+                BlockInfo maxTDInfo = blockInfo;
+                for (BlockInfo info : blocks) {
+                    if (info.getCummDifficulty().compareTo(maxTDInfo.getCummDifficulty()) > 0) {
+                        maxTDInfo = info;
+                    }
+                }
+
+                // 2. Loop back on each level until common block
+                IAionBlock forkLine = getBlockByHash(maxTDInfo.getHash());
+                loopBackToCommonBlock(bestLine, forkLine);
+            }
         }
     }
 
@@ -437,6 +483,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         while (level > 0) {
             pruneSideChains(block);
             block = getBlockByHash(block.getParentHash());
+            if (block == null) {
+                LOG.error("Block #" + (level - 1) + " missing from the database. "
+                        + "Cannot proceed with block pruning and total difficulty updates.");
+                return;
+            }
             level = block.getNumber();
         }
 
@@ -448,7 +499,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         level = 1;
         while (level <= initialLevel) {
             parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
-            System.out.println("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
+            LOG.error("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
             level++;
         }
     }
@@ -458,7 +509,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         long level = block.getNumber();
         byte[] blockHash = block.getHash();
 
-        System.out.println("Pruning side chains on level " + level + ".");
+        LOG.error("Pruning side chains on level " + level + ".");
 
         List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
         BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
@@ -492,7 +543,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         if (levelBlocks.size() != 1) {
             // something went awry
-            System.out.println("Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
+            LOG.error("Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
             return null;
         } else {
             // correct block info
