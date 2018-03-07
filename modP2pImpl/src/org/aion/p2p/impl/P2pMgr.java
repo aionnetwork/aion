@@ -45,8 +45,8 @@ import org.aion.p2p.impl.msg.ResActiveNodes;
 import org.aion.p2p.impl.msg.ResHandshake;
 
 /**
- * @author Chris p2p://{uuid}@{ip}:{port} TODO: 1) simplify id bytest to int, ip
- * bytest to str 2) upnp protocal 3) framing
+ * @author Chris p2p://{uuid}@{ip}:{port}
+ * TODO: 1) simplify id bytest to int, ip bytest to str 2) upnp protocal 3) framing
  */
 public final class P2pMgr implements IP2pMgr {
 
@@ -326,14 +326,16 @@ public final class P2pMgr implements IP2pMgr {
                             workers.submit(new TaskWrite(nodeShortId, sc, msg, channelBuffer));
                         }
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        if(showLog)
+                            e.printStackTrace();
                     }
                 }
             } else {
                 try {
                     this.channelBuffer.msgs.put(msg);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    if(showLog)
+                        e.printStackTrace();
                 }
             }
 
@@ -468,6 +470,11 @@ public final class P2pMgr implements IP2pMgr {
         if (!rb.isHeaderCompleted()) {
             readHeader((SocketChannel) _sk.channel(), rb);
         }
+
+//        if(rb.isHeaderCompleted() && !handlers.containsKey(rb.header.getRoute())){
+//            // TODO: Test
+//            return;
+//        }
 
         // read body
         if (rb.isHeaderCompleted() && !rb.isBodyCompleted()) {
