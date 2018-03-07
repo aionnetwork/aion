@@ -10,4 +10,3 @@ mv ${BIN_NAME} "aion-v${VER}-$(date +%Y-%m-%d).tar.bz2"
 rm -fr aion
 
 cd ..
-git checkout -- ./modAionImpl/src/org/aion/zero/impl/AionHub.java

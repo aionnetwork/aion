@@ -57,8 +57,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
-    public static final String VERSION = "0.1.0";
-
     /**
      * used by getSnapShotTo
      *

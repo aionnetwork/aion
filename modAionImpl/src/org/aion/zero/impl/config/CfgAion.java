@@ -35,6 +35,7 @@ import org.aion.mcf.config.*;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.GenesisBlockLoader;
+import org.aion.zero.impl.Version;
 
 /**
  * @author chris
@@ -52,7 +53,7 @@ public final class CfgAion extends Cfg {
     private CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
-        this.version = AionHub.VERSION;
+        this.version = Version.KERNEL_VERSION;
         this.net = new CfgNet();
         this.consensus = new CfgConsensusPow();
         this.sync = new CfgSync();

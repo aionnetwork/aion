@@ -35,6 +35,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.AionHub;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -132,10 +133,9 @@ public final class Cli {
                 case "-v":
                     System.out.println("\nVersion");
                     System.out.println("--------------------------------------------");
-                    System.out.println(AionHub.VERSION);
-                    break;
+                    // Don't put break here!!
                 case "--version":
-                    System.out.println(AionHub.VERSION);
+                    System.out.println(Version.KERNEL_VERSION);
                     break;
                 default:
                     System.out.println("Unable to parse the input arguments");
