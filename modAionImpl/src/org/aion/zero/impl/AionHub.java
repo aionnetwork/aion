@@ -72,7 +72,6 @@ public class AionHub {
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
 
     private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
-    public static final String VERSION = "0.1.14";
 
     private IP2pMgr p2pMgr;
 
@@ -386,7 +385,7 @@ public class AionHub {
     }
 
     public static String getRepoVersion() {
-        return AionRepositoryImpl.VERSION;
+        return Version.REPO_VERSION;
     }
 
     public AionBlock getStartingBlock() {

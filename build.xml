@@ -153,8 +153,6 @@
 
 	<target name="clean_build" depends="clean, mod_build, build" />
 
-	<target name="clean_build_fatjar" depends="clean, mod_build, build_fatjar" />
-
 	<target name="build_test" depends="build, test" />
 
 	<target name="mod_build">
@@ -246,94 +244,6 @@
 		</ant>
 	</target>
 
-	<target name="build_fatjar" depends="mod_build">
-
-		<mkdir dir="${dir.buildfile}" />
-		<mkdir dir="${dir.native}/linux/equihash" />
-		<mkdir dir="${dir.build.native}/linux/equihash" />
-
-		<copy includeemptydirs="false" todir="./build/native">
-			<fileset dir="./modAionImpl/src/org/aion/equihash/native" />
-		</copy>
-
-		<javac debug="true" debuglevel="source,lines,vars" destdir="${dir.buildfile}" includeantruntime="false">
-			<compilerarg line="--add-modules=java.xml.bind -h ${dir.buildfile}/native" />
-			<src path="./modAion/src" />
-			<src path="./modAionBase/src" />
-			<src path="./modMcf/src" />
-			<src path="./modAionImpl/src" />
-			<src path="./modApiServer/src" />
-			<src path="./modBoot/src" />
-			<src path="./modCrypto/src" />
-			<src path="./modDbImpl/src" />
-			<src path="./modEvtMgr/src" />
-			<src path="./modEvtMgrImpl/src" />
-			<src path="./modLogger/src" />
-			<src path="./modP2p/src" />
-			<src path="./modP2pImpl/src" />
-			<src path="./modRlp/src" />
-			<src path="./modTxPool/src" />
-			<src path="./modTxPoolImpl/src" />
-			<src path="./aion_fastvm/java/src" />
-			<classpath refid="cp" />
-		</javac>
-		<jar destfile="${dir.libfile}/aion.jar" filesetmanifest="mergewithoutmain">
-			<manifest>
-				<attribute name="Main-Class" value="org.aion.Aion" />
-				<attribute name="Class-Path" value="." />
-			</manifest>
-			<fileset dir="${dir.buildfile}" />
-
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/slf4j-api-1.7.25.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/commons-codec-1.10.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/commons-collections4-4.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/commons-lang3-3.4.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/guava-19.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/h2-mvstore-1.4.196.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/jctools-core-1.2.1.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/leveldb-api-0.9.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/leveldbjni-all-1.18.3.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/logback-core-1.2.3.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/logback-classic-1.2.3.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnmapdb.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnsc.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libnzmq.jar" />
-                        <zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />			
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/protobuf-java-3.5.0.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.libfile}/libJson.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modEvtMgr.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modEvtMgrImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modLogger.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modP2p.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modP2pImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modAionBase.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modTxPool.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modTxPoolImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modDbImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modRlp.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modCrypto.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modAion.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modAionImpl.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modApiServer.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modBoot.jar" />
-			<zipfileset excludes="META-INF/*.SF" src="${dir.modfile}/modMcf.jar" />
-		</jar>
-
-
-		<property environment="env" />
-		<fail unless="env.JAVA_HOME" message="JAVA_HOME not set" />
-
-		<!-- Set environment variable for LD_LIBRARY_PATH-->
-
-
-		<exec executable="g++" failonerror="true">
-			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -lsodium -o ./build/native/equiMiner.so "/> -->
-			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -I${dir.native}/linux/sodium -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ./build/native/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium"/> -->
-			<arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I${dir.build.native} -I${dir.native}/linux/sodium -mtune=generic -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ${dir.native}/linux/equihash/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium" />
-		</exec>
-
-	</target>
-
 	<target name="build" depends="mod_build">
 		<mkdir dir="${dir.buildfile}" />
 		<mkdir dir="${dir.native}/linux/equihash" />
@@ -371,7 +281,6 @@
 	</target>
 
 	<target name="pack_build">
-		<antcall target="pre_build" />
 		<antcall target="clean_build">
 			<param name="compile.debug" value="off" />
 		</antcall>
