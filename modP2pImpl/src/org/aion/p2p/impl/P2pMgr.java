@@ -48,7 +48,7 @@ import org.aion.p2p.impl.msg.ResHandshake;
  * @author Chris p2p://{uuid}@{ip}:{port} TODO: 1) simplify id bytest to int, ip
  * bytest to str 2) upnp protocal 3) framing
  */
-public final class P2pMgr implements IP2pMgr {
+public final class  P2pMgr implements IP2pMgr {
 
     private final static int PERIOD_SHOW_STATUS = 10000;
     private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
@@ -376,7 +376,8 @@ public final class P2pMgr implements IP2pMgr {
             }
         }
 
-        nodeMgr.loadPersistedNodes();
+        // rem out for bug :
+        //nodeMgr.loadPersistedNodes();
 
         cachedReqHandshake = new ReqHandshake(selfNodeId, selfNetId, this.selfIp, this.selfPort);
     }
@@ -678,7 +679,8 @@ public final class P2pMgr implements IP2pMgr {
                 scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
 
-            scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
+            // rem out for bug: https://github.com/aionnetwork/aion/issues/136
+            //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
 
             workers.submit(new TaskClear());
             workers.submit(new TaskConnectPeers());
