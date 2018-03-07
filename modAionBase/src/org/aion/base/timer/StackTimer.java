@@ -57,14 +57,10 @@ public class StackTimer implements ITimer {
      * We won't shutdown the thread pool until the very end, (when we need to
      * shutdown the program)
      */
-    private static final ExecutorService timers = Executors.newCachedThreadPool(new ThreadFactory() {
-
-        @Override
-        public Thread newThread(Runnable arg0) {
-            Thread thread = new Thread(arg0, "StackTimer");
-            thread.setPriority(Thread.MAX_PRIORITY);
-            return thread;
-        }
+    private static final ExecutorService timers = Executors.newCachedThreadPool(arg0 -> {
+        Thread thread = new Thread(arg0, "StackTimer");
+        thread.setPriority(Thread.NORM_PRIORITY);
+        return thread;
     });
 
     /**

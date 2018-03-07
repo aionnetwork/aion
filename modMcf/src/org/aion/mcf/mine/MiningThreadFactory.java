@@ -47,8 +47,8 @@ public class MiningThreadFactory implements ThreadFactory {
         if (t.isDaemon()) {
             t.setDaemon(false);
         }
-        if (t.getPriority() != Thread.NORM_PRIORITY) {
-            t.setPriority(Thread.NORM_PRIORITY);
+        if (t.getPriority() != Thread.MIN_PRIORITY) {
+            t.setPriority(Thread.MIN_PRIORITY);
         }
         return t;
     }
