@@ -74,6 +74,17 @@ public class NodeMgr implements INodeMgr {
         System.out.println(sb.toString());
     }
 
+    private final static char[] hexArray = "0123456789abcdef".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     /**
      *
      * @param selfShortId String
@@ -90,13 +101,14 @@ public class NodeMgr implements INodeMgr {
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
             sb.append("   -------------------------------------------------------\n");
-            sb.append("   seed       blk               td      id              ip   port      type\n");
-            sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
+            sb.append("   seed       blk                                                           header               td      id              ip   port      type\n");
+            sorted.sort((n1, n2) -> Arrays.compare(n2.getTotalDifficulty(), n1.getTotalDifficulty()));
             for (Node n : sorted) {
                 sb.append(
-                    String.format("      %c%10d %16s  %6s %15s  %5d  %8s\n",
+                    String.format("      %c%10d %64s %16s  %6s %15s  %5d  %8s\n",
                         n.getIfFromBootList() ? 0x221A : ' ',
                         n.getBestBlockNumber(),
+                        n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
                         n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
                         n.getIdShort(),
                         n.getIpStr(),
