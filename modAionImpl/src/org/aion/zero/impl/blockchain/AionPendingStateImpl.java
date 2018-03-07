@@ -579,7 +579,7 @@ public class AionPendingStateImpl
      *            account address
      * @return transaction nonce.
      */
-    public synchronized Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr) {
+    public Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr) {
         return this.txPool.bestNonceSet(addr);
     }
 
