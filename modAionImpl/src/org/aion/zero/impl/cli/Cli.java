@@ -133,6 +133,9 @@ public final class Cli {
                     System.out.println("--------------------------------------------");
                     System.out.println(AionHub.VERSION);
                     break;
+                case "--version":
+                    System.out.println(AionHub.VERSION);
+                    break;
                 default:
                     System.out.println("Unable to parse the input arguments");
                     printHelp();
