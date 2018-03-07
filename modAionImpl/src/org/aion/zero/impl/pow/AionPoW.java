@@ -179,10 +179,9 @@ public class AionPoW {
      * @param solution
      *            The generated equihash solution
      */
-    protected synchronized void processSolution(Solution solution) {
+    protected void processSolution(Solution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("New solution: block hash [{}]", Hex.toHexString(solution.getBlock().getHash()));
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
                 LOG.debug("Best block nonce [{}]", Hex.toHexString(blockchain.getBestBlock().getNonce()));
                 LOG.debug("Best block hash [{}]", Hex.toHexString(blockchain.getBestBlock().getHash()));
@@ -240,10 +239,6 @@ public class AionPoW {
             // it be used in DDOS?
             if (this.syncMgr.getNetworkBestBlockNumber() - bestBlock.getNumber() > syncLimit) {
                 return;
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("New template: block hash [{}]", Hex.toHexString(newBlock.getHash()));
             }
 
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
