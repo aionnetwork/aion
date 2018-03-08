@@ -65,6 +65,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
 
         indexDS = index;
+        RecoveryUtils.indexToLong(indexDS);
         this.index = new DataSourceLongArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
         this.blocksDS = blocks;
 
@@ -499,7 +500,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         level = 1;
         while (level <= initialLevel) {
             parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
-            LOG.error("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
+            LOG.info("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
             level++;
         }
     }
@@ -509,7 +510,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         long level = block.getNumber();
         byte[] blockHash = block.getHash();
 
-        LOG.error("Pruning side chains on level " + level + ".");
+        LOG.info("Pruning side chains on level " + level + ".");
 
         List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
         BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, blockHash);
