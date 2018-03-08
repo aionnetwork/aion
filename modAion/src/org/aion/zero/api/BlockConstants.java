@@ -82,6 +82,14 @@ public class BlockConstants implements IBlockConstants {
      */
     private static final long EXPECTED_BLOCK_TIME = 10;
 
+    /**
+     * Desired future elapsed time, when receiving a block, allow for at most this
+     * amount of seconds relative to local timestamp before rejecting the block
+     * as invalid. This accounts for clock drift between different clocks on the
+     * network.
+     */
+    private static final long CLOCK_DRIFT_BUFFER_TIME = 1;
+
     @Override
     public int getMaximumExtraDataSize() {
         return MAXIMUM_EXTRA_DATA_SIZE;
@@ -164,6 +172,10 @@ public class BlockConstants implements IBlockConstants {
 
     public long getExpectedBlockTime() {
         return EXPECTED_BLOCK_TIME;
+    }
+
+    public long getClockDriftBufferTime() {
+        return CLOCK_DRIFT_BUFFER_TIME;
     }
 
     /**
