@@ -58,13 +58,17 @@ public final class Node implements INode {
      */
     private String idShort;
 
-    private int version;
+    /**
+     * as filter rule
+     */
+    private int netId;
 
     private byte[] ip;
 
     private String ipStr;
 
     private int port = -1;
+
     private int portConnected = -1;
 
     private long timestamp;
@@ -76,8 +80,6 @@ public final class Node implements INode {
     private byte[] totalDifficulty;
 
     private SocketChannel channel;
-
-    private String type = "";
 
     private static final String REGEX_PROTOCOL = "^p2p://";                                                               // Protocol eg. p2p://
     private static final String REGEX_NODE_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";           // Node-Id  eg. 3e2cab6a-09dd-4771-b28d-6aa674009796
@@ -93,26 +95,12 @@ public final class Node implements INode {
     /**
      * constructor for initial stage of connections from network
      */
-    Node(boolean fromBootList, String _ipStr) {
-        this.fromBootList = fromBootList;
-
-        // if id is not gathered, leave it empty
-        // this.id = new byte[36];
-        this.idHash = 0;
-        this.version = 0;
-        this.ip = ipStrToBytes(_ipStr);
-        this.ipStr = _ipStr;
-        this.port = 0;
-        this.timestamp = System.currentTimeMillis();
-        this.bestBlockNumber = 0L;
-    }
-
     Node(String _ipStr, int port, int portConnected) {
         this.fromBootList = false;
         // if id is not gathered, leave it empty
         // this.id = new byte[36];
         this.idHash = 0;
-        this.version = 0;
+        this.netId = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
         this.port = port;
@@ -131,7 +119,7 @@ public final class Node implements INode {
             this.idHash = Arrays.hashCode(_id);
             this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
         }
-        this.version = -1;
+        this.netId = 0;
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
         this.port = _port;
@@ -169,12 +157,12 @@ public final class Node implements INode {
             short[] shorts = new short[_ip.length/2];
             ByteBuffer.wrap(_ip).asShortBuffer().get(shorts);
 
-            String ip = "";
+            StringBuilder ip = new StringBuilder();
             for (int i = 0; i < shorts.length; i++) {
-                ip += shorts[i] + (i < shorts.length - 1 ? "." : "");
+                ip.append(shorts[i]).append(i < shorts.length - 1 ? "." : "");
             }
 
-            return ip;
+            return ip.toString();
         }
     }
 
@@ -215,10 +203,10 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _version int
+     * @param _netId int
      */
-    void setVersion(final int _version) {
-        this.version = _version;
+    void setNetId(int _netId) {
+        this.netId = _netId;
     }
 
     /**
@@ -248,24 +236,10 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _type String
-     */
-    void setType(String _type) {
-        this.type = _type;
-    }
-
-    /**
      * @return boolean
      */
     boolean getIfFromBootList() {
         return this.fromBootList;
-    }
-
-    /**
-     * @return int
-     */
-    int getVersion() {
-        return this.version;
     }
 
     @Override
@@ -309,10 +283,6 @@ public final class Node implements INode {
     @Override
     public int getIdHash() {
         return this.idHash;
-    }
-
-    String getType() {
-        return this.type;
     }
 
     boolean hasFullInfo() {

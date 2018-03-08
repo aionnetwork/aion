@@ -82,18 +82,17 @@ public class NodeMgr implements INodeMgr {
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
             sb.append("   -------------------------------------------------------\n");
-            sb.append("   seed       blk               td      id              ip   port      type\n");
+            sb.append("   seed       blk               td      id              ip   port\n");
             sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
             for (Node n : sorted) {
                 sb.append(
-                    String.format("      %c%10d %16s  %6s %15s  %5d  %8s\n",
+                    String.format("      %c%10d %16s  %6s %15s  %5d\n",
                         n.getIfFromBootList() ? 0x221A : ' ',
                         n.getBestBlockNumber(),
                         n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
                         n.getIdShort(),
                         n.getIpStr(),
-                        n.getPort(),
-                        n.getType()
+                        n.getPort()
                     )
                 );
             }
@@ -248,7 +247,6 @@ public class NodeMgr implements INodeMgr {
     void moveOutboundToActive(int _nodeIdHash, String _shortId, final P2pMgr _p2pMgr) {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
-            node.setType("outbound");
             INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
             if (previous != null)
                 _p2pMgr.closeSocket(node.getChannel());
@@ -266,7 +264,6 @@ public class NodeMgr implements INodeMgr {
     void moveInboundToActive(int _channelHashCode, final P2pMgr _p2pMgr) {
         Node node = inboundNodes.remove(_channelHashCode);
         if (node != null) {
-            node.setType("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
             if (previous != null)

@@ -567,7 +567,7 @@ public final class P2pMgr implements IP2pMgr {
                     if (node != null) {
                         rb.nodeIdHash = Arrays.hashCode(reqHandshake.getNodeId());
                         node.setId(reqHandshake.getNodeId());
-                        node.setVersion(reqHandshake.getVersion());
+                        node.setNetId(reqHandshake.getNetId());
                         node.setPort(reqHandshake.getPort());
 
                         nodeMgr.moveInboundToActive(node.getChannel().hashCode(), this);
