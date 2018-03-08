@@ -26,12 +26,13 @@ package org.aion.zero.impl.db;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.db.AbstractPowBlockstore;
-import org.aion.mcf.ds.DataSourceArray;
+import org.aion.mcf.ds.DataSourceLongArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -52,19 +53,19 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
-    public IByteArrayKeyValueDatabase indexDS;
-    DataSourceArray<List<BlockInfo>> index;
-    public IByteArrayKeyValueDatabase blocksDS;
-    ObjectDataSource<AionBlock> blocks;
+    private IByteArrayKeyValueDatabase indexDS;
+    private DataSourceLongArray<List<BlockInfo>> index;
+    private IByteArrayKeyValueDatabase blocksDS;
+    private ObjectDataSource<AionBlock> blocks;
 
     public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
         init(index, blocks);
     }
 
-    public void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
+    private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
 
         indexDS = index;
-        this.index = new DataSourceArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
+        this.index = new DataSourceLongArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
         this.blocksDS = blocks;
 
         this.blocks = new ObjectDataSource<>(blocks, new Serializer<AionBlock, byte[]>() {
@@ -107,7 +108,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             return null;
         }
 
-        List<BlockInfo> blockInfos = index.get((int) blockNumber);
+        List<BlockInfo> blockInfos = index.get(blockNumber);
 
         for (BlockInfo blockInfo : blockInfos) {
             if (blockInfo.isMainChain()) {
@@ -145,8 +146,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     private void addInternalBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
 
-        List<BlockInfo> blockInfos = block.getNumber() >= index.size() ? new ArrayList<BlockInfo>()
-                : index.get((int) block.getNumber());
+        List<BlockInfo> blockInfos = block.getNumber() >= index.size() ? new ArrayList<>()
+                : index.get(block.getNumber());
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
@@ -156,7 +157,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                                            // that level
 
         blockInfos.add(blockInfo);
-        index.set((int) block.getNumber(), blockInfos);
+        index.set(block.getNumber(), blockInfos);
 
         blocks.put(block.getHash(), block);
     }
@@ -169,7 +170,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             return result;
         }
 
-        List<BlockInfo> blockInfos = index.get((int) number);
+        List<BlockInfo> blockInfos = index.get(number);
 
         for (BlockInfo blockInfo : blockInfos) {
 
@@ -183,12 +184,12 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     @Override
     public AionBlock getChainBlockByNumber(long number) {
-        int size = index.size();
+        long size = index.size();
         if (number < 0L || number >= size) {
             return null;
         }
 
-        List<BlockInfo> blockInfos = index.get((int) number);
+        List<BlockInfo> blockInfos = index.get(number);
 
         for (BlockInfo blockInfo : blockInfos) {
 
@@ -234,7 +235,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public BigInteger getTotalDifficulty() {
         long maxNumber = getMaxNumber();
 
-        List<BlockInfo> blockInfos = index.get((int) maxNumber);
+        List<BlockInfo> blockInfos = index.get(maxNumber);
         for (BlockInfo blockInfo : blockInfos) {
             if (blockInfo.isMainChain()) {
                 return blockInfo.getCummDifficulty();
@@ -256,7 +257,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     @Override
     public long getMaxNumber() {
         // the index size is always >= 0
-        long bestIndex = (long) index.size();
+        long bestIndex = index.size();
         return bestIndex - 1L;
     }
 
@@ -421,7 +422,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             }
 
             // remove the level
-            index.remove((int) currentLevel);
+            index.remove(currentLevel);
             if (bestLine != null) {
                 bestLine = getBlockByHash(bestLine.getParentHash());
             } else {
@@ -433,7 +434,6 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         if (bestLine == null) {
             LOG.error("Block at level #" + previousLevel + " is null. Reverting further back may be required.");
-            return;
         } else {
             // update the main chain based on difficulty, if needed
             List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
@@ -562,7 +562,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         int i;
         for (i = 0; i < maxBlocks; ++i) {
-            List<BlockInfo> blockInfos = index.get((int) number);
+            List<BlockInfo> blockInfos = index.get(number);
             if (blockInfos == null) {
                 break;
             }
@@ -583,7 +583,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     public static class BlockInfo implements Serializable {
 
-        public BlockInfo() {};
+        public BlockInfo() {}
 
         public BlockInfo(byte[] ser) {
             RLPList outerList = RLP.decode2(ser);
@@ -658,7 +658,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
      * Called by {@link AionBlockStore#BLOCK_INFO_SERIALIZER} for now, on main-net launch
      * we should default to this class.
      */
-    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_RLP_SERIALIZER = new Serializer<List<BlockInfo>,byte[]>() {
+    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_RLP_SERIALIZER = new Serializer<>() {
         @Override
         public byte[] serialize(List<BlockInfo> object) {
             byte[][] infoList = new byte[object.size()][];
@@ -675,14 +675,14 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             RLPList list = (RLPList) RLP.decode2(stream).get(0);
             List<BlockInfo> res = new ArrayList<>(list.size());
 
-            for (int i = 0; i < list.size(); i++) {
-                res.add(new BlockInfo(list.get(i).getRLPData()));
+            for (RLPElement aList : list) {
+                res.add(new BlockInfo(aList.getRLPData()));
             }
             return res;
         }
     };
 
-    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<List<BlockInfo>, byte[]>() {
+    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<>() {
 
         @Override
         public byte[] serialize(List<BlockInfo> value) {
@@ -729,11 +729,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     private List<BlockInfo> getBlockInfoForLevel(long level) {
-        return index.get((int) level);
+        return index.get(level);
     }
 
     private void setBlockInfoForLevel(long level, List<BlockInfo> infos) {
-        index.set((int) level, infos);
+        index.set(level, infos);
     }
 
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
