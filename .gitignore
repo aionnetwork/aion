@@ -13,10 +13,12 @@ mod*/*.iml
 build/
 mod/
 */build/
+*/native/
 native/linux/blake2b/libblake2b.so
+native/linux/equihash/equiMiner.so
 
 # ci
-*/report
+report/
+*/report/
 
 .ant-targets-build.xml
-modTxPoolImpl/native/

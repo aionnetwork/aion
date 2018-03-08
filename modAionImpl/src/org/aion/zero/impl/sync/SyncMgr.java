@@ -65,7 +65,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 public final class SyncMgr {
 
     // interval time get peer status
-    private static final int STATUS_INTERVAL = 500;
+    private static final int STATUS_INTERVAL = 2000;
 
     // timeout sent headers
     private static final int SENT_HEADERS_TIMEOUT = 5000;
@@ -202,13 +202,8 @@ public final class SyncMgr {
                         + " blocks-queue-size=" + importedBlocks.size() + "]");
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
-            Set<Integer> ids = new HashSet<>();
-            for (int i = 0; i < 3; i++) {
-                INode node = p2pMgr.getRandom();
-                if (node != null && !ids.contains(node.getIdHash())) {
-                    ids.add(node.getIdHash());
-                    p2pMgr.send(node.getIdHash(), reqStatus);
-                }
+            for (INode node : p2pMgr.getActiveNodes().values()) {
+                p2pMgr.send(node.getIdHash(), reqStatus);
             }
 
         }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);

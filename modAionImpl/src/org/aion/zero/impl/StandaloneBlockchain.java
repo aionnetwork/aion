@@ -178,9 +178,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         }
 
         public Builder withDefaultAccounts() {
-            if (this.defaultKeys != null)
-                throw new RuntimeException();
-
             for (int i = 0; i < INITIAL_ACC_LEN; i++) {
                 ECKey pk = ECKeyFac.inst().create();
                 this.defaultKeys.add(pk);

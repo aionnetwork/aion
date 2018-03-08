@@ -49,6 +49,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 
 /**
@@ -170,9 +171,47 @@ public class BlockchainIntegrationTest {
                         .subtract(BigInteger.valueOf(100)));
     }
 
-    /**
-     *
-     */
+    @Test
+    public void testBlockchainDifficultyOnBranching() {
+        StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts()
+                .build();
+        StandaloneBlockchain bc = bundle.bc;
+
+        BigInteger initialTD = bc.getTotalDifficulty();
+
+        // these two should have different hashes
+        AionBlock block1 = bc.createNewBlock(bc.getGenesis(), new ArrayList<>());
+
+        assertThat(bc.tryToConnect(block1)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        BigInteger postConnectTD = bc.getTotalDifficulty();
+        assertThat(postConnectTD).isEqualTo(bc.getGenesis().getDifficultyBI().add(block1.getDifficultyBI()));
+
+
+        // first scenario is a one level branch, where both branches are of same height
+        // but one branch (lighter) comes first, and the second (heavier) comes second
+        AionBlock block2 = bc.createNewBlock(block1, new ArrayList<>());
+        AionBlock heavyBlock = bc.createNewBlock(block1, new ArrayList<>());
+        heavyBlock.getHeader().setDifficulty(BigInteger.valueOf(10000000L).toByteArray());
+
+        assertThat(bc.tryToConnect(block2)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        BigInteger postBlock2TD = bc.getTotalDifficulty();
+        assertThat(postBlock2TD).isEqualTo(postConnectTD.add(block2.getDifficultyBI()));
+
+        assertThat(bc.tryToConnect(heavyBlock)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        BigInteger postHeavyBlockTD = bc.getTotalDifficulty();
+        assertThat(postHeavyBlockTD).isEqualTo(postConnectTD.add(heavyBlock.getDifficultyBI()));
+
+        assertThat(bc.getBlockStore().getBestBlock().getHash()).isEqualTo(heavyBlock.getHash());
+        assertThat(bc.getBlockStore().getTotalDifficulty()).isEqualTo(postHeavyBlockTD);
+
+
+    }
+
     @Ignore
     @Test
     public void testPruningEnabledBalanceTransfer() {

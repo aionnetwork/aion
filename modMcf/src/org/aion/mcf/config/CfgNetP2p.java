@@ -40,6 +40,7 @@ public final class CfgNetP2p {
         this.discover = false;
         this.showStatus = false;
         this.showLog = false;
+        this.bootlistSyncOnly = false;
     }
 
     private String ip;
@@ -51,6 +52,8 @@ public final class CfgNetP2p {
     private boolean showStatus;
 
     private boolean showLog;
+
+    private boolean bootlistSyncOnly;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -74,6 +77,9 @@ public final class CfgNetP2p {
                     break;
                 case "show-log":
                     this.showLog = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                case "bootlist-sync-only":
+                    this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 default:
                     // Cfg.skipElement(sr);
@@ -156,4 +162,6 @@ public final class CfgNetP2p {
     public boolean getShowLog() {
         return this.showLog;
     }
+
+    public boolean getBootlistSyncOnly() { return bootlistSyncOnly; }
 }

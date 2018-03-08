@@ -48,12 +48,13 @@ import org.aion.p2p.impl.msg.ResHandshake;
  * @author Chris p2p://{uuid}@{ip}:{port}
  * TODO: 1) simplify id bytest to int, ip bytest to str 2) upnp protocal 3) framing
  */
-public final class P2pMgr implements IP2pMgr {
+public final class  P2pMgr implements IP2pMgr {
 
     private final static int PERIOD_SHOW_STATUS = 10000;
     private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private final static int PERIOD_CONNECT_OUTBOUND = 1000;
     private final static int PERIOD_CLEAR = 20000;
+    private final static int PERIOD_PERSIST_NODES = 600000;
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
     private final static int TIMEOUT_OUTBOUND_NODES = 10000;
@@ -64,6 +65,7 @@ public final class P2pMgr implements IP2pMgr {
     private final int maxTempNodes;
     private final int maxActiveNodes;
 
+    private final boolean bootlistSyncOnly;
     private final boolean showStatus;
     final boolean showLog;
     private final int selfNodeIdHash;
@@ -319,7 +321,7 @@ public final class P2pMgr implements IP2pMgr {
                     this.channelBuffer.onWrite.set(false);
                     try {
 
-                        Msg msg = this.channelBuffer.msgs.poll(1, TimeUnit.MILLISECONDS);
+                        Msg msg = this.channelBuffer.messages.poll(1, TimeUnit.MILLISECONDS);
 
                         if (msg != null) {
                             //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
@@ -332,7 +334,7 @@ public final class P2pMgr implements IP2pMgr {
                 }
             } else {
                 try {
-                    this.channelBuffer.msgs.put(msg);
+                    this.channelBuffer.messages.put(msg);
                 } catch (InterruptedException e) {
                     if(showLog)
                         e.printStackTrace();
@@ -354,7 +356,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _showLog        boolean
      */
     public P2pMgr(String _nodeId, String _ip, int _port, final String[] _bootNodes, boolean _upnpEnable,
-                  int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog) {
+                  int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog, boolean _bootlistSyncOnly) {
         byte[] selfNodeId = _nodeId.getBytes();
         this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
         this.selfShortId = new String(Arrays.copyOfRange(selfNodeId, 0, 6));
@@ -366,6 +368,7 @@ public final class P2pMgr implements IP2pMgr {
         this.maxActiveNodes = _maxActiveNodes;
         this.showStatus = _showStatus;
         this.showLog = _showLog;
+        this.bootlistSyncOnly = _bootlistSyncOnly;
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -374,6 +377,9 @@ public final class P2pMgr implements IP2pMgr {
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
         }
+
+        // rem out for bug :
+        //nodeMgr.loadPersistedNodes();
 
         cachedReqHandshake = new ReqHandshake(selfNodeId, selfNetId, this.selfIp, this.selfPort);
     }
@@ -598,6 +604,9 @@ public final class P2pMgr implements IP2pMgr {
                 break;
 
             case Act.RES_ACTIVE_NODES:
+                if (bootlistSyncOnly)
+                    break;
+
                 if (rb.nodeIdHash != 0) {
                     Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null) {
@@ -672,8 +681,13 @@ public final class P2pMgr implements IP2pMgr {
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
-            scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
+
+            if(!bootlistSyncOnly)
+                scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
+
+            // rem out for bug: https://github.com/aionnetwork/aion/issues/136
+            //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
 
             workers.submit(new TaskClear());
             workers.submit(new TaskConnectPeers());
