@@ -2,7 +2,6 @@
 <aion>
 	<mode>aion</mode>
 	<id>[NODE-ID-PLACEHOLDER]</id>
-	<version>0.0.1</version>
 	<api>
 		<rpc active="true" ip="127.0.0.1" port="8545"></rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>

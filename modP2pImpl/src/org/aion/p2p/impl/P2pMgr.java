@@ -41,6 +41,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.aion.p2p.*;
+import org.aion.p2p.impl.one.msg.Hello;
 import org.aion.p2p.impl.zero.msg.ReqHandshake;
 import org.aion.p2p.impl.zero.msg.ReqHandshake2;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
@@ -403,59 +404,6 @@ public final class  P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _sk SelectionKey
-     * @throws IOException IOException
-     */
-    private void read(final SelectionKey _sk) throws IOException {
-
-        if (_sk.attachment() == null) {
-            throw new IOException("attachment is null");
-        }
-        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
-
-        // read header
-        if (!rb.isHeaderCompleted()) {
-            readHeader((SocketChannel) _sk.channel(), rb);
-        }
-
-//        if(rb.isHeaderCompleted() && !handlers.containsKey(rb.header.getRoute())){
-//            // TODO: Test
-//            return;
-//        }
-
-        // read body
-        if (rb.isHeaderCompleted() && !rb.isBodyCompleted()) {
-            readBody((SocketChannel) _sk.channel(), rb);
-        }
-
-        if (!rb.isBodyCompleted())
-            return;
-
-        Header h = rb.header;
-
-        byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
-
-        rb.refreshHeader();
-        rb.refreshBody();
-
-        byte ctrl = h.getCtrl();
-        byte act = h.getAction();
-
-        //System.out.println("read " + ctrl + "-" + act);
-
-        switch (ctrl) {
-            case Ctrl.NET:
-                handleP2pMsg(_sk, act, bodyBytes);
-                break;
-            default:
-                int route = h.getRoute();
-                if (rb.nodeIdHash != 0 || handlers.containsKey(route))
-                    handleKernelMsg(rb.nodeIdHash, route, bodyBytes);
-                break;
-        }
-    }
-
-    /**
      * @param _sc SocketChannel
      * @throws IOException IOException
      */
@@ -494,6 +442,74 @@ public final class  P2pMgr implements IP2pMgr {
                 throw new IOException("read-body-eof");
             }
         }
+    }
+
+    /**
+     * @param _sk SelectionKey
+     * @throws IOException IOException
+     */
+    private void read(final SelectionKey _sk) throws IOException {
+
+        if (_sk.attachment() == null) {
+            throw new IOException("attachment is null");
+        }
+        ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
+
+        // read header
+        if (!rb.isHeaderCompleted()) {
+            readHeader((SocketChannel) _sk.channel(), rb);
+        }
+
+//        if(rb.isHeaderCompleted() && !handlers.containsKey(rb.header.getRoute())){
+//            // TODO: Test
+//            return;
+//        }
+
+        // read body
+        if (rb.isHeaderCompleted() && !rb.isBodyCompleted()) {
+            readBody((SocketChannel) _sk.channel(), rb);
+        }
+
+        if (!rb.isBodyCompleted())
+            return;
+
+        Header h = rb.header;
+
+        byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
+
+        rb.refreshHeader();
+        rb.refreshBody();
+
+        short ver = h.getVer();
+        byte ctrl = h.getCtrl();
+        byte act = h.getAction();
+
+        //System.out.println("read " + ctrl + "-" + act);
+        switch(ver){
+            case Ver.V0:
+                switch (ctrl) {
+                    case Ctrl.NET:
+                        handleP2pMsg(_sk, act, bodyBytes);
+                        break;
+                    default:
+                        int route = h.getRoute();
+                        if (rb.nodeIdHash != 0 || handlers.containsKey(route))
+                            handleKernelMsg(rb.nodeIdHash, route, bodyBytes);
+                        break;
+                }
+                break;
+
+            // testing versioning
+            case Ver.V1:
+                if(ctrl == 0 && act == 0){
+                    Hello hello = Hello.decode(bodyBytes);
+                    if(hello != null)
+                        System.out.println("v1 hello msg " + hello.getMsg());
+                }
+
+                break;
+        }
+
     }
 
     /**
@@ -668,6 +684,22 @@ public final class  P2pMgr implements IP2pMgr {
             if(!bootlistSyncOnly)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
+
+            // test versioning
+            List<Hello> hello = new ArrayList<>();
+            hello.add(new Hello("HELLO"));
+            hello.add(new Hello("BONJOUR"));
+            hello.add(new Hello("HOLA"));
+            hello.add(new Hello("CIAO"));
+            hello.add(new Hello("OLÀ"));
+            hello.add(new Hello("ZDRAS-TVUY-TE"));
+
+            scheduledWorkers.scheduleWithFixedDelay(()->{
+                int ran = ThreadLocalRandom.current().nextInt(0,6 );
+                INode node = getRandom(NodeRandPolicy.RND, 0);
+                if (node != null)
+                    send(node.getIdHash(), hello.get(ran));
+            }, 3000, 3000, TimeUnit.MILLISECONDS);
 
             // rem out for bug: https://github.com/aionnetwork/aion/issues/136
             //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
