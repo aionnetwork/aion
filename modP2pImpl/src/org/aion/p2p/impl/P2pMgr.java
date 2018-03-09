@@ -500,14 +500,14 @@ public final class  P2pMgr implements IP2pMgr {
                 break;
 
             // testing versioning
-            case Ver.V1:
-                if(ctrl == 0 && act == 0){
-                    Hello hello = Hello.decode(bodyBytes);
-                    if(hello != null)
-                        System.out.println("v1 hello msg " + hello.getMsg());
-                }
-
-                break;
+//            case Ver.V1:
+//                if(ctrl == 0 && act == 0){
+//                    Hello hello = Hello.decode(bodyBytes);
+//                    if(hello != null)
+//                        System.out.println("v1 hello msg " + hello.getMsg());
+//                }
+//
+//                break;
         }
 
     }
@@ -536,22 +536,23 @@ public final class  P2pMgr implements IP2pMgr {
     private void handleHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId, int _port, final byte[] _revision){
         Node node = nodeMgr.getInboundNode(_channelHash);
         if (node != null) {
+            if(handshakeRuleCheck(_netId)){
+                _buffer.nodeIdHash = Arrays.hashCode(_nodeId);
+                node.setId(_nodeId);
+                node.setNetId(_netId);
+                node.setPort(_port);
 
-            _buffer.nodeIdHash = Arrays.hashCode(_nodeId);
-            node.setId(_nodeId);
-            node.setNetId(_netId);
-            node.setPort(_port);
+                String revision = "";
 
-            String revision = "";
-
-            if(_revision != null){
-                try {
-                    revision = new String(_revision, "UTF-8");
-                } catch (UnsupportedEncodingException e) {}
+                if(_revision != null){
+                    try {
+                        revision = new String(_revision, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {}
+                }
+                node.setRevision(revision);
+                nodeMgr.moveInboundToActive(node.getChannel().hashCode(), this);
+                workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), new ResHandshake(true), _buffer));
             }
-            node.setRevision(revision);
-            nodeMgr.moveInboundToActive(node.getChannel().hashCode(), this);
-            workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), new ResHandshake(true), _buffer));
         }
     }
 
@@ -686,20 +687,19 @@ public final class  P2pMgr implements IP2pMgr {
                     TimeUnit.MILLISECONDS);
 
             // test versioning
-            List<Hello> hello = new ArrayList<>();
-            hello.add(new Hello("HELLO"));
-            hello.add(new Hello("BONJOUR"));
-            hello.add(new Hello("HOLA"));
-            hello.add(new Hello("CIAO"));
-            hello.add(new Hello("OLÀ"));
-            hello.add(new Hello("ZDRAS-TVUY-TE"));
-
-            scheduledWorkers.scheduleWithFixedDelay(()->{
-                int ran = ThreadLocalRandom.current().nextInt(0,6 );
-                INode node = getRandom(NodeRandPolicy.RND, 0);
-                if (node != null)
-                    send(node.getIdHash(), hello.get(ran));
-            }, 3000, 3000, TimeUnit.MILLISECONDS);
+//            List<Hello> hello = new ArrayList<>();
+//            hello.add(new Hello("HELLO"));
+//            hello.add(new Hello("BONJOUR"));
+//            hello.add(new Hello("HOLA"));
+//            hello.add(new Hello("CIAO"));
+//            hello.add(new Hello("OLÀ"));
+//            hello.add(new Hello("ZDRAS-TVUY-TE"));
+//            scheduledWorkers.scheduleWithFixedDelay(()->{
+//                int ran = ThreadLocalRandom.current().nextInt(0,6 );
+//                INode node = getRandom(NodeRandPolicy.RND, 0);
+//                if (node != null)
+//                    send(node.getIdHash(), hello.get(ran));
+//            }, 3000, 3000, TimeUnit.MILLISECONDS);
 
             // rem out for bug: https://github.com/aionnetwork/aion/issues/136
             //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
