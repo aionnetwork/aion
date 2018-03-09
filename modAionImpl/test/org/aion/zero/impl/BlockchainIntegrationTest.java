@@ -66,7 +66,7 @@ public class BlockchainIntegrationTest {
      * are set correctly and no null pointers occur.
      */
     @Test
-    public void simpleBlockchainNullPointerTest() {
+    public void testSimpleBlockchainNullPointer() {
         /**
          * Mock Setups
          */
@@ -84,7 +84,7 @@ public class BlockchainIntegrationTest {
 
     // check that all accounts are loaded correctly
     @Test
-    public void simpleBlockchainLoadTest() {
+    public void testSimpleBlockchainLoad() {
         StandaloneBlockchain.Bundle b = (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         for (ECKey k : b.privateKeys) {
             assertThat(b.bc.getRepository().getBalance(Address.wrap(k.getAddress()))).isNotEqualTo(BigInteger.ZERO);
@@ -93,7 +93,7 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
-    public void createNewEmptyBlockTest() {
+    public void testCreateNewEmptyBlock() {
         StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         StandaloneBlockchain bc = bundle.bc;
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
@@ -101,7 +101,7 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
-    public void simpleFailedTransactionInsufficientBalance() {
+    public void testSimpleFailedTransactionInsufficientBalance() {
         // generate a recipient
         final Address receiverAddress = Address.wrap(ByteUtil.hexStringToBytes("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -131,7 +131,7 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
-    public void simpleOneTokenBalanceTransfer() {
+    public void testSimpleOneTokenBalanceTransfer() {
         // generate a recipient
         final Address receiverAddress = Address.wrap(ByteUtil.hexStringToBytes("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -169,6 +169,21 @@ public class BlockchainIntegrationTest {
                 .isEqualTo(senderInitialBalance.subtract(BigInteger
                         .valueOf(21000))
                         .subtract(BigInteger.valueOf(100)));
+    }
+
+    @Test
+    public void testAppendIncorrectTimestampBlock() {
+        StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts()
+                .build();
+        StandaloneBlockchain bc = bundle.bc;
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+
+        // set the block to be created 1 month in the future
+        block.getHeader().setTimestamp((System.currentTimeMillis() / 1000) + 2592000);
+        ImportResult result = bc.tryToConnect(block);
+        assertThat(result.isSuccessful()).isFalse();
     }
 
     @Test
