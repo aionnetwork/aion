@@ -41,7 +41,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.aion.p2p.*;
-import org.aion.p2p.impl.one.msg.Hello;
+// import org.aion.p2p.impl.one.msg.Hello;
 import org.aion.p2p.impl.zero.msg.ReqHandshake;
 import org.aion.p2p.impl.zero.msg.ReqHandshake2;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
