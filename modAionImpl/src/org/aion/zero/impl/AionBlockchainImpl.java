@@ -384,8 +384,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (isMoreThan(this.totalDifficulty, savedState.savedTD)) {
 
             if (LOG.isInfoEnabled())
-                LOG.info("branching: <num={} prev={} -> to={}>", savedState.savedBest.getNumber(),
-                        savedState.savedBest.getShortHash(), block.getShortHash());
+                LOG.info("branching: from = {}/{}, to = {}/{}",
+                        savedState.savedBest.getNumber(),
+                        Hex.toHexString(savedState.savedBest.getHash()),
+                        block.getNumber(),
+                        Hex.toHexString(block.getHash()));
             // main branch become this branch
             // cause we proved that total difficulty
             // is greater
