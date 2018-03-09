@@ -33,56 +33,49 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
+
+import java.util.List;
 
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.BlockPropagationHandler;
-import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
-import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
+import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
 
 /**
- * @author jay
- * handler for new block broadcasted from network
+ * @author chris
+ * handler for request block bodies broadcasted from network
  */
-public final class BroadcastNewBlockHandler extends Handler {
+public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
-    private final BlockPropagationHandler propHandler;
+    private final IAionBlockchain blockchain;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.aion.net.nio.ICallback#getCtrl() change param
-     * IPendingStateInternal later
-     */
-    public BroadcastNewBlockHandler(final Logger _log, final BlockPropagationHandler propHandler) {
-        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
+    private final IP2pMgr p2pMgr;
+
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
-        this.propHandler = propHandler;
+        this.blockchain = _blockchain;
+        this.p2pMgr = _p2pMgr;
     }
-
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null)
-            return;
-        byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
-        if (rawdata == null)
-            return;
+        ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
+        if (reqBlocks != null) {
+            List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(reqBlocks.getBlocksHashes());
+            this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
+            this.log.debug("<req-bodies req-take={} res-take={} from-node={}>", reqBlocks.getBlocksHashes().size(),
+                    blockBodies.size(), _displayId);
 
-        AionBlock block = new AionBlock(rawdata);
-
-        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
-
-        if (this.log.isDebugEnabled()) {
-            String hash = block.getShortHash();
-            hash = hash != null ? hash : "null";
-            this.log.debug("<block-prop node=" + _displayId + " block-hash=" + hash + " status=" + result.name() + ">");
-        }
+        } else
+            this.log.error("<req-bodies decode-msg>");
     }
 }

@@ -39,6 +39,7 @@
         <pathelement location="${dir.mod}/modRlp.jar"/>
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
+	<pathelement location="${dir.mod}/modP2p.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
@@ -54,7 +55,7 @@
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}"/>
         <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test"
-               destdir="${dir.test}" includes="**/*Test.java" excludes="**/BlockPropagationTest.java">
+               destdir="${dir.test}" includes="**/*Test.java">
             <classpath>
                 <path refid="classpath.test"/>
                 <path refid="classpath.dependency"/>
@@ -91,6 +92,7 @@
     <target name="build">
         <mkdir dir="${dir.dest}"/>
         <mkdir dir="${dir.native}"/>
+	<antcall target="pre_build" />
         <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./"
                destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
@@ -121,8 +123,23 @@
         <move includeemptydirs="false" todir="${dir.mod}">
             <file file="modAionImpl.jar"/>
         </move>
+
+        <antcall target="post_build" />
     </target>
 
+        <target name="pre_build">
+                <echo message="execute prebuild script"/>
+                <exec executable="/bin/bash">
+                        <arg value="../script/prebuild.sh" />
+                </exec>
+        </target>
+
+        <target name="post_build">
+                <echo message="execute postbuild script"/>
+                <exec executable="/bin/bash">
+                        <arg value="../script/postbuild.sh" />
+                </exec>
+        </target>
 
     <target name="build_v8">
         <mkdir dir="${dir.dest}"/>

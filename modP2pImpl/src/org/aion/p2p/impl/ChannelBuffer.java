@@ -22,7 +22,6 @@
  * Aion foundation.
  *
  */
-
 package org.aion.p2p.impl;
 
 import org.aion.p2p.Header;
@@ -55,6 +54,8 @@ class ChannelBuffer {
      */
     public AtomicBoolean onWrite = new AtomicBoolean(false);
 
+    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(10);
+
     void refreshHeader(){
         headerBuf.clear();
         header = null;
@@ -76,10 +77,7 @@ class ChannelBuffer {
      * @return boolean
      */
     boolean isBodyCompleted() {
-        return header != null && body != null && body.length == header.getLen();
+        return this.header != null && this.body != null && body.length == header.getLen();
     }
-
-
-    public BlockingQueue<Msg> msgs = new ArrayBlockingQueue<>(10);
 
 }

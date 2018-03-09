@@ -219,8 +219,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         this.updateAccPoolState();
         this.updateFeeMap();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("TxPoolA0.remove TX remove [{}] removed [{}]", txs.size(), removedTxl.size());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("TxPoolA0.remove TX remove [{}] removed [{}]", txs.size(), removedTxl.size());
         }
 
         return removedTxl;
@@ -262,12 +262,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         int cnt_txSz = blkSizeLimit;
         long cnt_nrg = blkNrgLimit.get();
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
-
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
                 .entrySet()) {
 
             Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> tpl = e.getValue();
-
             for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : tpl.entrySet()) {
                 // Check the small nonce tx must been picked before put the high nonce tx
                 ByteArrayWrapper dependTx = pair.getValue().getDependTx();
@@ -300,6 +298,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                     LOG.error("Snapshot txn exception", ex.toString());
                                 }
 
+                                if (LOG.isInfoEnabled()) {
+                                    LOG.info("TxPoolA0.snapshot return [{}] TX", rtn.size());
+                                }
                                 return rtn;
                             }
                         } else {
@@ -307,6 +308,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                 LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], txn_number[{}]", cnt_txSz,
                                         cnt_nrg, rtn.size());
                             }
+
                             return rtn;
                         }
                     }
@@ -314,8 +316,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("TxPoolA0.snapshot return [{}] TX", rtn.size());
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("TxPoolA0.snapshot return [{}] TX", rtn.size());
         }
 
         return rtn;

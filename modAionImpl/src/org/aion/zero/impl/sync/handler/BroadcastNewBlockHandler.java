@@ -33,62 +33,56 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
-import java.util.List;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.sync.BlockPropagationHandler;
+import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
+import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
- *
- * @author chris
- * handler for block headers response from network
- *
+ * @author jay
+ * handler for new block broadcasted from network
  */
-public final class ResBlocksHeadersCallback extends Handler {
+public final class BroadcastNewBlockHandler extends Handler {
 
     private final Logger log;
 
-    private final SyncMgr syncMgr;
+    private final BlockPropagationHandler propHandler;
 
-    public ResBlocksHeadersCallback(final Logger _log, final SyncMgr _syncMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_HEADERS);
-        this.syncMgr = _syncMgr;
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.aion.net.nio.ICallback#getCtrl() change param
+     * IPendingStateInternal later
+     */
+    public BroadcastNewBlockHandler(final Logger _log, final BlockPropagationHandler propHandler) {
+        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
         this.log = _log;
+        this.propHandler = propHandler;
     }
+
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if(_msgBytes == null || _msgBytes.length == 0)
+        if (_msgBytes == null)
             return;
-        ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
-        if(resHeaders != null) {
-            List<A0BlockHeader> headers = resHeaders.getHeaders();
-            if(headers != null && headers.size() > 0){
-                this.log.debug(
-                        "<res-headers from-block={} take={} from-node={}>",
-                        headers.get(0).getNumber(),
-                        headers.size(),
-                        _displayId
-                );
-                this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, _displayId, headers);
-            } else {
-                this.log.error(
-                    "<res-headers empty-headers from-node={} >",
-                    _displayId
-                );
-            }
-        } else
-            this.log.error(
-                    "<res-headers decode-msg msg-bytes={} from-node={} >",
-                    _msgBytes.length,
-                    _displayId
-            );
+        byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
+        if (rawdata == null)
+            return;
+
+        AionBlock block = new AionBlock(rawdata);
+
+        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
+
+        if (this.log.isDebugEnabled()) {
+            String hash = block.getShortHash();
+            hash = hash != null ? hash : "null";
+            this.log.debug("<block-prop node=" + _displayId + " block-hash=" + hash + " status=" + result.name() + ">");
+        }
     }
 }

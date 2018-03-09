@@ -23,35 +23,27 @@
  *
  */
 
-package org.aion.p2p;
+package org.aion.p2p.impl.zero.msg;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Msg;
+import org.aion.p2p.Ver;
+import org.aion.p2p.impl.Act;
 
 /**
- * @author  chris
+ *
+ * @author chris
+ *
  */
-public class Ver {
+public final class ReqActiveNodes extends Msg {
 
-    public static final short V0 = 0;
+    public ReqActiveNodes(){
+        super(Ver.V0, Ctrl.NET, Act.REQ_ACTIVE_NODES);
+    }
 
-    // for test
-    public static final short V1 = 1;
-
-    public static final short UNKNOWN = Short.MAX_VALUE;
-
-    private static Set<Short> active = new HashSet<>(){{
-        this.add(V0);
-        this.add(V1);
-    }};
-
-    /**
-     * @param _version short
-     * @return short
-     * method provided to filter any decoded version (short)
-     */
-    public static short filter(short _version){
-        return active.contains(_version) ? _version : UNKNOWN;
+    @Override
+    public byte[] encode() {
+        return null;
     }
 
 }

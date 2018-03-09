@@ -139,7 +139,7 @@ public final class HttpServer {
         case personal_unlockAccount:
             String account = (String) params.get(0);
             String password = (String) params.get(1);
-            int duration = new BigInteger(params.get(2) == null ? "300" : params.get(2) + "").intValue();
+            int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
             return processResult(_id, api.unlockAccount(account, password, duration));
 
         case eth_getBlockByNumber: {
@@ -332,6 +332,30 @@ public final class HttpServer {
 
         case eth_uninstallFilter:
             return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
+
+        /*
+         * net
+         */
+        case net_listening:
+            return processResult(_id, true);
+
+        case net_peerCount:
+            return processResult(_id, api.peerCount());
+
+        /*
+         * debug
+         */
+        case debug_getBlocksByNumber:
+            String number = params.get(0) + "";
+            boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
+
+            if (number == null) {
+                log.debug("debug_getBlockInfoByHeight: invalid input");
+                return processResult(_id, null);
+            }
+
+            JSONArray response = api.debug_getBlocksByNumber(number, fullTransactions);
+            return processResult(_id, response);
 
         /*
          * stratum pool
@@ -557,13 +581,6 @@ public final class HttpServer {
             }
 
             return processResult(_id, jsonObj);
-
-        /*
-         * extends
-         */
-        case net_listening:
-            return processResult(_id, true);
-
         case ping:
             return processResult(_id, "pong");
         default:

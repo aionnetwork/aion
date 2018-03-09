@@ -44,7 +44,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class AionTransacitonTest {
+public class AionTransactionTest {
 
     private void assertTransactionEquals(AionTransaction tx, AionTransaction tx2) {
         assertArrayEquals(tx.getHash(), tx2.getHash());

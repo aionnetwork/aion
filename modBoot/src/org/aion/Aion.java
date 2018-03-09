@@ -64,7 +64,14 @@ public class Aion {
             int ret = new Cli().call(args, cfg);
             System.exit(ret);
         }
-        cfg.fromXML();
+
+        /*
+         * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]
+         * return true which means should save back to xml config
+         */
+        if(cfg.fromXML())
+            cfg.toXML(new String[]{ "--id=" + cfg.getId() });
+
         
         try {
             ServiceLoader.load(AionLoggerFactory.class);

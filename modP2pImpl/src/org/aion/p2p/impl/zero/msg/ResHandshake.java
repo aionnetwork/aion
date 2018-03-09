@@ -23,35 +23,41 @@
  *
  */
 
-package org.aion.p2p;
+package org.aion.p2p.impl.zero.msg;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Msg;
+import org.aion.p2p.Ver;
+import org.aion.p2p.impl.Act;
 
 /**
- * @author  chris
+ *
+ * @author chris
+ *
  */
-public class Ver {
+public final class ResHandshake extends Msg {
 
-    public static final short V0 = 0;
+    private final boolean success;
 
-    // for test
-    public static final short V1 = 1;
+    public ResHandshake(final boolean _success) {
+        super(Ver.V0, Ctrl.NET, Act.RES_HANDSHAKE);
+        this.success = _success;
+    }
 
-    public static final short UNKNOWN = Short.MAX_VALUE;
+    public boolean getSuccess() {
+        return this.success;
+    }
 
-    private static Set<Short> active = new HashSet<>(){{
-        this.add(V0);
-        this.add(V1);
-    }};
+    public static ResHandshake decode(final byte[] _bytes) {
+        if (_bytes == null || _bytes.length != 1)
+            return null;
+        else
+            return new ResHandshake(_bytes[0] == 0x01);
+    }
 
-    /**
-     * @param _version short
-     * @return short
-     * method provided to filter any decoded version (short)
-     */
-    public static short filter(short _version){
-        return active.contains(_version) ? _version : UNKNOWN;
+    @Override
+    public byte[] encode() {
+        return this.success ? new byte[] { 0x01 } : new byte[] { 0x00 };
     }
 
 }

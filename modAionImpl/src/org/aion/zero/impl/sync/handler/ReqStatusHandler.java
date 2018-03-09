@@ -33,61 +33,47 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
-import java.util.List;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
-import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
-import org.aion.mcf.types.BlockIdentifier;
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.sync.msg.ResStatus;
 import org.slf4j.Logger;
 
 /**
- *
- * @author chris
- * handler for request block headers from network
- *
+ * @author chris handler for status request from network
  */
-public final class ReqBlocksHeadersHandler extends Handler {
-
-    /**
-     * self guardian
-     */
-    private final static int max_headers = 2000;
+public final class ReqStatusHandler extends Handler {
 
     private final Logger log;
 
-    private final IAionBlockchain blockchain;
+    private IAionBlockchain chain;
 
-    private final IP2pMgr p2pMgr;
+    private IP2pMgr mgr;
 
-    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
+    private byte[] genesisHash;
+
+    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
+            final byte[] _genesisHash) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
         this.log = _log;
-        this.blockchain = _blockchain;
-        this.p2pMgr = _p2pMgr;
+        this.chain = _chain;
+        this.mgr = _mgr;
+        this.genesisHash = _genesisHash;
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        ReqBlocksHeaders reqHeaders = ReqBlocksHeaders.decode(_msgBytes);
-        if (reqHeaders != null) {
-            long fromBlock = reqHeaders.getFromBlock();
-            int take = reqHeaders.getTake();
-            this.log.debug("<req-headers from-block={} take={} from-node={}>", fromBlock, take,
-                    _displayId);
-            List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
-                    new BlockIdentifier(null, fromBlock), 0, Math.min(take, max_headers), false);
-            ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
-            this.p2pMgr.send(_nodeIdHashcode, rbhs);
-        } else
-            this.log.error("<req-headers decode-msg msg-bytes={} from-node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length, _nodeIdHashcode);
+    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
+        this.log.debug("<req-status from-node={}>", _displayId);
+        ResStatus res = null;
+        synchronized (this.chain) {
+            res = new ResStatus(this.chain.getBestBlock().getNumber(), this.chain.getTotalDifficulty().toByteArray(),
+                    this.chain.getBestBlockHash(), this.genesisHash);
+        }
+        this.mgr.send(_nodeIdHashcode, res);
     }
 }

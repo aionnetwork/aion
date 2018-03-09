@@ -1,26 +1,33 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * The aion network project leverages useful source code from other
+ * open source projects. We greatly appreciate the effort that was
+ * invested in these projects and we thank the individual contributors
+ * for their work. For provenance information and contributors
+ * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
+ * Aion foundation.
+ *
+ */
+
 
 package org.aion.zero.impl.cli;
 
@@ -28,13 +35,12 @@ import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.AionHub;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 
 import java.io.Console;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -42,141 +48,99 @@ import java.util.UUID;
  *
  * @author chris
  */
-
-public class Cli {
-
-    private final static String ipv4Pattern = "^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$";
+public final class Cli {
 
     public int call(final String[] args, final Cfg cfg) {
         try {
+            cfg.fromXML();
             switch (args[0].toLowerCase()) {
-            case "-h":
-            case "--help":
-                printHelp();
-                break;
-            case "-a":
-            case "--account":
-                if (args.length < 2) {
+                case "-h":
                     printHelp();
-                    return 1;
-                }
+                    break;
+                case "-a":
+                    if (args.length < 2) {
+                        printHelp();
+                        return 1;
+                    }
 
-                switch (args[1]) {
-                case "create":
-                    if (!createAccount()) {
-                        return 1;
-                    }
-                    break;
-                case "list":
-                    if (!listAccounts()) {
-                        return 1;
-                    }
-                    break;
-                case "export":
-                    if (args.length < 3 || !exportPrivateKey(args[2])) {
-                        return 1;
-                    }
-                    break;
-                case "import":
-                    if (args.length < 3 || !importPrivateKey(args[2])) {
-                        return 1;
-                    }
-                    break;
-                default:
-                    printHelp();
-                    return 1;
-                }
-                break;
-            case "-c":
-            case "--config":
-                /**
-                 * for fast prototyping config setting for a new network
-                 */
-                if (args.length >= 2) {
-                    if (args[1].startsWith("--ips=")) {
-                        String[] subArgs = args[1].replace("--ips=", "").split(",");
-                        ArrayList<String[]> nodeInfos = new ArrayList<String[]>();
-                        for (int i = 0, m = subArgs.length; i < m; i++) {
-                            if (subArgs[i].matches(ipv4Pattern)) {
-                                String[] nodeInfo = new String[3];
-                                nodeInfo[0] = UUID.randomUUID().toString();
-                                nodeInfo[1] = subArgs[i];
-                                nodeInfo[2] = "30303";
-                                nodeInfos.add(nodeInfo);
+                    switch (args[1]) {
+                        case "create":
+                            if (!createAccount()) {
+                                return 1;
                             }
+                            break;
+                        case "list":
+                            if (!listAccounts()) {
+                                return 1;
+                            }
+                            break;
+                        case "export":
+                            if (args.length < 3 || !exportPrivateKey(args[2])) {
+                                return 1;
+                            }
+                            break;
+                        case "import":
+                            if (args.length < 3 || !importPrivateKey(args[2])) {
+                                return 1;
+                            }
+                            break;
+                        default:
+                            printHelp();
+                            return 1;
                         }
-                        System.out.println("Config Overriding Commands");
-                        System.out.println("---------------------------------------------");
-                        for (int i = 0, m = nodeInfos.size(); i < m; i++) {
-                            String[] ni = nodeInfos.get(i);
-                            System.out.println("");
-                            String command = "-c --id=" + ni[0] + " --p2p=" + ni[1] + "," + ni[2] + " --nodes=";
-                            for (int j = 0; j < m; j++) {
-                                if (j != i) {
-                                    command += "p2p://" + nodeInfos.get(j)[0] + "@" + nodeInfos.get(j)[1] + ":"
-                                            + nodeInfos.get(j)[2] + ",";
-                                }
-                            }
-                            command = command.substring(0, command.length() - 1);
-                            System.out.println(command);
+                    break;
+                case "-c":
+                    cfg.fromXML();
+                    cfg.setId(UUID.randomUUID().toString());
+                    cfg.toXML(null);
+                    System.out.println("\nNew config generated");
+                    break;
+                case "-i":
+                    cfg.fromXML();
+                    System.out.println("\nInformation");
+                    System.out.println("--------------------------------------------");
+                    System.out.println("current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    String[] nodes = cfg.getNet().getNodes();
+                    if (nodes != null && nodes.length > 0) {
+                        System.out.println("boot nodes list:");
+                        for (String node : nodes) {
+                            System.out.println("            " + node);
                         }
                     } else {
-                        cfg.toXML(Arrays.copyOfRange(args, 1, args.length));
+                        System.out.println("boot nodes list: 0");
                     }
-                } else {
-                    cfg.toXML(null);
-                    System.out.println("\nnew config generated");
-                }
-                break;
-            case "-i":
-            case "--info":
-                cfg.fromXML();
-                System.out.println("\nInformation");
-                System.out.println("--------------------------------------------");
-                System.out.println("current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
-                        + cfg.getNet().getP2p().getPort());
-                String[] nodes = cfg.getNet().getNodes();
-                if (nodes != null && nodes.length > 0) {
-                    System.out.println("boot nodes list:");
-                    for (int i = 0, m = nodes.length; i < m; i++) {
-                        System.out.println("            " + nodes[i]);
+                    System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    break;
+                case "-r":
+                    if (args.length < 2) {
+                        System.out.println("Starting database clean-up.");
+                        RecoveryUtils.pruneAndCorrect();
+                        System.out.println("Finished database clean-up.");
+                    } else {
+                        switch (revertTo(args[1])) {
+                        case SUCCESS:
+                            System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
+                            break;
+                        case FAILURE:
+                            System.out.println("Unable to revert to block number " + args[1] + ".");
+                            return 1;
+                        case ILLEGAL_ARGUMENT:
+                        default:
+                            return 1;
+                        }
                     }
-                } else {
-                    System.out.println("boot nodes list: 0");
-                }
-                System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
-                break;
-            case "-r":
-            case "--revert":
-                if (args.length < 2) {
-                    System.out.println("Please provide the block number you want to revert to as an argument.");
+                    break;
+                case "-v":
+                    System.out.println("\nVersion");
+                    System.out.println("--------------------------------------------");
+                    // Don't put break here!!
+                case "--version":
+                    System.out.println(Version.KERNEL_VERSION);
+                    break;
+                default:
+                    System.out.println("Unable to parse the input arguments");
+                    printHelp();
                     return 1;
-                } else {
-                    switch (revertTo(args[1])) {
-                    case SUCCESS:
-                        System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
-                        break;
-                    case FAILURE:
-                        System.out.println("Unable to revert to block number " + args[1] + ".");
-                        return 1;
-                    case ILLEGAL_ARGUMENT:
-                    default:
-                        return 1;
-                    }
-                }
-                break;
-            case "-v":
-                System.out.println("\nVersion");
-                System.out.println("--------------------------------------------");
-                System.out.println(AionHub.VERSION);
-                break;
-            case "--version":
-                System.out.println(AionHub.VERSION);
-                break;
-            default:
-                System.out.println("Unable to parse the input arguments");
-                printHelp();
-                return 1;
             }
             System.out.println("");
         } catch (Throwable e) {
@@ -190,42 +154,32 @@ public class Cli {
     /**
      * Print the CLI help info.
      */
-    protected void printHelp() {
-        System.out.println("Usage: ./aion.sh [options] [arguments]\n");
+    private void printHelp() {
+        System.out.println("Usage: ./aion.sh [options] [arguments]");
         System.out.println();
-        System.out.println("  -h");
-        System.out.println("  --help                       show help info");
+        System.out.println("  -h                           show help info");
         System.out.println();
-        System.out.println("  -a [arguments]");
-        System.out.println("  --account [arguments]");
         System.out.println("  -a create                    create a new account");
         System.out.println("  -a list                      list all existing accounts");
         System.out.println("  -a export [address]          export private key of an account");
         System.out.println("  -a import [private_key]      import private key");
         System.out.println();
-        System.out.println("  -c ");
-        System.out.println("  --config                     create config with default values");
-        System.out.println("  -c --id=uuid                 create config with customized node id");
-        System.out.println("  -c --nodes=p2p0,p2p1,..      create config with customized boot nodes");
-        System.out.println("  -c --p2p=ip:port             create config with customized p2p listening address");
+        System.out.println("  -c                           create config with default values");
         System.out.println();
-        System.out.println("  -i ");
-        System.out.println("  --info                       show information");
+        System.out.println("  -i                           show information");
         System.out.println();
-        System.out.println("  -r [block_number]");
-        System.out.println(
-                "  --revert [block_number]      removes from the database all blocks greater than the one given");
+        System.out.println("  -r                           remove blocks on side chains and correct block info");
+        System.out.println("  -r [block_number]            revert db up to specific block number");
         System.out.println();
-        System.out.println("  -v ");
-        System.out.println("  --version                    show version");
+        System.out.println("  -v                           show version");
     }
 
     /**
      * Creates a new account.
      *
-     * @return
+     * @return boolean
      */
-    protected boolean createAccount() {
+    private boolean createAccount() {
         String password = readPassword("Please enter a password: ");
         String password2 = readPassword("Please re-enter your password: ");
 
@@ -247,9 +201,9 @@ public class Cli {
     /**
      * List all existing account.
      *
-     * @return
+     * @return boolean
      */
-    protected boolean listAccounts() {
+    private boolean listAccounts() {
         String[] accounts = Keystore.list();
         for (String account : accounts) {
             System.out.println(account);
@@ -263,9 +217,9 @@ public class Cli {
      *
      * @param address
      *            address of the account
-     * @return
+     * @return boolean
      */
-    protected boolean exportPrivateKey(String address) {
+    private boolean exportPrivateKey(String address) {
         if (!Keystore.exist(address)) {
             System.out.println("The account does not exist!");
             return false;
@@ -288,9 +242,9 @@ public class Cli {
      *
      * @param privateKey
      *            private key in hex string
-     * @return
+     * @return boolean
      */
-    protected boolean importPrivateKey(String privateKey) {
+    private boolean importPrivateKey(String privateKey) {
         // TODO: the Hex.decode() method catches all exceptions which may cause
         // issues for other components
         byte[] raw = Hex.decode(privateKey.startsWith("0x") ? privateKey.substring(2) : privateKey);
@@ -321,15 +275,15 @@ public class Cli {
     /**
      * Reads a password from the console.
      *
-     * @param prompt
-     * @return
+     * @param prompt String
+     * @return boolean
      */
     public String readPassword(String prompt) {
         Console console = System.console();
         return new String(console.readPassword(prompt));
     }
 
-    protected RecoveryUtils.Status revertTo(String blockNumber) {
+    private RecoveryUtils.Status revertTo(String blockNumber) {
         // try to convert to long
         long block;
 

@@ -524,4 +524,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockMiner().isMining();
     }
 
+    public int peerCount() {
+        return this.ac.getAionHub().getP2pMgr().getActiveNodes().size();
+    }
 }

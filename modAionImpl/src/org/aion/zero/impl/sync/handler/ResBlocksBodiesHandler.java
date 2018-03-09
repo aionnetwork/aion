@@ -33,53 +33,42 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.p2p.Ctrl;
+import java.util.List;
 import org.aion.p2p.Handler;
-import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
 
 /**
+ *
  * @author chris
- * handler for status request from network
+ * handler for blocks bodies received from network
+ *
  */
-public final class ReqStatusHandler extends Handler {
+public final class ResBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
-    private IAionBlockchain chain;
+    private final SyncMgr syncMgr;
 
-    private IP2pMgr mgr;
-
-    private byte[] genesisHash;
-
-    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr, final byte[] _genesisHash) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+    public ResBlocksBodiesHandler(final Logger _log, final SyncMgr _syncMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
         this.log = _log;
-        this.chain = _chain;
-        this.mgr = _mgr;
-        this.genesisHash = _genesisHash;
+        this.syncMgr = _syncMgr;
     }
 
     @Override
-    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-        this.log.debug(
-                "<req-status from-node={}>",
-                _displayId
-        );
-        this.mgr.send(
-                _nodeIdHashcode,
-                new ResStatus(
-                        this.chain.getBestBlock().getNumber(),
-                        this.chain.getTotalDifficulty().toByteArray(),
-                        this.chain.getBestBlockHash(),
-                        this.genesisHash
-                )
-        );
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
+        List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
+        if(bodies != null && bodies.size() > 0)
+            this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
+        else
+            this.log.error("<res-bodies invalid>");
     }
 }

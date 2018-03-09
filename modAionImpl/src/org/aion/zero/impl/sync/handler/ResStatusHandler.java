@@ -33,42 +33,51 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
-import java.util.List;
-import org.aion.p2p.Handler;
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Ver;
-import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.msg.ResBlocksBodies;
+import org.aion.p2p.*;
 import org.slf4j.Logger;
+import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.sync.Act;
 
 /**
- *
  * @author chris
- * handler for blocks bodies received from network
- *
  */
-public final class ResBlocksBodiesHandler extends Handler {
+public final class ResStatusHandler extends Handler {
 
     private final Logger log;
 
+    private final IP2pMgr p2pMgr;
+
     private final SyncMgr syncMgr;
 
-    public ResBlocksBodiesHandler(final Logger _log, final SyncMgr _syncMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
+    public ResStatusHandler(final Logger _log, final IP2pMgr _p2pMgr, final SyncMgr _syncMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.log = _log;
+        this.p2pMgr = _p2pMgr;
         this.syncMgr = _syncMgr;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
-        List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if(bodies != null && bodies.size() > 0)
-            this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
-        else
-            this.log.error("<res-bodies invalid>");
+        if (_msgBytes == null || _msgBytes.length == 0)
+            return;
+        ResStatus rs = ResStatus.decode(_msgBytes);
+
+        INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
+
+        INodeMgr nmgr = this.p2pMgr.getNodeMgr();
+
+        nmgr.updateAllNodesInfo(node);
+
+        if (node != null) {
+            this.log.debug("<res-status best-block={} from-node={}>", rs.getBestBlockNumber(), _displayId);
+            long nodeBestBlockNumber = rs.getBestBlockNumber();
+            byte[] nodeBestBlockHash = rs.getBestHash();
+            byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
+            node.updateStatus(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
+            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash(), nodeTotalDifficulty);
+        }
     }
 }
