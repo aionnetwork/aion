@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import org.aion.base.util.Hex;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
@@ -196,8 +197,11 @@ public final class SyncMgr {
                 Thread.currentThread().setName("sync-status");
                 AionBlock blk = blockchain.getBestBlock();
                 System.out.println("[sync-status self=" + blk.getNumber() + "/"
-                        + this.blockchain.getTotalDifficulty().toString(10) + " network="
+                        + Hex.toHexString(this.blockchain.getBestBlockHash()) + "/"
+                        + this.blockchain.getTotalDifficulty().toString(10)
+                        + " network="
                         + this.netBestStatus.get().blockNumber + "/"
+                        + Hex.toHexString(netBestStatus.get().blockHash) + "/"
                         + netBestStatus.get().totalDiff.toString(10)
                         + " blocks-queue-size=" + importedBlocks.size() + "]");
             }, 0, 5000, TimeUnit.MILLISECONDS);
