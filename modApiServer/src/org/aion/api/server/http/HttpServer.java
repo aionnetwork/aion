@@ -114,7 +114,7 @@ public final class HttpServer {
         // TODO All of the eth_* methods need to be renamed to aion standard
         switch (_method) {
 
-        /*
+        /* -------------------------------------------------------------------------
          * web3
          */
         case eth_accounts:
@@ -135,12 +135,6 @@ public final class HttpServer {
                 jsonObj.put(key, cc.toJSON());
             }
             return processResult(_id, jsonObj);
-
-        case personal_unlockAccount:
-            String account = (String) params.get(0);
-            String password = (String) params.get(1);
-            int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
-            return processResult(_id, api.unlockAccount(account, password, duration));
 
         case eth_getBlockByNumber: {
             String number = (String) params.get(0);
@@ -237,20 +231,6 @@ public final class HttpServer {
             return processResult(_id, TypeConverter.toJsonHex(transactionHash));
         }
 
-        case eth_newBlockFilter:
-            return processResult(_id, api.eth_newBlockFilter());
-
-        case eth_newFilter:
-            if (params.length() == 1) {
-                ArgFltr args = ArgFltr.fromJSON(params.getJSONObject(0));
-                return processResult(_id, api.eth_newFilter(args));
-            } else
-                return processResult(_id, "");
-
-        case eth_getFilterLogs:
-        case eth_getFilterChanges:
-            return processResult(_id, api.eth_getFilterChanges(params.get(0) + ""));
-
         case eth_getTransactionReceipt:
             jsonObj = new JSONObject();
             TxRecpt txR = api.eth_getTransactionReceipt((String) params.get(0));
@@ -323,19 +303,52 @@ public final class HttpServer {
         case eth_getCode:
             return processResult(_id, api.eth_getCode(params.get(0) + ""));
 
+        /* -------------------------------------------------------------------------
+         * personal
+         */
+
+        case personal_unlockAccount:
+            String account = (String) params.get(0);
+            String password = (String) params.get(1);
+            int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
+            return processResult(_id, api.unlockAccount(account, password, duration));
+
+        /* -------------------------------------------------------------------------
+         * filters
+         */
+
+        case eth_newFilter:
+            return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
+
+        case eth_newBlockFilter:
+            return processResult(_id, api.eth_newBlockFilter());
+
+        case eth_newPendingTransactionFilter:
+            return processResult(_id, api.eth_newPendingTransactionFilter());
+
         case eth_uninstallFilter:
             return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
 
-        /*
+        case eth_getFilterChanges:
+            return processResult(_id, api.eth_getFilterChanges(params.get(0) + ""));
+
+        case eth_getFilterLogs:
+            return processResult(_id, api.eth_getFilterLogs(params.get(0) + ""));
+
+        case eth_getLogs:
+            return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
+
+        /* -------------------------------------------------------------------------
          * net
          */
+        // TODO: investigate how this endpoint is used by users to improve the quality of response
         case net_listening:
             return processResult(_id, true);
 
         case net_peerCount:
             return processResult(_id, api.peerCount());
 
-        /*
+        /* -------------------------------------------------------------------------
          * debug
          */
         case debug_getBlocksByNumber:
@@ -350,7 +363,7 @@ public final class HttpServer {
             JSONArray response = api.debug_getBlocksByNumber(number, fullTransactions);
             return processResult(_id, response);
 
-        /*
+        /* -------------------------------------------------------------------------
          * stratum pool
          */
         case getinfo:

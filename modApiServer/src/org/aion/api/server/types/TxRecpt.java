@@ -95,7 +95,7 @@ public final class TxRecpt {
     public boolean successful;
 
     public <TX extends AbstractTransaction, BH extends IBlockHeader, TXR extends AbstractTxReceipt<TX>> TxRecpt(
-            IBlock<TX, BH> block, AbstractTxInfo<TXR, TX> txInfo, long cumulativeNrgUsed) {
+            IBlock<TX, BH> block, AbstractTxInfo<TXR, TX> txInfo, long cumulativeNrgUsed, boolean isMainchain) {
 
         AbstractTxReceipt<TX> receipt = txInfo.getReceipt();
         if (block != null) {
@@ -105,7 +105,7 @@ public final class TxRecpt {
             this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
             for (int i = 0; i < this.logs.length; i++) {
                 Log logInfo = receipt.getLogInfoList().get(i);
-                this.logs[i] = new TxRecptLg(logInfo, block, txInfo.getIndex(), receipt.getTransaction(), i);
+                this.logs[i] = new TxRecptLg(logInfo, block, txInfo.getIndex(), receipt.getTransaction(), i, !isMainchain);
             }
         }
 

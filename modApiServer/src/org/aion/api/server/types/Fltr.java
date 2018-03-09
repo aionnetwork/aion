@@ -65,6 +65,8 @@ public abstract class Fltr {
     }
 
     public synchronized Object[] poll() {
+        // type erasure ... forced to return Object[]
+        // downside: user of this class needs to know that internal data-structure it a List of Evt Objects
         Object[] ret = events.toArray();
         this.lastPollTime.set(System.currentTimeMillis());
         this.events.clear();

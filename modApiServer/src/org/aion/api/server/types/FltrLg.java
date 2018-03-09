@@ -77,7 +77,7 @@ public final class FltrLg extends Fltr {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
-                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, receipt.getTransaction(), logIndex)));
+                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, receipt.getTransaction(), logIndex, true)));
                             }
                             logIndex++;
                         }
@@ -105,7 +105,7 @@ public final class FltrLg extends Fltr {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
-                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, txn, logIndex)));
+                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, txn, logIndex, true)));
                             }
                             logIndex++;
                         }

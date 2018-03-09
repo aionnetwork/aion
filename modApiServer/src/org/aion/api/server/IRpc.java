@@ -57,6 +57,7 @@ public interface IRpc {
         eth_uninstallFilter,
         eth_getFilterChanges,
         eth_getFilterLogs,
+        eth_getLogs,
 
         /**
          * net

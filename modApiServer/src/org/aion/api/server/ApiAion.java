@@ -285,6 +285,11 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getCode(addr);
     }
 
+    /* NOTE: only use this if you need receipts for one or small number transactions in a block.
+     * (since there is n^2 work happening here to compute cumulative nrg)
+     * For use cases where you need all the transaction receipts in a block, please use a different
+     * strategy,
+     */
     public TxRecpt getTransactionReceipt(byte[] txHash) {
         if (txHash == null) {
             if (LOG.isErrorEnabled()) {
@@ -340,7 +345,7 @@ public abstract class ApiAion extends Api {
             }
         }
 
-        return new TxRecpt(block, txInfo, cumulateNrg);
+        return new TxRecpt(block, txInfo, cumulateNrg, true);
     }
 
     public byte[] doCall(ArgTxCall _params) {

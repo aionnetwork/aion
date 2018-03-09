@@ -24,38 +24,33 @@
 
 package org.aion.api.server.http;
 
-import java.lang.reflect.Array;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.IRpc;
 import org.aion.api.server.types.*;
 import org.aion.base.type.*;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.zero.impl.db.AionBlockStore;
-import org.apache.commons.collections4.map.LRUMap;
 import org.aion.base.util.TypeConverter;
-import org.aion.mcf.core.AccountState;
 import org.aion.equihash.Solution;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.mcf.vm.types.Log;
-import org.aion.mcf.types.AbstractTxReceipt;
+import org.aion.mcf.core.AccountState;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
+import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 final class ApiWeb3Aion extends ApiAion implements IRpc {
 
@@ -219,107 +214,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    // ------------------------------------------------------------------------
-
-    String eth_newFilter(ArgFltr rf) {
-
-        FltrLg filter = new FltrLg();
-        filter.setTopics(rf.topics);
-        filter.setContractAddress((byte[][]) rf.address.toArray());
-        long id = fltrIndex.getAndIncrement();
-        installedFilters.put(id, filter);
-
-        final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.fromBlock));
-        AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.toBlock));
-
-        if (fromBlock != null) {
-            // need to add historical data
-            // this is our own policy: what to do in this case is not defined in the spec
-            //
-            // policy: add data from earliest to latest, until we can't fill the queue anymore
-            //
-            // caveat: filling up the events-queue with historical data will cause the following issue means that the user will miss all events generated between
-            // the first poll and filter installation.
-
-            toBlock = toBlock == null ? getBestBlock() : toBlock;
-            for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
-                if (filter.isFull()) break;
-                filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
-            }
-        }
-
-        return TypeConverter.toJsonHex(id);
-    }
-
-    String eth_newBlockFilter() {
-        long id = fltrIndex.getAndIncrement();
-        installedFilters.put(id, new FltrBlk());
-        return TypeConverter.toJsonHex(id);
-    }
-
-    String eth_newPendingTransactionFilter() { return ""; }
-
-    boolean eth_uninstallFilter(String id) {
-        return id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(id).longValue()) != null;
-    }
-
-    JSONArray eth_getFilterChanges(final String _id) {
-        if (_id == null)
-            return new JSONArray();
-        long id = TypeConverter.StringHexToBigInteger(_id).longValue();
-        Fltr filter = installedFilters.get(id);
-
-        if (filter == null) {
-            return new JSONArray();
-        }
-        Object[] _events = filter.poll();
-        int _events_size = _events.length;
-        JSONArray events = new JSONArray();
-
-        Fltr.Type t = filter.getType();
-        switch (t) {
-        case BLOCK:
-            if (LOG.isDebugEnabled())
-                LOG.debug("<filter-block-poll id={} events={}>", id, _events_size);
-            List<Object> blkHashes = new ArrayList<>();
-            for (Object _event : _events) {
-                blkHashes.add(((EvtBlk) _event).toJSON());
-            }
-            events = new JSONArray(blkHashes);
-            break;
-
-        case TRANSACTION:
-            if (LOG.isDebugEnabled())
-                LOG.debug("<filter-transaction-poll id={} events={}>", id, _events_size);
-            List<Object> txHashes = new ArrayList<>();
-            for (Object _event : _events) {
-                txHashes.add(((EvtTx) _event).toJSON());
-            }
-            events = new JSONArray(txHashes);
-            break;
-
-        case LOG:
-            if (LOG.isDebugEnabled())
-                LOG.debug("<filter-log-poll id={} events={}>", id, _events_size);
-            List<JSONObject> logs = new ArrayList<>();
-            for (Object _event : _events) {
-                logs.add(((EvtLg) _event).toJSON());
-            }
-            events = new JSONArray(logs);
-            break;
-
-        default:
-            if (LOG.isDebugEnabled())
-                LOG.debug("<filter-unknown-poll id={} events={}>", id, _events_size);
-            break;
-        }
-        return events;
-    }
-
-    JSONArray eth_getFilterLogs() { return null; }
-
-    // ------------------------------------------------------------------------
-
     TxRecpt eth_getTransactionReceipt(String txHash) {
         return this.getTransactionReceipt(TypeConverter.StringHexToByteArray(txHash));
     }
@@ -405,6 +299,104 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             b.put("mainchain", block.getValue().getValue());
             response.put(b);
         }
+        return response;
+    }
+
+    /* -------------------------------------------------------------------------
+     * filters
+     */
+
+    /* Web3 Filters Support
+     *
+     * NOTE: newFilter behaviour is ill-defined in the JSON-rpc spec for the following scenarios:
+     * (an explanation of how we resolved these ambiguities follows immediately after)
+     *
+     * newFilter is used to subscribe for filter on transaction logs for transactions with provided address and topics
+     *
+     * role of fromBlock, toBlock fields within context of newFilter, newBlockFilter, newPendingTransactionFilter
+     * (they seem only more pertinent for getLogs)
+     * how we resolve it: populate historical data (best-effort) in the filter response before "installing the filter"
+     * onus on the user to flush the filter of the historical data, before depending on it for up-to-date values.
+     * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
+     */
+    String eth_newFilter(final ArgFltr rf) {
+
+        FltrLg filter = new FltrLg();
+        filter.setTopics(rf.topics);
+        filter.setContractAddress((byte[][]) rf.address.toArray());
+
+        final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.fromBlock));
+        AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.toBlock));
+
+        if (fromBlock != null) {
+            // need to add historical data
+            // this is our own policy: what to do in this case is not defined in the spec
+            //
+            // policy: add data from earliest to latest, until we can't fill the queue anymore
+            //
+            // caveat: filling up the events-queue with historical data will cause the following issue:
+            // the user will miss all events generated between the first poll and filter installation.
+
+            toBlock = toBlock == null ? getBestBlock() : toBlock;
+            for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
+                if (filter.isFull()) break;
+                filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
+            }
+        }
+
+        // "install" the filter after populating historical data;
+        // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
+        long id = fltrIndex.getAndIncrement();
+        installedFilters.put(id, filter);
+
+        return TypeConverter.toJsonHex(id);
+    }
+
+    String eth_newBlockFilter() {
+        long id = fltrIndex.getAndIncrement();
+        installedFilters.put(id, new FltrBlk());
+        return TypeConverter.toJsonHex(id);
+    }
+
+    String eth_newPendingTransactionFilter() {
+        long id = fltrIndex.getAndIncrement();
+        installedFilters.put(id, new FltrTx());
+        return TypeConverter.toJsonHex(id);
+    }
+
+    boolean eth_uninstallFilter(String id) {
+        return id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(id).longValue()) != null;
+    }
+
+    JSONArray eth_getFilterChanges(final String _id) {
+        if (_id == null)
+            return new JSONArray();
+
+        long id = TypeConverter.StringHexToBigInteger(_id).longValue();
+        Fltr filter = installedFilters.get(id);
+
+        if (filter == null) return new JSONArray();
+
+        Object[] events = filter.poll();
+        JSONArray response = new JSONArray();
+        for (Object event : events) {
+            if (event instanceof Evt) {
+                // put the Object we get out of the Evt object in here
+                response.put(((Evt) event).toJSON());
+            }
+        }
+
+        return response;
+    }
+
+    JSONArray eth_getFilterLogs(final String _id) {
+        return eth_getFilterChanges(_id);
+    }
+
+    JSONArray eth_getLogs(final ArgFltr rf) {
+        String id = eth_newFilter(rf);
+        JSONArray response = eth_getFilterChanges(id);
+        eth_uninstallFilter(id);
         return response;
     }
 }

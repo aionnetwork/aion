@@ -1521,7 +1521,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             for (AionTransaction tx : txs) {
                 AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
                 cumulativeNrg += ti.getReceipt().getEnergyUsed();
-                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg);
+                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg, true);
 
                 List<Message.t_LgEle> tles = Arrays.asList(rt.logs).parallelStream()
                         .map(log -> {
