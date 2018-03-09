@@ -176,6 +176,13 @@ public class AionPendingStateImpl
                         public void onBest(IBlock _blk, List<?> _receipts) {
                             processBest((AionBlock) _blk, _receipts);
                         }
+
+                        public void onPendingTxStateChange() {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
+                            }
+                            flushCachePendingTx();
+                        }
                     });
         }
 
@@ -421,11 +428,6 @@ public class AionPendingStateImpl
             LOG.trace("PendingStateImpl.processBest: nonceMgr.flush");
         }
         nonceMgr.flush();
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
-        }
-        flushCachePendingTx();
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");

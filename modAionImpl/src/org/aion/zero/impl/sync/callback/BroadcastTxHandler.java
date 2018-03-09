@@ -92,33 +92,46 @@ public final class BroadcastTxHandler extends Handler {
         Map<Address, Map<BigInteger,ITransaction>> txn = castRawTx(broadCastTx);
         List<ITransaction> cacheTxn = Collections.synchronizedList(new ArrayList<>());
 
-        log.info("txn size[{}]", txn.size());
+        if (log.isTraceEnabled()) {
+            log.trace("receive txn size[{}]", txn.size());
+        }
 
         List<ITransaction> newCache = new ArrayList<>();
-        for(Address addr : txn.keySet()) {
+
+        txn.keySet().parallelStream().forEach( addr -> {
             Map<BigInteger,ITransaction> tmpTxMap = txn.get(addr);
 
-            for (BigInteger bi : tmpTxMap.keySet()) {
-                log.info("txn bi[{}]", bi.toString());
+            if (log.isTraceEnabled()) {
+                for (BigInteger bi : tmpTxMap.keySet()) {
+                    log.trace("receive txn bi[{}]", bi.toString());
+                }
             }
 
             BigInteger bn = expectNonce(tmpTxMap, addr);
             if (bn != null) {
                 List<ITransaction> seqTx = this.pendingState.getSeqCacheTx(tmpTxMap, addr, bn);
 
-                log.info("addr[{}] bn[{}] seqTx size[{}]", addr.toString(), bn.toString(), seqTx.size());
+                if (log.isTraceEnabled()) {
+                    log.trace("addr[{}] bn[{}] seqTx size[{}]", addr.toString(), bn.toString(), seqTx.size());
+                }
+
                 cacheTxn.addAll(seqTx);
             } else {
-
-                log.info("addToTxCache addr[{}] size[{}]", addr.toString(), tmpTxMap.size());
+                if (log.isTraceEnabled()) {
+                    log.trace("addToTxCache addr[{}] size[{}]", addr.toString(), tmpTxMap.size());
+                }
                 newCache.addAll(this.pendingState.addToTxCache(tmpTxMap, addr));
             }
-        }
+        });
 
         List<ITransaction> newPendingTx = new ArrayList<>();
         if (!cacheTxn.isEmpty()) {
             newPendingTx = this.pendingState.addPendingTransactions(cacheTxn, new StackTimer());
-            log.info("cacheTxn size[{}] newPendingTxsize[{}]", cacheTxn.size(), newPendingTx.size());
+
+            if (log.isTraceEnabled()) {
+                log.trace("cacheTxn size[{}] newPendingTx size[{}]", cacheTxn.size(), newPendingTx.size());
+            }
+
         }
 
         if (!newCache.isEmpty()) {
@@ -138,7 +151,7 @@ public final class BroadcastTxHandler extends Handler {
         }
     }
 
-    private BigInteger expectNonce(Map<BigInteger, ITransaction> tmpTx, Address from) {
+    private synchronized BigInteger expectNonce(Map<BigInteger, ITransaction> tmpTx, Address from) {
 
         BigInteger bestNonce = this.pendingState.bestNonce(from);
 

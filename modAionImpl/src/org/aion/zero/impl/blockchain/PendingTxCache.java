@@ -53,33 +53,34 @@ public class PendingTxCache {
         Map<BigInteger,AionTransaction> accountCacheMap = pendingTx.get(addr);
         if (accountCacheMap != null) {
             accountCacheMap.putAll(txmap);
-            rtn.add(accountCacheMap.get(bn));
 
-            boolean foundNext = true;
-            while(foundNext) {
-                bn = bn.add(BigInteger.ONE);
-                AionTransaction nextTx = accountCacheMap.get(bn);
-                if (nextTx == null) {
-                    foundNext = false;
-                } else {
-                    rtn.add(accountCacheMap.get(bn));
-                }
-            }
-
+            rtn.addAll(findSeqTx(bn, accountCacheMap));
             pendingTx.put(addr, accountCacheMap);
         } else {
-            rtn.add(txmap.get(bn));
-            boolean foundNext = true;
-            while(foundNext) {
-                bn = bn.add(BigInteger.ONE);
-                AionTransaction nextTx = txmap.get(bn);
-                if (nextTx == null) {
-                    foundNext = false;
-                } else {
-                    rtn.add(txmap.get(bn));
-                }
-            }
+            rtn.addAll(findSeqTx(bn, txmap));
             pendingTx.put(addr, txmap);
+        }
+
+        return rtn;
+    }
+
+    private List<AionTransaction> findSeqTx(BigInteger bn, Map<BigInteger, AionTransaction> cacheMap) {
+        if (bn == null || cacheMap == null) {
+            throw new NullPointerException();
+        }
+
+        List<AionTransaction> rtn = new ArrayList<>();
+        rtn.add(cacheMap.get(bn));
+
+        boolean foundNext = true;
+        while(foundNext) {
+            bn = bn.add(BigInteger.ONE);
+            AionTransaction nextTx = cacheMap.get(bn);
+            if (nextTx == null) {
+                foundNext = false;
+            } else {
+                rtn.add(cacheMap.get(bn));
+            }
         }
 
         return rtn;
@@ -122,6 +123,12 @@ public class PendingTxCache {
                 LOG.debug("cacheTx.flush addr[{}] bn[{}] size[{}]", addr.toString(), bn.toString(), pendingTx.get(addr).size());
             }
 
+            if (LOG.isTraceEnabled()) {
+                for (AionTransaction atx : pendingTx.get(addr).values()) {
+                    LOG.trace("cacheTx.flush nonce[{}]", new BigInteger(atx.getNonce()).toString());
+                }
+            }
+
             Map<BigInteger, AionTransaction> accountCache = pendingTx.get(addr);
 
             BigInteger finalBn = bn;
@@ -132,17 +139,7 @@ public class PendingTxCache {
             }
 
             if (accountCache.get(bn) != null) {
-                processableTx.add(accountCache.get(bn));
-                boolean foundNext = true;
-                while(foundNext) {
-                    bn = bn.add(BigInteger.ONE);
-                    AionTransaction nextTx = accountCache.get(bn);
-                    if (nextTx == null) {
-                        foundNext = false;
-                    } else {
-                        processableTx.add(accountCache.get(bn));
-                    }
-                }
+                processableTx.addAll(findSeqTx(bn, accountCache));
             }
         });
 
