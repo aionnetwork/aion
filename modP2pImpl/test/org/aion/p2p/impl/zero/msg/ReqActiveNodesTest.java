@@ -23,27 +23,25 @@
  *
  */
 
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.zero.msg;
 
 import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.Act;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author chris
- *
  */
-public final class ReqActiveNodes extends Msg {
+public class ReqActiveNodesTest {
+    @Test
+    public void testRoute() {
 
-    public ReqActiveNodes(){
-        super(Ver.V0, Ctrl.NET, Act.REQ_ACTIVE_NODES);
+        ReqActiveNodes req = new ReqActiveNodes();
+        assertEquals(Ver.V0, req.getHeader().getVer());
+        assertEquals(Ctrl.NET, req.getHeader().getCtrl());
+        assertEquals(Act.REQ_ACTIVE_NODES, req.getHeader().getAction());
+
     }
-
-    @Override
-    public byte[] encode() {
-        return null;
-    }
-
 }

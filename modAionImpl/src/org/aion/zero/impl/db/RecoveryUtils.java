@@ -25,9 +25,13 @@
 package org.aion.zero.impl.db;
 
 import org.aion.base.type.IBlock;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RecoveryUtils {
 
@@ -44,6 +48,11 @@ public class RecoveryUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
         // get the current blockchain
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
@@ -53,6 +62,38 @@ public class RecoveryUtils {
 
         // ok if we managed to get down to the expected block
         return status;
+    }
+
+    /**
+     * Used by the CLI call.
+     */
+    public static void pruneAndCorrect() {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
+        // get the current blockchain
+        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+
+        IBlockStoreBase store = blockchain.getBlockStore();
+
+        IBlock bestBlock = store.getBestBlock();
+        if (bestBlock == null) {
+            System.out.println("Empty database. Nothing to do.");
+            return;
+        }
+
+        // revert to block number and flush changes
+        store.pruneAndCorrect();
+        store.flush();
+
+        blockchain.getRepository().close();
     }
 
     /**

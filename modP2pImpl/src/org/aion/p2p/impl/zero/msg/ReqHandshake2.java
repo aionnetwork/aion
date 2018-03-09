@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.zero.msg;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

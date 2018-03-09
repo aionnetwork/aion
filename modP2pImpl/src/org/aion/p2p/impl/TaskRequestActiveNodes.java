@@ -25,11 +25,9 @@
 
 package org.aion.p2p.impl;
 
-import java.util.Map;
-
 import org.aion.p2p.INode;
 import org.aion.p2p.NodeRandPolicy;
-import org.aion.p2p.impl.msg.ReqActiveNodes;
+import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
 
 /**
  *

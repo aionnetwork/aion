@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.*;
 import org.aion.p2p.Ctrl;

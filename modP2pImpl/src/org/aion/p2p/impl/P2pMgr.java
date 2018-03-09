@@ -41,10 +41,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.aion.p2p.*;
-import org.aion.p2p.impl.msg.ReqHandshake;
-import org.aion.p2p.impl.msg.ReqHandshake2;
-import org.aion.p2p.impl.msg.ResActiveNodes;
-import org.aion.p2p.impl.msg.ResHandshake;
+import org.aion.p2p.impl.zero.msg.ReqHandshake;
+import org.aion.p2p.impl.zero.msg.ReqHandshake2;
+import org.aion.p2p.impl.zero.msg.ResActiveNodes;
+import org.aion.p2p.impl.zero.msg.ResHandshake;
 
 /**
  * @author Chris p2p://{uuid}@{ip}:{port}

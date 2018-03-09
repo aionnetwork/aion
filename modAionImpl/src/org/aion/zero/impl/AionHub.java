@@ -73,8 +73,6 @@ public class AionHub {
 
     private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    public static final String VERSION = "0.1.14";
-
     private IP2pMgr p2pMgr;
 
     private CfgAion cfg;
@@ -101,8 +99,6 @@ public class AionHub {
      * application is first booted.
      */
     private volatile AionBlock startingBlock;
-
-    //static private AionHub inst;
 
     /**
      * Initialize as per the <a href=
@@ -147,7 +143,7 @@ public class AionHub {
          */
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
         this.p2pMgr = new P2pMgr(
-                this.cfg.getNet().getId(), "",
+                this.cfg.getNet().getId(), Version.REPO_VERSION,
                 this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
                 cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(),
                 cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly());
@@ -389,7 +385,7 @@ public class AionHub {
     }
 
     public static String getRepoVersion() {
-        return AionRepositoryImpl.VERSION;
+        return Version.REPO_VERSION;
     }
 
     public AionBlock getStartingBlock() {
