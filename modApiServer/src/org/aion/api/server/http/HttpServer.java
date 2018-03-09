@@ -241,16 +241,9 @@ public final class HttpServer {
             return processResult(_id, api.eth_newBlockFilter());
 
         case eth_newFilter:
-            ArgFltr fltr = new ArgFltr();
-
-            /*
-             * deal with events for one contract first
-             */
             if (params.length() == 1) {
-                JSONObject json = params.getJSONObject(0);
-                fltr.address = Address.wrap(json.optString("address", ""));
-                fltr.topics = json.optString("topics", "");
-                return processResult(_id, api.eth_newFilter(fltr));
+                ArgFltr args = ArgFltr.fromJSON(params.getJSONObject(0));
+                return processResult(_id, api.eth_newFilter(args));
             } else
                 return processResult(_id, "");
 

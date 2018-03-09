@@ -60,7 +60,7 @@ public abstract class ApiAion extends Api {
 
     protected IAionChain ac = null;
     protected final static short FLTRS_MAX = 1024;
-    protected AtomicLong fltrIndex = new AtomicLong(1);
+    protected AtomicLong fltrIndex = new AtomicLong(0);
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
 

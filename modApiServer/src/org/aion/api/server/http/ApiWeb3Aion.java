@@ -24,6 +24,7 @@
 
 package org.aion.api.server.http;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,77 +65,49 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
         IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(2);
         if (blkHr != null) {
-            blkHr.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onBlock(final IBlockSummary _bs) {
-                            AionBlockSummary bs = (AionBlockSummary) _bs;
-                            IAionBlock b = bs.getBlock();
-                            List<AionTransaction> txs = b.getTransactionsList();
-
-                            /*
-                             * TODO: fix it If dump empty txs list block to
-                             * onBlock filter leads null exception on
-                             * getTransactionReceipt
-                             */
-                            if (txs.size() > 0) {
-                                installedFilters.values().forEach((f) -> {
-                                    switch (f.getType()) {
-                                    case BLOCK:
-                                        f.add(new EvtBlk(b));
-                                        if (LOG.isDebugEnabled())
-                                            LOG.debug("<event-new-block num={} txs={}>", b.getNumber(), txs.size());
-                                        break;
-                                    case LOG:
-                                        List<AionTxReceipt> txrs = bs.getReceipts();
-                                        int txIndex = 0;
-                                        int lgIndex = 0;
-                                        for (AionTxReceipt txr : txrs) {
-                                            List<Log> infos = txr.getLogInfoList();
-                                            for (Log bi : infos) {
-                                                TxRecptLg txLg = new TxRecptLg(bi, b, txIndex, txr.getTransaction(),
-                                                        lgIndex);
-                                                txIndex++;
-                                                lgIndex++;
-                                                f.add(new EvtLg(txLg));
-                                            }
-                                        }
-                                        if (LOG.isDebugEnabled())
-                                            LOG.debug("<event-new-log num={} txs={}>", b.getNumber(), txs.size());
-                                        break;
-                                    default:
-                                        if (LOG.isDebugEnabled())
-                                            LOG.debug("<event-new-", b.getNumber(), txs.size());
-                                        break;
-                                    }
-                                });
-                            }
+            blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
+                public void onBlock(final IBlockSummary _bs) {
+                    AionBlockSummary bs = (AionBlockSummary) _bs;
+                    installedFilters.keySet().forEach((k) -> {
+                        Fltr f = installedFilters.get(k);
+                        if (f.isExpired()) {
+                            LOG.debug("<Filter: expired, key={}>", k);
+                            installedFilters.remove(k);
+                        } else if (f.onBlock(bs)) {
+                            LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), bs.getBlock().getNumber());
                         }
                     });
+                }
+            });
         }
 
         IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(1);
         if (txHr != null) {
-            txHr.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onPendingTxUpdate(final ITxReceipt _txRcpt, final EventTx.STATE _state,
-                                final IBlock _blk) {
-                            ByteArrayWrapper txHashW = new ByteArrayWrapper(
-                                    ((AionTxReceipt) _txRcpt).getTransaction().getHash());
-                            if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
-                                pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
-                            } else {
-                                pendingReceipts.remove(txHashW);
-                            }
-                        }
+            txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
 
-                        public void onPendingTxReceived(ITransaction _tx) {
-                            installedFilters.values().forEach((f) -> {
-                                if (f.getType() == Fltr.Type.TRANSACTION) {
-                                    f.add(new EvtTx((AionTransaction) _tx));
-                                }
-                            });
+                public void onPendingTxUpdate(final ITxReceipt _txRcpt, final EventTx.STATE _state, final IBlock _blk) {
+                    ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
+                    if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
+                        pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
+                    } else {
+                        pendingReceipts.remove(txHashW);
+                    }
+                }
+
+                public void onPendingTxReceived(ITransaction _tx) {
+                    // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
+                    // in the onBlock event. eviction done here "just in case ..."
+                    installedFilters.keySet().forEach((k) -> {
+                        Fltr f = installedFilters.get(k);
+                        if (f.isExpired()) {
+                            LOG.debug("<Filter: expired, key={}>", k);
+                            installedFilters.remove(k);
+                        } else if(f.onTransaction(_tx)) {
+                            LOG.debug("<Filter: append, onPendingTransaction type={} txHash={}>", f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
                         }
                     });
+                }
+            });
         }
     }
 
@@ -230,6 +203,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         long bn = this.parseBnOrId(_bnOrId);
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
         BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
+
         if (nb == null) {
             if (LOG.isDebugEnabled())
                 LOG.debug("<get-block bn={} err=not-found>");
@@ -245,57 +219,48 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
+    // ------------------------------------------------------------------------
+
+    String eth_newFilter(ArgFltr rf) {
+
+        FltrLg filter = new FltrLg();
+        filter.setTopics(rf.topics);
+        filter.setContractAddress((byte[][]) rf.address.toArray());
+        long id = fltrIndex.getAndIncrement();
+        installedFilters.put(id, filter);
+
+        final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.fromBlock));
+        AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.toBlock));
+
+        if (fromBlock != null) {
+            // need to add historical data
+            // this is our own policy: what to do in this case is not defined in the spec
+            //
+            // policy: add data from earliest to latest, until we can't fill the queue anymore
+            //
+            // caveat: filling up the events-queue with historical data will cause the following issue means that the user will miss all events generated between
+            // the first poll and filter installation.
+
+            toBlock = toBlock == null ? getBestBlock() : toBlock;
+            for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
+                if (filter.isFull()) break;
+                filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
+            }
+        }
+
+        return TypeConverter.toJsonHex(id);
+    }
+
     String eth_newBlockFilter() {
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrBlk());
         return TypeConverter.toJsonHex(id);
     }
 
-    /**
-     * this method name is so weird, what does new means
-     */
-    String eth_newFilter(ArgFltr rf) {
-        FltrLg fltrLg = new FltrLg(rf.address, rf.toBlock, rf.topics);
-        long id = fltrIndex.getAndIncrement();
-        installedFilters.put(id, fltrLg);
+    String eth_newPendingTransactionFilter() { return ""; }
 
-        long toBlock = this.getBestBlock().getNumber();
-        long fromBlock = Math.max(1, toBlock - 5);
-
-        /*
-         * Simplify first for now. Preload past 5 blocks
-         */
-        int lgIndex = 0;
-        for (long i = fromBlock; i <= toBlock; i++) {
-            AionBlock blk = this.getBlock(i);
-            List<AionTransaction> txs = blk.getTransactionsList();
-            int txIndex = 0;
-            if (txs.size() > 0) {
-                for (AionTransaction tx : txs) {
-                    Address _contractAddress = tx.getTo() == null ? tx.getContractAddress() : tx.getTo();
-
-                    /*
-                     * only check with empty topics string here in case user
-                     * bind to all events which should emit constructor events
-                     */
-                    if (_contractAddress.equals(rf.address)) {
-                        @SuppressWarnings("rawtypes")
-                        AbstractTxReceipt txr = ac.getBlockchain().getTransactionInfo(tx.getHash()).getReceipt();
-                        @SuppressWarnings("unchecked")
-                        List<Log> infos = txr.getLogInfoList();
-                        for (Log bi : infos) {
-                            TxRecptLg txLg = new TxRecptLg(bi, blk, txIndex, txr.getTransaction(), lgIndex);
-                            txIndex++;
-                            lgIndex++;
-                            fltrLg.add(new EvtLg(txLg));
-                        }
-                    }
-                }
-            }
-        }
-
-        return Long.toHexString(id);
-
+    boolean eth_uninstallFilter(String id) {
+        return id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(id).longValue()) != null;
     }
 
     JSONArray eth_getFilterChanges(final String _id) {
@@ -351,6 +316,10 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return events;
     }
 
+    JSONArray eth_getFilterLogs() { return null; }
+
+    // ------------------------------------------------------------------------
+
     TxRecpt eth_getTransactionReceipt(String txHash) {
         return this.getTransactionReceipt(TypeConverter.StringHexToByteArray(txHash));
     }
@@ -363,10 +332,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (state == EMPTY)
             return "";
         return "0x" + state.toString();
-    }
-
-    boolean eth_uninstallFilter(String id) {
-        return id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(id).longValue()) != null;
     }
 
     Tx eth_getTransactionByHash(String txHash) {

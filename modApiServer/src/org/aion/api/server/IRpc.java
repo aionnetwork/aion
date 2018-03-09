@@ -40,18 +40,23 @@ public interface IRpc {
         eth_getBlockByNumber,
         eth_getBlockByHash,
         eth_getCode,
-        eth_getFilterChanges,
-        eth_getFilterLogs,
         eth_getTransactionByHash,
         eth_getTransactionReceipt,
         eth_getTransactionCount,
         eth_estimateGas,
         eth_sendTransaction,
         eth_sendRawTransaction,
-        eth_newBlockFilter,
-        eth_newFilter,
         eth_syncing,
+
+        /**
+         * filters
+         */
+        eth_newFilter,
+        eth_newBlockFilter,
+        eth_newPendingTransactionFilter,
         eth_uninstallFilter,
+        eth_getFilterChanges,
+        eth_getFilterLogs,
 
         /**
          * net
