@@ -319,7 +319,7 @@ public class NodeMgr implements INodeMgr {
             Iterator nodesIt = tempNodes.iterator();
             while (nodesIt.hasNext()) {
                 Node n = (Node) nodesIt.next();
-                if (n.peerMetric.shouldNotConn())
+                if (n.peerMetric.shouldNotConn() && !n.getIfFromBootList())
                     tempNodes.remove(n);
             }
         }
