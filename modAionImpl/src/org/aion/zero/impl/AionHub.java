@@ -142,8 +142,9 @@ public class AionHub {
          * loadBlockchain() method
          */
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
+        String[] frags = Version.KERNEL_VERSION.split("\\.");
         this.p2pMgr = new P2pMgr(
-                this.cfg.getNet().getId(), Version.REPO_VERSION,
+                this.cfg.getNet().getId(), frags[frags.length - 1],
                 this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
                 cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(),
                 cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly());
