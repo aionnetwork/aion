@@ -35,16 +35,19 @@
 
 package org.aion.zero.impl.sync.callback;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.aion.base.timer.StackTimer;
+import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.*;
+import org.aion.zero.impl.blockchain.PendingTxCache;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
+import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
@@ -60,6 +63,8 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
+    private final PendingTxCache pendingTxCache;
+
     /*
      * (non-Javadoc)
      *
@@ -71,6 +76,7 @@ public final class BroadcastTxHandler extends Handler {
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
+        this.pendingTxCache = new PendingTxCache();
     }
 
     @Override
@@ -83,23 +89,91 @@ public final class BroadcastTxHandler extends Handler {
             return;
         }
 
-        List<ITransaction> txn = new ArrayList<>();
-        for (byte[] rawdata : broadCastTx) {
-            AionTransaction tx = new AionTransaction(rawdata);
-            txn.add(tx);
+        Map<Address, Map<BigInteger,ITransaction>> txn = castRawTx(broadCastTx);
+        List<ITransaction> cacheTxn = Collections.synchronizedList(new ArrayList<>());
+
+        log.info("txn size[{}]", txn.size());
+
+        List<ITransaction> newCache = new ArrayList<>();
+        for(Address addr : txn.keySet()) {
+            Map<BigInteger,ITransaction> tmpTxMap = txn.get(addr);
+
+            for (BigInteger bi : tmpTxMap.keySet()) {
+                log.info("txn bi[{}]", bi.toString());
+            }
+
+            BigInteger bn = expectNonce(tmpTxMap, addr);
+            if (bn != null) {
+                List<ITransaction> seqTx = this.pendingState.getSeqCacheTx(tmpTxMap, addr, bn);
+
+                log.info("addr[{}] bn[{}] seqTx size[{}]", addr.toString(), bn.toString(), seqTx.size());
+                cacheTxn.addAll(seqTx);
+            } else {
+
+                log.info("addToTxCache addr[{}] size[{}]", addr.toString(), tmpTxMap.size());
+                newCache.addAll(this.pendingState.addToTxCache(tmpTxMap, addr));
+            }
         }
 
-        List<ITransaction> newPendingTx = this.pendingState.addPendingTransactions(txn, new StackTimer());
+        List<ITransaction> newPendingTx = new ArrayList<>();
+        if (!cacheTxn.isEmpty()) {
+            newPendingTx = this.pendingState.addPendingTransactions(cacheTxn, new StackTimer());
+            log.info("cacheTxn size[{}] newPendingTxsize[{}]", cacheTxn.size(), newPendingTx.size());
+        }
+
+        if (!newCache.isEmpty()) {
+            newPendingTx.addAll(newCache);
+        }
 
         // new pending tx, broadcast out to the active nodes
-        if (newPendingTx != null && !newPendingTx.isEmpty()) {
+        if (!newPendingTx.isEmpty()) {
             this.log.debug("<broadcast-txs txs={} from-node={}>", newPendingTx.size(), _displayId);
 
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
 
+            List<ITransaction> finalNewPendingTx = newPendingTx;
             activeNodes.forEach((k, v) -> {
-                this.p2pMgr.send(v.getIdHash(), new BroadcastTx(newPendingTx));
+                this.p2pMgr.send(v.getIdHash(), new BroadcastTx(finalNewPendingTx));
             });
         }
+    }
+
+    private BigInteger expectNonce(Map<BigInteger, ITransaction> tmpTx, Address from) {
+
+        BigInteger bestNonce = this.pendingState.bestNonce(from);
+
+        if (tmpTx.get(bestNonce) == null) {
+
+            Map<BigInteger, ITransaction> cachetx = this.pendingState.getCacheTx(from);
+            if (cachetx == null || cachetx.get(bestNonce) == null) {
+                return null;
+            }
+        }
+
+        return bestNonce;
+    }
+
+    private Map<Address, Map<BigInteger, ITransaction>> castRawTx(List<byte[]> broadCastTx) {
+
+        Map<Address, Map<BigInteger, ITransaction>> rtn = Collections.synchronizedMap(new HashMap<>());
+
+        for (byte[] raw : broadCastTx) {
+            try {
+                AionTransaction tx = new AionTransaction(raw);
+                if (TXValidator.isValid(tx)) {
+                    Address from = tx.getFrom();
+
+                    if (rtn.get(from) == null) {
+                        rtn.put(from, new HashMap<>());
+                    }
+
+                    rtn.get(from).put(new BigInteger(tx.getNonce()), tx);
+                }
+
+            } catch (Exception e){
+                log.error("rawdata -> AionTransaction cast exception[{}]", e.toString());
+            }
+        }
+        return rtn;
     }
 }

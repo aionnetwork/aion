@@ -27,6 +27,7 @@ package org.aion.zero.impl.blockchain;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.timer.ITimer;
+import org.aion.base.timer.StackTimer;
 import org.aion.base.timer.TimerDummy;
 import org.aion.base.type.*;
 import org.aion.base.util.ByteArrayWrapper;
@@ -67,6 +68,10 @@ public class AionPendingStateImpl
         implements IPendingStateInternal<org.aion.zero.impl.types.AionBlock, AionTransaction> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+    public PendingTxCache getPendingTxCache() {
+        return pendingTxCache;
+    }
 
     public static class TransactionSortedSet extends TreeSet<AionTransaction> {
 
@@ -115,6 +120,8 @@ public class AionPendingStateImpl
     static private NonceMgr nonceMgr;
 
     static private AionPendingStateImpl inst;
+
+    private PendingTxCache pendingTxCache = new PendingTxCache();
 
     public synchronized static AionPendingStateImpl inst() {
         if (inst == null) {
@@ -206,6 +213,10 @@ public class AionPendingStateImpl
 
     private boolean addNewTxIfNotExist(AionTransaction tx) {
         return receivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
+    }
+
+    public boolean isNewPending(AionTransaction tx) {
+        return receivedTxs.get(ByteArrayWrapper.wrap(tx.getHash())) == null;
     }
 
     /**
@@ -407,9 +418,14 @@ public class AionPendingStateImpl
         updateState(best);
 
         if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: nonceMgr.flush()");
+            LOG.trace("PendingStateImpl.processBest: nonceMgr.flush");
         }
         nonceMgr.flush();
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
+        }
+        flushCachePendingTx();
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");
@@ -419,6 +435,30 @@ public class AionPendingStateImpl
 
         IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
         this.evtMgr.newEvent(evtChange);
+    }
+
+    private void flushCachePendingTx() {
+        Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("PendingStateImpl.flushCachePendingTx: acc#[{}]", cacheTxAccount.size());
+        }
+
+        Map<Address, BigInteger> nonceMap = new HashMap<>();
+        for (Address addr : cacheTxAccount) {
+            BigInteger bn = nonceMgr.getNonce(addr);
+            nonceMap.put(addr, bn);
+        }
+
+        List<AionTransaction> newPendingTx = this.pendingTxCache.flush(nonceMap);
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("PendingStateImpl.flushCachePendingTx: newPendingTx_size[{}]", newPendingTx.size());
+        }
+
+        if (newPendingTx != null && !newPendingTx.isEmpty()) {
+            addPendingTransactions(newPendingTx, new StackTimer());
+        }
     }
 
     private void processBestInternal(IAionBlock block, List<AionTxReceipt> receipts) {
@@ -592,5 +632,25 @@ public class AionPendingStateImpl
     @Override
     public String getVersion() {
         return this.txPool.getVersion();
+    }
+
+    @Override
+    public BigInteger bestNonce(Address addr) {
+        return nonceMgr.getNonce(addr);
+    }
+
+    @Override
+    public List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {
+        return this.pendingTxCache.addCacheTx(txmap, addr);
+    }
+
+    @Override
+    public List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
+        return this.pendingTxCache.getSeqCacheTx(txmap, addr, bn);
+    }
+
+    @Override
+    public Map<BigInteger, AionTransaction> getCacheTx(Address from) {
+        return this.pendingTxCache.geCacheTx(from);
     }
 }

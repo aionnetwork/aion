@@ -64,4 +64,12 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
      * @jay
      */
     String getVersion();
+
+    BigInteger bestNonce(Address addr);
+
+    List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
+
+    List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
+
+    Map<BigInteger,Tx> getCacheTx(Address from);
 }
