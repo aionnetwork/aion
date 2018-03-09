@@ -90,6 +90,8 @@ public final class Node implements INode {
 
     private byte[] totalDifficulty;
 
+    private String revision = "";
+
     private SocketChannel channel;
 
     /**
@@ -242,6 +244,8 @@ public final class Node implements INode {
         this.portConnected = _port;
     }
 
+    void setRevision(String _revision) { this.revision = _revision; }
+
     /**
      * this method used to keep current node stage on either pending list or
      * active list
@@ -296,6 +300,8 @@ public final class Node implements INode {
     long getTimestamp() {
         return this.timestamp;
     }
+
+    String getRevision() { return this.revision; }
 
     /**
      * @return SocketChannel

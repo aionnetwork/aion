@@ -99,15 +99,14 @@ public class NodeMgr implements INodeMgr {
         ));
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
-            sb.append("---------------------------------------------------------------------------------------------------------------------------------------\n");
-            sb.append("          s"); // id & seed
+            sb.append("\n          s"); // id & seed
             sb.append("               td");
             sb.append("          #");
             sb.append("                                                             hash");
             sb.append("              ip");
             sb.append("  port");
             sb.append("     conn\n");
-
+            sb.append("---------------------------------------------------------------------------------------------------------------------------------------\n");
             sorted.sort((n1, n2) -> {
                 int tdCompare = new BigInteger(1, n2.getTotalDifficulty() == null ? new byte[0] : n2.getTotalDifficulty())
                     .compareTo(new BigInteger(1, n1.getTotalDifficulty() == null ? new byte[0] : n1.getTotalDifficulty()));

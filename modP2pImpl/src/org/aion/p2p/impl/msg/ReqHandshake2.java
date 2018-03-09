@@ -33,7 +33,8 @@ import java.util.List;
  *
  * @author chris
  *
- * 2018-03-07 append versions, revision
+ * 2018-03-07 extends versions, revision
+ * protocal version upgrading test
  *
  */
 public final class ReqHandshake2 extends ReqHandshake {
@@ -56,10 +57,14 @@ public final class ReqHandshake2 extends ReqHandshake {
      * @param _revision String
      * @param _versions List<byte[2]> header contains 2 byte version
      */
-    ReqHandshake2(final byte[] _nodeId, int _netId, final byte[] _ip, int _port, final byte[] _revision, final List<Short> _versions) {
+    public ReqHandshake2(final byte[] _nodeId, int _netId, final byte[] _ip, int _port, final byte[] _revision, final List<Short> _versions) {
         super(_nodeId, _netId, _ip, _port);
         this.revision = _revision;
         this.versions = _versions.subList(0, Math.min(MAX_VERSIONS_LEN, _versions.size()));
+    }
+
+    public byte[] getRevision(){
+        return this.revision;
     }
 
     /**
