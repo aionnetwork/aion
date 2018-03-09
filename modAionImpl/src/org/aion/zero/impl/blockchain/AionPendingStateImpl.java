@@ -26,9 +26,6 @@ package org.aion.zero.impl.blockchain;
 
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.timer.ITimer;
-import org.aion.base.timer.StackTimer;
-import org.aion.base.timer.TimerDummy;
 import org.aion.base.type.*;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -231,12 +228,12 @@ public class AionPendingStateImpl
      * rework the model that libAion uses to work with timers
      */
     @Override
-    public synchronized List<AionTransaction> addPendingTransaction(AionTransaction tx, ITimer timer) {
-        return addPendingTransactions(Collections.singletonList(tx), timer);
+    public synchronized List<AionTransaction> addPendingTransaction(AionTransaction tx) {
+        return addPendingTransactions(Collections.singletonList(tx));
     }
 
     @Override
-    public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions, ITimer timer) {
+    public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
         int unknownTx = 0;
         List<AionTransaction> newPending = new ArrayList<>();
 
@@ -244,7 +241,7 @@ public class AionPendingStateImpl
 
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                if (addPendingTransactionImpl(tx, timer)) {
+                if (addPendingTransactionImpl(tx)) {
                     newPending.add(tx);
                 }
             } else {
@@ -285,11 +282,8 @@ public class AionPendingStateImpl
                 }
             }
         }
-        /**
-         * TODO: only add timerDummys FOR NOW, we need to replace them with real
-         * timers later
-         */
-        addPendingTransaction(tx, new TimerDummy());
+
+        addPendingTransaction(tx);
     }
 
     private void fireTxUpdate(AionTxReceipt txReceipt, PendingTransactionState state, IAionBlock block) {
@@ -315,15 +309,14 @@ public class AionPendingStateImpl
      * @param tx
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
-    private boolean addPendingTransactionImpl(final AionTransaction tx, ITimer timer) {
+    private boolean addPendingTransactionImpl(final AionTransaction tx) {
 
         if (!TXValidator.isValid(tx)) {
             LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
             return false;
         }
 
-        AionTxExecSummary txSum = executeTx(tx, timer);
-        timer.shutdown();
+        AionTxExecSummary txSum = executeTx(tx);
 
         if (txSum.isRejected()) {
             if (LOG.isErrorEnabled()) {
@@ -459,7 +452,7 @@ public class AionPendingStateImpl
         }
 
         if (newPendingTx != null && !newPendingTx.isEmpty()) {
-            addPendingTransactions(newPendingTx, new StackTimer());
+            addPendingTransactions(newPendingTx);
         }
     }
 
@@ -570,7 +563,7 @@ public class AionPendingStateImpl
         // timer.shutdown();
     }
 
-    private AionTxExecSummary executeTx(AionTransaction tx, ITimer timer) {
+    private AionTxExecSummary executeTx(AionTransaction tx) {
 
         IAionBlock best = getBestBlock();
 

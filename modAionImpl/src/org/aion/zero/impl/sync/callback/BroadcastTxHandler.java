@@ -37,9 +37,7 @@ package org.aion.zero.impl.sync.callback;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import org.aion.base.timer.StackTimer;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.blockchain.IPendingStateInternal;
@@ -126,7 +124,7 @@ public final class BroadcastTxHandler extends Handler {
 
         List<ITransaction> newPendingTx = new ArrayList<>();
         if (!cacheTxn.isEmpty()) {
-            newPendingTx = this.pendingState.addPendingTransactions(cacheTxn, new StackTimer());
+            newPendingTx = this.pendingState.addPendingTransactions(cacheTxn);
 
             if (log.isTraceEnabled()) {
                 log.trace("cacheTxn size[{}] newPendingTx size[{}]", cacheTxn.size(), newPendingTx.size());
