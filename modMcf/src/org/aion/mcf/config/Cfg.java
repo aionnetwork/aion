@@ -44,8 +44,6 @@ public abstract class Cfg {
 
     protected String id;
 
-    protected String version;
-
     protected CfgApi api;
 
     protected CfgNet net;
@@ -76,10 +74,6 @@ public abstract class Cfg {
 
     public void setLog(final CfgLog _log) {
         this.log = _log;
-    }
-
-    public String getVersion() {
-        return this.version;
     }
 
     public String getId() {
