@@ -8,6 +8,7 @@
 		<java active="true" ip="127.0.0.1" port="8547"></java>
 	</api>
 	<net>
+		<id>0</id>
 		<nodes>
 			<node>p2p://2da62542-999f-4405-bdb3-50d8c61bed61@52.237.31.69:30303</node>
 			<node>p2p://c1f42646-279a-441e-bba7-bfebfc1eec63@52.179.100.107:30303</node>
