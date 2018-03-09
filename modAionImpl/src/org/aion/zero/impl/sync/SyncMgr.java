@@ -66,7 +66,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 public final class SyncMgr {
 
     // interval time get peer status
-    private static final int STATUS_INTERVAL = 500;
+    private static final int STATUS_INTERVAL = 2000;
 
     // timeout sent headers
     private static final int SENT_HEADERS_TIMEOUT = 5000;
@@ -128,7 +128,7 @@ public final class SyncMgr {
     }
 
     // Attation:
-    // update best block is callback function from p2p thread pool. even the
+    // update best block is handler function from p2p thread pool. even the
     // blocknumber and blockhash is atomic, but still need sync to prevent
     // blocknumber link to wrong block hash.
     public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,
@@ -206,13 +206,8 @@ public final class SyncMgr {
                         + " blocks-queue-size=" + importedBlocks.size() + "]");
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
-            Set<Integer> ids = new HashSet<>();
-            for (int i = 0; i < 3; i++) {
-                INode node = p2pMgr.getRandom();
-                if (node != null && !ids.contains(node.getIdHash())) {
-                    ids.add(node.getIdHash());
-                    p2pMgr.send(node.getIdHash(), reqStatus);
-                }
+            for (INode node : p2pMgr.getActiveNodes().values()) {
+                p2pMgr.send(node.getIdHash(), reqStatus);
             }
 
         }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);

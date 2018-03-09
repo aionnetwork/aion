@@ -23,27 +23,45 @@
  *
  */
 
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.one.msg;
 
-import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Act;
+import java.io.UnsupportedEncodingException;
 
 /**
  *
  * @author chris
  *
+ * Test versioning
+ *
  */
-public final class ReqActiveNodes extends Msg {
+public final class Hello extends Msg {
 
-    public ReqActiveNodes(){
-        super(Ver.V0, Ctrl.NET, Act.REQ_ACTIVE_NODES);
+    private String msg;
+
+    public Hello(String _msg){
+        super(Ver.V1, (byte)0, (byte)0);
+        this.msg = _msg;
+    }
+
+    public String getMsg(){
+        return this.msg;
+    }
+
+    public static Hello decode(final byte[] _bytes) {
+        String msg = "";
+        try{
+            msg = new String(_bytes, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+
+        }
+        return new Hello(msg);
     }
 
     @Override
     public byte[] encode() {
-        return null;
+        return this.msg.getBytes();
     }
 
 }

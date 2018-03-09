@@ -1,23 +1,28 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ * This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *******************************************************************************/
+ * Contributors to the aion source files in decreasing order of code volume:
+ *
+ * Aion foundation.
+ *
+ */
+
 package org.aion.mcf.config;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -28,6 +33,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
+/**
+ * @author chris
+ */
 public final class CfgSync {
 
     private int blocksImportMax;
@@ -48,8 +56,8 @@ public final class CfgSync {
             int eventType = sr.next();
             switch (eventType) {
             case XMLStreamReader.START_ELEMENT:
-                String elelmentName = sr.getLocalName().toLowerCase();
-                switch (elelmentName) {
+                String elementName = sr.getLocalName().toLowerCase();
+                switch (elementName) {
                 case "blocks-import-max":
                     this.blocksImportMax = Integer.parseInt(Cfg.readValue(sr));
                     break;
@@ -77,26 +85,33 @@ public final class CfgSync {
         try {
             Writer strWriter = new StringWriter();
             xmlWriter = output.createXMLStreamWriter(strWriter);
+
+            // start element sync
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("sync");
 
+            // sub-element blocks-import-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-import-max");
             xmlWriter.writeCharacters(this.getBlocksImportMax() + "");
             xmlWriter.writeEndElement();
 
+            // sub-element blocks-queue-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-queue-max");
             xmlWriter.writeCharacters(this.getBlocksQueueMax() + "");
             xmlWriter.writeEndElement();
 
+            // sub-element show-status
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("show-status");
             xmlWriter.writeCharacters(this.showStatus + "");
             xmlWriter.writeEndElement();
 
+            // close element sync
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
+
             xml = strWriter.toString();
             strWriter.flush();
             strWriter.close();
