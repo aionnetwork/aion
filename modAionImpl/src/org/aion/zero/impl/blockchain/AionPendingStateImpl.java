@@ -223,10 +223,6 @@ public class AionPendingStateImpl
         return receivedTxs.put(new ByteArrayWrapper(tx.getHash()), dummyObject) == null;
     }
 
-    public boolean isNewPending(AionTransaction tx) {
-        return receivedTxs.get(ByteArrayWrapper.wrap(tx.getHash())) == null;
-    }
-
     /**
      * TODO: when we removed libNc, timers were not introduced yet, we must
      * rework the model that libAion uses to work with timers
