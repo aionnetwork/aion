@@ -337,6 +337,7 @@ public final class SyncMgr {
                     ids.add(node.getIdHash());
                     this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, take));
                     // ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
+                    LOG.debug("Requesting blocks: from = {}, to = {}, node = {}", from , to, node.getIdShort());
                 }
             }
         }
@@ -408,11 +409,8 @@ public final class SyncMgr {
                     }
 
                     b = importedBlocks.take();
-                    blockNumberIndex = b.getNumber();
-                    ByteArrayWrapper hash = new ByteArrayWrapper(b.getHash());
-                    if (!savedHashes.containsKey(hash)) {
+                    if (!savedHashes.containsKey(ByteArrayWrapper.wrap(b.getHash()))) {
                         batch.add(b);
-                        savedHashes.put(hash, null);
                     }
                 }
 
@@ -441,6 +439,8 @@ public final class SyncMgr {
                             fetchAheadTriggerUsed = true;
                             getHeaders();
                         }
+
+                        savedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case IMPORTED_NOT_BEST:
                         if (LOG.isInfoEnabled()) {
@@ -456,6 +456,8 @@ public final class SyncMgr {
                             LOG.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                     b.getShortHash(), b.getTransactionsList().size());
                         }
+
+                        savedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case NO_PARENT:
                         if (LOG.isDebugEnabled()) {
