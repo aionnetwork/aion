@@ -320,9 +320,8 @@ public final class  P2pMgr implements IP2pMgr {
             }
         }
 
-        // rem out for bug :
+        // rem out for bug:
         //nodeMgr.loadPersistedNodes();
-
         cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp, this.selfPort);
     }
 
