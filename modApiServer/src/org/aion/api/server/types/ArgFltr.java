@@ -62,14 +62,17 @@ public class ArgFltr {
 
             // user can choose to pass in either one address, or an array of addresses
             List<byte[]> address = new ArrayList<>();
-            JSONArray addressList = json.optJSONArray("address");
-            if (addressList == null) {
-                // let the address constructor do the validation on the string
-                // it will throw if user passes invalid address
-                address.add((new Address(json.optString("address", null))).toBytes());
-            } else {
-                for (int i = 0; i < addressList.length(); i++) {
-                    address.add((new Address(addressList.optString(i, null))).toBytes());
+
+            if (!json.isNull("address")) {
+                JSONArray addressList = json.optJSONArray("address");
+                if (addressList == null) {
+                    // let the address constructor do the validation on the string
+                    // it will throw if user passes invalid address
+                    address.add((new Address(json.optString("address", null))).toBytes());
+                } else {
+                    for (int i = 0; i < addressList.length(); i++) {
+                        address.add((new Address(addressList.optString(i, null))).toBytes());
+                    }
                 }
             }
             /*

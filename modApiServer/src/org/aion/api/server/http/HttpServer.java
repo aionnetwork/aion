@@ -60,6 +60,7 @@ import static org.aion.base.util.ByteUtil.hexStringToBytes;
 
 /**
  * @author chris rpc server TODO: refactor as pooled response writing
+ * TODO: make implementation pass all spec tests: https://github.com/ethereum/rpc-tests
  */
 public final class HttpServer {
 
@@ -95,6 +96,10 @@ public final class HttpServer {
     private static HashMap<String, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
 
+    // TODO: make this compliant with the JSON RPC 2.0 spec: http://www.jsonrpc.org/specification
+    // for starters, need to return an error object with the right error codes
+    // (needs to be done in later refactor)
+    // optionally, support codes from Error Codes Improvement EIP: https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
     private static JSONObject processResult(final long _id, final Object _result) {
         JSONObject json = new JSONObject();
         json.put("jsonrpc", "2.0");
@@ -253,7 +258,7 @@ public final class HttpServer {
                 for (int i = 0; i < txR.logs.length; i++) {
                     JSONObject obj = new JSONObject();
                     obj.put("address", txR.logs[i].address);
-                    obj.put("data", txR.txData);
+                    obj.put("data", txR.logs[i].data);
                     obj.put("blockNumber", new NumericalValue(txR.blockNumber).toHexString());
                     obj.put("transactionIndex", new NumericalValue(txR.transactionIndex).toHexString());
                     obj.put("logIndex", new NumericalValue(i).toHexString());
@@ -317,26 +322,63 @@ public final class HttpServer {
          * filters
          */
 
+        // inelegant, java antipattern; will come up with a wrapper for all web3 calls to catch at top-level
+        // when this class gets refactored in the future.
         case eth_newFilter:
-            return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
+            try {
+                return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
+            } catch (Exception e) {
+                log.debug("eth_newFilter() threw exception", e);
+                return processResult(_id, null);
+            }
 
         case eth_newBlockFilter:
-            return processResult(_id, api.eth_newBlockFilter());
+            try {
+                return processResult(_id, api.eth_newBlockFilter());
+            } catch (Exception e) {
+                log.debug("eth_newBlockFilter() threw exception", e);
+                return processResult(_id, null);
+            }
 
         case eth_newPendingTransactionFilter:
-            return processResult(_id, api.eth_newPendingTransactionFilter());
+            try {
+                return processResult(_id, api.eth_newPendingTransactionFilter());
+            } catch (Exception e) {
+                log.debug("eth_newPendingTransactionFilter() threw exception", e);
+                return processResult(_id, null);
+            }
 
         case eth_uninstallFilter:
-            return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
+            try {
+                return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
+            } catch (Exception e) {
+                log.debug("eth_uninstallFilter() threw exception", e);
+                return processResult(_id, null);
+            }
 
         case eth_getFilterChanges:
-            return processResult(_id, api.eth_getFilterChanges(params.get(0) + ""));
+            try {
+                return processResult(_id, api.eth_getFilterChanges(params.get(0) + ""));
+            } catch (Exception e) {
+                log.debug("eth_getFilterChanges() threw exception", e);
+                return processResult(_id, null);
+            }
 
         case eth_getFilterLogs:
-            return processResult(_id, api.eth_getFilterLogs(params.get(0) + ""));
+            try {
+                return processResult(_id, api.eth_getFilterLogs(params.get(0) + ""));
+            } catch (Exception e) {
+                log.debug("eth_getFilterLogs() threw exception", e);
+                return processResult(_id, null);
+            }
 
         case eth_getLogs:
-            return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
+            try {
+                return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
+            } catch (Exception e) {
+                log.debug("eth_getLogs() threw exception", e);
+                return processResult(_id, null);
+            }
 
         /* -------------------------------------------------------------------------
          * net

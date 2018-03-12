@@ -53,8 +53,12 @@ public final class FltrLg extends Fltr {
         super(Type.LOG);
     }
 
-    public void setContractAddress(byte[] ... orAddress) {
-        contractAddresses = orAddress;
+    public void setContractAddress(List<byte[]> address) {
+        byte[][] t = new byte[address.size()][];
+        for (int i = 0; i < address.size(); i++) {
+            t[i] = address.get(i);
+        }
+        contractAddresses = t;
     }
 
     public void setTopics(List<byte[][]> topics) {

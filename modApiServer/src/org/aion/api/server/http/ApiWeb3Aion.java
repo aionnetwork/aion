@@ -320,36 +320,36 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
      */
     String eth_newFilter(final ArgFltr rf) {
+            FltrLg filter = new FltrLg();
+            filter.setTopics(rf.topics);
+            filter.setContractAddress(rf.address);
 
-        FltrLg filter = new FltrLg();
-        filter.setTopics(rf.topics);
-        filter.setContractAddress((byte[][]) rf.address.toArray());
+            final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.fromBlock));
+            AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.toBlock));
 
-        final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.fromBlock));
-        AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.toBlock));
+            if (fromBlock != null) {
+                // need to add historical data
+                // this is our own policy: what to do in this case is not defined in the spec
+                //
+                // policy: add data from earliest to latest, until we can't fill the queue anymore
+                //
+                // caveat: filling up the events-queue with historical data will cause the following issue:
+                // the user will miss all events generated between the first poll and filter installation.
 
-        if (fromBlock != null) {
-            // need to add historical data
-            // this is our own policy: what to do in this case is not defined in the spec
-            //
-            // policy: add data from earliest to latest, until we can't fill the queue anymore
-            //
-            // caveat: filling up the events-queue with historical data will cause the following issue:
-            // the user will miss all events generated between the first poll and filter installation.
-
-            toBlock = toBlock == null ? getBestBlock() : toBlock;
-            for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
-                if (filter.isFull()) break;
-                filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
+                toBlock = toBlock == null ? getBestBlock() : toBlock;
+                for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
+                    if (filter.isFull()) break;
+                    filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
+                }
             }
-        }
 
-        // "install" the filter after populating historical data;
-        // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
-        long id = fltrIndex.getAndIncrement();
-        installedFilters.put(id, filter);
+            // "install" the filter after populating historical data;
+            // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
+            long id = fltrIndex.getAndIncrement();
+            installedFilters.put(id, filter);
 
-        return TypeConverter.toJsonHex(id);
+            return TypeConverter.toJsonHex(id);
+
     }
 
     String eth_newBlockFilter() {
@@ -370,12 +370,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     JSONArray eth_getFilterChanges(final String _id) {
         if (_id == null)
-            return new JSONArray();
+            return null;
 
         long id = TypeConverter.StringHexToBigInteger(_id).longValue();
         Fltr filter = installedFilters.get(id);
 
-        if (filter == null) return new JSONArray();
+        if (filter == null) return null;
 
         Object[] events = filter.poll();
         JSONArray response = new JSONArray();
