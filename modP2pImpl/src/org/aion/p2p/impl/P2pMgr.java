@@ -483,7 +483,8 @@ public final class  P2pMgr implements IP2pMgr {
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
 
-        //System.out.println("read " + ctrl + "-" + act);
+        // print route
+        // System.out.println("read " + ver + "-" + ctrl + "-" + act);
         switch(ver){
             case Ver.V0:
                 switch (ctrl) {

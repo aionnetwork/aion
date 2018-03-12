@@ -64,8 +64,7 @@ public class TaskWrite implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setName("p2p-write");
-
-        // NOTE: the following logic may cause message loss
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         if (this.channelBuffer.onWrite.compareAndSet(false, true)) {
             /*
              * @warning header set len (body len) before header encode
@@ -76,7 +75,8 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
-            //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+            // print route
+            // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
             if (bodyBytes != null)
@@ -94,9 +94,7 @@ public class TaskWrite implements Runnable {
             } finally {
                 this.channelBuffer.onWrite.set(false);
                 try {
-
                     Msg msg = this.channelBuffer.messages.poll(1, TimeUnit.MILLISECONDS);
-
                     if (msg != null) {
                         //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                         workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));

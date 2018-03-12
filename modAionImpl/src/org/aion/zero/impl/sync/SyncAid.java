@@ -25,30 +25,68 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
 package org.aion.zero.impl.sync;
 
+import org.aion.zero.types.A0BlockHeader;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author chris
+ *
+ * SyncAid is created to achive 2 tasks on sync process
+ * 1. maintain particially trusted peers, proven by pow headers validations.
+ *    Keep some degree of tolerance based on common best block. Process is
+ *    driven by network status update
+ * 2. maintain track points on re-sync process
+ *
+ *
  */
-final class HeaderQuery {
+public class SyncAid {
 
-    String fromNode;
+    /**
+     * particially tructed node
+     */
+    class SyncNode{
 
-    long from;
+        /**
+         * maintain sequential headers starting from next one
+         * based on common header
+         * can be empty for most time
+         */
+        List<A0BlockHeader> cached = new ArrayList<>();
 
-    int take;
-
-    HeaderQuery(String _fromNode, long _from, int _take){
-        this.fromNode = _fromNode;
-        this.from = _from;
-        this.take = _take;
     }
+
+    /**
+     * group of particially tructed nodes
+     * based on same common height
+     */
+    class SyncGroup {
+
+        List<SyncNode> nodes = new ArrayList<>();
+
+        A0BlockHeader commonHeader;
+
+    }
+
+    /**
+     *
+     */
+    public void getRandomSyncPeer(){
+
+    }
+
+    /**
+     * return most close point sync point tracked
+     */
+    public void getSyncPoint(){
+
+    }
+
 }

@@ -45,7 +45,7 @@ final class HeadersWrapper {
 
     private int nodeIdHash;
 
-    private long timeout;
+    private long timestamp;
 
     private List<A0BlockHeader> headers;
 
@@ -57,7 +57,7 @@ final class HeadersWrapper {
     HeadersWrapper(int _nodeIdHash, final List<A0BlockHeader> _headers){
         this.nodeIdHash = _nodeIdHash;
         this.headers = _headers;
-        this.timeout = System.currentTimeMillis();
+        this.timestamp = System.currentTimeMillis();
     }
 
     /**
@@ -71,8 +71,8 @@ final class HeadersWrapper {
      * @return long
      * used to compare and drop from queue if expired
      */
-    long getTimeout(){
-        return this.timeout;
+    long getTimestamp(){
+        return this.timestamp;
     }
 
     /**

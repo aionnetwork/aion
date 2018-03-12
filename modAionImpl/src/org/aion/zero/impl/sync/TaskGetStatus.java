@@ -25,30 +25,57 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
  */
 
 package org.aion.zero.impl.sync;
 
+import org.aion.p2p.IP2pMgr;
+import org.aion.zero.impl.sync.msg.ReqStatus;
+import org.slf4j.Logger;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author chris
+ * long run
  */
-final class HeaderQuery {
+final class TaskGetStatus implements Runnable {
 
-    String fromNode;
+    // single instance req status
+    private final static ReqStatus reqStatus = new ReqStatus();
 
-    long from;
+    private final AtomicBoolean run;
 
-    int take;
+    private final int interval;
 
-    HeaderQuery(String _fromNode, long _from, int _take){
-        this.fromNode = _fromNode;
-        this.from = _from;
-        this.take = _take;
+    private final IP2pMgr p2p;
+
+    private final Logger log;
+
+    TaskGetStatus(final AtomicBoolean _run, int _interval, final IP2pMgr _p2p, final Logger _log){
+        this.run = _run;
+        this.interval = _interval;
+        this.p2p = _p2p;
+        this.log = _log;
+    }
+
+    @Override
+    public void run() {
+        Thread.currentThread().setName("sync-gs");
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+        while(this.run.get()){
+            Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
+            for (int id : ids) {
+                p2p.send(id, reqStatus);
+            }
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e) {
+                this.log.info("<sync-gs interrupted>");
+            }
+        }
+        this.log.info("<sync-gs shutdown>");
     }
 }
