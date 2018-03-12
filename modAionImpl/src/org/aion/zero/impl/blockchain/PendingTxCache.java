@@ -33,15 +33,19 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class PendingTxCache {
 
     private Map<Address, Map<BigInteger,AionTransaction>> pendingTx;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+    private static int cacheMax = 256*100_000; //256MB
+    private AtomicInteger currectSize = new AtomicInteger(0);
 
-    public PendingTxCache() {
-        pendingTx = Collections.synchronizedMap(new LRUMap<>(1_000_000));
+    public PendingTxCache(final int cacheMax) {
+        pendingTx = Collections.synchronizedMap(new LRUMap<>(100_000));
+        this.cacheMax = cacheMax *100_000;
     }
 
     public synchronized List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
@@ -49,22 +53,51 @@ public class PendingTxCache {
             throw new NullPointerException();
         }
 
+        if (isCacheMax(txmap)) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("PendingTx reached the max Memory settings");
+            }
+            return txmap.values().stream().collect(Collectors.toList());
+        }
+
         List<AionTransaction> rtn = new ArrayList<>();
         Map<BigInteger,AionTransaction> accountCacheMap = pendingTx.get(addr);
-        if (accountCacheMap != null) {
-            accountCacheMap.putAll(txmap);
 
+
+        if (accountCacheMap != null) {
+
+            int cz = currectSize.get();
+            currectSize.set(cz - getAccuTxSize(accountCacheMap.values().stream().collect(Collectors.toList())));
+
+            accountCacheMap.putAll(txmap);
             rtn.addAll(findSeqTx(bn, accountCacheMap));
             pendingTx.put(addr, accountCacheMap);
+            currectSize.addAndGet(getAccuTxSize(accountCacheMap.values().stream().collect(Collectors.toList())));
         } else {
             rtn.addAll(findSeqTx(bn, txmap));
             pendingTx.put(addr, txmap);
+            currectSize.addAndGet(getAccuTxSize(txmap.values().stream().collect(Collectors.toList())));
         }
 
         return rtn;
     }
 
-    private List<AionTransaction> findSeqTx(BigInteger bn, Map<BigInteger, AionTransaction> cacheMap) {
+    private int getAccuTxSize(List<AionTransaction> txList) {
+        final int[] rtn = { 0 };
+        txList.stream().forEach( tx -> {
+            rtn[0] += tx.getEncoded().length;
+        });
+
+        return rtn[0];
+    }
+
+    private boolean isCacheMax(Map<BigInteger, AionTransaction> txmap) {
+
+        LOG.info("isCacheMax [{}] [{}]", currectSize.get(), getAccuTxSize(txmap.values().stream().collect(Collectors.toList())));
+        return (currectSize.get() + getAccuTxSize(txmap.values().stream().collect(Collectors.toList()))) > cacheMax;
+    }
+
+    private synchronized List<AionTransaction> findSeqTx(BigInteger bn, Map<BigInteger, AionTransaction> cacheMap) {
         if (bn == null || cacheMap == null) {
             throw new NullPointerException();
         }
@@ -91,9 +124,20 @@ public class PendingTxCache {
             throw new NullPointerException();
         }
 
+        if (isCacheMax(txmap)) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("PendingTx reached the max Memory settings");
+            }
+            return txmap.values().stream().collect(Collectors.toList());
+        }
+
         Map<BigInteger, AionTransaction> pendingmap;
         if (pendingTx.get(addr) != null) {
             pendingmap = pendingTx.get(addr);
+
+            int cz = currectSize.get();
+            currectSize.set(cz - getAccuTxSize(pendingmap.values().stream().collect(Collectors.toList())));
+
             List<AionTransaction> newCache = new ArrayList<>();
             for (BigInteger bi : txmap.keySet()) {
                 if (pendingmap.get(bi) == null) {
@@ -103,20 +147,23 @@ public class PendingTxCache {
 
             pendingmap.putAll(txmap);
             pendingTx.put(addr, pendingmap);
+            currectSize.addAndGet(getAccuTxSize(pendingmap.values().stream().collect(Collectors.toList())));
+
             return newCache;
         } else {
             pendingTx.put(addr, txmap);
+            currectSize.addAndGet(getAccuTxSize(txmap.values().stream().collect(Collectors.toList())));
             return txmap.values().stream().collect(Collectors.toList());
         }
     }
 
-    public List<AionTransaction> flush(Map<Address, BigInteger> nonceMap) {
+    public synchronized List<AionTransaction> flush(Map<Address, BigInteger> nonceMap) {
         if (nonceMap == null) {
             throw new NullPointerException();
         }
 
         List<AionTransaction> processableTx = new ArrayList<>();
-        nonceMap.keySet().parallelStream().forEach( addr -> {
+        nonceMap.keySet().stream().forEach( addr -> {
             BigInteger bn = nonceMap.get(addr);
 
             if (LOG.isDebugEnabled()) {
@@ -130,9 +177,12 @@ public class PendingTxCache {
             }
 
             Map<BigInteger, AionTransaction> accountCache = pendingTx.get(addr);
+            int cz = currectSize.get();
+            currectSize.set(cz - getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
 
             BigInteger finalBn = bn;
             accountCache.entrySet().removeIf(e-> (e.getKey().compareTo(finalBn) < 0) );
+            currectSize.addAndGet(getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("cacheTx.flush after addr[{}] size[{}]", addr.toString(), pendingTx.get(addr).size());
@@ -146,11 +196,11 @@ public class PendingTxCache {
         return processableTx;
     }
 
-    public Set<Address> getCacheTxAccount() {
+    public synchronized Set<Address> getCacheTxAccount() {
         return this.pendingTx.keySet();
     }
 
-    public Map<BigInteger,AionTransaction> geCacheTx(Address from) {
+    public synchronized Map<BigInteger,AionTransaction> geCacheTx(Address from) {
         if (from == null) {
             throw new NullPointerException();
         }

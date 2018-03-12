@@ -66,10 +66,6 @@ public class AionPendingStateImpl
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
-    public PendingTxCache getPendingTxCache() {
-        return pendingTxCache;
-    }
-
     public static class TransactionSortedSet extends TreeSet<AionTransaction> {
 
         private static final long serialVersionUID = 4941385879122799663L;
@@ -118,7 +114,7 @@ public class AionPendingStateImpl
 
     static private AionPendingStateImpl inst;
 
-    private PendingTxCache pendingTxCache = new PendingTxCache();
+    private PendingTxCache pendingTxCache;
 
     public synchronized static AionPendingStateImpl inst() {
         if (inst == null) {
@@ -154,6 +150,8 @@ public class AionPendingStateImpl
             // log here!
             e.printStackTrace();
         }
+
+        this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
     }
 
     public void init(final AionBlockchainImpl blockchain) {
@@ -173,7 +171,13 @@ public class AionPendingStateImpl
                         public void onBest(IBlock _blk, List<?> _receipts) {
                             processBest((AionBlock) _blk, _receipts);
                         }
+                    });
+        }
 
+        IHandler txHandler = this.evtMgr.getHandler(1);
+        if (txHandler != null) {
+            txHandler.eventCallback(
+                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                         public void onPendingTxStateChange() {
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
@@ -411,6 +415,7 @@ public class AionPendingStateImpl
         }
 
         best = newBlock;
+        pendingState = repository.startTracking();
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("PendingStateImpl.processBest: updateState");
@@ -534,21 +539,12 @@ public class AionPendingStateImpl
 
     private void updateState(IAionBlock block) {
 
-        // @jay 18-01-05
-        // Do we need to execute pendingTX when update the best block?
-        // Temporary common out the tx execute
-
-        // TODO : move tracking inside the executeTx function
-        // pendingState = repository.startTracking();
-        // StackTimer timer = new StackTimer();
-
         List<AionTransaction> pendingTxl = this.txPool.snapshot();
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("updateState - snapshot tx[{}]", pendingTxl.size());
         }
         for (AionTransaction tx : pendingTxl) {
-            // AionTxExecSummary txSum = executeTx(tx, timer);
             if (LOG.isTraceEnabled()) {
                 LOG.debug("updateState - loop: " + tx.toString());
             }
@@ -556,11 +552,7 @@ public class AionPendingStateImpl
             AionTxReceipt receipt = new AionTxReceipt();
             receipt.setTransaction(tx);
             fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
-            // fireTxUpdate(txSum.getReceipt(), PendingTransactionState.PENDING,
-            // block);
         }
-
-        // timer.shutdown();
     }
 
     private AionTxExecSummary executeTx(AionTransaction tx) {

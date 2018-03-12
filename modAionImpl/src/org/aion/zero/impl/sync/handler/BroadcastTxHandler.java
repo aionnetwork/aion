@@ -42,7 +42,6 @@ import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.*;
-import org.aion.zero.impl.blockchain.PendingTxCache;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.impl.valid.TXValidator;
@@ -61,8 +60,6 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final PendingTxCache pendingTxCache;
-
     /*
      * (non-Javadoc)
      *
@@ -74,7 +71,6 @@ public final class BroadcastTxHandler extends Handler {
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
-        this.pendingTxCache = new PendingTxCache();
     }
 
     @Override
