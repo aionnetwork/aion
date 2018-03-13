@@ -50,6 +50,8 @@ import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -392,46 +394,23 @@ public final class HttpServer {
             }
 
             // Add template to map
-            templateMap.put(toHexString(bestBlock.getHeader().getHash()), bestBlock);
+            templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
 
             jsonObj = new JSONObject();
             jsonObj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
             jsonObj.put("height", bestBlock.getNumber());
             jsonObj.put("target", toHexString(BigInteger.valueOf(2).pow(256)
-                    .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray())); // TODO:
-                                                                                                    // ?
+                    .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray())); // TODO: Pool eventually calculates itself
             jsonObj.put("transactions", new JSONArray()); // TODO: ? Might not
-                                                          // be needed
 
             // Add AION block header parameters to getblocktemplate
             jsonObj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
 
-            // Temporary for mining pool testing
-
-            // byte[] toMine = bestBlock.getHeader().getHeaderBytes(true);
-            // for(int i = 0; i < toMine.length; i++){
-            // if(i > 0 && i % 8 == 0){
-            // System.out.println("");
-            // }
-            //
-            // System.out.print(String.format("%x",
-            // Byte.toUnsignedInt(toMine[i])) + " ");
-            // }
-            // System.out.println("");
-
-            //
-            // System.out.println("Target: "
-            // +BigInteger.valueOf(2).pow(256).divide(new
-            // BigInteger(bestBlock.getHeader().getDifficulty())));
-            //
-            // System.out.println("Sent: " + toHexString(bestBlock.getHash()));
-
-            // TODO: ?
             JSONObject coinbaseaux = new JSONObject();
             coinbaseaux.put("flags", "062f503253482f");
             jsonObj.put("coinbaseaux", coinbaseaux);
 
-            jsonObj.put("headerHash", toHexString(bestBlock.getHeader().getHash()));
+            jsonObj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
 
             // TODO: Maybe move this further up
             templateMapLock.writeLock().unlock();
@@ -501,8 +480,12 @@ public final class HttpServer {
                 String nce = (String) params.get(0);
                 String soln = (String) params.get(1);
                 String hdrHash = (String) params.get(2);
+                String nTime = (String) params.get(3);
 
                 bestBlock = templateMap.get(hdrHash);
+
+                //Update header timestamp
+                bestBlock.getHeader().setTimestamp(Long.parseLong(nTime, 16));
 
                 boolean successfulSubmit = false;
                 // TODO Clean up this section once decided on event vs direct
