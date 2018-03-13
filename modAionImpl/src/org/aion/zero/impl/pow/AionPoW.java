@@ -233,7 +233,7 @@ public class AionPoW {
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-            AionBlock newBlock = blockchain.createNewBlock(bestBlock, txs);
+            AionBlock newBlock = blockchain.createNewBlock(bestBlock, txs, true);
 
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
