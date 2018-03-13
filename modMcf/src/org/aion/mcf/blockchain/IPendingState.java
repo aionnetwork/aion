@@ -33,4 +33,5 @@ public interface IPendingState<TX extends ITransaction> {
     IRepositoryCache<?, ?, ?> getRepository();
 
     List<TX> getPendingTransactions();
+
 }

@@ -26,8 +26,6 @@ package org.aion.zero.impl.blockchain;
 
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.timer.ITimer;
-import org.aion.base.timer.TimerDummy;
 import org.aion.base.type.*;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -116,6 +114,8 @@ public class AionPendingStateImpl
 
     static private AionPendingStateImpl inst;
 
+    private PendingTxCache pendingTxCache;
+
     public synchronized static AionPendingStateImpl inst() {
         if (inst == null) {
             inst = new AionPendingStateImpl(AionRepositoryImpl.inst());
@@ -150,6 +150,8 @@ public class AionPendingStateImpl
             // log here!
             e.printStackTrace();
         }
+
+        this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
     }
 
     public void init(final AionBlockchainImpl blockchain) {
@@ -168,6 +170,19 @@ public class AionPendingStateImpl
                     new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                         public void onBest(IBlock _blk, List<?> _receipts) {
                             processBest((AionBlock) _blk, _receipts);
+                        }
+                    });
+        }
+
+        IHandler txHandler = this.evtMgr.getHandler(1);
+        if (txHandler != null) {
+            txHandler.eventCallback(
+                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
+                        public void onPendingTxStateChange() {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
+                            }
+                            flushCachePendingTx();
                         }
                     });
         }
@@ -213,12 +228,12 @@ public class AionPendingStateImpl
      * rework the model that libAion uses to work with timers
      */
     @Override
-    public synchronized List<AionTransaction> addPendingTransaction(AionTransaction tx, ITimer timer) {
-        return addPendingTransactions(Collections.singletonList(tx), timer);
+    public synchronized List<AionTransaction> addPendingTransaction(AionTransaction tx) {
+        return addPendingTransactions(Collections.singletonList(tx));
     }
 
     @Override
-    public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions, ITimer timer) {
+    public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
         int unknownTx = 0;
         List<AionTransaction> newPending = new ArrayList<>();
 
@@ -226,7 +241,7 @@ public class AionPendingStateImpl
 
             if (addNewTxIfNotExist(tx)) {
                 unknownTx++;
-                if (addPendingTransactionImpl(tx, timer)) {
+                if (addPendingTransactionImpl(tx)) {
                     newPending.add(tx);
                 }
             } else {
@@ -267,11 +282,8 @@ public class AionPendingStateImpl
                 }
             }
         }
-        /**
-         * TODO: only add timerDummys FOR NOW, we need to replace them with real
-         * timers later
-         */
-        addPendingTransaction(tx, new TimerDummy());
+
+        addPendingTransaction(tx);
     }
 
     private void fireTxUpdate(AionTxReceipt txReceipt, PendingTransactionState state, IAionBlock block) {
@@ -297,15 +309,14 @@ public class AionPendingStateImpl
      * @param tx
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
-    private boolean addPendingTransactionImpl(final AionTransaction tx, ITimer timer) {
+    private boolean addPendingTransactionImpl(final AionTransaction tx) {
 
         if (!TXValidator.isValid(tx)) {
             LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
             return false;
         }
 
-        AionTxExecSummary txSum = executeTx(tx, timer);
-        timer.shutdown();
+        AionTxExecSummary txSum = executeTx(tx);
 
         if (txSum.isRejected()) {
             if (LOG.isErrorEnabled()) {
@@ -400,6 +411,7 @@ public class AionPendingStateImpl
         }
 
         best = newBlock;
+        pendingState = repository.startTracking();
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("PendingStateImpl.processBest: updateState");
@@ -407,7 +419,7 @@ public class AionPendingStateImpl
         updateState(best);
 
         if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: nonceMgr.flush()");
+            LOG.trace("PendingStateImpl.processBest: nonceMgr.flush");
         }
         nonceMgr.flush();
 
@@ -419,6 +431,30 @@ public class AionPendingStateImpl
 
         IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
         this.evtMgr.newEvent(evtChange);
+    }
+
+    private void flushCachePendingTx() {
+        Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("PendingStateImpl.flushCachePendingTx: acc#[{}]", cacheTxAccount.size());
+        }
+
+        Map<Address, BigInteger> nonceMap = new HashMap<>();
+        for (Address addr : cacheTxAccount) {
+            BigInteger bn = nonceMgr.getNonce(addr);
+            nonceMap.put(addr, bn);
+        }
+
+        List<AionTransaction> newPendingTx = this.pendingTxCache.flush(nonceMap);
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("PendingStateImpl.flushCachePendingTx: newPendingTx_size[{}]", newPendingTx.size());
+        }
+
+        if (newPendingTx != null && !newPendingTx.isEmpty()) {
+            addPendingTransactions(newPendingTx);
+        }
     }
 
     private void processBestInternal(IAionBlock block, List<AionTxReceipt> receipts) {
@@ -499,21 +535,12 @@ public class AionPendingStateImpl
 
     private void updateState(IAionBlock block) {
 
-        // @jay 18-01-05
-        // Do we need to execute pendingTX when update the best block?
-        // Temporary common out the tx execute
-
-        // TODO : move tracking inside the executeTx function
-        // pendingState = repository.startTracking();
-        // StackTimer timer = new StackTimer();
-
         List<AionTransaction> pendingTxl = this.txPool.snapshot();
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("updateState - snapshot tx[{}]", pendingTxl.size());
         }
         for (AionTransaction tx : pendingTxl) {
-            // AionTxExecSummary txSum = executeTx(tx, timer);
             if (LOG.isTraceEnabled()) {
                 LOG.debug("updateState - loop: " + tx.toString());
             }
@@ -521,14 +548,10 @@ public class AionPendingStateImpl
             AionTxReceipt receipt = new AionTxReceipt();
             receipt.setTransaction(tx);
             fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
-            // fireTxUpdate(txSum.getReceipt(), PendingTransactionState.PENDING,
-            // block);
         }
-
-        // timer.shutdown();
     }
 
-    private AionTxExecSummary executeTx(AionTransaction tx, ITimer timer) {
+    private AionTxExecSummary executeTx(AionTransaction tx) {
 
         IAionBlock best = getBestBlock();
 
@@ -592,5 +615,25 @@ public class AionPendingStateImpl
     @Override
     public String getVersion() {
         return this.txPool.getVersion();
+    }
+
+    @Override
+    public BigInteger bestNonce(Address addr) {
+        return nonceMgr.getNonce(addr);
+    }
+
+    @Override
+    public List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {
+        return this.pendingTxCache.addCacheTx(txmap, addr);
+    }
+
+    @Override
+    public List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
+        return this.pendingTxCache.getSeqCacheTx(txmap, addr, bn);
+    }
+
+    @Override
+    public Map<BigInteger, AionTransaction> getCacheTx(Address from) {
+        return this.pendingTxCache.geCacheTx(from);
     }
 }

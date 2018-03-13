@@ -259,9 +259,10 @@ public final class SyncMgr {
         // add batch
         importedBlocks.addAll(blocks);
     }
-
+    
     public long getNetworkBestBlockNumber() {
         return this.networkStatus.get().blockNumber;
+
     }
 
     public void shutdown() {
