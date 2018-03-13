@@ -50,7 +50,7 @@
 
   <target name="test" depends="test_build">
     <mkdir dir="${test.report.dir}" />
-    <junit printsummary="on" haltonfailure="no" fork="true">
+    <junit printsummary="on" haltonfailure="yes" fork="true">
       <classpath>
         <path refid="classpath.test"/>
         <pathelement location="${dir.test}"/>
