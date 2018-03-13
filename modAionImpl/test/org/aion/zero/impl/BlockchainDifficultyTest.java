@@ -34,7 +34,6 @@
  ******************************************************************************/
 package org.aion.zero.impl;
 
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
@@ -53,7 +52,7 @@ public class BlockchainDifficultyTest {
                 .build();
         StandaloneBlockchain bc = bundle.bc;
 
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getDifficultyBI()).isLessThan(bc.getGenesis().getDifficultyBI());
     }
 }

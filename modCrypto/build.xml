@@ -111,7 +111,7 @@
 		<copy todir="${native.dir}">
 			<fileset dir="${native.src.dir}" />
 		</copy>
-		<junit printsummary="yes" haltonfailure="no" fork="true">
+		<junit printsummary="yes" haltonfailure="yes" fork="true">
 
 			<classpath>
 				<path refid="classpath.dependency" />
