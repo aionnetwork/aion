@@ -40,6 +40,7 @@ import java.util.List;
 
 /**
  * @author chris
+ * used by imported headers on sync mgr
  */
 final class HeadersWrapper {
 

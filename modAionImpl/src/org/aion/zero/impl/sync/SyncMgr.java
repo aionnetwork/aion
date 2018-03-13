@@ -35,22 +35,17 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.valid.BlockHeaderValidator;
@@ -60,10 +55,11 @@ import org.aion.mcf.valid.BlockHeaderValidator;
  */
 public final class SyncMgr {
 
+    // interval - show status
     private static final int INTERVAL_SHOW_STATUS = 10000;
 
-    // interval time get status from active nodes
-    private static final int INTERVAL_GET_STATUS = 2000;
+    // interval - get status from active nodes
+    private static final int INTERVAL_GET_STATUS = 5000;
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
@@ -78,7 +74,7 @@ public final class SyncMgr {
     private BlockHeaderValidator blockHeaderValidator;
     private AtomicBoolean start = new AtomicBoolean(true);
 
-    // set as last block number within one batch import when first blockfor
+    // set as last block number within one batch import when first block for
     // imported success as best
     // reset to 0 as any block import result as no parent (side chain)
     private AtomicLong jump;
@@ -173,7 +169,7 @@ public final class SyncMgr {
     }
 
     void getHeaders(){
-        workers.submit(new TaskGetHeaders(p2pMgr, blockchain, networkStatus, jump, this.syncForwardMax));
+        workers.submit(new TaskGetHeaders(p2pMgr, networkStatus, jump, this.syncForwardMax));
     }
 
     /**

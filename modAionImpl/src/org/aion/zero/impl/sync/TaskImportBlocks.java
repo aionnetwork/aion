@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * handle process of importing blocks to repo
  * long run
  */
-public class TaskImportBlocks implements Runnable {
+final class TaskImportBlocks implements Runnable {
 
     private final SyncMgr sync;
 
@@ -92,7 +92,7 @@ public class TaskImportBlocks implements Runnable {
 
                 List<AionBlock> batch = new ArrayList<>();
 
-                while ((System.currentTimeMillis() - start) < 300) {
+                while ((System.currentTimeMillis() - start) < 30) {
 
                     AionBlock b = importedBlocks.poll(1, TimeUnit.MILLISECONDS);
 
@@ -107,16 +107,12 @@ public class TaskImportBlocks implements Runnable {
                         continue;
                     }
 
-                    b = importedBlocks.take();
+                    //b = importedBlocks.take();
                     blockNumberIndex = b.getNumber();
                     ByteArrayWrapper hash = new ByteArrayWrapper(b.getHash());
 
-                    synchronized (cachedHashes){
-                        if (!cachedHashes.containsKey(hash)) {
-                            batch.add(b);
-                            cachedHashes.put(hash, null);
-                        }
-                    }
+                    if (!cachedHashes.containsKey(hash))
+                        batch.add(b);
                 }
 
                 // sleep if no batch empty then continue
@@ -140,8 +136,11 @@ public class TaskImportBlocks implements Runnable {
                             if (!fetchAheadTriggerUsed) {
                                 jump.set(batch.get(batch.size() - 1).getNumber());
                                 fetchAheadTriggerUsed = true;
-
                                 this.sync.getHeaders();
+                            }
+
+                            synchronized (cachedHashes){
+                                cachedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                             }
                             break;
                         case IMPORTED_NOT_BEST:
@@ -160,13 +159,16 @@ public class TaskImportBlocks implements Runnable {
                                 log.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                         b.getShortHash(), b.getTransactionsList().size());
                             }
+
+                            synchronized (cachedHashes){
+                                cachedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                            }
                             break;
                         case NO_PARENT:
                             if (log.isDebugEnabled()) {
                                 log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
                             }
 
-                            // reset and skip current batch
                             jump.set(jump.get() - 128);
                             continue;
                         case INVALID_BLOCK:
