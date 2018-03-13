@@ -62,6 +62,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (blkHr != null) {
             blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                 public void onBlock(final IBlockSummary _bs) {
+                    System.out.println("onBlock event");
                     AionBlockSummary bs = (AionBlockSummary) _bs;
                     installedFilters.keySet().forEach((k) -> {
                         Fltr f = installedFilters.get(k);
@@ -95,10 +96,10 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                     installedFilters.keySet().forEach((k) -> {
                         Fltr f = installedFilters.get(k);
                         if (f.isExpired()) {
-                            LOG.debug("<Filter: expired, key={}>", k);
+                            LOG.debug("<filter expired, key={}>", k);
                             installedFilters.remove(k);
                         } else if(f.onTransaction(_tx)) {
-                            LOG.debug("<Filter: append, onPendingTransaction type={} txHash={}>", f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
+                            LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
                         }
                     });
                 }
@@ -194,23 +195,17 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    JSONObject eth_getBlock(String _bnOrId, boolean _fullTx) {
+    Object eth_getBlock(String _bnOrId, boolean _fullTx) {
         long bn = this.parseBnOrId(_bnOrId);
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
-        BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
 
+        // return null if block not found
         if (nb == null) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("<get-block bn={} err=not-found>");
-            return null;
+            LOG.debug("<get-block bn={} err=not-found>");
+            return JSONObject.NULL;
         } else {
-            try {
-                return blockToJson(nb, totalDiff, _fullTx);
-            } catch (Exception ex) {
-                if (LOG.isDebugEnabled())
-                    LOG.debug("<get-block bn={} err=exception>", _bnOrId);
-                return null;
-            }
+            BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
+            return blockToJson(nb, totalDiff, _fullTx);
         }
     }
 
@@ -368,14 +363,14 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(id).longValue()) != null;
     }
 
-    JSONArray eth_getFilterChanges(final String _id) {
+    Object eth_getFilterChanges(final String _id) {
         if (_id == null)
             return null;
 
         long id = TypeConverter.StringHexToBigInteger(_id).longValue();
         Fltr filter = installedFilters.get(id);
 
-        if (filter == null) return null;
+        if (filter == null) return JSONObject.NULL;
 
         Object[] events = filter.poll();
         JSONArray response = new JSONArray();
@@ -389,13 +384,13 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return response;
     }
 
-    JSONArray eth_getFilterLogs(final String _id) {
+    Object eth_getFilterLogs(final String _id) {
         return eth_getFilterChanges(_id);
     }
 
-    JSONArray eth_getLogs(final ArgFltr rf) {
+    Object eth_getLogs(final ArgFltr rf) {
         String id = eth_newFilter(rf);
-        JSONArray response = eth_getFilterChanges(id);
+        Object response = eth_getFilterChanges(id);
         eth_uninstallFilter(id);
         return response;
     }

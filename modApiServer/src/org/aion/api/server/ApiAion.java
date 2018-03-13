@@ -34,6 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.aion.mcf.account.Keystore;
 import org.aion.api.server.types.ArgTxCall;
@@ -48,6 +51,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
@@ -531,5 +535,21 @@ public abstract class ApiAion extends Api {
 
     public int peerCount() {
         return this.ac.getAionHub().getP2pMgr().getActiveNodes().size();
+    }
+
+    // follows the ethereum standard for web3 compliance. DO NOT DEPEND ON IT. Will be changed to Aion-defined spec later
+    // https://github.com/ethereum/wiki/wiki/Client-Version-Strings
+    public String clientVersion() {
+        Pattern shortVersion = Pattern.compile("(\\d\\.\\d).*");
+        Matcher matcher = shortVersion.matcher(System.getProperty("java.version"));
+        matcher.matches();
+
+        return Arrays.asList(
+                "Aion(J)",
+                "v" + Version.KERNEL_VERSION,
+                System.getProperty("os.name"),
+                "Java" + matcher.group(1))
+                .stream()
+                .collect(Collectors.joining("/"));
     }
 }

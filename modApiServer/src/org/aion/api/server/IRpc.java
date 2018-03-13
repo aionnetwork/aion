@@ -27,14 +27,25 @@ package org.aion.api.server;
 public interface IRpc {
     
     enum Method {
-        
+
+        /**
+         * web3
+         */
+        web3_clientVersion,
+        web3_sha3,
+
+        /**
+         * compilers
+         */
+        eth_getCompilers,
+        eth_compileSolidity,
+
         /**
          * eth
          */
         eth_accounts,                
         eth_blockNumber,
         eth_coinbase,
-        eth_compileSolidity,
         eth_call,
         eth_getBalance,
         eth_getBlockByNumber,
@@ -62,6 +73,7 @@ public interface IRpc {
         /**
          * net
          */
+        net_version,
         net_listening,
         net_peerCount,
 

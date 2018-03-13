@@ -34,6 +34,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.p2p.IP2pMgr;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -54,6 +55,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
@@ -97,14 +101,23 @@ public final class HttpServer {
     private static ReadWriteLock templateMapLock;
 
     // TODO: make this compliant with the JSON RPC 2.0 spec: http://www.jsonrpc.org/specification
-    // for starters, need to return an error object with the right error codes
-    // (needs to be done in later refactor)
     // optionally, support codes from Error Codes Improvement EIP: https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
     private static JSONObject processResult(final long _id, final Object _result) {
         JSONObject json = new JSONObject();
         json.put("jsonrpc", "2.0");
         json.put("id", _id);
-        json.put("result", _result);
+
+        // according to the json-rpc spec (http://www.jsonrpc.org/specification):
+        // error: This member is REQUIRED on error. This member MUST NOT exist if there was no error triggered during invocation.
+        // result: This member is REQUIRED on success. This member MUST NOT exist if there was an error invoking the method.
+        if (_result == null) { // call equals on the leaf type
+            JSONObject error  = new JSONObject();
+            error.put("code", -32600);
+            error.put("message", "Invalid Request");
+            json.put("error", error);
+        } else {
+            json.put("result", _result);
+        }
         return json;
     }
 
@@ -115,23 +128,30 @@ public final class HttpServer {
         JSONObject jsonObj;
         JSONArray params = (JSONArray) _params;
         AionBlock bestBlock;
+        JSONArray compilers = new JSONArray(new String[] {"solidity"});
 
         // TODO All of the eth_* methods need to be renamed to aion standard
         switch (_method) {
-
         /* -------------------------------------------------------------------------
-         * web3
+        * web3
+        */
+        case web3_clientVersion: {
+            return processResult(_id, api.clientVersion());
+        }
+        case web3_sha3: {
+            String data = params.get(0) + "";
+            if (data == null)
+                return processResult(_id, null);
+
+            return processResult(_id, TypeConverter.toJsonHex(HashUtil.keccak256(data.getBytes())));
+        }
+        /* -------------------------------------------------------------------------
+         * compiler
          */
-        case eth_accounts:
-            return processResult(_id, new JSONArray(api.getAccounts()));
-
-        case eth_blockNumber:
-            return processResult(_id, api.getBestBlock().getNumber());
-
-        case eth_coinbase:
-            return processResult(_id, api.getCoinbase());
-
-        case eth_compileSolidity:
+        case eth_getCompilers: {
+            return processResult(_id, compilers);
+        }
+        case eth_compileSolidity: {
             @SuppressWarnings("unchecked")
             Map<String, CompiledContr> compiled = api.contract_compileSolidity(params.get(0) + "");
             jsonObj = new JSONObject();
@@ -140,31 +160,41 @@ public final class HttpServer {
                 jsonObj.put(key, cc.toJSON());
             }
             return processResult(_id, jsonObj);
+        }
+
+        /* -------------------------------------------------------------------------
+         * eth
+         */
+        case eth_accounts: {
+            return processResult(_id, new JSONArray(api.getAccounts()));
+        }
+        case eth_blockNumber: {
+            return processResult(_id, api.getBestBlock().getNumber());
+        }
+        case eth_coinbase: {
+            return processResult(_id, api.getCoinbase());
+        }
 
         case eth_getBlockByNumber: {
-            String number = (String) params.get(0);
-            boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
-
-            if (number == null) {
-                log.debug("eth_getBlockByNumber: invalid input");
+            String number = params.get(0) + "";
+            Boolean fullTransactions = params.optBoolean(1, false);
+            if (number == null)
                 return processResult(_id, null);
-            }
+
             return processResult(_id, api.eth_getBlock(number, fullTransactions));
         }
-
         case eth_getBlockByHash: {
-            String hashString = (String) params.get(0);
-                boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
-            if (hashString == null) {
-                log.debug("eth_getBlockByHash: invalid input");
+            String hashString = params.get(0) + "";
+            Boolean fullTransactions = params.optBoolean(1, false);
+            if (hashString == null)
                 return processResult(_id, null);
-            }
+
             return processResult(_id, api.eth_getBlockByHash(hashString, fullTransactions));
         }
-
-        case eth_getBalance:
+        case eth_getBalance: {
             String address = params.get(0) + "";
             return processResult(_id, TypeConverter.toJsonHex(api.getBalance(address)));
+        }
         /*
         // rationale for not supporting this: does not make sense in the context of aion's getWork for minig.
         // see functions under 'stratum pool' descriptor in IRpc.java for currenly-supported stratum interactions
@@ -172,7 +202,7 @@ public final class HttpServer {
             // Header without nonce and solution , pool needs add new nonce
             return processResult(_id, toHexString(HashUtil.h256(api.getBestBlock().getHeader().getHeaderBytes(true))));
         */
-        case eth_syncing:
+        case eth_syncing: {
             SyncInfo syncInfo = api.getSync();
             if (!syncInfo.done) {
                 JSONObject obj = new JSONObject();
@@ -186,8 +216,8 @@ public final class HttpServer {
                 // create obj for when syncing is ongoing
                 return processResult(_id, false);
             }
-
-        case eth_call:
+        }
+        case eth_call: {
             if (JSONArray.class.isInstance(_params)) {
                 JSONObject paramsObj = ((JSONArray) _params).getJSONObject(0);
                 ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj);
@@ -197,7 +227,7 @@ public final class HttpServer {
                 }
             }
             return processResult(_id, "");
-
+        }
         case eth_estimateGas: {
             if (_params instanceof JSONArray) {
                 JSONObject obj = ((JSONArray) _params).getJSONObject(0);
@@ -209,7 +239,7 @@ public final class HttpServer {
             }
             return processResult(_id, "");
         }
-        case eth_sendTransaction:
+        case eth_sendTransaction: {
             JSONObject paramsObj = ((JSONArray) _params).getJSONObject(0);
             ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj);
             if (txParams != null) {
@@ -217,7 +247,7 @@ public final class HttpServer {
                 return processResult(_id, TypeConverter.toJsonHex(res));
             } else
                 return processResult(_id, "");
-
+        }
         case eth_sendRawTransaction: {
             String rawHexString = (String) params.get(0);
             if (rawHexString == null) {
@@ -235,8 +265,7 @@ public final class HttpServer {
             byte[] transactionHash = api.sendTransaction(rawTransaction);
             return processResult(_id, TypeConverter.toJsonHex(transactionHash));
         }
-
-        case eth_getTransactionReceipt:
+        case eth_getTransactionReceipt: {
             jsonObj = new JSONObject();
             TxRecpt txR = api.eth_getTransactionReceipt((String) params.get(0));
             if (txR != null) {
@@ -274,7 +303,7 @@ public final class HttpServer {
                 jsonObj.put("logs", logArray);
             }
             return processResult(_id, jsonObj);
-
+        }
         case eth_getTransactionByHash: {
             Tx transaction = api.eth_getTransactionByHash((String) params.get(0));
             JSONObject obj = new JSONObject();
@@ -305,91 +334,56 @@ public final class HttpServer {
             NumericalValue nonce = api.eth_getTransactionCount(new Address(addr), reqNumber);
             return processResult(_id, nonce.toHexString());
         }
-        case eth_getCode:
+        case eth_getCode: {
             return processResult(_id, api.eth_getCode(params.get(0) + ""));
-
+        }
         /* -------------------------------------------------------------------------
          * personal
          */
-
-        case personal_unlockAccount:
+        case personal_unlockAccount: {
             String account = (String) params.get(0);
             String password = (String) params.get(1);
             int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
             return processResult(_id, api.unlockAccount(account, password, duration));
-
+        }
         /* -------------------------------------------------------------------------
          * filters
          */
-
-        // inelegant, java antipattern; will come up with a wrapper for all web3 calls to catch at top-level
-        // when this class gets refactored in the future.
-        case eth_newFilter:
-            try {
-                return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
-            } catch (Exception e) {
-                log.debug("eth_newFilter() threw exception", e);
-                return processResult(_id, null);
-            }
-
-        case eth_newBlockFilter:
-            try {
-                return processResult(_id, api.eth_newBlockFilter());
-            } catch (Exception e) {
-                log.debug("eth_newBlockFilter() threw exception", e);
-                return processResult(_id, null);
-            }
-
-        case eth_newPendingTransactionFilter:
-            try {
-                return processResult(_id, api.eth_newPendingTransactionFilter());
-            } catch (Exception e) {
-                log.debug("eth_newPendingTransactionFilter() threw exception", e);
-                return processResult(_id, null);
-            }
-
-        case eth_uninstallFilter:
-            try {
-                return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
-            } catch (Exception e) {
-                log.debug("eth_uninstallFilter() threw exception", e);
-                return processResult(_id, null);
-            }
-
-        case eth_getFilterChanges:
-            try {
-                return processResult(_id, api.eth_getFilterChanges(params.get(0) + ""));
-            } catch (Exception e) {
-                log.debug("eth_getFilterChanges() threw exception", e);
-                return processResult(_id, null);
-            }
-
-        case eth_getFilterLogs:
-            try {
-                return processResult(_id, api.eth_getFilterLogs(params.get(0) + ""));
-            } catch (Exception e) {
-                log.debug("eth_getFilterLogs() threw exception", e);
-                return processResult(_id, null);
-            }
-
-        case eth_getLogs:
-            try {
-                return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
-            } catch (Exception e) {
-                log.debug("eth_getLogs() threw exception", e);
-                return processResult(_id, null);
-            }
-
+        case eth_newFilter: {
+            return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
+        }
+        case eth_newBlockFilter: {
+            return processResult(_id, api.eth_newBlockFilter());
+        }
+        case eth_newPendingTransactionFilter: {
+            return processResult(_id, api.eth_newPendingTransactionFilter());
+        }
+        case eth_uninstallFilter: {
+            return processResult(_id, api.eth_uninstallFilter(params.get(0)+""));
+        }
+        case eth_getFilterChanges: {
+            return processResult(_id, api.eth_getFilterChanges(params.get(0)+""));
+        }
+        case eth_getFilterLogs: {
+            return processResult(_id, api.eth_getFilterLogs(params.get(0)+""));
+        }
+        case eth_getLogs: {
+            return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
+        }
         /* -------------------------------------------------------------------------
          * net
          */
         // TODO: investigate how this endpoint is used by users to improve the quality of response
-        case net_listening:
+        // currently, p2p manager is always listening for peers
+        case net_listening: {
             return processResult(_id, true);
-
-        case net_peerCount:
+        }
+        case net_peerCount: {
             return processResult(_id, api.peerCount());
-
+        }
+        case net_version: {
+            return processResult(_id, "0");
+        }
         /* -------------------------------------------------------------------------
          * debug
          */
@@ -761,9 +755,15 @@ public final class HttpServer {
                                                                     }
 
                                                                     if (idObj != null && method != null) {
-                                                                        JSONObject resJson = process(method,
-                                                                                Long.parseLong(idObj.toString()),
-                                                                                paramsObj);
+                                                                        long id = Long.parseLong(idObj.toString());
+                                                                        JSONObject resJson = null;
+                                                                        try {
+                                                                            resJson = process(method, id, paramsObj);
+                                                                        }
+                                                                        catch (Exception e) {
+                                                                            log.debug(method.name() + " threw exception", e);
+                                                                            resJson = processResult(id, null);
+                                                                        }
                                                                         String responseBody = resJson == null ? ""
                                                                                 : resJson.toString();
                                                                         String responseHeader = "HTTP/1.1 200 OK\n"
