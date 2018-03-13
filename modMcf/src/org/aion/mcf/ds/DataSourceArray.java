@@ -36,7 +36,7 @@ import java.util.Optional;
  */
 public class DataSourceArray<V> implements Flushable {
 
-    private ObjectDataSource<V> src;
+    private final ObjectDataSource<V> src;
     private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
     private long size = -1L;
 
@@ -49,23 +49,24 @@ public class DataSourceArray<V> implements Flushable {
         src.flush();
     }
 
-    public V set(long idx, V value) {
-        if (idx >= size()) {
-            setSize(idx + 1);
+    public V set(long index, V value) {
+        if (index >= size()) {
+            setSize(index + 1);
         }
-        if (idx <= Integer.MAX_VALUE) {
-            src.put(ByteUtil.intToBytes((int) idx), value);
+        if (index <= Integer.MAX_VALUE) {
+            src.put(ByteUtil.intToBytes((int) index), value);
         } else {
-            src.put(ByteUtil.longToBytes(idx), value);
+            src.put(ByteUtil.longToBytes(index), value);
         }
         return value;
     }
 
-    public void add(long index, V element) {
-        set(index, element);
-    }
-
     public void remove(long index) {
+        // without this check it will remove the sizeKey
+        if (index < 0 || index >= size()) {
+            return;
+        }
+
         if (index <= Integer.MAX_VALUE) {
             src.delete(ByteUtil.intToBytes((int) index));
         } else {
@@ -76,17 +77,18 @@ public class DataSourceArray<V> implements Flushable {
         }
     }
 
-    public V get(long idx) {
-        if (idx < 0 || idx >= size()) {
-            throw new IndexOutOfBoundsException(idx + " > " + size);
+    public V get(long index) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException(
+                    "Incorrect index value <" + index + ">. Allowed values are >= 0 and < " + size + ".");
         }
 
         V value;
 
-        if (idx <= Integer.MAX_VALUE) {
-            value = src.get(ByteUtil.intToBytes((int) idx));
+        if (index <= Integer.MAX_VALUE) {
+            value = src.get(ByteUtil.intToBytes((int) index));
         } else {
-            value = src.get(ByteUtil.longToBytes(idx));
+            value = src.get(ByteUtil.longToBytes(index));
         }
         return value;
     }

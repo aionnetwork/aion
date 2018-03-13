@@ -19,25 +19,19 @@
  *
  * Contributors:
  *     Aion foundation.
- *
  ******************************************************************************/
-
 package org.aion.zero.impl.db;
 
 import org.aion.base.type.IBlock;
 import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
-import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class RecoveryUtils {
-
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
     public enum Status {
         SUCCESS, FAILURE, ILLEGAL_ARGUMENT
