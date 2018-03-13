@@ -121,7 +121,7 @@ public abstract class ApiAion extends Api {
         AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
         ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
 
-        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret));
+        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
     }
 
     // --Commented out by Inspection START (02/02/18 6:57 PM):

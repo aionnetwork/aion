@@ -38,7 +38,6 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.TrieImpl;
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
@@ -70,14 +69,14 @@ public class BlockchainDataRecoveryTest {
         // first half of blocks will be correct
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
-            result = chain.tryToConnect(chain.createNewBlock(chain.getBestBlock(), Collections.emptyList()));
+            result = chain.tryToConnect(chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true));
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the state root
         List<byte[]> statesToDelete = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList());
+            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(next.getStateRoot());
@@ -127,7 +126,7 @@ public class BlockchainDataRecoveryTest {
         ImportResult result;
         List<byte[]> statesToDelete = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList());
+            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(next.getStateRoot());
@@ -178,7 +177,7 @@ public class BlockchainDataRecoveryTest {
         // all blocks will be incorrect
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList());
+            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }

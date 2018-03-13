@@ -42,7 +42,6 @@ import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.ImportResult;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Ignore;
@@ -66,7 +65,7 @@ public class BlockchainIntegrationTest {
      * are set correctly and no null pointers occur.
      */
     @Test
-    public void simpleBlockchainNullPointerTest() {
+    public void testSimpleBlockchainNullPointer() {
         /**
          * Mock Setups
          */
@@ -84,7 +83,7 @@ public class BlockchainIntegrationTest {
 
     // check that all accounts are loaded correctly
     @Test
-    public void simpleBlockchainLoadTest() {
+    public void testSimpleBlockchainLoad() {
         StandaloneBlockchain.Bundle b = (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         for (ECKey k : b.privateKeys) {
             assertThat(b.bc.getRepository().getBalance(Address.wrap(k.getAddress()))).isNotEqualTo(BigInteger.ZERO);
@@ -93,15 +92,15 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
-    public void createNewEmptyBlockTest() {
+    public void testCreateNewEmptyBlock() {
         StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getParentHash()).isEqualTo(bc.getGenesis().getHash());
     }
 
     @Test
-    public void simpleFailedTransactionInsufficientBalance() {
+    public void testSimpleFailedTransactionInsufficientBalance() {
         // generate a recipient
         final Address receiverAddress = Address.wrap(ByteUtil.hexStringToBytes("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -121,7 +120,7 @@ public class BlockchainIntegrationTest {
                 1L);
 
         tx.sign(bundle.privateKeys.get(0));
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx));
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList()).isEmpty();
         assertThat(block.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
@@ -131,7 +130,7 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
-    public void simpleOneTokenBalanceTransfer() {
+    public void testSimpleOneTokenBalanceTransfer() {
         // generate a recipient
         final Address receiverAddress = Address.wrap(ByteUtil.hexStringToBytes("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -153,7 +152,7 @@ public class BlockchainIntegrationTest {
                 1L);
         tx.sign(sender);
 
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx));
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         assertThat(block.getTransactionsList().size()).isEqualTo(1);
         assertThat(block.getTransactionsList().get(0)).isEqualTo(tx);
@@ -172,6 +171,21 @@ public class BlockchainIntegrationTest {
     }
 
     @Test
+    public void testAppendIncorrectTimestampBlock() {
+        StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts()
+                .build();
+        StandaloneBlockchain bc = bundle.bc;
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+
+        // set the block to be created 1 month in the future
+        block.getHeader().setTimestamp((System.currentTimeMillis() / 1000) + 2592000);
+        ImportResult result = bc.tryToConnect(block);
+        assertThat(result.isSuccessful()).isFalse();
+    }
+
+    @Test
     public void testBlockchainDifficultyOnBranching() {
         StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
                 .withValidatorConfiguration("simple")
@@ -182,7 +196,7 @@ public class BlockchainIntegrationTest {
         BigInteger initialTD = bc.getTotalDifficulty();
 
         // these two should have different hashes
-        AionBlock block1 = bc.createNewBlock(bc.getGenesis(), new ArrayList<>());
+        AionBlock block1 = bc.createNewBlock(bc.getGenesis(), new ArrayList<>(), true);
 
         assertThat(bc.tryToConnect(block1)).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -192,8 +206,8 @@ public class BlockchainIntegrationTest {
 
         // first scenario is a one level branch, where both branches are of same height
         // but one branch (lighter) comes first, and the second (heavier) comes second
-        AionBlock block2 = bc.createNewBlock(block1, new ArrayList<>());
-        AionBlock heavyBlock = bc.createNewBlock(block1, new ArrayList<>());
+        AionBlock block2 = bc.createNewBlock(block1, new ArrayList<>(), true);
+        AionBlock heavyBlock = bc.createNewBlock(block1, new ArrayList<>(), true);
         heavyBlock.getHeader().setDifficulty(BigInteger.valueOf(10000000L).toByteArray());
 
         assertThat(bc.tryToConnect(block2)).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -242,7 +256,7 @@ public class BlockchainIntegrationTest {
         tx.sign(sender);
 
         // create a new block containing a single transaction (tx)
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx));
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.singletonList(tx), true);
 
         // import the block to our blockchain
         ImportResult connection = bc.tryToConnect(block);

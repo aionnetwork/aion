@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import org.aion.base.util.Hex;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.base.util.ByteArrayWrapper;
@@ -65,7 +66,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 public final class SyncMgr {
 
     // interval time get peer status
-    private static final int STATUS_INTERVAL = 500;
+    private static final int STATUS_INTERVAL = 2000;
 
     // timeout sent headers
     private static final int SENT_HEADERS_TIMEOUT = 5000;
@@ -127,7 +128,7 @@ public final class SyncMgr {
     }
 
     // Attation:
-    // update best block is callback function from p2p thread pool. even the
+    // update best block is handler function from p2p thread pool. even the
     // blocknumber and blockhash is atomic, but still need sync to prevent
     // blocknumber link to wrong block hash.
     public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,
@@ -196,19 +197,17 @@ public final class SyncMgr {
                 Thread.currentThread().setName("sync-status");
                 AionBlock blk = blockchain.getBestBlock();
                 System.out.println("[sync-status self=" + blk.getNumber() + "/"
-                        + this.blockchain.getTotalDifficulty().toString(10) + " network="
+                        + Hex.toHexString(this.blockchain.getBestBlockHash()) + "/"
+                        + this.blockchain.getTotalDifficulty().toString(10)
+                        + " network="
                         + this.netBestStatus.get().blockNumber + "/"
+                        + Hex.toHexString(netBestStatus.get().blockHash) + "/"
                         + netBestStatus.get().totalDiff.toString(10)
                         + " blocks-queue-size=" + importedBlocks.size() + "]");
             }, 0, 5000, TimeUnit.MILLISECONDS);
         scheduledWorkers.scheduleWithFixedDelay(() -> {
-            Set<Integer> ids = new HashSet<>();
-            for (int i = 0; i < 3; i++) {
-                INode node = p2pMgr.getRandom();
-                if (node != null && !ids.contains(node.getIdHash())) {
-                    ids.add(node.getIdHash());
-                    p2pMgr.send(node.getIdHash(), reqStatus);
-                }
+            for (INode node : p2pMgr.getActiveNodes().values()) {
+                p2pMgr.send(node.getIdHash(), reqStatus);
             }
 
         }, 1000, STATUS_INTERVAL, TimeUnit.MILLISECONDS);
@@ -338,6 +337,7 @@ public final class SyncMgr {
                     ids.add(node.getIdHash());
                     this.p2pMgr.send(node.getIdHash(), new ReqBlocksHeaders(from, take));
                     // ids.put(node.getIdHash(), new HeaderQuery(node.getIdShort(), from, take));
+                    LOG.debug("Requesting blocks: from = {}, to = {}, node = {}", from , to, node.getIdShort());
                 }
             }
         }
@@ -409,11 +409,8 @@ public final class SyncMgr {
                     }
 
                     b = importedBlocks.take();
-                    blockNumberIndex = b.getNumber();
-                    ByteArrayWrapper hash = new ByteArrayWrapper(b.getHash());
-                    if (!savedHashes.containsKey(hash)) {
+                    if (!savedHashes.containsKey(ByteArrayWrapper.wrap(b.getHash()))) {
                         batch.add(b);
-                        savedHashes.put(hash, null);
                     }
                 }
 
@@ -442,6 +439,8 @@ public final class SyncMgr {
                             fetchAheadTriggerUsed = true;
                             getHeaders();
                         }
+
+                        savedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case IMPORTED_NOT_BEST:
                         if (LOG.isInfoEnabled()) {
@@ -457,6 +456,8 @@ public final class SyncMgr {
                             LOG.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                     b.getShortHash(), b.getTransactionsList().size());
                         }
+
+                        savedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case NO_PARENT:
                         if (LOG.isDebugEnabled()) {

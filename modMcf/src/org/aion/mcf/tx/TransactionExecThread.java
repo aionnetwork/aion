@@ -31,7 +31,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.aion.base.timer.StackTimer;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.log.AionLoggerFactory;
@@ -42,20 +41,11 @@ import org.slf4j.Logger;
  * Thread is responsible for execution of all transactions coming from API
  * (only), Blockchain thread execution is done separately
  * <p>
- * TODO: redo to use executors and return futures TODO: figure out what
- * limitations this introduces, how far can we stretch the execution queue?
  *
  * @author yao
  */
 public abstract class TransactionExecThread<PS extends IPendingStateInternal, TX extends ITransaction> {
 
-    /**
-     * Since TransactionExecThread is intended to be long running, we're safe in
-     * running a StackTimer for the duration of it's life.
-     * <p>
-     * Note: as a result of this, we must ensure serial execution
-     */
-    private StackTimer timer = new StackTimer();
     private final PS pendingState;
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
@@ -74,7 +64,7 @@ public abstract class TransactionExecThread<PS extends IPendingStateInternal, TX
     public Future<List<TX>> submitTransaction(TX tx) {
         Future<List<TX>> txListFuture = txExec.submit(() -> {
             LOG.debug("TransactionExecThread.submitTransaction: " + tx.toString());
-            return this.pendingState.addPendingTransaction(tx, timer);
+            return this.pendingState.addPendingTransaction(tx);
         });
 
         return txListFuture;
@@ -82,14 +72,13 @@ public abstract class TransactionExecThread<PS extends IPendingStateInternal, TX
 
     public Future<List<TX>> submitTransaction(List<TX> tx) {
         Future<List<TX>> txListFuture = txExec.submit(() -> {
-            return this.pendingState.addPendingTransactions(tx, timer);
+            return this.pendingState.addPendingTransactions(tx);
         });
         return txListFuture;
     }
 
     public void shutdown() {
         LOGGEN.info("TransactionExecThread shutting down...");
-        timer.shutdown();
         txExec.shutdown();
         try {
             LOGGEN.info("TransactionExecThread waiting termination.");

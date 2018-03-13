@@ -23,18 +23,27 @@
  *
  */
 
-package org.aion.p2p.impl;
+package org.aion.p2p.impl.zero.msg;
 
-public class TaskPersistNodes implements Runnable{
-    private NodeMgr nodeMgr;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Msg;
+import org.aion.p2p.Ver;
+import org.aion.p2p.impl.Act;
 
-    TaskPersistNodes(NodeMgr nodeMgr){
-        this.nodeMgr = nodeMgr;
+/**
+ *
+ * @author chris
+ *
+ */
+public final class ReqActiveNodes extends Msg {
+
+    public ReqActiveNodes(){
+        super(Ver.V0, Ctrl.NET, Act.REQ_ACTIVE_NODES);
     }
 
     @Override
-    public void run() {
-        System.out.println("<p2p persisting-nodes-to-disk>");
-        nodeMgr.persistNodes();
+    public byte[] encode() {
+        return null;
     }
+
 }

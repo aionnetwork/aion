@@ -33,42 +33,49 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
 import java.util.List;
-import org.aion.p2p.Handler;
+
 import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
 
 /**
- *
  * @author chris
- * handler for blocks bodies received from network
- *
+ * handler for request block bodies broadcasted from network
  */
-public final class ResBlocksBodiesHandler extends Handler {
+public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
-    private final SyncMgr syncMgr;
+    private final IAionBlockchain blockchain;
 
-    public ResBlocksBodiesHandler(final Logger _log, final SyncMgr _syncMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
+    private final IP2pMgr p2pMgr;
+
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
-        this.syncMgr = _syncMgr;
+        this.blockchain = _blockchain;
+        this.p2pMgr = _p2pMgr;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
-        List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if(bodies != null && bodies.size() > 0)
-            this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
-        else
-            this.log.error("<res-bodies invalid>");
+        ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
+        if (reqBlocks != null) {
+            List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(reqBlocks.getBlocksHashes());
+            this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
+            this.log.debug("<req-bodies req-take={} res-take={} from-node={}>", reqBlocks.getBlocksHashes().size(),
+                    blockBodies.size(), _displayId);
+
+        } else
+            this.log.error("<req-bodies decode-msg>");
     }
 }

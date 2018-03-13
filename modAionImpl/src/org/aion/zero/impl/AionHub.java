@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl;
@@ -52,9 +52,9 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.BlockPropagationHandler;
-import org.aion.zero.impl.sync.callback.BroadcastNewBlockHandler;
+import org.aion.zero.impl.sync.handler.BroadcastNewBlockHandler;
 import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.callback.*;
+import org.aion.zero.impl.sync.handler.*;
 import org.aion.zero.impl.tx.AionTransactionExecThread;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -100,8 +100,6 @@ public class AionHub {
      */
     private volatile AionBlock startingBlock;
 
-    static private AionHub inst;
-
     /**
      * Initialize as per the <a href=
      * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
@@ -144,7 +142,10 @@ public class AionHub {
          * loadBlockchain() method
          */
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
-        this.p2pMgr = new P2pMgr(this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
+        String[] frags = Version.KERNEL_VERSION.split("\\.");
+        this.p2pMgr = new P2pMgr(
+                this.cfg.getNet().getId(), frags[frags.length - 1],
+                this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
                 cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(),
                 cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly());
 
@@ -168,9 +169,9 @@ public class AionHub {
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
-        cbs.add(new ResStatusCallback(syncLog, this.p2pMgr, this.syncMgr));
+        cbs.add(new ResStatusHandler(syncLog, this.p2pMgr, this.syncMgr));
         cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr));
-        cbs.add(new ResBlocksHeadersCallback(syncLog, this.syncMgr));
+        cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr));
         cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr));
         cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr));

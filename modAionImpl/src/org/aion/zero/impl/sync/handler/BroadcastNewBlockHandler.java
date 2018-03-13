@@ -33,47 +33,56 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.sync.BlockPropagationHandler;
+import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
+import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
- * @author chris handler for status request from network
+ * @author jay
+ * handler for new block broadcasted from network
  */
-public final class ReqStatusHandler extends Handler {
+public final class BroadcastNewBlockHandler extends Handler {
 
     private final Logger log;
 
-    private IAionBlockchain chain;
+    private final BlockPropagationHandler propHandler;
 
-    private IP2pMgr mgr;
-
-    private byte[] genesisHash;
-
-    public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
-            final byte[] _genesisHash) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.aion.net.nio.ICallback#getCtrl() change param
+     * IPendingStateInternal later
+     */
+    public BroadcastNewBlockHandler(final Logger _log, final BlockPropagationHandler propHandler) {
+        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
         this.log = _log;
-        this.chain = _chain;
-        this.mgr = _mgr;
-        this.genesisHash = _genesisHash;
+        this.propHandler = propHandler;
     }
 
+
     @Override
-    public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-        this.log.debug("<req-status from-node={}>", _displayId);
-        ResStatus res = null;
-        synchronized (this.chain) {
-            res = new ResStatus(this.chain.getBestBlock().getNumber(), this.chain.getTotalDifficulty().toByteArray(),
-                    this.chain.getBestBlockHash(), this.genesisHash);
+    public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if (_msgBytes == null)
+            return;
+        byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
+        if (rawdata == null)
+            return;
+
+        AionBlock block = new AionBlock(rawdata);
+
+        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
+
+        if (this.log.isDebugEnabled()) {
+            String hash = block.getShortHash();
+            hash = hash != null ? hash : "null";
+            this.log.debug("<block-prop node=" + _displayId + " block-hash=" + hash + " status=" + result.name() + ">");
         }
-        this.mgr.send(_nodeIdHashcode, res);
     }
 }
