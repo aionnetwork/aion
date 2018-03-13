@@ -56,6 +56,8 @@ public abstract class Cfg {
 
     protected CfgLog log;
 
+    protected CfgTx tx;
+
     public void setId(final String _id){
         this.id = _id;
     }
@@ -74,6 +76,10 @@ public abstract class Cfg {
 
     public void setLog(final CfgLog _log) {
         this.log = _log;
+    }
+
+    public void setTx(final CfgTx _tx) {
+        this.tx = _tx;
     }
 
     public String getId() {
@@ -102,6 +108,10 @@ public abstract class Cfg {
 
     public CfgLog getLog() {
         return this.log;
+    }
+
+    public CfgTx getTx() {
+        return this.tx;
     }
 
     public String[] getNodes() {
