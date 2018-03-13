@@ -1,4 +1,4 @@
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.*;
 import java.util.ArrayList;
@@ -10,7 +10,6 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.Node;
 import org.aion.p2p.impl.Act;
-import org.aion.p2p.impl.P2pMgr;
 import org.junit.Assert;
 import org.junit.Test;
 

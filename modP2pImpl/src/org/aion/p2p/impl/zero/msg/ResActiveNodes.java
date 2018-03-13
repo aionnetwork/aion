@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.zero.msg;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -45,7 +45,7 @@ public final class ResActiveNodes extends Msg {
 
     private final List<Node> nodes;
 
-    private int count = 0;
+    private int count;
 
     /**
      * id 36 bytes, ipv4 8 bytes, port 4 bytes

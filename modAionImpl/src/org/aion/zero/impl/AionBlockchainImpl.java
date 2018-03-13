@@ -384,8 +384,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (isMoreThan(this.totalDifficulty, savedState.savedTD)) {
 
             if (LOG.isInfoEnabled())
-                LOG.info("branching: <num={} prev={} -> to={}>", savedState.savedBest.getNumber(),
-                        savedState.savedBest.getShortHash(), block.getShortHash());
+                LOG.info("branching: from = {}/{}, to = {}/{}",
+                        savedState.savedBest.getNumber(),
+                        Hex.toHexString(savedState.savedBest.getHash()),
+                        block.getNumber(),
+                        Hex.toHexString(block.getHash()));
             // main branch become this branch
             // cause we proved that total difficulty
             // is greater
@@ -408,6 +411,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
+        long currentTimestamp = System.currentTimeMillis() / THOUSAND_MS;
+        if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
+            return INVALID_BLOCK;
+
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Try connect block hash: {}, number: {}", Hex.toHexString(block.getHash()).substring(0, 6),
@@ -476,10 +483,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs) {
+        long time = System.currentTimeMillis() / THOUSAND_MS;
 
-        // adjust time to parent block this may happen due to system clocks
-        // difference
-        long time = System.currentTimeMillis() / THOUSAND_MS + TARGET_BLOCKINTERVAL;
         if (parent.getTimestamp() >= time) {
             time = parent.getTimestamp() + 1;
         }

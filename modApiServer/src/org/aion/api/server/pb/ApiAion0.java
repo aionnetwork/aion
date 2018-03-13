@@ -46,6 +46,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.zero.impl.AionHub;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -215,7 +216,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             // TODO : create query API for every module
             Message.rsp_protocolVersion rsp = Message.rsp_protocolVersion.newBuilder()
                     .setApi(String.valueOf(this.getApiVersion())).setDb(AionHub.getRepoVersion())
-                    .setKernel(AionHub.VERSION).setMiner(EquihashMiner.VERSION)
+                    .setKernel(Version.KERNEL_VERSION).setMiner(EquihashMiner.VERSION)
                     .setNet(this.ac.getAionHub().getP2pMgr().version())
                     .setTxpool(this.ac.getAionHub().getPendingState().getVersion()).setVm("0.1.0").build();
 

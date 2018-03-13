@@ -82,4 +82,9 @@ public interface IBlockConstants {
      * The lower bound of an energyLimit value
      */
     BigInteger getEnergyLowerBound();
+
+    /**
+     * Maximum accepted clock drift difference (seconds)
+     */
+    long getClockDriftBufferTime();
 }
