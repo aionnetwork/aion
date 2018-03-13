@@ -111,7 +111,16 @@ public class Equihash {
      */
     public Solution mine(IAionBlock block, byte[] nonce) {
 
-        byte[] blockHeader = block.getHeader().getHeaderBytes(true);
+        //Copy blockheader to create a local copy to modify
+        A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
+
+        //Get timestamp
+        long timeStamp = System.currentTimeMillis() / 1000;
+
+        //Update header
+        updateHeader.setTimestamp(timeStamp);
+
+        byte[] blockHeader = updateHeader.getHeaderBytes(true);
 
         // Target needs to be adjusted after further exploration
         BigInteger target = valueOf(2).pow(256).divide(new BigInteger(block.getHeader().getDifficulty()));
@@ -137,7 +146,7 @@ public class Equihash {
 
         // Copy the header, add nonce and solutions, hash and check if less than
         // difficulty
-        A0BlockHeader hdr = new A0BlockHeader(block.getHeader());
+        //A0BlockHeader hdr = new A0BlockHeader(block.getHeader());
 
         // Check each returned solution
         for (int i = 0; i < generatedSolutions.length; i++) {
@@ -145,12 +154,12 @@ public class Equihash {
             // Verify if any of the solutions pass the difficulty filter, return
             // if true.
             byte[] minimal = EquiUtils.getMinimalFromIndices(generatedSolutions[i], cBitLen);
-            hdr.setSolution(minimal);
-            hdr.setNonce(nonce);
+            updateHeader.setSolution(minimal);
+            updateHeader.setNonce(nonce);
 
             // Found a valid solution
-            if (isValidBlock(hdr, target)) {
-                return new Solution(block, nonce, minimal);
+            if (isValidBlock(updateHeader, target)) {
+                return new Solution(block, nonce, minimal, timeStamp);
             }
         }
 

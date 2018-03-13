@@ -426,6 +426,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         // set the nonce and solution
         block.getHeader().setNonce(solution.getNonce());
         block.getHeader().setSolution(solution.getSolution());
+        block.getHeader().setTimestamp(solution.getTimeStamp());
 
         // This can be improved
         return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();

@@ -485,14 +485,14 @@ public final class HttpServer {
                 bestBlock = templateMap.get(hdrHash);
 
                 //Update header timestamp
-                bestBlock.getHeader().setTimestamp(Long.parseLong(nTime, 16));
+                //bestBlock.getHeader().setTimestamp(Long.parseLong(nTime, 16));
 
                 boolean successfulSubmit = false;
                 // TODO Clean up this section once decided on event vs direct
                 // call
                 if (bestBlock != null) {
                     successfulSubmit = api
-                            .submitBlock(new Solution(bestBlock, hexStringToBytes(nce), hexStringToBytes(soln)));
+                            .submitBlock(new Solution(bestBlock, hexStringToBytes(nce), hexStringToBytes(soln), Long.parseLong(nTime, 16)));
                 }
 
                 if (successfulSubmit) {
