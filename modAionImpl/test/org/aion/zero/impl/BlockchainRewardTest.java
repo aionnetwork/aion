@@ -37,7 +37,6 @@ package org.aion.zero.impl;
 import org.aion.base.type.Address;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.zero.api.BlockConstants;
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.mcf.core.ImportResult;
 import org.junit.Ignore;
@@ -70,7 +69,7 @@ public class BlockchainRewardTest {
                 .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         ImportResult res = bc.tryToConnect(block);
         assertThat(res).isEqualTo(ImportResult.IMPORTED_BEST);
 
@@ -79,7 +78,7 @@ public class BlockchainRewardTest {
 
         // first block already sealed
         for (int i = 2; i < 99999; i++) {
-            AionBlock b = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+            AionBlock b = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
             ImportResult r = bc.tryToConnect(b);
             assertThat(r).isEqualTo(ImportResult.IMPORTED_BEST);
 

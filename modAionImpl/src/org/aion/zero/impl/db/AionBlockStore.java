@@ -25,6 +25,7 @@ package org.aion.zero.impl.db;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
 import org.aion.mcf.db.AbstractPowBlockstore;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
@@ -391,6 +392,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             --currentLevel;
         }
+
+        LOG.info("branching: common block = {}/{}", forkLine.getNumber(), Hex.toHexString(forkLine.getHash()));
     }
 
     @Override
