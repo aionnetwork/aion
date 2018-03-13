@@ -36,7 +36,6 @@ package org.aion.zero.impl;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -71,7 +70,7 @@ public class BlockchainForkingTest {
                 .build();
 
         StandaloneBlockchain bc = b.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList());
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
         ImportResult firstRes = bc.tryToConnect(block);
         ImportResult secondRes = bc.tryToConnect(block);
@@ -108,7 +107,7 @@ public class BlockchainForkingTest {
 
         StandaloneBlockchain bc = b.bc;
         AionBlock bestBlock = bc.getBestBlock();
-        AionBlock standardBlock = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList());
+        AionBlock standardBlock = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
         ChainConfiguration cc = new ChainConfiguration();
         AionBlock higherDifficultyBlock = new AionBlock(standardBlock);
