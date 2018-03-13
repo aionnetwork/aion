@@ -24,27 +24,16 @@
 
 package org.aion.zero.impl.db;
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.type.IBlock;
-import org.aion.base.util.Hex;
-import org.aion.db.impl.DatabaseFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.ds.DataSourceArray;
-import org.aion.mcf.ds.DataSourceLongArray;
-import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-
-import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
 
 public class RecoveryUtils {
 
@@ -52,94 +41,6 @@ public class RecoveryUtils {
 
     public enum Status {
         SUCCESS, FAILURE, ILLEGAL_ARGUMENT
-    }
-
-    /**
-     * Used by the CLI call.
-     */
-    public static Status indexToLong() {
-        // ensure mining is disabled
-        CfgAion cfg = CfgAion.inst();
-        cfg.dbFromXML();
-        cfg.getConsensus().setMining(false);
-
-        Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "ERROR");
-
-        AionLoggerFactory.init(cfgLog);
-
-        Properties info = new Properties();
-        info.setProperty("db_name", "index");
-        info.setProperty("db_type", cfg.getDb().getVendor());
-        info.setProperty("db_path", new File(cfg.getBasePath(), cfg.getDb().getPath()).getAbsolutePath());
-        info.setProperty("enable_auto_commit", String.valueOf(cfg.getDb().isAutoCommitEnabled()));
-        info.setProperty("enable_db_cache", String.valueOf(cfg.getDb().isDbCacheEnabled()));
-        info.setProperty("enable_db_compression", String.valueOf(cfg.getDb().isDbCompressionEnabled()));
-        info.setProperty("enable_heap_cache", String.valueOf(cfg.getDb().isHeapCacheEnabled()));
-        info.setProperty("max_heap_cache_size", cfg.getDb().getMaxHeapCacheSize());
-        info.setProperty("enable_heap_cache_stats", String.valueOf(cfg.getDb().isHeapCacheStatsEnabled()));
-
-        IByteArrayKeyValueDatabase indexDatabase = DatabaseFactory.connect(info);
-
-        // open the database connection
-        indexDatabase.open();
-
-        // check object status
-        if (indexDatabase == null) {
-            System.out.println(
-                    "Database <" + info.getProperty("db_type") + "> connection could not be established for <" + info
-                            .getProperty("db_name") + ">.");
-            return Status.FAILURE;
-        }
-
-        // check persistence status
-        if (!indexDatabase.isCreatedOnDisk()) {
-            System.out.println("Database <" + info.getProperty("db_type") + "> cannot be saved to disk for <" + info
-                    .getProperty("db_name") + ">.");
-            return Status.FAILURE;
-        }
-
-        indexToLong(indexDatabase);
-
-        // ok if we managed to get down to the expected block
-        return Status.SUCCESS;
-    }
-
-    /**
-     * Used by internal recovery method.
-     */
-    public static void indexToLong(IByteArrayKeyValueDatabase indexDatabase) {
-        byte[] oldSizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-
-        if (indexDatabase.get(oldSizeKey).isPresent()) {
-            LOG.info("Database using old version of block indexing. Updating ...");
-
-            DataSourceArray<List<AionBlockStore.BlockInfo>> oldIndex = new DataSourceArray<>(
-                    new ObjectDataSource<>(indexDatabase, BLOCK_INFO_SERIALIZER));
-            DataSourceLongArray<List<AionBlockStore.BlockInfo>> newIndex = new DataSourceLongArray<>(
-                    new ObjectDataSource<>(indexDatabase, BLOCK_INFO_SERIALIZER));
-
-            int size = oldIndex.size();
-
-            // converting data storage to use long
-            for (int i = 0; i < size; i++) {
-                newIndex.set((long) i, oldIndex.get(i));
-            }
-            newIndex.flush();
-
-            for (int i = size - 1; i >= 0; i--) {
-                oldIndex.remove(i);
-            }
-            oldIndex.flush();
-
-            // deleting old size key
-            indexDatabase.delete(oldSizeKey);
-
-            if (!indexDatabase.isAutoCommitEnabled()) {
-                indexDatabase.commit();
-            }
-            LOG.info("Update complete.");
-        }
     }
 
     /**

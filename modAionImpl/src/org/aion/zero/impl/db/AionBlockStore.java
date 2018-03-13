@@ -26,12 +26,12 @@ package org.aion.zero.impl.db;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
-import org.aion.mcf.db.AbstractPowBlockstore;
-import org.aion.mcf.ds.DataSourceLongArray;
-import org.aion.mcf.ds.ObjectDataSource;
-import org.aion.mcf.ds.Serializer;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.db.AbstractPowBlockstore;
+import org.aion.mcf.ds.DataSourceArray;
+import org.aion.mcf.ds.ObjectDataSource;
+import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
@@ -55,7 +55,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     private IByteArrayKeyValueDatabase indexDS;
-    private DataSourceLongArray<List<BlockInfo>> index;
+    private DataSourceArray<List<BlockInfo>> index;
     private IByteArrayKeyValueDatabase blocksDS;
     private ObjectDataSource<AionBlock> blocks;
 
@@ -66,8 +66,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
 
         indexDS = index;
-        RecoveryUtils.indexToLong(indexDS);
-        this.index = new DataSourceLongArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
+        this.index = new DataSourceArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
         this.blocksDS = blocks;
 
         this.blocks = new ObjectDataSource<>(blocks, new Serializer<AionBlock, byte[]>() {
@@ -148,15 +147,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     private void addInternalBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
 
-        List<BlockInfo> blockInfos = block.getNumber() >= index.size() ? new ArrayList<>()
-                : index.get(block.getNumber());
+        List<BlockInfo> blockInfos =
+                block.getNumber() >= index.size() ? new ArrayList<>() : index.get(block.getNumber());
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
         blockInfo.setHash(block.getHash());
-        blockInfo.setMainChain(mainChain); // FIXME:maybe here I should force
-                                           // reset main chain for all uncles on
-                                           // that level
+        blockInfo.setMainChain(mainChain); // FIXME: maybe here I should force reset main chain for all uncles on that level
 
         blockInfos.add(blockInfo);
         index.set(block.getNumber(), blockInfos);
@@ -593,8 +590,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             RLPList outerList = RLP.decode2(ser);
 
             // should we throw?
-            if (outerList.isEmpty())
-                return;
+            if (outerList.isEmpty()) { return; }
 
             RLPList list = (RLPList) outerList.get(0);
             this.hash = list.get(0).getRLPData();
@@ -652,8 +648,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         @Override
         protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-            if (desc.getName().equals("org.aion.db.a0.AionBlockStore$BlockInfo"))
-                return BlockInfo.class;
+            if (desc.getName().equals("org.aion.db.a0.AionBlockStore$BlockInfo")) { return BlockInfo.class; }
             return super.resolveClass(desc);
         }
     }

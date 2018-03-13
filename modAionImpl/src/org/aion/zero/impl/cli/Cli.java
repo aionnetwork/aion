@@ -95,9 +95,6 @@ public final class Cli {
                     cfg.toXML(null);
                     System.out.println("\nNew config generated");
                     break;
-                case "-d":
-                    RecoveryUtils.indexToLong();
-                    break;
                 case "-i":
                     cfg.fromXML();
                     System.out.println("\nInformation");
