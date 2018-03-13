@@ -484,9 +484,6 @@ public final class HttpServer {
 
                 bestBlock = templateMap.get(hdrHash);
 
-                //Update header timestamp
-                //bestBlock.getHeader().setTimestamp(Long.parseLong(nTime, 16));
-
                 boolean successfulSubmit = false;
                 // TODO Clean up this section once decided on event vs direct
                 // call
@@ -499,7 +496,7 @@ public final class HttpServer {
                     // Found a solution for this height and successfully
                     // submitted, clear all entries for next height
                     log.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            bestBlock.getShortHash(),
                             bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
                     templateMap.clear();
                 }
@@ -516,6 +513,7 @@ public final class HttpServer {
                 return json;
 
             } else {
+                // Expected on pool initialization
                 jsonObj.put("message", "success");
                 jsonObj.put("code", -1);
                 return processResult(_id, jsonObj);

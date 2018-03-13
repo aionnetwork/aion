@@ -144,15 +144,12 @@ public class Equihash {
             LOG.debug("Produced " + generatedSolutions.length + " solutions");
         }
 
-        // Copy the header, add nonce and solutions, hash and check if less than
-        // difficulty
-        //A0BlockHeader hdr = new A0BlockHeader(block.getHeader());
+        // Add nonce and solutions, hash and check if less than target
 
         // Check each returned solution
         for (int i = 0; i < generatedSolutions.length; i++) {
 
-            // Verify if any of the solutions pass the difficulty filter, return
-            // if true.
+            // Verify if any of the solutions pass the difficulty filter, return if true.
             byte[] minimal = EquiUtils.getMinimalFromIndices(generatedSolutions[i], cBitLen);
             updateHeader.setSolution(minimal);
             updateHeader.setNonce(nonce);
