@@ -314,7 +314,7 @@ public class ByteUtil {
     /**
      * Cast hex encoded value from byte[] to int
      *
-     * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+     * Limited to Integer.MAX_VALUE: 2^31-1 (4 bytes)
      *
      * @param b
      *            array contains the values
@@ -328,9 +328,9 @@ public class ByteUtil {
     }
 
     /**
-     * Cast hex encoded value from byte[] to int
+     * Cast hex encoded value from byte[] to long
      *
-     * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+     * Limited to Long.MAX_VALUE: 2^63-1 (8 bytes)
      *
      * @param b
      *            array contains the values
