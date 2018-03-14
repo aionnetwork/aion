@@ -31,6 +31,7 @@ import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 
@@ -214,6 +215,29 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     public byte[] getHash() {
         return HashUtil.h256(getEncoded());
+    }
+
+    /*
+     * Get hash of the static portion of the header; used to identify block templates submitted by the pool.
+     * Also to be used in BHv2 implementation
+     */
+    public byte[] getStaticHash() {
+        //Buffer size = header size (496) - timestamp (8)
+        ByteBuffer b = ByteBuffer.allocate(488);
+
+        b.put(this.parentHash, 0, this.parentHash.length);
+        b.put(this.coinbase.toBytes(), 0, 32);
+        b.put(this.stateRoot, 0, this.stateRoot.length);
+        b.put(this.txTrieRoot, 0, this.txTrieRoot.length);
+        b.put(this.receiptTrieRoot, 0, this.receiptTrieRoot.length);
+        b.put(this.logsBloom, 0, this.logsBloom.length);
+        b.put(this.difficulty,0,this.difficulty.length);
+        b.putLong(this.number);
+        b.put(this.extraData, 0, this.extraData.length);
+        b.putLong(this.energyConsumed);
+        b.putLong(this.energyLimit);
+
+        return HashUtil.h256(b.array());
     }
 
     public byte[] getEncoded() {
