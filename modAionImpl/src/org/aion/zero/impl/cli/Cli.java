@@ -48,7 +48,7 @@ import java.util.UUID;
  *
  * @author chris
  */
-public final class Cli {
+public class Cli {
 
     public int call(final String[] args, final Cfg cfg) {
         try {
@@ -145,7 +145,6 @@ public final class Cli {
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
-            e.printStackTrace();
             return 1;
         }
 

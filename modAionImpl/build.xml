@@ -39,7 +39,8 @@
         <pathelement location="${dir.mod}/modRlp.jar"/>
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
-	<pathelement location="${dir.mod}/modP2p.jar"/>
+        <pathelement location="${dir.mod}/modP2p.jar"/>
+        <pathelement location="${dir.mod}/modFastVM.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
@@ -75,7 +76,7 @@
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
-        <junit printsummary="on" haltonfailure="no" fork="true">
+        <junit printsummary="on" haltonfailure="yes" fork="true">
             <classpath>
                 <path refid="classpath.test"/>
                 <path refid="classpath.dependency"/>
@@ -92,7 +93,7 @@
     <target name="build">
         <mkdir dir="${dir.dest}"/>
         <mkdir dir="${dir.native}"/>
-	<antcall target="pre_build" />
+        <antcall target="pre_build"/>
         <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./"
                destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
@@ -124,22 +125,22 @@
             <file file="modAionImpl.jar"/>
         </move>
 
-        <antcall target="post_build" />
+        <antcall target="post_build"/>
     </target>
 
-        <target name="pre_build">
-                <echo message="execute prebuild script"/>
-                <exec executable="/bin/bash">
-                        <arg value="../script/prebuild.sh" />
-                </exec>
-        </target>
+    <target name="pre_build">
+        <echo message="execute prebuild script"/>
+        <exec executable="/bin/bash">
+            <arg value="../script/prebuild.sh"/>
+        </exec>
+    </target>
 
-        <target name="post_build">
-                <echo message="execute postbuild script"/>
-                <exec executable="/bin/bash">
-                        <arg value="../script/postbuild.sh" />
-                </exec>
-        </target>
+    <target name="post_build">
+        <echo message="execute postbuild script"/>
+        <exec executable="/bin/bash">
+            <arg value="../script/postbuild.sh"/>
+        </exec>
+    </target>
 
     <target name="build_v8">
         <mkdir dir="${dir.dest}"/>

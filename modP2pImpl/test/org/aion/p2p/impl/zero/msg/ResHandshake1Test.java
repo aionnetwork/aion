@@ -23,35 +23,43 @@
  *
  */
 
-package org.aion.p2p.impl.msg;
+package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.*;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.Act;
 import org.junit.Test;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author chris
  */
-public class ResHandshakeTest {
+public class ResHandshake1Test {
 
     @Test
-    public void testRoute(){
-        ResHandshake mh1 = new ResHandshake(true);
-        assertEquals(Ver.V0, mh1.getHeader().getVer());
-        assertEquals(Ctrl.NET, mh1.getHeader().getCtrl());
-        assertEquals(Act.RES_HANDSHAKE, mh1.getHeader().getAction());
-    }
+    public void test() throws UnsupportedEncodingException {
 
-    @Test
-    public void testEncodeDecode() {
+        // test over Byte.MAX_VALUE
+        byte[] randomBytes = new byte[200];
+        ThreadLocalRandom.current().nextBytes(randomBytes);
+        String randomBinaryVersion = new String(randomBytes, "UTF-8");
+        ResHandshake1 rh1 = new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
 
-        ResHandshake mh1 = new ResHandshake(ThreadLocalRandom.current().nextBoolean());
-        byte[] mhBytes = mh1.encode();
-        ResHandshake mh2 = ResHandshake.decode(mhBytes);
-        assertEquals(mh1.getSuccess(), mh2.getSuccess());
+        // test route
+        assertEquals(Ver.V0, rh1.getHeader().getVer());
+        assertEquals(Ctrl.NET, rh1.getHeader().getCtrl());
+        assertEquals(Act.RES_HANDSHAKE, rh1.getHeader().getAction());
+
+        // test encode / decode
+        byte[] mhBytes = rh1.encode();
+        ResHandshake1 rh2 = ResHandshake1.decode(mhBytes);
+        assertEquals(rh1.getSuccess(), rh2.getSuccess());
+        String v1 = rh1.getBinaryVersion();
+        String v2 = rh2.getBinaryVersion();
+
+        assertEquals(rh1.getBinaryVersion(), rh2.getBinaryVersion());
 
     }
 

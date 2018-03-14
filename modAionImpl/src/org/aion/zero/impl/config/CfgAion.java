@@ -33,9 +33,7 @@ import java.util.UUID;
 import javax.xml.stream.*;
 import org.aion.mcf.config.*;
 import org.aion.zero.impl.AionGenesis;
-import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.GenesisBlockLoader;
-import org.aion.zero.impl.Version;
 
 /**
  * @author chris
@@ -53,13 +51,13 @@ public final class CfgAion extends Cfg {
     private CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
-        this.version = Version.KERNEL_VERSION;
         this.net = new CfgNet();
         this.consensus = new CfgConsensusPow();
         this.sync = new CfgSync();
         this.api = new CfgApi();
         this.db = new CfgDb();
         this.log = new CfgLog();
+        this.tx = new CfgTx();
     }
 
     private static class CfgAionHolder {
@@ -169,9 +167,6 @@ public final class CfgAion extends Cfg {
                     case "mode":
                         this.mode = readValue(sr);
                         break;
-                    case "version":
-                        this.version = readValue(sr);
-                        break;
                     case "api":
                         this.api.fromXML(sr);
                         break;
@@ -189,6 +184,9 @@ public final class CfgAion extends Cfg {
                         break;
                     case "log":
                         this.log.fromXML(sr);
+                        break;
+                    case "tx":
+                        this.tx.fromXML(sr);
                         break;
                     default:
                         skipElement(sr);
@@ -284,23 +282,20 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getId());
             sw.writeEndElement();
 
-            sw.writeCharacters("\r\n\t");
-            sw.writeStartElement("version");
-            sw.writeCharacters(this.getVersion());
-            sw.writeEndElement();
-
             sw.writeCharacters(this.getApi().toXML());
             sw.writeCharacters(this.getNet().toXML());
             sw.writeCharacters(this.getSync().toXML());
             sw.writeCharacters(this.getConsensus().toXML());
             sw.writeCharacters(this.getDb().toXML());
             sw.writeCharacters(this.getLog().toXML());
+            sw.writeCharacters(this.getTx().toXML());
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();
             sw.flush();
             sw.close();
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println("<error on-write-config-xml-to-file>");
             System.exit(1);
         } finally {

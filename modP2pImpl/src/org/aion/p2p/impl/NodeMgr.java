@@ -34,10 +34,8 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
-
 import javax.xml.stream.*;
 
 public class NodeMgr implements INodeMgr {
@@ -45,7 +43,7 @@ public class NodeMgr implements INodeMgr {
     private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
     private static final String BASE_PATH = System.getProperty("user.dir");
-    public static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
+    private static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
 
     private final Set<String> seedIps = new HashSet<>();
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
@@ -74,6 +72,17 @@ public class NodeMgr implements INodeMgr {
         System.out.println(sb.toString());
     }
 
+    private final static char[] hexArray = "0123456789abcdef".toCharArray();
+    private static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     /**
      *
      * @param selfShortId String
@@ -81,27 +90,46 @@ public class NodeMgr implements INodeMgr {
     void dumpNodeInfo(String selfShortId) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
-        sb.append(String.format("   ================== p2p-status-%6s ==================\n", selfShortId));
-        sb.append(String.format("   temp[%d] inbound[%d] outbound[%d]\n",
+        sb.append(String.format("   ================================================================== p2p-status-%6s ==================================================================\n", selfShortId));
+        sb.append(String.format("   temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                            s - seed node, td - total difficulty, # - block number, bv - binary version\n",
             tempNodesSize(),
             inboundNodes.size(),
-            outboundNodes.size()
+            outboundNodes.size(),
+            activeNodes.size()
         ));
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
-            sb.append("   -------------------------------------------------------\n");
-            sb.append("   seed       blk               td      id              ip   port      type\n");
-            sorted.sort((n1, n2) -> Long.compare(n2.getBestBlockNumber(), n1.getBestBlockNumber()));
+            sb.append("\n             s"); // id & seed
+            sb.append("               td");
+            sb.append("          #");
+            sb.append("                                                             hash");
+            sb.append("              ip");
+            sb.append("  port");
+            sb.append("     conn");
+            sb.append("              bv\n");
+            sb.append("   -------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            sorted.sort((n1, n2) -> {
+                int tdCompare = new BigInteger(1, n2.getTotalDifficulty() == null ? new byte[0] : n2.getTotalDifficulty())
+                    .compareTo(new BigInteger(1, n1.getTotalDifficulty() == null ? new byte[0] : n1.getTotalDifficulty()));
+                if(tdCompare == 0) {
+                    Long n2Bn = n2.getBestBlockNumber();
+                    Long n1Bn = n1.getBestBlockNumber();
+                    return n2Bn.compareTo(n1Bn);
+                } else
+                    return tdCompare;
+            });
             for (Node n : sorted) {
                 sb.append(
-                    String.format("      %c%10d %16s  %6s %15s  %5d  %8s\n",
-                        n.getIfFromBootList() ? 0x221A : ' ',
-                        n.getBestBlockNumber(),
-                        n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
+                    String.format("   id:%6s %c %16s %10d %64s %15s %5d %8s %15s\n",
                         n.getIdShort(),
+                        n.getIfFromBootList() ? 'y' : ' ',
+                        n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
+                        n.getBestBlockNumber(),
+                        n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
                         n.getIpStr(),
                         n.getPort(),
-                        n.getType()
+                        n.getConnection(),
+                        n.getBinaryVersion()
                     )
                 );
             }
@@ -256,7 +284,7 @@ public class NodeMgr implements INodeMgr {
     void moveOutboundToActive(int _nodeIdHash, String _shortId, final P2pMgr _p2pMgr) {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
-            node.setType("outbound");
+            node.setConnection("outbound");
             INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
             if (previous != null)
                 _p2pMgr.closeSocket(node.getChannel());
@@ -274,7 +302,7 @@ public class NodeMgr implements INodeMgr {
     void moveInboundToActive(int _channelHashCode, final P2pMgr _p2pMgr) {
         Node node = inboundNodes.remove(_channelHashCode);
         if (node != null) {
-            node.setType("inbound");
+            node.setConnection("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
             if (previous != null)
@@ -291,7 +319,7 @@ public class NodeMgr implements INodeMgr {
             Iterator nodesIt = tempNodes.iterator();
             while (nodesIt.hasNext()) {
                 Node n = (Node) nodesIt.next();
-                if (n.peerMetric.shouldNotConn())
+                if (n.peerMetric.shouldNotConn() && !n.getIfFromBootList())
                     tempNodes.remove(n);
             }
         }

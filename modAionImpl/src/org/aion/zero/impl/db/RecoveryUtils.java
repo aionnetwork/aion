@@ -19,15 +19,17 @@
  *
  * Contributors:
  *     Aion foundation.
- *
  ******************************************************************************/
-
 package org.aion.zero.impl.db;
 
 import org.aion.base.type.IBlock;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RecoveryUtils {
 
@@ -43,6 +45,12 @@ public class RecoveryUtils {
         CfgAion cfg = CfgAion.inst();
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "INFO");
+        cfgLog.put("GEN", "INFO");
+
+        AionLoggerFactory.init(cfgLog);
 
         // get the current blockchain
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
@@ -64,6 +72,12 @@ public class RecoveryUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "INFO");
+        cfgLog.put("GEN", "INFO");
+
+        AionLoggerFactory.init(cfgLog);
+
         // get the current blockchain
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
@@ -83,7 +97,7 @@ public class RecoveryUtils {
     }
 
     /**
-     * Used my internal world state recovery method.
+     * Used by internal world state recovery method.
      */
     public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock) {
         IBlockStoreBase store = blockchain.getBlockStore();

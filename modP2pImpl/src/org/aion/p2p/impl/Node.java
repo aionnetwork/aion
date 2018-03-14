@@ -49,12 +49,15 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public final class Node implements INode {
 
+    private static final String REGEX_PROTOCOL = "^p2p://";                                                               // Protocol eg. p2p://
+    private static final String REGEX_NODE_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";           // Node-Id  eg. 3e2cab6a-09dd-4771-b28d-6aa674009796
+    private static final String REGEX_IPV4 = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";  // Ip       eg. 127.0.0.1
+    private static final String REGEX_PORT = "[0-9]+$";                                                                   // Port     eg. 30303
+    private static final Pattern PATTERN_P2P = Pattern.compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
+    private static final int SIZE_BYTES_IPV4 = 8;
+
     private boolean fromBootList;
 
-    /**
-     * id != "" && version != "" && node on pending nodes => move to active
-     * nodes
-     */
     private byte[] id; // 36 bytes
 
     private int idHash;
@@ -66,14 +69,13 @@ public final class Node implements INode {
      */
     private String idShort;
 
-    private int version;
-
     private byte[] ip;
 
     private String ipStr;
 
-    private int port = -1;
-    private int portConnected = -1;
+    private int port;
+
+    private int portConnected;
 
     private long timestamp;
 
@@ -83,44 +85,38 @@ public final class Node implements INode {
 
     private byte[] totalDifficulty;
 
+    private String binaryVersion = "";
+
     private SocketChannel channel;
 
-    private String type = "";
-
-    private static final String REGEX_PROTOCOL = "^p2p://";                                                               // Protocol eg. p2p://
-    private static final String REGEX_NODE_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";           // Node-Id  eg. 3e2cab6a-09dd-4771-b28d-6aa674009796
-    private static final String REGEX_IPV4 = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";  // Ip       eg. 127.0.0.1
-    private static final String REGEX_PORT = "[0-9]+$";                                                                   // Port     eg. 30303
-
-    private static final Pattern PATTERN_P2P = Pattern.compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
-
-    private static final int SIZE_BYTES_IPV4 = 8;
+    /**
+     * for log display indicates current node connection is
+     * constructed by inbound connection or outbound connection
+     */
+    private String connection = "";
 
     PeerMetric peerMetric = new PeerMetric();
 
     /**
-     * constructor for initial stage of connections from network
+     * constructor for initial stage of persisted peer info from file system
      */
-    Node(boolean fromBootList, String _ipStr) {
+    private Node(boolean fromBootList, String _ipStr) {
         this.fromBootList = fromBootList;
-
-        // if id is not gathered, leave it empty
-        // this.id = new byte[36];
         this.idHash = 0;
-        this.version = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
-        this.port = 0;
+        this.port = -1;
+        this.portConnected = -1;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
     }
 
+    /**
+     * constructor for initial stage of connections from network
+     */
     Node(String _ipStr, int port, int portConnected) {
         this.fromBootList = false;
-        // if id is not gathered, leave it empty
-        // this.id = new byte[36];
         this.idHash = 0;
-        this.version = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
         this.port = port;
@@ -139,10 +135,10 @@ public final class Node implements INode {
             this.idHash = Arrays.hashCode(_id);
             this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
         }
-        this.version = -1;
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
         this.port = _port;
+        this.portConnected = -1;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
     }
@@ -177,12 +173,12 @@ public final class Node implements INode {
             short[] shorts = new short[_ip.length/2];
             ByteBuffer.wrap(_ip).asShortBuffer().get(shorts);
 
-            String ip = "";
+            StringBuilder ip = new StringBuilder();
             for (int i = 0; i < shorts.length; i++) {
-                ip += shorts[i] + (i < shorts.length - 1 ? "." : "");
+                ip.append(shorts[i]).append(i < shorts.length - 1 ? "." : "");
             }
 
-            return ip;
+            return ip.toString();
         }
     }
 
@@ -223,13 +219,6 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _version int
-     */
-    void setVersion(final int _version) {
-        this.version = _version;
-    }
-
-    /**
      * @param _port int
      */
     void setPort(final int _port) {
@@ -239,6 +228,8 @@ public final class Node implements INode {
     void setPortConnected(final int _port) {
         this.portConnected = _port;
     }
+
+    void setBinaryVersion(String _revision) { this.binaryVersion = _revision; }
 
     /**
      * this method used to keep current node stage on either pending list or
@@ -256,10 +247,10 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _type String
+     * @param _connection String
      */
-    void setType(String _type) {
-        this.type = _type;
+    void setConnection(String _connection){
+        this.connection = _connection;
     }
 
     /**
@@ -267,13 +258,6 @@ public final class Node implements INode {
      */
     boolean getIfFromBootList() {
         return this.fromBootList;
-    }
-
-    /**
-     * @return int
-     */
-    int getVersion() {
-        return this.version;
     }
 
     @Override
@@ -302,6 +286,8 @@ public final class Node implements INode {
         return this.timestamp;
     }
 
+    String getBinaryVersion() { return this.binaryVersion; }
+
     /**
      * @return SocketChannel
      */
@@ -319,8 +305,11 @@ public final class Node implements INode {
         return this.idHash;
     }
 
-    String getType() {
-        return this.type;
+    /**
+     * @return String
+     */
+    public String getConnection() {
+        return this.connection;
     }
 
     boolean hasFullInfo() {
@@ -425,14 +414,13 @@ public final class Node implements INode {
         }
     }
 
-    public static Node fromXML(final XMLStreamReader sr) throws XMLStreamException
-    {
+    public static Node fromXML(final XMLStreamReader sr) throws XMLStreamException {
         String id = null;
         String ip = null;
         int port = 0;
         int failedConn = 0;
 
-        loop: while (sr.hasNext()) {
+        while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
@@ -456,6 +444,8 @@ public final class Node implements INode {
                     break;
                 case XMLStreamReader.END_ELEMENT:
                     Node node = new Node(false, ip);
+                    if(id == null)
+                        return null;
                     node.setId(id.getBytes());
                     node.setPort(port);
                     node.peerMetric.metricFailedConn = failedConn;
@@ -465,12 +455,11 @@ public final class Node implements INode {
         return null;
     }
 
-    public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
+    private static String readValue(final XMLStreamReader sr) throws XMLStreamException {
         StringBuilder str = new StringBuilder();
         readLoop:
         while (sr.hasNext()) {
-            int eventType = sr.next();
-            switch (eventType) {
+            switch (sr.next()) {
                 case XMLStreamReader.CHARACTERS:
                     str.append(sr.getText());
                     break;

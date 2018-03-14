@@ -33,51 +33,62 @@
  * Bitcoinj team.
  */
 
-package org.aion.zero.impl.sync.callback;
+package org.aion.zero.impl.sync.handler;
 
-import org.aion.p2p.*;
-import org.slf4j.Logger;
-import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.msg.ResStatus;
+import java.util.List;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
+import org.aion.zero.impl.sync.SyncMgr;
+import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
+import org.aion.zero.types.A0BlockHeader;
+import org.slf4j.Logger;
 
 /**
+ *
  * @author chris
+ * handler for block headers response from network
+ *
  */
-public final class ResStatusCallback extends Handler {
+public final class ResBlocksHeadersHandler extends Handler {
 
     private final Logger log;
 
-    private final IP2pMgr p2pMgr;
-
     private final SyncMgr syncMgr;
 
-    public ResStatusCallback(final Logger _log, final IP2pMgr _p2pMgr, final SyncMgr _syncMgr) {
-        super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
-        this.log = _log;
-        this.p2pMgr = _p2pMgr;
+    public ResBlocksHeadersHandler(final Logger _log, final SyncMgr _syncMgr) {
+        super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_HEADERS);
         this.syncMgr = _syncMgr;
+        this.log = _log;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null || _msgBytes.length == 0)
+        if(_msgBytes == null || _msgBytes.length == 0)
             return;
-        ResStatus rs = ResStatus.decode(_msgBytes);
-
-        INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
-
-        INodeMgr nmgr = this.p2pMgr.getNodeMgr();
-
-        nmgr.updateAllNodesInfo(node);
-
-        if (node != null) {
-            this.log.debug("<res-status best-block={} from-node={}>", rs.getBestBlockNumber(), _displayId);
-            long nodeBestBlockNumber = rs.getBestBlockNumber();
-            byte[] nodeBestBlockHash = rs.getBestHash();
-            byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
-            node.updateStatus(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
-            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash(), nodeTotalDifficulty);
-        }
+        ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
+        if(resHeaders != null) {
+            List<A0BlockHeader> headers = resHeaders.getHeaders();
+            if(headers != null && headers.size() > 0){
+                this.log.debug(
+                        "<res-headers from-block={} take={} from-node={}>",
+                        headers.get(0).getNumber(),
+                        headers.size(),
+                        _displayId
+                );
+                this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, _displayId, headers);
+            } else {
+                this.log.error(
+                    "<res-headers empty-headers from-node={} >",
+                    _displayId
+                );
+            }
+        } else
+            this.log.error(
+                    "<res-headers decode-msg msg-bytes={} from-node={} >",
+                    _msgBytes.length,
+                    _displayId
+            );
     }
 }

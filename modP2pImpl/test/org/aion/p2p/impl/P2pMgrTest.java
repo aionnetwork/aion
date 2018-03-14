@@ -27,6 +27,10 @@ package org.aion.p2p.impl;
 
 import org.aion.p2p.INode;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.net.Socket;
+import java.net.SocketException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -53,7 +57,7 @@ public class P2pMgrTest {
                 "p2p://" + nodeId1 + "@" + ip2+ ":" + port2
         };
 
-        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, 128, 128, false, false);
+        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, false, false);
         assertEquals(p2p.getTempNodesCount(), 0);
 
     }
@@ -65,7 +69,7 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip1+ ":" + port1
         };
 
-        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, 128, 128, false, false);
+        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, false, false);
         assertEquals(0,p2p.getTempNodesCount());
 
     }
@@ -79,7 +83,7 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip2+ ":" + port2,
         };
 
-        P2pMgr p2p = new P2pMgr(nodeId1, ip1, port1, nodes, false, 128, 128,false, false);
+        P2pMgr p2p = new P2pMgr(0, "",nodeId1, ip1, port1, nodes, false, 128, 128,false, false, false);
         assertEquals(p2p.getTempNodesCount(), 3);
 
     }
@@ -94,6 +98,7 @@ public class P2pMgrTest {
         int port2 = 30304;
 
         P2pMgr receiver = new P2pMgr(
+                0, "",
                 id1,
                 ip,
                 port1,
@@ -104,6 +109,7 @@ public class P2pMgrTest {
                 128,
                 128,
                 false,
+                false,
                 false
         );
 
@@ -112,6 +118,7 @@ public class P2pMgrTest {
         receiver.run();
 
         P2pMgr connector = new P2pMgr(
+                0, "",
                 id2,
                 ip,
                 port2,
@@ -121,6 +128,7 @@ public class P2pMgrTest {
                 false,
                 128,
                 128,
+                false,
                 false,
                 false
         );
@@ -138,5 +146,4 @@ public class P2pMgrTest {
         connector.shutdown();
 
     }
-
 }

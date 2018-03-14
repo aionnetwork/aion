@@ -44,8 +44,6 @@ public abstract class Cfg {
 
     protected String id;
 
-    protected String version;
-
     protected CfgApi api;
 
     protected CfgNet net;
@@ -57,6 +55,8 @@ public abstract class Cfg {
     protected CfgDb db;
 
     protected CfgLog log;
+
+    protected CfgTx tx;
 
     public void setId(final String _id){
         this.id = _id;
@@ -78,8 +78,8 @@ public abstract class Cfg {
         this.log = _log;
     }
 
-    public String getVersion() {
-        return this.version;
+    public void setTx(final CfgTx _tx) {
+        this.tx = _tx;
     }
 
     public String getId() {
@@ -108,6 +108,10 @@ public abstract class Cfg {
 
     public CfgLog getLog() {
         return this.log;
+    }
+
+    public CfgTx getTx() {
+        return this.tx;
     }
 
     public String[] getNodes() {
