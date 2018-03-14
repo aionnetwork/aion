@@ -586,4 +586,14 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         return "AionRepositoryImpl{ identityHashCode=" + System.identityHashCode(this) + ", " + //
                 "databaseGroupSize=" + (databaseGroup == null ? 0 : databaseGroup.size()) + '}';
     }
+
+    public void compact() {
+        if (databaseGroup != null) {
+            for (IByteArrayKeyValueDatabase db : databaseGroup) {
+                db.compact();
+            }
+        } else {
+            LOG.warn("databaseGroup is null");
+        }
+    }
 }

@@ -614,4 +614,8 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
         // the dirty entries now match the storage
         dirtyEntries.clear();
     }
+
+    public void compact(){
+        database.compact();
+    }
 }

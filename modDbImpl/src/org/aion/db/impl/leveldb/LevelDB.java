@@ -468,4 +468,18 @@ public class LevelDB extends AbstractDB {
         return success;
 
     }
+
+    @Override
+    public void compact() {
+        // acquire read lock
+        lock.writeLock().lock();
+
+        LOG.error("Compacting <" + this.name + ">.");
+        try {
+            db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
+        } finally {
+            // release write lock
+            lock.writeLock().unlock();
+        }
+    }
 }

@@ -93,6 +93,7 @@ public class RecoveryUtils {
         store.pruneAndCorrect();
         store.flush();
 
+        ((AionRepositoryImpl) blockchain.getRepository()).compact();
         blockchain.getRepository().close();
     }
 

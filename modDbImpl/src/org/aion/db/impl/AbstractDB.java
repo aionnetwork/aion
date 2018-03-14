@@ -196,4 +196,8 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      */
     public abstract boolean commitCache(Map<ByteArrayWrapper, byte[]> cache);
 
+    @Override
+    public void compact() {
+        LOG.info("Compact not supported by " + this.toString() + ".");
+    }
 }

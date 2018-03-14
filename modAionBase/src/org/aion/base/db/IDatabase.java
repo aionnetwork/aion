@@ -186,4 +186,5 @@ public interface IDatabase {
      */
     long approximateSize();
 
+    void compact();
 }
