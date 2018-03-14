@@ -136,7 +136,8 @@ public class NonceMgr {
 
         Map<Address, Map.Entry<BigInteger, BigInteger>> newNonceMap = Collections.synchronizedMap(new HashMap<>());
 
-        map.keySet().parallelStream().forEach( addr -> {
+        for (Address addr : map.keySet()) {
+
             BigInteger repoExpectNonce = repo.getNonce(addr);
             int cmp = map.get(addr).getValue().compareTo(repoExpectNonce);
 
@@ -211,7 +212,7 @@ public class NonceMgr {
                     }
                 }
             }
-        });
+        }
 
         map.putAll(newNonceMap);
     }

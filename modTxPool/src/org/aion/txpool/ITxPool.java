@@ -57,4 +57,6 @@ public interface ITxPool<TX extends ITransaction> {
 
     @SuppressWarnings("SameReturnValue")
     String getVersion();
+
+    List<TX> snapshotAll();
 }

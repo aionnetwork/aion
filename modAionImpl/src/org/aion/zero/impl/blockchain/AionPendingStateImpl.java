@@ -411,7 +411,6 @@ public class AionPendingStateImpl
         }
 
         best = newBlock;
-        pendingState = repository.startTracking();
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("PendingStateImpl.processBest: updateState");
@@ -428,6 +427,7 @@ public class AionPendingStateImpl
         }
 
         txPool.updateBlkNrgLimit(best.getNrgLimit());
+
 
         IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
         this.evtMgr.newEvent(evtChange);
@@ -535,19 +535,20 @@ public class AionPendingStateImpl
 
     private synchronized void updateState(IAionBlock block) {
 
-        List<AionTransaction> pendingTxl = this.txPool.snapshot(true);
+        pendingState = repository.startTracking();
+
+        List<AionTransaction> pendingTxl = this.txPool.snapshotAll();
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("updateState - snapshot tx[{}]", pendingTxl.size());
+            LOG.debug("updateState - snapshotAll tx[{}]", pendingTxl.size());
         }
         for (AionTransaction tx : pendingTxl) {
             if (LOG.isTraceEnabled()) {
                 LOG.debug("updateState - loop: " + tx.toString());
             }
 
-            executeTx(tx);
-
-            AionTxReceipt receipt = new AionTxReceipt();
+            AionTxExecSummary txSum = executeTx(tx);
+            AionTxReceipt receipt = txSum.getReceipt();
             receipt.setTransaction(tx);
             fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
         }

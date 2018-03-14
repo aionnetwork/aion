@@ -252,8 +252,17 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     @SuppressWarnings("unchecked")
     @Override
-    public synchronized List<TX> snapshot(boolean unlimited) {
+    public List<TX> snapshotAll() {
+        return snapshot(true);
+    }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<TX> snapshot() {
+        return snapshot(false);
+    }
+
+    private synchronized List<TX> snapshot(boolean getAll) {
         List<TX> rtn = new ArrayList<>();
         sortTxn();
 
@@ -274,15 +283,16 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
                         ITransaction itx = this.getMainMap().get(bw).getTx();
 
-                        cnt_txSz -= itx.getEncoded().length;
+                        if (!getAll) {
+                            cnt_txSz -= itx.getEncoded().length;
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
+                                        itx.getFrom().toString(), new BigInteger(itx.getNonce()).toString(),
+                                        itx.getEncoded().length, itx.getNrgConsume());
+                            }
 
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                    itx.getFrom().toString(), new BigInteger(itx.getNonce()).toString(),
-                                    itx.getEncoded().length, itx.getNrgConsume());
+                            cnt_nrg -= itx.getNrgConsume();
                         }
-
-                        cnt_nrg -= itx.getNrgConsume();
 
                         if (cnt_txSz > 0 && cnt_nrg > 0) {
                             try {
