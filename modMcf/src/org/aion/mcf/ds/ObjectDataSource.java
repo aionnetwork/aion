@@ -99,10 +99,4 @@ public class ObjectDataSource<V> implements Flushable {
     public void close() {
         src.close();
     }
-
-    @Override
-    public void flushDangerously() {
-        // TODO Auto-generated method stub
-
-    }
 }
