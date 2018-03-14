@@ -129,7 +129,7 @@ public class NodeMgr implements INodeMgr {
                         n.getIpStr(),
                         n.getPort(),
                         n.getConnection(),
-                        n.getRevision()
+                        n.getBinaryVersion()
                     )
                 );
             }
