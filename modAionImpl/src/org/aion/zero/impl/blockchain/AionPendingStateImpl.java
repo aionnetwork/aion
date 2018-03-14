@@ -533,7 +533,7 @@ public class AionPendingStateImpl
         return info;
     }
 
-    private void updateState(IAionBlock block) {
+    private synchronized void updateState(IAionBlock block) {
 
         List<AionTransaction> pendingTxl = this.txPool.snapshot();
 
@@ -544,6 +544,8 @@ public class AionPendingStateImpl
             if (LOG.isTraceEnabled()) {
                 LOG.debug("updateState - loop: " + tx.toString());
             }
+
+            addPendingTransactionImpl(tx);
 
             AionTxReceipt receipt = new AionTxReceipt();
             receipt.setTransaction(tx);
