@@ -209,7 +209,7 @@ public class AionPendingStateImpl
 
     @Override
     public List<AionTransaction> getPendingTransactions() {
-        return this.txPool.snapshot(false);
+        return this.txPool.snapshot();
     }
 
     public AionBlock getBestBlock() {

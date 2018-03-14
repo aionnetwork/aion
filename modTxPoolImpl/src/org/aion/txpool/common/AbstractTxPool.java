@@ -104,7 +104,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
     public abstract int size();
 
-    public abstract List<TX> snapshot(boolean unlimited);
+    public abstract List<TX> snapshot();
 
     public abstract Map.Entry<BigInteger, BigInteger> bestNonceSet(Address address);
 

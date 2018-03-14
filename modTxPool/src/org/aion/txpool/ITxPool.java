@@ -45,7 +45,7 @@ public interface ITxPool<TX extends ITransaction> {
 
     int size();
 
-    List<TX> snapshot(boolean unlimited);
+    List<TX> snapshot();
 
     List<TX> getOutdatedList();
 

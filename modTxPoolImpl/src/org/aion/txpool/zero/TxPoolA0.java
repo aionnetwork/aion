@@ -269,7 +269,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         removeTimeoutTxn();
 
         int cnt_txSz = blkSizeLimit;
-        long cnt_nrg = unlimited ? Long.MAX_VALUE : blkNrgLimit.get();
+        long cnt_nrg = blkNrgLimit.get();
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
                 .entrySet()) {
