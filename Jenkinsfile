@@ -50,7 +50,9 @@ pipeline {
     	}
     }
     post {
-        cleanWs()
+	always {
+        	cleanWs()
+	}
 	success {
 		slackSend channel: '#ci',
 			  color: 'good',
