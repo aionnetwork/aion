@@ -209,7 +209,7 @@ public class AionPendingStateImpl
 
     @Override
     public List<AionTransaction> getPendingTransactions() {
-        return this.txPool.snapshot();
+        return this.txPool.snapshot(false);
     }
 
     public AionBlock getBestBlock() {
@@ -535,7 +535,7 @@ public class AionPendingStateImpl
 
     private synchronized void updateState(IAionBlock block) {
 
-        List<AionTransaction> pendingTxl = this.txPool.snapshot();
+        List<AionTransaction> pendingTxl = this.txPool.snapshot(true);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("updateState - snapshot tx[{}]", pendingTxl.size());
@@ -545,7 +545,7 @@ public class AionPendingStateImpl
                 LOG.debug("updateState - loop: " + tx.toString());
             }
 
-            addPendingTransactionImpl(tx);
+            executeTx(tx);
 
             AionTxReceipt receipt = new AionTxReceipt();
             receipt.setTransaction(tx);
