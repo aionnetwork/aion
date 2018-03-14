@@ -90,8 +90,8 @@ public class NodeMgr implements INodeMgr {
     void dumpNodeInfo(String selfShortId) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
-        sb.append(String.format("   ============================================================== p2p-status-%6s ==============================================================\n", selfShortId));
-        sb.append(String.format("   temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                          s - seed node, td - total difficulty, # - block number, rv - revision\n",
+        sb.append(String.format("   ================================================================== p2p-status-%6s ==================================================================\n", selfShortId));
+        sb.append(String.format("   temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                            s - seed node, td - total difficulty, # - block number, bv - binary version\n",
             tempNodesSize(),
             inboundNodes.size(),
             outboundNodes.size(),
@@ -106,8 +106,8 @@ public class NodeMgr implements INodeMgr {
             sb.append("              ip");
             sb.append("  port");
             sb.append("     conn");
-            sb.append("      rv\n");
-            sb.append("   -----------------------------------------------------------------------------------------------------------------------------------------------\n");
+            sb.append("              bv\n");
+            sb.append("   -------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             sorted.sort((n1, n2) -> {
                 int tdCompare = new BigInteger(1, n2.getTotalDifficulty() == null ? new byte[0] : n2.getTotalDifficulty())
                     .compareTo(new BigInteger(1, n1.getTotalDifficulty() == null ? new byte[0] : n1.getTotalDifficulty()));
@@ -120,7 +120,7 @@ public class NodeMgr implements INodeMgr {
             });
             for (Node n : sorted) {
                 sb.append(
-                    String.format("   id:%6s %c %16s %10d %64s %15s %5d %8s %7s\n",
+                    String.format("   id:%6s %c %16s %10d %64s %15s %5d %8s %15s\n",
                         n.getIdShort(),
                         n.getIfFromBootList() ? 'y' : ' ',
                         n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
