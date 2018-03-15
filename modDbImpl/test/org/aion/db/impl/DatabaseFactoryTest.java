@@ -35,8 +35,6 @@
 package org.aion.db.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.MockDBDriver;
 import org.junit.Test;
@@ -58,7 +56,7 @@ public class DatabaseFactoryTest {
     @Test
     public void testDriverReturnDatabase() {
         Properties props = new Properties();
-        props.setProperty("db_name", dbName);
+        props.setProperty("db_name", dbName + DatabaseTestUtils.getNext());
         props.setProperty("db_path", dbPath);
 
         // MOCKDB
@@ -89,7 +87,7 @@ public class DatabaseFactoryTest {
     @Test
     public void testDriverRandomClassReturnNull() {
         Properties props = new Properties();
-        props.setProperty("db_name", dbName);
+        props.setProperty("db_name", dbName + DatabaseTestUtils.getNext());
         props.setProperty("db_path", dbPath);
 
         // random class that is not an IDriver
@@ -102,7 +100,7 @@ public class DatabaseFactoryTest {
     @Test
     public void testDriverRandomStringReturnNull() {
         Properties props = new Properties();
-        props.setProperty("db_name", dbName);
+        props.setProperty("db_name", dbName + DatabaseTestUtils.getNext());
         props.setProperty("db_path", dbPath);
 
         // random string
