@@ -37,12 +37,13 @@ import java.util.List;
  * protocal version upgrading test
  *
  */
-public final class ReqHandshake2 extends ReqHandshake {
+public final class ReqHandshake1 extends ReqHandshake {
 
     private byte[] revision;
 
     private List<Short> versions;
 
+    // one version byte[2] - short
     private static final byte MAX_VERSIONS_LEN = 63;
 
     // super LEN + revision len (byte) + versions len (byte)
@@ -57,7 +58,7 @@ public final class ReqHandshake2 extends ReqHandshake {
      * @param _revision String
      * @param _versions List<byte[2]> header contains 2 byte version
      */
-    public ReqHandshake2(final byte[] _nodeId, int _netId, final byte[] _ip, int _port, final byte[] _revision, final List<Short> _versions) {
+    public ReqHandshake1(final byte[] _nodeId, int _netId, final byte[] _ip, int _port, final byte[] _revision, final List<Short> _versions) {
         super(_nodeId, _netId, _ip, _port);
         this.revision = _revision;
         this.versions = _versions.subList(0, Math.min(MAX_VERSIONS_LEN, _versions.size()));
@@ -72,7 +73,7 @@ public final class ReqHandshake2 extends ReqHandshake {
      * @return ReqHandshake
      * decode body
      */
-    public static ReqHandshake2 decode(final byte[] _bytes) {
+    public static ReqHandshake1 decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length < MIN_LEN)
             return null;
         else {
@@ -105,7 +106,7 @@ public final class ReqHandshake2 extends ReqHandshake {
                 versions.add(version);
             }
 
-            return new ReqHandshake2(nodeId, netId, ip, port, revision, versions);
+            return new ReqHandshake1(nodeId, netId, ip, port, revision, versions);
         }
     }
 

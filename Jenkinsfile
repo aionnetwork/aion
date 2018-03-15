@@ -29,10 +29,10 @@ pipeline {
         
         stage('Archive build output') {
             when {
-                expression { GIT_BRANCH == 'master' || GIT_BRANCH == 'dev' }
+                expression { GIT_BRANCH == 'master' || GIT_BRANCH == 'dev' || GIT_BRANCH == 'ci' }
             }
             steps {                
-                archiveArtifacts artifacts: 'aion-v*.tar.bz2'
+                archiveArtifacts artifacts: 'pack/aion-v*.tar.bz2'
             }
         }
         
@@ -50,9 +50,20 @@ pipeline {
     	}
     }
     post {
-	success {
+	always {
         	cleanWs()
+	}
+	success {
+		slackSend channel: '#ci',
+			  color: 'good',
+			  message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
 	} 
+	failure {
+		slackSend channel: '#ci',
+			  color: 'danger', 
+			  message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
+	}
+
     }
     
 }

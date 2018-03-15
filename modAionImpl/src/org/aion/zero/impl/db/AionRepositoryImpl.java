@@ -510,43 +510,43 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         try {
 
             try {
-                if (detailsDatabase != null) {
-                    detailsDatabase.close();
-                    LOGGEN.info("details DB closed.");
-                    detailsDatabase = null;
+                if (detailsDS != null) {
+                    detailsDS.close();
+                    LOGGEN.info("Details data source closed.");
+                    detailsDS = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("details DB close exception", e);
+                LOGGEN.error("Exception occurred while closing the details data source.", e);
             }
 
             try {
                 if (stateDatabase != null) {
                     stateDatabase.close();
-                    LOGGEN.info("state DB closed.");
+                    LOGGEN.info("State database closed.");
                     stateDatabase = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("state DB close exception", e);
+                LOGGEN.error("Exception occurred while closing the state database.", e);
             }
 
             try {
                 if (transactionDatabase != null) {
                     transactionDatabase.close();
-                    LOGGEN.info("transaction DB closed.");
+                    LOGGEN.info("Transaction database closed.");
                     transactionDatabase = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("transaction DB close exception", e);
+                LOGGEN.error("Exception occurred while closing the transaction database.", e);
             }
 
             try {
                 if (blockStore != null) {
                     blockStore.close();
-                    LOGGEN.info("block DB closed.");
+                    LOGGEN.info("Block store closed.");
                     blockStore = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("block DB close exception", e);
+                LOGGEN.error("Exception occurred while closing the block store.", e);
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -585,5 +585,16 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     public String toString() {
         return "AionRepositoryImpl{ identityHashCode=" + System.identityHashCode(this) + ", " + //
                 "databaseGroupSize=" + (databaseGroup == null ? 0 : databaseGroup.size()) + '}';
+    }
+
+    @Override
+    public void compact() {
+        if (databaseGroup != null) {
+            for (IByteArrayKeyValueDatabase db : databaseGroup) {
+                db.compact();
+            }
+        } else {
+            LOG.error("Database group is null.");
+        }
     }
 }

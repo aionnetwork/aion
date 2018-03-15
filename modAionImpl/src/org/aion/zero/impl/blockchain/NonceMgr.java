@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.collections4.map.LRUMap;
 
@@ -133,18 +134,24 @@ public class NonceMgr {
             LOG.trace("NonceMgr- flush start");
         }
 
-        for (Map.Entry<Address, Map.Entry<BigInteger, BigInteger>> bw : map.entrySet()) {
-            BigInteger repoExpectNonce = repo.getNonce(bw.getKey());
-            int cmp = bw.getValue().getValue().compareTo(repoExpectNonce);
+        Map<Address, Map.Entry<BigInteger, BigInteger>> newNonceMap = Collections.synchronizedMap(new HashMap<>());
+
+        for (Map.Entry<Address, Map.Entry<BigInteger, BigInteger>> entry : map.entrySet()) {
+            Address key = entry.getKey();
+            Map.Entry<BigInteger, BigInteger> value = entry.getValue();
+
+            BigInteger repoExpectNonce = repo.getNonce(key);
+            int cmp = value.getValue().compareTo(repoExpectNonce);
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("NonceMgr- txpool.bestNonceSet");
             }
-            Map.Entry<BigInteger, BigInteger> poolBestNonceSet = txpool.bestNonceSet(bw.getKey());
+
+            Map.Entry<BigInteger, BigInteger> poolBestNonceSet = txpool.bestNonceSet(key);
 
             if (LOG.isInfoEnabled()) {
-                LOG.info("NonceMgr - flush: ADDR [{}] REPO [{}] NM [{}] TX1 [{}] TX2 [{}]", bw.getKey().toString(),
-                        repoExpectNonce.toString(), bw.getValue().getKey().toString(),
+                LOG.info("NonceMgr - flush: ADDR [{}] REPO [{}] NM [{}] TX1 [{}] TX2 [{}]", key.toString(),
+                        repoExpectNonce.toString(), value.getKey().toString(),
                         poolBestNonceSet == null ? -1 : poolBestNonceSet.getKey().toString(),
                         poolBestNonceSet == null ? -1 : poolBestNonceSet.getValue().toString());
             }
@@ -153,63 +160,63 @@ public class NonceMgr {
                 if (poolBestNonceSet != null) {
                     cmp = repoExpectNonce.compareTo(poolBestNonceSet.getKey());
                     if (cmp == -1) {
-                        map.put(bw.getKey(), new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
+                        newNonceMap.put(key, new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", bw.getKey().toString(),
+                            LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", key.toString(),
                                     repoExpectNonce.toString());
                         }
                     } else {
                         BigInteger contiNonceEnd = poolBestNonceSet.getValue();
                         cmp = repoExpectNonce.compareTo(contiNonceEnd);
                         if (cmp == 1) {
-                            map.put(bw.getKey(), new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
+                            newNonceMap.put(key, new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", bw.getKey().toString(),
+                                LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", key.toString(),
                                         repoExpectNonce.toString());
                             }
 
                         } else {
-                            map.put(bw.getKey(),
-                                    new AbstractMap.SimpleEntry<>(contiNonceEnd.add(BigInteger.ONE), repoExpectNonce));
+                            newNonceMap.put(key, new AbstractMap.SimpleEntry<>(contiNonceEnd.add(BigInteger.ONE), repoExpectNonce));
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("NonceMgr - flush: [{}] set to contiNonceEnd+1 [{}]", bw.getKey().toString(),
+                                LOG.debug("NonceMgr - flush: [{}] set to contiNonceEnd+1 [{}]", key.toString(),
                                         contiNonceEnd.add(BigInteger.ONE).toString());
                             }
                         }
                     }
                 } else {
-                    map.put(bw.getKey(), new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
+                    newNonceMap.put(key, new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", bw.getKey().toString(),
+                        LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", key.toString(),
                                 repoExpectNonce.toString());
                     }
                 }
             } else {
                 if (poolBestNonceSet != null) {
-                    cmp = bw.getValue().getKey().compareTo(poolBestNonceSet.getKey());
+                    cmp = value.getKey().compareTo(poolBestNonceSet.getKey());
                     if (cmp == -1) {
-                        map.put(bw.getKey(), new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
+                        newNonceMap.put(key, new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", bw.getKey().toString(),
+                            LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", key.toString(),
                                     repoExpectNonce.toString());
                         }
                     } else {
-                        map.put(bw.getKey(), new AbstractMap.SimpleEntry<>(
-                                poolBestNonceSet.getValue().add(BigInteger.ONE), repoExpectNonce));
+                        newNonceMap.put(key, new AbstractMap.SimpleEntry<>(poolBestNonceSet.getValue().add(BigInteger.ONE), repoExpectNonce));
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("NonceMgr - flush: [{}] set to contiNonceEnd+1 [{}]", bw.getKey().toString(),
+                            LOG.debug("NonceMgr - flush: [{}] set to contiNonceEnd+1 [{}]", key.toString(),
                                     poolBestNonceSet.getValue().add(BigInteger.ONE).toString());
                         }
                     }
                 } else {
-                    map.put(bw.getKey(), new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
+                    newNonceMap.put(key, new AbstractMap.SimpleEntry<>(repoExpectNonce, repoExpectNonce));
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", bw.getKey().toString(),
+                        LOG.debug("NonceMgr - flush: [{}] set to repoExpectNonce [{}]", key.toString(),
                                 repoExpectNonce.toString());
                     }
                 }
             }
         }
+
+        map.putAll(newNonceMap);
     }
 
     public synchronized BigInteger getRepoNonce(Address addr) {

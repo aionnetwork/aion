@@ -107,7 +107,7 @@
         <mkdir dir="${test.report.dir}" />
         <junit
             printsummary="yes"
-            haltonfailure="no"
+            haltonfailure="yes"
             fork="true"
             >
         <classpath>

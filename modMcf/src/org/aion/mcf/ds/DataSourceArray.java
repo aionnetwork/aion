@@ -27,18 +27,18 @@ import org.aion.base.db.Flushable;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
-import java.util.AbstractList;
+import java.util.Optional;
 
 /**
  * DataSource Array.
  *
  * @param <V>
  */
-public class DataSourceArray<V> extends AbstractList<V> implements Flushable {
+public class DataSourceArray<V> implements Flushable {
 
-    private ObjectDataSource<V> src;
+    private final ObjectDataSource<V> src;
     private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
-    private int size = -1;
+    private long size = -1L;
 
     public DataSourceArray(ObjectDataSource<V> src) {
         this.src = src;
@@ -49,58 +49,78 @@ public class DataSourceArray<V> extends AbstractList<V> implements Flushable {
         src.flush();
     }
 
-    @Override
-    public V set(int idx, V value) {
-        if (idx >= size()) {
-            setSize(idx + 1);
+    public V set(long index, V value) {
+        if (index >= size()) {
+            setSize(index + 1);
         }
-        src.put(ByteUtil.intToBytes(idx), value);
+        if (index <= Integer.MAX_VALUE) {
+            src.put(ByteUtil.intToBytes((int) index), value);
+        } else {
+            src.put(ByteUtil.longToBytes(index), value);
+        }
         return value;
     }
 
-    @Override
-    public void add(int index, V element) {
-        set(index, element);
-    }
+    public void remove(long index) {
+        // without this check it will remove the sizeKey
+        if (index < 0 || index >= size()) {
+            return;
+        }
 
-    @Override
-    public V remove(int index) {
-        src.delete(ByteUtil.intToBytes(index));
+        if (index <= Integer.MAX_VALUE) {
+            src.delete(ByteUtil.intToBytes((int) index));
+        } else {
+            src.delete(ByteUtil.longToBytes(index));
+        }
         if (index < size()) {
             setSize(index);
         }
-        // TODO: remove returned type
-        return null;
     }
 
-    @Override
-    public V get(int idx) {
-        if (idx < 0 || idx >= size()) {
-            throw new IndexOutOfBoundsException(idx + " > " + size);
+    public V get(long index) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException(
+                    "Incorrect index value <" + index + ">. Allowed values are >= 0 and < " + size + ".");
         }
-        return src.get(ByteUtil.intToBytes(idx));
+
+        V value;
+
+        if (index <= Integer.MAX_VALUE) {
+            value = src.get(ByteUtil.intToBytes((int) index));
+        } else {
+            value = src.get(ByteUtil.longToBytes(index));
+        }
+        return value;
     }
 
-    @Override
-    public int size() {
+    public long size() {
 
         if (size < 0) {
             // Read the value from the database directly and
             // convert to the size, and if it doesn't exist, 0.
-            size = src.getSrc().get(sizeKey).map(ByteUtil::byteArrayToInt).orElse(0);
+            Optional<byte[]> optBytes = src.getSrc().get(sizeKey);
+            if (!optBytes.isPresent()) {
+                size = 0L;
+            } else {
+                byte[] bytes = optBytes.get();
+
+                if (bytes.length == 4) {
+                    size = (long) ByteUtil.byteArrayToInt(bytes);
+                } else {
+                    size = ByteUtil.byteArrayToLong(bytes);
+                }
+            }
         }
 
         return size;
     }
 
-    private synchronized void setSize(int newSize) {
+    private synchronized void setSize(long newSize) {
         size = newSize;
-        src.getSrc().put(sizeKey, ByteUtil.intToBytes(newSize));
-    }
-
-    @Override
-    public void flushDangerously() {
-        // TODO Auto-generated method stub
-
+        if (size <= Integer.MAX_VALUE) {
+            src.getSrc().put(sizeKey, ByteUtil.intToBytes((int) newSize));
+        } else {
+            src.getSrc().put(sizeKey, ByteUtil.longToBytes(newSize));
+        }
     }
 }

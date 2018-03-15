@@ -415,7 +415,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
             return INVALID_BLOCK;
 
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("Try connect block hash: {}, number: {}", Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
@@ -482,11 +481,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return ret;
     }
 
-    public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs) {
+    public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
         long time = System.currentTimeMillis() / THOUSAND_MS;
 
         if (parent.getTimestamp() >= time) {
             time = parent.getTimestamp() + 1;
+            while (waitUntilBlockTime && System.currentTimeMillis() / THOUSAND_MS <= time) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
         }
         long energyLimit = this.chainConfiguration.calcEnergyLimit(parent.getHeader());
 

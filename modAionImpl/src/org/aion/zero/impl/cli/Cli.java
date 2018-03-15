@@ -48,7 +48,7 @@ import java.util.UUID;
  *
  * @author chris
  */
-public final class Cli {
+public class Cli {
 
     public int call(final String[] args, final Cfg cfg) {
         try {

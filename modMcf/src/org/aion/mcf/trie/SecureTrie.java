@@ -34,10 +34,10 @@
  ******************************************************************************/
 package org.aion.mcf.trie;
 
+import org.aion.base.db.IByteArrayKeyValueStore;
+
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.h256;
-
-import org.aion.base.db.IByteArrayKeyValueStore;
 
 public class SecureTrie extends TrieImpl implements Trie {
 
@@ -62,13 +62,5 @@ public class SecureTrie extends TrieImpl implements Trie {
     @Override
     public void delete(byte[] key) {
         this.update(key, EMPTY_BYTE_ARRAY);
-    }
-
-    @Override
-    public SecureTrie clone() {
-        this.getCache();
-        this.getRoot();
-
-        return null;
     }
 }
