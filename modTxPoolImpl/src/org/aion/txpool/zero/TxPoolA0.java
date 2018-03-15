@@ -61,8 +61,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
         }
 
-        txn_timeout *= multiplyMilli;
-        txn_timeout--; // final timeout value by 1000ns
+        txn_timeout--; // final timeout value sub -1 sec
 
         if (Optional.ofNullable(config.get(PROP_BLOCK_SIZE_LIMIT)).isPresent()) {
             blkSizeLimit = Integer.valueOf(config.get(PROP_BLOCK_SIZE_LIMIT).toString());
@@ -180,7 +179,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                         new BigInteger(tx.getNonce()).toString());
             }
 
-            long timestamp = new BigInteger(tx.getTimeStamp()).longValue()/ multiplyMilli;
+            long timestamp = new BigInteger(tx.getTimeStamp()).longValue()/ multiplyM;
             if (this.getTimeView().get(timestamp) == null) {
                 continue;
             }
@@ -378,7 +377,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     private void removeTimeoutTxn() {
 
-        long ts = TimeInstant.now().toEpochMilli()- txn_timeout;
+        long ts = TimeInstant.now().toEpochSec() - txn_timeout;
         List<TX> txl = Collections.synchronizedList(new ArrayList<>());
 
         this.getTimeView().entrySet().parallelStream().forEach(e -> {

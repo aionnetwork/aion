@@ -43,12 +43,12 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class AbstractTxPool<TX extends ITransaction> {
 
     protected static final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
-    protected static final int multiplyMilli = 1_000;
+    protected static final int multiplyM = 1_000_000;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
     protected static final int SEQUENTAILTXNCOUNT_MAX = 25;
     protected static long txn_timeout = 86_400; // 1 day by second
     protected static int blkSizeLimit = 16_000_000; // 16MB
-    protected final long TXN_TIMEOUT_MIN = 1; // 1s
+    protected final long TXN_TIMEOUT_MIN = 10; // 10s
     protected final long TXN_TIMEOUT_MAX = 86_400; // 1 day
     protected final int BLK_SIZE_MAX = 16_000_000; // 16MB
     protected final int BLK_SIZE_MIN = 1_000_000; // 1MB
@@ -166,7 +166,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
             // Gen temp timeMap
             LinkedHashSet<ByteArrayWrapper> lhs = new LinkedHashSet<>();
-            long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue()/multiplyMilli;
+            long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue()/ multiplyM;
 
             synchronized (timeMap) {
                 if (timeMap.get(timestamp) != null) {

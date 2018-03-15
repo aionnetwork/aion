@@ -46,6 +46,11 @@ public final class TimeInstant {
         return EPOCH;
     }
 
+    public long toEpochSec() {
+        return instant.getEpochSecond();
+    }
+
+
     public long toEpochNano() {
         long seconds = instant.getEpochSecond();
         int ns = instant.getNano();
