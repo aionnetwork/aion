@@ -54,7 +54,11 @@ public class MockDB extends AbstractDB {
         lock.writeLock().lock();
 
         // release resources if needed
-        if (kv != null) {kv.clear();}
+        if (kv != null) {
+            LOG.info("Closing database " + this.toString());
+
+            kv.clear();
+        }
 
         // set map to null
         kv = null;

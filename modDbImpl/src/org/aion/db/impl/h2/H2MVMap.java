@@ -191,6 +191,8 @@ public class H2MVMap extends AbstractDB {
             return;
         }
 
+        LOG.info("Closing database " + this.toString());
+
         try {
             // attempt to close the database
             store.close();

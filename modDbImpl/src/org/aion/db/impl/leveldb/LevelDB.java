@@ -151,6 +151,8 @@ public class LevelDB extends AbstractDB {
             return;
         }
 
+        LOG.info("Closing database " + this.toString());
+
         try {
             // attempt to close the database
             db.close();

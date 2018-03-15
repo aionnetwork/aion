@@ -512,41 +512,41 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             try {
                 if (detailsDS != null) {
                     detailsDS.close();
-                    LOGGEN.info("details source closed.");
+                    LOGGEN.info("Details data source closed.");
                     detailsDS = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("details source close exception", e);
+                LOGGEN.error("Exception occurred while closing the details data source.", e);
             }
 
             try {
                 if (stateDatabase != null) {
                     stateDatabase.close();
-                    LOGGEN.info("state DB closed.");
+                    LOGGEN.info("State database closed.");
                     stateDatabase = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("state DB close exception", e);
+                LOGGEN.error("Exception occurred while closing the state database.", e);
             }
 
             try {
                 if (transactionDatabase != null) {
                     transactionDatabase.close();
-                    LOGGEN.info("transaction DB closed.");
+                    LOGGEN.info("Transaction database closed.");
                     transactionDatabase = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("transaction DB close exception", e);
+                LOGGEN.error("Exception occurred while closing the transaction database.", e);
             }
 
             try {
                 if (blockStore != null) {
                     blockStore.close();
-                    LOGGEN.info("block store closed.");
+                    LOGGEN.info("Block store closed.");
                     blockStore = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("block store close exception", e);
+                LOGGEN.error("Exception occurred while closing the block store.", e);
             }
         } finally {
             rwLock.writeLock().unlock();
