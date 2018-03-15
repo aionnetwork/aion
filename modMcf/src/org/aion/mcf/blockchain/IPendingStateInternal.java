@@ -56,6 +56,8 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
      */
     Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
 
+    BigInteger bestPoolNonce(Address addr);
+
     /**
      * get txpool version
      *
