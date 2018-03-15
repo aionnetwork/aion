@@ -147,7 +147,7 @@ public final class  P2pMgr implements IP2pMgr {
         public void run() {
             Thread.currentThread().setName("p2p-ts");
             nodeMgr.dumpNodeInfo(selfShortId);
-            nodeMgr.dumpAllNodeInfo();
+            //nodeMgr.dumpAllNodeInfo();
         }
     }
 
@@ -483,7 +483,8 @@ public final class  P2pMgr implements IP2pMgr {
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
 
-        //System.out.println("read " + ctrl + "-" + act);
+        // print route
+        // System.out.println("read " + ver + "-" + ctrl + "-" + act);
         switch(ver){
             case Ver.V0:
                 switch (ctrl) {
@@ -522,9 +523,6 @@ public final class  P2pMgr implements IP2pMgr {
             return false;
 
         // check supported protocol versions
-
-
-
         return true;
     }
 
@@ -687,7 +685,8 @@ public final class  P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
+            //workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
+            workers = Executors.newCachedThreadPool();
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);

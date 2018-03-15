@@ -55,15 +55,18 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Logger log;
 
+    private final int max;
+
     private final IAionBlockchain blockchain;
 
     private final IP2pMgr p2pMgr;
 
-    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
+        this.max = _max;
     }
 
     @Override
@@ -71,6 +74,8 @@ public final class ReqBlocksBodiesHandler extends Handler {
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
             List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(reqBlocks.getBlocksHashes());
+            if(blockBodies.size() > max)
+                blockBodies = blockBodies.subList(0, Math.min(max - 1, blockBodies.size() -1));
             this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
             this.log.debug("<req-bodies req-take={} res-take={} from-node={}>", reqBlocks.getBlocksHashes().size(),
                     blockBodies.size(), _displayId);

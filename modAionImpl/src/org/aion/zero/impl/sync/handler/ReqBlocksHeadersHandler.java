@@ -59,7 +59,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
     /**
      * self guardian
      */
-    private final static int max_headers = 2000;
+    private final int max;
 
     private final Logger log;
 
@@ -67,11 +67,12 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
+        this.max = _max;
     }
 
     @Override
@@ -83,7 +84,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
             this.log.debug("<req-headers from-block={} take={} from-node={}>", fromBlock, take,
                     _displayId);
             List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
-                    new BlockIdentifier(null, fromBlock), 0, Math.min(take, max_headers), false);
+                    new BlockIdentifier(null, fromBlock), 0, Math.min(take, max), false);
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, rbhs);
         } else

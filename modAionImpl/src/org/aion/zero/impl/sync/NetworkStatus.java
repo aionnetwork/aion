@@ -25,30 +25,25 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
 package org.aion.zero.impl.sync;
 
+import java.math.BigInteger;
+
 /**
  * @author chris
+ * used by sync mgr display logging
  */
-final class HeaderQuery {
+class NetworkStatus {
 
-    String fromNode;
+    // network best block number from self node perspective
+    long blockNumber = 0L;
 
-    long from;
+    // network best block hash from self node perspective
+    byte[] blockHash = new byte[0];
 
-    int take;
+    BigInteger totalDiff = BigInteger.ZERO;
 
-    HeaderQuery(String _fromNode, long _from, int _take){
-        this.fromNode = _fromNode;
-        this.from = _from;
-        this.take = _take;
-    }
 }

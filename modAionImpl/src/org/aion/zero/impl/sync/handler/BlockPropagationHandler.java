@@ -33,8 +33,7 @@
  * Bitcoinj team.
  */
 
-
-package org.aion.zero.impl.sync;
+package org.aion.zero.impl.sync.handler;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
@@ -47,19 +46,20 @@ import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
-
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ *
+ * @author yao
+ *
  * Handles state and actions related to block propagation
  *
  * TODO: exists as functionality of SyncMgr, need to decouple
  */
 public class BlockPropagationHandler {
 
-    public static enum PropStatus {
+    public enum PropStatus {
         DROPPED, // block was invalid, drop no propagation
         PROPAGATED, // block was propagated, but was not connected
         CONNECTED, // block was ONLY connected, not propagated
@@ -191,7 +191,7 @@ public class BlockPropagationHandler {
         return sent.get();
     }
 
-    public int getCacheSize() {
-        return this.cacheSize;
-    }
+//    public int getCacheSize() {
+//        return this.cacheSize;
+//    }
 }
