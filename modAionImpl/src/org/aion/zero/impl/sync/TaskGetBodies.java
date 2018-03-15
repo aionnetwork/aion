@@ -55,6 +55,13 @@ final class TaskGetBodies implements Runnable {
 
     private final ConcurrentHashMap<Integer, HeadersWrapper> headersSent;
 
+    /**
+     *
+     * @param _p2p IP2pMgr
+     * @param _run AtomicBoolean
+     * @param _headersImported BlockingQueue
+     * @param _headersSent ConcurrentHashMap
+     */
     TaskGetBodies(
             final IP2pMgr _p2p,
             final AtomicBoolean _run,

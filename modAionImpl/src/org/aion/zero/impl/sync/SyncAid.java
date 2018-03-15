@@ -133,7 +133,6 @@ public class SyncAid {
                 /*
                  * new group - folk
                  */
-
             }
         }
     }

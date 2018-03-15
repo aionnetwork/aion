@@ -33,10 +33,7 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -68,12 +65,13 @@ final class TaskGetHeaders implements Runnable {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
         Set<Integer> ids = new HashSet<>();
-        List<INode> filtered = this.p2p.getActiveNodes().values().stream().filter(
+        List<INode> preFilter = new ArrayList<>(this.p2p.getActiveNodes().values());
+        List<INode> filtered = preFilter.stream().filter(
                 (n) -> this.networkStatus.get().totalDiff != null &&
                         n.getTotalDifficulty() != null &&
                         (new BigInteger(1, n.getTotalDifficulty())).compareTo(this.networkStatus.get().totalDiff) >= 0).collect(Collectors.toList());
         Random r = new Random(System.currentTimeMillis());
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             if (filtered.size() > 0) {
                 INode node = filtered.get(r.nextInt(filtered.size()));
                 if (!ids.contains(node.getIdHash())) {

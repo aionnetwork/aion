@@ -29,16 +29,12 @@
 
 package org.aion.zero.impl.sync;
 
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -57,9 +53,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final AtomicLong jump;
 
-    private final BlockingQueue<AionBlock> importedBlocks;
-
-    private final Map<ByteArrayWrapper, Object> cachedHashes;
+    private final BlockingQueue<List<AionBlock>> importedBlocks;
 
     private final Logger log;
 
@@ -68,8 +62,7 @@ final class TaskImportBlocks implements Runnable {
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final AtomicLong _jump,
-            final BlockingQueue<AionBlock> _importedBlocks,
-            final Map<ByteArrayWrapper, Object> _cachedHashes,
+            final BlockingQueue<List<AionBlock>> _importedBlocks,
             final Logger _log
     ){
         this.sync = _sync;
@@ -77,52 +70,19 @@ final class TaskImportBlocks implements Runnable {
         this.start = _start;
         this.jump = _jump;
         this.importedBlocks = _importedBlocks;
-        this.cachedHashes = _cachedHashes;
         this.log = _log;
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         Thread.currentThread().setName("sync-ib");
         while (start.get()) {
             try {
-                long start = System.currentTimeMillis();
-                long blockNumberIndex = 0;
 
-                List<AionBlock> batch = new ArrayList<>();
-
-                while ((System.currentTimeMillis() - start) < 30) {
-
-                    AionBlock b = importedBlocks.poll(1, TimeUnit.MILLISECONDS);
-
-                    // continue on batched blocks
-                    if (b == null) {
-                        continue;
-                    }
-
-                    // break if start of next batch
-                    if (blockNumberIndex > 0 && b.getNumber() != (blockNumberIndex + 1)) {
-                        start = 0;
-                        continue;
-                    }
-
-                    //b = importedBlocks.take();
-                    blockNumberIndex = b.getNumber();
-                    ByteArrayWrapper hash = new ByteArrayWrapper(b.getHash());
-
-                    if (!cachedHashes.containsKey(hash))
-                        batch.add(b);
-                }
-
-                // sleep if no batch empty then continue
-                if (batch.size() == 0) {
-                    Thread.sleep(5000);
-                    continue;
-                }
+                List<AionBlock> batch = importedBlocks.take();
 
                 boolean fetchAheadTriggerUsed = false;
-
                 for (AionBlock b : batch) {
                     ImportResult importResult = this.chain.tryToConnect(b);
                     switch (importResult) {
@@ -139,9 +99,6 @@ final class TaskImportBlocks implements Runnable {
                                 this.sync.getHeaders();
                             }
 
-                            synchronized (cachedHashes){
-                                cachedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                            }
                             break;
                         case IMPORTED_NOT_BEST:
                             if (log.isInfoEnabled()) {
@@ -149,9 +106,6 @@ final class TaskImportBlocks implements Runnable {
                                         b.getTransactionsList().size());
                             }
 
-                            synchronized (cachedHashes){
-                                cachedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                            }
                             break;
                         case EXIST:
                             // still exist
@@ -159,18 +113,14 @@ final class TaskImportBlocks implements Runnable {
                                 log.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                         b.getShortHash(), b.getTransactionsList().size());
                             }
-
-                            synchronized (cachedHashes){
-                                cachedHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                            }
                             break;
                         case NO_PARENT:
                             if (log.isDebugEnabled()) {
                                 log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
                             }
 
-                            jump.set(jump.get() - 128);
-                            continue;
+                            jump.set(Math.max(1, jump.get() - 128));
+                            break;
                         case INVALID_BLOCK:
                             if (log.isDebugEnabled()) {
                                 log.debug("<import-fail err=invalid-block num={} hash={} txs={}>", b.getNumber(),

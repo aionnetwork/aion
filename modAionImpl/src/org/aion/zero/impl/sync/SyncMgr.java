@@ -35,9 +35,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
@@ -45,10 +43,8 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.mcf.valid.BlockHeaderValidator;
 
 /**
  * @author chris
@@ -71,7 +67,6 @@ public final class SyncMgr {
     private AionBlockchainImpl blockchain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
-    private BlockHeaderValidator blockHeaderValidator;
     private AtomicBoolean start = new AtomicBoolean(true);
 
     // set as last block number within one batch import when first block for
@@ -81,8 +76,6 @@ public final class SyncMgr {
 
     private AtomicReference<NetworkStatus> networkStatus = new AtomicReference<>(new NetworkStatus());
 
-    private final Map<ByteArrayWrapper, Object> importedHashes = Collections.synchronizedMap(new LRUMap<>(1024));
-
     // store headers that has been sent to fetch block bodies
     private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
 
@@ -90,9 +83,10 @@ public final class SyncMgr {
     private final BlockingQueue<HeadersWrapper> importedHeaders = new LinkedBlockingQueue<>();
 
     // store blocks that ready to save to db
-    private final BlockingQueue<AionBlock> importedBlocks = new LinkedBlockingQueue<>();
+    private final BlockingQueue<List<AionBlock>> importedBlocks = new LinkedBlockingQueue<>();
 
-    private ExecutorService workers = Executors.newFixedThreadPool(5);
+    //private ExecutorService workers = Executors.newFixedThreadPool(5);
+    private ExecutorService workers = Executors.newCachedThreadPool();
 
     private static final class AionSyncMgrHolder {
         static final SyncMgr INSTANCE = new SyncMgr();
@@ -102,10 +96,15 @@ public final class SyncMgr {
         return AionSyncMgrHolder.INSTANCE;
     }
 
-    // Attation:
-    // update best block is handler function from p2p thread pool. even the
-    // blocknumber and blockhash is atomic, but still need sync to prevent
-    // blocknumber link to wrong block hash.
+    /**
+     *
+     * @param _displayId String
+     * @param _nodeBestBlockNumber long
+     * @param _nodeBestBlockHash byte[]
+     * @param _totalDiff byte[]
+     * fake td
+     *
+     */
     public synchronized void updateNetworkBestBlock(String _displayId, long _nodeBestBlockNumber,
             final byte[] _nodeBestBlockHash, final byte[] _totalDiff) {
         long selfBestBlockNumber = this.blockchain.getBestBlock().getNumber();
@@ -150,14 +149,13 @@ public final class SyncMgr {
         this.evtMgr = _evtMgr;
         this.syncForwardMax = _syncForwardMax;
         this.blocksQueueMax = _blocksQueueMax;
-        this.blockHeaderValidator = (new ChainConfiguration()).createBlockHeaderValidator();
-        this.jump = new AtomicLong(this.blockchain.getBestBlock().getNumber());
+        this.jump = new AtomicLong(this.blockchain.getBestBlock().getNumber() + 1);
 
         workers.submit(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log));
         workers.submit(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders));
-        workers.submit(new TaskImportBlocks(this, this.blockchain, this.start, this.jump, this.importedBlocks, importedHashes, log));
+        workers.submit(new TaskImportBlocks(this, this.blockchain, this.start, this.jump, this.importedBlocks, log));
         if (_showStatus)
-            workers.submit(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.blockchain, this.networkStatus, log));
+            workers.submit(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.blockchain, this.jump,  this.networkStatus, log));
 
         setupEventHandler();
     }
@@ -174,38 +172,16 @@ public final class SyncMgr {
 
     /**
      *
-     * @param _nodeIdHashcode
-     *            int
-     * @param _displayId
-     *            String
-     * @param _headers
-     *            List validate headers batch and add batch to imported headers
+     * @param _nodeIdHashcode int
+     * @param _displayId String
+     * @param _headers List validate headers batch and add batch to imported headers
      */
     public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, final List<A0BlockHeader> _headers) {
-
         if (_headers == null || _headers.isEmpty()) {
             return;
         }
-
         _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
-        Iterator<A0BlockHeader> it = _headers.iterator();
-        while (it.hasNext()) {
-
-            A0BlockHeader h = it.next();
-            boolean valid = this.blockHeaderValidator.validate(h);
-            boolean imported = this.importedHashes.containsKey(new ByteArrayWrapper(h.getHash()));
-
-            // drop all batch
-            if (!valid) {
-                return;
-            }
-            if (imported) {
-                it.remove();
-            }
-        }
-
         importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _headers));
-
         if (log.isDebugEnabled()) {
             log.debug("<incoming-headers size={} from-num={} to-num={} from-node={}>", _headers.size(),
                     _headers.get(0).getNumber(), _headers.get(_headers.size() - 1).getNumber(), _displayId);
@@ -213,13 +189,11 @@ public final class SyncMgr {
     }
 
     /**
-     * @param _nodeIdHashcode
-     *            int
-     * @param _displayId
-     *            String
-     * @param _bodies
-     *            List<byte[]> Assemble and validate blocks batch and add batch
-     *            to import queue from network response blocks bodies
+     * @param _nodeIdHashcode int
+     * @param _displayId String
+     * @param _bodies List<byte[]>
+     * Assemble and validate blocks batch and add batch
+     * to import queue from network response blocks bodies
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
@@ -248,16 +222,13 @@ public final class SyncMgr {
         if (m == 0)
             return;
 
-        // sort this batch
-        if (m > 1)
-            blocks.sort((b1, b2) -> b1.getNumber() > b2.getNumber() ? 1 : 0);
+        // add batch
+        importedBlocks.add(blocks);
+
         if (log.isDebugEnabled()) {
             log.debug("<incoming-bodies size={} from-num={} to-num={} from-node={}>", m, blocks.get(0).getNumber(),
                     blocks.get(blocks.size() - 1).getNumber(), _displayId);
         }
-
-        // add batch
-        importedBlocks.addAll(blocks);
     }
     
     public long getNetworkBestBlockNumber() {

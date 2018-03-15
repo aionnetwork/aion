@@ -34,6 +34,7 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -50,14 +51,17 @@ final class TaskShowStatus implements Runnable {
 
     private AionBlockchainImpl chain;
 
+    private AtomicLong jump;
+
     private AtomicReference<NetworkStatus> networkStatus;
 
     private Logger log;
 
-    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicReference<NetworkStatus> _networkStatus, final Logger _log){
+    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump, final AtomicReference<NetworkStatus> _networkStatus, final Logger _log){
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
+        this.jump = _jump;
         this.networkStatus = _networkStatus;
         this.log = _log;
     }
@@ -69,7 +73,8 @@ final class TaskShowStatus implements Runnable {
         while(this.start.get()){
             AionBlock blk = this.chain.getBestBlock();
             System.out.println(
-                "[sync-status self=" + blk.getNumber() + "/"
+                "[sync-status jump=" + jump.get()
+                + " self=" + blk.getNumber() + "/"
                 + Hex.toHexString(this.chain.getBestBlockHash()) + "/"
                 + this.chain.getTotalDifficulty().toString(10)
                 + " network="

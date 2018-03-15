@@ -34,6 +34,7 @@ import java.math.BigInteger;
 
 /**
  * @author chris
+ * used by sync mgr display logging
  */
 class NetworkStatus {
 

@@ -53,6 +53,13 @@ final class TaskGetStatus implements Runnable {
 
     private final Logger log;
 
+    /**
+     *
+     * @param _run AtomicBoolean
+     * @param _interval int
+     * @param _p2p IP2pMgr
+     * @param _log Logger
+     */
     TaskGetStatus(final AtomicBoolean _run, int _interval, final IP2pMgr _p2p, final Logger _log){
         this.run = _run;
         this.interval = _interval;
