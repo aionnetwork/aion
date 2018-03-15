@@ -21,4 +21,11 @@ native/linux/equihash/equiMiner.so
 report/
 */report/
 
+# ant
 .ant-targets-build.xml
+
+# local network
+node1/
+node2/
+node3/
+node4/
