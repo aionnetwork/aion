@@ -44,7 +44,6 @@ import org.h2.mvstore.MVStoreTool;
 import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 /*
  * IMPORTANT IMPLEMENTATION NOTE:
@@ -323,24 +322,8 @@ public class H2MVMap extends AbstractDB {
      * @inheritDoc
      */
     @Override
-    public Optional<byte[]> get(byte[] k) {
-        check(k);
-
-        // acquire read lock
-        lock.readLock().lock();
-
-        byte[] v;
-
-        try {
-            check();
-
-            v = map.get(k);
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
-
-        return Optional.ofNullable(v);
+    public byte[] getInternal(byte[] k) {
+        return map.get(k);
     }
 
     /**
@@ -493,28 +476,38 @@ public class H2MVMap extends AbstractDB {
         return success;
     }
 
-    // TODO: Find a way to expose flush() and compact() up to the application level
-
     /**
      * Compact the database file, that is, compact blocks that have a low fill rate,
      * and move chunks next to each other. This will typically shrink the database
      * file. Changes are flushed to the file, and old chunks are overwritten.
-     *
-     * @param maxCompactTime
-     *         the maximum time in milliseconds to compact
      */
-    public void compactFile(long maxCompactTime) {
-        store.setRetentionTime(0);
-        long start = System.nanoTime();
-        while (store.compact(95, 16 * 1024 * 1024)) {
-            store.sync();
-            store.compactMoveChunks(95, 16 * 1024 * 1024);
-            long time = System.nanoTime() - start;
-            if (time > TimeUnit.MILLISECONDS.toNanos(maxCompactTime)) {
-                break;
+    public void compact() {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        LOG.info("Compacting " + this.toString() + ".");
+
+        try {
+            store.setRetentionTime(0);
+
+            // old implementation with time limit
+            // long start = System.nanoTime();
+            while (store.compact(95, 16 * 1024 * 1024)) {
+                store.sync();
+                store.compactMoveChunks(95, 16 * 1024 * 1024);
+
+                // old implementation with time limit
+                // maxCompactTime: the maximum time in milliseconds to compact
+                // long time = System.nanoTime() - start;
+                // if (time > TimeUnit.MILLISECONDS.toNanos(maxCompactTime)) { break; }
             }
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
         }
     }
+
+    // TODO: Find a way to expose flush() up to the application level
 
     /**
      * It is recommended by the authors of MVMap to rely on the auto-commit feature

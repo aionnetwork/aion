@@ -164,24 +164,8 @@ public class MockDB extends AbstractDB {
      * @inheritDoc
      */
     @Override
-    public Optional<byte[]> get(byte[] k) {
-        check(k);
-
-        // acquire read lock
-        lock.readLock().lock();
-
-        byte[] v;
-
-        try {
-            check();
-
-            v = kv.get(ByteArrayWrapper.wrap(k));
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
-
-        return Optional.ofNullable(v);
+    public byte[] getInternal(byte[] k) {
+        return kv.get(ByteArrayWrapper.wrap(k));
     }
 
     /**

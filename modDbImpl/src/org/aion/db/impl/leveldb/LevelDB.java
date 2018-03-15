@@ -41,7 +41,10 @@ import org.iq80.leveldb.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @implNote The read-write lock is used only for those operations that are not synchronized
@@ -157,6 +160,21 @@ public class LevelDB extends AbstractDB {
             // ensuring the db is null after close was called
             db = null;
             // releasing write lock
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void compact() {
+        // acquire read lock
+        lock.writeLock().lock();
+
+        LOG.info("Compacting " + this.toString() + ".");
+
+        try {
+            db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
+        } finally {
+            // release write lock
             lock.writeLock().unlock();
         }
     }
@@ -294,24 +312,8 @@ public class LevelDB extends AbstractDB {
      * @inheritDoc
      */
     @Override
-    public Optional<byte[]> get(byte[] k) {
-        check(k);
-
-        // acquire read lock
-        lock.readLock().lock();
-
-        byte[] v;
-
-        try {
-            check();
-
-            v = db.get(k);
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
-
-        return Optional.ofNullable(v);
+    public byte[] getInternal(byte[] k) {
+        return db.get(k);
     }
 
     /**
@@ -467,19 +469,5 @@ public class LevelDB extends AbstractDB {
 
         return success;
 
-    }
-
-    @Override
-    public void compact() {
-        // acquire read lock
-        lock.writeLock().lock();
-
-        LOG.error("Compacting <" + this.name + ">.");
-        try {
-            db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
-        } finally {
-            // release write lock
-            lock.writeLock().unlock();
-        }
     }
 }

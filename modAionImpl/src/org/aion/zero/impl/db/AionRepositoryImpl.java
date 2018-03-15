@@ -510,13 +510,13 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         try {
 
             try {
-                if (detailsDatabase != null) {
-                    detailsDatabase.close();
-                    LOGGEN.info("details DB closed.");
-                    detailsDatabase = null;
+                if (detailsDS != null) {
+                    detailsDS.close();
+                    LOGGEN.info("details source closed.");
+                    detailsDS = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("details DB close exception", e);
+                LOGGEN.error("details source close exception", e);
             }
 
             try {
@@ -542,11 +542,11 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             try {
                 if (blockStore != null) {
                     blockStore.close();
-                    LOGGEN.info("block DB closed.");
+                    LOGGEN.info("block store closed.");
                     blockStore = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("block DB close exception", e);
+                LOGGEN.error("block store close exception", e);
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -587,13 +587,14 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                 "databaseGroupSize=" + (databaseGroup == null ? 0 : databaseGroup.size()) + '}';
     }
 
+    @Override
     public void compact() {
         if (databaseGroup != null) {
             for (IByteArrayKeyValueDatabase db : databaseGroup) {
                 db.compact();
             }
         } else {
-            LOG.warn("databaseGroup is null");
+            LOG.error("Database group is null.");
         }
     }
 }

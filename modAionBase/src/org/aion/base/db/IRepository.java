@@ -61,9 +61,9 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      * Performs batch updates on the data.
      *
      * @param accountStates
-     *            cached account states
+     *         cached account states
      * @param contractDetails
-     *            cached contract details
+     *         cached contract details
      */
     void updateBatch(Map<Address, AS> accountStates, Map<Address, IContractDetails<DW>> contractDetails);
 
@@ -81,10 +81,14 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     boolean isClosed();
 
     /**
-     * Closes the connection to the database. TODO: what semantics do we use for
-     * tracker repositories?
+     * Closes the connection to the database.
      */
     void close();
+
+    /**
+     * Reduce the size of the database when possible.
+     */
+    void compact();
 
     // navigate through snapshots
     // --------------------------------------------------------------------------------------
@@ -93,7 +97,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      * Used to check for corruption in the database.
      *
      * @param root
-     *            a world state trie root
+     *         a world state trie root
      * @return {@code true} if the root is valid, {@code false} otherwise
      */
     boolean isValidRoot(byte[] root);
@@ -104,7 +108,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      * Return to one of the previous snapshots by moving the root.
      *
      * @param root
-     *            - new root
+     *         - new root
      */
     void syncToRoot(byte[] root);
 

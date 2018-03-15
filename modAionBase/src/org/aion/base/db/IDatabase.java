@@ -97,6 +97,11 @@ public interface IDatabase {
      */
     boolean commit();
 
+    /**
+     * Reduce the size of the database when possible.
+     */
+    void compact();
+
     // Get information about the database state
     // ------------------------------------------------------------------------
 
@@ -185,6 +190,4 @@ public interface IDatabase {
      *             if the data store is closed
      */
     long approximateSize();
-
-    void compact();
 }

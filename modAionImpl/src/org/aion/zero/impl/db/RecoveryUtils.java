@@ -83,6 +83,7 @@ public class RecoveryUtils {
 
         IBlockStoreBase store = blockchain.getBlockStore();
 
+
         IBlock bestBlock = store.getBestBlock();
         if (bestBlock == null) {
             System.out.println("Empty database. Nothing to do.");
@@ -93,7 +94,9 @@ public class RecoveryUtils {
         store.pruneAndCorrect();
         store.flush();
 
-        ((AionRepositoryImpl) blockchain.getRepository()).compact();
+        // compact database after the changes were applied
+        blockchain.getRepository().compact();
+
         blockchain.getRepository().close();
     }
 
