@@ -28,20 +28,23 @@ package org.aion.p2p.impl;
 final class PeerMetric {
 
     private static final int STOP_CONN_AFTER_FAILED_CONN = 2;
+    private static final long FAILED_CONN_RETRY_INTERVAL = 3000;
 
     int metricFailedConn;
+    private long metricFailedConnTs;
 
     boolean shouldNotConn() {
-        return metricFailedConn > STOP_CONN_AFTER_FAILED_CONN;
+        return metricFailedConn > STOP_CONN_AFTER_FAILED_CONN && ((System.currentTimeMillis() - metricFailedConnTs ) > FAILED_CONN_RETRY_INTERVAL) ;
     }
 
     void incFailedCount() {
-        metricFailedConn++;
+        metricFailedConn ++;
+        metricFailedConnTs = System.currentTimeMillis();
     }
 
     void decFailedCount() {
         if (metricFailedConn > 0)
-            metricFailedConn--;
+            metricFailedConn --;
     }
 
 }

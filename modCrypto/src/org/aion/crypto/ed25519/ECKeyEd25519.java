@@ -73,6 +73,10 @@ public class ECKeyEd25519 implements ECKey {
     }
 
     public ECKey fromPrivate(byte[] bs) {
+        if (bs == null || bs.length != SECKEY_BYTES) {
+            return null;
+        }
+
         byte[] pk = new byte[PUBKEY_BYTES];
         byte[] sk = bs;
         Sodium.crypto_sign_ed25519_sk_to_pk(pk, sk);
