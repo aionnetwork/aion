@@ -122,22 +122,33 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
 
     @Override
     public boolean isClosed() {
-        throw new RuntimeException("Not supported");
+        // delegate to the tracked repository
+        return repository.isClosed();
     }
 
     @Override
     public void close() {
-        throw new RuntimeException("Not supported");
+        throw new UnsupportedOperationException(
+                "The tracking cache cannot be closed. \'Close\' should be called on the tracked repository.");
+    }
+
+    @Override
+    public void compact() {
+        throw new UnsupportedOperationException(
+                "The tracking cache cannot be compacted. \'Compact\' should be called on the tracked repository.");
     }
 
     @Override
     public byte[] getRoot() {
-        throw new RuntimeException("Not supported");
+        throw new UnsupportedOperationException(
+                "The tracking cache cannot return the root. \'Get root\' should be called on the tracked repository.");
+
     }
 
     @Override
     public void syncToRoot(byte[] root) {
-        throw new RuntimeException("Not supported");
+        throw new UnsupportedOperationException(
+                "The tracking cache cannot sync to root. \'Sync to root\' should be called on the tracked repository.");
     }
 
     @Override

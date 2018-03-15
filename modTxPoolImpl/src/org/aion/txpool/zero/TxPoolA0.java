@@ -61,8 +61,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
         }
 
-        txn_timeout *= multiplyMicro;
-        txn_timeout--; // final timeout value by 1000ns
+        txn_timeout--; // final timeout value sub -1 sec
 
         if (Optional.ofNullable(config.get(PROP_BLOCK_SIZE_LIMIT)).isPresent()) {
             blkSizeLimit = Integer.valueOf(config.get(PROP_BLOCK_SIZE_LIMIT).toString());
@@ -180,7 +179,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                         new BigInteger(tx.getNonce()).toString());
             }
 
-            long timestamp = new BigInteger(tx.getTimeStamp()).longValue();
+            long timestamp = new BigInteger(tx.getTimeStamp()).longValue()/ multiplyM;
             if (this.getTimeView().get(timestamp) == null) {
                 continue;
             }
@@ -252,11 +251,20 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     @SuppressWarnings("unchecked")
     @Override
-    public synchronized List<TX> snapshot() {
+    public List<TX> snapshotAll() {
+        return snapshot(true);
+    }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<TX> snapshot() {
+        return snapshot(false);
+    }
+
+    private synchronized List<TX> snapshot(boolean getAll) {
         List<TX> rtn = new ArrayList<>();
-        sortTxn();
 
+        sortTxn();
         removeTimeoutTxn();
 
         int cnt_txSz = blkSizeLimit;
@@ -264,6 +272,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
                 .entrySet()) {
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("snapshot fee[{}]", e.getKey().toString());
+            }
 
             Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> tpl = e.getValue();
             for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : tpl.entrySet()) {
@@ -274,15 +286,16 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
                         ITransaction itx = this.getMainMap().get(bw).getTx();
 
-                        cnt_txSz -= itx.getEncoded().length;
+                        if (!getAll) {
+                            cnt_txSz -= itx.getEncoded().length;
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
+                                        itx.getFrom().toString(), new BigInteger(itx.getNonce()).toString(),
+                                        itx.getEncoded().length, itx.getNrgConsume());
+                            }
 
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                    itx.getFrom().toString(), new BigInteger(itx.getNonce()).toString(),
-                                    itx.getEncoded().length, itx.getNrgConsume());
+                            cnt_nrg -= itx.getNrgConsume();
                         }
-
-                        cnt_nrg -= itx.getNrgConsume();
 
                         if (cnt_txSz > 0 && cnt_nrg > 0) {
                             try {
@@ -364,7 +377,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     private void removeTimeoutTxn() {
 
-        long ts = TimeInstant.now().toEpochMicro() - txn_timeout;
+        long ts = TimeInstant.now().toEpochSec() - txn_timeout;
         List<TX> txl = Collections.synchronizedList(new ArrayList<>());
 
         this.getTimeView().entrySet().parallelStream().forEach(e -> {

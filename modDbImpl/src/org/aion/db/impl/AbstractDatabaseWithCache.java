@@ -233,6 +233,8 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
         // acquire write lock
         lock.writeLock().lock();
 
+        LOG.info("Closing database " + this.toString());
+
         try {
             // close database
             database.close();
@@ -291,6 +293,22 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
         }
 
         return success;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void compact() {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        try {
+            database.compact();
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
+        }
     }
 
     /**
@@ -387,7 +405,8 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
     }
 
     private String propertiesInfo() {
-        return "<autocommit=" + (enableAutoCommit ? "ON" : "OFF") + //
+        return "<name=" + getName().get() + //
+                ",autocommit=" + (enableAutoCommit ? "ON" : "OFF") + //
                 ",size" + (maxSize == 0 ? "=UNBOUND" : "<" + maxSize) + //
                 ",stats=" + (statsEnabled ? "ON" : "OFF") + ">";
     }

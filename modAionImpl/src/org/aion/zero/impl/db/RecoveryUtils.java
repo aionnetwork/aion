@@ -83,6 +83,7 @@ public class RecoveryUtils {
 
         IBlockStoreBase store = blockchain.getBlockStore();
 
+
         IBlock bestBlock = store.getBestBlock();
         if (bestBlock == null) {
             System.out.println("Empty database. Nothing to do.");
@@ -92,6 +93,9 @@ public class RecoveryUtils {
         // revert to block number and flush changes
         store.pruneAndCorrect();
         store.flush();
+
+        // compact database after the changes were applied
+        blockchain.getRepository().compact();
 
         blockchain.getRepository().close();
     }
