@@ -203,7 +203,7 @@ public class AionPendingStateImpl
         return pendingState;
     }
 
-    public int getPendingTxSize() {
+    public synchronized int getPendingTxSize() {
         return this.txPool.size();
     }
 
@@ -608,7 +608,7 @@ public class AionPendingStateImpl
      *            account address
      * @return transaction nonce.
      */
-    public Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr) {
+    public synchronized Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr) {
         return this.txPool.bestNonceSet(addr);
     }
 
@@ -624,7 +624,7 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public BigInteger bestNonce(Address addr) {
+    public synchronized BigInteger bestNonce(Address addr) {
         return nonceMgr.getNonce(addr);
     }
 
