@@ -96,6 +96,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     private final Map<Address, List<PoolState>> poolStateView = new ConcurrentHashMap<>();
     private final List<TX> outDated = new ArrayList<>();
 
+    private final Map<Address, BigInteger> bestNonce = new ConcurrentHashMap<>();
+
     public abstract List<TX> add(List<TX> txl);
 
     public abstract boolean add(TX tx);
@@ -419,6 +421,25 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                 }
             }
         }
+    }
+
+
+    protected void setBestNonce(Address addr, BigInteger bn) {
+        if(addr == null || bn == null) {
+            throw new NullPointerException();
+        }
+
+        if (bestNonce.get(addr) == null || bestNonce.get(addr).compareTo(bn) < 0) {
+            bestNonce.put(addr, bn);
+        }
+    }
+
+    protected BigInteger getBestNonce(Address addr) {
+        if(addr == null) {
+            throw new NullPointerException();
+        }
+
+        return bestNonce.get(addr);
     }
 
     protected class TXState {
