@@ -5,9 +5,9 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-import static org.aion.base.util.ByteUtil.bytesToInts;
-import static org.aion.base.util.ByteUtil.intToBytesLE;
-import static org.aion.base.util.ByteUtil.merge;
+import java.util.Arrays;
+
+import static org.aion.base.util.ByteUtil.*;
 
 public class OptimizedEquiValidator {
     private int n;
@@ -75,10 +75,14 @@ public class OptimizedEquiValidator {
 
         int[] indices = getIndicesFromMinimal(solution, collisionBitLength);
 
-        byte[] hash = new byte[(n+7)/8];
+        if(hasDuplicate(indices)) {
+            LOG.debug("Invalid solution - duplicate solution index");
+            return false;
+        }
+
+        byte[] hash = new byte[indicesHashLength];
 
         return verify(blockHeader, nonce, blake, indices, 0, hash, k);
-
     }
 
 
@@ -127,19 +131,21 @@ public class OptimizedEquiValidator {
         boolean verify0 = verify(blockHeader, nonce, blake, indices, index, hash0, round-1);
         if(!verify0) {
             LOG.debug("Invalid verify0");
+            return false;
         }
 
         boolean verify1 = verify(blockHeader, nonce, blake, indices, index1, hash1, round-1);
         if(!verify1) {
             LOG.debug("Invalid verify1");
+            return false;
         }
 
         for(int i = 0; i < indicesHashLength; i++)
             hash[i] = (byte)(hash0[i] ^ hash1[i]);
 
-        int b = (round < k ? round * collisionBitLength : n);
+        int bits = (round < k ? round * collisionBitLength : n);
 
-        for(int i = 0; i < b/8; i++) {
+        for(int i = 0; i < bits/8; i++) {
             if(hash[i] != 0) {
                 LOG.debug("Non-zero XOR");
                 return false;
@@ -147,6 +153,10 @@ public class OptimizedEquiValidator {
         }
 
         // Try skipping b%8 check for now
+        if((bits%8) > 0 && (hash[bits/8] >> (8 - (bits%8)) ) != 0) {
+            LOG.debug("Non-zero XOR");
+            return false;
+        }
 
         if(round == k) {
             if(hash[indicesHashLength - 1] >> 6 > 0) {
@@ -158,7 +168,7 @@ public class OptimizedEquiValidator {
         return true;
     }
 
-    /**
+    /*
      * Get indices of solutions from minimized array format.
      *
      * @param minimal
@@ -179,5 +189,21 @@ public class OptimizedEquiValidator {
         EquiUtils.extendArray(minimal, arr, cBitLen + 1, bytePad);
 
         return bytesToInts(arr, true);
+    }
+
+    /*
+     * Check if duplicates are present in the solutions index array
+     */
+    private boolean hasDuplicate(int[] indices) {
+        int[] cpy = Arrays.copyOfRange(indices,0,indices.length);
+        Arrays.sort(cpy);
+
+        for(int i = 1; i < indices.length; i++) {
+            if(cpy[i] <= cpy[i-1]) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
