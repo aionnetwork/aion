@@ -124,8 +124,8 @@ final class TaskImportBlocks implements Runnable {
                         if (log.isDebugEnabled()) {
                             log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
                         }
-
-                        jump.set(Math.max(1, jump.get() - 128));
+                        if(batch.indexOf(b) == 0)
+                            jump.set(Math.max(1, jump.get() - 128));
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
