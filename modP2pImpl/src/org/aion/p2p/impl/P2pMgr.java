@@ -759,7 +759,7 @@ public final class  P2pMgr implements IP2pMgr {
 
     @Override
     public Map<Integer, INode> getActiveNodes() {
-        return this.nodeMgr.getActiveNodesMap();
+        return new HashMap<>(this.nodeMgr.getActiveNodesMap());
     }
 
     /**

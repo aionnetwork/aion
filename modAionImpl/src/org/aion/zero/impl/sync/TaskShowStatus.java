@@ -45,48 +45,47 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 final class TaskShowStatus implements Runnable {
 
-    private AtomicBoolean start;
+    private final AtomicBoolean start;
 
-    private int interval;
+    private final int interval;
 
-    private AionBlockchainImpl chain;
+    private final AionBlockchainImpl chain;
 
-    private AtomicLong jump;
+    private final AtomicLong jump;
 
-    private AtomicReference<NetworkStatus> networkStatus;
+    private final AtomicReference<NetworkStatus> networkStatus;
 
-    private Logger log;
+    private final SyncStatis statis;
 
-    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump, final AtomicReference<NetworkStatus> _networkStatus, final Logger _log){
+    private final Logger log;
+
+    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump, final AtomicReference<NetworkStatus> _networkStatus, final SyncStatis _statis, final Logger _log){
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
         this.jump = _jump;
         this.networkStatus = _networkStatus;
+        this.statis = _statis;
         this.log = _log;
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setName("sync-ss");
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
         while(this.start.get()){
             AionBlock blk = this.chain.getBestBlock();
             System.out.println(
-                "[sync-status jump=" + jump.get()
-                + " self=" + blk.getNumber() + "/"
-                + Hex.toHexString(this.chain.getBestBlockHash()) + "/"
-                + this.chain.getTotalDifficulty().toString(10)
-                + " network="
-                + this.networkStatus.get().blockNumber + "/"
-                + Hex.toHexString(networkStatus.get().blockHash) + "/"
-                + networkStatus.get().totalDiff.toString(10) + "]");
-
+                "[sync-status avg-import=" + this.statis.getAvgBlocksPerSec()
+                + " b/s jump=" + jump.get()
+                + " td=" + this.chain.getTotalDifficulty().toString(10) + "/" + networkStatus.get().totalDiff.toString(10)
+                + " b-num=" + blk.getNumber() + "/" + this.networkStatus.get().blockNumber
+                + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) + "/" + Hex.toHexString(networkStatus.get().blockHash) + "]");
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
                 if(log.isDebugEnabled())
-                    log.debug("<sync-ss interrupted>");
+                    log.debug("<sync-ss shutdown>");
+                return;
             }
         }
         if(log.isDebugEnabled())

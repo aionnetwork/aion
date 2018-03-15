@@ -69,7 +69,6 @@ final class TaskGetStatus implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName("sync-gs");
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         while(this.run.get()){
             Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
@@ -79,7 +78,8 @@ final class TaskGetStatus implements Runnable {
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                this.log.info("<sync-gs interrupted>");
+                this.log.info("<sync-gs shutdown>");
+                return;
             }
         }
         this.log.info("<sync-gs shutdown>");

@@ -55,6 +55,8 @@ final class TaskImportBlocks implements Runnable {
 
     private final BlockingQueue<List<AionBlock>> importedBlocks;
 
+    private final SyncStatis statis;
+
     private final Logger log;
 
     TaskImportBlocks(
@@ -63,6 +65,7 @@ final class TaskImportBlocks implements Runnable {
             final AtomicBoolean _start,
             final AtomicLong _jump,
             final BlockingQueue<List<AionBlock>> _importedBlocks,
+            final SyncStatis _statis,
             final Logger _log
     ){
         this.sync = _sync;
@@ -70,73 +73,74 @@ final class TaskImportBlocks implements Runnable {
         this.start = _start;
         this.jump = _jump;
         this.importedBlocks = _importedBlocks;
+        this.statis = _statis;
         this.log = _log;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-        Thread.currentThread().setName("sync-ib");
         while (start.get()) {
+
+            List<AionBlock> batch;
             try {
-
-                List<AionBlock> batch = importedBlocks.take();
-
-                boolean fetchAheadTriggerUsed = false;
-                for (AionBlock b : batch) {
-                    ImportResult importResult = this.chain.tryToConnect(b);
-                    switch (importResult) {
-                        case IMPORTED_BEST:
-                            if (log.isInfoEnabled()) {
-                                log.info("<import-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
-                                        b.getTransactionsList().size());
-                            }
-
-                            // re-targeting for next batch blocks headers
-                            if (!fetchAheadTriggerUsed) {
-                                jump.set(batch.get(batch.size() - 1).getNumber());
-                                fetchAheadTriggerUsed = true;
-                                this.sync.getHeaders();
-                            }
-
-                            break;
-                        case IMPORTED_NOT_BEST:
-                            if (log.isInfoEnabled()) {
-                                log.info("<import-not-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
-                                        b.getTransactionsList().size());
-                            }
-
-                            break;
-                        case EXIST:
-                            // still exist
-                            if (log.isDebugEnabled()) {
-                                log.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
-                                        b.getShortHash(), b.getTransactionsList().size());
-                            }
-                            break;
-                        case NO_PARENT:
-                            if (log.isDebugEnabled()) {
-                                log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
-                            }
-
-                            jump.set(Math.max(1, jump.get() - 128));
-                            break;
-                        case INVALID_BLOCK:
-                            if (log.isDebugEnabled()) {
-                                log.debug("<import-fail err=invalid-block num={} hash={} txs={}>", b.getNumber(),
-                                        b.getShortHash(), b.getTransactionsList().size());
-                            }
-                            break;
-                        default:
-                            if (log.isDebugEnabled()) {
-                                log.debug("<import-res-unknown>");
-                            }
-                            break;
-                    }
-                }
-            } catch (Exception ex) {
+                batch = importedBlocks.take();
+            } catch (InterruptedException ex) {
                 return;
             }
+
+            boolean fetchAheadTriggerUsed = false;
+            for (AionBlock b : batch) {
+                ImportResult importResult = this.chain.tryToConnect(b);
+                switch (importResult) {
+                    case IMPORTED_BEST:
+                        if (log.isInfoEnabled()) {
+                            log.info("<import-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
+                                    b.getTransactionsList().size());
+                        }
+
+                        // re-targeting for next batch blocks headers
+                        if (!fetchAheadTriggerUsed) {
+                            jump.set(batch.get(batch.size() - 1).getNumber());
+                            fetchAheadTriggerUsed = true;
+                            this.sync.getHeaders();
+                        }
+
+                        break;
+                    case IMPORTED_NOT_BEST:
+                        if (log.isInfoEnabled()) {
+                            log.info("<import-not-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
+                                    b.getTransactionsList().size());
+                        }
+
+                        break;
+                    case EXIST:
+                        if (log.isDebugEnabled()) {
+                            log.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
+                                    b.getShortHash(), b.getTransactionsList().size());
+                        }
+                        break;
+                    case NO_PARENT:
+                        if (log.isDebugEnabled()) {
+                            log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
+                        }
+
+                        jump.set(Math.max(1, jump.get() - 128));
+                        break;
+                    case INVALID_BLOCK:
+                        if (log.isDebugEnabled()) {
+                            log.debug("<import-fail err=invalid-block num={} hash={} txs={}>", b.getNumber(),
+                                    b.getShortHash(), b.getTransactionsList().size());
+                        }
+                        break;
+                    default:
+                        if (log.isDebugEnabled()) {
+                            log.debug("<import-res-unknown>");
+                        }
+                        break;
+                }
+            }
+            this.statis.update(this.chain.getBestBlock().getNumber());
         }
     }
 }

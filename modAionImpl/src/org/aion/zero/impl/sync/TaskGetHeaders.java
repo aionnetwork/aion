@@ -60,12 +60,9 @@ final class TaskGetHeaders implements Runnable {
 
     @Override
     public void run() {
-
-        Thread.currentThread().setName("sync-gh");
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-
         Set<Integer> ids = new HashSet<>();
-        List<INode> preFilter = new ArrayList<>(this.p2p.getActiveNodes().values());
+        Collection<INode> preFilter = this.p2p.getActiveNodes().values();
         List<INode> filtered = preFilter.stream().filter(
                 (n) -> this.networkStatus.get().totalDiff != null &&
                         n.getTotalDifficulty() != null &&

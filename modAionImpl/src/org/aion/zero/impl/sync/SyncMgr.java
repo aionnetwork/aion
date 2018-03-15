@@ -25,6 +25,7 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
+ *
  */
 
 package org.aion.zero.impl.sync;
@@ -64,9 +65,14 @@ public final class SyncMgr {
 
     private int blocksQueueMax = 2000;
 
+    private SyncStatis statis;
+
     private AionBlockchainImpl blockchain;
+
     private IP2pMgr p2pMgr;
+
     private IEventMgr evtMgr;
+
     private AtomicBoolean start = new AtomicBoolean(true);
 
     // set as last block number within one batch import when first block for
@@ -149,13 +155,16 @@ public final class SyncMgr {
         this.evtMgr = _evtMgr;
         this.syncForwardMax = _syncForwardMax;
         this.blocksQueueMax = _blocksQueueMax;
-        this.jump = new AtomicLong(this.blockchain.getBestBlock().getNumber() + 1);
 
-        workers.submit(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log));
-        workers.submit(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders));
-        workers.submit(new TaskImportBlocks(this, this.blockchain, this.start, this.jump, this.importedBlocks, log));
-        if (_showStatus)
-            workers.submit(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.blockchain, this.jump,  this.networkStatus, log));
+        long selfBest = this.blockchain.getBestBlock().getNumber();
+        this.jump = new AtomicLong( selfBest + 1);
+        this.statis = new SyncStatis(selfBest);
+
+        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
+        new Thread(new TaskImportBlocks(this, this.blockchain, this.start, this.jump, this.importedBlocks, this.statis, log), "sync-ib").start();
+        new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
+        if(_showStatus)
+            new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.blockchain, this.jump,  this.networkStatus, this.statis, log), "sync-ss").start();
 
         setupEventHandler();
     }
