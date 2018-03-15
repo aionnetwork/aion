@@ -73,4 +73,18 @@ public final class TimeInstant {
             return Math.addExact(micros, nanos / 1000);
         }
     }
+
+    public long toEpochMilli() {
+        long seconds = instant.getEpochSecond();
+        int nanos = instant.getNano();
+
+        if (seconds < 0 && nanos > 0) {
+            long milli = Math.multiplyExact(seconds + 1, 1000);
+            long adjustment = nanos / 1000_000 - 1000;
+            return Math.addExact(milli, adjustment);
+        } else {
+            long milli = Math.multiplyExact(seconds, 1000);
+            return Math.addExact(milli, nanos / 1000_000);
+        }
+    }
 }

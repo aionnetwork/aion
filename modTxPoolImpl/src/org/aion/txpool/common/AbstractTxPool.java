@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class AbstractTxPool<TX extends ITransaction> {
 
     protected static final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
-    protected static final long multiplyMicro = 1_000_000;
+    protected static final int multiplyMilli = 1_000;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
     protected static final int SEQUENTAILTXNCOUNT_MAX = 25;
     protected static long txn_timeout = 86_400; // 1 day by second
@@ -166,7 +166,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
             // Gen temp timeMap
             LinkedHashSet<ByteArrayWrapper> lhs = new LinkedHashSet<>();
-            long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue();
+            long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue()/multiplyMilli;
 
             synchronized (timeMap) {
                 if (timeMap.get(timestamp) != null) {
@@ -266,6 +266,11 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                         // check the previous txn status in the old PoolState
                         if (ps.firstNonce.equals(txNonceStart) && ps.combo == SEQUENTAILTXNCOUNT_MAX) {
                             newPoolState.add(ps);
+
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("AbstractTxPool.updateAccPoolState add fn [{}]", ps.firstNonce.toString());
+                            }
+
                             txNonceStart = txNonceStart.add(BigInteger.valueOf(SEQUENTAILTXNCOUNT_MAX));
                         } else {
                             // remove old poolState in the feeMap
@@ -273,6 +278,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                             if (txDp != null) {
                                 ByteArrayWrapper bw = e.getValue().getMap().get(ps.firstNonce).getKey();
                                 txDp.remove(bw);
+
+                                if (LOG.isTraceEnabled()) {
+                                    LOG.trace("AbstractTxPool.updateAccPoolState remove fn [{}]", ps.firstNonce.toString());
+                                }
 
                                 if (txDp.isEmpty()) {
                                     this.feeView.remove(ps.getFee());
@@ -361,7 +370,17 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         for (Entry<Address, List<PoolState>> e : this.poolStateView.entrySet()) {
             ByteArrayWrapper dependTx = null;
             for (PoolState ps : e.getValue()) {
-                if (!ps.isInFeePool()) {
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("updateFeeMap addr[{}] inFp[{}] fn[{}] cb[{}] fee[{}]", e.getKey().toString(), ps.isInFeePool(), ps.getFirstNonce().toString(), ps.getCombo(), ps.getFee().toString());
+                }
+
+                if (ps.isInFeePool()) {
+                    dependTx = this.accountView.get(e.getKey()).getMap().get(ps.getFirstNonce()).getKey();
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("updateFeeMap isInFeePool [{}]", dependTx.toString());
+                    }
+                } else {
 
                     TxDependList<ByteArrayWrapper> txl = new TxDependList<>();
                     for (BigInteger i = ps.firstNonce; i.compareTo(
@@ -378,9 +397,20 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     if (this.feeView.get(ps.fee) == null) {
                         Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> set = new LinkedHashMap<>();
                         set.put(txl.getTxList().get(0), txl);
+
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("updateFeeMap new feeView put fee[{}]", ps.fee);
+                        }
+
                         this.feeView.put(ps.fee, set);
                     } else {
+
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("updateFeeMap update feeView put fee[{}]", ps.fee);
+                        }
+
                         Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> preset = this.feeView.get(ps.fee);
+
                         preset.put(txl.getTxList().get(0), txl);
                         this.feeView.put(ps.fee, preset);
                     }

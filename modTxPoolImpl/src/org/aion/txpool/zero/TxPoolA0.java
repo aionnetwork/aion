@@ -61,7 +61,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
         }
 
-        txn_timeout *= multiplyMicro;
+        txn_timeout *= multiplyMilli;
         txn_timeout--; // final timeout value by 1000ns
 
         if (Optional.ofNullable(config.get(PROP_BLOCK_SIZE_LIMIT)).isPresent()) {
@@ -180,7 +180,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                         new BigInteger(tx.getNonce()).toString());
             }
 
-            long timestamp = new BigInteger(tx.getTimeStamp()).longValue();
+            long timestamp = new BigInteger(tx.getTimeStamp()).longValue()/ multiplyMilli;
             if (this.getTimeView().get(timestamp) == null) {
                 continue;
             }
@@ -264,8 +264,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     private synchronized List<TX> snapshot(boolean getAll) {
         List<TX> rtn = new ArrayList<>();
-        sortTxn();
 
+        sortTxn();
         removeTimeoutTxn();
 
         int cnt_txSz = blkSizeLimit;
@@ -273,6 +273,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
                 .entrySet()) {
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("snapshot fee[{}]", e.getKey().toString());
+            }
 
             Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> tpl = e.getValue();
             for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : tpl.entrySet()) {
@@ -374,7 +378,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     private void removeTimeoutTxn() {
 
-        long ts = TimeInstant.now().toEpochMicro() - txn_timeout;
+        long ts = TimeInstant.now().toEpochMilli()- txn_timeout;
         List<TX> txl = Collections.synchronizedList(new ArrayList<>());
 
         this.getTimeView().entrySet().parallelStream().forEach(e -> {
