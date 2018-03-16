@@ -495,7 +495,9 @@ public abstract class ApiAion extends Api {
     }
 
     private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
-        return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+        synchronized (this.ac.getAionHub().getPendingState()) {
+            return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+        }
     }
 
     private void regEvents() {

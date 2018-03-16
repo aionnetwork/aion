@@ -116,7 +116,7 @@ public class NonceMgr {
                         poolBestNonce == null ? -1 : poolBestNonce.toString());
             }
 
-            newNonceMap.put(key, new AbstractMap.SimpleEntry<>(poolBestNonce == null ? repoExpectNonce : poolBestNonce, repoExpectNonce));
+            newNonceMap.put(key, new AbstractMap.SimpleEntry<>(poolBestNonce == null ? repoExpectNonce : poolBestNonce.add(BigInteger.ONE), repoExpectNonce));
         }
 
         map.putAll(newNonceMap);
