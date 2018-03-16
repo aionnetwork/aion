@@ -31,8 +31,21 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.IEventMgr;
+import org.aion.evtmgr.IHandler;
+import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.IPendingStateInternal;
+import org.aion.mcf.db.TransactionStore;
+import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
+import org.aion.txpool.ITxPool;
+import org.aion.txpool.TxPoolModule;
+import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -40,22 +53,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.*;
-import org.aion.crypto.HashUtil;
-import org.aion.mcf.db.IBlockStorePow;
-import org.aion.mcf.db.TransactionStore;
-import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
-import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.IEventMgr;
-import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
-import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.vm.TransactionExecutor;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.txpool.ITxPool;
-import org.aion.txpool.TxPoolModule;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
@@ -72,17 +69,13 @@ public class AionPendingStateImpl
         private static final long serialVersionUID = 4941385879122799663L;
 
         public TransactionSortedSet() {
-            super(new Comparator<AionTransaction>() {
-
-                @Override
-                public int compare(AionTransaction tx1, AionTransaction tx2) {
-                    long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce())
-                            - ByteUtil.byteArrayToLong(tx2.getNonce());
-                    if (nonceDiff != 0) {
-                        return nonceDiff > 0 ? 1 : -1;
-                    }
-                    return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
+            super((tx1, tx2) -> {
+                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce())
+                        - ByteUtil.byteArrayToLong(tx2.getNonce());
+                if (nonceDiff != 0) {
+                    return nonceDiff > 0 ? 1 : -1;
                 }
+                return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
             });
         }
     }
@@ -90,8 +83,6 @@ public class AionPendingStateImpl
     private CfgAion cfg = CfgAion.inst();
 
     private IAionBlockchain blockchain;
-
-    private IBlockStorePow<AionBlock, A0BlockHeader> blockStore;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
@@ -155,7 +146,6 @@ public class AionPendingStateImpl
 
     public void init(final AionBlockchainImpl blockchain) {
         this.blockchain = blockchain;
-        this.blockStore = blockchain.getBlockStore();
         this.transactionStore = blockchain.getTransactionStore();
         this.evtMgr = blockchain.getEventMgr();
 
