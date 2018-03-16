@@ -149,7 +149,7 @@ public final class SyncMgr {
     }
 
     public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncForwardMax,
-            final int _blocksQueueMax, final boolean _showStatus) {
+            final int _blocksQueueMax, final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
         this.p2pMgr = _p2pMgr;
         this.blockchain = AionBlockchainImpl.inst();
         this.evtMgr = _evtMgr;
@@ -164,7 +164,7 @@ public final class SyncMgr {
         new Thread(new TaskImportBlocks(this, this.blockchain, this.start, this.jump, this.importedBlocks, this.statis, log), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
-            new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.blockchain, this.jump,  this.networkStatus, this.statis, log), "sync-ss").start();
+            new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.blockchain, this.jump,  this.networkStatus, this.statis, log, _printReport, _reportFolder), "sync-ss").start();
 
         setupEventHandler();
     }

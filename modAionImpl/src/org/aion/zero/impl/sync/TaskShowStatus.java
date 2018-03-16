@@ -26,22 +26,24 @@
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
  */
-
 package org.aion.zero.impl.sync;
 
 import org.aion.base.util.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * @author chris
- *
  * The thread print out sync status
  *
+ * @author chris
  */
 final class TaskShowStatus implements Runnable {
 
@@ -59,7 +61,12 @@ final class TaskShowStatus implements Runnable {
 
     private final Logger log;
 
-    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump, final AtomicReference<NetworkStatus> _networkStatus, final SyncStatis _statis, final Logger _log){
+    private final boolean printReport;
+    private final String reportFolder;
+
+    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump,
+            final AtomicReference<NetworkStatus> _networkStatus, final SyncStatis _statis, final Logger _log,
+            final boolean _printReport, final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
@@ -67,28 +74,39 @@ final class TaskShowStatus implements Runnable {
         this.networkStatus = _networkStatus;
         this.statis = _statis;
         this.log = _log;
+        this.printReport = _printReport;
+        this.reportFolder = _reportFolder;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-        while(this.start.get()){
+        while (this.start.get()) {
             AionBlock blk = this.chain.getBestBlock();
-            System.out.println(
-                "[sync-status avg-import=" + this.statis.getAvgBlocksPerSec()
-                + " b/s jump=" + jump.get()
-                + " td=" + this.chain.getTotalDifficulty().toString(10) + "/" + networkStatus.get().totalDiff.toString(10)
-                + " b-num=" + blk.getNumber() + "/" + this.networkStatus.get().blockNumber
-                + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) + "/" + Hex.toHexString(networkStatus.get().blockHash) + "]");
+            String status = "[sync-status avg-import=" + this.statis.getAvgBlocksPerSec() //
+                    + " b/s jump=" + jump.get() //
+                    + " td=" + this.chain.getTotalDifficulty().toString(10) //
+                    + "/" + networkStatus.get().totalDiff.toString(10) //
+                    + " b-num=" + blk.getNumber() + "/" + this.networkStatus.get().blockNumber //
+                    + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) //
+                    + "/" + Hex.toHexString(networkStatus.get().blockHash) + "]\n";
+            System.out.print(status);
+            if (printReport) {
+                try {
+                    Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-sync-report.out"),
+                            status.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                if(log.isDebugEnabled())
-                    log.debug("<sync-ss shutdown>");
+                if (log.isDebugEnabled()) { log.debug("<sync-ss shutdown>"); }
                 return;
             }
         }
-        if(log.isDebugEnabled())
-            log.debug("<sync-ss shutdown>");
+        if (log.isDebugEnabled()) { log.debug("<sync-ss shutdown>"); }
     }
 }
