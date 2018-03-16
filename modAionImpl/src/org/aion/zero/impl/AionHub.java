@@ -62,6 +62,7 @@ import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -146,7 +147,7 @@ public class AionHub {
                 this.cfg.getNet().getId(), Version.KERNEL_VERSION,
                 this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
                 cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(),
-                cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly());
+                cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly(), true, new File(cfg.getBasePath(), "reports").getAbsolutePath());
 
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
