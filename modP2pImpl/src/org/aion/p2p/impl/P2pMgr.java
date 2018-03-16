@@ -741,22 +741,6 @@ public final class  P2pMgr implements IP2pMgr {
         return nodeMgr.getRandom();
     }
 
-    public INode getRandom(NodeRandPolicy nrp, long bbn) {
-        switch (nrp) {
-            case RND:
-                break;
-            case REALTIME:
-
-                // only fetch node with blocknumber > ( highest -128 )
-                return nodeMgr.getRandomRealtime(bbn);
-
-            case SYNC:
-                break;
-        }
-
-        return nodeMgr.getRandom();
-    }
-
     @Override
     public Map<Integer, INode> getActiveNodes() {
         return new HashMap<>(this.nodeMgr.getActiveNodesMap());

@@ -109,8 +109,7 @@ public class NodeMgr implements INodeMgr {
             sb.append("              bv\n");
             sb.append("   -------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             sorted.sort((n1, n2) -> {
-                int tdCompare = new BigInteger(1, n2.getTotalDifficulty() == null ? new byte[0] : n2.getTotalDifficulty())
-                    .compareTo(new BigInteger(1, n1.getTotalDifficulty() == null ? new byte[0] : n1.getTotalDifficulty()));
+                int tdCompare = n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
                 if(tdCompare == 0) {
                     Long n2Bn = n2.getBestBlockNumber();
                     Long n1Bn = n1.getBestBlockNumber();
@@ -123,7 +122,7 @@ public class NodeMgr implements INodeMgr {
                     String.format("   id:%6s %c %16s %10d %64s %15s %5d %8s %15s\n",
                         n.getIdShort(),
                         n.getIfFromBootList() ? 'y' : ' ',
-                        n.getTotalDifficulty() == null ? "0" : new BigInteger(1, n.getTotalDifficulty()).toString(10),
+                        n.getTotalDifficulty().toString(10),
                         n.getBestBlockNumber(),
                         n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
                         n.getIpStr(),
@@ -406,59 +405,4 @@ public class NodeMgr implements INodeMgr {
             }
         }
     }
-
-    void loadPersistedNodes(){
-        File peerFile = new File(PEER_LIST_FILE_PATH);
-        XMLInputFactory input = XMLInputFactory.newInstance();
-        FileInputStream file = null;
-        try {
-            file = new FileInputStream(peerFile);
-            XMLStreamReader sr = input.createXMLStreamReader(file);
-            loop: while (sr.hasNext()) {
-                int eventType = sr.next();
-                switch (eventType) {
-                    case XMLStreamReader.START_ELEMENT:
-                        String elementName = sr.getLocalName().toLowerCase();
-                        switch (elementName) {
-                            case "aion-peers":
-                                loopNode:
-                                while (sr.hasNext()) {
-                                    int eventType1 = sr.next();
-                                    switch (eventType1) {
-                                        case XMLStreamReader.START_ELEMENT:
-                                            Node node = Node.fromXML(sr);
-
-                                            if(node == null)
-                                                break;
-                                            if(!node.peerMetric.shouldNotConn())
-                                                tempNodes.add(node);
-                                            allNodes.put(node.getFullHash(), node);
-                                            break;
-                                        case XMLStreamReader.END_ELEMENT:
-                                            break loopNode;
-                                    }
-                                }
-                                break;
-                        }
-                        break;
-                    case XMLStreamReader.END_ELEMENT:
-                        if (sr.getLocalName().toLowerCase().equals("aion-peers"))
-                            break loop;
-                        else
-                            break;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("<error on-parsing-peers-xml msg=" + e.getLocalizedMessage() + ">");
-        } finally {
-            if (file != null) {
-                try {
-                    file.close();
-                } catch (IOException e) {
-                    System.out.println("<error on-close-file-input-stream>");
-                }
-            }
-        }
-    }
-
 }
