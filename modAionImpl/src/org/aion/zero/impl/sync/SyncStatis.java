@@ -25,12 +25,7 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *
  */
 
 package org.aion.zero.impl.sync;
@@ -38,17 +33,25 @@ package org.aion.zero.impl.sync;
 /**
  * @author chris
  */
-final class HeaderQuery {
+final class SyncStatis {
 
-    String fromNode;
+    private long start;
 
-    long from;
+    private long startBlock;
 
-    int take;
+    private long avgBlocksPerSec;
 
-    HeaderQuery(String _fromNode, long _from, int _take){
-        this.fromNode = _fromNode;
-        this.from = _from;
-        this.take = _take;
+    SyncStatis(long _startBlock){
+        this.start = System.currentTimeMillis();
+        this.startBlock = _startBlock;
+        this.avgBlocksPerSec = 0;
+    }
+
+    synchronized void update(long _blockNumber){
+        avgBlocksPerSec = (_blockNumber - startBlock) * 1000 / (System.currentTimeMillis() - start);
+    }
+
+    synchronized long getAvgBlocksPerSec(){
+        return this.avgBlocksPerSec;
     }
 }

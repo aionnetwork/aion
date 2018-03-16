@@ -51,7 +51,7 @@ public final class BroadcastNewBlock extends Msg {
     private final IBlock block;
 
     public BroadcastNewBlock(@SuppressWarnings("rawtypes") final IBlock __newblock) {
-        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
+        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_BLOCK);
         this.block = __newblock;
     }
 

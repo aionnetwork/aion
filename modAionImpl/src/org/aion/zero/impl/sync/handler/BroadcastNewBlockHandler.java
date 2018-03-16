@@ -39,7 +39,6 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.BlockPropagationHandler;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
@@ -61,7 +60,7 @@ public final class BroadcastNewBlockHandler extends Handler {
      * IPendingStateInternal later
      */
     public BroadcastNewBlockHandler(final Logger _log, final BlockPropagationHandler propHandler) {
-        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_NEWBLOCK);
+        super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_BLOCK);
         this.log = _log;
         this.propHandler = propHandler;
     }
