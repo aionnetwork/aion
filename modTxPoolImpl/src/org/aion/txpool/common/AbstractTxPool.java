@@ -267,6 +267,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     for (PoolState ps : psl) {
                         // check the previous txn status in the old PoolState
                         if (ps.firstNonce.equals(txNonceStart) && ps.combo == SEQUENTAILTXNCOUNT_MAX) {
+                            ps.resetInFeePool();
                             newPoolState.add(ps);
 
                             if (LOG.isTraceEnabled()) {
@@ -491,12 +492,16 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             return combo;
         }
 
-        public boolean isInFeePool() {
+        boolean isInFeePool() {
             return inFeePool.get();
         }
 
-        public void setInFeePool() {
+        void setInFeePool() {
             inFeePool.set(true);
+        }
+
+        void resetInFeePool() {
+            inFeePool.set(false);
         }
     }
 }
