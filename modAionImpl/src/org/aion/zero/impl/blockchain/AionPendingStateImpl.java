@@ -208,11 +208,11 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public List<AionTransaction> getPendingTransactions() {
+    public synchronized List<AionTransaction> getPendingTransactions() {
         return this.txPool.snapshot();
     }
 
-    public AionBlock getBestBlock() {
+    public synchronized AionBlock getBestBlock() {
         if (best == null) {
             best = blockchain.getBestBlock();
         }
@@ -436,7 +436,7 @@ public class AionPendingStateImpl
         }
     }
 
-    private void flushCachePendingTx() {
+    private synchronized void flushCachePendingTx() {
         Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
 
         if (LOG.isDebugEnabled()) {
