@@ -179,7 +179,7 @@ public class AionPoW {
      * @param solution
      *            The generated equihash solution
      */
-    protected void processSolution(Solution solution) {
+    protected synchronized void processSolution(Solution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
@@ -251,7 +251,7 @@ public class AionPoW {
         }
     }
 
-    public void shutdown() {
+    public synchronized void shutdown() {
         shutDown.set(true);
     }
 }

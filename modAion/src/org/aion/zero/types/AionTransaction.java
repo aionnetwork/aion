@@ -329,8 +329,8 @@ public class AionTransaction extends AbstractTransaction {
         } else {
             dataS = ByteUtil.toHexString(Arrays.copyOfRange(data, 0, maxDataSize)) + "... (" + data.length + " bytes)";
         }
-        return "TransactionData [" + "hash=" + ByteUtil.toHexString(hash) + ", nonce=" + ByteUtil.toHexString(nonce)
-                + ", receiveAddress=" + (to == null ? "" : to.toString()) + ", value=" + ByteUtil.toHexString(value)
+        return "TransactionData [" + "hash=" + ByteUtil.toHexString(hash) + ", nonce=" + new BigInteger(1, nonce)
+                + ", receiveAddress=" + (to == null ? "" : to.toString()) + ", value=" + new BigInteger(1, value)
                 + ", data=" + dataS + ", timeStamp=" + ByteUtil.byteArrayToLong(timeStamp) + ", Nrg=" + this.nrg
                 + ", NrgPrice=" + this.nrgPrice + ", txType=" + this.type + ", sig="
                 + ((signature == null) ? "null" : signature.toString()) + "]";
