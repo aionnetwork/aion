@@ -13,16 +13,17 @@ public class OptimizedEquiValidator {
     private int n;
     private int k;
     private int indicesPerHashOutput;
+    private int indicesHashLength;
     private int hashOutput;
     private int collisionBitLength;
     private int collisionByteLength;
-    private int hashLength;
-    private int finalFullWidth;
     private int solutionWidth;
-    private int indicesHashLength;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
+
     private Blake2b.Param initState;
+
+    private byte[][] hashes;
 
     public OptimizedEquiValidator(int n, int k) {
         this.n = n;
@@ -32,10 +33,10 @@ public class OptimizedEquiValidator {
         this.hashOutput = indicesPerHashOutput * indicesHashLength;
         this.collisionBitLength = n / (k + 1);
         this.collisionByteLength = (collisionBitLength + 7) / 8;
-        this.hashLength = (k + 1) * collisionByteLength;
-        this.finalFullWidth = 2 * collisionByteLength + (Integer.BYTES * (1 << k));
         this.solutionWidth = (1 << k) * (collisionBitLength + 1) / 8;
         this.initState = this.InitialiseState();
+        this.hashes = new byte[solutionWidth][indicesHashLength];
+        hashes = new byte[solutionWidth][indicesHashLength];
     }
 
     /**
@@ -54,7 +55,7 @@ public class OptimizedEquiValidator {
         return p;
     }
 
-    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
+    public synchronized boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -82,14 +83,16 @@ public class OptimizedEquiValidator {
 
         byte[] hash = new byte[indicesHashLength];
 
-        return verify(blockHeader, nonce, blake, indices, 0, hash, k);
-    }
+        hashes = new byte[solutionWidth][indicesHashLength];
 
+        return verify(blockHeader, nonce, blake, indices, 0, hash, k);
+
+    }
 
     /**
      * Generate hash based on indices and index
      */
-    private void genHash(byte[] blockHeader, byte[] nonce, Blake2b blake, int[] indices, int index, byte[] hash) {
+    private void genHash(byte[] blockHeader, byte[] nonce, Blake2b blake, int[] indices, int index) {
         // Clear blake and re-use
         blake.reset();
 
@@ -105,15 +108,13 @@ public class OptimizedEquiValidator {
 
         byte[] tmpHash = blake.digest();
 
-        System.arraycopy(tmpHash, (indices[index] % indicesPerHashOutput) * indicesHashLength, hash, 0, indicesHashLength);
-
-
+        System.arraycopy(tmpHash, (indices[index] % indicesPerHashOutput) * indicesHashLength, hashes[index], 0, indicesHashLength);
     }
 
     private boolean verify(byte[] blockHeader, byte[] nonce, Blake2b blake, int[] indices, int index, byte[] hash, int round) {
         if(round == 0) {
             //Generate hash
-            genHash(blockHeader, nonce, blake, indices, index, hash);
+            genHash(blockHeader, nonce, blake, indices, index);
             return true;
         }
 
@@ -128,20 +129,20 @@ public class OptimizedEquiValidator {
         byte[] hash0 = new byte[indicesHashLength];
         byte[] hash1 = new byte[indicesHashLength];
 
-        boolean verify0 = verify(blockHeader, nonce, blake, indices, index, hash0, round-1);
+        boolean verify0 = verify(blockHeader, nonce, blake, indices, index, hashes[index], round-1);
         if(!verify0) {
             LOG.debug("Invalid verify0");
             return false;
         }
 
-        boolean verify1 = verify(blockHeader, nonce, blake, indices, index1, hash1, round-1);
+        boolean verify1 = verify(blockHeader, nonce, blake, indices, index1, hashes[index1], round-1);
         if(!verify1) {
             LOG.debug("Invalid verify1");
             return false;
         }
 
         for(int i = 0; i < indicesHashLength; i++)
-            hash[i] = (byte)(hash0[i] ^ hash1[i]);
+            hash[i] = (byte)(hashes[index][i] ^ hashes[index1][i]);
 
         int bits = (round < k ? round * collisionBitLength : n);
 
