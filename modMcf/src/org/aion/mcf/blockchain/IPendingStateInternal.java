@@ -42,20 +42,13 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
 
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
-    List<Tx> newTransactions(List<Tx> txSet);
-
-
-    /**
-     * get txpool version
-     *
-     * @return txpool version.
-     * @jay
-     */
-    String getVersion();
+    BigInteger bestNonce(Address addr);
 
     List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
 
     List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
 
     Map<BigInteger,Tx> getCacheTx(Address from);
+
+    String getVersion();
 }

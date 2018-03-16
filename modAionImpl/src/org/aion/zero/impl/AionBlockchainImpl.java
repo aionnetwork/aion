@@ -53,7 +53,6 @@ import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.blockchain.NonceMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -121,8 +120,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private Stack<State> stateStack = new Stack<>();
     private IEventMgr evtMgr = null;
-
-    private NonceMgr nonceMgr;
 
     /**
      * Chain configuration class, because chain configuration may change
@@ -232,10 +229,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public void setEventManager(IEventMgr eventManager) {
         this.evtMgr = eventManager;
-    }
-
-    public void setNonceMgr(NonceMgr nonceMgr) {
-        this.nonceMgr = nonceMgr;
     }
 
     public AionBlockStore getBlockStore() {
