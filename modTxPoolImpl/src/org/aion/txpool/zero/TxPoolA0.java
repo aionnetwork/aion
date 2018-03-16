@@ -88,7 +88,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         List<BigInteger> nl = Collections.synchronizedList(new ArrayList<>());
         synchronized (this) {
-
             this.getAccView(acc).getMap().entrySet().parallelStream().forEach(e -> nl.add(e.getKey()));
         }
         return nl.parallelStream().sorted().collect(Collectors.toList());
@@ -96,11 +95,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     @Override
     public synchronized boolean add(TX tx) {
-        List<TX> txl = new ArrayList<>();
-        txl.add(tx);
-        List<TX> rtn = this.add(txl);
-
-        return !rtn.isEmpty();
+        return !this.add(Collections.singletonList(tx)).isEmpty();
     }
 
     /**
@@ -216,6 +211,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             as.getMap().remove(new BigInteger(tx.getNonce()));
             as.setDirty();
         }
+
 
         this.updateAccPoolState();
         this.updateFeeMap();

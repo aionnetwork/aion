@@ -246,6 +246,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     protected void updateAccPoolState() {
 
         // iterate tx by account
+        List<Address> clearAddr = new ArrayList<>();
         for (Entry<Address, AccountState> e : this.accountView.entrySet()) {
             AccountState as = e.getValue();
             if (as.isDirty()) {
@@ -298,74 +299,88 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     this.poolStateView.get(e.getKey()).clear();
                 }
 
-                int cnt = 0;
-                BigInteger fee = BigInteger.ZERO;
-                BigInteger totalFee = BigInteger.ZERO;
+                if (as.getMap().isEmpty()) {
+                    this.poolStateView.remove(e.getKey());
+                    clearAddr.add(e.getKey());
+                } else {
 
-                for (Entry<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> en : as.getMap().entrySet()) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(
-                                "AbstractTxPool.updateAccPoolState mapsize[{}] nonce:[{}] cnt[{}] txNonceStart[{}]", as.getMap().size(), en.getKey().toString(), cnt, txNonceStart.toString());
-                    }
-                    if (en.getKey().equals(txNonceStart != null ? txNonceStart.add(BigInteger.valueOf(cnt)) : null)) {
-                        if (en.getValue().getValue().compareTo(fee) > -1) {
-                            fee = en.getValue().getValue();
-                            totalFee = totalFee.add(fee);
+                    int cnt = 0;
+                    BigInteger fee = BigInteger.ZERO;
+                    BigInteger totalFee = BigInteger.ZERO;
 
-                            if (++cnt == SEQUENTAILTXNCOUNT_MAX) {
-                                if (LOG.isTraceEnabled()) {
-                                    LOG.trace(
-                                            "AbstractTxPool.updateAccPoolState case1 - nonce:[{}] totalFee:[{}] cnt:[{}]",
-                                            txNonceStart, totalFee.toString(), cnt);
-                                }
-                                newPoolState.add(
-                                        new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)), cnt));
-
-                                txNonceStart = en.getKey().add(BigInteger.ONE);
-                                totalFee = BigInteger.ZERO;
-                                fee = BigInteger.ZERO;
-                                cnt = 0;
-                            }
-                        } else {
-                            if (totalFee.signum() == 1) {
-                                if (LOG.isTraceEnabled()) {
-                                    LOG.trace(
-                                            "AbstractTxPool.updateAccPoolState case2 - nonce:[{}] totalFee:[{}] cnt:[{}]",
-                                            txNonceStart, totalFee.toString(), cnt);
-                                }
-                                newPoolState.add(
-                                        new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)), cnt));
-
-                                // next PoolState
-                                txNonceStart = en.getKey();
+                    for (Entry<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> en : as.getMap().entrySet()) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace(
+                                    "AbstractTxPool.updateAccPoolState mapsize[{}] nonce:[{}] cnt[{}] txNonceStart[{}]",
+                                    as.getMap().size(), en.getKey().toString(), cnt, txNonceStart.toString());
+                        }
+                        if (en.getKey().equals(txNonceStart != null ? txNonceStart.add(BigInteger.valueOf(cnt)) : null)) {
+                            if (en.getValue().getValue().compareTo(fee) > -1) {
                                 fee = en.getValue().getValue();
-                                totalFee = fee;
-                                cnt = 1;
+                                totalFee = totalFee.add(fee);
+
+                                if (++cnt == SEQUENTAILTXNCOUNT_MAX) {
+                                    if (LOG.isTraceEnabled()) {
+                                        LOG.trace(
+                                                "AbstractTxPool.updateAccPoolState case1 - nonce:[{}] totalFee:[{}] cnt:[{}]",
+                                                txNonceStart, totalFee.toString(), cnt);
+                                    }
+                                    newPoolState.add(new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)),
+                                            cnt));
+
+                                    txNonceStart = en.getKey().add(BigInteger.ONE);
+                                    totalFee = BigInteger.ZERO;
+                                    fee = BigInteger.ZERO;
+                                    cnt = 0;
+                                }
+                            } else {
+                                if (totalFee.signum() == 1) {
+                                    if (LOG.isTraceEnabled()) {
+                                        LOG.trace(
+                                                "AbstractTxPool.updateAccPoolState case2 - nonce:[{}] totalFee:[{}] cnt:[{}]",
+                                                txNonceStart, totalFee.toString(), cnt);
+                                    }
+                                    newPoolState.add(new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)),
+                                            cnt));
+
+                                    // next PoolState
+                                    txNonceStart = en.getKey();
+                                    fee = en.getValue().getValue();
+                                    totalFee = fee;
+                                    cnt = 1;
+                                }
                             }
                         }
                     }
-                }
 
-                if (totalFee.signum() == 1) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("AbstractTxPool.updateAccPoolState case3 - nonce:[{}] totalFee:[{}] cnt:[{}] bw:[{}]",
-                                txNonceStart, totalFee.toString(), cnt, e.getKey().toString());
+                    if (totalFee.signum() == 1) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace(
+                                    "AbstractTxPool.updateAccPoolState case3 - nonce:[{}] totalFee:[{}] cnt:[{}] bw:[{}]",
+                                    txNonceStart, totalFee.toString(), cnt, e.getKey().toString());
+                        }
+
+                        newPoolState.add(new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)), cnt));
                     }
 
-                    newPoolState.add(new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)), cnt));
+                    this.poolStateView.put(e.getKey(), newPoolState);
+
+                    if (LOG.isTraceEnabled()) {
+                        this.poolStateView.forEach((k, v) -> v.forEach(l -> {
+                            LOG.trace("AbstractTxPool.updateAccPoolState - the first nonce of the poolState list:[{}]",
+                                    l.firstNonce);
+                        }));
+                    }
+                    as.sorted();
                 }
-
-                this.poolStateView.put(e.getKey(), newPoolState);
-
-                if (LOG.isTraceEnabled()) {
-                    this.poolStateView.forEach((k, v) -> v.forEach(l -> {
-                        LOG.trace("AbstractTxPool.updateAccPoolState - the first nonce of the poolState list:[{}]",
-                                l.firstNonce);
-                    }));
-                }
-
-                as.sorted();
             }
+        }
+
+        if(!clearAddr.isEmpty()) {
+            clearAddr.forEach( addr -> {
+                this.accountView.remove(addr);
+                this.bestNonce.remove(addr);
+            });
         }
     }
 
