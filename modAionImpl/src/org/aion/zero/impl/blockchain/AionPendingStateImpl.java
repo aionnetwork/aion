@@ -169,9 +169,7 @@ public class AionPendingStateImpl
             blkHandler.eventCallback(
                     new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                         public void onBest(IBlock _blk, List<?> _receipts) {
-                            LOG.info("before Onbest");
                             processBest((AionBlock) _blk, _receipts);
-                            LOG.info(" after Onbest");
                         }
                     });
         }
