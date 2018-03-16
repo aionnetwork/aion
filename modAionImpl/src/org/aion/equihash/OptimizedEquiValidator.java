@@ -6,6 +6,7 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.aion.base.util.ByteUtil.*;
 
@@ -18,6 +19,7 @@ public class OptimizedEquiValidator {
     private int collisionBitLength;
     private int collisionByteLength;
     private int solutionWidth;
+    private HashSet<Integer> indexSet;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
 
@@ -37,6 +39,7 @@ public class OptimizedEquiValidator {
         this.initState = this.InitialiseState();
         this.hashes = new byte[solutionWidth][indicesHashLength];
         hashes = new byte[solutionWidth][indicesHashLength];
+        indexSet = new HashSet<>();
     }
 
     /**
@@ -55,6 +58,15 @@ public class OptimizedEquiValidator {
         return p;
     }
 
+    /**
+     * Validate a solution for a given block header and nonce
+     *
+     * @param solution Byte array containing the Equihash solution
+     * @param blockHeader Block header raw bytes excluding nonce and solution
+     * @param nonce Nonce used to generate solution
+     * @return True if valid solution based on block header and nonce
+     * @throws NullPointerException
+     */
     public synchronized boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
@@ -74,7 +86,7 @@ public class OptimizedEquiValidator {
 
         Blake2b blake = Blake2b.Digest.newInstance(initState);
 
-        int[] indices = getIndicesFromMinimal(solution, collisionBitLength);
+        int[] indices = EquiUtils.getIndicesFromMinimal(solution, collisionBitLength);
 
         if(hasDuplicate(indices)) {
             LOG.debug("Invalid solution - duplicate solution index");
@@ -86,11 +98,11 @@ public class OptimizedEquiValidator {
         hashes = new byte[solutionWidth][indicesHashLength];
 
         return verify(blockHeader, nonce, blake, indices, 0, hash, k);
-
     }
 
     /**
-     * Generate hash based on indices and index
+     * Generate hash based on indices and index.
+     * The generated hash is placed in the hashes array based on the index
      */
     private void genHash(byte[] blockHeader, byte[] nonce, Blake2b blake, int[] indices, int index) {
         // Clear blake and re-use
@@ -122,93 +134,52 @@ public class OptimizedEquiValidator {
 
         // Check out of order indices
         if(indices[index] >= indices[index1]) {
-            LOG.debug("Invalid solution - indices out of order");
+            LOG.debug("Solution validation failed - indices out of order");
             return false;
         }
 
-        byte[] hash0 = new byte[indicesHashLength];
-        byte[] hash1 = new byte[indicesHashLength];
-
         boolean verify0 = verify(blockHeader, nonce, blake, indices, index, hashes[index], round-1);
         if(!verify0) {
-            LOG.debug("Invalid verify0");
+            LOG.debug("Solution validation failed - unable to verify left subtree");
             return false;
         }
 
         boolean verify1 = verify(blockHeader, nonce, blake, indices, index1, hashes[index1], round-1);
         if(!verify1) {
-            LOG.debug("Invalid verify1");
+            LOG.debug("Solution validation failed - unable to verify right subtree");
             return false;
         }
 
         for(int i = 0; i < indicesHashLength; i++)
             hash[i] = (byte)(hashes[index][i] ^ hashes[index1][i]);
 
-
-        for(int i = 0; i < indicesHashLength; i++){
-            System.out.println(toHexString(hash));
-        }
-
         int bits = (round < k ? round * collisionBitLength : n);
 
         for(int i = 0; i < bits/8; i++) {
             if(hash[i] != 0) {
-                LOG.debug("Non-zero XOR");
+                LOG.debug("Solution validation failed - Non-zero XOR");
                 return false;
             }
         }
 
-        // Try skipping b%8 check for now
+        // Check remainder bits
         if((bits%8) > 0 && (hash[bits/8] >> (8 - (bits%8)) ) != 0) {
-            LOG.debug("Non-zero XOR");
+            LOG.debug("Solution validation failed - Non-zero XOR");
             return false;
-        }
-
-        if(round == k) {
-            if(hash[indicesHashLength - 1] >> 6 > 0) {
-                LOG.debug("Non-zero XOR");
-                return false;
-            }
         }
 
         return true;
     }
 
     /*
-     * Get indices of solutions from minimized array format.
-     *
-     * @param minimal
-     *            Byte array in minimal format
-     * @param cBitLen
-     *            Number of bits in a collision
-     * @return An array containing solution indices.
-     */
-    public int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) throws NullPointerException {
-        if (minimal == null) {
-            throw new NullPointerException("null minimal bytes");
-        }
-
-        int lenIndices = 8 * Integer.BYTES * minimal.length / (cBitLen + 1);
-        int bytePad = Integer.BYTES - ((cBitLen + 1) + 7) / 8;
-
-        byte[] arr = new byte[lenIndices];
-        EquiUtils.extendArray(minimal, arr, cBitLen + 1, bytePad);
-
-        return bytesToInts(arr, true);
-    }
-
-    /*
      * Check if duplicates are present in the solutions index array
      */
     private boolean hasDuplicate(int[] indices) {
-        int[] cpy = Arrays.copyOfRange(indices,0,indices.length);
-        Arrays.sort(cpy);
-
-        for(int i = 1; i < indices.length; i++) {
-            if(cpy[i] <= cpy[i-1]) {
+        for(int index: indices) {
+            if(!indexSet.add(index))
                 return true;
-            }
         }
+        indexSet.clear();
 
         return false;
     }

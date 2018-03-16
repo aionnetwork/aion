@@ -51,7 +51,6 @@ public class EquihashValidatorTest {
     public void validate(){
         EquiValidator validate = new EquiValidator(210,9);
         OptimizedEquiValidator ov = new OptimizedEquiValidator(210,9);
-        //SimpleEquiValidator simple = SimpleEquiValidator.INSTANCE;
 
         byte[] header = {
                 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1479,6 +1478,7 @@ public class EquihashValidatorTest {
         assertEquals(false, isValid);
     }
 
+    // Call validator multiple times to ensure all states correctly cleared between calls
     @Test
     public void multipleBenchmarkTest() {
         byte[] header = {
@@ -1588,6 +1588,19 @@ public class EquihashValidatorTest {
         isValid = ov.isValidSolution(minimal, header, nonce);
         assertEquals(true, isValid);
 
+        solution[0] = solution[0] + 1;
+        byte[] minimal_updated = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
+        isValid = ov.isValidSolution(minimal_updated, header, nonce);
+        assertEquals(false, isValid);
+
+        solution[0] = solution[0] - 1;
+        nonce[0] = (byte)(nonce[0] + 8);
+        isValid = ov.isValidSolution(minimal, header, nonce);
+        assertEquals(false, isValid);
+
+        nonce[0] = (byte)1;
+        isValid = ov.isValidSolution(minimal, header, nonce);
+        assertEquals(true, isValid);
     }
 
 }
