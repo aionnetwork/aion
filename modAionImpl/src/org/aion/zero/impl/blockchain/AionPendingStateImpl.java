@@ -554,12 +554,12 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {
+    public synchronized List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {
         return this.pendingTxCache.addCacheTx(txmap, addr);
     }
 
     @Override
-    public List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
+    public synchronized List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
         return this.pendingTxCache.getSeqCacheTx(txmap, addr, bn);
     }
 
