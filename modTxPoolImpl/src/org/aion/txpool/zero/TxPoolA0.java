@@ -88,7 +88,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         List<BigInteger> nl = Collections.synchronizedList(new ArrayList<>());
         synchronized (this) {
-
             this.getAccView(acc).getMap().entrySet().parallelStream().forEach(e -> nl.add(e.getKey()));
         }
         return nl.parallelStream().sorted().collect(Collectors.toList());
@@ -96,11 +95,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     @Override
     public synchronized boolean add(TX tx) {
-        List<TX> txl = new ArrayList<>();
-        txl.add(tx);
-        List<TX> rtn = this.add(txl);
-
-        return !rtn.isEmpty();
+        return !this.add(Collections.singletonList(tx)).isEmpty();
     }
 
     /**
@@ -147,6 +142,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
             mainMap.put(bw, new TXState(tx));
             newPendingTx.add(tx);
+
+            setBestNonce(tx.getFrom(), new BigInteger(tx.getNonce()));
         }
 
         this.getMainMap().putAll(mainMap);
@@ -214,6 +211,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             as.getMap().remove(new BigInteger(tx.getNonce()));
             as.setDirty();
         }
+
 
         this.updateAccPoolState();
         this.updateFeeMap();
@@ -331,7 +329,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
 
         if (LOG.isInfoEnabled()) {
-            LOG.info("TxPoolA0.snapshot return [{}] TX", rtn.size());
+            LOG.info("TxPoolA0.snapshot return [{}] TX, poolSize[{}]", rtn.size(), getMainMap().size());
         }
 
         return rtn;
@@ -375,6 +373,14 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return nonceList.size() == 2 ? new AbstractMap.SimpleEntry<>(nonceList.get(0), nonceList.get(1)) : null;
     }
 
+    public synchronized BigInteger bestNonce(Address addr) {
+        if (addr == null) {
+            throw new NullPointerException();
+        }
+
+        return getBestNonce(addr);
+    }
+
     private void removeTimeoutTxn() {
 
         long ts = TimeInstant.now().toEpochSec() - txn_timeout;
@@ -396,7 +402,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         this.remove(txl);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("TxPoolA0.remove return [{}] TX", txl.size());
+            LOG.debug("TxPoolA0.remove return [{}] TX, poolSize[{}]", txl.size(), getMainMap().size());
         }
 
     }
