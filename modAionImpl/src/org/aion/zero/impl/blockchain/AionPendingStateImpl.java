@@ -226,16 +226,25 @@ public class AionPendingStateImpl
         List<AionTransaction> newPending = new ArrayList<>();
 
         for (AionTransaction tx : transactions) {
+            BigInteger nonce = new BigInteger(1, tx.getNonce());
 
-            if (addNewTxIfNotExist(tx)) {
-                unknownTx++;
-                if (addPendingTransactionImpl(tx)) {
-                    newPending.add(tx);
-                }
+            if (nonce.compareTo(bestNonce(tx.getFrom())) > 0) {
+                addToTxCache(Collections.singletonMap(nonce, tx), tx.getFrom());
+
+                LOG.info("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), nonce);
             } else {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("addPendingTransactions tx exist:[{}] ", tx.toString());
-                }
+                Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
+
+                do {
+                    if (addNewTxIfNotExist(tx)) {
+                        unknownTx++;
+                        if (addPendingTransactionImpl(tx)) {
+                            newPending.add(tx);
+                        }
+                    }
+
+                    nonce = nonce.add(BigInteger.ONE);
+                } while (cache != null && (tx = cache.get(nonce)) != null);
             }
         }
 
@@ -258,6 +267,7 @@ public class AionPendingStateImpl
         for (AionTransaction tx : newPending) {
             AionImpl.inst().broadcastTransaction(tx);
         }
+        LOG.info("Broadcast transactions: # of txs = {}", newPending.size());
 
         return newPending;
     }
