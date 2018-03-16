@@ -51,13 +51,27 @@ public interface IRpc {
         eth_getBlockByNumber,
         eth_getBlockByHash,
         eth_getCode,
-        eth_getTransactionByHash,
-        eth_getTransactionReceipt,
-        eth_getTransactionCount,
         eth_estimateGas,
         eth_sendTransaction,
         eth_sendRawTransaction,
+
+        eth_getTransactionCount,
+        eth_getBlockTransactionCountByHash,
+        eth_getBlockTransactionCountByNumber,
+
+        eth_getTransactionByHash,
+        eth_getTransactionByBlockHashAndIndex,
+        eth_getTransactionByBlockNumberAndIndex,
+        eth_getTransactionReceipt,
+
         eth_syncing,
+        eth_protocolVersion,
+        eth_mining,
+        eth_hashrate,
+        eth_submitHashrate,
+        eth_gasPrice,
+        eth_sign,
+        eth_getStorageAt,
 
         /**
          * filters
@@ -86,7 +100,7 @@ public interface IRpc {
          * personal
          */
         personal_unlockAccount,
-        
+
         /**
          * stratum pool - custom json-rpc endpoints
          */

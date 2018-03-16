@@ -72,5 +72,7 @@ public interface IP2pMgr {
      */
     void run();
 
-    String version();
+    List<Short> versions();
+
+    int chainId();
 }

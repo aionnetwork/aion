@@ -24,6 +24,7 @@
 
 package org.aion.api.server;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +39,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.aion.api.server.nrgprice.NrgOracle;
+import org.aion.evtmgr.IHandler;
 import org.aion.mcf.account.Keystore;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
@@ -50,20 +53,23 @@ import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.config.CfgApi;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
-
-    protected IAionChain ac = null;
+    protected NrgOracle nrgOracle;
+    protected IAionChain ac;
     protected final static short FLTRS_MAX = 1024;
+    protected final long DEFAULT_NRG_LIMIT = 500_000L;
     protected AtomicLong fltrIndex = new AtomicLong(0);
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
@@ -71,7 +77,18 @@ public abstract class ApiAion extends Api {
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
-        this.regEvents();
+
+        // register events
+        IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
+        evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
+        evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+
+        // instantiate nrg price oracle
+        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
+        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
+        this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
     }
 
     // General Level
@@ -411,6 +428,8 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getBalance(_address);
     }
 
+    // TODO: refactor these ad-hoc transaction creations - violates DRY and is messy
+
     public long estimateNrg(ArgTxCall _params) {
         if (_params == null) {
             throw new NullPointerException();
@@ -448,17 +467,16 @@ public abstract class ApiAion extends Api {
 
         if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
             LOG.error("<send-transaction msg=invalid-from-address>");
-            return ByteUtil.EMPTY_BYTE_ARRAY;
+            return null;
         }
 
         ECKey key = this.getAccountKey(from.toString());
         if (key == null) {
             LOG.error("<send-transaction msg=account-not-found>");
-            return ByteUtil.EMPTY_BYTE_ARRAY;
+            return null;
         }
 
         try {
-            // TODO : temp set nrg & price to 1
             byte[] nonce = (!_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
                     : getTxNonce(key).toByteArray();
 
@@ -470,7 +488,7 @@ public abstract class ApiAion extends Api {
             List<AionTransaction> parsedTx = ftx.get(10, TimeUnit.SECONDS);
             return parsedTx.get(0).getHash();
         } catch (Exception ex) {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
+            return null;
         }
     }
 
@@ -507,28 +525,6 @@ public abstract class ApiAion extends Api {
         return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
     }
 
-    private void regEvents() {
-        IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
-        regTxEvents(evtMgr);
-        regBlkEvents(evtMgr);
-    }
-
-    /**
-     * @param evtMgr
-     *            Oct 12, 2017 jay void
-     */
-    private void regBlkEvents(final IEventMgr evtMgr) {
-        evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
-    }
-
-    /**
-     * @param evtMgr
-     *            Oct 12, 2017 jay void
-     */
-    private void regTxEvents(final IEventMgr evtMgr) {
-        evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
-    }
-
     public boolean isMining() {
         return this.ac.getBlockMiner().isMining();
     }
@@ -537,19 +533,87 @@ public abstract class ApiAion extends Api {
         return this.ac.getAionHub().getP2pMgr().getActiveNodes().size();
     }
 
-    // follows the ethereum standard for web3 compliance. DO NOT DEPEND ON IT. Will be changed to Aion-defined spec later
+    // follows the ethereum standard for web3 compliance. DO NOT DEPEND ON IT.
+    // Will be changed to Aion-defined spec later
     // https://github.com/ethereum/wiki/wiki/Client-Version-Strings
     public String clientVersion() {
-        Pattern shortVersion = Pattern.compile("(\\d\\.\\d).*");
-        Matcher matcher = shortVersion.matcher(System.getProperty("java.version"));
-        matcher.matches();
+        try {
+            Pattern shortVersion = Pattern.compile("(\\d\\.\\d).*");
+            Matcher matcher = shortVersion.matcher(System.getProperty("java.version"));
+            matcher.matches();
 
-        return Arrays.asList(
-                "Aion(J)",
-                "v" + Version.KERNEL_VERSION,
-                System.getProperty("os.name"),
-                "Java" + matcher.group(1))
-                .stream()
-                .collect(Collectors.joining("/"));
+            return Arrays.asList(
+                    "Aion(J)",
+                    "v" + Version.KERNEL_VERSION,
+                    System.getProperty("os.name"),
+                    "Java" + matcher.group(1))
+                    .stream()
+                    .collect(Collectors.joining("/"));
+        }
+        catch(Exception e) {
+            LOG.debug("client version string generation failed", e);
+        }
+
+        return ("Aion(J)/v" + Version.KERNEL_VERSION);
+    }
+
+    // create a comma-separated string of supported p2p wire protocol versions
+    // mainly to keep compatibility with eth_protocolVersion which returns a String
+    public String p2pProtocolVersion() {
+        try {
+            List<Short> p2pVersions = this.ac.getAionHub().getP2pMgr().versions();
+            int i = 0;
+            StringBuilder b = new StringBuilder();
+            for (Short v : p2pVersions) {
+                b.append(ByteUtil.toHexString(ByteUtil.shortToBytes(v)));
+                if (i++ < p2pVersions.size())
+                    b.append(",");
+            }
+            return b.toString();
+        } catch (Exception e) {
+            LOG.error("p2p protocol versions string generation failed");
+            return "-1";
+        }
+    }
+
+    public String chainId() {
+        return (this.ac.getAionHub().getP2pMgr().chainId() + "");
+    }
+
+    public String getHashrate() {
+        double hashrate = 0;
+
+        // add the the hashrate computed by the internal CPU miner
+        if (isMining()) {
+            hashrate += this.ac.getBlockMiner().getHashrate();
+        }
+
+        hashrate += reportedHashrate;
+
+        return Double.toString(hashrate);
+    }
+
+    protected volatile double reportedHashrate = 0;
+
+    // hashrate in sol/s should just be a hexadecimal representation of a BigNumber
+    // right now, assuming only one external miner is connected to the kernel
+    // this needs to change in the future when this client needs to support multiple external miners
+    public boolean setReportedHashrate(String hashrate, String clientId) {
+        try {
+            reportedHashrate = Double.parseDouble(hashrate);
+            return true;
+        } catch(Exception e) {
+            LOG.debug("api - setReportedHashrate(): bad string supplied", e);
+        }
+
+        return false;
+    }
+
+    public long getRecommendedNrgPrice() {
+        return this.nrgOracle.getNrgPrice();
+    }
+
+    public long getDefaultNrgLimit() {
+        return DEFAULT_NRG_LIMIT;
     }
 }

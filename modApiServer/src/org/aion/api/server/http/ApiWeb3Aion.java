@@ -41,6 +41,7 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
@@ -58,7 +59,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         super(_ac);
         this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
 
-        IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(2);
+        IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHr != null) {
             blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                 public void onBlock(final IBlockSummary _bs) {
@@ -77,7 +78,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             });
         }
 
-        IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(1);
+        IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
         if (txHr != null) {
             txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
 
@@ -107,8 +108,11 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    /*
-     * Return a reference to the AIONBlock without converting values to hex
+    // --------------------------------------------------------------------
+    // Mining Pool
+    // --------------------------------------------------------------------
+
+    /* Return a reference to the AIONBlock without converting values to hex
      * Requied for the mining pool implementation
      */
     AionBlock getBlockRaw(int bn) {
@@ -121,154 +125,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         } else {
             return nb;
         }
-    }
-
-    private JSONObject blockToJson(AionBlock block, BigInteger totalDifficulty, boolean fullTransaction) {
-        JSONObject obj = new JSONObject();
-        obj.put("number", block.getNumber());
-        obj.put("hash", TypeConverter.toJsonHex(block.getHash()));
-        obj.put("parentHash", TypeConverter.toJsonHex(block.getParentHash()));
-        obj.put("logsBloom", TypeConverter.toJsonHex(block.getLogBloom()));
-        obj.put("transactionsRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
-        obj.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
-        obj.put("receiptsRoot",
-                TypeConverter.toJsonHex(block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
-        obj.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
-        obj.put("totalDifficulty", TypeConverter.toJsonHex(totalDifficulty));
-
-        // TODO: this is coinbase, miner, or minerAddress?
-        obj.put("miner", TypeConverter.toJsonHex(block.getCoinbase().toString()));
-        obj.put("timestamp", TypeConverter.toJsonHex(block.getTimestamp()));
-        obj.put("nonce", TypeConverter.toJsonHex(block.getNonce()));
-        obj.put("solution", TypeConverter.toJsonHex(block.getHeader().getSolution()));
-        obj.put("gasUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("gasLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
-        obj.put("nrgUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
-        obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
-        //
-        obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
-        obj.put("size", new NumericalValue(block.getEncoded().length).toHexString());
-
-        JSONArray jsonTxs = new JSONArray();
-        List<AionTransaction> _txs = block.getTransactionsList();
-        for (AionTransaction _tx : _txs) {
-            if (fullTransaction) {
-                JSONObject jsonTx = new JSONObject();
-                jsonTx.put("address", (_tx.getContractAddress() != null)? TypeConverter.toJsonHex(_tx.getContractAddress().toString()):null);
-                jsonTx.put("transactionHash", TypeConverter.toJsonHex(_tx.getHash()));
-                jsonTx.put("transactionIndex", getTransactionReceipt(_tx.getHash()).transactionIndex);
-                jsonTx.put("value", TypeConverter.toJsonHex(_tx.getValue()));
-                jsonTx.put("nrg", _tx.getNrg());
-                jsonTx.put("nrgPrice", TypeConverter.toJsonHex(_tx.getNrgPrice()));
-                jsonTx.put("nonce", ByteUtil.byteArrayToLong(_tx.getNonce()));
-                jsonTx.put("from", TypeConverter.toJsonHex(_tx.getFrom().toString()));
-                jsonTx.put("to", TypeConverter.toJsonHex(_tx.getTo().toString()));
-                jsonTx.put("timestamp", ByteUtil.byteArrayToLong(_tx.getTimeStamp()));
-                jsonTx.put("input", TypeConverter.toJsonHex(_tx.getData()));
-                jsonTx.put("blockNumber", block.getNumber());
-                jsonTxs.put(jsonTx);
-            } else {
-                jsonTxs.put(TypeConverter.toJsonHex(_tx.getHash()));
-            }
-        }
-        obj.put("transactions", jsonTxs);
-        return obj;
-    }
-
-    JSONObject eth_getBlockByHash(String hashString, boolean fullTransactions) {
-
-        byte[] hash = ByteUtil.hexStringToBytes(hashString);
-        AionBlock block = this.ac.getBlockchain().getBlockByHash(hash);
-        BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
-        if (block == null) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("<get-block bn={} err=not-found>");
-            return null;
-        } else {
-            try {
-                return blockToJson(block, totalDiff, fullTransactions);
-            } catch (Exception ex) {
-                if (LOG.isDebugEnabled())
-                    LOG.debug("<get-block bh={} err=exception>", hashString);
-                return null;
-            }
-        }
-    }
-
-    Object eth_getBlock(String _bnOrId, boolean _fullTx) {
-        long bn = this.parseBnOrId(_bnOrId);
-        AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
-
-        // return null if block not found
-        if (nb == null) {
-            LOG.debug("<get-block bn={} err=not-found>");
-            return JSONObject.NULL;
-        } else {
-            BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
-            return blockToJson(nb, totalDiff, _fullTx);
-        }
-    }
-
-    TxRecpt eth_getTransactionReceipt(String txHash) {
-        return this.getTransactionReceipt(TypeConverter.StringHexToByteArray(txHash));
-    }
-
-    private static final ByteArrayWrapper EMPTY = new ByteArrayWrapper(new byte[0]);
-    String eth_getCode(String address) throws Exception {
-        Address addr = new Address(address);
-        ByteArrayWrapper state = this.ac.getCode(addr).orElse(EMPTY);
-
-        if (state == EMPTY)
-            return "";
-        return "0x" + state.toString();
-    }
-
-    Tx eth_getTransactionByHash(String txHash) {
-        if (txHash.startsWith("0x"))
-            txHash = txHash.substring(2, txHash.length());
-
-        byte[] transactionHash = ByteUtil.hexStringToBytes(txHash);
-
-        AionTransaction transaction = this.getTransactionByHash(transactionHash);
-        TxRecpt transactionReceipt = this.getTransactionReceipt(ByteUtil.hexStringToBytes(txHash));
-        if (transaction != null && transactionReceipt != null)
-            return new Tx(transactionReceipt.contractAddress,
-                    transactionReceipt.transactionHash,
-                    transactionReceipt.blockHash,
-                    new NumericalValue(transactionReceipt.txNonce),
-                    transactionReceipt.from, transactionReceipt.to,
-                    new NumericalValue(transactionReceipt.txTimeStamp),
-                    new NumericalValue(transactionReceipt.txValue),
-                    transactionReceipt.txData,
-                    new NumericalValue(transactionReceipt.blockNumber),
-                    new NumericalValue(transaction.getNrg()),
-                    new NumericalValue(transaction.getNrgPrice()),
-                    new NumericalValue(transaction.getTxIndexInBlock()));
-        else
-            return null;
-    }
-
-    private final AccountState DEFAULT_ACCOUNT = new AccountState();
-
-    /**
-     * gets the transaction count given the address
-     * 
-     * @param address
-     *            of the account that query the transaction count (nonce) for
-     * @param number
-     *            null if latest, otherwise provide the number
-     * @return {@code 0} if account not found, {@code nonce} of the account
-     *         otherwise
-     */
-    NumericalValue eth_getTransactionCount(Address address, NumericalValue number) {
-        BigInteger nonce;
-        if (number == null) {
-            nonce = this.ac.getAccountState(address).orElse(DEFAULT_ACCOUNT).getNonce();
-        } else {
-            nonce = this.ac.getAccountState(address, number.toBigInteger().longValueExact()).orElse(DEFAULT_ACCOUNT)
-                    .getNonce();
-        }
-        return new NumericalValue(nonce);
     }
 
     // AION Mining Pool
@@ -285,12 +141,110 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();
     }
 
-    JSONArray debug_getBlocksByNumber(String _bnOrId, boolean _fullTransactions) {
-        long bn = this.parseBnOrId(_bnOrId);
+    // --------------------------------------------------------------------
+
+    Object eth_getBlockByHash(String hashString, boolean fullTransactions) {
+        byte[] hash = ByteUtil.hexStringToBytes(hashString);
+        AionBlock block = this.ac.getBlockchain().getBlockByHash(hash);
+        BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
+
+        if (block == null) {
+            LOG.debug("<get-block bn={} err=not-found>");
+            return null;
+        } else {
+            try {
+                return Blk.AionBlockToJson(block, totalDiff, fullTransactions);
+            } catch (Exception ex) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("<get-block bh={} err=exception>", hashString);
+                return null;
+            }
+        }
+    }
+
+    Object eth_getBlockByNumber(String _bnOrId, boolean _fullTx) {
+        Long bn = this.parseBnOrId(_bnOrId);
+        // TODO: if parse failed, return error message
+        // TODO: if 'pending', return pending block
+        if (bn == null || bn.equals(-1L))
+            return null;
+
+        AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
+
+        if (nb == null) {
+            LOG.debug("<get-block bn={} err=not-found>");
+            return null;
+        } else {
+            BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
+            return Blk.AionBlockToJson(nb, totalDiff, _fullTx);
+        }
+    }
+
+    Object eth_getTransactionReceipt(String txHash) {
+        TxRecpt r = this.getTransactionReceipt(TypeConverter.StringHexToByteArray(txHash));
+        if (r == null) return null;
+        return r.toJson();
+    }
+
+    Object eth_getCode(String address) throws Exception {
+        Address addr = new Address(address);
+        ByteArrayWrapper state = this.ac.getCode(addr).orElse(null);
+
+        if (state == null) return null;
+
+        return "0x" + state.toString();
+    }
+
+    Object eth_sendRawTransaction(String rawHexString) {
+        if (rawHexString == null)
+            return null;
+
+        byte[] rawTransaction = ByteUtil.hexStringToBytes(rawHexString);
+
+        byte[] transactionHash = sendTransaction(rawTransaction);
+
+        return TypeConverter.toJsonHex(transactionHash);
+    }
+
+    Object eth_getTransactionCount(String _address, String _bnOrId) {
+        Address address = new Address(_address);
+        AccountState account = null;
+
+        // deal with optional _bnOrId
+        if (_bnOrId == null) {
+            account = this.ac.getAccountState(address).orElse(null);
+        }
+
+        Long bn = parseBnOrId(_bnOrId);
+        // if you passed in an invalid bnOrId, it's and error
+        if (bn == null || bn.equals(-1L)) return null;
+
+        account = this.ac.getAccountState(address, bn).orElse(null);
+
+        // could not find the account state
+        if (account == null) return null;
+
+        return TypeConverter.toJsonHex(account.getNonce());
+    }
+
+
+
+    Object debug_getBlocksByNumber(String _bnOrId, boolean _fullTransactions) {
+        Long bn = parseBnOrId(_bnOrId);
+        // TODO: if parse failed, return error message
+        // TODO: if 'pending', return pending block
+        if (bn == null || bn.equals(-1L))
+            return null;
+
         List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks = ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore()).getBlocksByNumber(bn);
+        if (blocks == null) {
+            LOG.debug("<get-block bn={} err=not-found>");
+            return null;
+        }
+
         JSONArray response = new JSONArray();
         for (Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>> block : blocks) {
-            JSONObject b = blockToJson(block.getKey(), block.getValue().getKey(), _fullTransactions);
+            JSONObject b = (JSONObject) Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTransactions);
             b.put("mainchain", block.getValue().getValue());
             response.put(b);
         }
@@ -315,35 +269,43 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
      */
     String eth_newFilter(final ArgFltr rf) {
-            FltrLg filter = new FltrLg();
-            filter.setTopics(rf.topics);
-            filter.setContractAddress(rf.address);
+        FltrLg filter = new FltrLg();
+        filter.setTopics(rf.topics);
+        filter.setContractAddress(rf.address);
 
-            final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.fromBlock));
-            AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(this.parseBnOrId(rf.toBlock));
+        Long bnFrom = parseBnOrId(rf.fromBlock);
+        Long bnTo = parseBnOrId(rf.toBlock);
 
-            if (fromBlock != null) {
-                // need to add historical data
-                // this is our own policy: what to do in this case is not defined in the spec
-                //
-                // policy: add data from earliest to latest, until we can't fill the queue anymore
-                //
-                // caveat: filling up the events-queue with historical data will cause the following issue:
-                // the user will miss all events generated between the first poll and filter installation.
+        if (bnFrom == null || bnTo == null || bnFrom == -1 || bnTo == -1) {
+            LOG.debug("jsonrpc - eth_newFilter(): from, to block parse failed");
+            return null;
+        }
 
-                toBlock = toBlock == null ? getBestBlock() : toBlock;
-                for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
-                    if (filter.isFull()) break;
-                    filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
-                }
+        final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(bnFrom);
+        AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(bnTo);
+
+        if (fromBlock != null) {
+            // need to add historical data
+            // this is our own policy: what to do in this case is not defined in the spec
+            //
+            // policy: add data from earliest to latest, until we can't fill the queue anymore
+            //
+            // caveat: filling up the events-queue with historical data will cause the following issue:
+            // the user will miss all events generated between the first poll and filter installation.
+
+            toBlock = toBlock == null ? getBestBlock() : toBlock;
+            for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
+                if (filter.isFull()) break;
+                filter.onBlock(this.ac.getBlockchain().getBlockByNumber(i), this.ac.getAionHub().getBlockchain());
             }
+        }
 
-            // "install" the filter after populating historical data;
-            // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
-            long id = fltrIndex.getAndIncrement();
-            installedFilters.put(id, filter);
+        // "install" the filter after populating historical data;
+        // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
+        long id = fltrIndex.getAndIncrement();
+        installedFilters.put(id, filter);
 
-            return TypeConverter.toJsonHex(id);
+        return TypeConverter.toJsonHex(id);
 
     }
 
@@ -370,7 +332,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         long id = TypeConverter.StringHexToBigInteger(_id).longValue();
         Fltr filter = installedFilters.get(id);
 
-        if (filter == null) return JSONObject.NULL;
+        if (filter == null) return null;
 
         Object[] events = filter.poll();
         JSONArray response = new JSONArray();
@@ -393,5 +355,88 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Object response = eth_getFilterChanges(id);
         eth_uninstallFilter(id);
         return response;
+    }
+
+    Object eth_getTransactionByHash(String _txHash) {
+        byte[] txHash = ByteUtil.hexStringToBytes(_txHash);
+        if (_txHash == null || txHash == null) return null;
+
+        AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
+        if (txInfo == null) return null;
+
+        return Tx.InfoToJSON(txInfo);
+    }
+
+    Object eth_getTransactionByBlockHashAndIndex(String _blockHash,String _index) {
+        byte[] hash = ByteUtil.hexStringToBytes(_blockHash);
+        if (_blockHash == null || hash == null) return null;
+
+        AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
+        if (b == null) return null;
+
+        int idx = Integer.decode(_index);
+        if (idx >= b.getTransactionsList().size()) return null;
+
+        return Tx.AionTransactionToJSON(b.getTransactionsList().get(idx), idx);
+    }
+
+    Object eth_getTransactionByBlockNumberAndIndex(String _bnOrId, String _index) throws Exception {
+        List<AionTransaction> txs = getTransactionsByBlockId(_bnOrId);
+        if (txs == null) return null;
+
+        int idx = Integer.decode(_index);
+        if (idx >= txs.size()) return null;
+
+        return Tx.AionTransactionToJSON(txs.get(idx), idx);
+    }
+
+    public String eth_getBlockTransactionCountByHash(String hashString) {
+        byte[] hash = ByteUtil.hexStringToBytes(hashString);
+        AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
+        if (b == null) return null;
+        long n = b.getTransactionsList().size();
+        return TypeConverter.toJsonHex(n);
+    }
+
+    public String eth_getBlockTransactionCountByNumber(String bnOrId) throws Exception {
+        List<AionTransaction> list = getTransactionsByBlockId(bnOrId);
+        if (list == null) return null;
+        long n = list.size();
+        return TypeConverter.toJsonHex(n);
+    }
+
+    private List<AionTransaction> getTransactionsByBlockId(String id) {
+        Long bn = parseBnOrId(id);
+        if (bn == null || bn == -1) return null;
+
+        AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
+        if (b == null) return null;
+
+        return b.getTransactionsList();
+    }
+
+    public Long parseBnOrId(String _bnOrId) {
+        if (_bnOrId == null)
+            return null;
+
+        try
+        {
+            if ("earliest".equalsIgnoreCase(_bnOrId)) {
+                return 0L;
+            } else if ("latest".equalsIgnoreCase(_bnOrId)) {
+                return getBestBlock().getNumber();
+            } else if ("pending".equalsIgnoreCase(_bnOrId)) {
+                return -1L;
+            } else {
+                if (_bnOrId.startsWith("0x")) {
+                    return TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
+                } else {
+                    return Long.parseLong(_bnOrId);
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("err on parsing block number #" + _bnOrId);
+            return null;
+        }
     }
 }

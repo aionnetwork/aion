@@ -36,14 +36,25 @@ import java.io.Writer;
  */
 public final class CfgApi {
 
+    private CfgApiZmq zmq;
+    private CfgApiRpc rpc;
+    private CfgApiNrg nrg;
+
     public CfgApi() {
         this.rpc = new CfgApiRpc();
         this.zmq = new CfgApiZmq();
+        this.nrg = new CfgApiNrg();
     }
 
-    private CfgApiZmq zmq;
-
-    private CfgApiRpc rpc;
+    public CfgApiRpc getRpc() {
+        return this.rpc;
+    }
+    public CfgApiZmq getZmq() {
+        return this.zmq;
+    }
+    public CfgApiNrg getNrg() {
+        return this.nrg;
+    }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -57,6 +68,9 @@ public final class CfgApi {
                     break;
                 case "rpc":
                     this.rpc.fromXML(sr);
+                    break;
+                case "nrg":
+                    this.nrg.fromXML(sr);
                     break;
                 default:
                     Cfg.skipElement(sr);
@@ -82,6 +96,7 @@ public final class CfgApi {
 
             xmlWriter.writeCharacters(this.rpc.toXML());
             xmlWriter.writeCharacters(this.zmq.toXML());
+            xmlWriter.writeCharacters(this.nrg.toXML());
 
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
@@ -96,13 +111,4 @@ public final class CfgApi {
             return "";
         }
     }
-
-    public CfgApiRpc getRpc() {
-        return this.rpc;
-    }
-
-    public CfgApiZmq getZmq() {
-        return this.zmq;
-    }
-
 }

@@ -156,7 +156,10 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
     @Override
     public int compareTo(Address o) {
         return FastByteComparisons.compareTo(this.address, 0, ADDRESS_LEN, o.toBytes(), 0, o.toBytes().length);
+    }
 
+    public int compareTo(byte[] o) {
+        return FastByteComparisons.compareTo(this.address, 0, ADDRESS_LEN, o, 0, o.length);
     }
 
     @Override

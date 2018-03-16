@@ -30,4 +30,6 @@ public interface IMineRunner {
     void delayedStartMining(int sec);
 
     boolean isMining();
+
+    double getHashrate();
 }

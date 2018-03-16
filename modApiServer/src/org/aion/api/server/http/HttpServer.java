@@ -29,12 +29,12 @@ import org.aion.api.server.types.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
+import org.aion.crypto.ECKey;
 import org.aion.mcf.config.CfgApi;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.p2p.IP2pMgr;
-import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -55,9 +55,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
@@ -100,8 +97,10 @@ public final class HttpServer {
     private static HashMap<String, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
 
+    // TODO: overload this so we can pass error messages to the client
     // TODO: make this compliant with the JSON RPC 2.0 spec: http://www.jsonrpc.org/specification
-    // optionally, support codes from Error Codes Improvement EIP: https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
+    // optionally, support codes from Error Codes Improvement EIP:
+    // https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
     private static JSONObject processResult(final long _id, final Object _result) {
         JSONObject json = new JSONObject();
         json.put("jsonrpc", "2.0");
@@ -121,13 +120,17 @@ public final class HttpServer {
         return json;
     }
 
-    private static JSONObject process(final IRpc.Method _method, final long _id, final Object _params)
-            throws Exception {
+    private static JSONObject process(final IRpc.Method _method, final long _id, final Object _params) throws Exception
+    {
         if (log.isDebugEnabled())
             log.debug("<request mth=[{}] id={} params={}>", _method.name(), _id, _params.toString());
+
         JSONObject jsonObj;
+
         JSONArray params = (JSONArray) _params;
+
         AionBlock bestBlock;
+
         JSONArray compilers = new JSONArray(new String[] {"solidity"});
 
         // TODO All of the eth_* methods need to be renamed to aion standard
@@ -181,7 +184,7 @@ public final class HttpServer {
             if (number == null)
                 return processResult(_id, null);
 
-            return processResult(_id, api.eth_getBlock(number, fullTransactions));
+            return processResult(_id, api.eth_getBlockByNumber(number, fullTransactions));
         }
         case eth_getBlockByHash: {
             String hashString = params.get(0) + "";
@@ -218,125 +221,103 @@ public final class HttpServer {
             }
         }
         case eth_call: {
-            if (JSONArray.class.isInstance(_params)) {
-                JSONObject paramsObj = ((JSONArray) _params).getJSONObject(0);
-                ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj);
-                if (txParams != null) {
-                    byte[] res = api.doCall(txParams);
-                    return processResult(_id, TypeConverter.toJsonHex(res));
-                }
+            JSONObject paramsObj = params.getJSONObject(0);
+            ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj, api.getRecommendedNrgPrice(), api.getDefaultNrgLimit());
+            if (txParams != null) {
+                byte[] res = api.doCall(txParams);
+                return processResult(_id, TypeConverter.toJsonHex(res));
             }
-            return processResult(_id, "");
+            return processResult(_id, null);
         }
         case eth_estimateGas: {
-            if (_params instanceof JSONArray) {
-                JSONObject obj = ((JSONArray) _params).getJSONObject(0);
-                ArgTxCall txParams = ArgTxCall.fromJSON(obj);
-                if (txParams != null) {
-                    NumericalValue estimatedGas = new NumericalValue(api.estimateGas(txParams));
-                    return processResult(_id, estimatedGas.toHexString());
-                }
+            JSONObject obj = params.getJSONObject(0);
+            ArgTxCall txParams = ArgTxCall.fromJSON(obj, api.getRecommendedNrgPrice(), api.getDefaultNrgLimit());
+            if (txParams != null) {
+                NumericalValue estimatedGas = new NumericalValue(api.estimateGas(txParams));
+                return processResult(_id, estimatedGas.toHexString());
             }
-            return processResult(_id, "");
+            return processResult(_id, null);
         }
         case eth_sendTransaction: {
-            JSONObject paramsObj = ((JSONArray) _params).getJSONObject(0);
-            ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj);
+            JSONObject paramsObj = params.getJSONObject(0);
+            ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj, api.getRecommendedNrgPrice(), api.getDefaultNrgLimit());
+
+            // check for unlocked account
+            Address address = txParams.getFrom();
+            ECKey key = api.getAccountKey(address.toString());
+            // TODO: send json-rpc error code + message
+            if (key == null)
+                return processResult(_id, null);
+
             if (txParams != null) {
                 byte[] res = api.sendTransaction(txParams);
                 return processResult(_id, TypeConverter.toJsonHex(res));
-            } else
-                return processResult(_id, "");
-        }
-        case eth_sendRawTransaction: {
-            String rawHexString = (String) params.get(0);
-            if (rawHexString == null) {
-                log.debug("eth_sendRawTransaction invalid input");
-                return processResult(_id, null);
             }
-
-            byte[] rawTransaction;
-            try {
-                rawTransaction = ByteUtil.hexStringToBytes(rawHexString);
-            } catch (Exception e) {
-                log.debug("eth_sendRawTransaction invalid hex");
-                return processResult(_id, null);
-            }
-            byte[] transactionHash = api.sendTransaction(rawTransaction);
-            return processResult(_id, TypeConverter.toJsonHex(transactionHash));
+            return processResult(_id, null);
         }
-        case eth_getTransactionReceipt: {
-            jsonObj = new JSONObject();
-            TxRecpt txR = api.eth_getTransactionReceipt((String) params.get(0));
-            if (txR != null) {
-                jsonObj.put("transactionHash", txR.transactionHash);
-                jsonObj.put("transactionIndex", new NumericalValue(txR.transactionIndex).toHexString());
-                jsonObj.put("blockHash", txR.blockHash);
-                jsonObj.put("blockNumber", new NumericalValue(txR.blockNumber).toHexString());
-                jsonObj.put("cumulativeGasUsed", new NumericalValue(txR.cumulativeNrgUsed).toHexString());
-                jsonObj.put("cumulativeNrgUsed", new NumericalValue(txR.cumulativeNrgUsed).toHexString());
-                jsonObj.put("gasUsed", new NumericalValue(txR.nrgUsed).toHexString());
-                jsonObj.put("nrgUsed", new NumericalValue(txR.nrgUsed).toHexString());
-                jsonObj.put("contractAddress", txR.contractAddress);
-                jsonObj.put("from", txR.from);
-                jsonObj.put("to", txR.to);
-                jsonObj.put("logsBloom", txR.logsBloom);
-                jsonObj.put("status", txR.successful ? "0x1" : "0x0");
+        case eth_sendRawTransaction:
+            return processResult(_id, api.eth_sendRawTransaction(params.get(0) + ""));
 
-                JSONArray logArray = new JSONArray();
-                for (int i = 0; i < txR.logs.length; i++) {
-                    JSONObject obj = new JSONObject();
-                    obj.put("address", txR.logs[i].address);
-                    obj.put("data", txR.logs[i].data);
-                    obj.put("blockNumber", new NumericalValue(txR.blockNumber).toHexString());
-                    obj.put("transactionIndex", new NumericalValue(txR.transactionIndex).toHexString());
-                    obj.put("logIndex", new NumericalValue(i).toHexString());
+        case eth_getTransactionReceipt:
+            return processResult(_id, api.eth_getTransactionReceipt(params.get(0) + ""));
 
-                    String[] topics = txR.logs[i].topics;
-                    JSONArray topicArray = new JSONArray();
-                    for (int j = 0; j < topics.length; j++) {
-                        topicArray.put(j, topics[j]);
-                    }
-                    obj.put("topics", topicArray);
-                    logArray.put(i, obj);
-                }
-                jsonObj.put("logs", logArray);
-            }
-            return processResult(_id, jsonObj);
-        }
-        case eth_getTransactionByHash: {
-            Tx transaction = api.eth_getTransactionByHash((String) params.get(0));
-            JSONObject obj = new JSONObject();
+        case eth_getTransactionByHash:
+            return processResult(_id, api.eth_getTransactionByHash(params.get(0) + ""));
 
-            if (transaction != null) {
-                obj.put("hash", transaction.transactionHash);
-                obj.put("nonce", transaction.nonce.toHexString());
-                obj.put("blockHash", transaction.blockHash);
-                obj.put("blockNumber", transaction.blockNumber.toHexString());
-                obj.put("transactionIndex", transaction.transactionIndex.toHexString());
-                obj.put("from", transaction.from);
-                obj.put("to", transaction.to);
-                obj.put("value", transaction.value.toHexString());
-                obj.put("gas", transaction.gas.toHexString());
-                obj.put("gasPrice", transaction.gasPrice.toHexString());
-                obj.put("nrg", transaction.gas.toHexString());
-                obj.put("nrgPrice", transaction.gasPrice.toHexString());
-                obj.put("input", transaction.input);
-            }
-            return processResult(_id, obj);
-        }
-        case eth_getTransactionCount: {
-            String addr = (String) params.get(0);
-            String requestedState = (String) params.get(1);
+        case eth_getTransactionCount:
+            return processResult(_id, api.eth_getTransactionCount(params.get(0) + "", params.opt(1) + ""));
 
-            NumericalValue reqNumber = requestedState == null || requestedState.equals("latest") ? null
-                    : new NumericalValue(requestedState);
-            NumericalValue nonce = api.eth_getTransactionCount(new Address(addr), reqNumber);
-            return processResult(_id, nonce.toHexString());
-        }
-        case eth_getCode: {
+        case eth_getCode:
             return processResult(_id, api.eth_getCode(params.get(0) + ""));
+
+        case eth_protocolVersion:
+            return processResult(_id, api.p2pProtocolVersion());
+
+        case eth_mining:
+            return processResult(_id, api.isMining());
+
+        case eth_hashrate:
+            return processResult(_id, api.getHashrate());
+
+        case eth_submitHashrate: {
+            String hashrate = params.get(0) + "";
+            String clientId = params.get(1) + "";
+
+            return processResult(_id, api.setReportedHashrate(hashrate, clientId));
         }
+        case eth_gasPrice:
+            return processResult(_id, TypeConverter.toJsonHex(api.getRecommendedNrgPrice()));
+
+        case eth_sign: {
+            String addressStr = params.get(0) + "";
+            String givenMessage = params.get(1) + "";
+
+            Address address = Address.wrap(addressStr);
+            ECKey key = api.getAccountKey(address.toString());
+            if (key == null)
+                return processResult(_id, null);
+
+            // Message starts with Unicode Character 'END OF MEDIUM' (U+0019)
+            String message = "\u0019Aion Signed Message:\n" + givenMessage.length() + givenMessage;
+            byte[] messageHash = HashUtil.keccak256(message.getBytes());
+
+            String signature = TypeConverter.toJsonHex(key.sign(messageHash).getSignature());
+
+            return processResult(_id, signature);
+        }
+
+        case eth_getTransactionByBlockHashAndIndex:
+            return processResult(_id, api.eth_getTransactionByBlockHashAndIndex(params.get(0) + "", params.get(1) + ""));
+
+        case eth_getTransactionByBlockNumberAndIndex:
+            return processResult(_id, api.eth_getTransactionByBlockNumberAndIndex(params.get(0) + "", params.get(1) + ""));
+
+        case eth_getBlockTransactionCountByHash:
+            return processResult(_id, api.eth_getBlockTransactionCountByHash(params.get(0) + ""));
+
+        case eth_getBlockTransactionCountByNumber:
+            return processResult(_id, api.eth_getBlockTransactionCountByNumber(params.get(0) + ""));
+
         /* -------------------------------------------------------------------------
          * personal
          */
@@ -349,45 +330,45 @@ public final class HttpServer {
         /* -------------------------------------------------------------------------
          * filters
          */
-        case eth_newFilter: {
+        case eth_newFilter:
             return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
-        }
-        case eth_newBlockFilter: {
+
+        case eth_newBlockFilter:
             return processResult(_id, api.eth_newBlockFilter());
-        }
-        case eth_newPendingTransactionFilter: {
+
+        case eth_newPendingTransactionFilter:
             return processResult(_id, api.eth_newPendingTransactionFilter());
-        }
-        case eth_uninstallFilter: {
+
+        case eth_uninstallFilter:
             return processResult(_id, api.eth_uninstallFilter(params.get(0)+""));
-        }
-        case eth_getFilterChanges: {
+
+        case eth_getFilterChanges:
             return processResult(_id, api.eth_getFilterChanges(params.get(0)+""));
-        }
-        case eth_getFilterLogs: {
+
+        case eth_getFilterLogs:
             return processResult(_id, api.eth_getFilterLogs(params.get(0)+""));
-        }
-        case eth_getLogs: {
+
+        case eth_getLogs:
             return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
-        }
+
         /* -------------------------------------------------------------------------
          * net
          */
         // TODO: investigate how this endpoint is used by users to improve the quality of response
-        // currently, p2p manager is always listening for peers
-        case net_listening: {
+        // currently, p2p manager is always listening for peers and is active
+        case net_listening:
             return processResult(_id, true);
-        }
-        case net_peerCount: {
+
+        case net_peerCount:
             return processResult(_id, api.peerCount());
-        }
-        case net_version: {
-            return processResult(_id, "0");
-        }
+
+        case net_version:
+            return processResult(_id, api.chainId());
+
         /* -------------------------------------------------------------------------
          * debug
          */
-        case debug_getBlocksByNumber:
+        case debug_getBlocksByNumber: {
             String number = params.get(0) + "";
             boolean fullTransactions = Boolean.parseBoolean(params.get(1) + "");
 
@@ -396,8 +377,8 @@ public final class HttpServer {
                 return processResult(_id, null);
             }
 
-            JSONArray response = api.debug_getBlocksByNumber(number, fullTransactions);
-            return processResult(_id, response);
+            return processResult(_id, api.debug_getBlocksByNumber(number, fullTransactions));
+        }
 
         /* -------------------------------------------------------------------------
          * stratum pool
@@ -653,6 +634,185 @@ public final class HttpServer {
         }
     }
 
+    static class ProcessInbound extends Thread {
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(1);
+
+                    if (selector.selectNow() <= 0)
+                        continue;
+
+                    Set<SelectionKey> sks = selector.selectedKeys();
+                    Iterator<SelectionKey> it = sks.iterator();
+                    while (it.hasNext()) {
+                        SelectionKey sk = it.next();
+                        it.remove();
+                        try {
+                            if (sk.isAcceptable()) {
+                                SocketChannel tcpChannel = tcpServer.accept();
+                                tcpChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                                tcpChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                                tcpChannel.configureBlocking(false);
+                                tcpChannel.register(selector, SelectionKey.OP_READ);
+                            }
+                            if (sk.isReadable()) {
+                                SocketChannel sc = (SocketChannel) sk.channel();
+
+                                // TODO: complete: Content-Length read
+                                ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
+                                while (sc.read(readBuffer) > 0) {
+                                    sc.read(readBuffer);
+                                }
+                                try {
+                                    byte[] readBytes = readBuffer.array();
+                                    if (readBytes.length > 0) {
+
+                                        String msg = new String(readBytes, "UTF-8").trim();
+
+                                        if (msg.startsWith("OPTIONS"))
+                                            handleOptions(sc, msg);
+
+                                        String[] msgFrags = msg.split(CF);
+                                        int docBreaker = 0;
+                                        int len = msgFrags.length;
+
+                                        for (int i = 0; i < len; i++) {
+                                            if (msgFrags[i].isEmpty())
+                                                docBreaker = i;
+                                        }
+                                        if (docBreaker + 2 == len) {
+                                            String requestBody = msgFrags[docBreaker + 1];
+
+                                            // TODO: clear this part, index 1
+                                            char firstChar = requestBody.charAt(0);
+
+                                            if (firstChar == '{') {
+                                                // single call
+                                                JSONObject bodyObj = new JSONObject(requestBody);
+                                                Object methodObj = bodyObj.get("method");
+                                                Object idObj = bodyObj.get("id");
+                                                Object paramsObj = bodyObj.getJSONArray("params");
+
+                                                Method method = null;
+                                                try {
+                                                    if (methodObj != null) {
+                                                        String methodStr = (String) methodObj;
+                                                        method = Method.valueOf(methodStr);
+                                                    } else
+                                                        sc.close();
+                                                } catch (IllegalArgumentException ex) {
+                                                    sc.close();
+                                                }
+
+                                                if (idObj != null && method != null) {
+                                                    JSONObject resJson = process(method,
+                                                            Long.parseLong(idObj.toString()),
+                                                            paramsObj);
+                                                    String responseBody = resJson == null ? ""
+                                                            : resJson.toString();
+                                                    String responseHeader = "HTTP/1.1 200 OK\n"
+                                                            + "Content-Length: "
+                                                            + responseBody.getBytes().length + "\n"
+                                                            + "Content-Type: application/json\n"
+                                                            + "Access-Control-Allow-Origin: *\n\n";
+
+                                                    if (log.isDebugEnabled())
+                                                        log.debug("<response mths=[{}] result={}>",
+                                                                method.toString(), responseBody);
+
+                                                    String response = responseHeader + responseBody;
+                                                    ByteBuffer resultBuffer = ByteBuffer
+                                                            .wrap((response).getBytes(CHARSET));
+                                                    while (resultBuffer.hasRemaining()) {
+                                                        try {
+                                                            sc.write(resultBuffer);
+                                                        } catch (IOException e) {
+                                                            break;
+                                                        }
+                                                    }
+                                                    sc.close();
+                                                } else
+                                                    sc.close();
+                                            } else if (firstChar == '[') {
+
+                                                // batch calls
+                                                JSONArray requestBodies = new JSONArray(
+                                                        requestBody);
+                                                JSONArray responseBodies = new JSONArray();
+                                                List<String> methodStrs = new ArrayList<>();
+                                                for (int i = 0, m = requestBodies
+                                                        .length(); i < m; i++) {
+                                                    JSONObject bodyObj = requestBodies
+                                                            .getJSONObject(i);
+                                                    Object methodObj = bodyObj.get("method");
+                                                    Object idObj = bodyObj.get("id");
+                                                    Object paramsObj = bodyObj
+                                                            .getJSONArray("params");
+
+                                                    Method method = null;
+                                                    try {
+                                                        if (methodObj != null) {
+                                                            String methodStr = (String) methodObj;
+                                                            method = Method.valueOf(methodStr);
+                                                            methodStrs.add(methodStr);
+                                                        } else
+                                                            sc.close();
+                                                    } catch (IllegalArgumentException ex) {
+                                                        sc.close();
+                                                    }
+                                                    if (idObj != null && method != null)
+                                                        responseBodies.put(process(method,
+                                                                Long.parseLong(idObj.toString()),
+                                                                paramsObj));
+                                                }
+                                                String responseBody = responseBodies.toString();
+
+                                                if (log.isDebugEnabled())
+                                                    log.debug("<response mths=[{}] result={}>",
+                                                            String.join(",", methodStrs),
+                                                            responseBody);
+                                                String responseHeader = "HTTP/1.1 200 OK\n"
+                                                        + "Content-Length: "
+                                                        + responseBody.getBytes().length + "\n"
+                                                        + "Content-Type: application/json\n"
+                                                        + "Access-Control-Allow-Origin: *\n";
+                                                ByteBuffer resultBuffer = ByteBuffer
+                                                        .wrap((responseHeader + "\n" + responseBody)
+                                                                .getBytes(CHARSET));
+                                                while (resultBuffer.hasRemaining()) {
+                                                    try {
+                                                        sc.write(resultBuffer);
+                                                    } catch (IOException e) {
+                                                        sc.close();
+                                                        break;
+                                                    }
+                                                }
+                                            } else
+                                                sc.close();
+                                        }
+                                    } else
+                                        sc.close();
+                                } catch (Exception ex) {
+                                    sc.close();
+                                }
+                            }
+                        } catch (CancelledKeyException | IOException ex) {
+                            ex.printStackTrace();
+                            sk.channel().close();
+                            sk.cancel();
+                        }
+                    }
+                } catch (IOException | InterruptedException e1) {
+                    if (log.isDebugEnabled())
+                        log.debug("<rpc-io-exception>");
+                }
+            }
+        }
+    }
+
+    private static ServerSocketChannel tcpServer;
+
     public static void start(final IP2pMgr _p2pMgr) {
         p2pMgr = _p2pMgr;
 
@@ -669,7 +829,7 @@ public final class HttpServer {
                         int port = cfg.getRpc().getPort();
 
                         InetSocketAddress address = new InetSocketAddress(ip, port);
-                        ServerSocketChannel tcpServer = ServerSocketChannel.open();
+                        tcpServer = ServerSocketChannel.open();
                         tcpServer.configureBlocking(false);
                         tcpServer.socket().setReuseAddress(true);
                         tcpServer.socket().bind(address);
@@ -678,198 +838,9 @@ public final class HttpServer {
                         if (log.isDebugEnabled())
                             log.debug("<rpc action=start bind={}:{}>", ip, port);
 
-                        Thread processInbound = new Thread(() -> {
-                            // while (start.get()) {
-                            while (!Thread.currentThread().isInterrupted()) {
-                                try {
-                                    if (selector.selectNow() > 0) {
-                                        Set<SelectionKey> sks = selector.selectedKeys();
-                                        Iterator<SelectionKey> it = sks.iterator();
-                                        while (it.hasNext()) {
-                                            SelectionKey sk = it.next();
-                                            it.remove();
-                                            try {
-                                                if (sk.isAcceptable()) {
-                                                    SocketChannel tcpChannel = tcpServer.accept();
-                                                    tcpChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                                                    tcpChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                                                    tcpChannel.configureBlocking(false);
-                                                    tcpChannel.register(selector, SelectionKey.OP_READ);
-                                                }
-                                                if (sk.isReadable()) {
-                                                    SocketChannel sc = (SocketChannel) sk.channel();
-
-                                                    /*
-                                                     * TODO: complete
-                                                     * Content-Length read
-                                                     */
-                                                    ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
-                                                    while (sc.read(readBuffer) > 0) {
-                                                        sc.read(readBuffer);
-                                                    }
-                                                    try {
-                                                        byte[] readBytes = readBuffer.array();
-                                                        if (readBytes.length > 0) {
-
-                                                            String msg = new String(readBytes, "UTF-8").trim();
-
-                                                            if (msg.startsWith("OPTIONS"))
-                                                                handleOptions(sc, msg);
-
-                                                            String[] msgFrags = msg.split(CF);
-                                                            int docBreaker = 0;
-                                                            int len = msgFrags.length;
-
-                                                            for (int i = 0; i < len; i++) {
-                                                                if (msgFrags[i].isEmpty())
-                                                                    docBreaker = i;
-                                                            }
-                                                            if (docBreaker + 2 == len) {
-                                                                String requestBody = msgFrags[docBreaker + 1];
-                                                                /*
-                                                                 * TODO: clear
-                                                                 * this part
-                                                                 * index 1
-                                                                 */
-                                                                char firstChar = requestBody.charAt(0);
-
-                                                                if (firstChar == '{') {
-                                                                    /*
-                                                                     * single
-                                                                     * call
-                                                                     */
-                                                                    JSONObject bodyObj = new JSONObject(requestBody);
-                                                                    Object methodObj = bodyObj.get("method");
-                                                                    Object idObj = bodyObj.get("id");
-                                                                    Object paramsObj = bodyObj.getJSONArray("params");
-
-                                                                    Method method = null;
-                                                                    try {
-                                                                        if (methodObj != null) {
-                                                                            String methodStr = (String) methodObj;
-                                                                            method = Method.valueOf(methodStr);
-                                                                        } else
-                                                                            sc.close();
-                                                                    } catch (IllegalArgumentException ex) {
-                                                                        sc.close();
-                                                                    }
-
-                                                                    if (idObj != null && method != null) {
-                                                                        long id = Long.parseLong(idObj.toString());
-                                                                        JSONObject resJson = null;
-                                                                        try {
-                                                                            resJson = process(method, id, paramsObj);
-                                                                        }
-                                                                        catch (Exception e) {
-                                                                            log.debug(method.name() + " threw exception", e);
-                                                                            resJson = processResult(id, null);
-                                                                        }
-                                                                        String responseBody = resJson == null ? ""
-                                                                                : resJson.toString();
-                                                                        String responseHeader = "HTTP/1.1 200 OK\n"
-                                                                                + "Content-Length: "
-                                                                                + responseBody.getBytes().length + "\n"
-                                                                                + "Content-Type: application/json\n"
-                                                                                + "Access-Control-Allow-Origin: *\n\n";
-
-                                                                        if (log.isDebugEnabled())
-                                                                            log.debug("<response mths=[{}] result={}>",
-                                                                                    method.toString(), responseBody);
-
-                                                                        String response = responseHeader + responseBody;
-                                                                        ByteBuffer resultBuffer = ByteBuffer
-                                                                                .wrap((response).getBytes(CHARSET));
-                                                                        while (resultBuffer.hasRemaining()) {
-                                                                            try {
-                                                                                sc.write(resultBuffer);
-                                                                            } catch (IOException e) {
-                                                                                break;
-                                                                            }
-                                                                        }
-                                                                        sc.close();
-                                                                    } else
-                                                                        sc.close();
-                                                                } else if (firstChar == '[') {
-                                                                    /*
-                                                                     * batch
-                                                                     * calls
-                                                                     */
-                                                                    JSONArray requestBodies = new JSONArray(
-                                                                            requestBody);
-                                                                    JSONArray responseBodies = new JSONArray();
-                                                                    List<String> methodStrs = new ArrayList<>();
-                                                                    for (int i = 0, m = requestBodies
-                                                                            .length(); i < m; i++) {
-                                                                        JSONObject bodyObj = requestBodies
-                                                                                .getJSONObject(i);
-                                                                        Object methodObj = bodyObj.get("method");
-                                                                        Object idObj = bodyObj.get("id");
-                                                                        Object paramsObj = bodyObj
-                                                                                .getJSONArray("params");
-
-                                                                        Method method = null;
-                                                                        try {
-                                                                            if (methodObj != null) {
-                                                                                String methodStr = (String) methodObj;
-                                                                                method = Method.valueOf(methodStr);
-                                                                                methodStrs.add(methodStr);
-                                                                            } else
-                                                                                sc.close();
-                                                                        } catch (IllegalArgumentException ex) {
-                                                                            sc.close();
-                                                                        }
-                                                                        if (idObj != null && method != null)
-                                                                            responseBodies.put(process(method,
-                                                                                    Long.parseLong(idObj.toString()),
-                                                                                    paramsObj));
-                                                                    }
-                                                                    String responseBody = responseBodies.toString();
-
-                                                                    if (log.isDebugEnabled())
-                                                                        log.debug("<response mths=[{}] result={}>",
-                                                                                String.join(",", methodStrs),
-                                                                                responseBody);
-                                                                    String responseHeader = "HTTP/1.1 200 OK\n"
-                                                                            + "Content-Length: "
-                                                                            + responseBody.getBytes().length + "\n"
-                                                                            + "Content-Type: application/json\n"
-                                                                            + "Access-Control-Allow-Origin: *\n";
-                                                                    ByteBuffer resultBuffer = ByteBuffer
-                                                                            .wrap((responseHeader + "\n" + responseBody)
-                                                                                    .getBytes(CHARSET));
-                                                                    while (resultBuffer.hasRemaining()) {
-                                                                        try {
-                                                                            sc.write(resultBuffer);
-                                                                        } catch (IOException e) {
-                                                                            sc.close();
-                                                                            break;
-                                                                        }
-                                                                    }
-                                                                } else
-                                                                    sc.close();
-                                                            }
-                                                        } else
-                                                            sc.close();
-                                                    } catch (Exception ex) {
-                                                        sc.close();
-                                                    }
-                                                }
-                                            } catch (CancelledKeyException | IOException ex) {
-                                                ex.printStackTrace();
-                                                sk.channel().close();
-                                                sk.cancel();
-                                            }
-                                        }
-                                    }
-                                    Thread.sleep(1);
-                                } catch (IOException | InterruptedException e1) {
-                                    if (log.isDebugEnabled())
-                                        log.debug("<rpc-io-exception>");
-                                }
-                            }
-                        });
-                        processInbound.setName("rpc-server");
-                        processInbound.start();
+                        ProcessInbound process = new ProcessInbound();
+                        process.setName("rpc-server");
+                        process.start();
                     }
 
                 } catch (IOException ex) {

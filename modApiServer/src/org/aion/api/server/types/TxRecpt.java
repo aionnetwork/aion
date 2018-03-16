@@ -36,6 +36,8 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * 
@@ -130,5 +132,44 @@ public final class TxRecpt {
 
         this.logsBloom = txInfo.getReceipt().getBloomFilter().toString();
         this.successful = txInfo.getReceipt().isSuccessful();
+    }
+
+    public JSONObject toJson() {
+        JSONObject obj = new JSONObject();
+
+        obj.put("transactionHash", transactionHash);
+        obj.put("transactionIndex", new NumericalValue(transactionIndex).toHexString());
+        obj.put("blockHash", blockHash);
+        obj.put("blockNumber", new NumericalValue(blockNumber).toHexString());
+        obj.put("cumulativeGasUsed", new NumericalValue(cumulativeNrgUsed).toHexString());
+        obj.put("cumulativeNrgUsed", new NumericalValue(cumulativeNrgUsed).toHexString());
+        obj.put("gasUsed", new NumericalValue(nrgUsed).toHexString());
+        obj.put("nrgUsed", new NumericalValue(nrgUsed).toHexString());
+        obj.put("contractAddress", contractAddress);
+        obj.put("from", from);
+        obj.put("to", to);
+        obj.put("logsBloom", logsBloom);
+        obj.put("status", successful ? "0x1" : "0x0");
+
+        JSONArray logArray = new JSONArray();
+        for (int i = 0; i < logs.length; i++) {
+            JSONObject log = new JSONObject();
+            log.put("address", logs[i].address);
+            log.put("data", logs[i].data);
+            log.put("blockNumber", new NumericalValue(blockNumber).toHexString());
+            log.put("transactionIndex", new NumericalValue(transactionIndex).toHexString());
+            log.put("logIndex", new NumericalValue(i).toHexString());
+
+            String[] topics = logs[i].topics;
+            JSONArray topicArray = new JSONArray();
+            for (int j = 0; j < topics.length; j++) {
+                topicArray.put(j, topics[j]);
+            }
+            log.put("topics", topicArray);
+            logArray.put(i, log);
+        }
+        obj.put("logs", logArray);
+
+        return obj;
     }
 }
