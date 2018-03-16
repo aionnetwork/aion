@@ -32,6 +32,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -261,6 +262,11 @@ public class AionPendingStateImpl
 
             IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
             this.evtMgr.newEvent(evtChange);
+        }
+
+        // Broadcast new pending transactions
+        for (AionTransaction tx : newPending) {
+            AionImpl.inst().broadcastTransaction(tx);
         }
 
         return newPending;

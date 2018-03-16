@@ -127,7 +127,7 @@ public class AionImpl implements IAionChain {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Future<List<AionTransaction>> submitTransaction(AionTransaction transaction) {
+    public Future<List<AionTransaction>> broadcastTransaction(AionTransaction transaction) {
         A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
 
         final Future<List<AionTransaction>> listFuture = TxExecutor.getInstance().submitTransaction(txTask);

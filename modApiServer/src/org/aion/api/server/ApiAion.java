@@ -478,9 +478,10 @@ public abstract class ApiAion extends Api {
 
         try {
             AionTransaction tx = new AionTransaction(signedTx);
-            Future<List<AionTransaction>> ftx = this.ac.submitTransaction(tx);
-            List<AionTransaction> parsedTx = ftx.get(10, TimeUnit.SECONDS);
-            return parsedTx.get(0).getHash();
+
+            pendingState.addPendingTransaction(tx);
+
+            return tx.getHash();
         } catch (Exception ex) {
             return ByteUtil.EMPTY_BYTE_ARRAY;
         }
