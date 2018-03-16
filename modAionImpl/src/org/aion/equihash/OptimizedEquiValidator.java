@@ -144,6 +144,11 @@ public class OptimizedEquiValidator {
         for(int i = 0; i < indicesHashLength; i++)
             hash[i] = (byte)(hashes[index][i] ^ hashes[index1][i]);
 
+
+        for(int i = 0; i < indicesHashLength; i++){
+            System.out.println(toHexString(hash));
+        }
+
         int bits = (round < k ? round * collisionBitLength : n);
 
         for(int i = 0; i < bits/8; i++) {
