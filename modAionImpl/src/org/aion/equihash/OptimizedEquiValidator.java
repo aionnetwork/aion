@@ -61,8 +61,7 @@ public class OptimizedEquiValidator {
         this.solutionWidth = (1 << k) * (collisionBitLength + 1) / 8;
         this.initState = this.InitialiseState();
         this.hashes = new byte[solutionWidth][indicesHashLength];
-        hashes = new byte[solutionWidth][indicesHashLength];
-        indexSet = new HashSet<>();
+        this.indexSet = new HashSet<>();
     }
 
     /**
