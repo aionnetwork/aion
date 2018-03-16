@@ -170,15 +170,18 @@ public class EquiValidator {
 
                 if (!hasCollision(X[i * 2], X[i * 2 + 1], collisionByteLength)) {
                     LOG.error("Invalid Solution: Collision not present");
+                    System.out.println("No collision");
                     return false;
                 }
 
                 if (EquiUtils.indicesBefore(X[i * 2 + 1], X[i * 2], hashLen, lenIndices)) {
+                    System.out.println("Incorrect order");
                     LOG.error("Invalid Solution: Index tree incorrecly ordered");
                     return false;
                 }
                 if (!distinctIndices(X[i * 2 + 1], X[i * 2], hashLen, lenIndices)) {
                     LOG.error("Invalid solution: duplicate indices");
+                    System.out.println("DUp order");
                     return false;
                 }
 
