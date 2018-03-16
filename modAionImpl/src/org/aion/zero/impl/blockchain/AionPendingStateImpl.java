@@ -231,7 +231,7 @@ public class AionPendingStateImpl
             if (nonce.compareTo(bestNonce(tx.getFrom())) > 0) {
                 addToTxCache(Collections.singletonMap(nonce, tx), tx.getFrom());
 
-                LOG.info("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), nonce);
+                LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), nonce);
             } else {
                 Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
 
@@ -267,7 +267,6 @@ public class AionPendingStateImpl
         for (AionTransaction tx : newPending) {
             AionImpl.inst().broadcastTransaction(tx);
         }
-        LOG.info("Broadcast transactions: # of txs = {}", newPending.size());
 
         return newPending;
     }
