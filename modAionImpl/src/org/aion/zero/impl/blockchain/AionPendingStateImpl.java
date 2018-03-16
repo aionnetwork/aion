@@ -208,11 +208,11 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public List<AionTransaction> getPendingTransactions() {
+    public synchronized List<AionTransaction> getPendingTransactions() {
         return this.txPool.snapshot();
     }
 
-    public AionBlock getBestBlock() {
+    public synchronized AionBlock getBestBlock() {
         if (best == null) {
             best = blockchain.getBestBlock();
         }
@@ -436,7 +436,7 @@ public class AionPendingStateImpl
         }
     }
 
-    private void flushCachePendingTx() {
+    private synchronized void flushCachePendingTx() {
         Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
 
         if (LOG.isDebugEnabled()) {
@@ -612,6 +612,11 @@ public class AionPendingStateImpl
         return this.txPool.bestNonceSet(addr);
     }
 
+    @Override
+    public synchronized BigInteger bestPoolNonce(Address addr) {
+        return this.txPool.bestNonce(addr);
+    }
+
     /**
      * get txpool version
      *
@@ -627,6 +632,8 @@ public class AionPendingStateImpl
     public synchronized BigInteger bestNonce(Address addr) {
         return nonceMgr.getNonce(addr);
     }
+
+
 
     @Override
     public List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {

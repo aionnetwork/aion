@@ -23,6 +23,7 @@
  ******************************************************************************/
 package org.aion.equihash;
 
+import static org.aion.base.util.ByteUtil.bytesToInts;
 import static org.aion.base.util.ByteUtil.intsToBytes;
 
 /**
@@ -216,5 +217,28 @@ public class EquiUtils {
         compressArray(arr, ret, cBitLen + 1, bytePad);
 
         return ret;
+    }
+
+    /**
+     * Get indices of solutions from minimized array format.
+     *
+     * @param minimal
+     *            Byte array in minimal format
+     * @param cBitLen
+     *            Number of bits in a collision
+     * @return An array containing solution indices.
+     */
+    public static int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) throws NullPointerException {
+        if (minimal == null) {
+            throw new NullPointerException("null minimal bytes");
+        }
+
+        int lenIndices = 8 * Integer.BYTES * minimal.length / (cBitLen + 1);
+        int bytePad = Integer.BYTES - ((cBitLen + 1) + 7) / 8;
+
+        byte[] arr = new byte[lenIndices];
+        EquiUtils.extendArray(minimal, arr, cBitLen + 1, bytePad);
+
+        return bytesToInts(arr, true);
     }
 }

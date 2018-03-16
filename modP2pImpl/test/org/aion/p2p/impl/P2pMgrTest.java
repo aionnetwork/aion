@@ -133,7 +133,7 @@ public class P2pMgrTest {
 //                false
 //        );
 //        connector.run();
-//        Thread.sleep(5000);
+//        Thread.sleep(10000);
 //        assertEquals(1, receiver.getActiveNodes().size());
 //        assertEquals(1, connector.getActiveNodes().size());
 //
