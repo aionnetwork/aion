@@ -45,35 +45,38 @@ final class TaskGetHeaders implements Runnable {
 
     private final IP2pMgr p2p;
 
-    private final AtomicReference<NetworkStatus> networkStatus;
+    private final int syncMax;
 
-    private final AtomicLong jump;
+    private final long jump;
 
-    private final int syncForwardMax;
+    private final BigInteger selfTd;
 
-    TaskGetHeaders(final IP2pMgr _p2p, final AtomicReference<NetworkStatus> _networkStatus, final AtomicLong _jump, int _syncForwardMax){
+    TaskGetHeaders(final IP2pMgr _p2p, int _syncMax, long _jump, BigInteger _selfTd){
         this.p2p = _p2p;
-        this.networkStatus = _networkStatus;
+        this.syncMax = _syncMax;
         this.jump = _jump;
-        this.syncForwardMax = _syncForwardMax;
+        this.selfTd = _selfTd;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
         Set<Integer> ids = new HashSet<>();
         Collection<INode> preFilter = this.p2p.getActiveNodes().values();
+
         List<INode> filtered = preFilter.stream().filter(
-                (n) -> this.networkStatus.get().totalDiff != null &&
-                        n.getTotalDifficulty() != null &&
-                        (new BigInteger(1, n.getTotalDifficulty())).compareTo(this.networkStatus.get().totalDiff) >= 0).collect(Collectors.toList());
+                (n) -> n.getTotalDifficulty() != null &&
+                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
+        ).collect(Collectors.toList());
+
         Random r = new Random(System.currentTimeMillis());
         for (int i = 0; i < 2; i++) {
             if (filtered.size() > 0) {
                 INode node = filtered.get(r.nextInt(filtered.size()));
                 if (!ids.contains(node.getIdHash())) {
                     ids.add(node.getIdHash());
-                    this.p2p.send(node.getIdHash(), new ReqBlocksHeaders(jump.get(), this.syncForwardMax));
+                    this.p2p.send(node.getIdHash(), new ReqBlocksHeaders(jump, this.syncMax));
                 }
             }
         }

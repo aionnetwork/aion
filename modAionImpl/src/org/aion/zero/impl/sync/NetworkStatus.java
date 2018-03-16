@@ -36,14 +36,49 @@ import java.math.BigInteger;
  * @author chris
  * used by sync mgr display logging
  */
-class NetworkStatus {
+final class NetworkStatus {
 
-    // network best block number from self node perspective
-    long blockNumber = 0L;
+    private String targetDisplayId;
 
-    // network best block hash from self node perspective
-    byte[] blockHash = new byte[0];
+    private BigInteger targetTotalDiff;
 
-    BigInteger totalDiff = BigInteger.ZERO;
+    private long targetBestBlockNumber;
+
+    private String targetBestBlockHash;
+
+    NetworkStatus(){
+        this.targetDisplayId = "";
+        this.targetTotalDiff = BigInteger.ZERO;
+        this.targetBestBlockNumber = 0;
+        this.targetBestBlockHash = "";
+    }
+
+    synchronized void update(
+        String _targetDisplayId,
+        BigInteger _targetTotalDiff,
+        long _targetBestBlockNumber,
+        String _targetBestBlockHash
+    ){
+        this.targetDisplayId = _targetDisplayId;
+        this.targetTotalDiff = _targetTotalDiff;
+        this.targetBestBlockNumber = _targetBestBlockNumber;
+        this.targetBestBlockHash = _targetBestBlockHash;
+    }
+
+    String getTargetDisplayId(){
+        return this.targetDisplayId;
+    }
+
+    BigInteger getTargetTotalDiff(){
+        return this.targetTotalDiff;
+    }
+
+    long getTargetBestBlockNumber(){
+        return this.targetBestBlockNumber;
+    }
+
+    String getTargetBestBlockHash(){
+        return this.targetBestBlockHash;
+    }
 
 }
