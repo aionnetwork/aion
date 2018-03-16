@@ -237,7 +237,7 @@ public class TxnPoolTest {
     }
 
     @Test
-
+    @Ignore
     public void snapshot3() {
         Properties config = new Properties();
         config.put("txn-timeout", "100");
