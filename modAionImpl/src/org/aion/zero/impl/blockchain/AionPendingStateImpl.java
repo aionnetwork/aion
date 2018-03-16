@@ -415,7 +415,8 @@ public class AionPendingStateImpl
         return b1;
     }
 
-    private void flushCachePendingTx() {
+    @Override
+    public synchronized void flushCachePendingTx() {
         Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
 
         if (LOG.isDebugEnabled()) {
