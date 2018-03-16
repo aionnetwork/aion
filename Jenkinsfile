@@ -39,7 +39,7 @@ pipeline {
     	stage('Test') {
 		steps {
     			timeout(60){
-    				sh "${env.ANT_HOME} test"
+    				sh "${env.ANT_HOME} ci_build"
     			}
     		}
     		post {

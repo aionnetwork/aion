@@ -68,15 +68,30 @@
 	</path>
 
 	<target name="test_modules">
-		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="test" />
+		 
 		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modRlp/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modDbImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAion/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
+	</target>
+
+	<target name="ci_test_modules">
+		 
+		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modRlp/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modDbImpl/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAion/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 	</target>
 
@@ -131,6 +146,8 @@
 
 	<target name="test" depends="clean, build, test_modules_collect_reports" />
 
+	<target name="ci_build" depends="clean, build, ci_test_modules_collect_reports" />
+
 	<macrodef name="macro_collect_reports">
 		<attribute name="src" />
 		<attribute name="dest" />
@@ -142,6 +159,18 @@
 	</macrodef>
 
 	<target name="test_modules_collect_reports" depends="test_modules">
+		<mkdir dir="${test.report.dir}" />
+		<macro_collect_reports src="modAionBase/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modCrypto/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modP2pImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modTxPoolImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modRlp/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modDbImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
+	</target>
+
+	<target name="ci_test_modules_collect_reports" depends="ci_test_modules">
 		<mkdir dir="${test.report.dir}" />
 		<macro_collect_reports src="modAionBase/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modCrypto/report" dest="${test.report.dir}" />

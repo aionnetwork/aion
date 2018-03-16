@@ -105,6 +105,15 @@
 		</javac>
 	</target>
 
+	<target name="ci_test-compile" depends="build">
+		<mkdir dir="${test.build.dir}" />
+		<javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="${test.src.dir}" destdir="${test.build.dir}" includes="**/*Test.java">
+			<classpath>
+				<path refid="classpath.test" />
+			</classpath>
+		</javac>
+	</target>
+
 	<target name="test" depends="test-compile">
 		<mkdir dir="${test.report.dir}" />
 		<mkdir dir="${native.dir}" />
@@ -126,4 +135,28 @@
 			</batchtest>
 		</junit>
 	</target>
+
+	<target name="ci_build" depends="ci_test-compile">
+		<mkdir dir="${test.report.dir}" />
+		<mkdir dir="${native.dir}" />
+		<copy todir="${native.dir}">
+			<fileset dir="${native.src.dir}" />
+		</copy>
+		<junit printsummary="yes" haltonfailure="no" fork="true">
+
+			<classpath>
+				<path refid="classpath.dependency" />
+				<path refid="classpath.test" />
+				<pathelement location="${test.build.dir}" />
+			</classpath>
+
+			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
+			<batchtest todir="${test.report.dir}">
+				<fileset dir="${test.src.dir}" includes="**/*Test.java" />
+			</batchtest>
+		</junit>
+	</target>
+
+
 </project>
