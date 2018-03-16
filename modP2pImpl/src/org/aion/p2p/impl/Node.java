@@ -84,7 +84,7 @@ public final class Node implements INode {
 
     private byte[] bestBlockHash;
 
-    private BigInteger totalDifficulty;
+    private BigInteger totalDifficulty = BigInteger.ZERO;
 
     private String binaryVersion = "";
 
@@ -355,7 +355,7 @@ public final class Node implements INode {
     public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
         this.bestBlockNumber = _bestBlockNumber;
         this.bestBlockHash = _bestBlockHash;
-        this.totalDifficulty = _totalDifficulty;
+        this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
     }
 
     void copyNodeStatus(Node _n) {

@@ -90,8 +90,8 @@ public class NodeMgr implements INodeMgr {
     void dumpNodeInfo(String selfShortId) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
-        sb.append(String.format("   ================================================================== p2p-status-%6s ==================================================================\n", selfShortId));
-        sb.append(String.format("   temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                            s - seed node, td - total difficulty, # - block number, bv - binary version\n",
+        sb.append(String.format("================================================================== p2p-status-%6s ==================================================================\n", selfShortId));
+        sb.append(String.format("temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                            s - seed node, td - total difficulty, # - block number, bv - binary version\n",
             tempNodesSize(),
             inboundNodes.size(),
             outboundNodes.size(),
@@ -99,7 +99,7 @@ public class NodeMgr implements INodeMgr {
         ));
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if(sorted.size() > 0){
-            sb.append("\n             s"); // id & seed
+            sb.append("\n          s"); // id & seed
             sb.append("               td");
             sb.append("          #");
             sb.append("                                                             hash");
@@ -118,19 +118,23 @@ public class NodeMgr implements INodeMgr {
                     return tdCompare;
             });
             for (Node n : sorted) {
-                sb.append(
-                    String.format("   id:%6s %c %16s %10d %64s %15s %5d %8s %15s\n",
-                        n.getIdShort(),
-                        n.getIfFromBootList() ? 'y' : ' ',
-                        n.getTotalDifficulty().toString(10),
-                        n.getBestBlockNumber(),
-                        n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
-                        n.getIpStr(),
-                        n.getPort(),
-                        n.getConnection(),
-                        n.getBinaryVersion()
-                    )
-                );
+                try{
+                    sb.append(
+                        String.format("id:%6s %c %16s %10d %64s %15s %5d %8s %15s\n",
+                            n.getIdShort(),
+                            n.getIfFromBootList() ? 'y' : ' ',
+                            n.getTotalDifficulty().toString(10),
+                            n.getBestBlockNumber(),
+                            n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
+                            n.getIpStr(),
+                            n.getPort(),
+                            n.getConnection(),
+                            n.getBinaryVersion()
+                        )
+                    );
+                } catch(Exception ex){
+                    ex.printStackTrace();
+                }
             }
         }
         sb.append("\n");

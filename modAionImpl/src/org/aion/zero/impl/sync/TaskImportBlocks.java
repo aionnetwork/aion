@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author chris
  * handle process of importing blocks to repo
- * long run
+ * TODO: targeted send
  */
 final class TaskImportBlocks implements Runnable {
 
@@ -90,7 +90,7 @@ final class TaskImportBlocks implements Runnable {
             }
 
             boolean fetchAheadTriggerUsed = false;
-            boolean shouldBreak = false;
+            boolean shouldBreakFor = false;
             for (AionBlock b : batch) {
                 ImportResult importResult = this.chain.tryToConnect(b);
                 switch (importResult) {
@@ -122,13 +122,14 @@ final class TaskImportBlocks implements Runnable {
                         }
                         break;
                     case NO_PARENT:
+                        long oldJump = jump.get();
+                        long newJump = Math.max(1, oldJump - sync.syncForwardMax);
                         if (log.isDebugEnabled()) {
                             log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
                         }
-                        if(batch.indexOf(b) == 0) {
-                            shouldBreak = true;
-                            jump.set(Math.max(1, jump.get() - 128));
-                        }
+                        System.out.println("<sync-jump " + oldJump + "->" + newJump + ">");
+                        jump.set(newJump);
+                        shouldBreakFor = true;
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
@@ -142,7 +143,7 @@ final class TaskImportBlocks implements Runnable {
                         }
                         break;
                 }
-                if(shouldBreak)
+                if(shouldBreakFor)
                     break;
             }
             this.statis.update(this.chain.getBestBlock().getNumber());

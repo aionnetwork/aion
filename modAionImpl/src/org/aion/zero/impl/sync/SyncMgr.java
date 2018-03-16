@@ -35,8 +35,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.aion.base.util.Hex;
 import org.slf4j.Logger;
 import org.aion.evtmgr.IEvent;
@@ -63,7 +61,7 @@ public final class SyncMgr {
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     // default how many blocks forward to sync based on current block number
-    private int syncForwardMax = 192;
+    int syncForwardMax = 192;
 
     private int blocksQueueMax = 2000;
 
@@ -80,7 +78,7 @@ public final class SyncMgr {
     // reset to 0 as any block import result as no parent (side chain)
     private AtomicLong jump;
 
-    private NetworkStatus networkStatus = new NetworkStatus();
+    private final NetworkStatus networkStatus = new NetworkStatus();
 
     // store headers that has been sent to fetch block bodies
     private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
@@ -123,15 +121,13 @@ public final class SyncMgr {
         BigInteger selfTd = this.chain.getTotalDifficulty();
 
         // trigger send headers routine immediately
-        if(_remoteTotalDiff.compareTo(selfTd) > 0) {
+        if(_remoteTotalDiff.compareTo(selfTd) >= 0) {
             this.getHeaders(selfTd);
 
             // update network best status
             synchronized (this.networkStatus){
-                if(this.networkStatus.getTargetTotalDiff().compareTo(_remoteTotalDiff) > 0){
-
+                if(_remoteTotalDiff.compareTo(this.networkStatus.getTargetTotalDiff()) > 0){
                     String remoteBestBlockHash = Hex.toHexString(_remoteBestBlockHash);
-
                     if (log.isDebugEnabled()) {
                         log.debug(
                             "<network-status-updated on-sync id={}->{} td={}->{} bn={}->{} bh={}->{}>",
@@ -195,6 +191,28 @@ public final class SyncMgr {
     void getHeaders(BigInteger _selfTd){
         workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, jump.get(), _selfTd));
     }
+
+//    void getHeadersTargeted(long targeted){
+//
+//        Set<Integer> ids = new HashSet<>();
+//        Collection<INode> preFilter = this.p2p.getActiveNodes().values();
+//
+//        List<INode> filtered = preFilter.stream().filter(
+//                (n) -> n.getTotalDifficulty() != null &&
+//                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
+//        ).collect(Collectors.toList());
+//
+//        Random r = new Random(System.currentTimeMillis());
+//        for (int i = 0; i < 2; i++) {
+//            if (filtered.size() > 0) {
+//                INode node = filtered.get(r.nextInt(filtered.size()));
+//                if (!ids.contains(node.getIdHash())) {
+//                    ids.add(node.getIdHash());
+//                    this.p2p.send(node.getIdHash(), new ReqBlocksHeaders(jump, this.syncMax));
+//                }
+//            }
+//        }
+//    }
 
     /**
      *
