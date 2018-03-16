@@ -199,7 +199,7 @@ public class PendingTxCache {
     }
 
     public synchronized Set<Address> getCacheTxAccount() {
-        return this.pendingTx.keySet();
+        return new HashSet<>(this.pendingTx.keySet());
     }
 
     public synchronized Map<BigInteger,AionTransaction> geCacheTx(Address from) {
