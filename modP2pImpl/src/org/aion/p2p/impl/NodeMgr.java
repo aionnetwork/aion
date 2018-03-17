@@ -107,7 +107,7 @@ public class NodeMgr implements INodeMgr {
             sb.append("  port");
             sb.append("     conn");
             sb.append("              bv\n");
-            sb.append("   -------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            sb.append("-------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             sorted.sort((n1, n2) -> {
                 int tdCompare = n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
                 if(tdCompare == 0) {

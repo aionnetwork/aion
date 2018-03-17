@@ -46,6 +46,8 @@ final class HeadersWrapper {
 
     private int nodeIdHash;
 
+    private String displayId;
+
     private long timestamp;
 
     private List<A0BlockHeader> headers;
@@ -55,8 +57,9 @@ final class HeadersWrapper {
      * @param _nodeIdHash int
      * @param _headers List
      */
-    HeadersWrapper(int _nodeIdHash, final List<A0BlockHeader> _headers){
+    HeadersWrapper(int _nodeIdHash, String _displayId, final List<A0BlockHeader> _headers){
         this.nodeIdHash = _nodeIdHash;
+        this.displayId = _displayId;
         this.headers = _headers;
         this.timestamp = System.currentTimeMillis();
     }
@@ -67,6 +70,11 @@ final class HeadersWrapper {
     int getNodeIdHash(){
         return this.nodeIdHash;
     }
+
+    /**
+     * @return String - node display id
+     */
+    String getDisplayId() { return this.displayId; }
 
     /**
      * @return long

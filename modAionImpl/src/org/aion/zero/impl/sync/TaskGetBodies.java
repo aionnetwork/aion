@@ -90,8 +90,8 @@ final class TaskGetBodies implements Runnable {
             List<A0BlockHeader> headers = hw.getHeaders();
             synchronized (headersSent) {
                 HeadersWrapper hw1 = headersSent.get(idHash);
-                // already sent, check timeout and add it back if not timeout
-                // yet
+                // already sent, check timeout and add it back if
+                // not timeout yet
                 if (hw1 != null) {
                     // not expired yet
                     if ((System.currentTimeMillis() - hw1.getTimestamp()) < SENT_HEADERS_TIMEOUT)
@@ -102,6 +102,7 @@ final class TaskGetBodies implements Runnable {
                     for (A0BlockHeader h : headers) {
                         headerHashes.add(h.getHash());
                     }
+
                     this.p2p.send(idHash, new ReqBlocksBodies(headerHashes));
                 }
             }

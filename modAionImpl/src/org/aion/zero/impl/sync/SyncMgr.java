@@ -56,7 +56,7 @@ public final class SyncMgr {
     private static final int INTERVAL_SHOW_STATUS = 10000;
 
     // interval - get status from active nodes
-    private static final int INTERVAL_GET_STATUS = 5000;
+    private static final int INTERVAL_GET_STATUS = 3000;
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
@@ -121,12 +121,13 @@ public final class SyncMgr {
         BigInteger selfTd = this.chain.getTotalDifficulty();
 
         // trigger send headers routine immediately
-        if(_remoteTotalDiff.compareTo(selfTd) >= 0) {
+        if(_remoteTotalDiff.compareTo(selfTd) > 0) {
             this.getHeaders(selfTd);
 
             // update network best status
             synchronized (this.networkStatus){
-                if(_remoteTotalDiff.compareTo(this.networkStatus.getTargetTotalDiff()) > 0){
+                BigInteger networkTd = this.networkStatus.getTargetTotalDiff();
+                if(_remoteTotalDiff.compareTo(networkTd) > 0){
                     String remoteBestBlockHash = Hex.toHexString(_remoteBestBlockHash);
                     if (log.isDebugEnabled()) {
                         log.debug(
@@ -173,8 +174,9 @@ public final class SyncMgr {
         this.jump = new AtomicLong( selfBest + 1);
         SyncStatics statics = new SyncStatics(selfBest);
 
-        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
-        new Thread(new TaskImportBlocks(this, this.chain, this.start, this.jump, this.importedBlocks, statics, log), "sync-ib").start();
+        Thread tGetBodies = new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh");
+        tGetBodies.start();
+        Thread tImport = new Thread(new TaskImportBlocks(this, this.chain, this.start, this.jump, this.importedBlocks, statics, log), "sync-ib");
         new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.jump,  this.networkStatus, statics, log), "sync-ss").start();
@@ -224,8 +226,16 @@ public final class SyncMgr {
         if (_headers == null || _headers.isEmpty()) {
             return;
         }
+
+        System.out.println(
+            "incoming-headers " +
+            " from-node=" + _displayId +
+            " from-block=" + _headers.get(0).getNumber() +
+            " to-block=" + _headers.get(_headers.size() - 1).getNumber()
+        );
+
         _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
-        importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _headers));
+        importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, _headers));
         if (log.isDebugEnabled()) {
             log.debug("<incoming-headers size={} from-num={} to-num={} from-node={}>", _headers.size(),
                     _headers.get(0).getNumber(), _headers.get(_headers.size() - 1).getNumber(), _displayId);
@@ -281,7 +291,7 @@ public final class SyncMgr {
         }
     }
 
-    public void shutdown() {
+    public synchronized void shutdown() {
         start.set(false);
         workers.shutdown();
     }
