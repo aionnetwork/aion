@@ -183,7 +183,14 @@ public class PendingTxCache {
             currectSize.set(cz - getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
 
             BigInteger finalBn = bn;
-            accountCache.entrySet().removeIf(e-> (e.getKey().compareTo(finalBn) < 0) );
+            Iterator<Map.Entry<BigInteger, AionTransaction>> itr = accountCache.entrySet().iterator();
+            while (itr.hasNext()) {
+                Map.Entry<BigInteger, AionTransaction> entry = itr.next();
+                if (entry.getKey().compareTo(finalBn) < 0) {
+                    itr.remove();
+                }
+            }
+
             currectSize.addAndGet(getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
 
             if (LOG.isDebugEnabled()) {
