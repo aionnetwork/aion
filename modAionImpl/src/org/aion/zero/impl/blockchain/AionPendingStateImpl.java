@@ -212,13 +212,14 @@ public class AionPendingStateImpl
         List<AionTransaction> newPending = new ArrayList<>();
 
         for (AionTransaction tx : transactions) {
-            BigInteger nonce = new BigInteger(1, tx.getNonce());
+            BigInteger txNonce = new BigInteger(1, tx.getNonce());
+            BigInteger bestNonce = bestNonce(tx.getFrom());
 
-            if (nonce.compareTo(bestNonce(tx.getFrom())) > 0) {
-                addToTxCache(Collections.singletonMap(nonce, tx), tx.getFrom());
+            if (txNonce.compareTo(bestNonce) > 0) {
+                addToTxCache(Collections.singletonMap(txNonce, tx), tx.getFrom());
 
-                LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), nonce);
-            } else {
+                LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+            } else if (txNonce.equals(bestNonce)) {
                 Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
 
                 do {
@@ -229,8 +230,8 @@ public class AionPendingStateImpl
                         }
                     }
 
-                    nonce = nonce.add(BigInteger.ONE);
-                } while (cache != null && (tx = cache.get(nonce)) != null);
+                    txNonce = txNonce.add(BigInteger.ONE);
+                } while (cache != null && (tx = cache.get(txNonce)) != null);
             }
         }
 
