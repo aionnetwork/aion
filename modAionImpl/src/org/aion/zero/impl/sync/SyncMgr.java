@@ -266,12 +266,12 @@ public final class SyncMgr {
         if (m == 0)
             return;
 
-        System.out.println(
-                "incoming-bodies " +
-                " from-node=" + _displayId +
-                " from-block=" + blocks.get(0).getNumber() +
-                " to-block=" + blocks.get(blocks.size() - 1).getNumber()
-        );
+//        System.out.println(
+//                "incoming-bodies " +
+//                " from-node=" + _displayId +
+//                " from-block=" + blocks.get(0).getNumber() +
+//                " to-block=" + blocks.get(blocks.size() - 1).getNumber()
+//        );
 
         // add batch
         importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
