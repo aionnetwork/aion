@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
 
@@ -65,7 +66,7 @@ public class AionPoW {
 
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected long lastUpdate = 0;
+    protected AtomicLong lastUpdate = new AtomicLong(0);
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private static int syncLimit = 128;
@@ -105,8 +106,8 @@ public class AionPoW {
                         Thread.sleep(100);
 
                         long now = System.currentTimeMillis();
-                        if (now - lastUpdate > 3000 && newPendingTxReceived.compareAndSet(true, false)
-                                || now - lastUpdate > 10000) { // fallback, when
+                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
+                                || now - lastUpdate.get() > 10000) { // fallback, when
                                                                // we never
                                                                // received any
                                                                // events
@@ -226,6 +227,12 @@ public class AionPoW {
      */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
+            // TODO: Validate the trustworthiness of getNetworkBestBlock - can
+            // it be used in DDOS?
+            if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber() > syncLimit) {
+                return;
+            }
+
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Creating a new block template");
             }
@@ -236,18 +243,12 @@ public class AionPoW {
 
             AionBlock newBlock = blockchain.createNewBlock(bestBlock, txs, false);
 
-            // TODO: Validate the trustworthiness of getNetworkBestBlock - can
-            // it be used in DDOS?
-            if (this.syncMgr.getNetworkBestBlockNumber() - bestBlock.getNumber() > syncLimit) {
-                return;
-            }
-
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));
             eventMgr.newEvent(ev);
 
             // update last timestamp
-            lastUpdate = System.currentTimeMillis();
+            lastUpdate.set(System.currentTimeMillis());
         }
     }
 
