@@ -25,60 +25,54 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
- *
  */
 
 package org.aion.zero.impl.sync;
 
-import java.math.BigInteger;
+import org.aion.zero.impl.types.AionBlock;
+import java.util.List;
 
 /**
  * @author chris
- * used by sync mgr display logging
+ * used by imported headers on sync mgr
  */
-final class NetworkStatus {
+final class BlocksWrapper {
 
-    private String targetDisplayId;
+    private int nodeIdHash;
 
-    private BigInteger targetTotalDiff;
+    private String displayId;
 
-    private long targetBestBlockNumber;
+    private List<AionBlock> blocks;
 
-    private String targetBestBlockHash;
-
-    NetworkStatus(){
-        this.targetDisplayId = "";
-        this.targetTotalDiff = BigInteger.ZERO;
-        this.targetBestBlockNumber = 0;
-        this.targetBestBlockHash = "";
+    /**
+     *
+     * @param _nodeIdHash int
+     * @param _displayId String
+     * @param _blocks List
+     */
+    BlocksWrapper(int _nodeIdHash, String _displayId, final List<AionBlock> _blocks){
+        this.nodeIdHash = _nodeIdHash;
+        this.displayId = _displayId;
+        this.blocks = _blocks;
     }
 
-    synchronized void update(
-        String _targetDisplayId,
-        BigInteger _targetTotalDiff,
-        long _targetBestBlockNumber,
-        String _targetBestBlockHash
-    ){
-        this.targetDisplayId = _targetDisplayId;
-        this.targetTotalDiff = _targetTotalDiff;
-        this.targetBestBlockNumber = _targetBestBlockNumber;
-        this.targetBestBlockHash = _targetBestBlockHash;
+    /**
+     * @return int - node id hash
+     */
+    int getNodeIdHash(){
+        return this.nodeIdHash;
     }
 
-    String getTargetDisplayId(){
-        return this.targetDisplayId;
-    }
+    /**
+     * @return String - node display id
+     */
+    String getDisplayId() { return this.displayId; }
 
-    BigInteger getTargetTotalDiff(){
-        return this.targetTotalDiff;
-    }
-
-    long getTargetBestBlockNumber(){
-        return this.targetBestBlockNumber;
-    }
-
-    String getTargetBestBlockHash(){
-        return this.targetBestBlockHash;
+    /**
+     * @return List
+     */
+    List<AionBlock> getBlocks(){
+        return this.blocks;
     }
 
 }

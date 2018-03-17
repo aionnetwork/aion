@@ -41,6 +41,8 @@ import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.sync.Act;
 
+import java.math.BigInteger;
+
 /**
  * @author chris
  */
@@ -68,11 +70,14 @@ public final class ResStatusHandler extends Handler {
         this.p2pMgr.getNodeMgr().updateAllNodesInfo(node);
         if (node != null) {
             this.log.debug("<res-status best-block={} from-node={}>", rs.getBestBlockNumber(), _displayId);
-            long nodeBestBlockNumber = rs.getBestBlockNumber();
-            byte[] nodeBestBlockHash = rs.getBestHash();
-            byte[] nodeTotalDifficulty = rs.getTotalDifficulty();
-            node.updateStatus(nodeBestBlockNumber, nodeBestBlockHash, nodeTotalDifficulty);
-            syncMgr.updateNetworkBestBlock(_displayId, nodeBestBlockNumber, rs.getBestHash(), nodeTotalDifficulty);
+            long remoteBestBlockNumber = rs.getBestBlockNumber();
+            byte[] remoteBestBlockHash = rs.getBestHash();
+            byte[] remoteTdBytes = rs.getTotalDifficulty();
+            if(remoteTdBytes != null && remoteBestBlockHash != null){
+                BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
+                node.updateStatus(remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                syncMgr.updateNetworkStatus(_displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+            }
         }
     }
 }
