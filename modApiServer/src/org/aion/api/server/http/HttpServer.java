@@ -125,199 +125,182 @@ public final class HttpServer {
         if (log.isDebugEnabled())
             log.debug("<request mth=[{}] id={} params={}>", _method.name(), _id, _params.toString());
 
-        JSONObject jsonObj;
-
         JSONArray params = (JSONArray) _params;
 
         AionBlock bestBlock;
+        JSONObject jsonObj;
 
-        JSONArray compilers = new JSONArray(new String[] {"solidity"});
+        /* Rationale for pushing all the function implementations (even trivial ones) up to
+         * ApiWeb3Aion is to keep all implementations in one place and separate concerns
+         *
+         * In this case statement, the only things that are enforced are:
+         * 1. Optional vs mandatory fields (get() vs opt())
+         * 2. Any type checking and casting (bool, string, object, etc.) as defined by api spec
+         */
 
-        // TODO All of the eth_* methods need to be renamed to aion standard
         switch (_method) {
+
         /* -------------------------------------------------------------------------
         * web3
         */
         case web3_clientVersion: {
-            return processResult(_id, api.clientVersion());
+            return processResult(_id, api.web3_clientVersion());
         }
         case web3_sha3: {
             String data = params.get(0) + "";
-            if (data == null)
-                return processResult(_id, null);
-
-            return processResult(_id, TypeConverter.toJsonHex(HashUtil.keccak256(data.getBytes())));
+            return processResult(_id, api.web3_sha3(data));
+        }
+        /* -------------------------------------------------------------------------
+         * net
+         */
+        case net_version: {
+            return processResult(_id, api.net_version());
+        }
+        case net_peerCount: {
+            return processResult(_id, api.net_peerCount());
+        }
+        // currently, p2p manager is always listening for peers and is active
+        case net_listening: {
+            return processResult(_id, api.net_listening());
+        }
+        /* -------------------------------------------------------------------------
+         * eth
+         */
+        case eth_protocolVersion: {
+            return processResult(_id, api.eth_protocolVersion());
+        }
+        case eth_syncing: {
+            return processResult(_id, api.eth_syncing());
+        }
+        case eth_coinbase: {
+            return processResult(_id, api.eth_coinbase());
+        }
+        case eth_mining: {
+            return processResult(_id, api.eth_mining());
+        }
+        case eth_hashrate: {
+            return processResult(_id, api.eth_hashrate());
+        }
+        case eth_submitHashrate: {
+            String hashrate = params.get(0) + "";
+            String clientId = params.get(1) + "";
+            return processResult(_id, api.eth_submitHashrate(hashrate, clientId));
+        }
+        case eth_gasPrice: {
+            return processResult(_id, api.eth_gasPrice());
+        }
+        case eth_accounts: {
+            return processResult(_id, api.eth_accounts());
+        }
+        case eth_blockNumber: {
+            return processResult(_id, api.eth_blockNumber());
+        }
+        case eth_getBalance: {
+            String address = params.get(0) + "";
+            Object bnOrId = params.opt(1);
+            return processResult(_id, api.eth_getBalance(address, bnOrId));
+        }
+        case eth_getStorageAt: {
+            String address = params.get(0) + "";
+            String index = params.get(1) + "";
+            Object bnOrId = params.opt(2);
+            return processResult(_id, api.eth_getStorageAt(address, index, bnOrId));
+        }
+        case eth_getTransactionCount: {
+            String address = params.get(0) + "";
+            Object bnOrId = params.opt(1);
+            return processResult(_id, api.eth_getTransactionCount(address, bnOrId));
+        }
+        case eth_getBlockTransactionCountByHash: {
+            String hash = params.get(0) + "";
+            return processResult(_id, api.eth_getBlockTransactionCountByHash(hash));
+        }
+        case eth_getBlockTransactionCountByNumber: {
+            String bnOrId = params.get(0) + "";
+            return processResult(_id, api.eth_getBlockTransactionCountByNumber(bnOrId));
+        }
+        case eth_getCode: {
+            String address = params.get(0) + "";
+            Object bnOrId = params.opt(1);
+            return processResult(_id, api.eth_getCode(address, bnOrId));
+        }
+        case eth_sign: {
+            String address = params.get(0) + "";
+            String message = params.get(1) + "";
+            return processResult(_id, api.eth_sign(address, message));
+        }
+        case eth_sendTransaction: {
+            JSONObject tx = params.getJSONObject(0);
+            return processResult(_id, api.eth_sendTransaction(tx));
+        }
+        case eth_sendRawTransaction: {
+            return processResult(_id, api.eth_sendRawTransaction(params.get(0) + ""));
+        }
+        case eth_call: {
+            JSONObject tx = params.getJSONObject(0);
+            Object bnOrId = params.opt(1);
+            return processResult(_id, api.eth_call(tx, bnOrId));
+        }
+        case eth_estimateGas: {
+            JSONObject tx = params.getJSONObject(0);
+            return processResult(_id, api.eth_estimateGas(tx));
+        }
+        case eth_getBlockByHash: {
+            String hash = params.get(0) + "";
+            boolean fullTx = params.optBoolean(1, false);
+            return processResult(_id, api.eth_getBlockByHash(hash, fullTx));
+        }
+        case eth_getBlockByNumber: {
+            String bnOrId = params.get(0) + "";
+            boolean fullTx = params.optBoolean(1, false);
+            return processResult(_id, api.eth_getBlockByNumber(bnOrId, fullTx));
+        }
+        case eth_getTransactionByHash: {
+            return processResult(_id, api.eth_getTransactionByHash(params.get(0) + ""));
+        }
+        case eth_getTransactionByBlockHashAndIndex: {
+            return processResult(_id, api.eth_getTransactionByBlockHashAndIndex(params.get(0) + "", params.get(1) + ""));
+        }
+        case eth_getTransactionByBlockNumberAndIndex: {
+            return processResult(_id, api.eth_getTransactionByBlockNumberAndIndex(params.get(0) + "", params.get(1) + ""));
+        }
+        case eth_getTransactionReceipt: {
+            return processResult(_id, api.eth_getTransactionReceipt(params.get(0) + ""));
         }
         /* -------------------------------------------------------------------------
          * compiler
          */
         case eth_getCompilers: {
-            return processResult(_id, compilers);
+            return processResult(_id, api.eth_getCompilers());
         }
         case eth_compileSolidity: {
-            @SuppressWarnings("unchecked")
-            Map<String, CompiledContr> compiled = api.contract_compileSolidity(params.get(0) + "");
-            jsonObj = new JSONObject();
-            for (String key : compiled.keySet()) {
-                CompiledContr cc = compiled.get(key);
-                jsonObj.put(key, cc.toJSON());
-            }
-            return processResult(_id, jsonObj);
+            String contract = params.get(0) + "";
+            return processResult(_id, api.eth_compileSolidity(contract));
         }
-
         /* -------------------------------------------------------------------------
-         * eth
+         * filters
          */
-        case eth_accounts: {
-            return processResult(_id, new JSONArray(api.getAccounts()));
+        case eth_newFilter: {
+            return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
         }
-        case eth_blockNumber: {
-            return processResult(_id, api.getBestBlock().getNumber());
+        case eth_newBlockFilter: {
+            return processResult(_id, api.eth_newBlockFilter());
         }
-        case eth_coinbase: {
-            return processResult(_id, api.getCoinbase());
+        case eth_newPendingTransactionFilter: {
+            return processResult(_id, api.eth_newPendingTransactionFilter());
         }
-
-        case eth_getBlockByNumber: {
-            String number = params.get(0) + "";
-            Boolean fullTransactions = params.optBoolean(1, false);
-            if (number == null)
-                return processResult(_id, null);
-
-            return processResult(_id, api.eth_getBlockByNumber(number, fullTransactions));
+        case eth_uninstallFilter: {
+            return processResult(_id, api.eth_uninstallFilter(params.get(0) + ""));
         }
-        case eth_getBlockByHash: {
-            String hashString = params.get(0) + "";
-            Boolean fullTransactions = params.optBoolean(1, false);
-            if (hashString == null)
-                return processResult(_id, null);
-
-            return processResult(_id, api.eth_getBlockByHash(hashString, fullTransactions));
+        case eth_getFilterChanges: {
+            return processResult(_id, api.eth_getFilterChanges(params.get(0) + ""));
         }
-        case eth_getBalance: {
-            String address = params.get(0) + "";
-            return processResult(_id, TypeConverter.toJsonHex(api.getBalance(address)));
+        case eth_getFilterLogs: {
+            return processResult(_id, api.eth_getFilterLogs(params.get(0) + ""));
         }
-        /*
-        // rationale for not supporting this: does not make sense in the context of aion's getWork for minig.
-        // see functions under 'stratum pool' descriptor in IRpc.java for currenly-supported stratum interactions
-        case eth_getWork:
-            // Header without nonce and solution , pool needs add new nonce
-            return processResult(_id, toHexString(HashUtil.h256(api.getBestBlock().getHeader().getHeaderBytes(true))));
-        */
-        case eth_syncing: {
-            SyncInfo syncInfo = api.getSync();
-            if (!syncInfo.done) {
-                JSONObject obj = new JSONObject();
-                // create obj for when syncing is completed
-                obj.put("startingBlock", new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
-                obj.put("currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
-                obj.put("highestBlock", new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
-                obj.put("importMax", new NumericalValue(syncInfo.blksImportMax).toHexString());
-                return processResult(_id, obj);
-            } else {
-                // create obj for when syncing is ongoing
-                return processResult(_id, false);
-            }
+        case eth_getLogs: {
+            return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
         }
-        case eth_call: {
-            JSONObject paramsObj = params.getJSONObject(0);
-            ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj, api.getRecommendedNrgPrice(), api.getDefaultNrgLimit());
-            if (txParams != null) {
-                byte[] res = api.doCall(txParams);
-                return processResult(_id, TypeConverter.toJsonHex(res));
-            }
-            return processResult(_id, null);
-        }
-        case eth_estimateGas: {
-            JSONObject obj = params.getJSONObject(0);
-            ArgTxCall txParams = ArgTxCall.fromJSON(obj, api.getRecommendedNrgPrice(), api.getDefaultNrgLimit());
-            if (txParams != null) {
-                NumericalValue estimatedGas = new NumericalValue(api.estimateGas(txParams));
-                return processResult(_id, estimatedGas.toHexString());
-            }
-            return processResult(_id, null);
-        }
-        case eth_sendTransaction: {
-            JSONObject paramsObj = params.getJSONObject(0);
-            ArgTxCall txParams = ArgTxCall.fromJSON(paramsObj, api.getRecommendedNrgPrice(), api.getDefaultNrgLimit());
-
-            // check for unlocked account
-            Address address = txParams.getFrom();
-            ECKey key = api.getAccountKey(address.toString());
-            // TODO: send json-rpc error code + message
-            if (key == null)
-                return processResult(_id, null);
-
-            if (txParams != null) {
-                byte[] res = api.sendTransaction(txParams);
-                return processResult(_id, TypeConverter.toJsonHex(res));
-            }
-            return processResult(_id, null);
-        }
-        case eth_sendRawTransaction:
-            return processResult(_id, api.eth_sendRawTransaction(params.get(0) + ""));
-
-        case eth_getTransactionReceipt:
-            return processResult(_id, api.eth_getTransactionReceipt(params.get(0) + ""));
-
-        case eth_getTransactionByHash:
-            return processResult(_id, api.eth_getTransactionByHash(params.get(0) + ""));
-
-        case eth_getTransactionCount:
-            return processResult(_id, api.eth_getTransactionCount(params.get(0) + "", params.opt(1) + ""));
-
-        case eth_getCode:
-            return processResult(_id, api.eth_getCode(params.get(0) + ""));
-
-        case eth_protocolVersion:
-            return processResult(_id, api.p2pProtocolVersion());
-
-        case eth_mining:
-            return processResult(_id, api.isMining());
-
-        case eth_hashrate:
-            return processResult(_id, api.getHashrate());
-
-        case eth_submitHashrate: {
-            String hashrate = params.get(0) + "";
-            String clientId = params.get(1) + "";
-
-            return processResult(_id, api.setReportedHashrate(hashrate, clientId));
-        }
-        case eth_gasPrice:
-            return processResult(_id, TypeConverter.toJsonHex(api.getRecommendedNrgPrice()));
-
-        case eth_sign: {
-            String addressStr = params.get(0) + "";
-            String givenMessage = params.get(1) + "";
-
-            Address address = Address.wrap(addressStr);
-            ECKey key = api.getAccountKey(address.toString());
-            if (key == null)
-                return processResult(_id, null);
-
-            // Message starts with Unicode Character 'END OF MEDIUM' (U+0019)
-            String message = "\u0019Aion Signed Message:\n" + givenMessage.length() + givenMessage;
-            byte[] messageHash = HashUtil.keccak256(message.getBytes());
-
-            String signature = TypeConverter.toJsonHex(key.sign(messageHash).getSignature());
-
-            return processResult(_id, signature);
-        }
-
-        case eth_getTransactionByBlockHashAndIndex:
-            return processResult(_id, api.eth_getTransactionByBlockHashAndIndex(params.get(0) + "", params.get(1) + ""));
-
-        case eth_getTransactionByBlockNumberAndIndex:
-            return processResult(_id, api.eth_getTransactionByBlockNumberAndIndex(params.get(0) + "", params.get(1) + ""));
-
-        case eth_getBlockTransactionCountByHash:
-            return processResult(_id, api.eth_getBlockTransactionCountByHash(params.get(0) + ""));
-
-        case eth_getBlockTransactionCountByNumber:
-            return processResult(_id, api.eth_getBlockTransactionCountByNumber(params.get(0) + ""));
-
         /* -------------------------------------------------------------------------
          * personal
          */
@@ -327,44 +310,6 @@ public final class HttpServer {
             int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
             return processResult(_id, api.unlockAccount(account, password, duration));
         }
-        /* -------------------------------------------------------------------------
-         * filters
-         */
-        case eth_newFilter:
-            return processResult(_id, api.eth_newFilter(ArgFltr.fromJSON(params.getJSONObject(0))));
-
-        case eth_newBlockFilter:
-            return processResult(_id, api.eth_newBlockFilter());
-
-        case eth_newPendingTransactionFilter:
-            return processResult(_id, api.eth_newPendingTransactionFilter());
-
-        case eth_uninstallFilter:
-            return processResult(_id, api.eth_uninstallFilter(params.get(0)+""));
-
-        case eth_getFilterChanges:
-            return processResult(_id, api.eth_getFilterChanges(params.get(0)+""));
-
-        case eth_getFilterLogs:
-            return processResult(_id, api.eth_getFilterLogs(params.get(0)+""));
-
-        case eth_getLogs:
-            return processResult(_id, api.eth_getLogs(ArgFltr.fromJSON(params.getJSONObject(0))));
-
-        /* -------------------------------------------------------------------------
-         * net
-         */
-        // TODO: investigate how this endpoint is used by users to improve the quality of response
-        // currently, p2p manager is always listening for peers and is active
-        case net_listening:
-            return processResult(_id, true);
-
-        case net_peerCount:
-            return processResult(_id, api.peerCount());
-
-        case net_version:
-            return processResult(_id, api.chainId());
-
         /* -------------------------------------------------------------------------
          * debug
          */
@@ -379,7 +324,6 @@ public final class HttpServer {
 
             return processResult(_id, api.debug_getBlocksByNumber(number, fullTransactions));
         }
-
         /* -------------------------------------------------------------------------
          * stratum pool
          */
@@ -607,7 +551,7 @@ public final class HttpServer {
         case ping:
             return processResult(_id, "pong");
         default:
-            return processResult(_id, "");
+            return processResult(_id, null);
         }
     }
 
@@ -634,7 +578,7 @@ public final class HttpServer {
         }
     }
 
-    static class ProcessInbound extends Thread {
+    private static class ProcessInbound extends Thread {
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {

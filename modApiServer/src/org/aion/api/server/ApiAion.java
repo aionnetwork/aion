@@ -64,6 +64,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
+import org.json.JSONArray;
 
 public abstract class ApiAion extends Api {
     protected NrgOracle nrgOracle;
@@ -73,6 +74,7 @@ public abstract class ApiAion extends Api {
     protected AtomicLong fltrIndex = new AtomicLong(0);
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
+    protected String[] compilers = new String[] {"solidity"};
 
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
@@ -106,27 +108,14 @@ public abstract class ApiAion extends Api {
         return installedFilters;
     }
 
-    // Authenication Level
     public String getCoinbase() {
         String coinbase = CfgAion.inst().getConsensus().getMinerAddress();
-        if (Address.wrap(coinbase).equals(Address.EMPTY_ADDRESS())) { // no
-                                                                      // miner
-                                                                      // coinbase
-                                                                      // set
-            List<String> accsSorted = Keystore.accountsSorted();
-            if (accsSorted.isEmpty()) {
-                return TypeConverter.toJsonHex("");
-            }
-            String cb = accsSorted.get(0);
-            return TypeConverter.toJsonHex(cb);
-        }
         return TypeConverter.toJsonHex(coinbase);
     }
 
-    // Chain Level
     @Override
     public AionBlock getBestBlock() {
-        return this.ac.getAionHub().getBlockchain().getBestBlock();
+        return this.ac.getBlockchain().getBestBlock();
     }
 
     public AionBlock getBlockTemplate() {
@@ -141,25 +130,16 @@ public abstract class ApiAion extends Api {
         return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
     }
 
-    // --Commented out by Inspection START (02/02/18 6:57 PM):
-    // @Override
-    // public AionBlock getBlock(String _bnOrId) {
-    // long bn = this.parseBnOrId(_bnOrId);
-    // return this.ac.getAionHub().getBlockchain().getBlockByNumber(bn);
-    // }
-    // --Commented out by Inspection STOP (02/02/18 6:57 PM)
-
     public AionBlock getBlockByHash(byte[] hash) {
-        return this.ac.getAionHub().getBlockchain().getBlockByHash(hash);
+        return this.ac.getBlockchain().getBlockByHash(hash);
     }
 
     @Override
     public AionBlock getBlock(long blkNr) {
         if (blkNr == -1) {
-            return this.ac.getAionHub().getBlockchain()
-                    .getBlockByNumber(this.ac.getBlockchain().getBestBlock().getNumber());
+            return this.ac.getBlockchain().getBestBlock();
         } else if (blkNr > 0) {
-            return this.ac.getAionHub().getBlockchain().getBlockByNumber(blkNr);
+            return this.ac.getBlockchain().getBlockByNumber(blkNr);
         } else if (blkNr == 0) {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
             return new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList());
