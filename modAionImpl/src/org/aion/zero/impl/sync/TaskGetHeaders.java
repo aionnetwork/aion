@@ -34,8 +34,6 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -45,35 +43,46 @@ final class TaskGetHeaders implements Runnable {
 
     private final IP2pMgr p2p;
 
-    private final AtomicReference<NetworkStatus> networkStatus;
+    private final int syncMax;
 
-    private final AtomicLong jump;
+    private long fromBlock;
 
-    private final int syncForwardMax;
+    private final BigInteger selfTd;
 
-    TaskGetHeaders(final IP2pMgr _p2p, final AtomicReference<NetworkStatus> _networkStatus, final AtomicLong _jump, int _syncForwardMax){
+    TaskGetHeaders(final IP2pMgr _p2p, int _syncMax, long _fromBlock, BigInteger _selfTd){
         this.p2p = _p2p;
-        this.networkStatus = _networkStatus;
-        this.jump = _jump;
-        this.syncForwardMax = _syncForwardMax;
+        this.syncMax = _syncMax;
+        this.fromBlock = _fromBlock;
+        this.selfTd = _selfTd;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
         Set<Integer> ids = new HashSet<>();
         Collection<INode> preFilter = this.p2p.getActiveNodes().values();
+
         List<INode> filtered = preFilter.stream().filter(
-                (n) -> this.networkStatus.get().totalDiff != null &&
-                        n.getTotalDifficulty() != null &&
-                        (new BigInteger(1, n.getTotalDifficulty())).compareTo(this.networkStatus.get().totalDiff) >= 0).collect(Collectors.toList());
-        Random r = new Random(System.currentTimeMillis());
-        for (int i = 0; i < 2; i++) {
-            if (filtered.size() > 0) {
+                (n) -> n.getTotalDifficulty() != null &&
+                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
+        ).collect(Collectors.toList());
+
+        if (filtered.size() > 0) {
+            Random r = new Random(System.currentTimeMillis());
+            for (int i = 0; i < 2; i++) {
                 INode node = filtered.get(r.nextInt(filtered.size()));
                 if (!ids.contains(node.getIdHash())) {
                     ids.add(node.getIdHash());
-                    this.p2p.send(node.getIdHash(), new ReqBlocksHeaders(jump.get(), this.syncForwardMax));
+                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
+//                    System.out.println(
+//                        "request headers from remote-node=" + node.getIdShort() +
+//                        " remote-td=" + node.getTotalDifficulty().toString(10) +
+//                        " remote-bn=" + node.getBestBlockNumber() +
+//                        " from-block=" + rbh.getFromBlock() +
+//                        " take=" + rbh.getTake()
+//                    );
+                    this.p2p.send(node.getIdHash(), rbh);
                 }
             }
         }

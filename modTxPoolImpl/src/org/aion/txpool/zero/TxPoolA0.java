@@ -163,7 +163,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         for (TX tx : txs) {
             ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getHash());
-
             if (this.getMainMap().remove(bw) == null) {
                 continue;
             }
@@ -194,7 +193,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 this.getPoolStateView(tx.getFrom()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
 
                 fee.parallelStream().forEach(bi -> {
-
                     this.getFeeView().get(bi).entrySet().removeIf(
                             byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue()
                                     .getAddress().equals(address));
