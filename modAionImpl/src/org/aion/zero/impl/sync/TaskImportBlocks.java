@@ -86,35 +86,50 @@ final class TaskImportBlocks implements Runnable {
                 switch (importResult) {
                     case IMPORTED_BEST:
                         if (log.isInfoEnabled()) {
-                            log.info("<import-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
-                                    b.getTransactionsList().size());
+                            log.info("<import-best from-node={} num={} hash={} txs={}>",
+                                bw.getDisplayId(),
+                                b.getNumber(),
+                                b.getShortHash(),
+                                b.getTransactionsList().size());
                         }
 
                         break;
                     case IMPORTED_NOT_BEST:
                         if (log.isInfoEnabled()) {
-                            log.info("<import-not-best from-node={} num={} hash={} txs={}>", bw.getDisplayId(), b.getNumber(), b.getShortHash(),
-                                    b.getTransactionsList().size());
+                            log.info("<import-not-best from-node={} num={} hash={} txs={}>",
+                                bw.getDisplayId(),
+                                b.getNumber(),
+                                b.getShortHash(),
+                                b.getTransactionsList().size());
                         }
 
                         break;
                     case EXIST:
                         if (log.isDebugEnabled()) {
-                            log.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
-                                    b.getShortHash(), b.getTransactionsList().size());
+                            log.debug("<import-block-exit from-node={} num={} hash={} txs={}>",
+                                bw.getDisplayId(),
+                                b.getNumber(),
+                                b.getShortHash(),
+                                b.getTransactionsList().size());
                         }
 
                         break;
                     case NO_PARENT:
                         if (log.isDebugEnabled()) {
-                            log.debug("<import-fail err=no-parent from-node={} num={} hash={}>", bw.getDisplayId(), b.getNumber(), b.getShortHash());
+                            log.debug("<import-no-parent from-node={} num={} hash={}>",
+                                bw.getDisplayId(),
+                                b.getNumber(),
+                                b.getShortHash());
                         }
 
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
-                            log.debug("<import-fail err=invalid-block num={} hash={} txs={}>", b.getNumber(),
-                                    b.getShortHash(), b.getTransactionsList().size());
+                            log.debug("<import-invalid-block from-node={} num={} hash={} txs={}>",
+                                bw.getDisplayId(),
+                                b.getNumber(),
+                                b.getShortHash(),
+                                b.getTransactionsList().size());
                         }
                         break;
                     default:

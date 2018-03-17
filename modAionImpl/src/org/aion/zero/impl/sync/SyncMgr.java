@@ -34,7 +34,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.aion.base.util.Hex;
 import org.slf4j.Logger;
@@ -62,7 +61,9 @@ public final class SyncMgr {
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     // default how many blocks forward to sync based on current block number
-    int syncForwardMax = 192;
+    private int syncForwardMax = 192;
+
+    private final static int syncBackwordMax = 16;
 
     private int blocksQueueMax = 2000;
 
@@ -121,7 +122,7 @@ public final class SyncMgr {
         BigInteger selfTd = this.chain.getTotalDifficulty();
 
         // trigger send headers routine immediately
-        if(_remoteTotalDiff.compareTo(selfTd) >= 0) {
+        if(_remoteTotalDiff.compareTo(selfTd) > 0) {
             this.getHeaders(selfTd);
 
             // update network best status
@@ -189,7 +190,7 @@ public final class SyncMgr {
     }
 
     private void getHeaders(BigInteger _selfTd){
-        workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, Math.max(1, this.chain.getBestBlock().getNumber() - 128), _selfTd));
+        workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, Math.max(1, this.chain.getBestBlock().getNumber() - syncBackwordMax), _selfTd));
     }
 
     //    void getHeaders(int _nodeId, String _displayId, long _fromBlock){
