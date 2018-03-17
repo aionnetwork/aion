@@ -45,14 +45,14 @@ final class TaskGetHeaders implements Runnable {
 
     private final int syncMax;
 
-    private final long jump;
+    private long fromBlock;
 
     private final BigInteger selfTd;
 
-    TaskGetHeaders(final IP2pMgr _p2p, int _syncMax, long _jump, BigInteger _selfTd){
+    TaskGetHeaders(final IP2pMgr _p2p, int _syncMax, long _fromBlock, BigInteger _selfTd){
         this.p2p = _p2p;
         this.syncMax = _syncMax;
-        this.jump = _jump;
+        this.fromBlock = _fromBlock;
         this.selfTd = _selfTd;
     }
 
@@ -74,15 +74,14 @@ final class TaskGetHeaders implements Runnable {
                 INode node = filtered.get(r.nextInt(filtered.size()));
                 if (!ids.contains(node.getIdHash())) {
                     ids.add(node.getIdHash());
-                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(jump, this.syncMax);
-                    System.out.println(
-                        "request headers from remote-node=" + node.getIdShort() +
-                        " remote-td=" + node.getTotalDifficulty().toString(10) +
-                        " remote-bn=" + node.getBestBlockNumber() +
-                        " jump=" + jump +
-                        " from-block=" + rbh.getFromBlock() +
-                        " take=" + rbh.getTake()
-                    );
+                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
+//                    System.out.println(
+//                        "request headers from remote-node=" + node.getIdShort() +
+//                        " remote-td=" + node.getTotalDifficulty().toString(10) +
+//                        " remote-bn=" + node.getBestBlockNumber() +
+//                        " from-block=" + rbh.getFromBlock() +
+//                        " take=" + rbh.getTake()
+//                    );
                     this.p2p.send(node.getIdHash(), rbh);
                 }
             }

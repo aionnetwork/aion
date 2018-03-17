@@ -34,7 +34,6 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author chris
@@ -50,19 +49,16 @@ final class TaskShowStatus implements Runnable {
 
     private final AionBlockchainImpl chain;
 
-    private final AtomicLong jump;
-
     private final NetworkStatus networkStatus;
 
     private final SyncStatics statics;
 
     private final Logger log;
 
-    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump, final NetworkStatus _networkStatus, final SyncStatics _statics, final Logger _log){
+    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final NetworkStatus _networkStatus, final SyncStatics _statics, final Logger _log){
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
-        this.jump = _jump;
         this.networkStatus = _networkStatus;
         this.statics = _statics;
         this.log = _log;
@@ -81,7 +77,7 @@ final class TaskShowStatus implements Runnable {
 
             System.out.println(
                 "[sync-status avg-import=" + this.statics.getAvgBlocksPerSec()
-                        + " b/s jump=" + jump.get()
+                        + "b/s"
                         + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10)
                         + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus.getTargetBestBlockNumber()
                         + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) + "/" + this.networkStatus.getTargetBestBlockHash() + "]");

@@ -1237,9 +1237,15 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             try {
                 req = Message.req_getBlockDetailsByNumber.parseFrom(data);
-                List<Long> blkNum = req.getBlkNumbersList().parallelStream()
-                        .collect(Collectors.toSet()).parallelStream()
-                        .sorted().collect(Collectors.toList());
+                long latestBlkNum = this.getBestBlock().getNumber();
+
+                List<Long> blkNum = req.getBlkNumbersList()
+                        .parallelStream()
+                        .filter(n -> n <= latestBlkNum)
+                        .collect(Collectors.toSet())
+                            .parallelStream()
+                            .sorted()
+                            .collect(Collectors.toList());
 
                 if (blkNum.size() > 1000) {
                     blkNum = blkNum.subList(0, 1000);

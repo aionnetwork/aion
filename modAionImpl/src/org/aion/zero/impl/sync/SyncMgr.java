@@ -77,7 +77,7 @@ public final class SyncMgr {
     // set as last block number within one batch import when first block for
     // imported success as best
     // reset to 0 as any block import result as no parent (side chain)
-    private AtomicLong jump;
+    // private AtomicLong jump;
 
     private final NetworkStatus networkStatus = new NetworkStatus();
 
@@ -118,7 +118,6 @@ public final class SyncMgr {
         BigInteger _remoteTotalDiff) {
 
         // self
-        AionBlock selfBest = new AionBlock(this.chain.getBestBlock());
         BigInteger selfTd = this.chain.getTotalDifficulty();
 
         // trigger send headers routine immediately
@@ -147,19 +146,20 @@ public final class SyncMgr {
                     );
                 }
             }
-        } else {
-
-            //TODO: can be faked to stop miner
-            this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
-            if (log.isDebugEnabled()) {
-                log.debug(
-                        "<network-status off-sync td={}/{} bn={}/{} bh={}/{}>",
-                        selfTd.toString(10), this.networkStatus.getTargetTotalDiff().toString(10),
-                        _remoteBestBlockNumber, this.networkStatus.getTargetBestBlockNumber(),
-                        Hex.toHexString(selfBest.getHash()), this.networkStatus.getTargetBestBlockHash()
-                );
-            }
         }
+//        else {
+//
+//            //TODO: can be faked to stop miner
+//            this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
+//            if (log.isDebugEnabled()) {
+//                log.debug(
+//                        "<network-status off-sync td={}/{} bn={}/{} bh={}/{}>",
+//                        selfTd.toString(10), this.networkStatus.getTargetTotalDiff().toString(10),
+//                        _remoteBestBlockNumber, this.networkStatus.getTargetBestBlockNumber(),
+//                        Hex.toHexString(selfBest.getHash()), this.networkStatus.getTargetBestBlockHash()
+//                );
+//            }
+//        }
     }
 
     public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncForwardMax,
@@ -171,14 +171,13 @@ public final class SyncMgr {
         this.blocksQueueMax = _blocksQueueMax;
 
         long selfBest = this.chain.getBestBlock().getNumber();
-        this.jump = new AtomicLong( selfBest + 1);
         SyncStatics statics = new SyncStatics(selfBest);
 
         new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
-        new Thread(new TaskImportBlocks(this, this.chain, this.start, this.jump, this.importedBlocks, statics, log), "sync-ib").start();
+        new Thread(new TaskImportBlocks(this.chain, this.start, this.importedBlocks, statics, log), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
-            new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.jump,  this.networkStatus, statics, log), "sync-ss").start();
+            new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log), "sync-ss").start();
 
         setupEventHandler();
     }
@@ -189,22 +188,22 @@ public final class SyncMgr {
         this.evtMgr.registerEvent(events);
     }
 
-    void getHeaders(BigInteger _selfTd){
-        workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, jump.get(), _selfTd));
+    private void getHeaders(BigInteger _selfTd){
+        workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, Math.max(1, this.chain.getBestBlock().getNumber() - 128), _selfTd));
     }
 
-//    void getHeaders(int _nodeId, String _displayId, long _fromBlock){
-//        ReqBlocksHeaders rbh = new ReqBlocksHeaders(_fromBlock, this.syncForwardMax);
-//        System.out.println(
-//                "try-request headers from remote-node=" + _displayId +
-//                        " remote-td=" + node.getTotalDifficulty().toString(10) +
-//                        " remote-bn=" + node.getBestBlockNumber() +
-//                        " jump=" + jump +
-//                        " from-block=" + rbh.getFromBlock() +
-//                        " take=" + rbh.getTake()
-//        );
-//        p2pMgr.send(_nodeId, );
-//    }
+    //    void getHeaders(int _nodeId, String _displayId, long _fromBlock){
+    //        ReqBlocksHeaders rbh = new ReqBlocksHeaders(_fromBlock, this.syncForwardMax);
+    //        System.out.println(
+    //                "try-request headers from remote-node=" + _displayId +
+    //                        " remote-td=" + node.getTotalDifficulty().toString(10) +
+    //                        " remote-bn=" + node.getBestBlockNumber() +
+    //                        " jump=" + jump +
+    //                        " from-block=" + rbh.getFromBlock() +
+    //                        " take=" + rbh.getTake()
+    //        );
+    //        p2pMgr.send(_nodeId, );
+    //    }
 
     /**
      *
@@ -217,12 +216,12 @@ public final class SyncMgr {
             return;
         }
 
-        System.out.println(
-            "incoming-headers " +
-            " from-node=" + _displayId +
-            " from-block=" + _headers.get(0).getNumber() +
-            " to-block=" + _headers.get(_headers.size() - 1).getNumber()
-        );
+//        System.out.println(
+//            "incoming-headers " +
+//            " from-node=" + _displayId +
+//            " from-block=" + _headers.get(0).getNumber() +
+//            " to-block=" + _headers.get(_headers.size() - 1).getNumber()
+//        );
 
         _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
         importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, _headers));
