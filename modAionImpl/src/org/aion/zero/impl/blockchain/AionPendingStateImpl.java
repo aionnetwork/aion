@@ -161,20 +161,6 @@ public class AionPendingStateImpl
                         }
                     });
         }
-
-        IHandler txHandler = this.evtMgr.getHandler(1);
-        if (txHandler != null) {
-            txHandler.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onPendingTxStateChange() {
-                            if (LOG.isTraceEnabled()) {
-                                LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
-                            }
-                            flushCachePendingTx();
-                        }
-                    });
-        }
-
     }
 
     private void regBlockEvents() {
@@ -329,8 +315,12 @@ public class AionPendingStateImpl
             if (LOG.isTraceEnabled()) {
                 LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");
             }
-
             txPool.updateBlkNrgLimit(best.getNrgLimit());
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
+            }
+            flushCachePendingTx();
 
 
             IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
@@ -414,8 +404,7 @@ public class AionPendingStateImpl
         return b1;
     }
 
-    @Override
-    public synchronized void flushCachePendingTx() {
+    private void flushCachePendingTx() {
         Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
 
         if (LOG.isDebugEnabled()) {

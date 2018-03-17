@@ -39,10 +39,7 @@ import org.aion.mcf.types.AbstractTxReceipt;
 public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITransaction> extends IPendingState<Tx> {
 
     // called by onBest
-    void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
-
-    // called by onPendingTxStateChange
-    void flushCachePendingTx();
+    void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);x
 
     List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
 
