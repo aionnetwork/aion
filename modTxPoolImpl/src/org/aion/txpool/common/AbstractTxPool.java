@@ -267,7 +267,9 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     }
                     for (PoolState ps : psl) {
                         // check the previous txn status in the old PoolState
-                        if (ps.firstNonce.equals(txNonceStart) && ps.combo == SEQUENTAILTXNCOUNT_MAX) {
+                        if (isClean(ps, as)
+                                && ps.firstNonce.equals(txNonceStart)
+                                && ps.combo == SEQUENTAILTXNCOUNT_MAX) {
                             ps.resetInFeePool();
                             newPoolState.add(ps);
 
@@ -384,6 +386,20 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         }
     }
 
+    private boolean isClean(PoolState ps, AccountState as) {
+        if (ps == null || as == null) {
+            throw new NullPointerException();
+        }
+
+        for(BigInteger bi = ps.getFirstNonce() ; bi.compareTo(ps.firstNonce.add(BigInteger.valueOf(ps.getCombo()))) < 0 ; bi = bi.add(BigInteger.ONE)) {
+            if (!as.getMap().containsKey(bi)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     protected void updateFeeMap() {
         for (Entry<Address, List<PoolState>> e : this.poolStateView.entrySet()) {
             ByteArrayWrapper dependTx = null;
@@ -403,6 +419,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     TxDependList<ByteArrayWrapper> txl = new TxDependList<>();
                     for (BigInteger i = ps.firstNonce; i.compareTo(
                             ps.firstNonce.add(BigInteger.valueOf(ps.combo))) < 0; i = i.add(BigInteger.ONE)) {
+
                         txl.addTx(this.accountView.get(e.getKey()).getMap().get(i).getKey());
                     }
 
