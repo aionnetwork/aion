@@ -273,7 +273,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // pick up the receipt from the block on the main chain
             for (AionTxInfo info : infos) {
                 AionBlock block = getBlockStore().getBlockByHash(info.getBlockHash());
+                if (block == null) continue;
+
                 AionBlock mainBlock = getBlockStore().getChainBlockByNumber(block.getNumber());
+                if (mainBlock == null) continue;
+
                 if (FastByteComparisons.equal(info.getBlockHash(), mainBlock.getHash())) {
                     txInfo = info;
                     break;
