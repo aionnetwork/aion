@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.aion.base.util.Hex;
 import org.slf4j.Logger;
 import org.aion.evtmgr.IEvent;
@@ -87,7 +88,7 @@ public final class SyncMgr {
     private final BlockingQueue<HeadersWrapper> importedHeaders = new LinkedBlockingQueue<>();
 
     // store blocks that ready to save to db
-    private final BlockingQueue<List<AionBlock>> importedBlocks = new LinkedBlockingQueue<>();
+    private final BlockingQueue<BlocksWrapper> importedBlocks = new LinkedBlockingQueue<>();
 
     //private ExecutorService workers = Executors.newFixedThreadPool(5);
     private ExecutorService workers = Executors.newCachedThreadPool();
@@ -121,7 +122,7 @@ public final class SyncMgr {
         BigInteger selfTd = this.chain.getTotalDifficulty();
 
         // trigger send headers routine immediately
-        if(_remoteTotalDiff.compareTo(selfTd) > 0) {
+        if(_remoteTotalDiff.compareTo(selfTd) >= 0) {
             this.getHeaders(selfTd);
 
             // update network best status
@@ -144,7 +145,6 @@ public final class SyncMgr {
                             _remoteBestBlockNumber,
                             remoteBestBlockHash
                     );
-
                 }
             }
         } else {
@@ -174,9 +174,8 @@ public final class SyncMgr {
         this.jump = new AtomicLong( selfBest + 1);
         SyncStatics statics = new SyncStatics(selfBest);
 
-        Thread tGetBodies = new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh");
-        tGetBodies.start();
-        Thread tImport = new Thread(new TaskImportBlocks(this, this.chain, this.start, this.jump, this.importedBlocks, statics, log), "sync-ib");
+        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
+        new Thread(new TaskImportBlocks(this, this.chain, this.start, this.jump, this.importedBlocks, statics, log), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.jump,  this.networkStatus, statics, log), "sync-ss").start();
@@ -194,26 +193,17 @@ public final class SyncMgr {
         workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, jump.get(), _selfTd));
     }
 
-//    void getHeadersTargeted(long targeted){
-//
-//        Set<Integer> ids = new HashSet<>();
-//        Collection<INode> preFilter = this.p2p.getActiveNodes().values();
-//
-//        List<INode> filtered = preFilter.stream().filter(
-//                (n) -> n.getTotalDifficulty() != null &&
-//                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
-//        ).collect(Collectors.toList());
-//
-//        Random r = new Random(System.currentTimeMillis());
-//        for (int i = 0; i < 2; i++) {
-//            if (filtered.size() > 0) {
-//                INode node = filtered.get(r.nextInt(filtered.size()));
-//                if (!ids.contains(node.getIdHash())) {
-//                    ids.add(node.getIdHash());
-//                    this.p2p.send(node.getIdHash(), new ReqBlocksHeaders(jump, this.syncMax));
-//                }
-//            }
-//        }
+//    void getHeaders(int _nodeId, String _displayId, long _fromBlock){
+//        ReqBlocksHeaders rbh = new ReqBlocksHeaders(_fromBlock, this.syncForwardMax);
+//        System.out.println(
+//                "try-request headers from remote-node=" + _displayId +
+//                        " remote-td=" + node.getTotalDifficulty().toString(10) +
+//                        " remote-bn=" + node.getBestBlockNumber() +
+//                        " jump=" + jump +
+//                        " from-block=" + rbh.getFromBlock() +
+//                        " take=" + rbh.getTake()
+//        );
+//        p2pMgr.send(_nodeId, );
 //    }
 
     /**
@@ -276,8 +266,15 @@ public final class SyncMgr {
         if (m == 0)
             return;
 
+        System.out.println(
+                "incoming-bodies " +
+                " from-node=" + _displayId +
+                " from-block=" + blocks.get(0).getNumber() +
+                " to-block=" + blocks.get(blocks.size() - 1).getNumber()
+        );
+
         // add batch
-        importedBlocks.add(blocks);
+        importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
 
         if (log.isDebugEnabled()) {
             log.debug("<incoming-bodies size={} from-num={} to-num={} from-node={}>", m, blocks.get(0).getNumber(),

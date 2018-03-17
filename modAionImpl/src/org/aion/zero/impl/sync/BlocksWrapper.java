@@ -29,33 +29,31 @@
 
 package org.aion.zero.impl.sync;
 
-import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.impl.types.AionBlock;
 import java.util.List;
 
 /**
  * @author chris
  * used by imported headers on sync mgr
  */
-final class HeadersWrapper {
+final class BlocksWrapper {
 
     private int nodeIdHash;
 
     private String displayId;
 
-    private long timestamp;
-
-    private List<A0BlockHeader> headers;
+    private List<AionBlock> blocks;
 
     /**
      *
      * @param _nodeIdHash int
-     * @param _headers List
+     * @param _displayId String
+     * @param _blocks List
      */
-    HeadersWrapper(int _nodeIdHash, String _displayId, final List<A0BlockHeader> _headers){
+    BlocksWrapper(int _nodeIdHash, String _displayId, final List<AionBlock> _blocks){
         this.nodeIdHash = _nodeIdHash;
         this.displayId = _displayId;
-        this.headers = _headers;
-        this.timestamp = System.currentTimeMillis();
+        this.blocks = _blocks;
     }
 
     /**
@@ -71,18 +69,10 @@ final class HeadersWrapper {
     String getDisplayId() { return this.displayId; }
 
     /**
-     * @return long
-     * used to compare and drop from queue if expired
-     */
-    long getTimestamp(){
-        return this.timestamp;
-    }
-
-    /**
      * @return List
      */
-    List<A0BlockHeader> getHeaders(){
-        return this.headers;
+    List<AionBlock> getBlocks(){
+        return this.blocks;
     }
 
 }

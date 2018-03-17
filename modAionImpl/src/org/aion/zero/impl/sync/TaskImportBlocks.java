@@ -53,7 +53,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final AtomicLong jump;
 
-    private final BlockingQueue<List<AionBlock>> importedBlocks;
+    private final BlockingQueue<BlocksWrapper> importedBlocks;
 
     private final SyncStatics statis;
 
@@ -64,7 +64,7 @@ final class TaskImportBlocks implements Runnable {
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final AtomicLong _jump,
-            final BlockingQueue<List<AionBlock>> _importedBlocks,
+            final BlockingQueue<BlocksWrapper> _importedBlocks,
             final SyncStatics _statis,
             final Logger _log
     ){
@@ -82,16 +82,20 @@ final class TaskImportBlocks implements Runnable {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         while (start.get()) {
 
-            List<AionBlock> batch;
+            BlocksWrapper bw;
             try {
-                batch = importedBlocks.take();
+                bw = importedBlocks.take();
             } catch (InterruptedException ex) {
                 return;
             }
 
+            List<AionBlock> batch = bw.getBlocks();
+            int batchSize = batch.size();
             boolean fetchAheadTriggerUsed = false;
             boolean shouldBreakFor = false;
-            for (AionBlock b : batch) {
+
+            for (int i = 0; i < batchSize; i++) {
+                AionBlock b = batch.get(i);
                 ImportResult importResult = this.chain.tryToConnect(b);
                 switch (importResult) {
                     case IMPORTED_BEST:
@@ -110,8 +114,15 @@ final class TaskImportBlocks implements Runnable {
                         break;
                     case IMPORTED_NOT_BEST:
                         if (log.isInfoEnabled()) {
-                            log.info("<import-not-best num={} hash={} txs={}>", b.getNumber(), b.getShortHash(),
+                            log.info("<import-not-best from-node={} num={} hash={} txs={}>", bw.getDisplayId(), b.getNumber(), b.getShortHash(),
                                     b.getTransactionsList().size());
+                        }
+
+                        // last ele
+                        if(i == (batchSize - 1)) {
+                            long newJump = b.getNumber();
+                            System.out.println("import-not-best jump " + jump.get() + "->" + newJump);
+                            jump.set(newJump);
                         }
 
                         break;
@@ -120,16 +131,26 @@ final class TaskImportBlocks implements Runnable {
                             log.debug("<import-fail err=block-exit num={} hash={} txs={}>", b.getNumber(),
                                     b.getShortHash(), b.getTransactionsList().size());
                         }
+
+                        if(i == 0) {
+                            long newJump = jump.get() + (batch.size() - 1);
+                            System.out.println("exist " + b.getNumber() + " jump " + jump.get() + "->" + newJump);
+                            jump.set(newJump);
+                            shouldBreakFor = true;
+                        }
                         break;
                     case NO_PARENT:
-                        long oldJump = jump.get();
-                        long newJump = Math.max(1, oldJump - sync.syncForwardMax);
                         if (log.isDebugEnabled()) {
-                            log.debug("<import-fail err=no-parent num={} hash={}>", b.getNumber(), b.getShortHash());
+                            log.debug("<import-fail err=no-parent from-node={} num={} hash={}>", bw.getDisplayId(), b.getNumber(), b.getShortHash());
                         }
-                        System.out.println("<sync-jump " + oldJump + "->" + newJump + ">");
-                        jump.set(newJump);
-                        shouldBreakFor = true;
+
+                        // first ele
+                        if(i == 0) {
+                            long newJump = Math.max(1, chain.getBestBlock().getNumber() - 128);
+                            System.out.println("no-parent " + b.getNumber() + " jump " + jump.get() + "->" + newJump);
+                            jump.set(newJump);
+                            shouldBreakFor = true;
+                        }
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
@@ -143,8 +164,8 @@ final class TaskImportBlocks implements Runnable {
                         }
                         break;
                 }
-                if(shouldBreakFor)
-                    break;
+//                if(shouldBreakFor)
+//                    break;
             }
             this.statis.update(this.chain.getBestBlock().getNumber());
         }
