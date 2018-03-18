@@ -114,6 +114,9 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         }
 
         synchronized (this) {
+            if (this.parsed)
+                return;
+            
             RLPList params = RLP.decode2(rlpEncoded);
             RLPList block = (RLPList) params.get(0);
 
