@@ -38,6 +38,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
@@ -60,6 +61,8 @@ import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
 public class AionPoW {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
+    private static final int syncLimit = 128;
+
     protected IAionBlockchain blockchain;
     protected IPendingState<AionTransaction> pendingState;
     protected IEventMgr eventMgr;
@@ -69,8 +72,9 @@ public class AionPoW {
     protected AtomicLong lastUpdate = new AtomicLong(0);
 
     private AtomicBoolean shutDown = new AtomicBoolean();
-    private static int syncLimit = 128;
     private SyncMgr syncMgr;
+
+    private final CfgAion config = CfgAion.inst();
 
     /**
      * Creates an {@link AionPoW} instance. Be sure to call
@@ -227,6 +231,11 @@ public class AionPoW {
      */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
+
+            if (!config.getConsensus().getMining()) {
+                return;
+            }
+
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
             if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber() > syncLimit) {
