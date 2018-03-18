@@ -100,26 +100,24 @@ public class AionPoW {
             setupHandler();
             registerCallback();
 
-//            new Thread(() -> {
-//                while (!shutDown.get()) {
-//                    try {
-//                        Thread.sleep(100);
-//
-//                        long now = System.currentTimeMillis();
-//                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
-//                                || now - lastUpdate.get() > 10000) { // fallback, when
-//                                                               // we never
-//                                                               // received any
-//                                                               // events
-//                            createNewBlockTemplate();
-//                        }
-//                    } catch (InterruptedException e) {
-//                        break;
-//                    }
-//                }
-//            }, "pow").start();
+            new Thread(() -> {
+                while (!shutDown.get()) {
+                    try {
+                        Thread.sleep(100);
 
-            createNewBlockTemplate();
+                        long now = System.currentTimeMillis();
+                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
+                                || now - lastUpdate.get() > 10000) { // fallback, when
+                                                               // we never
+                                                               // received any
+                                                               // events
+                            createNewBlockTemplate();
+                        }
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+            }, "pow").start();
         }
     }
 
