@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
  ******************************************************************************/
-
 package org.aion.zero.impl.db;
 
 import org.aion.base.type.IBlock;
@@ -49,7 +47,8 @@ public class RecoveryUtils {
         cfg.getConsensus().setMining(false);
 
         Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "ERROR");
+        cfgLog.put("DB", "INFO");
+        cfgLog.put("GEN", "INFO");
 
         AionLoggerFactory.init(cfgLog);
 
@@ -74,7 +73,8 @@ public class RecoveryUtils {
         cfg.getConsensus().setMining(false);
 
         Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "ERROR");
+        cfgLog.put("DB", "INFO");
+        cfgLog.put("GEN", "INFO");
 
         AionLoggerFactory.init(cfgLog);
 
@@ -82,6 +82,7 @@ public class RecoveryUtils {
         AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
 
         IBlockStoreBase store = blockchain.getBlockStore();
+
 
         IBlock bestBlock = store.getBestBlock();
         if (bestBlock == null) {
@@ -93,11 +94,14 @@ public class RecoveryUtils {
         store.pruneAndCorrect();
         store.flush();
 
+        // compact database after the changes were applied
+        blockchain.getRepository().compact();
+
         blockchain.getRepository().close();
     }
 
     /**
-     * Used my internal world state recovery method.
+     * Used by internal world state recovery method.
      */
     public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock) {
         IBlockStoreBase store = blockchain.getBlockStore();

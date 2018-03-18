@@ -275,7 +275,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
             // pick up the receipt from the block on the main chain
             for (AionTxInfo info : infos) {
                 AionBlock block = getBlockStore().getBlockByHash(info.getBlockHash());
+                if (block == null) continue;
+
                 AionBlock mainBlock = getBlockStore().getChainBlockByNumber(block.getNumber());
+                if (mainBlock == null) continue;
+
                 if (FastByteComparisons.equal(info.getBlockHash(), mainBlock.getHash())) {
                     txInfo = info;
                     break;
@@ -459,10 +463,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 IEvent evtOnBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
                 evtOnBlock.setFuncArgs(Collections.singletonList(summary));
                 this.evtMgr.newEvent(evtOnBlock);
-
-                // // TODO : Is this correct to fire a pendingTX event?
-                IEvent evtPendingTx = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
-                this.evtMgr.newEvent(evtPendingTx);
 
                 IEvent evtTrace = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
                 String str = String.format("Block chain size: [ %d ]", this.getSize());

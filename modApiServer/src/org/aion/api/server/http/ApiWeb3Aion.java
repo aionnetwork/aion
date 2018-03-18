@@ -157,6 +157,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         // set the nonce and solution
         block.getHeader().setNonce(solution.getNonce());
         block.getHeader().setSolution(solution.getSolution());
+        block.getHeader().setTimestamp(solution.getTimeStamp());
 
         // This can be improved
         return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();
@@ -595,7 +596,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     public Object personal_unlockAccount(String _account, String _password, Object _duration) {
         int duration = 300;
-        if (_duration != null)
+        if (!_duration.equals(null))
             duration = new BigInteger(_duration + "").intValueExact();
 
         return unlockAccount(_account, _password, duration);
@@ -660,40 +661,20 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             }
         }
 
-        templateMap.put(toHexString(bestBlock.getHeader().getHash()), bestBlock);
+        templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
 
         JSONObject coinbaseaux = new JSONObject();
         coinbaseaux.put("flags", "062f503253482f");
-
-        // Temporary for mining pool testing
-
-        // byte[] toMine = bestBlock.getHeader().getHeaderBytes(true);
-        // for(int i = 0; i < toMine.length; i++){
-        // if(i > 0 && i % 8 == 0){
-        // System.out.println("");
-        // }
-        //
-        // System.out.print(String.format("%x",
-        // Byte.toUnsignedInt(toMine[i])) + " ");
-        // }
-        // System.out.println("");
-
-        //
-        // System.out.println("Target: "
-        // +BigInteger.valueOf(2).pow(256).divide(new
-        // BigInteger(bestBlock.getHeader().getDifficulty())));
-        //
-        // System.out.println("Sent: " + toHexString(bestBlock.getHash()));
 
         JSONObject obj = new JSONObject();
         obj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
         obj.put("height", bestBlock.getNumber());
         obj.put("target", toHexString(BigInteger.valueOf(2).pow(256)
-                .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray()));
+                .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray())); // TODO: Pool eventually calculates itself
         obj.put("transactions", new JSONArray());
         obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
         obj.put("coinbaseaux", coinbaseaux);
-        obj.put("headerHash", toHexString(bestBlock.getHeader().getHash()));
+        obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
 
         templateMapLock.writeLock().unlock();
 
@@ -760,19 +741,19 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return obj;
     }
 
-    public Object stratum_submitblock(Object nce, Object soln, Object hdrHash) {
+    public Object stratum_submitblock(Object nce, Object soln, Object hdrHash, Object ts) {
         JSONObject obj = new JSONObject();
 
-        if (nce != null && soln != null && hdrHash != null) {
+        if (nce != null && soln != null && hdrHash != null && ts != null) {
 
             templateMapLock.writeLock().lock();
 
-            AionBlock bestBlock = templateMap.get(hdrHash);
+            AionBlock bestBlock = templateMap.get(hdrHash + "");
 
             boolean successfulSubmit = false;
             // TODO Clean up this section once decided on event vs direct call
             if (bestBlock != null) {
-                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + "")));
+                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16)));
             }
 
             if (successfulSubmit) {

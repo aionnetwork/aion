@@ -173,20 +173,6 @@ public class AionPendingStateImpl
                         }
                     });
         }
-
-        IHandler txHandler = this.evtMgr.getHandler(1);
-        if (txHandler != null) {
-            txHandler.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onPendingTxStateChange() {
-                            if (LOG.isTraceEnabled()) {
-                                LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
-                            }
-                            flushCachePendingTx();
-                        }
-                    });
-        }
-
     }
 
     private void regBlockEvents() {
@@ -203,16 +189,16 @@ public class AionPendingStateImpl
         return pendingState;
     }
 
-    public int getPendingTxSize() {
+    public synchronized int getPendingTxSize() {
         return this.txPool.size();
     }
 
     @Override
-    public List<AionTransaction> getPendingTransactions() {
+    public synchronized List<AionTransaction> getPendingTransactions() {
         return this.txPool.snapshot();
     }
 
-    public AionBlock getBestBlock() {
+    public synchronized AionBlock getBestBlock() {
         if (best == null) {
             best = blockchain.getBestBlock();
         }
@@ -261,9 +247,6 @@ public class AionPendingStateImpl
             IEvent evtRecv = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             evtRecv.setFuncArgs(Collections.singletonList(newPending));
             this.evtMgr.newEvent(evtRecv);
-
-            IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
-            this.evtMgr.newEvent(evtChange);
         }
 
         return newPending;
@@ -363,74 +346,78 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public void processBest(AionBlock newBlock, List receipts) {
+    public synchronized void processBest(AionBlock newBlock, List receipts) {
+        synchronized (nonceMgr) {
+            synchronized (txPool) {
+                if (getBestBlock() != null && !getBestBlock().isParentOf(newBlock)) {
 
-        if (getBestBlock() != null && !getBestBlock().isParentOf(newBlock)) {
+                    // need to switch the state to another fork
 
-            // need to switch the state to another fork
+                    IAionBlock commonAncestor = findCommonAncestor(getBestBlock(), newBlock);
 
-            IAionBlock commonAncestor = findCommonAncestor(getBestBlock(), newBlock);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("New best block from another fork: " + newBlock.getShortDescr() + ", old best: "
+                                + getBestBlock().getShortDescr() + ", ancestor: " + commonAncestor.getShortDescr());
+                    }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("New best block from another fork: " + newBlock.getShortDescr() + ", old best: "
-                        + getBestBlock().getShortDescr() + ", ancestor: " + commonAncestor.getShortDescr());
-            }
+                    // first return back the transactions from forked blocks
+                    IAionBlock rollback = getBestBlock();
+                    while (!rollback.isEqual(commonAncestor)) {
 
-            // first return back the transactions from forked blocks
-            IAionBlock rollback = getBestBlock();
-            while (!rollback.isEqual(commonAncestor)) {
+                        List<AionTransaction> atl = rollback.getTransactionsList();
+                        if (!atl.isEmpty()) {
+                            this.txPool.add(atl);
+                        }
 
-                List<AionTransaction> atl = rollback.getTransactionsList();
-                if (!atl.isEmpty()) {
-                    this.txPool.add(atl);
+                        rollback = blockchain.getBlockByHash(rollback.getParentHash());
+                    }
+
+                    // rollback the state snapshot to the ancestor
+                    pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
+
+                    // next process blocks from new fork
+                    IAionBlock main = newBlock;
+                    List<IAionBlock> mainFork = new ArrayList<>();
+                    while (!main.isEqual(commonAncestor)) {
+                        mainFork.add(main);
+                        main = blockchain.getBlockByHash(main.getParentHash());
+                    }
+
+                    // processing blocks from ancestor to new block
+                    for (int i = mainFork.size() - 1; i >= 0; i--) {
+                        processBestInternal(mainFork.get(i), null);
+                    }
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("PendingStateImpl.processBest: " + newBlock.getShortDescr());
+                    }
+                    processBestInternal(newBlock, receipts);
                 }
 
-                rollback = blockchain.getBlockByHash(rollback.getParentHash());
+                best = newBlock;
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingStateImpl.processBest: updateState");
+                }
+                updateState(best);
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingStateImpl.processBest: nonceMgr.flush");
+                }
+                nonceMgr.flush();
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");
+                }
+
+                txPool.updateBlkNrgLimit(best.getNrgLimit());
+
+                flushCachePendingTx();
+
+                IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
+                this.evtMgr.newEvent(evtChange);
             }
-
-            // rollback the state snapshot to the ancestor
-            pendingState = repository.getSnapshotTo(commonAncestor.getStateRoot()).startTracking();
-
-            // next process blocks from new fork
-            IAionBlock main = newBlock;
-            List<IAionBlock> mainFork = new ArrayList<>();
-            while (!main.isEqual(commonAncestor)) {
-                mainFork.add(main);
-                main = blockchain.getBlockByHash(main.getParentHash());
-            }
-
-            // processing blocks from ancestor to new block
-            for (int i = mainFork.size() - 1; i >= 0; i--) {
-                processBestInternal(mainFork.get(i), null);
-            }
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("PendingStateImpl.processBest: " + newBlock.getShortDescr());
-            }
-            processBestInternal(newBlock, receipts);
         }
-
-        best = newBlock;
-        pendingState = repository.startTracking();
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: updateState");
-        }
-        updateState(best);
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: nonceMgr.flush");
-        }
-        nonceMgr.flush();
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");
-        }
-
-        txPool.updateBlkNrgLimit(best.getNrgLimit());
-
-        IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
-        this.evtMgr.newEvent(evtChange);
     }
 
     private void flushCachePendingTx() {
@@ -535,17 +522,20 @@ public class AionPendingStateImpl
 
     private void updateState(IAionBlock block) {
 
-        List<AionTransaction> pendingTxl = this.txPool.snapshot();
+        pendingState = repository.startTracking();
+
+        List<AionTransaction> pendingTxl = this.txPool.snapshotAll();
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("updateState - snapshot tx[{}]", pendingTxl.size());
+            LOG.debug("updateState - snapshotAll tx[{}]", pendingTxl.size());
         }
         for (AionTransaction tx : pendingTxl) {
             if (LOG.isTraceEnabled()) {
                 LOG.debug("updateState - loop: " + tx.toString());
             }
 
-            AionTxReceipt receipt = new AionTxReceipt();
+            AionTxExecSummary txSum = executeTx(tx);
+            AionTxReceipt receipt = txSum.getReceipt();
             receipt.setTransaction(tx);
             fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
         }
@@ -602,8 +592,13 @@ public class AionPendingStateImpl
      *            account address
      * @return transaction nonce.
      */
-    public Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr) {
+    public synchronized Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr) {
         return this.txPool.bestNonceSet(addr);
+    }
+
+    @Override
+    public synchronized BigInteger bestPoolNonce(Address addr) {
+        return this.txPool.bestNonce(addr);
     }
 
     /**
@@ -618,9 +613,11 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public BigInteger bestNonce(Address addr) {
+    public synchronized BigInteger bestNonce(Address addr) {
         return nonceMgr.getNonce(addr);
     }
+
+
 
     @Override
     public List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {

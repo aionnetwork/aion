@@ -14,9 +14,6 @@ public class Test {
         Set<String> ips = new HashSet<>();
         for(int i = 0; i < 3; i++)
             ips.add("192.168.0." + i);
-
-
-
         assertTrue(ips.contains("192.168.0.2"));
         assertFalse(ips.contains("192.168.0.3"));
 

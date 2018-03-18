@@ -28,6 +28,7 @@ package org.aion.p2p.impl;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -69,11 +70,6 @@ public final class Node implements INode {
      */
     private String idShort;
 
-    /**
-     * as filter rule
-     */
-    private int netId;
-
     private byte[] ip;
 
     private String ipStr;
@@ -88,9 +84,9 @@ public final class Node implements INode {
 
     private byte[] bestBlockHash;
 
-    private byte[] totalDifficulty;
+    private BigInteger totalDifficulty = BigInteger.ZERO;
 
-    private String revision = "";
+    private String binaryVersion = "";
 
     private SocketChannel channel;
 
@@ -108,7 +104,6 @@ public final class Node implements INode {
     private Node(boolean fromBootList, String _ipStr) {
         this.fromBootList = fromBootList;
         this.idHash = 0;
-        this.netId = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
         this.port = -1;
@@ -123,7 +118,6 @@ public final class Node implements INode {
     Node(String _ipStr, int port, int portConnected) {
         this.fromBootList = false;
         this.idHash = 0;
-        this.netId = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
         this.port = port;
@@ -142,7 +136,6 @@ public final class Node implements INode {
             this.idHash = Arrays.hashCode(_id);
             this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
         }
-        this.netId = 0;
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
         this.port = _port;
@@ -227,13 +220,6 @@ public final class Node implements INode {
     }
 
     /**
-     * @param _netId int
-     */
-    void setNetId(int _netId) {
-        this.netId = _netId;
-    }
-
-    /**
      * @param _port int
      */
     void setPort(final int _port) {
@@ -244,7 +230,7 @@ public final class Node implements INode {
         this.portConnected = _port;
     }
 
-    void setRevision(String _revision) { this.revision = _revision; }
+    void setBinaryVersion(String _revision) { this.binaryVersion = _revision; }
 
     /**
      * this method used to keep current node stage on either pending list or
@@ -301,7 +287,7 @@ public final class Node implements INode {
         return this.timestamp;
     }
 
-    String getRevision() { return this.revision; }
+    String getBinaryVersion() { return this.binaryVersion; }
 
     /**
      * @return SocketChannel
@@ -361,17 +347,15 @@ public final class Node implements INode {
     }
 
     @Override
-    public byte[] getTotalDifficulty() {
+    public BigInteger getTotalDifficulty() {
         return this.totalDifficulty;
     }
 
     @Override
-    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, final byte[] _totalDifficulty) {
-        if (_bestBlockNumber > this.bestBlockNumber) {
-            this.bestBlockNumber = _bestBlockNumber;
-            this.bestBlockHash = _bestBlockHash;
-            this.totalDifficulty = _totalDifficulty;
-        }
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
+        this.bestBlockNumber = _bestBlockNumber;
+        this.bestBlockHash = _bestBlockHash;
+        this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
     }
 
     void copyNodeStatus(Node _n) {

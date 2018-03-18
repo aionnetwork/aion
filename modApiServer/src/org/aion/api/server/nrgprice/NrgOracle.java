@@ -55,6 +55,7 @@ public class NrgOracle {
                 break;
 
             lastBlock = blockchain.getBlockByHash(lastBlock.getParentHash());
+            itr--;
         }
 
         // check if handler is of type BLOCK, if so attach our event
@@ -63,7 +64,7 @@ public class NrgOracle {
                 public void onBlock(final IBlockSummary _bs) {
                     System.out.println("nrg-oracle - onBlock event");
                     AionBlockSummary bs = (AionBlockSummary) _bs;
-                    onBlock(bs);
+                    processBlock(bs);
                 }
             });
         } else {
@@ -71,7 +72,7 @@ public class NrgOracle {
         }
     }
 
-    private void onBlock(AionBlockSummary blockSummary) {
+    private void processBlock(AionBlockSummary blockSummary) {
         AionBlock blk = (AionBlock) blockSummary.getBlock();
         advisor.processBlock(blk);
         cacheFlushCounter--;

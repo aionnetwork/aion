@@ -100,6 +100,7 @@ public interface IRpc {
          * personal
          */
         personal_unlockAccount,
+        personal_listAccounts,
 
         /**
          * stratum pool - custom json-rpc endpoints

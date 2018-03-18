@@ -28,6 +28,7 @@ import org.aion.api.server.IRpc.Method;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApi;
+import org.aion.mcf.vm.types.Log;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.json.JSONArray;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -119,6 +121,7 @@ public final class HttpServer
             case eth_gasPrice: {
                 return processResult(_id, api.eth_gasPrice());
             }
+            case personal_listAccounts:
             case eth_accounts: {
                 return processResult(_id, api.eth_accounts());
             }
@@ -286,7 +289,8 @@ public final class HttpServer
                 Object nce = params.opt(0);
                 Object soln = params.opt(1);
                 Object hdrHash = params.opt(2);
-                return processResult(_id, api.stratum_submitblock(nce, soln, hdrHash));
+                Object ts = params.opt(3);
+                return processResult(_id, api.stratum_submitblock(nce, soln, hdrHash, ts));
             }
             case getHeaderByBlockNumber: {
                 Object blkNum = params.opt(0);
@@ -454,9 +458,15 @@ public final class HttpServer
                                     }
 
                                     if (idObj != null && method != null) {
-                                        JSONObject resJson = process(method,
-                                                Long.parseLong(idObj.toString()),
-                                                paramsObj);
+                                        JSONObject resJson = null;
+                                        try {
+                                            resJson = process(method,
+                                                    Long.parseLong(idObj.toString()),
+                                                    paramsObj);
+                                        } catch (Exception e) {
+                                            LOG.debug("method {} threw exception.", methodObj+"", e);
+                                            resJson = processResult(Long.parseLong(idObj.toString()), null);
+                                        }
                                         String responseBody = resJson == null ? ""
                                                 : resJson.toString();
                                         String responseHeader = "HTTP/1.1 200 OK\n"
@@ -508,10 +518,18 @@ public final class HttpServer
                                         } catch (IllegalArgumentException ex) {
                                             sc.close();
                                         }
-                                        if (idObj != null && method != null)
-                                            responseBodies.put(process(method,
-                                                    Long.parseLong(idObj.toString()),
-                                                    paramsObj));
+                                        if (idObj != null && method != null) {
+                                            JSONObject resJson = null;
+                                            try {
+                                                resJson = process(method,
+                                                        Long.parseLong(idObj.toString()),
+                                                        paramsObj);
+                                            } catch (Exception e) {
+                                                LOG.debug("method {} threw exception.", methodObj+"", e);
+                                                resJson = processResult(Long.parseLong(idObj.toString()), null);
+                                            }
+                                            responseBodies.put(resJson);
+                                        }
                                     }
                                     String responseBody = responseBodies.toString();
 

@@ -80,7 +80,7 @@ public abstract class ApiAion extends Api {
 
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
-        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
+        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
         this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
@@ -495,7 +495,9 @@ public abstract class ApiAion extends Api {
     }
 
     private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
-        return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+        synchronized (this.ac.getAionHub().getPendingState()) {
+            return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+        }
     }
 
     public boolean isMining() {
@@ -539,7 +541,8 @@ public abstract class ApiAion extends Api {
             StringBuilder b = new StringBuilder();
             for (Short v : p2pVersions) {
                 b.append(ByteUtil.toHexString(ByteUtil.shortToBytes(v)));
-                if (i++ < p2pVersions.size())
+                i++;
+                if (i < p2pVersions.size())
                     b.append(",");
             }
             return b.toString();

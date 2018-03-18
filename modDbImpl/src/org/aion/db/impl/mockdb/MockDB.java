@@ -54,7 +54,11 @@ public class MockDB extends AbstractDB {
         lock.writeLock().lock();
 
         // release resources if needed
-        if (kv != null) {kv.clear();}
+        if (kv != null) {
+            LOG.info("Closing database " + this.toString());
+
+            kv.clear();
+        }
 
         // set map to null
         kv = null;
@@ -164,24 +168,8 @@ public class MockDB extends AbstractDB {
      * @inheritDoc
      */
     @Override
-    public Optional<byte[]> get(byte[] k) {
-        check(k);
-
-        // acquire read lock
-        lock.readLock().lock();
-
-        byte[] v;
-
-        try {
-            check();
-
-            v = kv.get(ByteArrayWrapper.wrap(k));
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
-
-        return Optional.ofNullable(v);
+    public byte[] getInternal(byte[] k) {
+        return kv.get(ByteArrayWrapper.wrap(k));
     }
 
     /**
