@@ -41,7 +41,7 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
     // called by onBest
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
-    List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
+    List<Tx> addToTxCache(Tx tx);
 
     List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
 

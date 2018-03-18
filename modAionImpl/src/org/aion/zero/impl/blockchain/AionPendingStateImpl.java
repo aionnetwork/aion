@@ -216,7 +216,7 @@ public class AionPendingStateImpl
             BigInteger bestNonce = bestNonce(tx.getFrom());
 
             if (txNonce.compareTo(bestNonce) > 0) {
-                addToTxCache(Collections.singletonMap(txNonce, tx), tx.getFrom());
+                addToTxCache(tx);
 
                 LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
             } else if (txNonce.equals(bestNonce)) {
@@ -543,8 +543,14 @@ public class AionPendingStateImpl
     }
 
     @Override
-    public synchronized List<AionTransaction> addToTxCache(Map<BigInteger, AionTransaction> txmap, Address addr) {
-        return this.pendingTxCache.addCacheTx(txmap, addr);
+    public synchronized List<AionTransaction> addToTxCache(AionTransaction tx) {
+        Map<BigInteger, AionTransaction> txmap = getCacheTx(tx.getFrom());
+        if (txmap == null) {
+            txmap = new HashMap<>();
+        }
+        txmap.put(new BigInteger(1, tx.getNonce()), tx);
+
+        return this.pendingTxCache.addCacheTx(txmap, tx.getFrom());
     }
 
     @Override
