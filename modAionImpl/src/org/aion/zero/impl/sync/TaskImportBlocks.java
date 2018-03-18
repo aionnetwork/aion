@@ -30,11 +30,17 @@
 package org.aion.zero.impl.sync;
 
 import org.aion.mcf.core.ImportResult;
+import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -43,6 +49,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * TODO: targeted send
  */
 final class TaskImportBlocks implements Runnable {
+
+    private final IP2pMgr p2p;
 
     private final AionBlockchainImpl chain;
 
@@ -54,13 +62,17 @@ final class TaskImportBlocks implements Runnable {
 
     private final Logger log;
 
+    private final Map<Integer, Long> sidechains = new ConcurrentHashMap<>();
+
     TaskImportBlocks(
+            final IP2pMgr p2p,
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final BlockingQueue<BlocksWrapper> _importedBlocks,
             final SyncStatics _statis,
             final Logger _log
     ){
+        this.p2p = p2p;
         this.chain = _chain;
         this.start = _start;
         this.importedBlocks = _importedBlocks;
@@ -112,7 +124,6 @@ final class TaskImportBlocks implements Runnable {
                                 b.getShortHash(),
                                 b.getTransactionsList().size());
                         }
-
                         break;
                     case NO_PARENT:
                         if (log.isDebugEnabled()) {
@@ -122,6 +133,14 @@ final class TaskImportBlocks implements Runnable {
                                 b.getShortHash());
                         }
 
+                        Long number = sidechains.get(bw.getNodeIdHash());
+                        if (number == null || b.getNumber() < number) {
+                            sidechains.put(bw.getNodeIdHash(), b.getNumber());
+
+                            // dive down slowly
+                            ReqBlocksHeaders req = new ReqBlocksHeaders(Math.max(1, b.getNumber() - 16), 32);
+                            this.p2p.send(bw.getNodeIdHash(), req);
+                        }
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
