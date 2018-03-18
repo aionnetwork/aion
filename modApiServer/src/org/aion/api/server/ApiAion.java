@@ -24,36 +24,20 @@
 
 package org.aion.api.server;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import org.aion.api.server.nrgprice.NrgOracle;
-import org.aion.evtmgr.IHandler;
-import org.aion.mcf.account.Keystore;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.type.Address;
-
-import org.aion.base.util.*;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEventMgr;
+import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.mcf.config.CfgApi;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
@@ -64,7 +48,16 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.json.JSONArray;
+
+import java.math.BigInteger;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract class ApiAion extends Api {
     protected NrgOracle nrgOracle;
@@ -552,7 +545,7 @@ public abstract class ApiAion extends Api {
             return b.toString();
         } catch (Exception e) {
             LOG.error("p2p protocol versions string generation failed");
-            return "-1";
+            return null;
         }
     }
 

@@ -86,12 +86,12 @@ public class Aion {
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         System.out.println(                
-                        "                     ______                  \n" +
-                        "      .'.       |  .~      ~.  |..          |\n" +
-                        "    .'   `.     | |          | |  ``..      |\n" +
-                        "  .''''''''`.   | |          | |      ``..  |\n" +
-                        ".'           `. |  `.______.'  |          ``|\n\n" +                          
-                        "                     NETWORK\n\n"
+                        "                     _____                  \n" +
+                        "      .'.       |  .~     ~.  |..          |\n" +
+                        "    .'   `.     | |         | |  ``..      |\n" +
+                        "  .''''''''`.   | |         | |      ``..  |\n" +
+                        ".'           `. |  `._____.'  |          ``|\n\n" +
+                        "                    NETWORK\n\n"
                 );
 
         IAionChain ac = AionFactory.create();
@@ -118,8 +118,7 @@ public class Aion {
             zmqThread.start();
         }
 
-        
-        HttpServer.start(ac.getAionHub().getP2pMgr());
+        HttpServer.start();
 
         /*
          * This is a hack, but used to let us pass zmqThread into thread

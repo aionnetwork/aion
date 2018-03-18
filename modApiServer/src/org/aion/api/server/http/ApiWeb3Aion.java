@@ -24,7 +24,6 @@
 
 package org.aion.api.server.http;
 
-import com.sun.xml.internal.ws.api.ha.StickyFeature;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.IRpc;
 import org.aion.api.server.types.*;
@@ -39,7 +38,6 @@ import org.aion.equihash.Solution;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.mcf.core.AccountState;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -47,25 +45,41 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.libsodium.jni.crypto.Util;
-import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static org.aion.base.util.ByteUtil.hexStringToBytes;
+import static org.aion.base.util.ByteUtil.toHexString;
 
 final class ApiWeb3Aion extends ApiAion implements IRpc {
 
+    // TODO: Verify currentMining will follow kernel block generation schedule.
+    // private static AtomicReference<AionBlock> currentMining;
+    // TODO: Verify if need to use a concurrent map; locking may allow for use
+    // of a simple map
+    private static HashMap<String, AionBlock> templateMap;
+    private static ReadWriteLock templateMapLock;
+
     ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
-        this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
+        pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
+        templateMap = new HashMap<>();
+        templateMapLock = new ReentrantReadWriteLock();
 
+
+        // Fill data on block and transaction events into the filters and pending receipts
         IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHr != null) {
             blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
@@ -204,8 +218,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return getHashrate();
     }
 
-    public Object eth_submitHashrate(String hashrate, String clientId) {
-        return setReportedHashrate(hashrate, clientId);
+    public Object eth_submitHashrate(String _hashrate, String _clientId) {
+        return setReportedHashrate(_hashrate, _clientId);
     }
 
     public Object eth_gasPrice() {
@@ -270,8 +284,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return TypeConverter.toJsonHex(n);
     }
 
-    public Object eth_getBlockTransactionCountByNumber(String bnOrId) {
-        List<AionTransaction> list = getTransactionsByBlockId(bnOrId);
+    public Object eth_getBlockTransactionCountByNumber(String _bnOrId) {
+        List<AionTransaction> list = getTransactionsByBlockId(_bnOrId);
         if (list == null) return null;
         long n = list.size();
         return TypeConverter.toJsonHex(n);
@@ -324,11 +338,11 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return null;
     }
 
-    public Object eth_sendRawTransaction(String rawHexString) {
-        if (rawHexString == null)
+    public Object eth_sendRawTransaction(String _rawTx) {
+        if (_rawTx == null)
             return null;
 
-        byte[] rawTransaction = ByteUtil.hexStringToBytes(rawHexString);
+        byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
         byte[] transactionHash = sendTransaction(rawTransaction);
 
         return TypeConverter.toJsonHex(transactionHash);
@@ -365,8 +379,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return estimate.toHexString();
     }
 
-    public Object eth_getBlockByHash(String hashString, boolean fullTransactions) {
-        byte[] hash = ByteUtil.hexStringToBytes(hashString);
+    public Object eth_getBlockByHash(String _hashString, boolean _fullTx) {
+        byte[] hash = ByteUtil.hexStringToBytes(_hashString);
         AionBlock block = this.ac.getBlockchain().getBlockByHash(hash);
         BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
 
@@ -375,10 +389,10 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             return null;
         } else {
             try {
-                return Blk.AionBlockToJson(block, totalDiff, fullTransactions);
+                return Blk.AionBlockToJson(block, totalDiff, _fullTx);
             } catch (Exception ex) {
                 if (LOG.isDebugEnabled())
-                    LOG.debug("<get-block bh={} err=exception>", hashString);
+                    LOG.debug("<get-block bh={} err=exception>", _hashString);
                 return null;
             }
         }
@@ -424,7 +438,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return Tx.AionTransactionToJSON(b.getTransactionsList().get(idx), idx);
     }
 
-    public Object eth_getTransactionByBlockNumberAndIndex(String _bnOrId, String _index) throws Exception {
+    public Object eth_getTransactionByBlockNumberAndIndex(String _bnOrId, String _index) {
         List<AionTransaction> txs = getTransactionsByBlockId(_bnOrId);
         if (txs == null) return null;
 
@@ -434,9 +448,18 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return Tx.AionTransactionToJSON(txs.get(idx), idx);
     }
 
-    public Object eth_getTransactionReceipt(String txHash) {
-        TxRecpt r = this.getTransactionReceipt(TypeConverter.StringHexToByteArray(txHash));
+    public Object eth_getTransactionReceipt(String _txHash) {
+        byte[] txHash = TypeConverter.StringHexToByteArray(_txHash);
+        TxRecpt r = getTransactionReceipt(txHash);
+
+        // if we can't find the receipt on the mainchain, try looking for it in pending receipts cache
+        if (r == null) {
+            AionTxReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(txHash));
+            r = new TxRecpt(pendingReceipt, null, null, null, true);
+        }
+
         if (r == null) return null;
+
         return r.toJson();
     }
 
@@ -476,7 +499,9 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * onus on the user to flush the filter of the historical data, before depending on it for up-to-date values.
      * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
      */
-    public String eth_newFilter(final ArgFltr rf) {
+    public String eth_newFilter(JSONObject _filterObj) {
+        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
+
         FltrLg filter = new FltrLg();
         filter.setTopics(rf.topics);
         filter.setContractAddress(rf.address);
@@ -528,8 +553,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return TypeConverter.toJsonHex(id);
     }
 
-    public boolean eth_uninstallFilter(String id) {
-        return id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(id).longValue()) != null;
+    public boolean eth_uninstallFilter(String _id) {
+        return _id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue()) != null;
     }
 
     public Object eth_getFilterChanges(final String _id) {
@@ -553,12 +578,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return response;
     }
 
-    public Object eth_getFilterLogs(final String _id) {
+    public Object eth_getFilterLogs(String _id) {
         return eth_getFilterChanges(_id);
     }
 
-    public Object eth_getLogs(final ArgFltr rf) {
-        String id = eth_newFilter(rf);
+    public Object eth_getLogs(JSONObject _filterObj) {
+        String id = eth_newFilter(_filterObj);
         Object response = eth_getFilterChanges(id);
         eth_uninstallFilter(id);
         return response;
@@ -568,11 +593,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * personal
      */
 
-    public Object personal_unlockAccount() {
-        String account = (String) params.get(0);
-        String password = (String) params.get(1);
-        int duration = new BigInteger(params.get(2).equals(null) ? "300" : params.get(2) + "").intValue();
-        return processResult(_id, api.unlockAccount(account, password, duration));
+    public Object personal_unlockAccount(String _account, String _password, Object _duration) {
+        int duration = 300;
+        if (_duration != null)
+            duration = new BigInteger(_duration + "").intValueExact();
+
+        return unlockAccount(_account, _password, duration);
     }
 
     /* -------------------------------------------------------------------------
@@ -598,6 +624,207 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             response.put(b);
         }
         return response;
+    }
+
+    /* -------------------------------------------------------------------------
+     * stratum pool
+     */
+
+    public Object stratum_getinfo() {
+        JSONObject obj = new JSONObject();
+
+        obj.put("balance", 0);
+        obj.put("blocks", 0);
+        obj.put("connections", peerCount());
+        obj.put("proxy", "");
+        obj.put("generate", true);
+        obj.put("genproclimit", 100);
+        obj.put("difficulty", 0);
+
+        return obj;
+    }
+
+    public Object stratum_getblocktemplate() {
+        // TODO: Change this to a synchronized map implementation mapping
+        // block hashes to the block. Allow multiple block templates at same height.
+        templateMapLock.writeLock().lock();
+
+        AionBlock bestBlock = getBlockTemplate();
+
+        // Check first entry in the map; if its height is higher a sync may
+        // have switch branches, abandon current work to start on new branch
+        if (!templateMap.keySet().isEmpty()) {
+            if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
+                // Found a higher block, clear any remaining cached entries and start on new height
+                templateMap.clear();
+            }
+        }
+
+        templateMap.put(toHexString(bestBlock.getHeader().getHash()), bestBlock);
+
+        JSONObject coinbaseaux = new JSONObject();
+        coinbaseaux.put("flags", "062f503253482f");
+
+        // Temporary for mining pool testing
+
+        // byte[] toMine = bestBlock.getHeader().getHeaderBytes(true);
+        // for(int i = 0; i < toMine.length; i++){
+        // if(i > 0 && i % 8 == 0){
+        // System.out.println("");
+        // }
+        //
+        // System.out.print(String.format("%x",
+        // Byte.toUnsignedInt(toMine[i])) + " ");
+        // }
+        // System.out.println("");
+
+        //
+        // System.out.println("Target: "
+        // +BigInteger.valueOf(2).pow(256).divide(new
+        // BigInteger(bestBlock.getHeader().getDifficulty())));
+        //
+        // System.out.println("Sent: " + toHexString(bestBlock.getHash()));
+
+        JSONObject obj = new JSONObject();
+        obj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
+        obj.put("height", bestBlock.getNumber());
+        obj.put("target", toHexString(BigInteger.valueOf(2).pow(256)
+                .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray()));
+        obj.put("transactions", new JSONArray());
+        obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
+        obj.put("coinbaseaux", coinbaseaux);
+        obj.put("headerHash", toHexString(bestBlock.getHeader().getHash()));
+
+        templateMapLock.writeLock().unlock();
+
+        return obj;
+    }
+
+    public Object stratum_dumpprivkey() {
+        return "";
+    }
+
+    public Object stratum_validateaddress(String _address) {
+        /*
+         * "isvalid" : true|false, (boolean) If the address is valid or not.
+         * If not, this is the only property returned. "address" :
+         * "address", (string) The bitcoin address validated "scriptPubKey"
+         * : "hex", (string) The hex encoded scriptPubKey generated by the
+         * address "ismine" : true|false, (boolean) If the address is yours
+         * or not "iswatchonly" : true|false, (boolean) If the address is
+         * watchonly "isscript" : true|false, (boolean) If the key is a
+         * script "pubkey" : "publickeyhex", (string) The hex value of the
+         * raw public key "iscompressed" : true|false, (boolean) If the
+         * address is compressed "account" : "account" (string) DEPRECATED.
+         * The account associated with the address, "" is the default
+         * account "timestamp" : timestamp, (number, optional) The creation
+         * time of the key if available in seconds since epoch (Jan 1 1970
+         * GMT) "hdkeypath" : "keypath" (string, optional) The HD keypath if
+         * the key is HD and available "hdmasterkeyid" : "<hash160>"
+         * (string, optional) The Hash160 of the HD master pubkey
+         */
+        JSONObject obj = new JSONObject();
+
+        obj.put("isvalid", true);
+        obj.put("address", _address + "");
+        obj.put("scriptPubKey", "hex");
+        obj.put("ismine", true);
+        obj.put("iswatchonly", true);
+        obj.put("isscript", true);
+        obj.put("timestamp", 0);
+        obj.put("hdkeypath", "");
+        obj.put("hdmasterkeyid", new byte[0]); // new byte[160]
+
+        return obj;
+    }
+
+    public Object stratum_getdifficulty() {
+        // TODO: This needs to be refactored to return valid data
+        return 0x4000;
+    }
+
+    public Object stratum_getmininginfo() {
+        AionBlock bestBlock = getBestBlock();
+
+        JSONObject obj = new JSONObject();
+        obj.put("blocks", bestBlock.getNumber());
+        obj.put("currentblocksize", 0);
+        obj.put("currentblocktx", bestBlock.getTransactionsList().size());
+        obj.put("difficulty", 3368767.14053294);
+        obj.put("errors", "");
+        obj.put("genproclimit", -1);
+        obj.put("hashespersec", 0);
+        obj.put("pooledtx", 0);
+        obj.put("testnet", false);
+
+        return obj;
+    }
+
+    public Object stratum_submitblock(Object nce, Object soln, Object hdrHash) {
+        JSONObject obj = new JSONObject();
+
+        if (nce != null && soln != null && hdrHash != null) {
+
+            templateMapLock.writeLock().lock();
+
+            AionBlock bestBlock = templateMap.get(hdrHash);
+
+            boolean successfulSubmit = false;
+            // TODO Clean up this section once decided on event vs direct call
+            if (bestBlock != null) {
+                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + "")));
+            }
+
+            if (successfulSubmit) {
+                // Found a solution for this height and successfully submitted, clear all entries for next height
+                LOG.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                templateMap.clear();
+            }
+
+            templateMapLock.writeLock().unlock();
+
+            // TODO: Simplified response for now, need to provide better feedback to caller in next update
+            obj.put("result", true);
+        } else {
+            obj.put("message", "success");
+            obj.put("code", -1);
+        }
+
+        return obj;
+    }
+
+    public Object stratum_getHeaderByBlockNumber(Object _blockNum) {
+        JSONObject obj = new JSONObject();
+
+        if (_blockNum != null) {
+            String bnStr = _blockNum + "";
+            try {
+                int bnInt = Integer.decode(bnStr);
+                AionBlock block = getBlockRaw(bnInt);
+
+                if (block != null) {
+                    A0BlockHeader header = block.getHeader();
+                    obj.put("code", 0); // 0 = success
+                    obj.put("nonce", toHexString(header.getNonce()));
+                    obj.put("solution", toHexString(header.getSolution()));
+                    obj.put("headerHash", toHexString(HashUtil.h256(header.getHeaderBytes(false))));
+                    obj.putOpt("blockHeader", header.toJSON());
+                } else {
+                    obj.put("message", "Fail - Unable to find block" + bnStr);
+                    obj.put("code", -2);
+                }
+            } catch (Exception e) {
+                obj.put("message", bnStr + " must be an integer value");
+                obj.put("code", -3);
+            }
+        } else {
+            obj.put("message", "Missing block number");
+            obj.put("code", -1);
+        }
+
+        return obj;
     }
 
     // --------------------------------------------------------------------
