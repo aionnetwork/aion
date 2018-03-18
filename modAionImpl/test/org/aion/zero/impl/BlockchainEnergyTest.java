@@ -37,7 +37,6 @@ package org.aion.zero.impl;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Test;
@@ -61,7 +60,7 @@ public class BlockchainEnergyTest {
 
         // in cases where no transactions are included (no energy usage)
         // the default energy limit should persist (it should not degrade)
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(block.getNrgLimit()).isEqualTo(bc.getGenesis().getNrgLimit());
     }
 
@@ -94,13 +93,13 @@ public class BlockchainEnergyTest {
             txs.add(atx);
 
         }
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs);
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), txs, true);
         ImportResult result = bc.tryToConnect(block);
 
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // proceed with connecting the next block, should observe an increase in energyLimit
-        AionBlock secondBlock = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST);
+        AionBlock secondBlock = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
         assertThat(secondBlock.getNrgLimit()).isGreaterThan(block.getNrgLimit());
         System.out.println(String.format("%d > %d", secondBlock.getNrgLimit(), block.getNrgLimit()));
     }

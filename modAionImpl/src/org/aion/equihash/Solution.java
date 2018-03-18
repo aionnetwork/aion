@@ -39,12 +39,14 @@ public class Solution implements ISolution {
     private IAionBlock block;
     private byte[] nonce;
     private byte[] solution;
+    private long timeStamp;
 
-    public Solution(IAionBlock block, byte[] nonce, byte[] solution) {
+    public Solution(IAionBlock block, byte[] nonce, byte[] solution, long timeStamp) {
 
         this.block = block;
         this.nonce = nonce;
         this.solution = solution;
+        this.timeStamp = timeStamp;
     }
 
     public IAionBlock getBlock() {
@@ -69,5 +71,13 @@ public class Solution implements ISolution {
 
     public void setSolution(byte[] solution) {
         this.solution = solution;
+    }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }

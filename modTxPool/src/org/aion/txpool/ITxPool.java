@@ -53,8 +53,12 @@ public interface ITxPool<TX extends ITransaction> {
 
     Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
 
+    BigInteger bestNonce(Address addr);
+
     void updateBlkNrgLimit(long nrg);
 
     @SuppressWarnings("SameReturnValue")
     String getVersion();
+
+    List<TX> snapshotAll();
 }

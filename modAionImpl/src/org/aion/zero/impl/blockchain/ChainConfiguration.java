@@ -25,6 +25,7 @@ package org.aion.zero.impl.blockchain;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.BIUtil;
+import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
@@ -58,7 +59,7 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     protected IMiner<?, ?> miner;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
-    protected EquiValidator equiValidator;
+    protected OptimizedEquiValidator equiValidator;
     protected Address tokenBridgingOwnerAddress;
 
     public ChainConfiguration() {
@@ -106,9 +107,9 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
      *
      * @return
      */
-    protected EquiValidator getEquihashValidator() {
+    protected OptimizedEquiValidator getEquihashValidator() {
         if (this.equiValidator == null) {
-            this.equiValidator = new EquiValidator(CfgAion.getN(), CfgAion.getK());
+            this.equiValidator = new OptimizedEquiValidator(CfgAion.getN(), CfgAion.getK());
         }
         return this.equiValidator;
     }

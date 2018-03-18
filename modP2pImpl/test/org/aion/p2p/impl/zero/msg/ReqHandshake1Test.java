@@ -27,7 +27,6 @@ package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.*;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +41,7 @@ import org.junit.Test;
 /**
  * @author chris
  */
-public class ReqHandshake2Test {
+public class ReqHandshake1Test {
 
     private byte[] validNodeId = UUID.randomUUID().toString().getBytes();
 
@@ -63,7 +62,7 @@ public class ReqHandshake2Test {
 
 
     @Before
-    public void ReqHandshake2Test() throws UnsupportedEncodingException {
+    public void ReqHandshake2Test() {
 
         randomRevision = new byte[Byte.MAX_VALUE];
         ThreadLocalRandom.current().nextBytes(randomRevision);
@@ -77,7 +76,7 @@ public class ReqHandshake2Test {
     @Test
     public void testRoute() {
         System.out.println("randomRevision " + randomRevision);
-        ReqHandshake2 req = new ReqHandshake2(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
+        ReqHandshake1 req = new ReqHandshake1(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
         assertEquals(Ver.V0, req.getHeader().getVer());
         assertEquals(Ctrl.NET, req.getHeader().getCtrl());
         assertEquals(Act.REQ_HANDSHAKE, req.getHeader().getAction());
@@ -86,10 +85,10 @@ public class ReqHandshake2Test {
     @Test
     public void testValidEncodeDecode() {
 
-        ReqHandshake2 req1 = new ReqHandshake2(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
+        ReqHandshake1 req1 = new ReqHandshake1(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
         byte[] bytes = req1.encode();
 
-        ReqHandshake2 req2 = ReqHandshake2.decode(bytes);
+        ReqHandshake1 req2 = ReqHandshake1.decode(bytes);
         assertNotNull(req2.getNodeId());
         assertArrayEquals(req1.getNodeId(), req2.getNodeId());
         assertArrayEquals(req1.getIp(), req2.getIp());
@@ -101,7 +100,7 @@ public class ReqHandshake2Test {
     @Test
     public void testInvalidEncodeDecode() {
 
-        ReqHandshake2 req1 = new ReqHandshake2(invalidNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
+        ReqHandshake1 req1 = new ReqHandshake1(invalidNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
         byte[] bytes = req1.encode();
         assertNull(bytes);
     }

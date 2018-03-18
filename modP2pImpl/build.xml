@@ -63,6 +63,21 @@
     </junit>
   </target>
 
+  <target name="ci_build" depends="test_build">
+    <mkdir dir="${test.report.dir}" />
+    <junit printsummary="on" haltonfailure="no" fork="true">
+      <classpath>
+        <path refid="classpath.test"/>
+        <pathelement location="${dir.test}"/>
+      </classpath>
+      <formatter type="plain" usefile="false" />
+      <formatter type="xml" />
+      <batchtest todir="${test.report.dir}">
+        <fileset dir="${src.test}" includes="**/*Test.java" />
+      </batchtest>
+    </junit>
+  </target>
+
 
   <target name="build">
     <mkdir dir="${dir.dest}"/>

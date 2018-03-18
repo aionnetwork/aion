@@ -5,6 +5,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.p2p.*;
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
@@ -143,7 +144,7 @@ public class BlockPropagationTest {
                 .withDefaultAccounts(accounts)
                 .build();
 
-        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST);
+        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -183,7 +184,7 @@ public class BlockPropagationTest {
                 .withDefaultAccounts(accounts)
                 .build();
 
-        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST);
+        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -238,7 +239,7 @@ public class BlockPropagationTest {
                 .withDefaultAccounts(accounts)
                 .build();
 
-        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST);
+        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -290,7 +291,7 @@ public class BlockPropagationTest {
                 .withDefaultAccounts(accounts)
                 .build();
 
-        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST);
+        AionBlock block = bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());

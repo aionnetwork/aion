@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-import org.aion.base.timer.ITimer;
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
@@ -39,23 +38,12 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITransaction> extends IPendingState<Tx> {
 
-    List<Tx> addPendingTransactions(List<Tx> transactions, ITimer timer);
 
-    List<Tx> addPendingTransaction(Tx tx, ITimer timer);
 
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
     List<Tx> newTransactions(List<Tx> txSet);
 
-    /**
-     * get the first transaction nonce of the given account inside the txpool
-     *
-     * @param addr
-     *         account address
-     * @return transaction nonce.
-     * @jay
-     */
-    Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
 
     /**
      * get txpool version
@@ -64,4 +52,10 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
      * @jay
      */
     String getVersion();
+
+    List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
+
+    List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
+
+    Map<BigInteger,Tx> getCacheTx(Address from);
 }

@@ -38,7 +38,7 @@ package org.aion.zero.impl.sync;
 /**
  * @author chris
  */
-final class HeaderQuery{
+final class HeaderQuery {
 
     String fromNode;
 

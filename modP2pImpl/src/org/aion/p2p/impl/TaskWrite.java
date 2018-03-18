@@ -1,14 +1,41 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ * This file is part of the aion network project.
+ *
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
+ *
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
+ *
+ * Aion foundation.
+ *
+ */
+
 package org.aion.p2p.impl;
 
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author chris
+ */
 public class TaskWrite implements Runnable {
 
     private ExecutorService workers;
@@ -37,8 +64,7 @@ public class TaskWrite implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setName("p2p-write");
-
-        // NOTE: the following logic may cause message loss
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         if (this.channelBuffer.onWrite.compareAndSet(false, true)) {
             /*
              * @warning header set len (body len) before header encode
@@ -49,7 +75,8 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
-            //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+            // print route
+            // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
             if (bodyBytes != null)
@@ -67,9 +94,7 @@ public class TaskWrite implements Runnable {
             } finally {
                 this.channelBuffer.onWrite.set(false);
                 try {
-
                     Msg msg = this.channelBuffer.messages.poll(1, TimeUnit.MILLISECONDS);
-
                     if (msg != null) {
                         //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                         workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));

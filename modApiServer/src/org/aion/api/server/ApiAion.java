@@ -117,7 +117,7 @@ public abstract class ApiAion extends Api {
         AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
         ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
 
-        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret));
+        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
     }
 
     // --Commented out by Inspection START (02/02/18 6:57 PM):
@@ -495,7 +495,9 @@ public abstract class ApiAion extends Api {
     }
 
     private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
-        return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+        synchronized (this.ac.getAionHub().getPendingState()) {
+            return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+        }
     }
 
     private void regEvents() {
