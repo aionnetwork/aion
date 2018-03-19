@@ -28,6 +28,7 @@ package org.aion.p2p.impl;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -83,7 +84,7 @@ public final class Node implements INode {
 
     private byte[] bestBlockHash;
 
-    private byte[] totalDifficulty;
+    private BigInteger totalDifficulty = BigInteger.ZERO;
 
     private String binaryVersion = "";
 
@@ -346,17 +347,15 @@ public final class Node implements INode {
     }
 
     @Override
-    public byte[] getTotalDifficulty() {
+    public BigInteger getTotalDifficulty() {
         return this.totalDifficulty;
     }
 
     @Override
-    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, final byte[] _totalDifficulty) {
-        if (_bestBlockNumber > this.bestBlockNumber) {
-            this.bestBlockNumber = _bestBlockNumber;
-            this.bestBlockHash = _bestBlockHash;
-            this.totalDifficulty = _totalDifficulty;
-        }
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
+        this.bestBlockNumber = _bestBlockNumber;
+        this.bestBlockHash = _bestBlockHash;
+        this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
     }
 
     void copyNodeStatus(Node _n) {

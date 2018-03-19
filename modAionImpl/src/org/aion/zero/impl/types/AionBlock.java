@@ -54,7 +54,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
 
     /* Private */
     private byte[] rlpEncoded;
-    private boolean parsed = false;
+    private volatile boolean parsed = false;
 
     private Trie txsState;
 
@@ -108,23 +108,28 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         this.parsed = true;
     }
 
-    public synchronized void parseRLP() {
-        if (parsed) {
+    public void parseRLP() {
+        if (this.parsed) {
             return;
         }
 
-        RLPList params = RLP.decode2(rlpEncoded);
-        RLPList block = (RLPList) params.get(0);
+        synchronized (this) {
+            if (this.parsed)
+                return;
+            
+            RLPList params = RLP.decode2(rlpEncoded);
+            RLPList block = (RLPList) params.get(0);
 
-        // Parse Header
-        RLPList header = (RLPList) block.get(0);
-        this.header = new A0BlockHeader(header);
+            // Parse Header
+            RLPList header = (RLPList) block.get(0);
+            this.header = new A0BlockHeader(header);
 
-        // Parse Transactions
-        RLPList txTransactions = (RLPList) block.get(1);
-        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
+            // Parse Transactions
+            RLPList txTransactions = (RLPList) block.get(1);
+            this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
 
-        this.parsed = true;
+            this.parsed = true;
+        }
     }
 
     public int size() {
@@ -192,8 +197,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     public BigInteger getCumulativeDifficulty() {
         // TODO: currently returning incorrect total difficulty
         parseRLP();
-        BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
-        return calcDifficulty;
+        return new BigInteger(1, this.header.getDifficulty());
     }
 
     public long getTimestamp() {

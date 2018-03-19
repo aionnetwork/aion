@@ -26,9 +26,7 @@ package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Future;
 
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
@@ -44,9 +42,8 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.tx.A0TxTask;
-import org.aion.zero.impl.tx.TxExecutor;
+import org.aion.zero.impl.tx.TxBroadcaster;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -55,7 +52,6 @@ import org.aion.zero.types.IAionBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.p2p.INode;
 import org.slf4j.Logger;
 
 public class AionImpl implements IAionChain {
@@ -127,12 +123,10 @@ public class AionImpl implements IAionChain {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Future<List<AionTransaction>> submitTransaction(AionTransaction transaction) {
+    public void broadcastTransaction(AionTransaction transaction) {
         A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
 
-        final Future<List<AionTransaction>> listFuture = TxExecutor.getInstance().submitTransaction(txTask);
-        this.aionHub.getTxThread().submitTransaction(transaction);
-        return listFuture;
+        TxBroadcaster.getInstance().submitTransaction(txTask);
     }
 
     public long estimateTxNrg(AionTransaction tx, IAionBlock block) {

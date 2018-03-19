@@ -25,6 +25,8 @@
 
 package org.aion.p2p;
 
+import java.math.BigInteger;
+
 /**
  *
  * @author chris
@@ -70,13 +72,13 @@ public interface INode {
     /**
      * @return BigInteger
      */
-    byte[] getTotalDifficulty();
+    BigInteger getTotalDifficulty();
 
     /**
      * @param _bestBlockNumber long
      * @param _bestBlockHash byte[]
      * @param _totalDifficulty long
      */
-    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, final byte[] _totalDifficulty);
+    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty);
 
 }

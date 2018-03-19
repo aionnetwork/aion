@@ -23,15 +23,25 @@
  ******************************************************************************/
 package org.aion.mcf.blockchain;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 
 public interface IPendingState<TX extends ITransaction> {
+
+    List<TX> addPendingTransactions(List<TX> transactions);
+
+    List<TX> addPendingTransaction(TX tx);
 
     IRepositoryCache<?, ?, ?> getRepository();
 
     List<TX> getPendingTransactions();
 
+    BigInteger bestNonce(Address addr);
+
+    String getVersion();
 }

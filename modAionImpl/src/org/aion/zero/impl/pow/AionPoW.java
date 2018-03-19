@@ -38,6 +38,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
@@ -49,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
 
@@ -59,17 +61,20 @@ import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
 public class AionPoW {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
+    private static final int syncLimit = 128;
+
     protected IAionBlockchain blockchain;
     protected IPendingState<AionTransaction> pendingState;
     protected IEventMgr eventMgr;
 
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected long lastUpdate = 0;
+    protected AtomicLong lastUpdate = new AtomicLong(0);
 
     private AtomicBoolean shutDown = new AtomicBoolean();
-    private static int syncLimit = 128;
     private SyncMgr syncMgr;
+
+    private final CfgAion config = CfgAion.inst();
 
     /**
      * Creates an {@link AionPoW} instance. Be sure to call
@@ -105,8 +110,8 @@ public class AionPoW {
                         Thread.sleep(100);
 
                         long now = System.currentTimeMillis();
-                        if (now - lastUpdate > 3000 && newPendingTxReceived.compareAndSet(true, false)
-                                || now - lastUpdate > 10000) { // fallback, when
+                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
+                                || now - lastUpdate.get() > 10000) { // fallback, when
                                                                // we never
                                                                // received any
                                                                // events
@@ -179,7 +184,7 @@ public class AionPoW {
      * @param solution
      *            The generated equihash solution
      */
-    protected void processSolution(Solution solution) {
+    protected synchronized void processSolution(Solution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
@@ -226,6 +231,17 @@ public class AionPoW {
      */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
+
+            if (!config.getConsensus().getMining()) {
+                return;
+            }
+
+            // TODO: Validate the trustworthiness of getNetworkBestBlock - can
+            // it be used in DDOS?
+            if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber() > syncLimit) {
+                return;
+            }
+
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Creating a new block template");
             }
@@ -236,22 +252,16 @@ public class AionPoW {
 
             AionBlock newBlock = blockchain.createNewBlock(bestBlock, txs, false);
 
-            // TODO: Validate the trustworthiness of getNetworkBestBlock - can
-            // it be used in DDOS?
-            if (this.syncMgr.getNetworkBestBlockNumber() - bestBlock.getNumber() > syncLimit) {
-                return;
-            }
-
             EventConsensus ev = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
             ev.setFuncArgs(Collections.singletonList(newBlock));
             eventMgr.newEvent(ev);
 
             // update last timestamp
-            lastUpdate = System.currentTimeMillis();
+            lastUpdate.set(System.currentTimeMillis());
         }
     }
 
-    public void shutdown() {
+    public synchronized void shutdown() {
         shutDown.set(true);
     }
 }

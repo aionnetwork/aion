@@ -37,8 +37,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The thread print out sync status
@@ -53,26 +51,23 @@ final class TaskShowStatus implements Runnable {
 
     private final AionBlockchainImpl chain;
 
-    private final AtomicLong jump;
+    private final NetworkStatus networkStatus;
 
-    private final AtomicReference<NetworkStatus> networkStatus;
-
-    private final SyncStatis statis;
+    private final SyncStatics statics;
 
     private final Logger log;
 
     private final boolean printReport;
     private final String reportFolder;
 
-    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final AtomicLong _jump,
-            final AtomicReference<NetworkStatus> _networkStatus, final SyncStatis _statis, final Logger _log,
+    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain,
+            final NetworkStatus _networkStatus, final SyncStatics _statics, final Logger _log,
             final boolean _printReport, final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
-        this.jump = _jump;
         this.networkStatus = _networkStatus;
-        this.statis = _statis;
+        this.statics = _statics;
         this.log = _log;
         this.printReport = _printReport;
         this.reportFolder = _reportFolder;
@@ -82,15 +77,24 @@ final class TaskShowStatus implements Runnable {
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
         while (this.start.get()) {
-            AionBlock blk = this.chain.getBestBlock();
-            String status = "[sync-status avg-import=" + this.statis.getAvgBlocksPerSec() //
-                    + " b/s jump=" + jump.get() //
-                    + " td=" + this.chain.getTotalDifficulty().toString(10) //
-                    + "/" + networkStatus.get().totalDiff.toString(10) //
-                    + " b-num=" + blk.getNumber() + "/" + this.networkStatus.get().blockNumber //
+            AionBlock selfBest;
+            String selfTd;
+            synchronized (this.chain) {
+                selfBest = this.chain.getBestBlock();
+                selfTd = this.chain.getTotalDifficulty().toString(10);
+            }
+
+            String status = "[sync-status avg-import=" + this.statics.getAvgBlocksPerSec() //
+                    + "b/s" //
+                    + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10) //
+                    + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus.getTargetBestBlockNumber() //
                     + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) //
-                    + "/" + Hex.toHexString(networkStatus.get().blockHash) + "]\n";
+                    + "/" + this.networkStatus.getTargetBestBlockHash() + "]";
+
+            // print to std output
             System.out.print(status);
+
+            // print to report file
             if (printReport) {
                 try {
                     Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-sync-report.out"),

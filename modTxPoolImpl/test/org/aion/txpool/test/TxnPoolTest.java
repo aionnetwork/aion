@@ -50,6 +50,7 @@ import org.junit.Ignore;
 import java.math.BigInteger;
 import java.util.*;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -236,7 +237,7 @@ public class TxnPoolTest {
     }
 
     @Test
-
+    //@Ignore
     public void snapshot3() {
         Properties config = new Properties();
         config.put("txn-timeout", "100");
@@ -865,5 +866,70 @@ public class TxnPoolTest {
                 assertTrue(nl.get(i).equals(BigInteger.valueOf(i)));
             }
         }
+    }
+
+    @Test
+    public void testSnapshotAll() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+        ECKey key = ECKeyFac.inst().create();
+
+        List<AionTransaction> txs = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.getAddress()),
+                    Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                    ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, 1L);
+            tx.sign(key);
+            txs.add(tx);
+        }
+
+        Properties config = new Properties();
+        ITxPool<AionTransaction> tp = new TxPoolA0<>(config);
+
+        tp.add(txs.subList(0, 500));
+        assertEquals(500, tp.snapshot().size());
+        assertEquals(500, tp.snapshotAll().size());
+
+        tp.remove(txs.subList(0, 100));
+        assertEquals(400, tp.snapshot().size());
+        assertEquals(400, tp.snapshotAll().size());
+    }
+
+    @Test
+    public void testRemove2() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+        ECKey key = ECKeyFac.inst().create();
+
+        List<AionTransaction> txs = new ArrayList<>();
+        for (int i = 0; i < 95; i++) {
+            AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.getAddress()),
+                    Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                    ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, 1L);
+            tx.sign(key);
+            tx.setNrgConsume(100L);
+            txs.add(tx);
+        }
+
+        Properties config = new Properties();
+        ITxPool<AionTransaction> tp = new TxPoolA0<>(config);
+
+        tp.add(txs.subList(0, 26));
+        assertEquals(26, tp.snapshot().size());
+        assertEquals(26, tp.snapshotAll().size());
+
+        tp.remove(txs.subList(0, 13));
+        assertEquals(13, tp.snapshot().size());
+        assertEquals(13, tp.snapshotAll().size());
+
+        tp.add(txs.subList(26, 70));
+        assertEquals(57, tp.snapshot().size());
+        assertEquals(57, tp.snapshotAll().size());
+
+        tp.remove(txs.subList(13, 40));
+        assertEquals(30, tp.snapshot().size());
+        assertEquals(30, tp.snapshotAll().size());
+        // assume we don't remove tx 40
+        tp.remove(txs.subList(41, 70));
+        assertEquals(1, tp.snapshot().size());
+        assertEquals(1, tp.snapshotAll().size());
     }
 }

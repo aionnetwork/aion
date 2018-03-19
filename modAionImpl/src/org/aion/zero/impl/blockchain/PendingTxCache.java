@@ -93,7 +93,9 @@ public class PendingTxCache {
 
     private boolean isCacheMax(Map<BigInteger, AionTransaction> txmap) {
 
-        LOG.info("isCacheMax [{}] [{}]", currectSize.get(), getAccuTxSize(txmap.values().stream().collect(Collectors.toList())));
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("isCacheMax [{}] [{}]", currectSize.get(), getAccuTxSize(txmap.values().stream().collect(Collectors.toList())));
+        }
         return (currectSize.get() + getAccuTxSize(txmap.values().stream().collect(Collectors.toList()))) > cacheMax;
     }
 
@@ -180,8 +182,14 @@ public class PendingTxCache {
             int cz = currectSize.get();
             currectSize.set(cz - getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
 
-            BigInteger finalBn = bn;
-            accountCache.entrySet().removeIf(e-> (e.getKey().compareTo(finalBn) < 0) );
+            Iterator<Map.Entry<BigInteger, AionTransaction>> itr = accountCache.entrySet().iterator();
+            while (itr.hasNext()) {
+                Map.Entry<BigInteger, AionTransaction> entry = itr.next();
+                if (entry.getKey().compareTo(bn) < 0) {
+                    itr.remove();
+                }
+            }
+
             currectSize.addAndGet(getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
 
             if (LOG.isDebugEnabled()) {
@@ -197,7 +205,7 @@ public class PendingTxCache {
     }
 
     public synchronized Set<Address> getCacheTxAccount() {
-        return this.pendingTx.keySet();
+        return new HashSet<>(this.pendingTx.keySet());
     }
 
     public synchronized Map<BigInteger,AionTransaction> geCacheTx(Address from) {

@@ -38,37 +38,13 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITransaction> extends IPendingState<Tx> {
 
-    List<Tx> addPendingTransactions(List<Tx> transactions);
-
-    List<Tx> addPendingTransaction(Tx tx);
-
+    // called by onBest
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
-    List<Tx> newTransactions(List<Tx> txSet);
-
-    /**
-     * get the first transaction nonce of the given account inside the txpool
-     *
-     * @param addr
-     *         account address
-     * @return transaction nonce.
-     * @jay
-     */
-    Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
-
-    /**
-     * get txpool version
-     *
-     * @return txpool version.
-     * @jay
-     */
-    String getVersion();
-
-    BigInteger bestNonce(Address addr);
-
-    List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
+    List<Tx> addToTxCache(Tx tx);
 
     List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
 
     Map<BigInteger,Tx> getCacheTx(Address from);
+
 }

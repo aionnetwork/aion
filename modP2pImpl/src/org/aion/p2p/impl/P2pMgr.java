@@ -67,7 +67,7 @@ public final class  P2pMgr implements IP2pMgr {
     private final int maxTempNodes;
     private final int maxActiveNodes;
 
-    private final boolean bootlistSyncOnly;
+    private final boolean syncSeedsOnly;
     private final boolean showStatus;
     final boolean showLog;
     private final boolean printReport;
@@ -116,7 +116,7 @@ public final class  P2pMgr implements IP2pMgr {
                 if (num == 0)
                     continue;
 
-                selectorLock.lock();
+                //selectorLock.lock();
                 Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 
                 while (keys.hasNext()) {
@@ -140,7 +140,7 @@ public final class  P2pMgr implements IP2pMgr {
                             closeSocket((SocketChannel) sk.channel());
                         }
                 }
-                selectorLock.unlock();
+                //selectorLock.unlock();
             }
             if (showLog)
                 System.out.println("<p2p-pi shutdown>");
@@ -210,7 +210,7 @@ public final class  P2pMgr implements IP2pMgr {
                         configChannel(channel);
 
                         if (channel.finishConnect() && channel.isConnected()) {
-                            selectorLock.lock();
+                            //selectorLock.lock();
                             SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
@@ -220,7 +220,7 @@ public final class  P2pMgr implements IP2pMgr {
                             node.setPortConnected(channel.socket().getLocalPort());
 
                             addOutboundNode(node);
-                            selectorLock.unlock();
+                            //selectorLock.unlock();
 
                             // fire extended handshake request first
                             workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), channel, cachedReqHandshake1, rb));
@@ -255,9 +255,9 @@ public final class  P2pMgr implements IP2pMgr {
                 try {
                     Thread.sleep(PERIOD_CLEAR);
 
-                    selectorLock.lock();
+                    //selectorLock.lock();
                     nodeMgr.rmTimeOutInbound(P2pMgr.this);
-                    selectorLock.unlock();
+                    //selectorLock.unlock();
 
                     // clean up temp nodes list if metric failed.
                     nodeMgr.rmMetricFailedNodes();
@@ -277,9 +277,9 @@ public final class  P2pMgr implements IP2pMgr {
                             continue;
 
                         if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
-                            selectorLock.lock();
+                            //selectorLock.lock();
                             closeSocket(node.getChannel());
-                            selectorLock.unlock();
+                            //selectorLock.unlock();
                             outboundIt.remove();
 
                             if (showLog)
@@ -287,9 +287,9 @@ public final class  P2pMgr implements IP2pMgr {
                         }
                     }
 
-                    selectorLock.lock();
+                    //selectorLock.lock();
                     nodeMgr.rmTimeOutActives(P2pMgr.this);
-                    selectorLock.unlock();
+                    //selectorLock.unlock();
 
                 } catch (Exception e) {
                 }
@@ -322,7 +322,7 @@ public final class  P2pMgr implements IP2pMgr {
         this.maxActiveNodes = _maxActiveNodes;
         this.showStatus = _showStatus;
         this.showLog = _showLog;
-        this.bootlistSyncOnly = _bootlistSyncOnly;
+        this.syncSeedsOnly = _bootlistSyncOnly;
         this.printReport = _printReport;
         this.reportFolder = _reportFolder;
 
@@ -490,8 +490,9 @@ public final class  P2pMgr implements IP2pMgr {
 
         Header h = rb.header;
 
-        byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
+        //byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
 
+        byte[] bodyBytes = rb.body;
         rb.refreshHeader();
         rb.refreshBody();
 
@@ -640,7 +641,7 @@ public final class  P2pMgr implements IP2pMgr {
                 break;
 
             case Act.RES_ACTIVE_NODES:
-                if (bootlistSyncOnly)
+                if (syncSeedsOnly)
                     break;
 
                 if (rb.nodeIdHash != 0) {
@@ -701,8 +702,8 @@ public final class  P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            //workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
-            workers = Executors.newCachedThreadPool();
+            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
+            // workers = Executors.newCachedThreadPool();
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
@@ -721,7 +722,7 @@ public final class  P2pMgr implements IP2pMgr {
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
 
-            if(!bootlistSyncOnly)
+            if(!syncSeedsOnly)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
 
@@ -757,22 +758,6 @@ public final class  P2pMgr implements IP2pMgr {
         return nodeMgr.getRandom();
     }
 
-    public INode getRandom(NodeRandPolicy nrp, long bbn) {
-        switch (nrp) {
-            case RND:
-                break;
-            case REALTIME:
-
-                // only fetch node with blocknumber > ( highest -128 )
-                return nodeMgr.getRandomRealtime(bbn);
-
-            case SYNC:
-                break;
-        }
-
-        return nodeMgr.getRandom();
-    }
-
     @Override
     public Map<Integer, INode> getActiveNodes() {
         return new HashMap<>(this.nodeMgr.getActiveNodesMap());
@@ -781,9 +766,9 @@ public final class  P2pMgr implements IP2pMgr {
     /**
      * for test
      */
-    void clearTempNodes() {
-        this.nodeMgr.clearTempNodes();
-    }
+//    void clearTempNodes() {
+//        this.nodeMgr.clearTempNodes();
+//    }
 
     int getTempNodesCount() {
         return nodeMgr.tempNodesSize();
