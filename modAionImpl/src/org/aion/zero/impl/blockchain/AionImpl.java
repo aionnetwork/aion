@@ -132,7 +132,7 @@ public class AionImpl implements IAionChain {
     public long estimateTxNrg(AionTransaction tx, IAionBlock block) {
 
         if (tx.getSignature() == null) {
-            tx.sign(ECKeyFac.inst().fromPrivate(Address.ZERO_ADDRESS().toBytes()));
+            tx.sign(ECKeyFac.inst().fromPrivate(new byte[64]));
         }
 
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
@@ -151,7 +151,7 @@ public class AionImpl implements IAionChain {
     @Override
     public AionTxReceipt callConstant(AionTransaction tx, IAionBlock block) {
         if (tx.getSignature() == null) {
-            tx.sign(ECKeyFac.inst().fromPrivate(new byte[32]));
+            tx.sign(ECKeyFac.inst().fromPrivate(new byte[64]));
         }
 
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
