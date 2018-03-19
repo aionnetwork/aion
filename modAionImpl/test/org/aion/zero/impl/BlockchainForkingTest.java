@@ -71,9 +71,18 @@ public class BlockchainForkingTest {
 
         StandaloneBlockchain bc = b.bc;
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        AionBlock sameBlock = new AionBlock(block.getEncoded());
 
         ImportResult firstRes = bc.tryToConnect(block);
-        ImportResult secondRes = bc.tryToConnect(block);
+
+        // check that the returned block is the first block
+        assertThat(bc.getBestBlock() == block).isTrue();
+
+        ImportResult secondRes = bc.tryToConnect(sameBlock);
+
+        // the second block should get rejected, so check that the reference still refers
+        // to the first block (we dont change the published reference)
+        assertThat(bc.getBestBlock() == block).isTrue();
 
         assertThat(firstRes).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(secondRes).isEqualTo(ImportResult.EXIST);
@@ -128,11 +137,17 @@ public class BlockchainForkingTest {
         ImportResult result = bc.tryToConnect(standardBlock);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
+        // assert that the block we just inserted (best) is the instance that is returned
+        assertThat(bc.getBestBlock() == standardBlock).isTrue();
+
         System.out.println(new ByteArrayWrapper(bc.getRepository().getRoot()));
 
         ImportResult higherDifficultyResult = bc.tryToConnect(higherDifficultyBlock);
 
         assertThat(higherDifficultyResult).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(bc.getBestBlockHash()).isEqualTo(higherDifficultyBlock.getHash());
+
+        // the object reference here is intentional
+        assertThat(bc.getBestBlock() == higherDifficultyBlock).isTrue();
     }
 }

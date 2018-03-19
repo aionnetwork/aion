@@ -52,7 +52,6 @@ public class BlockPropagationTest {
 
         @Override public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash,
                 BigInteger _totalDifficulty) {
-
         }
 
         @Override
