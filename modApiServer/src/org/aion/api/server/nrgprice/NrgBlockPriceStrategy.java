@@ -46,9 +46,9 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
         else
             this.percentile = percentile;
 
-        // clamp the windowSize at the bottom
-        if (windowSize < 0)
-            this.windowSize = 0; // when no elements in window, just return the minPrice
+        // clamp the windowSize at the bottom at 1
+        if (windowSize < 1)
+            this.windowSize = 1; // when no elements in window, just return the minPrice
         else {
             this.windowSize = windowSize;
 
@@ -120,7 +120,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
         // if I'm still hungry, then I can't give a good enough prediction yet.
         // if I'm still hungry, and if the chain is being supported by proof of work, the miners will accept
         // transaction with any gasPrice > some minimum threshold they've set internally.
-        if (windowSize == 0 || isHungry())
+        if (isHungry())
             return defaultPrice;
 
         // let the backing syncronized collection do the locking for us.
