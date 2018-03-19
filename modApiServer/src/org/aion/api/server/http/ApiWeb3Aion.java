@@ -88,7 +88,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (blkHr != null) {
             blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                 public void onBlock(final IBlockSummary _bs) {
-                    System.out.println("onBlock event");
                     AionBlockSummary bs = (AionBlockSummary) _bs;
                     installedFilters.keySet().forEach((k) -> {
                         Fltr f = installedFilters.get(k);

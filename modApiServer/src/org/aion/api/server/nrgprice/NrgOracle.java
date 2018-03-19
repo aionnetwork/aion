@@ -62,7 +62,7 @@ public class NrgOracle {
         if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
             handler.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                 public void onBlock(final IBlockSummary _bs) {
-                    System.out.println("nrg-oracle - onBlock event");
+                    LOG.debug("nrg-oracle - onBlock event");
                     AionBlockSummary bs = (AionBlockSummary) _bs;
                     processBlock(bs);
                 }
