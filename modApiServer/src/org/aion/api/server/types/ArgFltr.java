@@ -91,7 +91,7 @@ public class ArgFltr {
             JSONArray topicList = json.optJSONArray("topics");
             if (topicList != null) {
                 for (Object topic : topicList) {
-                    if (topic.equals(null)) {
+                    if (topic == null || topic.equals(null)) {
                         topics.add((byte[][]) null);
                     } else if (topic instanceof String) {
                         byte[][] data = new byte[1][];
