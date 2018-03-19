@@ -78,10 +78,7 @@ public final class BroadcastTxHandler extends Handler {
             return;
         }
 
-        List<AionTransaction> txs = castRawTx(broadCastTx);
-        for (AionTransaction tx : txs) {
-            pendingState.addPendingTransaction(tx);
-        }
+        pendingState.addPendingTransactions(castRawTx(broadCastTx));
     }
 
     private List<AionTransaction> castRawTx(List<byte[]> broadCastTx) {
