@@ -194,7 +194,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                 }
 
                 // considering refactor later
-                BigInteger nonce = new BigInteger(tx.getNonce());
+                BigInteger nonce = new BigInteger(1, tx.getNonce());
 
                 BigInteger nrgCharge = BigInteger.valueOf(tx.getNrgPrice())
                         .multiply(BigInteger.valueOf(tx.getNrgConsume()));

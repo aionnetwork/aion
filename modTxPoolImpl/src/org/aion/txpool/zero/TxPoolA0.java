@@ -143,7 +143,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             mainMap.put(bw, new TXState(tx));
             newPendingTx.add(tx);
 
-            setBestNonce(tx.getFrom(), new BigInteger(tx.getNonce()));
+            setBestNonce(tx.getFrom(), new BigInteger(1, tx.getNonce()));
         }
 
         this.getMainMap().putAll(mainMap);
@@ -172,10 +172,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("TxPoolA0.remove:[{}] nonce:[{}]", ByteUtils.toHexString(tx.getHash()),
-                        new BigInteger(tx.getNonce()).toString());
+                        new BigInteger(1, tx.getNonce()).toString());
             }
 
-            long timestamp = new BigInteger(tx.getTimeStamp()).longValue()/ multiplyM;
+            long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue()/ multiplyM;
             if (this.getTimeView().get(timestamp) == null) {
                 continue;
             }
@@ -206,7 +206,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             AccountState as = this.getAccView(tx.getFrom());
-            as.getMap().remove(new BigInteger(tx.getNonce()));
+            as.getMap().remove(new BigInteger(1, tx.getNonce()));
             as.setDirty();
         }
 
@@ -286,7 +286,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                             cnt_txSz -= itx.getEncoded().length;
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                        itx.getFrom().toString(), new BigInteger(itx.getNonce()).toString(),
+                                        itx.getFrom().toString(), new BigInteger(1, itx.getNonce()).toString(),
                                         itx.getEncoded().length, itx.getNrgConsume());
                             }
 
