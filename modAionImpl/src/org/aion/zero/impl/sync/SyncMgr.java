@@ -34,8 +34,11 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -93,6 +96,8 @@ public final class SyncMgr {
 
     //private ExecutorService workers = Executors.newFixedThreadPool(5);
     private ExecutorService workers = Executors.newCachedThreadPool();
+
+    private Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
 
     private static final class AionSyncMgrHolder {
         static final SyncMgr INSTANCE = new SyncMgr();
@@ -175,7 +180,7 @@ public final class SyncMgr {
         SyncStatics statics = new SyncStatics(selfBest);
 
         new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
-        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log), "sync-ib").start();
+        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log, importedBlockHashes), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log), "sync-ss").start();
@@ -212,7 +217,7 @@ public final class SyncMgr {
      * @param _displayId String
      * @param _headers List validate headers batch and add batch to imported headers
      */
-    public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, final List<A0BlockHeader> _headers) {
+    public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, List<A0BlockHeader> _headers) {
         if (_headers == null || _headers.isEmpty()) {
             return;
         }
@@ -223,6 +228,9 @@ public final class SyncMgr {
 //            " from-block=" + _headers.get(0).getNumber() +
 //            " to-block=" + _headers.get(_headers.size() - 1).getNumber()
 //        );
+
+        // filter imported block headers
+        _headers = _headers.stream().filter((k) -> !importedBlockHashes.containsKey(k.getHash())).collect(Collectors.toList());
 
         _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
         importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, _headers));
