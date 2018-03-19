@@ -227,6 +227,8 @@ public class AionPendingStateImpl
                         unknownTx++;
                         if (addPendingTransactionImpl(tx)) {
                             newPending.add(tx);
+                        } else {
+                            break;
                         }
                     }
 
