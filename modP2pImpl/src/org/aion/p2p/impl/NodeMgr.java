@@ -25,18 +25,18 @@
 
 package org.aion.p2p.impl;
 
-import java.math.BigInteger;
-import java.io.File;
-import java.io.FileInputStream;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.INodeObserver;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.aion.p2p.INode;
-import org.aion.p2p.INodeMgr;
-import javax.xml.stream.*;
 
 public class NodeMgr implements INodeMgr {
 
@@ -51,6 +51,15 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> activeNodes = new ConcurrentHashMap<>();
+
+    private volatile INodeObserver observer;
+
+    public synchronized void registerNodeObserver(INodeObserver observer) {
+        if (this.observer != null) {
+            throw new IllegalStateException("cannot register multiple observers");
+        }
+        this.observer = observer;
+    }
 
     Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
@@ -295,6 +304,9 @@ public class NodeMgr implements INodeMgr {
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
+
+            if (this.observer != null)
+                this.observer.newActiveNode(_nodeIdHash);
         }
     }
 
@@ -314,6 +326,9 @@ public class NodeMgr implements INodeMgr {
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }
+
+            if (this.observer != null)
+                this.observer.newActiveNode(_channelHashCode);
         }
     }
 
@@ -358,6 +373,9 @@ public class NodeMgr implements INodeMgr {
                 activeIt.remove();
                 if (pmgr.showLog)
                     System.out.println("<p2p-clear active-timeout>");
+
+                if (this.observer != null)
+                    this.observer.removeActiveNode(key);
             }
         }
     }
