@@ -63,7 +63,7 @@ public abstract class TransactionExecThread<PS extends IPendingStateInternal, TX
 
     public Future<List<TX>> submitTransaction(TX tx) {
         Future<List<TX>> txListFuture = txExec.submit(() -> {
-            LOG.debug("TransactionExecThread.submitTransaction: " + tx.toString());
+            LOG.debug("TransactionExecThread.broadcastTransaction: " + tx.toString());
             return this.pendingState.addPendingTransaction(tx);
         });
 

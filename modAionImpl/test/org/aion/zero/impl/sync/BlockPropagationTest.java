@@ -50,6 +50,10 @@ public class BlockPropagationTest {
             return BigInteger.ZERO;
         }
 
+        @Override public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash,
+                BigInteger _totalDifficulty) {
+        }
+
         @Override
         public byte[] getIp() {
             return new byte[0];
@@ -68,10 +72,6 @@ public class BlockPropagationTest {
         @Override
         public int getPort() {
             return 0;
-        }
-
-        @Override
-        public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, BigInteger totalDifficulty) {
         }
     }
 

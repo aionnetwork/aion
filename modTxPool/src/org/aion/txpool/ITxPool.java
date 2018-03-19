@@ -31,6 +31,11 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Aion pending state should be the only user of transaction pool.
+ *
+ * @param <TX>
+ */
 public interface ITxPool<TX extends ITransaction> {
 
     String PROP_TXN_TIMEOUT = "txn-timeout";
