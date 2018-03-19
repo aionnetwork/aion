@@ -77,7 +77,6 @@ public final class BroadcastTxHandler extends Handler {
         if (broadCastTx.isEmpty()) {
             return;
         }
-
         pendingState.addPendingTransactions(castRawTx(broadCastTx));
     }
 
