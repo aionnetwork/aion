@@ -38,7 +38,6 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
@@ -54,6 +53,7 @@ import org.aion.rlp.RLP;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.mcf.config.CfgReports;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -68,6 +68,7 @@ import org.aion.zero.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
@@ -151,9 +152,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *         singleton instance of cfgAion
      */
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
-        PRINT_REPORT = cfgAion.isPrintReport();
-        FREQUENCY = cfgAion.getReportFrequency();
-        REPORTS_FOLDER = cfgAion.getReportsFolder();
+        CfgReports reports = cfgAion.getReports();
+        PRINT_REPORT = reports.isEnabled();
+        FREQUENCY = reports.getBlockFrequency();
+        REPORTS_FOLDER = new File(cfgAion.getBasePath(), reports.getPath()).getAbsolutePath();
 
         return new A0BCConfig() {
             @Override
