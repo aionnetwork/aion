@@ -69,11 +69,8 @@ public final class ReqStatusHandler extends Handler {
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
         this.log.debug("<req-status from-node={}>", _displayId);
-        ResStatus res = null;
-        synchronized (this.chain) {
-            res = new ResStatus(this.chain.getBestBlock().getNumber(), this.chain.getTotalDifficulty().toByteArray(),
+        ResStatus res = new ResStatus(this.chain.getBestBlock().getNumber(), this.chain.getTotalDifficulty().toByteArray(),
                     this.chain.getBestBlockHash(), this.genesisHash);
-        }
         this.mgr.send(_nodeIdHashcode, res);
     }
 }
