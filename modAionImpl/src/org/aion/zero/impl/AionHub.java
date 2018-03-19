@@ -43,6 +43,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.P2pMgr;
+import org.aion.utils.TaskDumpHeap;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -64,6 +65,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
@@ -93,6 +95,8 @@ public class AionHub {
     private IEventMgr eventMgr;
 
     private AionPoW pow;
+
+    private AtomicBoolean start = new AtomicBoolean(true);
 
     /**
      * A "cached" block that represents our local best block when the
@@ -167,6 +171,10 @@ public class AionHub {
 
         this.pow = new AionPoW();
         this.pow.init(blockchain, mempool, eventMgr);
+
+        if (cfg.getReports().isHeapDumpEnabled()){
+            new Thread(new TaskDumpHeap(this.start, cfg.getReports().getHeapDumpInterval(), reportsFolder), "dump-heap").start();
+        }
     }
 
     private void registerCallback() {
@@ -378,6 +386,8 @@ public class AionHub {
             repository.close();
             LOG.info("shutdown DB... Done!");
         }
+
+        this.start.set(false);
     }
 
     public SyncMgr getSyncMgr() {

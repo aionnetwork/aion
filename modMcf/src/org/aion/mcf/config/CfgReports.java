@@ -1,7 +1,5 @@
 package org.aion.mcf.config;
 
-import org.aion.mcf.config.Cfg;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -19,13 +17,17 @@ public class CfgReports {
 
     private boolean enable;
     private String path;
-    private long blockFrequency;
+    private long block_frequency;
+    private boolean enable_heap_dumps;
+    private int heap_dump_interval;
 
     public CfgReports() {
         // default configuration
         this.enable = false;
         this.path = "reports";
-        this.blockFrequency = 500L;
+        this.block_frequency = 500L;
+        this.enable_heap_dumps = false;
+        this.heap_dump_interval = 100000;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -43,7 +45,13 @@ public class CfgReports {
                             this.path = Cfg.readValue(sr);
                             break;
                         case "block_frequency":
-                            this.blockFrequency = Long.parseLong(Cfg.readValue(sr));
+                            this.block_frequency = Long.parseLong(Cfg.readValue(sr));
+                            break;
+                        case "enable_heap_dumps":
+                            this.enable_heap_dumps = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "heap_dump_interval":
+                            this.heap_dump_interval = Integer.parseInt(Cfg.readValue(sr));
                             break;
                         default:
                             Cfg.skipElement(sr);
@@ -81,6 +89,16 @@ public class CfgReports {
             xmlWriter.writeCharacters(String.valueOf(this.getBlockFrequency()));
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("enable_heap_dumps");
+            xmlWriter.writeCharacters(String.valueOf(this.isHeapDumpEnabled()));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("heap_dump_interval");
+            xmlWriter.writeCharacters(String.valueOf(this.getHeapDumpInterval()));
+            xmlWriter.writeEndElement();
+
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
@@ -104,6 +122,14 @@ public class CfgReports {
     }
 
     public long getBlockFrequency() {
-        return this.blockFrequency;
+        return this.block_frequency;
+    }
+
+    public boolean isHeapDumpEnabled() {
+        return enable_heap_dumps;
+    }
+
+    public int getHeapDumpInterval() {
+        return this.heap_dump_interval;
     }
 }
