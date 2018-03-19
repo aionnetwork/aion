@@ -250,7 +250,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!_bnOrId.equals(null))
+        if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         BigInteger balance = getRepoByJsonBlockId(bnOrId).getBalance(address);
@@ -261,7 +261,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!_bnOrId.equals(null))
+        if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         DataWord key = DataWord.ZERO;
@@ -282,7 +282,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!_bnOrId.equals(null))
+        if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         return TypeConverter.toJsonHex(getRepoByJsonBlockId(bnOrId).getNonce(address));
@@ -307,7 +307,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!_bnOrId.equals(null))
+        if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
@@ -364,7 +364,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
-        if (!_bnOrId.equals(null))
+        if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
@@ -617,7 +617,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     public Object personal_unlockAccount(String _account, String _password, Object _duration) {
         int duration = 300;
-        if (!_duration.equals(null))
+        if (_duration != null && !_duration.equals(null))
             duration = new BigInteger(_duration + "").intValueExact();
 
         return unlockAccount(_account, _password, duration);
@@ -765,7 +765,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     public Object stratum_submitblock(Object nce, Object soln, Object hdrHash, Object ts) {
         JSONObject obj = new JSONObject();
 
-        if (!nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
+        if (nce != null && soln != null && hdrHash != null && ts != null &&
+                !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
 
             templateMapLock.writeLock().lock();
 
@@ -800,7 +801,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     public Object stratum_getHeaderByBlockNumber(Object _blockNum) {
         JSONObject obj = new JSONObject();
 
-        if (!_blockNum.equals(null)) {
+        if (_blockNum != null && !_blockNum.equals(null)) {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);
