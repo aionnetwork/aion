@@ -33,6 +33,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
 
     int percentile;
     int windowSize;
+    int recommendationIndex;
 
     public NrgBlockPriceStrategy(long defaultPrice, long maxPrice, int windowSize, int percentile) {
         super(defaultPrice, maxPrice);
@@ -48,6 +49,12 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
         // clamp the windowSize at the bottom
         if (windowSize < 0)
             this.windowSize = 0; // when no elements in window, just return the minPrice
+        else {
+            this.windowSize = windowSize;
+
+            // percentile enforced to be between 0-100, so i should exist within array bounds
+            this.recommendationIndex = (int) Math.round(windowSize * percentile / 100d);
+        }
 
         blkPriceQ = new ArrayBlockingQueue<>(windowSize);
     }
@@ -55,7 +62,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
     @Override
     // in order to have good recommendations, we try to keep the blkPriceQ full
     public boolean isHungry() {
-        return (blkPriceQ.remainingCapacity() < 0);
+        return (blkPriceQ.remainingCapacity() > 0);
     }
 
     // notion of "block price" = lowest gas price for all transactions in a block, exluding miner's own transactions
@@ -120,9 +127,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
         Long[] blkPrice = blkPriceQ.toArray(new Long[blkPriceQ.size()]);
         Arrays.sort(blkPrice);
 
-        // percentile enforced to be between 0-100, so i should exist within array bounds
-        int i = (blkPrice.length-1) * (percentile/100);
-        long recommendation = blkPrice[i];
+        long recommendation = blkPrice[recommendationIndex];
 
         // clamp the recommendation at the top if necessary
         // no minimum clamp since we can let the price go as low as the network deems profitable

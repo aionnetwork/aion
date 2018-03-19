@@ -26,6 +26,7 @@ package org.aion.api.server.types;
 
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -38,7 +39,7 @@ import org.json.JSONObject;
  */
 public class Tx {
 
-    public static Object InfoToJSON(AionTxInfo info)
+    public static Object InfoToJSON(AionTxInfo info, AionBlock b)
     {
         if (info == null) return null;
 
@@ -47,10 +48,10 @@ public class Tx {
 
         AionTransaction tx = receipt.getTransaction();
 
-        return (AionTransactionToJSON(tx, info.getIndex()));
+        return (AionTransactionToJSON(tx, b, info.getIndex()));
     }
 
-    public static Object AionTransactionToJSON(AionTransaction tx, int index) {
+    public static Object AionTransactionToJSON(AionTransaction tx, AionBlock b, int index) {
         if (tx == null) return null;
 
         JSONObject json = new JSONObject();
@@ -68,8 +69,8 @@ public class Tx {
         json.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
         json.put("timestamp", ByteUtil.byteArrayToLong(tx.getTimeStamp()));
         json.put("input", TypeConverter.toJsonHex(tx.getData()));
-        json.put("blockNumber", TypeConverter.toJsonHex(tx.getBlockNumber()));
-        json.put("blockHash", TypeConverter.toJsonHex(tx.getBlockHash()));
+        json.put("blockNumber", TypeConverter.toJsonHex(b.getNumber()));
+        json.put("blockHash", TypeConverter.toJsonHex(b.getHash()));
 
         return json;
     }

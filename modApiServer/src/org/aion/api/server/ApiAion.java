@@ -35,7 +35,6 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.evtmgr.IEventMgr;
-import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.zero.impl.AionGenesis;
@@ -43,7 +42,6 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
@@ -77,13 +75,6 @@ public abstract class ApiAion extends Api {
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
-
-        // instantiate nrg price oracle
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
-        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
-        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
-        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
-        this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
     }
 
     // General Level
@@ -540,7 +531,7 @@ public abstract class ApiAion extends Api {
             int i = 0;
             StringBuilder b = new StringBuilder();
             for (Short v : p2pVersions) {
-                b.append(ByteUtil.toHexString(ByteUtil.shortToBytes(v)));
+                b.append(ByteUtil.byteArrayToInt(ByteUtil.shortToBytes(v)));
                 i++;
                 if (i < p2pVersions.size())
                     b.append(",");

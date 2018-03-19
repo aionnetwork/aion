@@ -26,6 +26,7 @@ package org.aion.api.server.http;
 
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.IRpc;
+import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.*;
@@ -41,6 +42,8 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -61,6 +64,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
+import static org.aion.base.util.ByteUtil.numBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
 
 final class ApiWeb3Aion extends ApiAion implements IRpc {
@@ -127,6 +131,13 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                 }
             });
         }
+
+        // instantiate nrg price oracle
+        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
+        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
+        this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
     }
 
     // --------------------------------------------------------------------
@@ -239,7 +250,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (!_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         BigInteger balance = getRepoByJsonBlockId(bnOrId).getBalance(address);
@@ -250,7 +261,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (!_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         DataWord key = DataWord.ZERO;
@@ -271,7 +282,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (!_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         return TypeConverter.toJsonHex(getRepoByJsonBlockId(bnOrId).getNonce(address));
@@ -296,7 +307,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (!_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
@@ -353,7 +364,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (!_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
@@ -423,7 +434,10 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
         if (txInfo == null) return null;
 
-        return Tx.InfoToJSON(txInfo);
+        AionBlock b = this.ac.getBlockchain().getBlockByHash(txInfo.getBlockHash());
+        if (b == null) return null;
+
+        return Tx.InfoToJSON(txInfo, b);
     }
 
     public Object eth_getTransactionByBlockHashAndIndex(String _blockHash,String _index) {
@@ -433,20 +447,27 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
         if (b == null) return null;
 
-        int idx = Integer.decode(_index);
-        if (idx >= b.getTransactionsList().size()) return null;
-
-        return Tx.AionTransactionToJSON(b.getTransactionsList().get(idx), idx);
-    }
-
-    public Object eth_getTransactionByBlockNumberAndIndex(String _bnOrId, String _index) {
-        List<AionTransaction> txs = getTransactionsByBlockId(_bnOrId);
-        if (txs == null) return null;
+        List<AionTransaction> txs = b.getTransactionsList();
 
         int idx = Integer.decode(_index);
         if (idx >= txs.size()) return null;
 
-        return Tx.AionTransactionToJSON(txs.get(idx), idx);
+        return Tx.AionTransactionToJSON(txs.get(idx), b, idx);
+    }
+
+    public Object eth_getTransactionByBlockNumberAndIndex(String _bnOrId, String _index) {
+        Long bn = parseBnOrId(_bnOrId);
+        if (bn == null || bn < 0) return null;
+
+        AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
+        if (b == null) return null;
+
+        List<AionTransaction> txs = b.getTransactionsList();
+
+        int idx = Integer.decode(_index);
+        if (idx >= txs.size()) return null;
+
+        return Tx.AionTransactionToJSON(txs.get(idx), b, idx);
     }
 
     public Object eth_getTransactionReceipt(String _txHash) {
@@ -744,7 +765,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     public Object stratum_submitblock(Object nce, Object soln, Object hdrHash, Object ts) {
         JSONObject obj = new JSONObject();
 
-        if (nce != null && soln != null && hdrHash != null && ts != null) {
+        if (!nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
 
             templateMapLock.writeLock().lock();
 
@@ -779,7 +800,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     public Object stratum_getHeaderByBlockNumber(Object _blockNum) {
         JSONObject obj = new JSONObject();
 
-        if (_blockNum != null) {
+        if (!_blockNum.equals(null)) {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);
