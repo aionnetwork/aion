@@ -230,7 +230,9 @@ public final class SyncMgr {
 //        );
 
         // filter imported block headers
-        _headers = _headers.stream().filter((k) -> !importedBlockHashes.containsKey(k.getHash())).collect(Collectors.toList());
+        _headers = _headers.stream()
+                .filter((k) -> !importedBlockHashes.containsKey(ByteArrayWrapper.wrap(k.getHash())))
+                .collect(Collectors.toList());
 
         _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
         importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, _headers));
