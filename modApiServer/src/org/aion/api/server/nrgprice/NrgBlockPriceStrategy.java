@@ -74,22 +74,21 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
         List<AionTransaction> txns = blk.getTransactionsList();
         Address coinbase = blk.getCoinbase();
 
-        long[] nrgPrices = new long[txns.size()];
-        int i = 0;
+        // there is nothing stopping nrg price to be 0. don't explicitly enforce non-zero nrg.
+        Long minNrg = -1L;
         for(AionTransaction txn : txns) {
             if (coinbase.compareTo(txn.getSignature().getPubkey(null)) != 0) {
-                nrgPrices[i++] = txn.getNrgPrice();
+                long nrg = txn.getNrgPrice();
+                if (nrg > minNrg)
+                    minNrg = nrg;
             }
         }
 
         // we didn't find any non-miner transactions
-        if (i == 0)
+        if (minNrg < 0)
             return null;
 
-        // Arrays.sort by default sorts in ascending order
-        Arrays.sort(nrgPrices);
-
-        return nrgPrices[0];
+        return minNrg;
     }
 
     /* Onus on the holder of an NrgPriceAdvisor instance to provide guarantees on:
