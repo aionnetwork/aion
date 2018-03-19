@@ -63,7 +63,12 @@ public abstract class AbstractHandler {
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("dispatcher e[{}]", e.getEventType());
                         }
-                        dispatch(e);
+
+                        try {
+                            dispatch(e);
+                        } catch (Exception ex) {
+                            LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}", e.getEventType(), e.getCallbackType(), ex);
+                        }
                     }
                 }
 

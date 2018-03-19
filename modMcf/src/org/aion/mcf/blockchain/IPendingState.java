@@ -33,26 +33,15 @@ import org.aion.base.type.ITransaction;
 
 public interface IPendingState<TX extends ITransaction> {
 
-    IRepositoryCache<?, ?, ?> getRepository();
-
-    List<TX> getPendingTransactions();
-
     List<TX> addPendingTransactions(List<TX> transactions);
 
     List<TX> addPendingTransaction(TX tx);
 
-    /**
-     * get the first transaction nonce of the given account inside the txpool
-     *
-     * @param addr
-     *         account address
-     * @return transaction nonce.
-     * @jay
-     */
-    Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
+    IRepositoryCache<?, ?, ?> getRepository();
 
-    BigInteger bestPoolNonce(Address addr);
+    List<TX> getPendingTransactions();
 
     BigInteger bestNonce(Address addr);
 
+    String getVersion();
 }

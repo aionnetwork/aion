@@ -38,24 +38,13 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITransaction> extends IPendingState<Tx> {
 
-
-
+    // called by onBest
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
-    List<Tx> newTransactions(List<Tx> txSet);
-
-
-    /**
-     * get txpool version
-     *
-     * @return txpool version.
-     * @jay
-     */
-    String getVersion();
-
-    List<Tx> addToTxCache(Map<BigInteger, Tx> txmap, Address addr);
+    List<Tx> addToTxCache(Tx tx);
 
     List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
 
     Map<BigInteger,Tx> getCacheTx(Address from);
+
 }

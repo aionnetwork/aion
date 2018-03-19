@@ -474,8 +474,9 @@ public final class  P2pMgr implements IP2pMgr {
 
         Header h = rb.header;
 
-        byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
+        //byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
 
+        byte[] bodyBytes = rb.body;
         rb.refreshHeader();
         rb.refreshBody();
 

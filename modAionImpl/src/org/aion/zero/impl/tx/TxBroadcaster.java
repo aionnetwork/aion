@@ -31,16 +31,16 @@ import java.util.concurrent.Future;
 import org.aion.mcf.types.AbstractTransaction;
 
 @SuppressWarnings("rawtypes")
-public class TxExecutor<TX extends AbstractTransaction, TXTASK extends AbstractTxTask> {
+public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends AbstractTxTask> {
 
-    private TxExecutor() {
+    private TxBroadcaster() {
     }
 
-    static private TxExecutor instance;
+    static private TxBroadcaster instance;
 
-    static public TxExecutor getInstance() {
+    static public TxBroadcaster getInstance() {
         if (instance == null) {
-            instance = new TxExecutor();
+            instance = new TxBroadcaster();
         }
         return instance;
     }

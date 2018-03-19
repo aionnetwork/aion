@@ -9,6 +9,7 @@ import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,8 +46,12 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public byte[] getTotalDifficulty() {
-            return new byte[0];
+        public BigInteger getTotalDifficulty() {
+            return BigInteger.ZERO;
+        }
+
+        @Override public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash,
+                BigInteger _totalDifficulty) {
         }
 
         @Override
@@ -67,11 +72,6 @@ public class BlockPropagationTest {
         @Override
         public int getPort() {
             return 0;
-        }
-
-        @Override
-        public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, byte[] _totalDifficulty) {
-
         }
     }
 

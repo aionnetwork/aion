@@ -46,7 +46,6 @@ import org.aion.p2p.impl.P2pMgr;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.blockchain.NonceMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -128,9 +127,6 @@ public class AionHub {
 
         this.mempool = AionPendingStateImpl.inst();
 
-        // nonceMgr init after the repo and the tx pending pool were inited!
-        blockchain.setNonceMgr(NonceMgr.inst());
-
         this.txThread = AionTransactionExecThread.getInstance();
 
         loadBlockchain();
@@ -173,7 +169,7 @@ public class AionHub {
         cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr));
         cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksImportMax()));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr));
-        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, NonceMgr.inst()));
+        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr));
         cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler));
         this.p2pMgr.register(cbs);
     }

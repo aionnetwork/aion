@@ -392,7 +392,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             --currentLevel;
         }
 
-        LOG.info("branching: common block = {}/{}", forkLine.getNumber(), Hex.toHexString(forkLine.getHash()));
+        AionLoggerFactory.getLogger(LogEnum.CONS.name()).info("branching: common block = {}/{}", forkLine.getNumber(), Hex.toHexString(forkLine.getHash()));
     }
 
     @Override

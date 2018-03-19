@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.api.server;
@@ -362,18 +362,21 @@ public abstract class ApiAion extends Api {
             return null;
         } else {
             try {
-                byte[] nonce = !(_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
-                        : getTxNonce(key).toByteArray();
+                synchronized (pendingState) {
+                    byte[] nonce = !(_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
+                            : pendingState.bestNonce(Address.wrap(key.getAddress())).toByteArray();
 
-                AionTransaction tx = new AionTransaction(nonce, from, null, _params.getValue().toByteArray(),
-                        _params.getData(), _params.getNrg(), _params.getNrgPrice());
-                tx.sign(key);
-                Future<List<AionTransaction>> ftx = this.ac.submitTransaction(tx);
-                List<AionTransaction> parsedTx = ftx.get(10, TimeUnit.SECONDS);
-                ContractCreateResult c = new ContractCreateResult();
-                c.address = parsedTx.get(0).getContractAddress();
-                c.transId = parsedTx.get(0).getHash();
-                return c;
+                    AionTransaction tx = new AionTransaction(nonce, from, null, _params.getValue().toByteArray(),
+                            _params.getData(), _params.getNrg(), _params.getNrgPrice());
+                    tx.sign(key);
+
+                    pendingState.addPendingTransaction(tx);
+
+                    ContractCreateResult c = new ContractCreateResult();
+                    c.address = tx.getContractAddress();
+                    c.transId = tx.getHash();
+                    return c;
+                }
             } catch (Exception ex) {
                 LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
 
@@ -413,7 +416,8 @@ public abstract class ApiAion extends Api {
         }
 
         try {
-            byte[] nonce = getTxNonce(key, false).toByteArray();
+            // Transaction is executed as local transaction, no need to retrieve the real nonce.
+            byte[] nonce = BigInteger.ZERO.toByteArray();
 
             AionTransaction tx = new AionTransaction(nonce, _params.getTo(), _params.getValue().toByteArray(),
                     _params.getData(), _params.getNrg(), _params.getNrgPrice());
@@ -441,16 +445,19 @@ public abstract class ApiAion extends Api {
         }
 
         try {
-            byte[] nonce = (!_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
-                    : getTxNonce(key).toByteArray();
+            synchronized (pendingState) {
+                // TODO : temp set nrg & price to 1
+                byte[] nonce = (!_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
+                        : pendingState.bestNonce(Address.wrap(key.getAddress())).toByteArray();
 
-            AionTransaction tx = new AionTransaction(nonce, _params.getTo(), _params.getValue().toByteArray(),
-                    _params.getData(), _params.getNrg(), _params.getNrgPrice());
-            tx.sign(key);
+                AionTransaction tx = new AionTransaction(nonce, _params.getTo(), _params.getValue().toByteArray(),
+                        _params.getData(), _params.getNrg(), _params.getNrgPrice());
+                tx.sign(key);
 
-            Future<List<AionTransaction>> ftx = this.ac.submitTransaction(tx);
-            List<AionTransaction> parsedTx = ftx.get(10, TimeUnit.SECONDS);
-            return parsedTx.get(0).getHash();
+                pendingState.addPendingTransaction(tx);
+
+                return tx.getHash();
+            }
         } catch (Exception ex) {
             return null;
         }
@@ -463,9 +470,10 @@ public abstract class ApiAion extends Api {
 
         try {
             AionTransaction tx = new AionTransaction(signedTx);
-            Future<List<AionTransaction>> ftx = this.ac.submitTransaction(tx);
-            List<AionTransaction> parsedTx = ftx.get(10, TimeUnit.SECONDS);
-            return parsedTx.get(0).getHash();
+
+            pendingState.addPendingTransaction(tx);
+
+            return tx.getHash();
         } catch (Exception ex) {
             return ByteUtil.EMPTY_BYTE_ARRAY;
         }
@@ -481,15 +489,13 @@ public abstract class ApiAion extends Api {
         return CfgAion.inst().getNodes();
     }
 
-    private synchronized BigInteger getTxNonce(ECKey key) {
-        return getTxNonce(key, true);
-    }
+//    private synchronized BigInteger getTxNonce(ECKey key) {
+//        return pendingState.bestNonce();
+//    }
 
-    private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
-        synchronized (this.ac.getAionHub().getPendingState()) {
-            return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
-        }
-    }
+//    private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
+//        return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) : nm.getNonce(Address.wrap(key.getAddress()));
+//    }
 
     public boolean isMining() {
         return this.ac.getBlockMiner().isMining();

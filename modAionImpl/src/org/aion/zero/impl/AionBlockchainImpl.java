@@ -53,7 +53,6 @@ import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.blockchain.NonceMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -105,6 +104,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo> transactionStore;
     private AionBlock bestBlock;
 
+    /**
+     * This version of the bestBlock is only used for external reference
+     * (ex. through {@link #getBestBlock()}), this is done because {@link #bestBlock}
+     * can slip into temporarily inconsistent states while forking, and we
+     * don't want to expose that information to external actors.
+     *
+     * However we would still like to publish a bestBlock without locking,
+     * therefore we introduce a volatile block that is only published when
+     * all forking/appending behaviour is completed.
+     */
+    private volatile AionBlock pubBestBlock;
+
     private BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
 
@@ -121,8 +132,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private Stack<State> stateStack = new Stack<>();
     private IEventMgr evtMgr = null;
-
-    private NonceMgr nonceMgr;
 
     /**
      * Chain configuration class, because chain configuration may change
@@ -234,22 +243,44 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.evtMgr = eventManager;
     }
 
-    public void setNonceMgr(NonceMgr nonceMgr) {
-        this.nonceMgr = nonceMgr;
-    }
-
     public AionBlockStore getBlockStore() {
         return (AionBlockStore) repository.getBlockStore();
     }
 
+    /**
+     * Referenced only by external
+     *
+     * Note: If you are making changes to this method and want to use
+     * it to track internal state, use {@link #bestBlock} instead
+     *
+     * @return {@code bestAionBlock}
+     * @see #pubBestBlock
+     */
     @Override
     public byte[] getBestBlockHash() {
-        return getBestBlock().getHash();
+        return this.pubBestBlock.getHash();
     }
 
+    /**
+     * Referenced only by external
+     *
+     * Note: If you are making changes to this method and want to use
+     * it to track internal state, opt for {@link #getSizeInternal()}
+     * instead.
+     *
+     * @return {@code positive long} representing the current size
+     * @see #pubBestBlock
+     */
     @Override
     public long getSize() {
-        return bestBlock.getNumber() + 1;
+        return this.pubBestBlock.getNumber() + 1;
+    }
+
+    /**
+     * @see #getSize()
+     */
+    private long getSizeInternal() {
+        return this.bestBlock.getNumber() + 1;
     }
 
     @Override
@@ -367,7 +398,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         stateStack.pop();
     }
 
-    private synchronized AionBlockSummary tryConnectAndFork(final AionBlock block) {
+    /**
+     * Not thread safe, currently only run in {@link #tryToConnect(AionBlock)},
+     * assumes that the environment is already locked
+     *
+     * @param block
+     * @return
+     */
+    private AionBlockSummary tryConnectAndFork(final AionBlock block) {
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
@@ -465,7 +503,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 this.evtMgr.newEvent(evtOnBlock);
 
                 IEvent evtTrace = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
-                String str = String.format("Block chain size: [ %d ]", this.getSize());
+                String str = String.format("Block chain size: [ %d ]", this.getSizeInternal());
                 evtTrace.setFuncArgs(Collections.singletonList(str));
                 this.evtMgr.newEvent(evtTrace);
 
@@ -941,14 +979,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getParent(block.getHeader()) != null;
     }
 
-    // @Override
-    // public List<Chain> getAltChains() {
-    // return altChains;
-    // }
-    // @Override
-    // public List<NcBlock> getGarbage() {
-    // return garbage;
-    // }
     public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
         return transactionStore;
     }
@@ -956,14 +986,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public synchronized void setBestBlock(AionBlock block) {
         bestBlock = block;
+        pubBestBlock = block;
         updateBestKnownBlock(block);
     }
 
-    // @Override
-    public synchronized AionBlock getBestBlock() {
-        // the method is synchronized since the bestBlock might be
-        // temporarily switched to the fork while importing non-best block
-        return bestBlock;
+    @Override
+    public AionBlock getBestBlock() {
+        return this.pubBestBlock;
     }
 
     @Override

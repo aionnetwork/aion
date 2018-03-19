@@ -35,7 +35,7 @@ import org.aion.log.LogEnum;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
-import org.aion.zero.impl.blockchain.NonceMgr;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.mcf.types.AbstractBlock;
 import org.slf4j.Logger;
 
@@ -50,7 +50,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
     private final Compiler solc = Compiler.getInstance();
-    protected final NonceMgr nm = NonceMgr.inst();
+    protected final AionPendingStateImpl pendingState = AionPendingStateImpl.inst();
 
     public abstract String getCoinbase();
 
