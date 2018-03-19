@@ -251,9 +251,7 @@ public class AionPendingStateImpl
         }
 
         // Broadcast new pending transactions
-        for (AionTransaction tx : newPending) {
-            AionImpl.inst().broadcastTransaction(tx);
-        }
+        AionImpl.inst().broadcastTransactions(newPending);
 
         return newPending;
     }

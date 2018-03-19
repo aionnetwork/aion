@@ -25,6 +25,7 @@
 package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -124,6 +125,10 @@ public class AionImpl implements IAionChain {
     @SuppressWarnings("unchecked")
     @Override
     public void broadcastTransaction(AionTransaction transaction) {
+        broadcastTransactions(Collections.singletonList(transaction));
+    }
+
+    public void broadcastTransactions(List<AionTransaction> transaction) {
         A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
 
         TxBroadcaster.getInstance().submitTransaction(txTask);
