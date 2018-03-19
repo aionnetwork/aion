@@ -62,7 +62,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final Logger log;
 
-    private final Map<Integer, Long> sidechains = new ConcurrentHashMap<>();
+    //private final Map<Integer, Long> sidechains = new ConcurrentHashMap<>();
 
     TaskImportBlocks(
             final IP2pMgr p2p,
@@ -133,14 +133,14 @@ final class TaskImportBlocks implements Runnable {
                                 b.getShortHash());
                         }
 
-                        Long number = sidechains.get(bw.getNodeIdHash());
+                        /*Long number = sidechains.get(bw.getNodeIdHash());
                         if (number == null || b.getNumber() < number) {
                             sidechains.put(bw.getNodeIdHash(), b.getNumber());
 
                             // dive down slowly
                             ReqBlocksHeaders req = new ReqBlocksHeaders(Math.max(1, b.getNumber() - 16), 32);
                             this.p2p.send(bw.getNodeIdHash(), req);
-                        }
+                        }*/
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
