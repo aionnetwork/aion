@@ -557,6 +557,33 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
+        long firstBlock = getMaxNumber();
+        long lastBlock = firstBlock - numberOfBlocks;
+
+        File file = new File(reportsFolder, System.currentTimeMillis() + "-blocks-report.out");
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+        while (firstBlock > lastBlock) {
+            List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
+
+            writer.append("Blocks at level " + firstBlock + ":");
+            writer.newLine();
+
+            for (BlockInfo bi : levelBlocks) {
+                writer.append(
+                        "Hash: " + Hex.toHexString(bi.getHash()) + " Total Difficulty: " + bi.getCummDifficulty());
+                writer.newLine();
+            }
+            writer.newLine();
+
+            firstBlock--;
+        }
+
+        writer.close();
+    }
+
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {
 
         List<byte[]> result = new ArrayList<>();

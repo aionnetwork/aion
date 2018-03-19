@@ -48,6 +48,11 @@ public final class CfgAion extends Cfg {
 
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
 
+    // constants for printing reports
+    private static final boolean printReport = true;
+    private static final long reportFrequency = 500L;
+    private static String reportsFolder;
+
     private CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
@@ -58,6 +63,9 @@ public final class CfgAion extends Cfg {
         this.db = new CfgDb();
         this.log = new CfgLog();
         this.tx = new CfgTx();
+        File reports = new File(getBasePath(), "reports");
+        reports.mkdirs();
+        reportsFolder = reports.getAbsolutePath();
     }
 
     private static class CfgAionHolder {
@@ -89,6 +97,18 @@ public final class CfgAion extends Cfg {
 
     public static int getK() {
         return K;
+    }
+
+    public static boolean isPrintReport() {
+        return printReport;
+    }
+
+    public static long getReportFrequency() {
+        return reportFrequency;
+    }
+
+    public static String getReportsFolder() {
+        return reportsFolder;
     }
 
     private void closeFileInputStream(final FileInputStream fis){

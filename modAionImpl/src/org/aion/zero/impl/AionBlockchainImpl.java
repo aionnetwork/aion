@@ -69,6 +69,7 @@ import org.aion.zero.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -141,6 +142,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *         singleton instance of cfgAion
      */
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
+        PRINT_REPORT = cfgAion.isPrintReport();
+        FREQUENCY = cfgAion.getReportFrequency();
+        REPORTS_FOLDER = cfgAion.getReportsFolder();
+
         return new A0BCConfig() {
             @Override
             public Address getCoinbase() {
@@ -478,8 +483,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
+        if (PRINT_REPORT && block.getNumber() % FREQUENCY == 0) {
+            try {
+                getBlockStore().dumpPastBlocks(FREQUENCY, REPORTS_FOLDER);
+            } catch (IOException e) {
+                LOG.error("IO exception occurred during printing reports.", e);
+            }
+        }
+
         return ret;
     }
+
+    // constants for printing reports
+    private static boolean PRINT_REPORT;
+    private static long FREQUENCY;
+    private static String REPORTS_FOLDER;
+
 
     public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
         long time = System.currentTimeMillis() / THOUSAND_MS;

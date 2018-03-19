@@ -138,9 +138,6 @@ public class AionHub {
 
         this.startingBlock = this.blockchain.getBestBlock();
 
-        File reports = new File(cfg.getBasePath(), "reports");
-        reports.mkdirs();
-
         /*
          * p2p hook up start sync mgr needs to be initialed after
          * loadBlockchain() method
@@ -148,13 +145,13 @@ public class AionHub {
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
         this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
                 cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(), 128, 128,
-                cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly(), true,
-                reports.getAbsolutePath());
+                cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly(), cfg.isPrintReport(),
+                cfg.getReportsFolder());
 
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
-                this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus(), true,
-                reports.getAbsolutePath());
+                this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus(), cfg.isPrintReport(),
+                cfg.getReportsFolder());
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler = new BlockPropagationHandler(1024,
