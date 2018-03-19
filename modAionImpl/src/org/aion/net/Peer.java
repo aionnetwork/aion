@@ -22,36 +22,72 @@ public class Peer {
 
     private final Set<ByteArrayWrapper> seenTxs = new LinkedHashSet<>();
 
-    private final ReadWriteLock rwlock = new ReentrantReadWriteLock();
+    private final ReadWriteLock rwBlockLock = new ReentrantReadWriteLock();
+
+    private final ReadWriteLock rwTxLock = new ReentrantReadWriteLock();
+
+    /**
+     * Metrics regarding application specific context (and some network context)
+     */
 
     public Peer() {}
 
     public boolean addBlockHash(ByteArrayWrapper blockHash) {
-        if (seenBlocks.contains(blockHash))
-            return false;
+        rwBlockLock.readLock().lock();
+        try {
+            if (seenBlocks.contains(blockHash))
+                return false;
+        } finally {
+            rwBlockLock.readLock().unlock();
+        }
 
-        seenBlocks.add(blockHash);
-        if (seenBlocks.size() > MAX_BLOCKS)
-            seenBlocks.iterator().remove();
-        return true;
+        rwBlockLock.writeLock().lock();
+        try {
+            seenBlocks.add(blockHash);
+            if (seenBlocks.size() > MAX_BLOCKS)
+                seenBlocks.iterator().remove();
+            return true;
+        } finally {
+            rwBlockLock.writeLock().unlock();
+        }
     }
 
     public boolean addTxHash(ByteArrayWrapper txHash) {
-        if (seenTxs.contains(txHash))
-            return false;
+        rwTxLock.readLock().lock();
+        try {
+            if (seenTxs.contains(txHash))
+                return false;
+        } finally {
+            rwTxLock.readLock().unlock();
+        }
 
-        seenTxs.add(txHash);
-        if (seenTxs.size() > MAX_TXS)
-            seenTxs.iterator().remove();
-        return true;
+        rwTxLock.writeLock().lock();
+        try {
+            seenTxs.add(txHash);
+            if (seenTxs.size() > MAX_TXS)
+                seenTxs.iterator().remove();
+            return true;
+        } finally {
+            rwTxLock.writeLock().unlock();
+        }
     }
 
     public boolean containsBlock(ByteArrayWrapper blockHash) {
-        return this.seenBlocks.contains(blockHash);
+        rwBlockLock.readLock().lock();
+        try {
+            return this.seenBlocks.contains(blockHash);
+        } finally {
+            rwBlockLock.readLock().unlock();
+        }
     }
 
     public boolean containsTx(ByteArrayWrapper txHash) {
-        return this.seenTxs.contains(txHash);
+        rwTxLock.readLock().lock();
+        try {
+            return this.seenTxs.contains(txHash);
+        } finally {
+            rwTxLock.readLock().unlock();
+        }
     }
 
 

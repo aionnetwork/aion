@@ -306,7 +306,7 @@ public class NodeMgr implements INodeMgr {
             }
 
             if (this.observer != null)
-                this.observer.newActiveNode(_nodeIdHash);
+                this.observer.newActiveNode(_nodeIdHash, node.getIp(), node.getPort());
         }
     }
 
@@ -328,7 +328,7 @@ public class NodeMgr implements INodeMgr {
             }
 
             if (this.observer != null)
-                this.observer.newActiveNode(_channelHashCode);
+                this.observer.newActiveNode(_channelHashCode, node.getIp(), node.getPort());
         }
     }
 
@@ -378,6 +378,16 @@ public class NodeMgr implements INodeMgr {
                     this.observer.removeActiveNode(key);
             }
         }
+    }
+
+    public void dropActive(Integer nodeIdHash, P2pMgr pmgr) {
+        Node node = activeNodes.remove(nodeIdHash);
+
+        // if we tried to drop a node that is already dropped
+        if (node == null)
+            return;
+
+        pmgr.closeSocket(node.getChannel());
     }
 
     /**
