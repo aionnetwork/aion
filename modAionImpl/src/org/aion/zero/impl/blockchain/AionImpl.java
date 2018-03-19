@@ -125,10 +125,10 @@ public class AionImpl implements IAionChain {
     @SuppressWarnings("unchecked")
     @Override
     public void broadcastTransaction(AionTransaction transaction) {
-        broadcastTransaction(Collections.singletonList(transaction));
+        broadcastTransactions(Collections.singletonList(transaction));
     }
 
-    public void broadcastTransaction(List<AionTransaction> transaction) {
+    public void broadcastTransactions(List<AionTransaction> transaction) {
         A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
 
         TxBroadcaster.getInstance().submitTransaction(txTask);
