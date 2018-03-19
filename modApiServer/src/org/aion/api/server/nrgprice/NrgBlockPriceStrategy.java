@@ -54,6 +54,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
 
             // percentile enforced to be between 0-100, so i should exist within array bounds
             this.recommendationIndex = (int) Math.round(windowSize * percentile / 100d);
+            if (this.recommendationIndex > (windowSize - 1)) this.recommendationIndex = windowSize - 1;
         }
 
         blkPriceQ = new ArrayBlockingQueue<>(windowSize);
