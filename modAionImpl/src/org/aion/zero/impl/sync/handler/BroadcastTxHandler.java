@@ -142,11 +142,10 @@ public final class BroadcastTxHandler extends Handler {
             this.log.debug("<broadcast-txs txs={} from-node={}>", newPendingTx.size(), _displayId);
 
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
-
-            List<ITransaction> finalNewPendingTx = newPendingTx;
-            activeNodes.forEach((k, v) -> {
-                this.p2pMgr.send(v.getIdHash(), new BroadcastTx(finalNewPendingTx));
-            });
+            
+            for (INode node : activeNodes.values()) {
+                this.p2pMgr.send(node.getIdHash(), new BroadcastTx(newPendingTx));
+            }
         }
     }
 
@@ -167,7 +166,7 @@ public final class BroadcastTxHandler extends Handler {
 
     private Map<Address, Map<BigInteger, ITransaction>> castRawTx(List<byte[]> broadCastTx) {
 
-        Map<Address, Map<BigInteger, ITransaction>> rtn = Collections.synchronizedMap(new HashMap<>());
+        Map<Address, Map<BigInteger, ITransaction>> rtn = new HashMap<>();
 
         for (byte[] raw : broadCastTx) {
             try {
