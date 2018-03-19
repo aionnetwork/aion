@@ -29,6 +29,7 @@
 
 package org.aion.zero.impl.sync;
 
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -36,6 +37,7 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +64,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final Logger log;
 
-    //private final Map<Integer, Long> sidechains = new ConcurrentHashMap<>();
+    private final Map<ByteArrayWrapper, Object> importedBlockHashes;
 
     TaskImportBlocks(
             final IP2pMgr p2p,
@@ -70,7 +72,8 @@ final class TaskImportBlocks implements Runnable {
             final AtomicBoolean _start,
             final BlockingQueue<BlocksWrapper> _importedBlocks,
             final SyncStatics _statis,
-            final Logger _log
+            final Logger _log,
+            final Map<ByteArrayWrapper, Object> importedBlockHashes
     ){
         this.p2p = p2p;
         this.chain = _chain;
@@ -78,6 +81,7 @@ final class TaskImportBlocks implements Runnable {
         this.importedBlocks = _importedBlocks;
         this.statis = _statis;
         this.log = _log;
+        this.importedBlockHashes = importedBlockHashes;
     }
 
     @Override
@@ -94,6 +98,10 @@ final class TaskImportBlocks implements Runnable {
 
             List<AionBlock> batch = bw.getBlocks();
             for (AionBlock b : batch) {
+                if (importedBlockHashes.containsKey(ByteArrayWrapper.wrap(b.getHash()))) {
+                    continue;
+                }
+
                 ImportResult importResult = this.chain.tryToConnect(b);
                 switch (importResult) {
                     case IMPORTED_BEST:
@@ -105,6 +113,7 @@ final class TaskImportBlocks implements Runnable {
                                 b.getTransactionsList().size());
                         }
 
+                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case IMPORTED_NOT_BEST:
                         if (log.isInfoEnabled()) {
@@ -115,6 +124,7 @@ final class TaskImportBlocks implements Runnable {
                                 b.getTransactionsList().size());
                         }
 
+                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case EXIST:
                         if (log.isDebugEnabled()) {
@@ -124,6 +134,9 @@ final class TaskImportBlocks implements Runnable {
                                 b.getShortHash(),
                                 b.getTransactionsList().size());
                         }
+
+
+                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case NO_PARENT:
                         if (log.isDebugEnabled()) {
@@ -133,14 +146,6 @@ final class TaskImportBlocks implements Runnable {
                                 b.getShortHash());
                         }
 
-                        /*Long number = sidechains.get(bw.getNodeIdHash());
-                        if (number == null || b.getNumber() < number) {
-                            sidechains.put(bw.getNodeIdHash(), b.getNumber());
-
-                            // dive down slowly
-                            ReqBlocksHeaders req = new ReqBlocksHeaders(Math.max(1, b.getNumber() - 16), 32);
-                            this.p2p.send(bw.getNodeIdHash(), req);
-                        }*/
                         break;
                     case INVALID_BLOCK:
                         if (log.isDebugEnabled()) {
