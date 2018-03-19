@@ -157,6 +157,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         Map<Address, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap = new HashMap<>();
         SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> timeMap = new TreeMap<>();
 
+        Map<ITransaction, Long> updatedTx = new HashMap<>();
         this.mainMap.entrySet().parallelStream().forEach(e -> {
             TXState ts = e.getValue();
 
@@ -167,25 +168,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             ITransaction tx = ts.getTx();
 
             // Gen temp timeMap
-            LinkedHashSet<ByteArrayWrapper> lhs = new LinkedHashSet<>();
             long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue()/ multiplyM;
 
-            synchronized (timeMap) {
-                if (timeMap.get(timestamp) != null) {
-                    lhs = timeMap.get(timestamp);
-                }
-
-                lhs.add(e.getKey());
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("AbstractTxPool.sortTxn Put txHash into timeMap: ts:[{}] size:[{}]", timestamp, lhs.size());
-                }
-
-                timeMap.put(timestamp, lhs);
-            }
-
             Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> nonceMap;
-
+            ITransaction replacedTx = null;
             synchronized (accMap) {
                 if (accMap.get(tx.getFrom()) != null) {
                     nonceMap = accMap.get(tx.getFrom());
@@ -204,7 +190,22 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                             ByteUtils.toHexString(e.getKey().getData()), nrgCharge.toString());
                 }
 
-                nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
+
+                // considering same nonce tx, only put the latest tx.
+                if (nonceMap.get(nonce) != null) {
+                    try {
+                        if (new BigInteger(1, this.mainMap.get(nonceMap.get(nonce).getKey()).getTx().getTimeStamp()).compareTo(new BigInteger(1,tx.getTimeStamp())) < 1) {
+                            replacedTx = this.mainMap.get(nonceMap.get(nonce).getKey()).getTx();
+                            updatedTx.put(replacedTx, timestamp);
+                            nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
+
+                        }
+                    } catch (Exception ex) {
+                        LOG.error( "AbsTxPool.sortTxn {} [{}]", ex.toString(), tx.toString());
+                    }
+                } else {
+                    nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
+                }
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("AbstractTxPool.sortTxn Put tx into accMap: acc:[{}] mapsize[{}] ", tx.getFrom().toString(), nonceMap.size());
@@ -212,8 +213,44 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
                 accMap.put(tx.getFrom(), nonceMap);
             }
+
+            LinkedHashSet<ByteArrayWrapper> lhs = new LinkedHashSet<>();
+
+            synchronized (timeMap) {
+                if (timeMap.get(timestamp) != null) {
+                    lhs = timeMap.get(timestamp);
+                }
+
+                lhs.add(e.getKey());
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("AbstractTxPool.sortTxn Put txHash into timeMap: ts:[{}] size:[{}]", timestamp, lhs.size());
+                }
+
+                timeMap.put(timestamp, lhs);
+
+                if (replacedTx != null) {
+                    long t = new BigInteger(replacedTx.getTimeStamp()).longValue()/multiplyM;
+                    if (timeMap.get(t) != null) {
+                        timeMap.get(t).remove(ByteArrayWrapper.wrap(replacedTx.getHash()));
+                    }
+                }
+            }
+
             ts.setSorted();
         });
+
+        if (!updatedTx.isEmpty()) {
+            for (Map.Entry<ITransaction, Long> en : updatedTx.entrySet()) {
+                ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getHash());
+                if (this.timeView.get(en.getValue()) != null) {
+                    this.timeView.get(en.getValue()).remove(bw);
+                }
+
+                this.mainMap.remove(bw);
+            }
+
+        }
 
         if (accMap.size() > 0) {
 

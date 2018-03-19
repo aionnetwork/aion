@@ -318,6 +318,77 @@ public class TxnPoolTest {
     }
 
     @Test
+    public void addRepeatedTxn2() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "10");
+
+        ITxPool<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 10;
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransaction(nonce);
+            ((AionTransaction) txn).sign(key.get(0));
+            txn.setNrgConsume(50);
+            txnl.add(txn);
+        }
+
+        tp.add(txnl);
+        assertTrue(tp.size() == cnt);
+
+        byte[] nonce = new byte[Long.BYTES];
+        nonce[Long.BYTES - 1] = (byte) 5;
+        ITransaction txn = genTransaction(nonce);
+        ((AionTransaction) txn).sign(key.get(0));
+        txn.setNrgConsume(500);
+        tp.add(txn);
+
+        List<ITransaction> snapshot = tp.snapshot();
+        assertTrue(snapshot.size() == cnt);
+
+        assertTrue(snapshot.get(5).equals(txn));
+    }
+
+    @Test
+    public void addRepeatedTxn3() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "10");
+
+        ITxPool<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 10;
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransaction(nonce);
+            ((AionTransaction) txn).sign(key.get(0));
+            txn.setNrgConsume(50);
+            txnl.add(txn);
+        }
+
+        tp.add(txnl);
+        tp.snapshot();
+        assertTrue(tp.size() == cnt);
+
+        byte[] nonce = new byte[Long.BYTES];
+        nonce[Long.BYTES - 1] = (byte) 5;
+        ITransaction txn = genTransaction(nonce);
+        ((AionTransaction) txn).sign(key.get(0));
+        txn.setNrgConsume(500);
+        tp.add(txn);
+
+        List<ITransaction> snapshot = tp.snapshot();
+        assertTrue(snapshot.size() == cnt);
+
+        assertTrue(snapshot.get(5).equals(txn));
+    }
+
+    @Test
     public void addTxWithSameNonce() {
         Properties config = new Properties();
         config.put("txn-timeout", "10");
