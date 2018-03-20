@@ -244,8 +244,10 @@ public final class SyncMgr {
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
-//        if (importedBlocks.size() > blocksQueueMax)
-//            return;
+        if (importedBlocks.size() > blocksQueueMax) {
+            log.info("imported blocks queue is full!");
+            return;
+        }
 
         HeadersWrapper hw = this.sentHeaders.remove(_nodeIdHashcode);
         if (hw == null || _bodies == null)
