@@ -117,7 +117,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         List<TX> newPendingTx = new ArrayList<>();
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
-
         for (TX tx : txl) {
             // Gen temp mainTxMap
             byte[] hash = tx.getHash();
@@ -384,11 +383,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return nonceList.size() == 2 ? new AbstractMap.SimpleEntry<>(nonceList.get(0), nonceList.get(1)) : null;
     }
 
-    public synchronized BigInteger bestNonce(Address addr) {
-        if (addr == null) {
-            throw new NullPointerException();
-        }
-
+    public BigInteger bestNonce(Address addr) {
         return getBestNonce(addr);
     }
 
