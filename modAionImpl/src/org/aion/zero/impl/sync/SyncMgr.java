@@ -64,7 +64,7 @@ public final class SyncMgr {
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     // default how many blocks forward to sync based on current block number
-    private int syncForwardMax = 192;
+    private int syncForwardMax = 32;
 
     private final static int syncBackwordMax = 16;
 
@@ -222,13 +222,6 @@ public final class SyncMgr {
             return;
         }
 
-//        System.out.println(
-//            "incoming-headers " +
-//            " from-node=" + _displayId +
-//            " from-block=" + _headers.get(0).getNumber() +
-//            " to-block=" + _headers.get(_headers.size() - 1).getNumber()
-//        );
-
         // filter imported block headers
         _headers = _headers.stream()
                 .filter((k) -> !importedBlockHashes.containsKey(ByteArrayWrapper.wrap(k.getHash())))
@@ -251,8 +244,10 @@ public final class SyncMgr {
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
-        if (importedBlocks.size() > blocksQueueMax)
+        if (importedBlocks.size() > blocksQueueMax) {
+            log.info("imported blocks queue is full!");
             return;
+        }
 
         HeadersWrapper hw = this.sentHeaders.remove(_nodeIdHashcode);
         if (hw == null || _bodies == null)
@@ -276,12 +271,11 @@ public final class SyncMgr {
         if (m == 0)
             return;
 
-//        System.out.println(
-//                "incoming-bodies " +
-//                " from-node=" + _displayId +
-//                " from-block=" + blocks.get(0).getNumber() +
-//                " to-block=" + blocks.get(blocks.size() - 1).getNumber()
-//        );
+
+        if (log.isDebugEnabled()) {
+            log.debug("<incoming-bodies size={} from-num={} to-num={} from-node={}>", blocks.size(),
+                    blocks.get(0).getNumber(), blocks.get(blocks.size() - 1).getNumber(), _displayId);
+        }
 
         // add batch
         importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
