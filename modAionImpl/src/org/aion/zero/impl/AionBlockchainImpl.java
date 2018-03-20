@@ -152,11 +152,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *         singleton instance of cfgAion
      */
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
-        CfgReports reports = cfgAion.getReports();
-        PRINT_REPORT = reports.isEnabled();
-        FREQUENCY = reports.getBlockFrequency();
-        REPORTS_FOLDER = new File(cfgAion.getBasePath(), reports.getPath()).getAbsolutePath();
-
         return new A0BCConfig() {
             @Override
             public Address getCoinbase() {
@@ -523,22 +518,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        if (PRINT_REPORT && block.getNumber() % FREQUENCY == 0) {
-            try {
-                getBlockStore().dumpPastBlocks(FREQUENCY, REPORTS_FOLDER);
-            } catch (IOException e) {
-                LOG.error("IO exception occurred during printing reports.", e);
-            }
-        }
-
         return ret;
     }
-
-    // constants for printing reports
-    private static boolean PRINT_REPORT;
-    private static long FREQUENCY;
-    private static String REPORTS_FOLDER;
-
 
     public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
         long time = System.currentTimeMillis() / THOUSAND_MS;

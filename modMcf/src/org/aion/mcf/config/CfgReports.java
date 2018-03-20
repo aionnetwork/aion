@@ -1,3 +1,25 @@
+/*******************************************************************************
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ ******************************************************************************/
 package org.aion.mcf.config;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -17,7 +39,8 @@ public class CfgReports {
 
     private boolean enable;
     private String path;
-    private long block_frequency;
+    private int dump_interval;
+    private int block_frequency;
     private boolean enable_heap_dumps;
     private int heap_dump_interval;
 
@@ -25,7 +48,8 @@ public class CfgReports {
         // default configuration
         this.enable = false;
         this.path = "reports";
-        this.block_frequency = 500L;
+        this.dump_interval = 10000;
+        this.block_frequency = 500;
         this.enable_heap_dumps = false;
         this.heap_dump_interval = 100000;
     }
@@ -44,8 +68,11 @@ public class CfgReports {
                         case "path":
                             this.path = Cfg.readValue(sr);
                             break;
+                        case "dump_interval":
+                            this.dump_interval = Integer.parseInt(Cfg.readValue(sr));
+                            break;
                         case "block_frequency":
-                            this.block_frequency = Long.parseLong(Cfg.readValue(sr));
+                            this.block_frequency = Integer.parseInt(Cfg.readValue(sr));
                             break;
                         case "enable_heap_dumps":
                             this.enable_heap_dumps = Boolean.parseBoolean(Cfg.readValue(sr));
@@ -85,6 +112,11 @@ public class CfgReports {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("dump_interval");
+            xmlWriter.writeCharacters(String.valueOf(this.getDumpInterval()));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("block_frequency");
             xmlWriter.writeCharacters(String.valueOf(this.getBlockFrequency()));
             xmlWriter.writeEndElement();
@@ -121,7 +153,11 @@ public class CfgReports {
         return this.path;
     }
 
-    public long getBlockFrequency() {
+    public int getDumpInterval() {
+        return this.dump_interval;
+    }
+
+    public int getBlockFrequency() {
         return this.block_frequency;
     }
 
@@ -132,4 +168,5 @@ public class CfgReports {
     public int getHeapDumpInterval() {
         return this.heap_dump_interval;
     }
+
 }

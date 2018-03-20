@@ -44,6 +44,7 @@ import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.P2pMgr;
 import org.aion.utils.TaskDumpHeap;
+import org.aion.utils.TaskDumpThreadsAndBlocks;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -172,8 +173,15 @@ public class AionHub {
         this.pow = new AionPoW();
         this.pow.init(blockchain, mempool, eventMgr);
 
-        if (cfg.getReports().isHeapDumpEnabled()){
-            new Thread(new TaskDumpHeap(this.start, cfg.getReports().getHeapDumpInterval(), reportsFolder), "dump-heap").start();
+        if (cfg.getReports().isEnabled()) {
+            new Thread(new TaskDumpThreadsAndBlocks(this.start, cfg.getReports().getDumpInterval(),
+                    blockchain.getBlockStore(), cfg.getReports().getBlockFrequency(), reportsFolder), "dump-threads-and-blocks")
+                    .start();
+        }
+
+        if (cfg.getReports().isHeapDumpEnabled()) {
+            new Thread(new TaskDumpHeap(this.start, cfg.getReports().getHeapDumpInterval(), reportsFolder), "dump-heap")
+                    .start();
         }
     }
 
