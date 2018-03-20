@@ -307,31 +307,31 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized DataWord getStorageValue(Address address, DataWord key) {
+    public DataWord getStorageValue(Address address, DataWord key) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? null : details.get(key);
     }
 
     @Override
-    public synchronized int getStorageSize(Address address) {
+    public int getStorageSize(Address address) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? 0 : details.getStorageSize();
     }
 
     @Override
-    public synchronized Set<DataWord> getStorageKeys(Address address) {
+    public Set<DataWord> getStorageKeys(Address address) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptySet() : details.getStorageKeys();
     }
 
     @Override
-    public synchronized Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
+    public Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
     @Override
-    public synchronized byte[] getCode(Address address) {
+    public byte[] getCode(Address address) {
         AccountState accountState = getAccountState(address);
 
         if (accountState == null) {
@@ -359,9 +359,19 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         }
     }
 
+    /**
+     * @inheritDoc
+     * @implNote Any other method calling this can rely on the fact that
+     *         the contract details returned is a newly created object by {@link IContractDetails#getSnapshotTo(byte[])}.
+     *         Since this querying method it locked, the methods calling it
+     *         <b>may not need to be locked or synchronized</b>, depending on the specific use case.
+     */
     @Override
-    public synchronized IContractDetails<DataWord> getContractDetails(Address address) {
+    public IContractDetails<DataWord> getContractDetails(Address address) {
         rwLock.readLock().lock();
+
+        IContractDetails<DataWord> details = null;
+
         try {
             // That part is important cause if we have
             // to sync details storage according the trie root
@@ -371,15 +381,15 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             if (accountState != null) {
                 storageRoot = getAccountState(address).getStateRoot();
             }
-            IContractDetails<DataWord> details = detailsDS.get(address.toBytes());
+
+            details = detailsDS.get(address.toBytes());
 
             if (details != null) {
                 details = details.getSnapshotTo(storageRoot);
             }
-
-            return details;
         } finally {
             rwLock.readLock().unlock();
+            return details;
         }
     }
 
@@ -424,7 +434,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
      *           state and contract details.
      */
     @Override
-    public synchronized void loadAccountState(Address address, Map<Address, AccountState> cacheAccounts,
+    public void loadAccountState(Address address, Map<Address, AccountState> cacheAccounts,
             Map<Address, IContractDetails<DataWord>> cacheDetails) {
 
         AccountState account = getAccountState(address);
