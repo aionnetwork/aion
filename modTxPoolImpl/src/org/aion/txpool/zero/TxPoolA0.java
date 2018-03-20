@@ -94,8 +94,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public synchronized boolean add(TX tx) {
-        return !this.add(Collections.singletonList(tx)).isEmpty();
+    public synchronized TX add(TX tx) {
+        List<TX> rtn = this.add(Collections.singletonList(tx)) ;
+        return  rtn.isEmpty() ? null : rtn.get(0);
     }
 
     /**
@@ -141,14 +142,45 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             mainMap.put(bw, new TXState(tx));
-            newPendingTx.add(tx);
 
-            setBestNonce(tx.getFrom(), new BigInteger(1, tx.getNonce()));
+            BigInteger bn = new BigInteger(1, tx.getNonce());
+
+            if (this.getAccView(tx.getFrom()) != null) {
+                AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(tx.getFrom()).getMap().get(bn);
+                if (entry != null) {
+                    TX oldTx = removeOldTx(entry.getKey(), bn);
+                    if (oldTx != null) {
+                        newPendingTx.add(oldTx);
+                    }
+                }
+            } else {
+                newPendingTx.add(tx);
+            }
+
+            setBestNonce(tx.getFrom(), bn);
         }
 
         this.getMainMap().putAll(mainMap);
 
         return newPendingTx;
+    }
+
+    private TX removeOldTx(ByteArrayWrapper key, BigInteger bn) {
+        if (this.getMainMap().get(key) == null) {
+            LOG.error("this should not happen! key[{}]", key.toString());
+            return null;
+        }
+
+        ITransaction oldTx = this.getMainMap().get(key).getTx().clone();
+        long ts = new BigInteger(oldTx.getTimeStamp()).longValue()/multiplyM;
+        if (this.getTimeView().get(ts) != null) {
+            this.getTimeView().get(ts).remove(key);
+        }
+
+        this.getAccView(oldTx.getFrom()).getMap().remove(bn);
+        this.getMainMap().remove(key);
+
+        return (TX)oldTx;
     }
 
     public List<TX> getOutdatedList() {
