@@ -355,7 +355,6 @@ public final class P2pMgr implements IP2pMgr {
      *                     Construct node info after handshake request success
      */
     private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId, int _port, final byte[] _revision) {
-        System.out.println(this.selfShortId);
         Node node = nodeMgr.getInboundNode(_channelHash);
         if (node != null) {
             if (handshakeRuleCheck(_netId)) {
@@ -384,7 +383,6 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        System.out.println(this.selfShortId);
         Node node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
         if (node != null) {
             node.refreshTimestamp();
@@ -677,7 +675,6 @@ public final class P2pMgr implements IP2pMgr {
 
         @Override
         public void channelReady(SelectableChannel channel, SelectionKey key) {
-            System.out.println("read called!!");
             try {
                 P2pMgr.this.read(key);
             } catch (IOException e) {

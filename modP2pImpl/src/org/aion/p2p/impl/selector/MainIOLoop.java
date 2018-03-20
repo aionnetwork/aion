@@ -171,6 +171,7 @@ public class MainIOLoop implements Runnable {
     private boolean runAllTasks() {
         assert isEventLoopThread();
         List<Runnable> tasks = this.eventBus.retrieveAllEvents();
+
         if (tasks.isEmpty())
             return false;
 
@@ -244,7 +245,6 @@ public class MainIOLoop implements Runnable {
         // schedule an event for the channel to be attached
         this.eventBus.addEvent(() -> {
             try {
-                System.out.println("attaching buffer");
                 SelectionKey key = channel.register(this.currSelector, interestOps, buffer);
                 key.attach(buffer);
             } catch (ClosedChannelException e) {
@@ -259,7 +259,6 @@ public class MainIOLoop implements Runnable {
      */
     public void write(ByteBuffer buffer, SocketChannel channel) {
         this.eventBus.addEvent(() -> {
-            System.out.println("writing buffer to: " + channel.socket().toString());
             try {
                 if (!channel.isOpen()) {
                     System.out.println("could not write, channel was closed");
