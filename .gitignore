@@ -1,31 +1,33 @@
 # aion
-config/
-database/
-keystore/
-pack/
+/config/
+/database/
+/keystore/
+/pack/
+/reports/
+/cache/
 
 # ide
-.idea/
-mod*/.idea/
-mod*/*.iml
+/.idea/
+/mod*/.idea/
+/mod*/*.iml
 
 # build
-build/
-mod/
-*/build/
-*/native/
-native/linux/blake2b/libblake2b.so
-native/linux/equihash/equiMiner.so
+/build/
+/mod/
+/mod*/build/
+/mod*/native/
+/native/linux/blake2b/libblake2b.so
+/native/linux/equihash/equiMiner.so
 
 # ci
-report/
-*/report/
+/report/
+/mod*/report/
 
 # ant
 .ant-targets-build.xml
 
 # local network
-node1/
-node2/
-node3/
-node4/
+/node1/
+/node2/
+/node3/
+/node4/
