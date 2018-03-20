@@ -24,77 +24,167 @@
 
 package org.aion.api.server.types;
 
-import org.aion.base.type.Address;
+import org.aion.base.type.*;
+import org.aion.mcf.vm.types.Log;
+import org.aion.mcf.vm.types.Bloom;
+import org.aion.zero.impl.core.BloomFilter;
+import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.types.IAionBlock;
+import org.aion.zero.impl.core.IAionBlockchain;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
- * @author chris Multiple clients usage might cause FltrLg run out queue max
- *         fast TODO: implement usage per client
+ * @author chris
  */
 
+// NOTE: only used by web3 api
 public final class FltrLg extends Fltr {
 
-    private Address contractAddress;
+    private List<byte[][]> topics = new ArrayList<>();  //  [[addr1, addr2], null, [A, B], [C]]
+    private byte[][] contractAddresses = new byte[0][];
+    private Bloom[][] filterBlooms;
 
-    /**
-     * set value when FltrLg initialed clear this filter at onBlock event if
-     * initialToBlock != "latest" which means end user is not attend to watch
-     * continue binded events TODO: due to its http post rpc callback, server
-     * cannot detect user is stop calling which would cause this Fltr is left in
-     * installedFilters forever. Clear this filtr if current incoming block
-     * number is bigger than initialToBlock and initialBlock != "latest"
-     */
-    private String initialToBlock;
-
-    private String[] topics;
-
-    public FltrLg(final Address contractAddress, final String initialToBlock, final String topicsStr) {
-        super(Fltr.Type.LOG);
-        this.contractAddress = contractAddress;
-        this.initialToBlock = initialToBlock;
-        this.topics = (topicsStr == null || topicsStr.equals("")) ? new String[0] : topicsStr.split(",");
+    public FltrLg() {
+        super(Type.LOG);
     }
 
-    /**
-     * 
-     * used on event hook up to remove expired fltr
-     */
-    public String getInitialToBlock() {
-        return this.initialToBlock;
+    public void setContractAddress(List<byte[]> address) {
+        byte[][] t = new byte[address.size()][];
+        for (int i = 0; i < address.size(); i++) {
+            t[i] = address.get(i);
+        }
+        contractAddresses = t;
     }
 
-    public String[] getLogs() {
-        return this.topics;
+    public void setTopics(List<byte[][]> topics) {
+        this.topics = topics;
     }
 
-    /**
-     * verify if current log filter is for specific contract address
-     */
-    public boolean isFor(byte[] contractAddress, String topic) {
+    // -------------------------------------------------------------------------------
 
-        // System.out.println(com.nuco.util.TypeConverter.toJsonHex(this.contractAddress));
-        // System.out.println(com.nuco.util.TypeConverter.toJsonHex(contractAddress));
-        // System.out.println(String.join(",", this.topics));
-        // System.out.println(topic);
-        // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    @Override
+    public boolean onBlock(IBlockSummary bs) {
+        List<AionTxReceipt> receipts = ((AionBlockSummary) bs).getReceipts();
+        IBlock blk = bs.getBlock();
 
-        topic = "0x" + topic;
-        if (!this.contractAddress.equals(contractAddress))
-            return false;
-        if (this.topics.length > 0) {
-            boolean contains = false;
-            check: for (int i = 0, m = this.topics.length; i < m; i++) {
-                if (this.topics[i].equals(topic)) {
-                    contains = true;
-                    // System.out.println("DataWord matched");
-                    break check;
+        if (matchBloom(new Bloom(((IAionBlock) blk).getLogBloom()))) {
+            int txIndex = 0;
+            for (AionTxReceipt receipt : receipts) {
+                ITransaction tx = receipt.getTransaction();
+                if (matchesContractAddress(tx.getTo().toBytes())) {
+                    if (matchBloom(receipt.getBloomFilter())) {
+                        int logIndex = 0;
+                        for (Log logInfo : receipt.getLogInfoList()) {
+                            if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
+                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, receipt.getTransaction(), logIndex, true)));
+                            }
+                            logIndex++;
+                        }
+                    }
                 }
-
+                txIndex++;
             }
-            return contains;
-        } else
-            return true;
+        }
+        return true;
     }
 
+    // inelegant (distributing chain singleton ref. into here), tradeoff for efficiency and ease of impl.
+    // rationale: this way, we only retrieve logs from DB for transactions that the bloom
+    // filter gives a positive match for;
+    public boolean onBlock(IAionBlock blk, IAionBlockchain chain) {
+        if (matchBloom(new Bloom(blk.getLogBloom()))) {
+            int txIndex = 0;
+            for (ITransaction txn : blk.getTransactionsList()) {
+                if (matchesContractAddress(txn.getTo().toBytes())) {
+                    // now that we know that our filter might match with some logs in this transaction, go ahead
+                    // and retrieve the txReceipt from the chain
+                    AionTxInfo txInfo = chain.getTransactionInfo(txn.getHash());
+                    AionTxReceipt receipt = txInfo.getReceipt();
+                    if (matchBloom(receipt.getBloomFilter())) {
+                        int logIndex = 0;
+                        for (Log logInfo : receipt.getLogInfoList()) {
+                            if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
+                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, txn, logIndex, true)));
+                            }
+                            logIndex++;
+                        }
+                    }
+                }
+                txIndex++;
+            }
+        }
+        return true;
+    }
+
+    // -------------------------------------------------------------------------------
+
+    private void initBlooms() {
+        if (filterBlooms != null) return;
+
+        List<byte[][]> addrAndTopics = new ArrayList<>(topics);
+        addrAndTopics.add(contractAddresses);
+
+        filterBlooms = new Bloom[addrAndTopics.size()][];
+        for (int i = 0; i < addrAndTopics.size(); i++) {
+            byte[][] orTopics = addrAndTopics.get(i);
+            if (orTopics == null || orTopics.length == 0) {
+                filterBlooms[i] = new Bloom[] {new Bloom()}; // always matches
+            } else {
+                filterBlooms[i] = new Bloom[orTopics.length];
+                for (int j = 0; j < orTopics.length; j++) {
+                    filterBlooms[i][j] = BloomFilter.create(orTopics[j]);
+                }
+            }
+        }
+    }
+
+    public boolean matchBloom(Bloom blockBloom) {
+        initBlooms();
+        for (Bloom[] andBloom : filterBlooms) {
+            boolean orMatches = false;
+            for (Bloom orBloom : andBloom) {
+                if (blockBloom.matches(orBloom)) {
+                    orMatches = true;
+                    break;
+                }
+            }
+            if (!orMatches) return false;
+        }
+        return true;
+    }
+
+    public boolean matchesContractAddress(byte[] toAddr) {
+        initBlooms();
+        for (byte[] address : contractAddresses) {
+            if (Arrays.equals(address, toAddr)) return true;
+        }
+        return contractAddresses.length == 0;
+    }
+
+    public boolean matchesExactly(Log logInfo) {
+        initBlooms();
+        if (!matchesContractAddress(logInfo.getAddress().toBytes())) return false;
+        List<byte[]> logTopics = logInfo.getTopics();
+        for (int i = 0; i < this.topics.size(); i++) {
+            if (i >= logTopics.size()) return false;
+            byte[][] orTopics = topics.get(i);
+            if (orTopics != null && orTopics.length > 0) {
+                boolean orMatches = false;
+                byte[] logTopic = logTopics.get(i);
+                for (byte[] orTopic : orTopics) {
+                    if (Arrays.equals(orTopic,logTopic)) {
+                        orMatches = true;
+                        break;
+                    }
+                }
+                if (!orMatches) return false;
+            }
+        }
+        return true;
+    }
 }

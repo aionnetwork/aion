@@ -45,14 +45,17 @@ public class EvtLg extends Evt {
     @Override
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
+
+        obj.put("removed", this.el.removed);
         obj.put("logIndex", this.el.logIndex);
-        obj.put("blockNumber", this.el.blockNumber);
-        obj.put("blockHash", this.el.blockHash);
-        obj.put("transactionHash", this.el.transactionHash);
         obj.put("transactionIndex", this.el.transactionIndex);
+        obj.put("transactionHash", this.el.transactionHash);
+        obj.put("blockHash", this.el.blockHash);
+        obj.put("blockNumber", this.el.blockNumber);
         obj.put("address", this.el.address);
         obj.put("data", this.el.data);
         obj.put("topics", new JSONArray(this.el.topics));
+
         return obj;
     }
 }

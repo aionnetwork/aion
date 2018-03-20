@@ -5,6 +5,10 @@
 	<api>
 		<rpc active="true" ip="127.0.0.1" port="8545"></rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
+		<nrg>
+			<default>1E9</default>
+			<max>100E9</max>
+		</nrg>
 	</api>
 	<net>
 		<id>0</id>
