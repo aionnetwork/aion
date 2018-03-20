@@ -58,6 +58,8 @@ public abstract class Cfg {
 
     protected CfgTx tx;
 
+    protected CfgReports reports;
+
     public void setId(final String _id){
         this.id = _id;
     }
@@ -112,6 +114,10 @@ public abstract class Cfg {
 
     public CfgTx getTx() {
         return this.tx;
+    }
+
+    public CfgReports getReports() {
+        return this.reports;
     }
 
     public String[] getNodes() {

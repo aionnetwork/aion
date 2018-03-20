@@ -87,7 +87,7 @@ public class NodeMgr implements INodeMgr {
      *
      * @param selfShortId String
      */
-    void dumpNodeInfo(String selfShortId) {
+    public String dumpNodeInfo(String selfShortId) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         sb.append(String.format("================================================================== p2p-status-%6s ==================================================================\n", selfShortId));
@@ -138,7 +138,7 @@ public class NodeMgr implements INodeMgr {
             }
         }
         sb.append("\n");
-        System.out.println(sb.toString());
+        return sb.toString();
     }
 
     private void updateMetric(final Node _n) {
