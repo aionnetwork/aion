@@ -50,7 +50,6 @@ public abstract class AbstractHandler {
     protected List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
     private AtomicBoolean interrupt = new AtomicBoolean(false);
     private boolean interruptted = false;
-    private int maxThread = 3;
 
     protected ExecutorService es;
 
@@ -84,7 +83,8 @@ public abstract class AbstractHandler {
     });
 
     protected AbstractHandler() {
-        this.es = Executors.newWorkStealingPool(Math.min(eventCallback.size() + 1, maxThread));
+        int maxThread = 3;
+        this.es = Executors.newWorkStealingPool(Math.min(eventCallback.size(), maxThread));
     }
 
     public synchronized boolean addEvent(IEvent _evt) {

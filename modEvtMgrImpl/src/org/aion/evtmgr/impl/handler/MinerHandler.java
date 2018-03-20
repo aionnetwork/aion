@@ -49,7 +49,7 @@ public class MinerHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                es.submit(new Thread(() -> {
+                es.submit(() -> {
                     switch (event.getCallbackType()) {
                     case 0:
                         ((EventCallbackA0) cb).onMiningStarted();
@@ -68,7 +68,7 @@ public class MinerHandler extends AbstractHandler implements IHandler {
                         break;
                     default:
                     }
-                }, "Miner_ES"));
+                });
             }
         }
     }
