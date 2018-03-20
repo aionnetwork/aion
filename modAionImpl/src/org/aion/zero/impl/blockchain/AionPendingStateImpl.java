@@ -130,7 +130,7 @@ public class AionPendingStateImpl
 
         prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
         // The BlockEnergyLimit will be updated when the best block found.
-        prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, "1000000");
+        prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, "10000000");
         prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, "16000000");
         prop.put(ITxPool.PROP_TXN_TIMEOUT, "86400");
         TxPoolModule txPoolModule = null;
@@ -277,13 +277,10 @@ public class AionPendingStateImpl
 
     private boolean inPool(BigInteger txNonce, Address from) {
 
-        BigInteger bn = cachePoolNonce.get(from);
-        if (bn == null) {
-            bn = this.txPool.bestNonce(from);
-            cachePoolNonce.put(from, bn);
-        }
+        BigInteger bn = this.txPool.bestNonce(from);
 
-        return (bn.compareTo(txNonce) > -1);
+
+        return bn == null ? false : (bn.compareTo(txNonce) > -1);
     }
 
 
