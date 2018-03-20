@@ -25,8 +25,6 @@
 package org.aion.evtmgr.impl.handler;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
