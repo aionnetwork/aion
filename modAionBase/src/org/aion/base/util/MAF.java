@@ -25,21 +25,15 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
 package org.aion.base.util;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-/*
-    author: ali sharif
-    Implements a simple Moving Average Filter
-    This class is thread safe
+/**
+ * @author: ali sharif
+ * Implements a simple Moving Average Filter
+ * This class is thread safe
  */
 public class MAF {
     private final Queue<Double> myQ = new ConcurrentLinkedQueue<Double>();

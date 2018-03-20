@@ -104,8 +104,13 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public String version() {
-            return null;
+        public List<Short> versions() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public int chainId() {
+            return 0;
         }
 
         @Override
