@@ -102,7 +102,11 @@ final class TaskImportBlocks implements Runnable {
                     continue;
                 }
 
+                long t1 = System.currentTimeMillis();
                 ImportResult importResult = this.chain.tryToConnect(b);
+                long t2 = System.currentTimeMillis();
+                log.debug("import: number = {}, result = {}, time elapsed = {}", b.getNumber(), importResult, t2 - t1);
+
                 switch (importResult) {
                     case IMPORTED_BEST:
                         if (log.isInfoEnabled()) {
