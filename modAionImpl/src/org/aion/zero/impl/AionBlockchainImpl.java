@@ -28,7 +28,6 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
-import org.aion.base.type.IBlockIdentifier;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
@@ -38,7 +37,6 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
@@ -71,6 +69,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
@@ -94,10 +93,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
     private static final int THOUSAND_MS = 1000;
-    private static final int TARGET_BLOCKINTERVAL = 10; // second
     private static final int DIFFICULTY_BYTES = 16;
-    
-    A0BCConfig config;
+
+    private A0BCConfig config;
+    private long exitOn = Long.MAX_VALUE;
 
     private IRepository repository;
     private IRepositoryCache track;
@@ -123,7 +122,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<BlockIdentifier>();
 
-    long exitOn = Long.MAX_VALUE;
 
     private boolean fork = false;
 
@@ -333,12 +331,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
+    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
         return getBlockStore().getListHashesEndWith(hash, qty);
     }
 
     @Override
-    public synchronized List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
+    public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
         long bestNumber = bestBlock.getNumber();
 
         if (blockNumber > bestNumber) {
@@ -1032,25 +1030,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.exitOn = exitOn;
     }
 
-    public void setMinerCoinbase(Address minerCoinbase) {
-        this.minerCoinbase = minerCoinbase;
-    }
-
     @Override
     public Address getMinerCoinbase() {
         return minerCoinbase;
     }
 
-    public void setMinerExtraData(byte[] minerExtraData) {
-        this.minerExtraData = minerExtraData;
-    }
-
     public boolean isBlockExist(byte[] hash) {
         return getBlockStore().isBlockExist(hash);
-    }
-
-    public void setParentHeaderValidator(DependentBlockHeaderRule<A0BlockHeader> parentHeaderValidator) {
-        this.parentHeaderValidator = parentHeaderValidator;
     }
 
     /**
@@ -1067,7 +1053,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return {@link A0BlockHeader}'s list or empty list if none found
      */
     @Override
-    public synchronized List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit,
+    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit,
             boolean reverse) {
 
         // Identifying block we'll move from
@@ -1201,7 +1187,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
+    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
         List<byte[]> bodies = new ArrayList<>(hashes.size());
 
         for (byte[] hash : hashes) {
@@ -1220,18 +1206,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         IRepository savedRepo = repository;
         AionBlock savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see IGenericChain#updateBestKnownBlock(org.aion.types. IBlockIdentifier)
-     */
-    @Override
-    public synchronized void updateBestKnownBlock(IBlockIdentifier _identifier) {
-        if (bestKnownBlock.get() == null || _identifier.getNumber() > bestKnownBlock.get().getNumber()) {
-            bestKnownBlock.set((BlockIdentifier) _identifier);
-        }
     }
 
     private void updateBestKnownBlock(AionBlock block) {
