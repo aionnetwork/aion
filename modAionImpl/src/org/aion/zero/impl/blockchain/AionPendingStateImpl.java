@@ -315,9 +315,7 @@ public class AionPendingStateImpl
             return false;
         }
 
-        boolean inPool = inPool(txNonce, tx.getFrom());
-
-        AionTxExecSummary txSum = inPool ? executeInPoolTx(tx) : executeTx(tx);
+        AionTxExecSummary txSum = executeTx(tx, inPool(txNonce, tx.getFrom()));
 
         if (txSum.isRejected()) {
             if (LOG.isErrorEnabled()) {
@@ -553,27 +551,14 @@ public class AionPendingStateImpl
                 LOG.debug("updateState - loop: " + tx.toString());
             }
 
-            AionTxExecSummary txSum = executeTx(tx);
+            AionTxExecSummary txSum = executeTx(tx, false);
             AionTxReceipt receipt = txSum.getReceipt();
             receipt.setTransaction(tx);
             fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
         }
     }
-
-    private AionTxExecSummary executeInPoolTx(AionTransaction tx) {
-
-        IAionBlock best = getBestBlock();
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("executeTx: {}", Hex.toHexString(tx.getHash()));
-        }
-
-        TransactionExecutor executor = new TransactionExecutor(tx, best, pendingState);
-        executor.setBypassNonce(true);
-        return executor.execute();
-    }
-
-    private AionTxExecSummary executeTx(AionTransaction tx) {
+    
+    private AionTxExecSummary executeTx(AionTransaction tx, boolean inPool) {
 
         IAionBlock best = getBestBlock();
 
@@ -582,6 +567,9 @@ public class AionPendingStateImpl
         }
 
         TransactionExecutor executor = new TransactionExecutor(tx, best, pendingState);
+        if (inPool) {
+            executor.setBypassNonce(true);
+        }
         return executor.execute();
     }
 
