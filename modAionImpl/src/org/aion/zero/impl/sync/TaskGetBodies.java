@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class TaskGetBodies implements Runnable {
 
     // timeout sent headers
-    private final static int SENT_HEADERS_TIMEOUT = 5000;
+    private final static int SENT_HEADERS_TIMEOUT = 10000;
 
     private final IP2pMgr p2p;
 
