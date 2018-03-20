@@ -89,14 +89,10 @@ final class TaskGetBodies implements Runnable {
             int idHash = hw.getNodeIdHash();
             List<A0BlockHeader> headers = hw.getHeaders();
             synchronized (headersSent) {
-                HeadersWrapper hw1 = headersSent.get(idHash);
+                HeadersWrapper hwPrevious = headersSent.get(idHash);
                 // already sent, check timeout and add it back if
                 // not timeout yet
-                if (hw1 != null) {
-                    // not expired yet
-                    if ((System.currentTimeMillis() - hw1.getTimestamp()) < SENT_HEADERS_TIMEOUT)
-                        headersSent.put(idHash, hw1);
-                } else {
+                if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
                     this.headersSent.put(idHash, hw);
                     List<byte[]> headerHashes = new ArrayList<>();
                     for (A0BlockHeader h : headers) {
