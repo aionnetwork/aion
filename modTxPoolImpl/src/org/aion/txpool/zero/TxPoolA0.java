@@ -170,25 +170,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         return newPendingTx;
     }
-
-    private TX removeOldTx(ByteArrayWrapper key, BigInteger bn) {
-        if (this.getMainMap().get(key) == null) {
-            LOG.error("this should not happen! key[{}]", key.toString());
-            return null;
-        }
-
-        ITransaction oldTx = this.getMainMap().get(key).getTx().clone();
-        long ts = new BigInteger(oldTx.getTimeStamp()).longValue()/multiplyM;
-        if (this.getTimeView().get(ts) != null) {
-            this.getTimeView().get(ts).remove(key);
-        }
-
-        this.getAccView(oldTx.getFrom()).getMap().remove(bn);
-        this.getMainMap().remove(key);
-
-        return (TX)oldTx;
-    }
-
+    
     public List<TX> getOutdatedList() {
         return this.getOutdatedListImpl();
     }
