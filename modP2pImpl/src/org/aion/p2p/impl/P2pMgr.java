@@ -33,10 +33,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -84,7 +81,6 @@ public final class P2pMgr implements IP2pMgr {
     private NodeMgr nodeMgr = new NodeMgr();
     private ServerSocketChannel tcpServer;
     private Selector selector;
-    private Lock selectorLock = new ReentrantLock();
     private ScheduledThreadPoolExecutor scheduledWorkers;
     private ExecutorService workers;
     private AtomicBoolean start = new AtomicBoolean(true);
@@ -147,7 +143,7 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * @param _channel SocketChannel TODO: check option
      */
-    private void configChannel(final SocketChannel _channel) throws IOException {
+    private static void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
         _channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
@@ -189,6 +185,32 @@ public final class P2pMgr implements IP2pMgr {
         Node previous = nodeMgr.getOutboundNodes().putIfAbsent(_node.getIdHash(), _node);
         if (previous != null)
             closeSocket(_node.getChannel());
+    }
+
+    /**
+     * Customized code for registering a channel, taken from Java NIO reference
+     *
+     * @param selector to register to channel to
+     * @param channel inbound channel produced by {@link #tcpServer}
+     * @param ops the items/events we're interested in
+     */
+    private static void registerChannel(Selector selector, SocketChannel channel, int ops, NodeMgr nodeMgr)
+            throws IOException {
+        if (channel == null)
+            return;
+
+        configChannel(channel);
+        SelectionKey key = channel.register(selector, ops);
+        key.attach(new ChannelBuffer());
+
+        String ip = channel.socket().getInetAddress().getHostAddress();
+        int port = channel.socket().getPort();
+        int localPort = channel.socket().getLocalPort();
+
+        // attach to NodeMgr
+        Node node = nodeMgr.allocNode(ip, localPort, port);
+        node.setChannel(channel);
+        nodeMgr.inboundNodeAdd(node);
     }
 
     private void accept() {
@@ -265,9 +287,12 @@ public final class P2pMgr implements IP2pMgr {
      */
     private void read(final SelectionKey _sk) throws IOException {
 
+        // this should never happen, we always allocate a new channel when the
+        // server socket accepts a new connection through OP_ACCEPT
         if (_sk.attachment() == null) {
             throw new IOException("attachment is null");
         }
+
         ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         // read header
@@ -353,6 +378,7 @@ public final class P2pMgr implements IP2pMgr {
      *                     Construct node info after handshake request success
      */
     private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId, int _port, final byte[] _revision) {
+        System.out.println(this.selfShortId);
         Node node = nodeMgr.getInboundNode(_channelHash);
         if (node != null) {
             if (handshakeRuleCheck(_netId)) {
@@ -381,6 +407,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
+        System.out.println(this.selfShortId);
         Node node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
         if (node != null) {
             node.refreshTimestamp();
@@ -510,7 +537,11 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            Thread boss = new Thread(new TaskInbound(), "p2p-pi");
+            // this is the main selector thread, this thread handles the following tasks:
+            // 1) All selector registration is done through this channel, selector registration
+            //    may be done by {@link #TaskConnectPeers}
+            // 2) All selector removal is done through this channel
+            Thread boss = new Thread(new TaskInbound(), "p2p-selector-main");
             boss.setPriority(Thread.MAX_PRIORITY);
             boss.start();
 
@@ -632,15 +663,16 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void run() {
             while (start.get()) {
-
                 int num;
                 try {
-                    num = selector.select(10);
+                    num = selector.select(5000);
                 } catch (IOException e) {
                     if (showLog)
                         System.out.println("<p2p inbound-select-io-exception>");
                     continue;
                 }
+
+                // always check command queue
 
                 if (num == 0)
                     continue;
@@ -649,17 +681,24 @@ public final class P2pMgr implements IP2pMgr {
                 Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 
                 while (keys.hasNext()) {
-
                     final SelectionKey sk = keys.next();
-                    keys.remove();
-
                     if (!sk.isValid())
                         continue;
 
-                    if (sk.isAcceptable())
-                        accept();
+                    // acceptable is only called by the SocketServerChannel when a new inbound connection is
+                    // processed
+                    if (sk.isAcceptable()) {
+                        ServerSocketChannel server = (ServerSocketChannel) sk.channel();
+                        try {
+                            SocketChannel channel = server.accept();
+                            registerChannel(P2pMgr.this.selector, channel, SelectionKey.OP_READ, P2pMgr.this.nodeMgr);
+                        } catch (IOException e) {
+                            // we're equipped to handle this (registerChannel will simply ignore)
+                            // no need to do anything here
+                        }
+                    }
 
-                    if (sk.isReadable())
+                    if (sk.isReadable()) {
                         try {
                             read(sk);
                         } catch (IOException | NullPointerException e) {
@@ -669,6 +708,10 @@ public final class P2pMgr implements IP2pMgr {
                             }
                             closeSocket((SocketChannel) sk.channel());
                         }
+                    }
+
+                    // we've finished with this key, remove
+                    keys.remove();
                 }
                 //selectorLock.unlock();
             }
@@ -731,7 +774,6 @@ public final class P2pMgr implements IP2pMgr {
                         configChannel(channel);
 
                         if (channel.finishConnect() && channel.isConnected()) {
-                            //selectorLock.lock();
                             SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
@@ -741,7 +783,6 @@ public final class P2pMgr implements IP2pMgr {
                             node.setPortConnected(channel.socket().getLocalPort());
 
                             addOutboundNode(node);
-                            //selectorLock.unlock();
 
                             // fire extended handshake request first
                             workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), channel, cachedReqHandshake1, rb));
@@ -817,5 +858,4 @@ public final class P2pMgr implements IP2pMgr {
             }
         }
     }
-
 }
