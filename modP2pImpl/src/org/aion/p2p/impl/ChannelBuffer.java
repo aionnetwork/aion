@@ -26,6 +26,7 @@ package org.aion.p2p.impl;
 
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
+import org.aion.p2p.impl.selector.Task;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -37,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author chris
  *
  */
-class ChannelBuffer {
+public class ChannelBuffer {
 
     int nodeIdHash = 0;
 
@@ -48,6 +49,8 @@ class ChannelBuffer {
     Header header = null;
 
     byte[] body = null;
+
+    public Task task;
 
     /**
      * write flag
