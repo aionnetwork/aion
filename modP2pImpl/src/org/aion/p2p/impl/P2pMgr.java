@@ -26,6 +26,8 @@
 package org.aion.p2p.impl;
 
 import org.aion.p2p.*;
+import org.aion.p2p.impl.selector.MainIOLoop;
+import org.aion.p2p.impl.selector.Task;
 import org.aion.p2p.impl.zero.msg.*;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -80,10 +83,15 @@ public final class P2pMgr implements IP2pMgr {
     private final Set<Short> versions = new HashSet<>();
     private NodeMgr nodeMgr = new NodeMgr();
     private ServerSocketChannel tcpServer;
-    private Selector selector;
     private ScheduledThreadPoolExecutor scheduledWorkers;
     private ExecutorService workers;
     private AtomicBoolean start = new AtomicBoolean(true);
+
+    private final MainIOLoop ioLoop;
+
+    private final HandleRead handleRead = new HandleRead();
+
+    private final HandleInboundEvent handleInbound = new HandleInboundEvent();
 
     /**
      * @param _nodeId         byte[36]
@@ -125,6 +133,8 @@ public final class P2pMgr implements IP2pMgr {
         cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp, this.selfPort);
         cachedResHandshake = new ResHandshake(true);
         cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
+
+        this.ioLoop = new MainIOLoop(SelectorProvider.provider());
     }
 
     /**
@@ -155,15 +165,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _sc SocketChannel
      */
     void closeSocket(final SocketChannel _sc) {
-        try {
-            SelectionKey sk = _sc.keyFor(selector);
-            _sc.close();
-            if (sk != null)
-                sk.cancel();
-        } catch (IOException e) {
-            if (showLog)
-                System.out.println("<p2p close-socket-io-exception>");
-        }
+        this.ioLoop.cancelChannel(_sc);
     }
 
     /**
@@ -190,18 +192,20 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * Customized code for registering a channel, taken from Java NIO reference
      *
-     * @param selector to register to channel to
+     * @param loop event loop
      * @param channel inbound channel produced by {@link #tcpServer}
      * @param ops the items/events we're interested in
      */
-    private static void registerChannel(Selector selector, SocketChannel channel, int ops, NodeMgr nodeMgr)
+    private static void registerChannel(MainIOLoop loop, SocketChannel channel, int ops, NodeMgr nodeMgr, Task task)
             throws IOException {
         if (channel == null)
             return;
 
         configChannel(channel);
-        SelectionKey key = channel.register(selector, ops);
-        key.attach(new ChannelBuffer());
+        ChannelBuffer buffer = new ChannelBuffer();
+        buffer.task = task;
+
+        loop.attachChannel(channel, ops, buffer, buffer.task);
 
         String ip = channel.socket().getInetAddress().getHostAddress();
         int port = channel.socket().getPort();
@@ -211,33 +215,6 @@ public final class P2pMgr implements IP2pMgr {
         Node node = nodeMgr.allocNode(ip, localPort, port);
         node.setChannel(channel);
         nodeMgr.inboundNodeAdd(node);
-    }
-
-    private void accept() {
-        SocketChannel channel;
-        try {
-            channel = tcpServer.accept();
-            configChannel(channel);
-
-            SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
-            sk.attach(new ChannelBuffer());
-
-            String ip = channel.socket().getInetAddress().getHostAddress();
-            int port = channel.socket().getPort();
-
-            // Node node = new Node(false, ip);
-            Node node = nodeMgr.allocNode(ip, 0, port);
-
-            node.setChannel(channel);
-            nodeMgr.inboundNodeAdd(node);
-        } catch (IOException e) {
-            if (showLog)
-                System.out.println("<p2p inbound-accept-io-exception>");
-            return;
-        }
-
-        if (showLog)
-            System.out.println("<p2p new-connection>");
     }
 
     /**
@@ -285,7 +262,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _sk SelectionKey
      * @throws IOException IOException
      */
-    private void read(final SelectionKey _sk) throws IOException {
+    protected void read(final SelectionKey _sk) throws IOException {
 
         // this should never happen, we always allocate a new channel when the
         // server socket accepts a new connection through OP_ACCEPT
@@ -395,11 +372,11 @@ public final class P2pMgr implements IP2pMgr {
                         binaryVersion = "decode-fail";
                     }
                     node.setBinaryVersion(binaryVersion);
-                    workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake1, _buffer));
+                    workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake1));
                 }
                 // handshake 0
                 else {
-                    workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake, _buffer));
+                    workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), cachedResHandshake));
                 }
                 nodeMgr.moveInboundToActive(_channelHash, this);
             }
@@ -461,8 +438,8 @@ public final class P2pMgr implements IP2pMgr {
                 if (rb.nodeIdHash != 0) {
                     Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null)
-                        workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(),
-                                new ResActiveNodes(nodeMgr.getActiveNodesList()), rb));
+                        workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(),
+                                new ResActiveNodes(nodeMgr.getActiveNodesList())));
                 }
                 break;
 
@@ -525,8 +502,6 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public void run() {
         try {
-            selector = Selector.open();
-
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
             workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
             // workers = Executors.newCachedThreadPool();
@@ -535,13 +510,20 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);
             tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
-            tcpServer.register(selector, SelectionKey.OP_ACCEPT);
+
+            ChannelBuffer ibChannelBuffer = new ChannelBuffer();
+            ibChannelBuffer.task = handleInbound;
+
+            this.ioLoop.attachChannel(tcpServer,
+                    SelectionKey.OP_ACCEPT,
+                    ibChannelBuffer,
+                    ibChannelBuffer.task);
 
             // this is the main selector thread, this thread handles the following tasks:
             // 1) All selector registration is done through this channel, selector registration
             //    may be done by {@link #TaskConnectPeers}
             // 2) All selector removal is done through this channel
-            Thread boss = new Thread(new TaskInbound(), "p2p-selector-main");
+            Thread boss = new Thread(this.ioLoop, "p2p-selector-main");
             boss.setPriority(Thread.MAX_PRIORITY);
             boss.start();
 
@@ -635,13 +617,10 @@ public final class P2pMgr implements IP2pMgr {
     public void send(int _nodeIdHashcode, final Msg _msg) {
         Node node = this.nodeMgr.getActiveNode(_nodeIdHashcode);
         if (node != null) {
-            SelectionKey sk = node.getChannel().keyFor(selector);
-
-            if (sk != null) {
-                Object attachment = sk.attachment();
-                if (attachment != null)
-                    workers.submit(
-                            new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), _msg, (ChannelBuffer) attachment));
+            SocketChannel channel = node.getChannel();
+            if (channel.isOpen()) {
+                this.workers.submit(
+                        new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), _msg));
             }
         }
     }
@@ -659,64 +638,64 @@ public final class P2pMgr implements IP2pMgr {
         return "0.1.0";
     }
 
-    private final class TaskInbound implements Runnable {
+    private final class HandleInboundEvent implements Task {
+
+        // this is triggered everytime a new event comes in from channel
         @Override
-        public void run() {
-            while (start.get()) {
-                int num;
-                try {
-                    num = selector.select(5000);
-                } catch (IOException e) {
-                    if (showLog)
-                        System.out.println("<p2p inbound-select-io-exception>");
-                    continue;
+        public void channelReady(SelectableChannel channel, SelectionKey key) {
+            try {
+                ServerSocketChannel serverChannel = (ServerSocketChannel) channel;
+                SocketChannel socketChan = serverChannel.accept();
+
+                registerChannel(P2pMgr.this.ioLoop,
+                        socketChan,
+                        SelectionKey.OP_READ,
+                        P2pMgr.this.nodeMgr,
+                        P2pMgr.this.handleRead);
+
+            } catch (IOException e) {
+                if (P2pMgr.this.showLog) {
+                    System.out.println("failed to register channel");
+                    e.printStackTrace();
                 }
-
-                // always check command queue
-
-                if (num == 0)
-                    continue;
-
-                //selectorLock.lock();
-                Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
-
-                while (keys.hasNext()) {
-                    final SelectionKey sk = keys.next();
-                    if (!sk.isValid())
-                        continue;
-
-                    // acceptable is only called by the SocketServerChannel when a new inbound connection is
-                    // processed
-                    if (sk.isAcceptable()) {
-                        ServerSocketChannel server = (ServerSocketChannel) sk.channel();
-                        try {
-                            SocketChannel channel = server.accept();
-                            registerChannel(P2pMgr.this.selector, channel, SelectionKey.OP_READ, P2pMgr.this.nodeMgr);
-                        } catch (IOException e) {
-                            // we're equipped to handle this (registerChannel will simply ignore)
-                            // no need to do anything here
-                        }
-                    }
-
-                    if (sk.isReadable()) {
-                        try {
-                            read(sk);
-                        } catch (IOException | NullPointerException e) {
-                            e.printStackTrace();
-                            if (showLog) {
-                                System.out.println("<p2p read-msg-io-exception>");
-                            }
-                            closeSocket((SocketChannel) sk.channel());
-                        }
-                    }
-
-                    // we've finished with this key, remove
-                    keys.remove();
-                }
-                //selectorLock.unlock();
             }
-            if (showLog)
-                System.out.println("<p2p-pi shutdown>");
+        }
+
+        @Override
+        public void channelUnregistered(SelectableChannel channel, Throwable cause) {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                if (P2pMgr.this.showLog) {
+                    System.out.println("failed to close channel");
+                }
+            }
+        }
+    }
+
+    private final class HandleRead implements Task {
+
+        @Override
+        public void channelReady(SelectableChannel channel, SelectionKey key) {
+            System.out.println("read called!!");
+            try {
+                P2pMgr.this.read(key);
+            } catch (IOException e) {
+                // on any IO exception, cancel the channel, no need to close it should be
+                // closed when channelUnregistered is triggered
+                P2pMgr.this.ioLoop.cancel(key);
+            }
+        }
+
+        @Override
+        public void channelUnregistered(SelectableChannel channel, Throwable cause) {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                if (P2pMgr.this.showLog) {
+                    System.out.println("failed to close channel");
+                }
+            }
         }
     }
 
@@ -774,19 +753,18 @@ public final class P2pMgr implements IP2pMgr {
                         configChannel(channel);
 
                         if (channel.finishConnect() && channel.isConnected()) {
-                            SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
-                            sk.attach(rb);
+                            rb.task = P2pMgr.this.handleRead;
+                            P2pMgr.this.ioLoop.attachChannel(channel, SelectionKey.OP_READ, rb, rb.task);
 
                             node.setChannel(channel);
                             node.setPortConnected(channel.socket().getLocalPort());
-
                             addOutboundNode(node);
 
                             // fire extended handshake request first
-                            workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), channel, cachedReqHandshake1, rb));
-                            workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), channel, cachedReqHandshake, rb));
+                            workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), channel, cachedReqHandshake1));
+                            workers.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), channel, cachedReqHandshake));
 
                             if (showLog)
                                 System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port

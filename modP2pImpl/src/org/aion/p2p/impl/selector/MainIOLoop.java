@@ -1,12 +1,11 @@
 package org.aion.p2p.impl.selector;
 
 import org.aion.p2p.impl.ChannelBuffer;
+import org.aion.p2p.impl.TaskWrite;
 
 import java.io.IOException;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.List;
@@ -199,6 +198,11 @@ public class MainIOLoop implements Runnable {
         }
     }
 
+    private void wakeup(boolean inEventLoop) {
+        if (!inEventLoop && this.wakenUp.compareAndSet(false, true))
+            this.currSelector.wakeup();
+    }
+
     // -------------------------------------------------------------- public
 
     public boolean isEventLoopThread() {
@@ -233,10 +237,6 @@ public class MainIOLoop implements Runnable {
         if (task == null)
             throw new NullPointerException();
 
-        if (!isRunning) {
-            throw new IllegalStateException("attempted to register before event loop is running");
-        }
-
         // just in case the user forgets to set it
         if (buffer.task == null)
             buffer.task = task;
@@ -244,9 +244,33 @@ public class MainIOLoop implements Runnable {
         // schedule an event for the channel to be attached
         this.eventBus.addEvent(() -> {
             try {
-                channel.register(this.currSelector, interestOps, buffer);
+                System.out.println("attaching buffer");
+                SelectionKey key = channel.register(this.currSelector, interestOps, buffer);
+                key.attach(buffer);
             } catch (ClosedChannelException e) {
                 buffer.task.channelUnregistered(channel, e);
+            }
+        });
+        wakeup(isEventLoopThread());
+    }
+
+    /**
+     * Submit a new task (this is a write task the base class to serialize messages)
+     */
+    public void write(ByteBuffer buffer, SocketChannel channel) {
+        this.eventBus.addEvent(() -> {
+            System.out.println("writing buffer to: " + channel.socket().toString());
+            try {
+                if (!channel.isOpen()) {
+                    System.out.println("could not write, channel was closed");
+                    return;
+                }
+
+                while (buffer.hasRemaining()) {
+                    channel.write(buffer);
+                }
+            } catch (IOException e) {
+                System.out.println("could not write to buffer");
             }
         });
     }
@@ -255,8 +279,11 @@ public class MainIOLoop implements Runnable {
         return this.selectorProvider;
     }
 
-    public void wakeup(boolean inEventLoop) {
-        if (!inEventLoop && this.wakenUp.compareAndSet(false, true))
-            this.currSelector.wakeup();
+    public void cancelChannel(SocketChannel channel) {
+        this.eventBus.addEvent(() -> {
+            SelectionKey key = channel.keyFor(this.currSelector);
+            if (key != null)
+                key.cancel();
+        });
     }
 }

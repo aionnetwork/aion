@@ -191,6 +191,8 @@ public class P2pMgrTest {
 
             endLatch.await();
             System.out.println("hello world!");
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             System.out.println("shutting down connections");
             try {
