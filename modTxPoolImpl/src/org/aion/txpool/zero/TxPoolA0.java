@@ -150,14 +150,12 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 snapshot();
             }
 
-            if (this.getAccView(tx.getFrom()) != null) {
-                AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(tx.getFrom()).getMap().get(txNonce);
-                if (entry != null) {
-                    List oldTx = remove(Collections.singletonList(this.getMainMap().get(entry.getKey()).getTx()));
+            AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(tx.getFrom()).getMap().get(txNonce);
+            if (entry != null) {
+                List oldTx = remove(Collections.singletonList(this.getMainMap().get(entry.getKey()).getTx()));
 
-                    if (oldTx != null && !oldTx.isEmpty()) {
-                        newPendingTx.add((TX) oldTx.get(0));
-                    }
+                if (oldTx != null && !oldTx.isEmpty()) {
+                    newPendingTx.add((TX) oldTx.get(0));
                 }
             } else {
                 newPendingTx.add(tx);
@@ -170,7 +168,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         return newPendingTx;
     }
-    
+
     public List<TX> getOutdatedList() {
         return this.getOutdatedListImpl();
     }
