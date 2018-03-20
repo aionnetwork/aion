@@ -84,7 +84,7 @@ public abstract class AbstractHandler {
     });
 
     protected AbstractHandler() {
-        this.es = Executors.newWorkStealingPool(Math.max(eventCallback.size() + 1, maxThread));
+        this.es = Executors.newWorkStealingPool(Math.min(eventCallback.size() + 1, maxThread));
     }
 
     public synchronized boolean addEvent(IEvent _evt) {
