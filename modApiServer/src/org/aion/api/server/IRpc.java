@@ -27,35 +27,67 @@ package org.aion.api.server;
 public interface IRpc {
     
     enum Method {
-        
+
+        /**
+         * web3
+         */
+        web3_clientVersion,
+        web3_sha3,
+
+        /**
+         * compilers
+         */
+        eth_getCompilers,
+        eth_compileSolidity,
+
         /**
          * eth
          */
         eth_accounts,                
         eth_blockNumber,
         eth_coinbase,
-        eth_compileSolidity,
         eth_call,
         eth_getBalance,
         eth_getBlockByNumber,
         eth_getBlockByHash,
         eth_getCode,
-        eth_getFilterChanges,
-        eth_getFilterLogs,
-        eth_getTransactionByHash,
-        eth_getTransactionReceipt,
-        eth_getTransactionCount,
         eth_estimateGas,
         eth_sendTransaction,
         eth_sendRawTransaction,
-        eth_newBlockFilter,
-        eth_newFilter,
+
+        eth_getTransactionCount,
+        eth_getBlockTransactionCountByHash,
+        eth_getBlockTransactionCountByNumber,
+
+        eth_getTransactionByHash,
+        eth_getTransactionByBlockHashAndIndex,
+        eth_getTransactionByBlockNumberAndIndex,
+        eth_getTransactionReceipt,
+
         eth_syncing,
+        eth_protocolVersion,
+        eth_mining,
+        eth_hashrate,
+        eth_submitHashrate,
+        eth_gasPrice,
+        eth_sign,
+        eth_getStorageAt,
+
+        /**
+         * filters
+         */
+        eth_newFilter,
+        eth_newBlockFilter,
+        eth_newPendingTransactionFilter,
         eth_uninstallFilter,
+        eth_getFilterChanges,
+        eth_getFilterLogs,
+        eth_getLogs,
 
         /**
          * net
          */
+        net_version,
         net_listening,
         net_peerCount,
 
@@ -68,7 +100,8 @@ public interface IRpc {
          * personal
          */
         personal_unlockAccount,
-        
+        personal_listAccounts,
+
         /**
          * stratum pool - custom json-rpc endpoints
          */

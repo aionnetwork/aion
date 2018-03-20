@@ -289,6 +289,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
+    /* NOTE: only returns receipts from the main chain
+     */
     public AionTxInfo getTransactionInfo(byte[] hash) {
 
         List<AionTxInfo> infos = transactionStore.get(hash);

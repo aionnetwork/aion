@@ -230,6 +230,8 @@ public class AionPendingStateImpl
                         unknownTx++;
                         if (addPendingTransactionImpl(tx, txNonce)) {
                             newPending.add(tx);
+                        } else {
+                            break;
                         }
                     }
 

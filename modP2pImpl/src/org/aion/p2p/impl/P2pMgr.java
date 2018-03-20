@@ -809,8 +809,12 @@ public final class  P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public String version() {
-        return "0.1.0";
+    public List<Short> versions() {
+        return new ArrayList<Short>(versions);
     }
+
+    @Override
+    public int chainId() { return selfNetId; }
+
 
 }

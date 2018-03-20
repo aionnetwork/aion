@@ -25,6 +25,7 @@
 package org.aion.equihash;
 
 import org.aion.base.type.*;
+import org.aion.base.util.MAF;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -74,6 +75,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     // Status scheduler
     private ScheduledThreadPoolExecutor scheduledWorkers;
 
+    // keep a moving average filter for the last 64 STATUS_INTERVALs
+    private MAF hashrateMAF;
+
     /**
      * Miner threads
      */
@@ -104,7 +108,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         this.n = CfgAion.getN();
         this.k = CfgAion.getK();
         this.miner = new Equihash(n, k);
+
         scheduledWorkers = new ScheduledThreadPoolExecutor(1);
+        hashrateMAF = new MAF(64);
 
         setCpuThreads(cfg.getConsensus().getCpuMineThreads());
 
@@ -279,13 +285,18 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
-    private class ShowMiningStatusTask implements Runnable {
+    @Override
+    public double getHashrate() {
+        return hashrateMAF.getAverage();
+    }
 
+    private class ShowMiningStatusTask implements Runnable {
         @Override
         public void run() {
             Thread.currentThread().setName("miner_status");
-            LOG.info("Aion internal miner generating {} solutions per second",
-                    (double) miner.totalSolGenerated.getAndSet(0) / STATUS_INTERVAL);
+            double hashrate = (double) miner.totalSolGenerated.getAndSet(0) / STATUS_INTERVAL;
+            hashrateMAF.add(hashrate);
+            LOG.info("Aion internal miner generating {} solutions per second", hashrate);
         }
     }
 }

@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import org.aion.mcf.account.Keystore;
 import org.aion.api.server.ApiAion;
@@ -213,12 +214,15 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE);
             }
 
+
+
             // TODO : create query API for every module
             Message.rsp_protocolVersion rsp = Message.rsp_protocolVersion.newBuilder()
                     .setApi(String.valueOf(this.getApiVersion())).setDb(AionHub.getRepoVersion())
                     .setKernel(Version.KERNEL_VERSION).setMiner(EquihashMiner.VERSION)
-                    .setNet(this.ac.getAionHub().getP2pMgr().version())
-                    .setTxpool(this.ac.getAionHub().getPendingState().getVersion()).setVm("0.1.0").build();
+                    .setNet(this.p2pProtocolVersion())
+                    .setTxpool(this.ac.getAionHub().getPendingState().getVersion())
+                    .setVm("0.1.0").build();
 
             byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
@@ -1527,7 +1531,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             for (AionTransaction tx : txs) {
                 AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
                 cumulativeNrg += ti.getReceipt().getEnergyUsed();
-                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg);
+                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg, true);
 
                 List<Message.t_LgEle> tles = Arrays.asList(rt.logs).parallelStream()
                         .map(log -> {
