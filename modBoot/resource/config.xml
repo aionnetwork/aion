@@ -27,7 +27,7 @@
 		</p2p>
 	</net>
 	<sync>
-		<blocks-import-max>192</blocks-import-max>
+		<blocks-import-max>32</blocks-import-max>
 		<blocks-queue-max>2000</blocks-queue-max>
 		<show-status>false</show-status>
 	</sync>

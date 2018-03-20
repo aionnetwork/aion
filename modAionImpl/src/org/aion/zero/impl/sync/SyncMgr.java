@@ -64,7 +64,7 @@ public final class SyncMgr {
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     // default how many blocks forward to sync based on current block number
-    private int syncForwardMax = 192;
+    private int syncForwardMax = 32;
 
     private final static int syncBackwordMax = 16;
 
