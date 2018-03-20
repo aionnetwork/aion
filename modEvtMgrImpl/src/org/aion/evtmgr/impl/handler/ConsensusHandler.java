@@ -50,7 +50,7 @@ public class ConsensusHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                es.submit(() -> {
+                es.submit(new Thread(() -> {
                     switch (event.getCallbackType()) {
                     case 0:
                         ((EventCallbackA0) cb).onSyncDone();
@@ -63,7 +63,7 @@ public class ConsensusHandler extends AbstractHandler implements IHandler {
                         break;
                     default:
                     }
-                });
+                }, "Cons_ES"));
             }
         }
     }

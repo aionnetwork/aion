@@ -54,7 +54,7 @@ public class TxHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                es.submit(() -> {
+                es.submit(new Thread(() -> {
                     switch (event.getCallbackType()) {
                     case 0:
                         ((EventCallbackA0) cb).onPendingTxStateChange();
@@ -71,7 +71,7 @@ public class TxHandler extends AbstractHandler implements IHandler {
                         break;
                     default:
                     }
-                });
+                }, "Tx_ES"));
             }
         }
     }
