@@ -104,7 +104,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     public static AionRepositoryImpl inst() {
-
         return AionRepositoryImplHolder.inst;
     }
 
@@ -113,6 +112,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     private void init() {
+        rwLock.writeLock().lock();
         try {
             initializeDatabasesAndCaches();
 
@@ -128,9 +128,14 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             worldState = createStateTrie();
         } catch (Exception e) { // TODO - If any of the connections failed.
             e.printStackTrace();
+        } finally{
+            rwLock.writeLock().unlock();
         }
     }
 
+    /**
+     * @implNote  The transaction store is not locked.
+     */
     public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
         return this.transactionStore;
     }
@@ -213,8 +218,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         detailsCache.clear();
     }
 
-    private synchronized void updateContractDetails(final Address address,
-            final IContractDetails<DataWord> contractDetails) {
+    private void updateContractDetails(final Address address, final IContractDetails<DataWord> contractDetails) {
         rwLock.readLock().lock();
         try {
             detailsDS.update(address, contractDetails);
@@ -273,7 +277,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized void syncToRoot(final byte[] root) {
+    public void syncToRoot(final byte[] root) {
         rwLock.readLock().lock();
         try {
             worldState.setRoot(root);
@@ -283,17 +287,11 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized IRepositoryCache startTracking() {
+    public IRepositoryCache startTracking() {
         return new AionRepositoryCache(this);
     }
 
-    // @Override
-    public synchronized void dumpState(IAionBlock block, long nrgUsed, int txNumber, byte[] txHash) {
-        return;
-
-    }
-
-    public synchronized String getTrieDump() {
+    public String getTrieDump() {
         rwLock.readLock().lock();
         try {
             return worldState.getTrieDump();
@@ -302,13 +300,8 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         }
     }
 
-    public synchronized void dumpTrie(IAionBlock block) {
-        return;
-
-    }
-
     @Override
-    public synchronized BigInteger getBalance(Address address) {
+    public BigInteger getBalance(Address address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getBalance();
     }
@@ -352,7 +345,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized BigInteger getNonce(Address address) {
+    public BigInteger getNonce(Address address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getNonce();
     }
@@ -395,22 +388,29 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         return detailsDS.get(address.toBytes()) != null;
     }
 
+    /**
+     * @inheritDoc
+     * @implNote Any other method calling this can rely on the fact that
+     *         the account state returned is a newly created object.
+     *         Since this querying method it locked, the methods calling it
+     *         <b>may not need to be locked or synchronized</b>, depending on the specific use case.
+     */
     @Override
-    public synchronized AccountState getAccountState(Address address) {
-        // TODO
+    public AccountState getAccountState(Address address) {
         rwLock.readLock().lock();
+
+        AccountState result = null;
+
         try {
-            AccountState result = null;
             byte[] accountData = worldState.get(address.toBytes());
 
             if (accountData.length != 0) {
                 result = new AccountState(accountData);
                 LOG.debug("New AccountSate [{}], State [{}]", address.toString(), result.toString());
             }
-
-            return result;
         } finally {
             rwLock.readLock().unlock();
+            return result;
         }
     }
 
