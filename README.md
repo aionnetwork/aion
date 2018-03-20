@@ -36,5 +36,4 @@ Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for f
 
 Aion is released under the [GPL-V3 license](https://github.com/aionnetwork/aion/blob/dev/LICENSE)
 
-
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->
