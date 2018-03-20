@@ -542,24 +542,11 @@ public class AionPendingStateImpl
         return this.pendingState.getNonce(addr);
     }
 
-    @Override
-    public synchronized List<AionTransaction> addToTxCache(AionTransaction tx) {
-        Map<BigInteger, AionTransaction> txmap = getCacheTx(tx.getFrom());
-        if (txmap == null) {
-            txmap = new HashMap<>();
-        }
-        txmap.put(new BigInteger(1, tx.getNonce()), tx);
-
-        return this.pendingTxCache.addCacheTx(txmap, tx.getFrom());
+    private List<AionTransaction> addToTxCache(AionTransaction tx) {
+        return this.pendingTxCache.addCacheTx(tx);
     }
 
-    @Override
-    public synchronized List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
-        return this.pendingTxCache.getSeqCacheTx(txmap, addr, bn);
-    }
-
-    @Override
-    public Map<BigInteger, AionTransaction> getCacheTx(Address from) {
+    private Map<BigInteger, AionTransaction> getCacheTx(Address from) {
         return this.pendingTxCache.geCacheTx(from);
     }
 
