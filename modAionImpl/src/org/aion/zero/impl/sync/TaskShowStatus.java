@@ -26,20 +26,22 @@
  * Contributors to the aion source files in decreasing order of code volume:
  * Aion foundation.
  */
-
 package org.aion.zero.impl.sync;
 
 import org.aion.base.util.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author chris
- *
  * The thread print out sync status
  *
+ * @author chris
  */
 final class TaskShowStatus implements Runnable {
 
@@ -55,19 +57,26 @@ final class TaskShowStatus implements Runnable {
 
     private final Logger log;
 
-    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain, final NetworkStatus _networkStatus, final SyncStatics _statics, final Logger _log){
+    private final boolean printReport;
+    private final String reportFolder;
+
+    TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain,
+            final NetworkStatus _networkStatus, final SyncStatics _statics, final Logger _log,
+            final boolean _printReport, final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
         this.networkStatus = _networkStatus;
         this.statics = _statics;
         this.log = _log;
+        this.printReport = _printReport;
+        this.reportFolder = _reportFolder;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-        while(this.start.get()){
+        while (this.start.get()) {
             AionBlock selfBest;
             String selfTd;
             synchronized (this.chain) {
@@ -75,22 +84,33 @@ final class TaskShowStatus implements Runnable {
                 selfTd = this.chain.getTotalDifficulty().toString(10);
             }
 
-            System.out.println(
-                "[sync-status avg-import=" + this.statics.getAvgBlocksPerSec()
-                        + "b/s"
-                        + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10)
-                        + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus.getTargetBestBlockNumber()
-                        + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) + "/" + this.networkStatus.getTargetBestBlockHash() + "]");
+            String status = "[sync-status avg-import=" + this.statics.getAvgBlocksPerSec() //
+                    + "b/s" //
+                    + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10) //
+                    + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus.getTargetBestBlockNumber() //
+                    + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) //
+                    + "/" + this.networkStatus.getTargetBestBlockHash() + "]";
+
+            // print to std output
+            System.out.print(status);
+
+            // print to report file
+            if (printReport) {
+                try {
+                    Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-sync-report.out"),
+                            status.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                if(log.isDebugEnabled())
-                    log.debug("<sync-ss shutdown>");
+                if (log.isDebugEnabled()) { log.debug("<sync-ss shutdown>"); }
                 return;
             }
         }
-        if(log.isDebugEnabled())
-            log.debug("<sync-ss shutdown>");
+        if (log.isDebugEnabled()) { log.debug("<sync-ss shutdown>"); }
     }
 }

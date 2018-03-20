@@ -14,6 +14,7 @@ module aion.zero.impl {
     requires aion.db.impl;
     requires aion.zero;
     requires aion.fastvm;
+    requires jdk.management;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;
