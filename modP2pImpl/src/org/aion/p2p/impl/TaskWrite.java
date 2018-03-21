@@ -105,15 +105,13 @@ public class TaskWrite implements Runnable {
                         //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
                         workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));
                     }
+                } else {
+                    this.channelBuffer.messages.clear();
                 }
             }
         } else {
-            try {
-                this.channelBuffer.messages.put(msg);
-            } catch (InterruptedException e) {
-                if(showLog)
-                    e.printStackTrace();
-            }
+            // message may get dropped here when the message queue is full.
+            this.channelBuffer.messages.offer(msg);
         }
     }
 }
