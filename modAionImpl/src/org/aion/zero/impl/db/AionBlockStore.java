@@ -565,7 +565,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
-        while (firstBlock > lastBlock) {
+        while (firstBlock > lastBlock && firstBlock >= 0) {
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
 
             writer.append("Blocks at level " + firstBlock + ":");

@@ -19,7 +19,7 @@ fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging --output $JDK_RT
+  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management --output $JDK_RT
 fi
 
 # download the web3.js if can't find the web3.js env
@@ -42,4 +42,3 @@ if [ ! -d "$DOCS_PATH" ]; then
   mkdir $DOCS_PATH
   cp -r ./docs/** $DOCS_PATH
 fi
-
