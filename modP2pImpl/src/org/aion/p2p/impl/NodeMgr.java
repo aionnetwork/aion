@@ -387,6 +387,7 @@ public class NodeMgr implements INodeMgr {
         if (node == null)
             return;
 
+        this.observer.removeActiveNode(nodeIdHash);
         pmgr.closeSocket(node.getChannel());
     }
 

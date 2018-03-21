@@ -213,6 +213,73 @@ public class P2pMgrTest {
         }
     }
 
+    @Test
+    public void testClose() throws InterruptedException {
+        final NewActiveNodeResponse response = new NewActiveNodeResponse();
+        final CountDownLatch endLatch = new CountDownLatch(1);
+
+        final CountDownLatch dropLatch = new CountDownLatch(1);
+
+        INodeObserver connectorMockObs = new INodeObserver() {
+            @Override
+            public void newActiveNode(Integer nodeId, byte[] ip, int port) {
+                response.ip = ip;
+                response.nodeId = nodeId;
+                response.port = port;
+                endLatch.countDown();
+            }
+
+            @Override
+            public void removeActiveNode(Integer nodeId) {
+                dropLatch.countDown();
+            }
+        };
+
+        Map.Entry<P2pMgr, P2pMgr> pair = newTwoNodeSetup();
+        try {
+            P2pMgr connector = pair.getKey();
+            P2pMgr receiver = pair.getValue();
+            System.out.println(receiver.getNodeIdHash());
+            connector.getNodeMgr().registerNodeObserver(connectorMockObs);
+
+            // receiver must be run first so we can accept the connection
+            receiver.run();
+
+            System.out.println("sleeping for 1s for receiver to initialize");
+            Thread.sleep(1000L);
+
+            connector.run();
+            endLatch.await();
+
+            System.out.println("connected");
+
+            // after connection drop
+            connector.dropActive(receiver.getNodeIdHash());
+            dropLatch.await();
+
+            System.out.println("dropped");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            System.out.println("shutting down connections");
+            try {
+                pair.getKey().shutdown();
+            } catch (Exception e) {
+                System.out.println("exception on shutdown");
+                e.printStackTrace();
+                pair.getKey().shutdown();
+            }
+
+            try {
+                pair.getValue().shutdown();
+            } catch (Exception e) {
+                System.out.println("exception on shutdown");
+                e.printStackTrace();
+                pair.getValue().shutdown();
+            }
+        }
+    }
+
 //    @Test
 //    public void testConnect() throws InterruptedException {
 //

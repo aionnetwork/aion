@@ -26,7 +26,7 @@ public class MainIOLoop implements Runnable {
 
     private final AtomicBoolean wakenUp = new AtomicBoolean();
 
-    private long timeoutMillis = 1000L; // 1s
+    private long timeoutMillis = 5000L; // 1s
 
     private volatile boolean needsToSelectAgain = false;
 
@@ -272,6 +272,7 @@ public class MainIOLoop implements Runnable {
                 System.out.println("could not write to buffer");
             }
         });
+        wakeup(isEventLoopThread());
     }
 
     public SelectorProvider getSelectorProvider() {
@@ -283,6 +284,7 @@ public class MainIOLoop implements Runnable {
             SelectionKey key = channel.keyFor(this.currSelector);
             if (key != null)
                 key.cancel();
+            ((ChannelBuffer) key.attachment()).task.channelUnregistered(channel, null);
         });
     }
 }

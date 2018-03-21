@@ -179,6 +179,14 @@ public final class P2pMgr implements IP2pMgr {
         this.nodeMgr.dropActive(_nodeIdHash, this);
     }
 
+    public int getNodeIdHash() {
+        return this.selfNodeIdHash;
+    }
+
+    public byte[] getNodeId() {
+        return this.selfNodeId;
+    }
+
     /**
      * @param _node Node 1) leave outbound timestamp check to outbound connections process 2) add if no such connection
      *              or drop new if connection to target exists
@@ -535,21 +543,6 @@ public final class P2pMgr implements IP2pMgr {
             if (!syncSeedsOnly)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000, PERIOD_REQUEST_ACTIVE_NODES,
                         TimeUnit.MILLISECONDS);
-
-            // test versioning
-//            List<Hello> hello = new ArrayList<>();
-//            hello.add(new Hello("HELLO"));
-//            hello.add(new Hello("BONJOUR"));
-//            hello.add(new Hello("HOLA"));
-//            hello.add(new Hello("CIAO"));
-//            hello.add(new Hello("OLÀ"));
-//            hello.add(new Hello("ZDRAS-TVUY-TE"));
-//            scheduledWorkers.scheduleWithFixedDelay(()->{
-//                int ran = ThreadLocalRandom.current().nextInt(0,6 );
-//                INode node = getRandom(NodeRandPolicy.RND, 0);
-//                if (node != null)
-//                    send(node.getIdHash(), hello.get(ran));
-//            }, 3000, 3000, TimeUnit.MILLISECONDS);
 
             // rem out for bug: https://github.com/aionnetwork/aion/issues/136
             //scheduledWorkers.scheduleWithFixedDelay(new TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES, TimeUnit.MILLISECONDS);
