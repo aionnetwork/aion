@@ -77,12 +77,8 @@ final class TaskShowStatus implements Runnable {
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
         while (this.start.get()) {
-            AionBlock selfBest;
-            String selfTd;
-            synchronized (this.chain) {
-                selfBest = this.chain.getBestBlock();
-                selfTd = this.chain.getTotalDifficulty().toString(10);
-            }
+            AionBlock selfBest = this.chain.getBestBlock();
+            String selfTd = this.chain.getTotalDifficulty().toString(10);
 
             String status = "[sync-status avg-import=" + this.statics.getAvgBlocksPerSec() //
                     + "b/s" //
