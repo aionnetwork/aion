@@ -20,6 +20,9 @@ public class EnergyLimitStrategyTest {
                                                                     config.getConstants().getEnergyLowerBound());
 
     @Mock
+    A0BlockHeader inputHeader;
+
+    @Mock
     A0BlockHeader parentHeader;
 
     @Mock
@@ -102,6 +105,22 @@ public class EnergyLimitStrategyTest {
                 System.out.println("completed 100_000 cycles: " + cycle_counter + " timestamp: " + System.currentTimeMillis());
                 cycle_counter++;
             }
+        }
+    }
+
+    // given the targetted energy limit strategy, should always converge to our
+    // desired limit
+    @Test
+    public void testConvergence() {
+        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
+
+        for (int k = 0; k < 100; k++) {
+            strategy.setConstants(config);
+            long parentEnergy = randLong(5000, 20_000_000);
+            for (int i = 0; i < 100_000; i++) {
+                parentEnergy = strategy.targetEnergyLimitStrategy(parentEnergy);
+            }
+            assertThat(parentEnergy).isEqualTo(10_000_000L);
         }
     }
 }

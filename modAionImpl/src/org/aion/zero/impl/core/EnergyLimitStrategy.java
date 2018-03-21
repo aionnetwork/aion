@@ -31,7 +31,7 @@ public class EnergyLimitStrategy {
     // strategy shifts the energy limit towards a certain bound
 
     public long targetEnergyLimitStrategy(A0BlockHeader header) {
-        return targetEnergyLimitStrategy(header.energyLimit);
+        return targetEnergyLimitStrategy(header.getEnergyLimit());
     }
 
     public long targetEnergyLimitStrategy(final long parentEnergyLimit) {
