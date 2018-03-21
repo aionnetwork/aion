@@ -93,15 +93,10 @@ public class TaskWrite implements Runnable {
                 }
             } finally {
                 this.channelBuffer.onWrite.set(false);
-                try {
-                    Msg msg = this.channelBuffer.messages.poll(1, TimeUnit.MILLISECONDS);
-                    if (msg != null) {
-                        //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
-                        workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));
-                    }
-                } catch (InterruptedException e) {
-                    if(showLog)
-                        e.printStackTrace();
+                Msg msg = this.channelBuffer.messages.poll();
+                if (msg != null) {
+                    //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                    workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));
                 }
             }
         } else {
