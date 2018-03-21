@@ -119,8 +119,6 @@ public class PendingTxCache {
                         findPosition = true;
                     } else {
                         //case 1b: replace nonce still over the cachelimit, replace it and find the best remove list
-                        //tempCacheSize -= cacheTxMap.get(tx.getFrom()).get(nonce).getEncoded().length;
-                        //if (isCacheMax(txSize - oldTxSize)) {
                         for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
                             if (e.getKey().compareTo(nonce) > 0) {
                                 removeTx.add(e.getKey());
