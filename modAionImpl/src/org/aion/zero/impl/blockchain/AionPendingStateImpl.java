@@ -80,8 +80,6 @@ public class AionPendingStateImpl
         }
     }
 
-    private CfgAion cfg = CfgAion.inst();
-
     private IAionBlockchain blockchain;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
@@ -141,6 +139,7 @@ public class AionPendingStateImpl
             e.printStackTrace();
         }
 
+        CfgAion cfg = CfgAion.inst();
         this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
     }
 
@@ -177,7 +176,7 @@ public class AionPendingStateImpl
         return pendingState;
     }
 
-    public synchronized int getPendingTxSize() {
+    private int getPendingTxSize() {
         return this.txPool.size();
     }
 
@@ -278,7 +277,7 @@ public class AionPendingStateImpl
     /**
      * Executes pending tx on the latest best block Fires pending state update
      *
-     * @param tx
+     * @param tx transaction come from API or P2P
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
     private boolean addPendingTransactionImpl(final AionTransaction tx) {
@@ -326,7 +325,7 @@ public class AionPendingStateImpl
             if (b1.getNumber() < b2.getNumber()) {
                 b2 = blockchain.getBlockByHash(b2.getParentHash());
             }
-            if (b1 == null || b2 == null) {
+            if (b2 == null) {
                 // shouldn't happen
                 throw new RuntimeException("Pending state can't find common ancestor: one of blocks has a gap");
             }
@@ -544,10 +543,6 @@ public class AionPendingStateImpl
 
     private List<AionTransaction> addToTxCache(AionTransaction tx) {
         return this.pendingTxCache.addCacheTx(tx);
-    }
-
-    private Map<BigInteger, AionTransaction> getCacheTx(Address from) {
-        return this.pendingTxCache.geCacheTx(from);
     }
 
     @Override
