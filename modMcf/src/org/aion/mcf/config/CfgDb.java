@@ -202,6 +202,9 @@ public class CfgDb {
         return enable_heap_cache_stats;
     }
 
+    public void setHeapCacheEnabled(boolean enable_heap_cache) {
+        this.enable_heap_cache = enable_heap_cache;
+    }
 }
 
 
