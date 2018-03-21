@@ -30,6 +30,7 @@
 package org.aion.zero.impl.sync;
 
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -105,8 +106,9 @@ final class TaskImportBlocks implements Runnable {
                 long t1 = System.currentTimeMillis();
                 ImportResult importResult = this.chain.tryToConnect(b);
                 long t2 = System.currentTimeMillis();
-                log.debug("<import-status: from = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms",
-                        bw.getDisplayId(), b.getNumber(), b.getTransactionsList().size(), importResult, t2 - t1);
+                log.debug("<import-status: from = {}, number = {}, hash = {}, txs = {}, result = {}, time elapsed = {} ms",
+                        bw.getDisplayId(), b.getNumber(), Hex.toHexString(b.getHash()),
+                        b.getTransactionsList().size(), importResult, t2 - t1);
 
                 switch (importResult) {
                     case IMPORTED_BEST:
