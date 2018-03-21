@@ -155,7 +155,7 @@ public class PendingTxCache {
 
         } else {
             if (cacheTxMap.size() == cacheAccountLimit) {
-                //remove firstAccount pendingTxCache
+                //remove firstAccount in pendingTxCache
                 Iterator<Map.Entry<Address,TreeMap<BigInteger, AionTransaction>>> it = cacheTxMap.entrySet().iterator();
                 if (it.hasNext()) {
                     currentSize.addAndGet( -getAccountSize(it.next().getValue()));
