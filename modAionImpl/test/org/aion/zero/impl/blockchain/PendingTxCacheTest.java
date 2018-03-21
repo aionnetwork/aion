@@ -25,12 +25,12 @@ public class PendingTxCacheTest {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
 
         int keyCnt = 100_001;
-        key = new ArrayList<>();
-
         System.out.println("gen key list----------------");
-        for (int i = 0; i < keyCnt; i++) {
-            key.add(ECKeyFac.inst().create());
-            System.out.println("gen key " + i);
+        if (key == null) {
+            key = new ArrayList<>();
+            for (int i = 0; i < keyCnt; i++) {
+                key.add(ECKeyFac.inst().create());
+            }
         }
         System.out.println("gen key list finished-------");
     }
@@ -108,19 +108,17 @@ public class PendingTxCacheTest {
     @Test
     public void addCacheTxTest3() {
 
-        PendingTxCache cache = new PendingTxCache(1);
+        PendingTxCache cache = new PendingTxCache(1000);
 
-        List<ITransaction> txn = new ArrayList<>();
+        List<AionTransaction> txn = new ArrayList<>();
         for (int i=0 ; i<key.size() ; i++) {
             txn.add(getMockTransaction(0, 1, i).get(0));
         }
 
-        List<AionTransaction> newCache = new ArrayList<>();
-        for (ITransaction tx : txn) {
-            newCache.add(cache.addCacheTx((AionTransaction) tx).get(0));
+        for (AionTransaction tx : txn) {
+            cache.addCacheTx(tx);
         }
 
-        assertTrue(newCache.size() == key.size());
         assertTrue(cache.getCacheTxAccount().size() == key.size() - 1);
     }
 

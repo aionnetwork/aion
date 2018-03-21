@@ -41,9 +41,10 @@ public class PendingTxCache {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
     private static int CacheMax = 256*100_000; //256MB
     private AtomicInteger currentSize = new AtomicInteger(0);
+    private int cacheAccountLimit = 100_000;
 
     PendingTxCache(final int cacheMax) {
-        cacheTxMap = Collections.synchronizedMap(new LRUMap<>(100_000));
+        cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
         PendingTxCache.CacheMax = cacheMax *100_000;
     }
 
@@ -91,8 +92,6 @@ public class PendingTxCache {
             throw new NullPointerException();
         }
 
-        cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
-
         int txSize = tx.getEncoded().length;
         if (isCacheMax(txSize)) {
             if (LOG.isTraceEnabled()) {
@@ -105,7 +104,7 @@ public class PendingTxCache {
             } else {
                 // calculate replaced nonce tx size
                 BigInteger nonce = tx.getNonceBI();
-                List<BigInteger> removeTx = null;
+                List<BigInteger> removeTx;
                 boolean findPosition = false;
 
                 removeTx = new ArrayList<>();
@@ -157,6 +156,17 @@ public class PendingTxCache {
             }
 
         } else {
+            if (cacheTxMap.size() == cacheAccountLimit) {
+                //remove firstAccount pendingTxCache
+                Iterator<Map.Entry<Address,TreeMap<BigInteger, AionTransaction>>> it = cacheTxMap.entrySet().iterator();
+                if (it.hasNext()) {
+                    currentSize.addAndGet( -getAccountSize(it.next().getValue()));
+                    it.remove();
+                }
+            }
+
+            cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
+
             cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
             currentSize.addAndGet(txSize);
         }
