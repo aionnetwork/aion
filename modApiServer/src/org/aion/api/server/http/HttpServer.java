@@ -415,7 +415,7 @@ public final class HttpServer
                 id = body.get("id") + "";
                 params = body.getJSONArray("params");
             } catch (Exception e) {
-                LOG.debug("<rpc-server - invalid rpc request>", e);
+                LOG.debug("<rpc-server - invalid rpc request [0]>", e);
                 return new RpcMsg(null, RpcError.INVALID_REQUEST).toJson();
             }
 
@@ -423,7 +423,7 @@ public final class HttpServer
             try {
                 rpc = Method.valueOf(method);
             } catch (Exception e) {
-                LOG.debug("rpc-server - invalid method", e);
+                LOG.debug("rpc-server - invalid method [1]", e);
                 return new RpcMsg(null, RpcError.METHOD_NOT_FOUND).setId(id).toJson();
             }
 
@@ -431,11 +431,11 @@ public final class HttpServer
                 RpcMsg response = process(rpc, params);
                 return response.setId(id).toJson();
             } catch (Exception e) {
-                LOG.debug("<rpc-server - internal error>", e);
+                LOG.debug("<rpc-server - internal error [2]>", e);
                 return new RpcMsg(null, RpcError.INTERNAL_ERROR).setId(id).toJson();
             }
         } catch (Exception e) {
-            LOG.debug("<rpc-server - internal error>", e);
+            LOG.debug("<rpc-server - internal error [3]>", e);
         }
 
         return new RpcMsg(null, RpcError.INTERNAL_ERROR).toJson();
@@ -451,7 +451,7 @@ public final class HttpServer
             } catch (Exception e) {
                 // rpc call Batch, invalid JSON
                 // rpc call with an empty Array
-                LOG.debug("<rpc-server - rpc call parse error>", e);
+                LOG.debug("<rpc-server - rpc call parse error [4]>", e);
                 return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
             }
 
@@ -462,7 +462,7 @@ public final class HttpServer
                     JSONObject body = reqBodies.getJSONObject(i);
                     respBodies.put(processObject(body));
                 } catch (Exception e) {
-                    LOG.debug("<rpc-server - invalid rpc request>", e);
+                    LOG.debug("<rpc-server - invalid rpc request [5]>", e);
                     respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
                 }
             }
@@ -475,7 +475,7 @@ public final class HttpServer
             return composeRpcResponse(respBody);
 
         } catch (Exception e) {
-            LOG.debug("<rpc-server - internal error>", e);
+            LOG.debug("<rpc-server - internal error [6]>", e);
         }
 
         return composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString());
@@ -488,7 +488,7 @@ public final class HttpServer
             return composeRpcResponse(processObject(obj).toString());
         } catch (Exception e) {
             // rpc call with invalid JSON
-            LOG.debug("<rpc-server - rpc call parse error>", e);
+            LOG.debug("<rpc-server - rpc call parse error [7]>", e);
         }
 
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
@@ -536,7 +536,7 @@ public final class HttpServer
                 System.out.println("sc.close();");
                 sc.close();
             } catch (IOException e) {
-                LOG.error("<rpc-worker - socketchannel failed to close>", e);
+                LOG.error("<rpc-worker - socketchannel failed to close [8]>", e);
             }
         }
     }
@@ -549,7 +549,6 @@ public final class HttpServer
                     int num;
                     try{
                         num = selector.select();
-                        System.out.println("got new request!");
                     } catch (IOException e){
                         continue;
                     }
@@ -587,7 +586,7 @@ public final class HttpServer
                         }
                     }
                 } catch (Exception e) {
-                    LOG.debug("<rpc-server - main event loop uncaught error>", e);
+                    LOG.debug("<rpc-server - main event loop uncaught error [9]>", e);
                 }
             }
         }
@@ -603,7 +602,7 @@ public final class HttpServer
             if (sk != null)
                 sk.cancel();
         } catch (IOException e) {
-            LOG.debug("<rpc-server - error closing socket>", e);
+            LOG.debug("<rpc-server - error closing socket [10]>", e);
         }
     }
 
@@ -628,12 +627,12 @@ public final class HttpServer
                 LOG.debug("<rpc-server-start bind={}:{}>", ip, port);
 
             tInbound = new Thread(new TaskInbound(), "rpc-server");
-            tInbound.setPriority(Thread.MIN_PRIORITY);
+            tInbound.setPriority(Thread.NORM_PRIORITY);
             this.start = true;
 
             tInbound.start();
         } catch (IOException ex) {
-            LOG.error("<rpc-server io-exception. potentially server failed to start>");
+            LOG.error("<rpc-server io-exception. potentially server failed to start [11]>");
         }
     }
 }

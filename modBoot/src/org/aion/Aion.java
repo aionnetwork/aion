@@ -118,7 +118,11 @@ public class Aion {
             zmqThread.start();
         }
 
-        HttpServer.start();
+        // TODO: clean this up and add shutdown hook to graceful shutdown.
+        if(cfg.getApi().getRpc().getActive()) {
+            HttpServer rpcServer = new HttpServer(cfg.getApi().getRpc().getIp(), cfg.getApi().getRpc().getPort(), "*");
+            rpcServer.start();
+        }
 
         /*
          * This is a hack, but used to let us pass zmqThread into thread
