@@ -100,23 +100,49 @@ public class PendingTxCache {
             }
 
             if (cacheTxMap.get(tx.getFrom()) == null) {
+                // no tx belong to the account, return directly
                 return Collections.singletonList(tx);
             } else {
-
+                // calculate replaced nonce tx size
                 BigInteger nonce = tx.getNonceBI();
                 List<BigInteger> removeTx = null;
                 boolean findPosition = false;
-                for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
-                    if (e.getKey().compareTo(nonce) > -1) {
-                        if (removeTx == null) {
-                            removeTx = new ArrayList<>();
-                        }
 
-                        removeTx.add(e.getKey());
-                        currentSize.addAndGet( - e.getValue().getEncoded().length);
-                        if (!isCacheMax(tx.getEncoded().length)) {
-                            findPosition = true;
-                            break;
+                removeTx = new ArrayList<>();
+                int tempCacheSize = currentSize.get();
+                if (cacheTxMap.get(tx.getFrom()).get(nonce) != null) {
+                    // case 1: found tx has same nonce in the cachemap
+                    removeTx.add(nonce);
+                    int oldTxSize = cacheTxMap.get(tx.getFrom()).get(nonce).getEncoded().length;
+                    tempCacheSize -= oldTxSize;
+                    if (!isCacheMax( txSize - oldTxSize)) {
+                        //case 1a: replace nonce within the cachelimit, replace it
+                        findPosition = true;
+                    } else {
+                        //case 1b: replace nonce still over the cachelimit, replace it and find the best remove list
+                        //tempCacheSize -= cacheTxMap.get(tx.getFrom()).get(nonce).getEncoded().length;
+                        //if (isCacheMax(txSize - oldTxSize)) {
+                        for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
+                            if (e.getKey().compareTo(nonce) > 0) {
+                                removeTx.add(e.getKey());
+                                tempCacheSize -= e.getValue().getEncoded().length;
+                                if (tempCacheSize + txSize < CacheMax) {
+                                    findPosition = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // case 2: backward iterate the cache to remove bigger nonce tx until find the enough cache size
+                    for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
+                        if (e.getKey().compareTo(nonce) > 0) {
+                            removeTx.add(e.getKey());
+                            tempCacheSize -= e.getValue().getEncoded().length;
+                            if (tempCacheSize + txSize < CacheMax) {
+                                findPosition = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -126,12 +152,13 @@ public class PendingTxCache {
                         cacheTxMap.get(tx.getFrom()).remove(bi);
                     }
                     cacheTxMap.get(tx.getFrom()).put(nonce, tx);
-                    currentSize.addAndGet(txSize);
+                    currentSize.set(tempCacheSize + txSize);
                 }
             }
 
         } else {
             cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
+            currentSize.addAndGet(txSize);
         }
 
         return new ArrayList<>(cacheTxMap.get(tx.getFrom()).values());
@@ -181,4 +208,5 @@ public class PendingTxCache {
 
         return cacheTxMap.get(from);
     }
+
 }
