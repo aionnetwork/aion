@@ -49,7 +49,7 @@ public class MinerHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                es.submit(() -> {
+                es.execute(() -> {
                     switch (event.getCallbackType()) {
                     case 0:
                         ((EventCallbackA0) cb).onMiningStarted();
