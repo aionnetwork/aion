@@ -25,6 +25,7 @@ public class RpcMsg {
         this.result = result;
         this.error = error;
         this.errorData = errorData;
+        this.id = JSONObject.NULL;
     }
 
     public Object getResult() {
@@ -62,5 +63,10 @@ public class RpcMsg {
             json.put("result", this.result);
         }
         return json;
+    }
+
+    @Override
+    public String toString() {
+        return this.toJson().toString();
     }
 }

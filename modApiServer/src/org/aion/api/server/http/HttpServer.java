@@ -25,6 +25,7 @@ package org.aion.api.server.http;
 
 import org.aion.api.server.IRpc;
 import org.aion.api.server.IRpc.Method;
+import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApi;
@@ -53,18 +54,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author chris lin, ali sharif
  *
  * RPC server implementation, based on josn rpc 2.0 spec: http://www.jsonrpc.org/specification
- * TODO: consider AIP for error codes (ex. github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal)
+ *
+ * Limitations: only handles positional parameters (no support for by-name parameters)
+ *
  */
 public final class HttpServer
 {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    private static JSONObject process(final IRpc.Method _method, final long _id, final JSONArray _params) throws Exception
+    private static RpcMsg process(final IRpc.Method _method, final JSONArray _params) throws Exception
     {
         if (LOG.isDebugEnabled())
-            LOG.debug("<request mth=[{}] id={} params={}>", _method.name(), _id, _params.toString());
+            LOG.debug("<request mth=[{}] params={}>", _method.name(), _params.toString());
 
         RpcMsg response;
+
+        if (_method == null)
+            return new RpcMsg(null, RpcError.METHOD_NOT_FOUND);
 
         switch (_method) {
 
@@ -301,7 +307,7 @@ public final class HttpServer
             }
         }
 
-        return response.setId(_id).toJson();
+        return response;
     }
 
     // -----------------------------------------------------------------------------------------------------------
@@ -310,7 +316,6 @@ public final class HttpServer
     private Selector selector;
     private ServerSocketChannel tcpServer;
     private Thread tInbound;
-    private ExecutorService workers;
     private volatile boolean start; // no need to make it atomic boolean. volatile does the job
 
     // configuration parameters
@@ -345,14 +350,6 @@ public final class HttpServer
 
         this.api = new ApiWeb3Aion(AionImpl.inst());
 
-        this.workers = new ThreadPoolExecutor(
-                Runtime.getRuntime().availableProcessors(),
-                4,
-                60,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(10),
-                new RpcThreadFactory()
-        );
         this.start = false;
     }
 
@@ -366,7 +363,7 @@ public final class HttpServer
 
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
     // https://www.w3.org/TR/cors/#cors-api-specifiation-request
-    private void handleOptions(final SocketChannel sc, final String msg) throws Exception {
+    private String handleOptions(final SocketChannel sc, final String msg) throws Exception {
         // parse the origin header
         String[] frags = msg.split("\n");
         String origin = "";
@@ -382,119 +379,132 @@ public final class HttpServer
             respHeader += "\nAccess-Control-Allow-Origin: " + corsDomain;
         }
 
-        writeResponse(sc, respHeader);
+        return respHeader;
     }
 
-    // implementing http://www.jsonrpc.org/specification#batch
-    private void handleBatch(final SocketChannel sc, String requestBody) throws Exception{
-
-        JSONArray reqBodies = new JSONArray(requestBody);
-        JSONArray respBodies = new JSONArray();
-
-        for (int i = 0, n = reqBodies.length(); i < n; i++)
-        {
-            try {
-                JSONObject body = reqBodies.getJSONObject(i);
-                String method = body.getString("method");
-                String id = body.getString("id");
-                JSONArray params = body.getJSONArray("params");
-                Method rpc = rpc = Method.valueOf(method);
-
-                respBodies.put(process(rpc, Long.parseLong(id), params));
-            } catch (Exception e) {
-                LOG.debug("rpc-server - failed batch decode [{}]", i, e);
-            }
+    private String composeRpcResponse(String _respBody) {
+        String respBody;
+        if (_respBody == null) {
+            respBody = new RpcMsg(null, RpcError.INTERNAL_ERROR).toString();
+        } else {
+            respBody = _respBody;
         }
 
-        String respBody = respBodies.toString();
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("<rpc-server response={}>", respBody);
-
+        int bodyLength = respBody.getBytes().length;
         String respHeader = POST_TEMPLATE;
-        respHeader += "\nContent-Length: " + respBody.getBytes().length;
+        respHeader += "\nContent-Length: " + bodyLength;
         if (corsDomain != null) {
             respHeader += "\nAccess-Control-Allow-Origin: " + corsDomain;
         }
 
-        ByteBuffer resultBuffer = ByteBuffer.wrap((respHeader + "\n\n" + respBody).getBytes(CHARSET));
-
-        while (resultBuffer.hasRemaining()) {
-            _sc.write(resultBuffer);
-        }
-        _sc.keyFor(selector).cancel();
-        _sc.close();
+        if (bodyLength > 0)
+            return (respHeader + "\n\n" + respBody);
+        else
+            return (respHeader);
     }
 
-    private void handleSingle(final SocketChannel _sc, String _requestBody) throws Exception{
-        JSONObject bodyObj = new JSONObject(_requestBody);
-        Object methodObj = bodyObj.get("method");
-        Object idObj = bodyObj.get("id");
-        Object paramsObj = bodyObj.getJSONArray("params");
-        Method method = null;
+    private JSONObject processObject(JSONObject body) {
         try {
-            if (methodObj != null) {
-                String methodStr = (String) methodObj;
-                method = Method.valueOf(methodStr);
-            } else
-                _sc.close();
-        } catch (IllegalArgumentException ex) {
-            _sc.close();
+            String method;
+            JSONArray params;
+            String id = "null";
+
+            try {
+                // not checking for 'jsonrpc' key == 2.0. can pass in anything
+                method = body.getString("method");
+                id = body.get("id") + "";
+                params = body.getJSONArray("params");
+            } catch (Exception e) {
+                LOG.debug("<rpc-server - invalid rpc request>", e);
+                return new RpcMsg(null, RpcError.INVALID_REQUEST).toJson();
+            }
+
+            Method rpc = null;
+            try {
+                rpc = Method.valueOf(method);
+            } catch (Exception e) {
+                LOG.debug("rpc-server - invalid method", e);
+                return new RpcMsg(null, RpcError.METHOD_NOT_FOUND).setId(id).toJson();
+            }
+
+            try {
+                RpcMsg response = process(rpc, params);
+                return response.setId(id).toJson();
+            } catch (Exception e) {
+                LOG.debug("<rpc-server - internal error>", e);
+                return new RpcMsg(null, RpcError.INTERNAL_ERROR).setId(id).toJson();
+            }
+        } catch (Exception e) {
+            LOG.debug("<rpc-server - internal error>", e);
         }
 
-        if (idObj != null && method != null) {
-            JSONObject resJson = process(method,
-                    Long.parseLong(idObj.toString()),
-                    paramsObj);
-            String responseBody = resJson == null ? "" : resJson.toString();
-            String responseHeader =
-                    "HTTP/1.1 200 OK\n"
-                            + "Content-Length: "
-                            + responseBody.getBytes().length + "\n"
-                            + "Content-Type: application/json\n"
-                            + "Access-Control-Allow-Origin: *\n\n";
+        return new RpcMsg(null, RpcError.INTERNAL_ERROR).toJson();
+    }
 
-            if (log.isDebugEnabled())
-                log.debug("<response mths=[{}] result={}>",
-                        method.toString(), responseBody);
+    // implementing http://www.jsonrpc.org/specification#batch
+    private String handleBatch(String msg) throws Exception {
+        try {
+            JSONArray reqBodies;
+            try {
+                reqBodies = new JSONArray(msg);
+                if (reqBodies.length() < 1) throw new Exception();
+            } catch (Exception e) {
+                // rpc call Batch, invalid JSON
+                // rpc call with an empty Array
+                LOG.debug("<rpc-server - rpc call parse error>", e);
+                return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
+            }
 
-            String response = responseHeader + responseBody;
-            ByteBuffer resultBuffer = ByteBuffer
-                    .wrap((response).getBytes(CHARSET));
-            while (resultBuffer.hasRemaining()) {
+            JSONArray respBodies = new JSONArray();
+
+            for (int i = 0, n = reqBodies.length(); i < n; i++) {
                 try {
-                    _sc.write(resultBuffer);
-                } catch (IOException e) {
-                    break;
+                    JSONObject body = reqBodies.getJSONObject(i);
+                    respBodies.put(processObject(body));
+                } catch (Exception e) {
+                    LOG.debug("<rpc-server - invalid rpc request>", e);
+                    respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
                 }
             }
+
+            String respBody = respBodies.toString();
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("<rpc-server response={}>", respBody);
+
+            return composeRpcResponse(respBody);
+
+        } catch (Exception e) {
+            LOG.debug("<rpc-server - internal error>", e);
         }
+
+        return composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString());
     }
 
-    private class TaskRespond implements Runnable {
-
-        private SocketChannel sc;
-        public TaskRespond(final SocketChannel sc) {
-            this.sc = sc;
+    private String handleSingle(String msg) throws Exception{
+        JSONArray reqBodies;
+        try {
+            JSONObject obj = new JSONObject(msg);
+            return composeRpcResponse(processObject(obj).toString());
+        } catch (Exception e) {
+            // rpc call with invalid JSON
+            LOG.debug("<rpc-server - rpc call parse error>", e);
         }
 
-        @Override
-        public void run() {
-            try {
-                ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
-                while (sc.read(readBuffer) > 0) { }
+        return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
+    }
 
-                byte[] readBytes = readBuffer.array();
-                if (readBytes.length > 0) {
+    public void respond(SocketChannel sc, byte[] readBytes) {
+        try {
+            // for empty requests, just close the socket channel
+            if (readBytes.length > 0) {
+                String msg = new String(readBytes, "UTF-8").trim();
+                String response = null;
 
-                    String msg = new String(readBytes, "UTF-8").trim();
-
-                    // cors preflight or options query
-                    if (msg.startsWith("OPTIONS")) {
-                        handleOptions(sc, msg);
-                        return;
-                    }
-
+                // cors preflight or options query
+                if (msg.startsWith("OPTIONS")) {
+                    response = handleOptions(sc, msg);
+                } else {
                     String[] msgFrags = msg.split(CF);
                     int docBreaker = 0;
                     int len = msgFrags.length;
@@ -507,23 +517,27 @@ public final class HttpServer
                         String requestBody = msgFrags[docBreaker + 1];
                         char firstChar = requestBody.charAt(0);
                         if (firstChar == '{')
-                            handleSingle(sc, requestBody);
+                            response = handleSingle(requestBody);
                         else if (firstChar == '[')
-                            handleBatch(sc, requestBody);
+                            response = handleBatch(requestBody);
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    sc.keyFor(selector).cancel();
-                    sc.close();
-                } catch (IOException e) {
-                    LOG.error("rpc-worker - socket channel failed to close.");
-                    e.printStackTrace();
-                }
-            }
 
+                if (response == null) {
+                    response = composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString());
+                }
+
+                writeResponse(sc, response);
+            }
+        } catch (Exception e) {
+            LOG.debug("<rpc-worker - failed to process incoming request. closing socketchannel>", e);
+        } finally {
+            try {
+                System.out.println("sc.close();");
+                sc.close();
+            } catch (IOException e) {
+                LOG.error("<rpc-worker - socketchannel failed to close>", e);
+            }
         }
     }
 
@@ -561,14 +575,35 @@ public final class HttpServer
                         }
 
                         if (sk.isReadable()) {
-                            SocketChannel sc = (SocketChannel) sk.channel();
-                            workers.submit(new TaskRespond(sc));
+                            try {
+                                SocketChannel sc = (SocketChannel) sk.channel();
+                                ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
+                                while (sc.read(readBuffer) > 0) { }
+                                // dispatch to worker here
+                                respond(sc, readBuffer.array());
+                            } catch (Exception e) {
+                                closeSocket((SocketChannel) sk.channel());
+                            }
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOG.debug("<rpc-server - main event loop uncaught error>", e);
                 }
             }
+        }
+    }
+
+    /**
+     * @param _sc SocketChannel
+     */
+    private void closeSocket(final SocketChannel _sc) {
+        try {
+            SelectionKey sk = _sc.keyFor(selector);
+            _sc.close();
+            if (sk != null)
+                sk.cancel();
+        } catch (IOException e) {
+            LOG.debug("<rpc-server - error closing socket>", e);
         }
     }
 
@@ -593,6 +628,7 @@ public final class HttpServer
                 LOG.debug("<rpc-server-start bind={}:{}>", ip, port);
 
             tInbound = new Thread(new TaskInbound(), "rpc-server");
+            tInbound.setPriority(Thread.MIN_PRIORITY);
             this.start = true;
 
             tInbound.start();
