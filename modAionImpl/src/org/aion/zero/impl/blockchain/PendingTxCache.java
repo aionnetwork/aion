@@ -34,65 +34,28 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class PendingTxCache {
 
-    private Map<Address, Map<BigInteger,AionTransaction>> cacheTxMap;
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+    private Map<Address, TreeMap<BigInteger,AionTransaction>> cacheTxMap;
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
     private static int CacheMax = 256*100_000; //256MB
     private AtomicInteger currentSize = new AtomicInteger(0);
 
-    public PendingTxCache(final int cacheMax) {
+    PendingTxCache(final int cacheMax) {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(100_000));
         PendingTxCache.CacheMax = cacheMax *100_000;
     }
 
-//    public List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
-//        if (addr == null || txmap == null || bn == null) {
-//            throw new NullPointerException();
-//        }
-//
-//        if (isCacheMax(txmap)) {
-//            if (LOG.isTraceEnabled()) {
-//                LOG.trace("PendingTx reached the max Memory settings");
-//            }
-//            return txmap.values().stream().collect(Collectors.toList());
-//        }
-//
-//        List<AionTransaction> rtn = new ArrayList<>();
-//        Map<BigInteger,AionTransaction> accountCacheMap = cacheTxMap.get(addr);
-//
-//
-//        if (accountCacheMap != null) {
-//
-//            int cz = currentSize.get();
-//            currentSize.set(cz - getAccuTxSize(accountCacheMap.values().stream().collect(Collectors.toList())));
-//
-//            accountCacheMap.putAll(txmap);
-//            rtn.addAll(findSeqTx(bn, accountCacheMap));
-//            cacheTxMap.put(addr, accountCacheMap);
-//            currentSize.addAndGet(getAccuTxSize(accountCacheMap.values().stream().collect(Collectors.toList())));
-//        } else {
-//            rtn.addAll(findSeqTx(bn, txmap));
-//            cacheTxMap.put(addr, txmap);
-//            currentSize.addAndGet(getAccuTxSize(txmap.values().stream().collect(Collectors.toList())));
-//        }
-//
-//        return rtn;
-//    }
-
-    private int getAccuTxSize(Map<BigInteger, AionTransaction> txMap) {
+    private int getAccountSize(Map<BigInteger, AionTransaction> txMap) {
 
         if (txMap == null) {
             return 0;
         } else {
-            final int[] size = { 0 };
-            txMap.values().parallelStream().forEach(tx -> {
-                size[0] += tx.getEncoded().length;
-            });
+            final int[] accountSize = { 0 };
+            txMap.values().parallelStream().forEach(tx -> accountSize[0] += tx.getEncoded().length);
 
-            return size[0];
+            return accountSize[0];
         }
     }
 
@@ -104,37 +67,31 @@ public class PendingTxCache {
         return (currentSize.get() + txSize) > CacheMax;
     }
 
-    private synchronized List<AionTransaction> findSeqTx(BigInteger bn, Map<BigInteger, AionTransaction> cacheMap) {
-        if (bn == null || cacheMap == null) {
-            throw new NullPointerException();
-        }
+    private List<AionTransaction> findSeqTx(BigInteger bn, Address addr) {
 
         List<AionTransaction> rtn = new ArrayList<>();
-        rtn.add(cacheMap.get(bn));
+        rtn.add(cacheTxMap.get(addr).get(bn));
 
         boolean foundNext = true;
         while(foundNext) {
             bn = bn.add(BigInteger.ONE);
-            AionTransaction nextTx = cacheMap.get(bn);
+            AionTransaction nextTx = cacheTxMap.get(addr).get(bn);
             if (nextTx == null) {
                 foundNext = false;
             } else {
-                rtn.add(cacheMap.get(bn));
+                rtn.add(cacheTxMap.get(addr).get(bn));
             }
         }
 
         return rtn;
     }
 
-    public List<AionTransaction> addCacheTx(AionTransaction tx) {
+    List<AionTransaction> addCacheTx(AionTransaction tx) {
         if (tx == null) {
             throw new NullPointerException();
         }
 
-        if (cacheTxMap.get(tx.getFrom()) == null) {
-            SortedMap<BigInteger, AionTransaction> cacheMap = new TreeMap<>(Collections.reverseOrder());
-            cacheTxMap.put(tx.getFrom(), cacheMap);
-        }
+        cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
 
         int txSize = tx.getEncoded().length;
         if (isCacheMax(txSize)) {
@@ -149,14 +106,14 @@ public class PendingTxCache {
                 BigInteger nonce = tx.getNonceBI();
                 List<BigInteger> removeTx = null;
                 boolean findPosition = false;
-                for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).entrySet()) {
+                for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
                     if (e.getKey().compareTo(nonce) > -1) {
                         if (removeTx == null) {
                             removeTx = new ArrayList<>();
                         }
 
                         removeTx.add(e.getKey());
-                        currentSize.set(currentSize.get() - e.getValue().getEncoded().length);
+                        currentSize.addAndGet( - e.getValue().getEncoded().length);
                         if (!isCacheMax(tx.getEncoded().length)) {
                             findPosition = true;
                             break;
@@ -177,7 +134,7 @@ public class PendingTxCache {
             cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
         }
 
-        return cacheTxMap.get(tx.getFrom()).values().stream().collect(Collectors.toList());
+        return new ArrayList<>(cacheTxMap.get(tx.getFrom()).values());
     }
 
     public List<AionTransaction> flush(Map<Address, BigInteger> nonceMap) {
@@ -186,62 +143,41 @@ public class PendingTxCache {
         }
 
         List<AionTransaction> processableTx = new ArrayList<>();
-        
 
-        nonceMap.keySet().stream().forEach( addr -> {
+        for (Address addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
-
             if (LOG.isDebugEnabled()) {
-                LOG.debug("cacheTx.flush addr[{}] bn[{}] size[{}]", addr.toString(), bn.toString(), cacheTxMap.get(addr).size());
+                LOG.debug("cacheTx.flush addr[{}] bn[{}] size[{}], cache_size[{}]", addr.toString(), bn.toString(), cacheTxMap.get(addr).size(), currentSize.get());
             }
 
-            if (LOG.isTraceEnabled()) {
-                for (AionTransaction atx : cacheTxMap.get(addr).values()) {
-                    LOG.trace("cacheTx.flush nonce[{}]", new BigInteger(atx.getNonce()).toString());
+            if (cacheTxMap.get(addr) != null) {
+                currentSize.addAndGet(- getAccountSize(cacheTxMap.get(addr)));
+                cacheTxMap.get(addr).headMap(bn).clear();
+                currentSize.addAndGet(getAccountSize(cacheTxMap.get(addr)));
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("cacheTx.flush after addr[{}] size[{}], cache_size[{}]", addr.toString(), cacheTxMap.get(addr).size(), currentSize.get());
+                }
+
+                if (cacheTxMap.get(addr).get(bn) != null) {
+                    processableTx.addAll(findSeqTx(bn, addr));
                 }
             }
-
-            Map<BigInteger, AionTransaction> accountCache = cacheTxMap.get(addr);
-            int cz = currentSize.get();
-            currentSize.set(cz - getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
-
-            Iterator<Map.Entry<BigInteger, AionTransaction>> itr = accountCache.entrySet().iterator();
-            while (itr.hasNext()) {
-                Map.Entry<BigInteger, AionTransaction> entry = itr.next();
-                if (entry.getKey().compareTo(bn) < 0) {
-                    itr.remove();
-                }
-            }
-
-            currentSize.addAndGet(getAccuTxSize(accountCache.values().stream().collect(Collectors.toList())));
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("cacheTx.flush after addr[{}] size[{}]", addr.toString(), cacheTxMap.get(addr).size());
-            }
-
-            if (accountCache.get(bn) != null) {
-                processableTx.addAll(findSeqTx(bn, accountCache));
-            }
-        });
+        }
 
         return processableTx;
     }
 
-    public Set<Address> getCacheTxAccount() {
+    Set<Address> getCacheTxAccount() {
         return new HashSet<>(this.cacheTxMap.keySet());
     }
 
-    public Map<BigInteger,AionTransaction> geCacheTx(Address from) {
+    Map<BigInteger,AionTransaction> geCacheTx(Address from) {
         if (from == null) {
             throw new NullPointerException();
         }
 
-        if (cacheTxMap.get(from) == null) {
-
-            SortedMap<BigInteger, AionTransaction> cacheMap = Collections.synchronizedSortedMap(new TreeMap<>());
-
-            cacheTxMap.put(from, cacheMap);
-        }
+        cacheTxMap.computeIfAbsent(from, k -> new TreeMap<>());
 
         return cacheTxMap.get(from);
     }
