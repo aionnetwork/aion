@@ -73,9 +73,10 @@ public final class ReqBlocksBodiesHandler extends Handler {
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
-            List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(reqBlocks.getBlocksHashes());
-            if(blockBodies.size() > max)
-                blockBodies = blockBodies.subList(0, Math.min(max - 1, blockBodies.size() -1));
+            List<byte[]> hashes = reqBlocks.getBlocksHashes();
+            hashes = hashes.size() > max ? hashes.subList(0, max) : hashes;
+
+            List<byte[]> blockBodies = this.blockchain.getListOfBodiesByHashes(hashes);
             this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
             this.log.debug("<req-bodies req-take={} res-take={} from-node={}>", reqBlocks.getBlocksHashes().size(),
                     blockBodies.size(), _displayId);

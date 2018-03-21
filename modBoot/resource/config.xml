@@ -27,7 +27,7 @@
 		</p2p>
 	</net>
 	<sync>
-		<blocks-import-max>192</blocks-import-max>
+		<blocks-import-max>32</blocks-import-max>
 		<blocks-queue-max>2000</blocks-queue-max>
 		<show-status>false</show-status>
 	</sync>
@@ -40,6 +40,8 @@
 	<db>
 		<path>database</path>
 		<vendor>leveldb</vendor>
+		<enable_heap_cache>true</enable_heap_cache>
+		<max_heap_cache_size>8096</max_heap_cache_size>
 		<enable_db_cache>true</enable_db_cache>
 		<enable_db_compression>true</enable_db_compression>
 	</db>
