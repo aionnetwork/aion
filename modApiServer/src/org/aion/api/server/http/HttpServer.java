@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 package org.aion.api.server.http;
 
@@ -40,35 +40,31 @@ import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * @author chris rpc server TODO: refactor as pooled response writing
- * TODO: make implementation pass all spec tests: https://github.com/ethereum/rpc-tests
+ * @author chris lin, ali sharif
+ *
+ * RPC server implementation, based on josn rpc 2.0 spec: http://www.jsonrpc.org/specification
+ * TODO: consider AIP for error codes (ex. github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal)
  */
 public final class HttpServer
 {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    private static JSONObject process(final IRpc.Method _method, final long _id, final Object _params) throws Exception
+    private static JSONObject process(final IRpc.Method _method, final long _id, final JSONArray _params) throws Exception
     {
         if (LOG.isDebugEnabled())
             LOG.debug("<request mth=[{}] id={} params={}>", _method.name(), _id, _params.toString());
 
-        JSONArray params = (JSONArray) _params;
-
-        /* Rationale for pushing all the function implementations (even trivial ones) up to
-         * ApiWeb3Aion is to keep all implementations in one place and separate concerns
-         *
-         * In these case statement, the only things that are enforced are:
-         * 1. Optional vs mandatory fields (get() vs opt())
-         * 2. Any type checking and casting (bool, string, object, etc.) as defined by api spec
-         */
+        RpcMsg response;
 
         switch (_method) {
 
@@ -76,537 +72,532 @@ public final class HttpServer
         * web3
         */
             case web3_clientVersion: {
-                return processResult(_id, api.web3_clientVersion());
+                response = api.web3_clientVersion();
+                break;
+
             }
             case web3_sha3: {
-                String data = params.get(0) + "";
-                return processResult(_id, api.web3_sha3(data));
+                response = api.web3_sha3(_params);
+                break;
             }
         /* -------------------------------------------------------------------------
          * net
          */
             case net_version: {
-                return processResult(_id, api.net_version());
+                response = api.net_version();
+                break;
             }
             case net_peerCount: {
-                return processResult(_id, api.net_peerCount());
+                response = api.net_peerCount();
+                break;
             }
-            // currently, p2p manager is always listening for peers and is active
             case net_listening: {
-                return processResult(_id, api.net_listening());
+                response = api.net_listening();
+                break;
             }
         /* -------------------------------------------------------------------------
          * eth
          */
             case eth_protocolVersion: {
-                return processResult(_id, api.eth_protocolVersion());
+                response = api.eth_protocolVersion();
+                break;
             }
             case eth_syncing: {
-                return processResult(_id, api.eth_syncing());
+                response = api.eth_syncing();
+                break;
             }
             case eth_coinbase: {
-                return processResult(_id, api.eth_coinbase());
+                response = api.eth_coinbase();
+                break;
             }
             case eth_mining: {
-                return processResult(_id, api.eth_mining());
+                response = api.eth_mining();
+                break;
             }
             case eth_hashrate: {
-                return processResult(_id, api.eth_hashrate());
+                response = api.eth_hashrate();
+                break;
             }
             case eth_submitHashrate: {
-                String hashrate = params.get(0) + "";
-                String clientId = params.get(1) + "";
-                return processResult(_id, api.eth_submitHashrate(hashrate, clientId));
+                response = api.eth_submitHashrate(_params);
+                break;
             }
             case eth_gasPrice: {
-                return processResult(_id, api.eth_gasPrice());
+                response = api.eth_gasPrice();
+                break;
             }
             case personal_listAccounts:
             case eth_accounts: {
-                return processResult(_id, api.eth_accounts());
+                response = api.eth_accounts();
+                break;
             }
             case eth_blockNumber: {
-                return processResult(_id, api.eth_blockNumber());
+                response = api.eth_blockNumber();
+                break;
             }
             case eth_getBalance: {
-                String address = params.get(0) + "";
-                Object bnOrId = params.opt(1);
-                return processResult(_id, api.eth_getBalance(address, bnOrId));
+                response = api.eth_getBalance(_params);
+                break;
             }
             case eth_getStorageAt: {
-                String address = params.get(0) + "";
-                String index = params.get(1) + "";
-                Object bnOrId = params.opt(2);
-                return processResult(_id, api.eth_getStorageAt(address, index, bnOrId));
+                response = api.eth_getStorageAt(_params);
+                break;
             }
             case eth_getTransactionCount: {
-                String address = params.get(0) + "";
-                Object bnOrId = params.opt(1);
-                return processResult(_id, api.eth_getTransactionCount(address, bnOrId));
+                response = api.eth_getTransactionCount(_params);
+                break;
             }
             case eth_getBlockTransactionCountByHash: {
-                String hash = params.get(0) + "";
-                return processResult(_id, api.eth_getBlockTransactionCountByHash(hash));
+                response = api.eth_getBlockTransactionCountByHash(_params);
+                break;
             }
             case eth_getBlockTransactionCountByNumber: {
-                String bnOrId = params.get(0) + "";
-                return processResult(_id, api.eth_getBlockTransactionCountByNumber(bnOrId));
+                response = api.eth_getBlockTransactionCountByNumber(_params);
+                break;
             }
             case eth_getCode: {
-                String address = params.get(0) + "";
-                Object bnOrId = params.opt(1);
-                return processResult(_id, api.eth_getCode(address, bnOrId));
+                response = api.eth_getCode(_params);
+                break;
             }
             case eth_sign: {
-                String address = params.get(0) + "";
-                String message = params.get(1) + "";
-                return processResult(_id, api.eth_sign(address, message));
+                response = api.eth_sign(_params);
+                break;
             }
             case eth_sendTransaction: {
-                JSONObject tx = params.getJSONObject(0);
-                return processResult(_id, api.eth_sendTransaction(tx));
+                response = api.eth_sendTransaction(_params);
+                break;
             }
             case eth_sendRawTransaction: {
-                return processResult(_id, api.eth_sendRawTransaction(params.get(0) + ""));
+                response = api.eth_sendRawTransaction(_params);
+                break;
             }
             case eth_call: {
-                JSONObject tx = params.getJSONObject(0);
-                Object bnOrId = params.opt(1);
-                return processResult(_id, api.eth_call(tx, bnOrId));
+                response = api.eth_call(_params);
+                break;
             }
             case eth_estimateGas: {
-                JSONObject tx = params.getJSONObject(0);
-                return processResult(_id, api.eth_estimateGas(tx));
+                response = api.eth_estimateGas(_params);
+                break;
             }
             case eth_getBlockByHash: {
-                String hash = params.get(0) + "";
-                boolean fullTx = params.optBoolean(1, false);
-                return processResult(_id, api.eth_getBlockByHash(hash, fullTx));
+                response = api.eth_getBlockByHash(_params);
+                break;
             }
             case eth_getBlockByNumber: {
-                String bnOrId = params.get(0) + "";
-                boolean fullTx = params.optBoolean(1, false);
-                return processResult(_id, api.eth_getBlockByNumber(bnOrId, fullTx));
+                response = api.eth_getBlockByNumber(_params);
+                break;
             }
             case eth_getTransactionByHash: {
-                String hash = params.get(0) + "";
-                return processResult(_id, api.eth_getTransactionByHash(hash));
+                response = api.eth_getTransactionByHash(_params);
+                break;
             }
             case eth_getTransactionByBlockHashAndIndex: {
-                String hash = params.get(0) + "";
-                String index = params.get(1) + "";
-                return processResult(_id, api.eth_getTransactionByBlockHashAndIndex(hash, index));
+                response = api.eth_getTransactionByBlockHashAndIndex(_params);
+                break;
             }
             case eth_getTransactionByBlockNumberAndIndex: {
-                String bnOrId = params.get(0) + "";
-                String index = params.get(1) + "";
-                return processResult(_id, api.eth_getTransactionByBlockNumberAndIndex(bnOrId, index));
+                response = api.eth_getTransactionByBlockNumberAndIndex(_params);
+                break;
             }
             case eth_getTransactionReceipt: {
-                String hash = params.get(0) + "";
-                return processResult(_id, api.eth_getTransactionReceipt(hash));
+                response = api.eth_getTransactionReceipt(_params);
+                break;
             }
         /* -------------------------------------------------------------------------
          * compiler
          */
             case eth_getCompilers: {
-                return processResult(_id, api.eth_getCompilers());
+                response = api.eth_getCompilers();
+                break;
             }
             case eth_compileSolidity: {
-                String contract = params.get(0) + "";
-                return processResult(_id, api.eth_compileSolidity(contract));
+                response = api.eth_compileSolidity(_params);
+                break;
             }
         /* -------------------------------------------------------------------------
          * filters
          */
             case eth_newFilter: {
-                JSONObject filterObj = params.getJSONObject(0);
-                return processResult(_id, api.eth_newFilter(filterObj));
+                response = api.eth_newFilter(_params);
+                break;
             }
             case eth_newBlockFilter: {
-                return processResult(_id, api.eth_newBlockFilter());
+                response = api.eth_newBlockFilter();
+                break;
             }
             case eth_newPendingTransactionFilter: {
-                return processResult(_id, api.eth_newPendingTransactionFilter());
+                response = api.eth_newPendingTransactionFilter();
+                break;
             }
             case eth_uninstallFilter: {
-                String id = params.get(0) + "";
-                return processResult(_id, api.eth_uninstallFilter(id));
+                response = api.eth_uninstallFilter(_params);
+                break;
             }
+            case eth_getFilterLogs:
             case eth_getFilterChanges: {
-                String id = params.get(0) + "";
-                return processResult(_id, api.eth_getFilterChanges(id));
-            }
-            case eth_getFilterLogs: {
-                String id = params.get(0) + "";
-                return processResult(_id, api.eth_getFilterLogs(id));
+                response = api.eth_getFilterChanges(_params);
+                break;
             }
             case eth_getLogs: {
-                JSONObject filterObj = params.getJSONObject(0);
-                return processResult(_id, api.eth_getLogs(filterObj));
+                response = api.eth_getLogs(_params);
+                break;
             }
         /* -------------------------------------------------------------------------
          * personal
          */
             case personal_unlockAccount: {
-                String account = params.get(0) + "";
-                String password = params.get(1) + "";
-                Object duration = params.opt(2);
-                return processResult(_id, api.personal_unlockAccount(account, password, duration));
+                response = api.personal_unlockAccount(_params);
+                break;
             }
         /* -------------------------------------------------------------------------
          * debug
          */
             case debug_getBlocksByNumber: {
-                String number = params.get(0) + "";
-                boolean fullTx = params.optBoolean(1, false);
-
-                return processResult(_id, api.debug_getBlocksByNumber(number, fullTx));
+                response = api.debug_getBlocksByNumber(_params);
+                break;
             }
         /* -------------------------------------------------------------------------
          * stratum pool
          */
             case getinfo: {
-                return processResult(_id, api.stratum_getinfo());
+                response = api.stratum_getinfo();
+                break;
             }
             case getblocktemplate: {
-                return processResult(_id, api.stratum_getblocktemplate());
+                response = api.stratum_getblocktemplate();
+                break;
             }
             case dumpprivkey: {
-                return processResult(_id, api.stratum_dumpprivkey());
+                response = api.stratum_dumpprivkey();
+                break;
             }
             case validateaddress: {
-                String address = params.get(0) + "";
-                return processResult(_id, api.stratum_validateaddress(address));
+                response = api.stratum_validateaddress(_params);
+                break;
             }
             case getdifficulty: {
-                return processResult(_id, api.stratum_getdifficulty());
+                response = api.stratum_getdifficulty();
+                break;
             }
             case getmininginfo: {
-                return processResult(_id, api.stratum_getmininginfo());
+                response = api.stratum_getmininginfo();
+                break;
             }
             case submitblock: {
-                Object nce = params.opt(0);
-                Object soln = params.opt(1);
-                Object hdrHash = params.opt(2);
-                Object ts = params.opt(3);
-                return processResult(_id, api.stratum_submitblock(nce, soln, hdrHash, ts));
+                response = api.stratum_submitblock(_params);
+                break;
             }
             case getHeaderByBlockNumber: {
-                Object blkNum = params.opt(0);
-                return processResult(_id, api.stratum_getHeaderByBlockNumber(blkNum));
+                response = api.stratum_getHeaderByBlockNumber(_params);
+                break;
             }
             case ping: {
-                return processResult(_id, "pong");
+                response = new RpcMsg("pong");
+                break;
             }
             default: {
-                return processResult(_id, null);
+                response = null;
+                break;
             }
         }
+
+        return response.setId(_id).toJson();
     }
 
     // -----------------------------------------------------------------------------------------------------------
 
+    private static ApiWeb3Aion api;
+    private Selector selector;
+    private ServerSocketChannel tcpServer;
+    private Thread tInbound;
+    private ExecutorService workers;
+    private volatile boolean start; // no need to make it atomic boolean. volatile does the job
 
-    private static CfgApi cfg = CfgAion.inst().getApi();
+    // configuration parameters
+    private final String ip;
+    private final int port;
+    private final String corsDomain;
 
     private static final String CHARSET = "UTF-8";
     private static final String CF = "\r\n";
-    private static final String RES_OPTIONS_TEMPLATE =
-        "HTTP/1.1 200 OK\n" +
-        "Server: Aion(J) Web3\n" +
-        "Access-Control-Allow-Headers: Content-Type\n" +
-        "Access-Control-Allow-Origin: [ALLOW_ORIGIN]\n" +
-        "Access-Control-Allow-Methods: POST, OPTIONS\n" +
-        "Content-Length: 0\n" +
-        "Content-Type: text/plain";
+    private static final String OPTIONS_TEMPLATE =
+                                        "HTTP/1.1 200 OK\n" +
+                                        "Server: Aion(J) RPC\n" +
+                                        "Access-Control-Allow-Headers: Content-Type\n" +
+                                        "Access-Control-Allow-Methods: POST, OPTIONS\n" +
+                                        "Content-Length: 0\n" +
+                                        "Content-Type: text/plain";
+    private static final String POST_TEMPLATE =
+                                        "HTTP/1.1 200 OK\n" +
+                                        "Server: Aion(J) RPC\n" +
+                                        "Content-Type: application/json";
 
-    private static final boolean ALLOW_CORS = true;
-    private static final String CORS_STRING = "*";
 
-    private static ApiWeb3Aion api = new ApiWeb3Aion(AionImpl.inst());
-
-    // TODO: overload this so we can pass error messages to the client
-    // TODO: make this compliant with the JSON RPC 2.0 spec: http://www.jsonrpc.org/specification
-    // optionally, support codes from Error Codes Improvement EIP:
-    // https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-    private static JSONObject processResult(final long _id, final Object _result) {
-        JSONObject json = new JSONObject();
-        json.put("jsonrpc", "2.0");
-        json.put("id", _id);
-
-        // according to the json-rpc spec (http://www.jsonrpc.org/specification):
-        // error: This member is REQUIRED on error. This member MUST NOT exist if there was no error triggered during invocation.
-        // result: This member is REQUIRED on success. This member MUST NOT exist if there was an error invoking the method.
-        if (_result == null) { // call equals on the leaf type
-            JSONObject error  = new JSONObject();
-            error.put("code", -32600);
-            error.put("message", "Invalid Request");
-
-            json.put("error", error);
+    public HttpServer(final String _ip, final int _port, final String _corsDomain){
+        this.ip = _ip;
+        this.port = _port;
+        if (_corsDomain != null && _corsDomain.length() > 0) {
+            this.corsDomain = _corsDomain;
         } else {
-            json.put("result", _result);
+            this.corsDomain = null;
         }
-        return json;
+
+
+        this.api = new ApiWeb3Aion(AionImpl.inst());
+
+        this.workers = new ThreadPoolExecutor(
+                Runtime.getRuntime().availableProcessors(),
+                4,
+                60,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10),
+                new RpcThreadFactory()
+        );
+        this.start = false;
     }
 
-    // https://www.html5rocks.com/en/tutorials/cors/
-    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
-    private static void handleOptions(final SocketChannel _sc, final String _msg) throws IOException {
+    private void writeResponse(final SocketChannel sc, final String response) throws Exception {
+        ByteBuffer data = ByteBuffer.wrap(response.getBytes(CHARSET));
 
-        String[] frags = _msg.split("\n");
-        String reqOrigin = "";
+        while (data.hasRemaining()) {
+            sc.write(data);
+        }
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
+    // https://www.w3.org/TR/cors/#cors-api-specifiation-request
+    private void handleOptions(final SocketChannel sc, final String msg) throws Exception {
+        // parse the origin header
+        String[] frags = msg.split("\n");
+        String origin = "";
         for (String frag : frags) {
-            if (frag.startsWith("Origin: "))
-                reqOrigin = frag.replace("Origin: ", "");
+            if (frag.startsWith("Origin: ")) {
+                origin = frag.replace("Origin: ", "");
+                break;
+            }
         }
 
-        ByteBuffer buf = ByteBuffer.wrap(RES_OPTIONS_TEMPLATE.replace("[ALLOW_ORIGIN]", ALLOW_CORS ? CORS_STRING : reqOrigin).getBytes(CHARSET));
+        String respHeader = OPTIONS_TEMPLATE;
+        if (corsDomain != null) {
+            respHeader += "\nAccess-Control-Allow-Origin: " + corsDomain;
+        }
 
-        try {
-            while (buf.hasRemaining()) {
-                _sc.write(buf);
+        writeResponse(sc, respHeader);
+    }
+
+    // implementing http://www.jsonrpc.org/specification#batch
+    private void handleBatch(final SocketChannel sc, String requestBody) throws Exception{
+
+        JSONArray reqBodies = new JSONArray(requestBody);
+        JSONArray respBodies = new JSONArray();
+
+        for (int i = 0, n = reqBodies.length(); i < n; i++)
+        {
+            try {
+                JSONObject body = reqBodies.getJSONObject(i);
+                String method = body.getString("method");
+                String id = body.getString("id");
+                JSONArray params = body.getJSONArray("params");
+                Method rpc = rpc = Method.valueOf(method);
+
+                respBodies.put(process(rpc, Long.parseLong(id), params));
+            } catch (Exception e) {
+                LOG.debug("rpc-server - failed batch decode [{}]", i, e);
             }
-        } catch (IOException e) {
-            LOG.error("<api options-write-io-exception>");
-        } finally {
+        }
+
+        String respBody = respBodies.toString();
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("<rpc-server response={}>", respBody);
+
+        String respHeader = POST_TEMPLATE;
+        respHeader += "\nContent-Length: " + respBody.getBytes().length;
+        if (corsDomain != null) {
+            respHeader += "\nAccess-Control-Allow-Origin: " + corsDomain;
+        }
+
+        ByteBuffer resultBuffer = ByteBuffer.wrap((respHeader + "\n\n" + respBody).getBytes(CHARSET));
+
+        while (resultBuffer.hasRemaining()) {
+            _sc.write(resultBuffer);
+        }
+        _sc.keyFor(selector).cancel();
+        _sc.close();
+    }
+
+    private void handleSingle(final SocketChannel _sc, String _requestBody) throws Exception{
+        JSONObject bodyObj = new JSONObject(_requestBody);
+        Object methodObj = bodyObj.get("method");
+        Object idObj = bodyObj.get("id");
+        Object paramsObj = bodyObj.getJSONArray("params");
+        Method method = null;
+        try {
+            if (methodObj != null) {
+                String methodStr = (String) methodObj;
+                method = Method.valueOf(methodStr);
+            } else
+                _sc.close();
+        } catch (IllegalArgumentException ex) {
             _sc.close();
         }
-    }
 
-    private static class ProcessInbound extends Thread
-    {
-        public void run() {
+        if (idObj != null && method != null) {
+            JSONObject resJson = process(method,
+                    Long.parseLong(idObj.toString()),
+                    paramsObj);
+            String responseBody = resJson == null ? "" : resJson.toString();
+            String responseHeader =
+                    "HTTP/1.1 200 OK\n"
+                            + "Content-Length: "
+                            + responseBody.getBytes().length + "\n"
+                            + "Content-Type: application/json\n"
+                            + "Access-Control-Allow-Origin: *\n\n";
 
-            while (!Thread.currentThread().isInterrupted())
-            {
+            if (log.isDebugEnabled())
+                log.debug("<response mths=[{}] result={}>",
+                        method.toString(), responseBody);
+
+            String response = responseHeader + responseBody;
+            ByteBuffer resultBuffer = ByteBuffer
+                    .wrap((response).getBytes(CHARSET));
+            while (resultBuffer.hasRemaining()) {
                 try {
-                    Thread.sleep(1);
-
-                    if (selector.selectNow() <= 0)
-                        continue;
-
-                    Set<SelectionKey> sks = selector.selectedKeys();
-                    Iterator<SelectionKey> it = sks.iterator();
-                    while (it.hasNext()) {
-                        SelectionKey sk = it.next();
-                        it.remove();
-
-                        try {
-                            if (sk.isAcceptable()) {
-                                SocketChannel tcpChannel = tcpServer.accept();
-                                tcpChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                                tcpChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                                tcpChannel.configureBlocking(false);
-                                tcpChannel.register(selector, SelectionKey.OP_READ);
-                            }
-                            if (!sk.isReadable()) continue;
-
-                            SocketChannel sc = (SocketChannel) sk.channel();
-
-                            // TODO: complete Content-Length read instead of 'allocating' 1GB everytime
-                            ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
-                            while (sc.read(readBuffer) > 0) {
-                                sc.read(readBuffer);
-                            }
-
-                            try {
-                                byte[] readBytes = readBuffer.array();
-                                if (readBytes.length <= 0) {
-                                    sc.close();
-                                    continue;
-                                }
-
-                                String msg = new String(readBytes, CHARSET).trim();
-
-                                if (msg.startsWith("OPTIONS"))
-                                    handleOptions(sc, msg);
-
-                                String[] msgFrags = msg.split(CF);
-                                int docBreaker = 0;
-                                int len = msgFrags.length;
-
-                                for (int i = 0; i < len; i++) {
-                                    if (msgFrags[i].isEmpty()) docBreaker = i;
-                                }
-
-                                if (docBreaker + 2 != len) {
-                                    sc.close();
-                                    continue;
-                                }
-
-                                String requestBody = msgFrags[docBreaker + 1];
-
-                                char firstChar = requestBody.charAt(0);
-
-                                if (firstChar == '{') {
-                                    // single call
-                                    JSONObject bodyObj = new JSONObject(requestBody);
-                                    Object methodObj = bodyObj.get("method");
-                                    Object idObj = bodyObj.get("id");
-                                    Object paramsObj = bodyObj.getJSONArray("params");
-
-                                    Method method = null;
-                                    try {
-                                        if (methodObj != null) {
-                                            String methodStr = (String) methodObj;
-                                            method = Method.valueOf(methodStr);
-                                        } else
-                                            sc.close();
-                                    } catch (IllegalArgumentException ex) {
-                                        sc.close();
-                                    }
-
-                                    if (idObj != null && method != null) {
-                                        JSONObject resJson = null;
-                                        try {
-                                            resJson = process(method,
-                                                    Long.parseLong(idObj.toString()),
-                                                    paramsObj);
-                                        } catch (Exception e) {
-                                            LOG.debug("method {} threw exception.", methodObj+"", e);
-                                            resJson = processResult(Long.parseLong(idObj.toString()), null);
-                                        }
-                                        String responseBody = resJson == null ? ""
-                                                : resJson.toString();
-                                        String responseHeader = "HTTP/1.1 200 OK\n"
-                                                + "Content-Length: " + responseBody.getBytes().length + "\n"
-                                                + "Content-Type: application/json\n"
-                                                + "Access-Control-Allow-Origin: *\n\n";
-
-                                        if (LOG.isDebugEnabled())
-                                            LOG.debug("<response mths=[{}] result={}>",
-                                                    method.toString(), responseBody);
-
-                                        String response = responseHeader + responseBody;
-                                        ByteBuffer resultBuffer = ByteBuffer
-                                                .wrap((response).getBytes(CHARSET));
-                                        while (resultBuffer.hasRemaining()) {
-                                            try {
-                                                sc.write(resultBuffer);
-                                            } catch (IOException e) {
-                                                break;
-                                            }
-                                        }
-                                        sc.close();
-                                    } else
-                                        sc.close();
-                                } else if (firstChar == '[') {
-
-                                    // batch calls
-                                    JSONArray requestBodies = new JSONArray(
-                                            requestBody);
-                                    JSONArray responseBodies = new JSONArray();
-                                    List<String> methodStrs = new ArrayList<>();
-                                    for (int i = 0, m = requestBodies
-                                            .length(); i < m; i++) {
-                                        JSONObject bodyObj = requestBodies
-                                                .getJSONObject(i);
-                                        Object methodObj = bodyObj.get("method");
-                                        Object idObj = bodyObj.get("id");
-                                        Object paramsObj = bodyObj
-                                                .getJSONArray("params");
-
-                                        Method method = null;
-                                        try {
-                                            if (methodObj != null) {
-                                                String methodStr = (String) methodObj;
-                                                method = Method.valueOf(methodStr);
-                                                methodStrs.add(methodStr);
-                                            } else
-                                                sc.close();
-                                        } catch (IllegalArgumentException ex) {
-                                            sc.close();
-                                        }
-                                        if (idObj != null && method != null) {
-                                            JSONObject resJson = null;
-                                            try {
-                                                resJson = process(method,
-                                                        Long.parseLong(idObj.toString()),
-                                                        paramsObj);
-                                            } catch (Exception e) {
-                                                LOG.debug("method {} threw exception.", methodObj+"", e);
-                                                resJson = processResult(Long.parseLong(idObj.toString()), null);
-                                            }
-                                            responseBodies.put(resJson);
-                                        }
-                                    }
-                                    String responseBody = responseBodies.toString();
-
-                                    if (LOG.isDebugEnabled())
-                                        LOG.debug("<response mths=[{}] result={}>",
-                                                String.join(",", methodStrs),
-                                                responseBody);
-                                    String responseHeader = "HTTP/1.1 200 OK\n"
-                                            + "Content-Length: "
-                                            + responseBody.getBytes().length + "\n"
-                                            + "Content-Type: application/json\n"
-                                            + "Access-Control-Allow-Origin: *\n";
-                                    ByteBuffer resultBuffer = ByteBuffer
-                                            .wrap((responseHeader + "\n" + responseBody)
-                                                    .getBytes(CHARSET));
-                                    while (resultBuffer.hasRemaining()) {
-                                        try {
-                                            sc.write(resultBuffer);
-                                        } catch (IOException e) {
-                                            sc.close();
-                                            break;
-                                        }
-                                    }
-                                } else
-                                    sc.close();
-
-
-                            } catch (Exception ex) {
-                                sc.close();
-                            }
-                        } catch (CancelledKeyException | IOException ex) {
-                            ex.printStackTrace();
-                            sk.channel().close();
-                            sk.cancel();
-                        }
-                    }
-                } catch (IOException | InterruptedException e1) {
-                    if (LOG.isDebugEnabled())
-                        LOG.debug("<rpc-io-exception>");
+                    _sc.write(resultBuffer);
+                } catch (IOException e) {
+                    break;
                 }
             }
         }
     }
 
-    private static AtomicBoolean start = new AtomicBoolean(false);
-    private static Selector selector;
-    private static ServerSocketChannel tcpServer;
+    private class TaskRespond implements Runnable {
 
-    public static void start() {
+        private SocketChannel sc;
+        public TaskRespond(final SocketChannel sc) {
+            this.sc = sc;
+        }
 
-        if (start.get() == true)
-            return;
-        // shady way to create a singleton
-        start.set(true);
+        @Override
+        public void run() {
+            try {
+                ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
+                while (sc.read(readBuffer) > 0) { }
 
-        if (!cfg.getRpc().getActive())
-            return;
+                byte[] readBytes = readBuffer.array();
+                if (readBytes.length > 0) {
+
+                    String msg = new String(readBytes, "UTF-8").trim();
+
+                    // cors preflight or options query
+                    if (msg.startsWith("OPTIONS")) {
+                        handleOptions(sc, msg);
+                        return;
+                    }
+
+                    String[] msgFrags = msg.split(CF);
+                    int docBreaker = 0;
+                    int len = msgFrags.length;
+
+                    for (int i = 0; i < len; i++) {
+                        if (msgFrags[i].isEmpty())
+                            docBreaker = i;
+                    }
+                    if (docBreaker + 2 == len) {
+                        String requestBody = msgFrags[docBreaker + 1];
+                        char firstChar = requestBody.charAt(0);
+                        if (firstChar == '{')
+                            handleSingle(sc, requestBody);
+                        else if (firstChar == '[')
+                            handleBatch(sc, requestBody);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    sc.keyFor(selector).cancel();
+                    sc.close();
+                } catch (IOException e) {
+                    LOG.error("rpc-worker - socket channel failed to close.");
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+
+    private class TaskInbound implements Runnable {
+        @Override
+        public void run() {
+            while (start) {
+                try {
+                    int num;
+                    try{
+                        num = selector.select();
+                        System.out.println("got new request!");
+                    } catch (IOException e){
+                        continue;
+                    }
+
+                    if(num == 0)
+                        continue;
+
+                    Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+
+                    while (keys.hasNext()) {
+                        SelectionKey sk = keys.next();
+                        keys.remove();
+
+                        if(!sk.isValid())
+                            continue;
+
+                        if (sk.isAcceptable()) {
+                            SocketChannel tcpChannel = tcpServer.accept();
+                            tcpChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+                            tcpChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+                            tcpChannel.configureBlocking(false);
+                            tcpChannel.register(selector, SelectionKey.OP_READ);
+                        }
+
+                        if (sk.isReadable()) {
+                            SocketChannel sc = (SocketChannel) sk.channel();
+                            workers.submit(new TaskRespond(sc));
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void start() {
+        InetSocketAddress address = new InetSocketAddress(this.ip, this.port);
+
+        try{
+            this.tcpServer = ServerSocketChannel.open();
+            this.tcpServer.configureBlocking(false);
+            this.tcpServer.socket().setReuseAddress(true);
+            this.tcpServer.socket().bind(address);
+        } catch (IOException e) {
+            LOG.info("<rpc-server-bind-failed bind={}:{}>", ip, port);
+            System.exit(1);
+        }
 
         try {
             selector = Selector.open();
-
-            String ip = cfg.getRpc().getIp();
-            int port = cfg.getRpc().getPort();
-
-            tcpServer = ServerSocketChannel.open();
-            tcpServer.configureBlocking(false);
-            tcpServer.socket().setReuseAddress(true);
-            tcpServer.socket().bind(new InetSocketAddress(ip, port));
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            LOG.debug("<rpc action=start bind={}:{}>", ip, port);
+            if (LOG.isDebugEnabled())
+                LOG.debug("<rpc-server-start bind={}:{}>", ip, port);
 
-            ProcessInbound process = new ProcessInbound();
-            process.setName("rpc-server");
-            process.start();
+            tInbound = new Thread(new TaskInbound(), "rpc-server");
+            this.start = true;
+
+            tInbound.start();
         } catch (IOException ex) {
-            LOG.error("<api io-exception>");
+            LOG.error("<rpc-server io-exception. potentially server failed to start>");
         }
     }
 }

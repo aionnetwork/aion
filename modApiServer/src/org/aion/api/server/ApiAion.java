@@ -65,7 +65,7 @@ public abstract class ApiAion extends Api {
     protected AtomicLong fltrIndex = new AtomicLong(0);
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
-    protected String[] compilers = new String[] {"solidity"};
+    protected final String[] compilers = new String[] {"solidity"};
 
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
