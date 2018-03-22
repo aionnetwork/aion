@@ -48,9 +48,19 @@ public interface IBlockConstants {
     BigInteger getEnergyDivisorLimit();
 
     /**
+     * The divisor for energy (long)
+     */
+    long getEnergyDivisorLimitLong();
+
+    /**
      * The divisor for difficulty
      */
     BigInteger getDifficultyBoundDivisor();
+
+    /**
+     * Divisor for difficulty (long)
+     */
+    long getDifficultyBoundDivisorLong();
 
     /**
      * The intended block time, specified in seconds

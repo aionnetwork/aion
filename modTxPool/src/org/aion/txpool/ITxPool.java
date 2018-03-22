@@ -44,7 +44,8 @@ public interface ITxPool<TX extends ITransaction> {
 
     List<TX> add(List<TX> tx);
 
-    boolean add(TX tx);
+    // return TX if the TX add success, if the pool already has the same nonce tx. return the old tx.
+    TX add(TX tx);
 
     List<TX> remove(List<TX> tx);
 
@@ -66,4 +67,5 @@ public interface ITxPool<TX extends ITransaction> {
     String getVersion();
 
     List<TX> snapshotAll();
+
 }

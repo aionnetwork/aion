@@ -27,9 +27,7 @@ package org.aion.evtmgr.impl.abs;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.aion.evtmgr.IEvent;
@@ -50,40 +48,43 @@ public abstract class AbstractHandler {
     protected Set<IEvent> events = new HashSet<>();
     protected BlockingQueue<IEvent> queue = new LinkedBlockingQueue<IEvent>();
     protected List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
-    protected AtomicBoolean interrupt = new AtomicBoolean(false);
+    private AtomicBoolean interrupt = new AtomicBoolean(false);
     private boolean interruptted = false;
 
-    protected Thread dispatcher = new Thread() {
-        @Override
-        public void run() {
-            try {
-                while (!interrupt.get()) {
-                    IEvent e = queue.take();
-                    if (e.getEventType() != EventDummy.getTypeStatic() && events.contains(e)) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("dispatcher e[{}]", e.getEventType());
-                        }
+    protected ExecutorService es;
 
-                        try {
-                            dispatch(e);
-                        } catch (Exception ex) {
-                            LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}", e.getEventType(), e.getCallbackType(), ex);
-                        }
+    protected Thread dispatcher = new Thread(() -> {
+        try {
+            while (!interrupt.get()) {
+                IEvent e = queue.take();
+                if (e.getEventType() != EventDummy.getTypeStatic() && events.contains(e)) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("dispatcher e[{}]", e.getEventType());
+                    }
+
+                    try {
+                        dispatch(e);
+                    } catch (Exception ex) {
+                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}", e.getEventType(), e.getCallbackType(), ex);
                     }
                 }
-
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("dispatcher interrupted!");
-                }
-
-                queue.clear();
-                interruptted = true;
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
+
+            if (LOG.isInfoEnabled()) {
+                LOG.info("dispatcher interrupted!");
+            }
+
+            queue.clear();
+            interruptted = true;
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-    };
+    });
+
+    protected AbstractHandler() {
+        this.es = Executors.newWorkStealingPool(3);
+    }
 
     public synchronized boolean addEvent(IEvent _evt) {
         return this.events.add(_evt);
@@ -97,6 +98,8 @@ public abstract class AbstractHandler {
 
     public void stop() throws InterruptedException {
         // In case the thread got stuck into the blocking queue.
+        es.shutdown();
+
         interrupt.set(true);
         this.queue.add(new EventDummy());
 
@@ -132,6 +135,7 @@ public abstract class AbstractHandler {
     }
 
     public void start() {
+
         if (!this.dispatcher.isAlive()) {
             this.dispatcher.start();
         }

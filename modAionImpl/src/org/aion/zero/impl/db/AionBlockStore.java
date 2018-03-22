@@ -156,9 +156,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         blockInfo.setMainChain(mainChain); // FIXME: maybe here I should force reset main chain for all uncles on that level
 
         blockInfos.add(blockInfo);
-        index.set(block.getNumber(), blockInfos);
 
         blocks.put(block.getHash(), block);
+        index.set(block.getNumber(), blockInfos);
     }
 
     public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number) {
@@ -555,6 +555,33 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             return blockInfo.getCummDifficulty();
         }
+    }
+
+    public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
+        long firstBlock = getMaxNumber();
+        long lastBlock = firstBlock - numberOfBlocks;
+
+        File file = new File(reportsFolder, System.currentTimeMillis() + "-blocks-report.out");
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+
+        while (firstBlock > lastBlock && firstBlock >= 0) {
+            List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
+
+            writer.append("Blocks at level " + firstBlock + ":");
+            writer.newLine();
+
+            for (BlockInfo bi : levelBlocks) {
+                writer.append(
+                        "Hash: " + Hex.toHexString(bi.getHash()) + " Total Difficulty: " + bi.getCummDifficulty());
+                writer.newLine();
+            }
+            writer.newLine();
+
+            firstBlock--;
+        }
+
+        writer.close();
     }
 
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {

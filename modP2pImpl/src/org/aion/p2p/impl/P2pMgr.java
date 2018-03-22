@@ -25,6 +25,7 @@
 
 package org.aion.p2p.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -34,9 +35,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -67,6 +71,8 @@ public final class  P2pMgr implements IP2pMgr {
     private final boolean syncSeedsOnly;
     private final boolean showStatus;
     final boolean showLog;
+    private final boolean printReport;
+    private final String reportFolder;
     private final int selfNetId;
     private final String selfRevision;
     private final byte[] selfNodeId;
@@ -146,7 +152,16 @@ public final class  P2pMgr implements IP2pMgr {
         @Override
         public void run() {
             Thread.currentThread().setName("p2p-ts");
-            nodeMgr.dumpNodeInfo(selfShortId);
+            String status = nodeMgr.dumpNodeInfo(selfShortId);
+            System.out.println(status);
+            if (printReport) {
+                try {
+                    Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-p2p-report.out"),
+                            status.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             //nodeMgr.dumpAllNodeInfo();
         }
     }
@@ -295,7 +310,7 @@ public final class  P2pMgr implements IP2pMgr {
      * @param _showLog        boolean
      */
     public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[] _bootNodes, boolean _upnpEnable,
-                  int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog, boolean _bootlistSyncOnly) {
+                  int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog, boolean _bootlistSyncOnly, boolean _printReport, String _reportFolder) {
         this.selfNetId = _netId;
         this.selfRevision = _revision;
         this.selfNodeId = _nodeId.getBytes();
@@ -309,6 +324,8 @@ public final class  P2pMgr implements IP2pMgr {
         this.showStatus = _showStatus;
         this.showLog = _showLog;
         this.syncSeedsOnly = _bootlistSyncOnly;
+        this.printReport = _printReport;
+        this.reportFolder = _reportFolder;
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -686,8 +703,15 @@ public final class  P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
-            // workers = Executors.newCachedThreadPool();
+            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16), new ThreadFactory() {
+
+                private AtomicInteger cnt = new AtomicInteger();
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r,"p2p-worker-" + cnt.incrementAndGet());
+                }
+            });
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);

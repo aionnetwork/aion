@@ -30,6 +30,7 @@
 package org.aion.zero.impl.sync;
 
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -102,64 +103,28 @@ final class TaskImportBlocks implements Runnable {
                     continue;
                 }
 
+                long t1 = System.currentTimeMillis();
                 ImportResult importResult = this.chain.tryToConnect(b);
+                long t2 = System.currentTimeMillis();
+                log.debug("<import-status: node = {}, number = {}, hash = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        bw.getDisplayId(), b.getNumber(), Hex.toHexString(b.getHash()),
+                        b.getTransactionsList().size(), importResult, t2 - t1);
+
                 switch (importResult) {
                     case IMPORTED_BEST:
-                        if (log.isInfoEnabled()) {
-                            log.info("<import-best from-node={} num={} hash={} txs={}>",
-                                bw.getDisplayId(),
-                                b.getNumber(),
-                                b.getShortHash(),
-                                b.getTransactionsList().size());
-                        }
-
                         importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case IMPORTED_NOT_BEST:
-                        if (log.isInfoEnabled()) {
-                            log.info("<import-not-best from-node={} num={} hash={} txs={}>",
-                                bw.getDisplayId(),
-                                b.getNumber(),
-                                b.getShortHash(),
-                                b.getTransactionsList().size());
-                        }
-
                         importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case EXIST:
-                        if (log.isDebugEnabled()) {
-                            log.debug("<import-block-exit from-node={} num={} hash={} txs={}>",
-                                bw.getDisplayId(),
-                                b.getNumber(),
-                                b.getShortHash(),
-                                b.getTransactionsList().size());
-                        }
-
-
                         importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
                     case NO_PARENT:
-                        if (log.isDebugEnabled()) {
-                            log.debug("<import-no-parent from-node={} num={} hash={}>",
-                                bw.getDisplayId(),
-                                b.getNumber(),
-                                b.getShortHash());
-                        }
-
                         break;
                     case INVALID_BLOCK:
-                        if (log.isDebugEnabled()) {
-                            log.debug("<import-invalid-block from-node={} num={} hash={} txs={}>",
-                                bw.getDisplayId(),
-                                b.getNumber(),
-                                b.getShortHash(),
-                                b.getTransactionsList().size());
-                        }
                         break;
                     default:
-                        if (log.isDebugEnabled()) {
-                            log.debug("<import-res-unknown>");
-                        }
                         break;
                 }
             }

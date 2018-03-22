@@ -19,32 +19,45 @@
  *
  * Contributors:
  *     Aion foundation.
- *
  ******************************************************************************/
+package org.aion.utils;
 
-package org.aion.mcf.blockchain;
-
-import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockIdentifier;
-import org.aion.mcf.core.AbstractTxInfo;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.types.AbstractBlockHeader;
+import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Generic Chain interface.
+ * Thread for printing heap dumps.
+ *
+ * @author Alexandra Roatis
  */
-public interface IGenericChain<BLK extends IBlock, BH extends AbstractBlockHeader> {
+public class TaskDumpHeap implements Runnable {
 
-    BLK getBlockByNumber(long number);
+    private final AtomicBoolean start;
+    private final int interval;
 
-    BLK getBlockByHash(byte[] hash);
+    private final String reportFolder;
 
-    IBlockStoreBase<?, ?> getBlockStore();
+    public TaskDumpHeap(final AtomicBoolean _start, final int _interval, final String _reportFolder) {
+        this.start = _start;
+        this.interval = _interval;
+        this.reportFolder = _reportFolder;
+    }
 
-    BLK getBestBlock();
+    @Override
+    public void run() {
+        Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        while (this.start.get()) {
 
-    AbstractTxInfo getTransactionInfo(byte[] hash);
+            File file = new File(reportFolder, System.currentTimeMillis() + "-heap-report.hprof");
 
-    void flush();
+            HeapDumper.dumpHeap(file.getAbsolutePath(), true);
 
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
+    }
 }
+

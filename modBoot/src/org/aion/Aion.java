@@ -27,6 +27,7 @@ package org.aion;
 
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.util.ServiceLoader;
 
@@ -91,7 +92,8 @@ public class Aion {
                         "    .'   `.     | |         | |  ``..      |\n" +
                         "  .''''''''`.   | |         | |      ``..  |\n" +
                         ".'           `. |  `._____.'  |          ``|\n\n" +
-                        "                    NETWORK\n\n"
+                        "                    NETWORK  v" + KERNEL_VERSION +
+                                "\n\n"
                 );
 
         IAionChain ac = AionFactory.create();
