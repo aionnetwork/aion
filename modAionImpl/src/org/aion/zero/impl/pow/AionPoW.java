@@ -24,21 +24,20 @@
 
 package org.aion.zero.impl.pow;
 
-import org.aion.base.type.*;
 import org.aion.base.util.Hex;
-import org.aion.evtmgr.impl.es.EventExecuteService;
-import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.mcf.blockchain.IPendingState;
-import org.aion.mcf.core.ImportResult;
 import org.aion.equihash.Solution;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.IPendingState;
+import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -47,7 +46,10 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -125,9 +127,11 @@ public class AionPoW {
             this.syncMgr = SyncMgr.inst();
 
             setupHandler();
-            registerCallback();
 
             ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+
+            registerCallback();
+
             ees.start(new EpPOW());
 
             new Thread(() -> {
@@ -174,58 +178,13 @@ public class AionPoW {
      */
     public void registerCallback() {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
-        consensusHandler.eventCallback(
-                new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-                    @Override
-                    public void onEvent(IEvent evt) {
-                        if (evt == null) {
-                            throw new NullPointerException();
-                        }
-
-                        try {
-                            ees.add(evt);
-                        } catch (Exception e) {
-                            LOG.error("{}", e.toString());
-                        }
-                    }
-                });
+        consensusHandler.eventCallback(new EventCallback(ees, LOG));
 
         IHandler blockHandler = eventMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
-        blockHandler.eventCallback(
-                new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                    @Override
-                    public void onEvent(IEvent evt) {
-                        if (evt == null) {
-                            throw new NullPointerException();
-                        }
-
-                        try {
-                            ees.add(evt);
-                        } catch (Exception e) {
-                            LOG.error("{}", e.toString());
-                        }
-                    }
-                });
+        blockHandler.eventCallback(new EventCallback(ees, LOG));
 
         IHandler transactionHandler = eventMgr.getHandler(IHandler.TYPE.TX0.getValue());
-        transactionHandler.eventCallback(
-                new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-
-                    @Override
-                    public void onEvent(IEvent evt) {
-                        if (evt == null) {
-                            throw new NullPointerException();
-                        }
-
-                        try {
-                            ees.add(evt);
-                        } catch (Exception e) {
-                            LOG.error("{}", e.toString());
-                        }
-                    }
-                });
+        transactionHandler.eventCallback(new EventCallback(ees, LOG));
     }
 
     /**

@@ -72,10 +72,6 @@ public interface IHandler {
 
     void onEvent(IEvent _evt);
 
-    /**
-     * @param eventCallbackA0
-     *            Oct 4, 2017 jay void
-     */
     void eventCallback(IEventCallback _evtCallback);
 
     void start();

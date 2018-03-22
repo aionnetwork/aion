@@ -63,7 +63,12 @@ public class EventExecuteService {
         if (event == null) {
             throw new NullPointerException();
         }
-        return callbackEvt.add(event);
+        try {
+            return callbackEvt.add(event);
+        } catch (IllegalStateException e) {
+            LOG.error("ExecutorService Q is full!");
+            return false;
+        }
     }
 
 

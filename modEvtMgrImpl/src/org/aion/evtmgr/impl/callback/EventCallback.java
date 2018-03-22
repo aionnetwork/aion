@@ -26,67 +26,35 @@ package org.aion.evtmgr.impl.callback;
 
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
-import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.slf4j.Logger;
 
 /**
  * @author jay
  *
  */
 @SuppressWarnings("hiding")
-public class EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>
-        implements IEventCallback {
+public class EventCallback implements IEventCallback {
+    EventExecuteService ees;
+    static Logger LOG;
+    public EventCallback(EventExecuteService _ees, Logger log) {
+        if (_ees == null || log == null) {
+            throw new NullPointerException();
+        }
 
-    // Block events
-    public void onBlock(final IBlockSummary _bs) {
+        ees = _ees;
+        LOG = log;
     }
 
-    public void onEvent(IEvent e) {
-    }
+    public void onEvent(IEvent evt) {
+        if (evt == null) {
+            throw new NullPointerException();
+        }
 
-    // Tx events
-    public void onPendingTxStateChange() {
+        try {
+            ees.add(evt);
+        } catch (Exception e) {
+            LOG.error("{}", e.toString());
+        }
     }
-
-    public void onPendingTxReceived(ITransaction _tx) {
-    }
-
-    public void onPendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state, IBlock _blk) {
-    }
-
-    public void onTxExecuted(ITxExecSummary _summary) {
-    }
-
-    // Miner events
-    public void onMiningStarted() {
-    }
-
-    public void onMiningStopped() {
-    }
-
-    public void onBlockMiningStarted(IBlock _blk) {
-    }
-
-    public void onBlockMined(IBlock _blk) {
-    }
-
-    public void onBlockMiningCanceled(IBlock _blk) {
-    }
-
-    // Consensus
-    public void onSyncDone() {
-    }
-
-    public void onBlockTemplate(IBlock block) {
-    }
-
-    public void onSolution(ISolution solution) {
-    }
-
-    // VM
-    public void onVMTraceCreated(String _txHash, String _trace) {
-    }
-
-    public void onTrace(String _trace) {
-    }
-
 }

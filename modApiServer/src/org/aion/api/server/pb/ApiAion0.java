@@ -24,26 +24,22 @@
 
 package org.aion.api.server.pb;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-
-import org.aion.evtmgr.IEvent;
-import org.aion.mcf.account.Keystore;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
 import org.aion.api.server.types.*;
 import org.aion.base.type.*;
-import org.aion.base.util.*;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
+import org.aion.base.util.TypeConverter;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.account.Keystore;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.zero.impl.AionHub;
@@ -54,11 +50,14 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.json.JSONArray;
 import org.apache.commons.collections4.map.LRUMap;
+import org.json.JSONArray;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 public class ApiAion0 extends ApiAion implements IApiAion {
 
@@ -172,45 +171,18 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         super(ac);
         this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(10000, 100));
 
+        startES("EpApi");
+
         IHandler hdrTx = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
         if (hdrTx != null) {
-            hdrTx.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-
-                        @Override
-                        public void onEvent(IEvent evt) {
-                            if (evt == null) {
-                                throw new NullPointerException();
-                            }
-                            try {
-                                ees.add(evt);
-                            } catch (Exception e) {
-                                LOG.error("{}", e.toString());
-                            }
-                        }
-                    });
+            hdrTx.eventCallback(new EventCallback(ees, LOG));
         }
 
         IHandler hdrBlk = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (hdrBlk != null) {
-            hdrBlk.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        @Override
-                        public void onEvent(IEvent evt) {
-                            if (evt == null) {
-                                throw new NullPointerException();
-                            }
-                            try {
-                                ees.add(evt);
-                            } catch (Exception e) {
-                                LOG.error("{}", e.toString());
-                            }
-                        }
-                    });
+            hdrBlk.eventCallback(new EventCallback(ees, LOG));
         }
 
-        startES("EpApi");
         ees.start(new EpApi());
     }
 

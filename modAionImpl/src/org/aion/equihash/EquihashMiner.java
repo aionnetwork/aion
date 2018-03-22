@@ -24,12 +24,11 @@
 
 package org.aion.equihash;
 
-import org.aion.base.type.*;
 import org.aion.base.util.MAF;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
@@ -41,7 +40,9 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.IAionBlock;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import static org.aion.base.util.Hex.toHexString;
 
@@ -132,12 +133,12 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
         setCpuThreads(cfg.getConsensus().getCpuMineThreads());
 
+        ees = new EventExecuteService(1000, "EPMiner", Thread.NORM_PRIORITY, LOG);
+
         this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
         registerMinerEvents();
-
         registerCallback();
 
-        ees = new EventExecuteService(1000, "EPMiner", Thread.NORM_PRIORITY, LOG);
         ees.start(new EpMiner());
     }
 
@@ -270,21 +271,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             if (this.evtMgr != null) {
                 IHandler hdrCons = this.evtMgr.getHandler(4);
                 if (hdrCons != null) {
-                    hdrCons.eventCallback(
-                            new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                                @Override
-                                public void onEvent(IEvent evt) {
-                                    if (evt == null) {
-                                        throw new NullPointerException();
-                                    }
-
-                                    try {
-                                        ees.add(evt);
-                                    } catch (Exception e) {
-                                        LOG.error("{}", e.toString());
-                                    }
-                                }
-                            });
+                    hdrCons.eventCallback(new EventCallback(ees, LOG));
                 }
             } else {
                 LOG.error("event manager is null");

@@ -1,10 +1,9 @@
 package org.aion.api.server.nrgprice;
 
 
-import org.aion.base.type.*;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
@@ -79,31 +78,14 @@ public class NrgOracle {
             itr--;
         }
 
+        ees = new EventExecuteService(1000, "EpNrg", Thread.NORM_PRIORITY, LOG);
         // check if handler is of type BLOCK, if so attach our event
         if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
-            handler.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-//                public void onBlock(final IBlockSummary _bs) {
-//                    LOG.debug("nrg-oracle - onBlock event");
-//                    AionBlockSummary bs = (AionBlockSummary) _bs;
-//                    processBlock(bs);
-//                }
-                public void onEvent(IEvent evt) {
-                    if (evt == null) {
-                        throw new NullPointerException();
-                    }
-                    try {
-                        ees.add(evt);
-                    } catch (Exception e) {
-                        LOG.error("{}", e.toString());
-                    }
-
-                }
-            });
+            handler.eventCallback(new EventCallback(ees, LOG));
         } else {
             LOG.error("nrg-oracle - invalid handler provided to constructor");
         }
 
-        ees = new EventExecuteService(1000, "EpNrg", Thread.NORM_PRIORITY, LOG);
         ees.start(new EpNrg());
     }
 

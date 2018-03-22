@@ -29,16 +29,17 @@ import org.aion.api.server.IRpc;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.*;
+import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.Solution;
-import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -57,7 +58,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -115,41 +119,16 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         templateMapLock = new ReentrantReadWriteLock();
 
 
+        startES("EpWeb3");
         // Fill data on block and transaction events into the filters and pending receipts
         IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHr != null) {
-            blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-                @Override
-                public void onEvent(IEvent evt) {
-                    if (evt == null) {
-                        throw new NullPointerException();
-                    }
-                    try {
-                        ees.add(evt);
-                    } catch (Exception e) {
-                        LOG.error("{}", e.toString());
-                    }
-                }
-            });
+            blkHr.eventCallback(new EventCallback(ees, LOG));
         }
 
         IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
         if (txHr != null) {
-            txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-                @Override
-                public void onEvent(IEvent evt) {
-                    if (evt == null) {
-                        throw new NullPointerException();
-                    }
-                    try {
-                        ees.add(evt);
-                    } catch (Exception e) {
-                        LOG.error("{}", e.toString());
-                    }
-                }
-            });
+            txHr.eventCallback(new EventCallback(ees, LOG));
         }
 
         // instantiate nrg price oracle
@@ -159,7 +138,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
         this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
 
-        startES("EpWeb3");
     }
 
     // --------------------------------------------------------------------

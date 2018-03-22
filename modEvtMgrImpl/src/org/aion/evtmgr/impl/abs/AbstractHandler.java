@@ -88,8 +88,6 @@ public abstract class AbstractHandler {
         return this.events.add(_evt);
     }
 
-    protected abstract <E extends IEvent> void dispatch(E _e);
-
     public void stop() throws InterruptedException {
 
         interrupt.set(true);
@@ -113,6 +111,20 @@ public abstract class AbstractHandler {
 
         if (LOG.isInfoEnabled()) {
             LOG.info("Handler {} dispatcher closed!", this.getType());
+        }
+    }
+
+
+    public <E extends IEvent> void dispatch(E event) {
+        if (this.typeEqual(event.getEventType())) {
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
+            }
+
+            for (IEventCallback cb : this.eventCallback) {
+                cb.onEvent(event);
+            }
         }
     }
 

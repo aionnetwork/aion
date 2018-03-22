@@ -34,7 +34,7 @@ import org.aion.base.util.Hex;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
@@ -185,26 +185,14 @@ public class AionPendingStateImpl
         this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
         this.pendingState = repository.startTracking();
 
+        ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
+
         regBlockEvents();
         IHandler blkHandler = this.evtMgr.getHandler(2);
         if (blkHandler != null) {
-            blkHandler.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onEvent(IEvent evt) {
-                            if (evt == null) {
-                                throw new NullPointerException();
-                            }
-                            try {
-                                ees.add(evt);
-                            } catch (Exception e) {
-                                LOG.error("{}", e.toString());
-                            }
-
-                        }
-                    });
+            blkHandler.eventCallback(new EventCallback(ees, LOG));
         }
 
-        ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
         ees.start(new EpPS());
     }
 

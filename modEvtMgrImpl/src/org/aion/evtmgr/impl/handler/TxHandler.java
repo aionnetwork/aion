@@ -25,7 +25,6 @@
 package org.aion.evtmgr.impl.handler;
 
 import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
 
@@ -39,26 +38,6 @@ public class TxHandler extends AbstractHandler implements IHandler {
     public TxHandler() {
         dispatcher.setName("TxHdr");
     }
-
-    @SuppressWarnings("rawtypes")
-    public <E extends IEvent> void dispatch(E event) {
-        if (this.typeEqual(event.getEventType())) {
-
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
-            }
-
-            for (IEventCallback cb : this.eventCallback) {
-                cb.onEvent(event);
-            }
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.aion.evt.common.IHandler#getType()
-     */
 
     /*
      * (non-Javadoc)

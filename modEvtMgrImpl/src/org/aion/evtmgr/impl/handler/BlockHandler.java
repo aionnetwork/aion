@@ -26,7 +26,6 @@ package org.aion.evtmgr.impl.handler;
 
 
 import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
 
@@ -39,29 +38,6 @@ public class BlockHandler extends AbstractHandler implements IHandler {
     // Default constructor to set name of the thread, simplifies troubleshooting
     public BlockHandler() {
         dispatcher.setName("BlkHdr");
-    }
-
-    @SuppressWarnings("rawtypes")
-    public <E extends IEvent> void dispatch(E event) {
-        if (this.typeEqual(event.getEventType())) {
-
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
-            }
-
-            for (IEventCallback cb : this.eventCallback) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("CB dispatching hashCode[{}] cbType[{}]", cb.hashCode(), event.getCallbackType());
-                }
-
-                cb.onEvent(event);
-
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("CB dispatched hashCode[{}] cbType[{}]", cb.hashCode(), event.getCallbackType());
-                }
-            }
-        }
     }
 
     @Override
