@@ -66,9 +66,14 @@ public final class ResBlocksBodiesHandler extends Handler {
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if(bodies != null && bodies.size() > 0)
-            this.syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
-        else
-            this.log.error("<res-bodies invalid>");
+        if(bodies == null) {
+            log.error("<res-bodies-invalid node={}>", _displayId);
+        } else {
+            if (bodies.isEmpty()) {
+                log.info("<res-bodies-empty node={}>", _displayId);
+            } else {
+                syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
+            }
+        }
     }
 }
