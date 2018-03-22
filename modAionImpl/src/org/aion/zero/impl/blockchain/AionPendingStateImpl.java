@@ -539,23 +539,48 @@ public class AionPendingStateImpl
 
     private void updateState(IAionBlock block) {
 
-        pendingState = repository.startTracking();
-
-        List<AionTransaction> pendingTxl = this.txPool.snapshotAll();
-
+        List<AionTransaction> poolTxs = this.txPool.snapshotAll();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("updateState - snapshotAll tx[{}]", pendingTxl.size());
+            LOG.debug("updateState - snapshotAll tx[{}]", poolTxs.size());
         }
-        for (AionTransaction tx : pendingTxl) {
+
+        IRepositoryCache oldPs = pendingState.startTracking();
+        Set<Address> accs = getTxsAccounts(block.getTransactionsList());
+        for (Address addr : getTxsAccounts(poolTxs)) {
+            if (!accs.contains(addr)) {
+                oldPs.getAccountState(addr);
+            }
+        }
+
+        pendingState.rollback();
+        oldPs.flush();
+
+        for (AionTransaction tx : poolTxs) {
             if (LOG.isTraceEnabled()) {
-                LOG.debug("updateState - loop: " + tx.toString());
+                LOG.trace("updateState reCheck poolTx: " + tx.toString());
             }
 
-            AionTxExecSummary txSum = executeTx(tx, false);
-            AionTxReceipt receipt = txSum.getReceipt();
+            AionTxReceipt receipt;
+            if (accs.contains(tx.getFrom())) {
+                AionTxExecSummary txSum = executeTx(tx, false);
+                receipt = txSum.getReceipt();
+            } else {
+                receipt = new AionTxReceipt();
+            }
+
             receipt.setTransaction(tx);
             fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
         }
+    }
+
+    private Set<Address> getTxsAccounts(List<AionTransaction> txn) {
+        Set<Address> rtn = new HashSet<>();
+        for (AionTransaction tx : txn) {
+            if (!rtn.contains(tx.getFrom())) {
+                rtn.add(tx.getFrom());
+            }
+        }
+        return rtn;
     }
     
     private AionTxExecSummary executeTx(AionTransaction tx, boolean inPool) {
