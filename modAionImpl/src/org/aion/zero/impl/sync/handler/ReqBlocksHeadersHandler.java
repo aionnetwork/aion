@@ -39,8 +39,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -49,7 +47,6 @@ import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
-import org.aion.mcf.types.BlockIdentifier;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
@@ -70,8 +67,6 @@ public final class ReqBlocksHeadersHandler extends Handler {
     private final IAionBlockchain blockchain;
 
     private final IP2pMgr p2pMgr;
-
-    private final ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
     private final Map<Long, A0BlockHeader> cache = Collections.synchronizedMap(new LRUMap<>(1024));
 
@@ -117,15 +112,16 @@ public final class ReqBlocksHeadersHandler extends Handler {
                 this.p2pMgr.send(_nodeIdHashcode, new ResBlocksHeaders(headers));
 
             this.log.debug("<req-headers from-block={} take={} from-node={}>",
-                    from,
-                    take,
-                    _displayId);
+                from,
+                take,
+                _displayId
+            );
 
         } else
             this.log.error(
-                    "<req-headers decode-msg msg-bytes={} from-node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length,
-                    _nodeIdHashcode
+                "<req-headers decode-msg msg-bytes={} from-node={}>",
+                _msgBytes == null ? 0 : _msgBytes.length,
+                _nodeIdHashcode
             );
     }
 }
