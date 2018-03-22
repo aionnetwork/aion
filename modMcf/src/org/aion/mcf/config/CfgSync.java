@@ -45,8 +45,8 @@ public final class CfgSync {
     private boolean showStatus;
 
     public CfgSync() {
-        this.blocksImportMax = 192;
-        this.blocksQueueMax = 2000;
+        this.blocksImportMax = 32;
+        this.blocksQueueMax = 64;
         this.showStatus = false;
     }
 
