@@ -61,7 +61,7 @@ public final class SyncMgr {
     private static final int INTERVAL_SHOW_STATUS = 10000;
 
     // interval - get status from active nodes
-    private static final int INTERVAL_GET_STATUS = 3000;
+    private static final int INTERVAL_GET_STATUS = 1000;
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
