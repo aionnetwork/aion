@@ -40,12 +40,10 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
@@ -78,7 +76,7 @@ public class AionPoW {
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
 
-    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(1000, true);
+    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(100_000, true);
 
     private final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
         Thread thread = new Thread(arg0, "EpPOW");
@@ -101,29 +99,28 @@ public class AionPoW {
          */
         @Override
         public void run() {
-            boolean normal;
             while (go) {
                 IEvent e = null;
                 try {
                     e = callbackEvt.take();
-                    normal = true;
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
-                    normal = false;
                 }
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
                 }
 
-                if (normal) {
-                    if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                        // create a new block template every time the best block
-                        // updates.
-                        createNewBlockTemplate();
-                    } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
-                        go = false;
-                    }
+                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                    newPendingTxReceived.set(true);
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    // create a new block template every time the best block
+                    // updates.
+                    createNewBlockTemplate();
+                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                    processSolution((Solution) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                    go = false;
                 }
             }
         }
@@ -207,9 +204,22 @@ public class AionPoW {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
         consensusHandler.eventCallback(
                 new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
+//                    @Override
+//                    public void onSolution(ISolution solution) {
+//
+//                        processSolution((Solution) solution);
+//                    }
                     @Override
-                    public void onSolution(ISolution solution) {
-                        processSolution((Solution) solution);
+                    public void onEvent(IEvent evt) {
+                        if (evt == null) {
+                            throw new NullPointerException();
+                        }
+
+                        try {
+                            callbackEvt.add(evt);
+                        } catch (Exception e) {
+                            LOG.error("{}", e.toString());
+                        }
                     }
                 });
 
@@ -221,17 +231,35 @@ public class AionPoW {
                         if (evt == null) {
                             throw new NullPointerException();
                         }
-                        callbackEvt.add(evt);
+
+                        try {
+                            callbackEvt.add(evt);
+                        } catch (Exception e) {
+                            LOG.error("{}", e.toString());
+                        }
                     }
                 });
 
         IHandler transactionHandler = eventMgr.getHandler(IHandler.TYPE.TX0.getValue());
         transactionHandler.eventCallback(
                 new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
+//                    @Override
+//                    public void onPendingTxReceived(ITransaction tx) {
+//                        // set the transaction flag to true
+//                        newPendingTxReceived.set(true);
+//                    }
+
                     @Override
-                    public void onPendingTxReceived(ITransaction tx) {
-                        // set the transaction flag to true
-                        newPendingTxReceived.set(true);
+                    public void onEvent(IEvent evt) {
+                        if (evt == null) {
+                            throw new NullPointerException();
+                        }
+
+                        try {
+                            callbackEvt.add(evt);
+                        } catch (Exception e) {
+                            LOG.error("{}", e.toString());
+                        }
                     }
                 });
     }

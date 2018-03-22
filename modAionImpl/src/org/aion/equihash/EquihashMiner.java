@@ -30,6 +30,7 @@ import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
 import org.aion.mcf.mine.AbstractMineRunner;
@@ -83,6 +84,44 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
      */
     private List<Thread> threads = new ArrayList<>();
 
+    private final class EpMiner implements Runnable {
+        boolean go = true;
+        /**
+         * When an object implementing interface <code>Runnable</code> is used
+         * to create a thread, starting the thread causes the object's
+         * <code>run</code> method to be called in that separately executing
+         * thread.
+         * <p>
+         * The general contract of the method <code>run</code> is that it may
+         * take any action whatsoever.
+         *
+         * @see Thread#run()
+         */
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = null;
+                try {
+                    e = callbackEvt.take();
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
+                }
+
+                if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
+                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
+
+
     /**
      * Singleton instance
      *
@@ -118,6 +157,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         registerMinerEvents();
 
         registerCallback();
+
+        es.execute(new EpMiner());
     }
 
     @Override
@@ -250,8 +291,17 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                 if (hdrCons != null) {
                     hdrCons.eventCallback(
                             new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                                public void onBlockTemplate(IBlock block) {
-                                    EquihashMiner.this.onBlockTemplate((AionBlock) block);
+                                @Override
+                                public void onEvent(IEvent evt) {
+                                    if (evt == null) {
+                                        throw new NullPointerException();
+                                    }
+
+                                    try {
+                                        callbackEvt.add(evt);
+                                    } catch (Exception e) {
+                                        LOG.error("{}", e.toString());
+                                    }
                                 }
                             });
                 }

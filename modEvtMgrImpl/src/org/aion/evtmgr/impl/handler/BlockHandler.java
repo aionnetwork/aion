@@ -56,17 +56,17 @@ public class BlockHandler extends AbstractHandler implements IHandler {
                     LOG.trace("CB dispatching hashCode[{}] cbType[{}]", cb.hashCode(), event.getCallbackType());
                 }
 
-                ((EventCallbackA0) cb).onEvent(event);
+                cb.onEvent(event);
 
-                switch (event.getCallbackType()) {
-                    case 0:
-                        ((EventCallbackA0) cb).onBlock(event.getFuncArgs().get(0));
-                        break;
+//                switch (event.getCallbackType()) {
+//                    case 0:
+//                        ((EventCallbackA0) cb).onBlock(event.getFuncArgs().get(0));
+//                        break;
 //                    case 2:
 //                        ((EventCallbackA0) cb).onEvent(event);
 //                        break;
-                    default:
-                }
+//                    default:
+//                }
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("CB dispatched hashCode[{}] cbType[{}]", cb.hashCode(), event.getCallbackType());

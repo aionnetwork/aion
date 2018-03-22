@@ -29,10 +29,14 @@ import java.util.*;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.mcf.account.Keystore;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiUtil;
@@ -67,6 +71,95 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private final static int TX_HASH_LEN = 32;
 
     private static final int ACCOUNT_CREATE_LIMIT = 100;
+
+    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(1000, true);
+
+    private final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
+        Thread thread = new Thread(arg0, "EpAPI");
+        thread.setPriority(Thread.MIN_PRIORITY);
+        return thread;
+    });
+
+    private final class EpAPI implements Runnable {
+        boolean go = true;
+        /**
+         * When an object implementing interface <code>Runnable</code> is used
+         * to create a thread, starting the thread causes the object's
+         * <code>run</code> method to be called in that separately executing
+         * thread.
+         * <p>
+         * The general contract of the method <code>run</code> is that it may
+         * take any action whatsoever.
+         *
+         * @see Thread#run()
+         */
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = null;
+                try {
+                    e = callbackEvt.take();
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
+                }
+
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                    processBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
+    private void processBlock(AionBlockSummary cbs) {
+        Set<Long> keys = installedFilters.keySet();
+        for (Long key : keys) {
+            Fltr fltr = installedFilters.get(key);
+            if (fltr.isExpired()) {
+                LOG.debug("<fltr key={} expired removed>", key);
+                installedFilters.remove(key);
+            } else {
+                @SuppressWarnings("unchecked")
+                List<AionTxReceipt> txrs = ((AionBlockSummary) cbs).getReceipts();
+                if (fltr.getType() == Fltr.Type.EVENT
+                        && !Optional.ofNullable(txrs).orElse(Collections.emptyList()).isEmpty()) {
+                    FltrCt _fltr = (FltrCt) fltr;
+
+                    for (AionTxReceipt txr : txrs) {
+                        AionTransaction tx = txr.getTransaction();
+                        Address contractAddress = Optional.ofNullable(tx.getTo())
+                                .orElse(tx.getContractAddress());
+
+                        Integer cnt = 0;
+                        txr.getLogInfoList().forEach(bi -> bi.getTopics().forEach(lg -> {
+                            if (_fltr.isFor(contractAddress, ByteUtil.toHexString(lg))) {
+                                IBlock<AionTransaction, ?> blk = (cbs).getBlock();
+                                List<AionTransaction> txList = blk.getTransactionsList();
+                                int insideCnt = 0;
+                                for (AionTransaction t : txList) {
+                                    if (Arrays.equals(t.getHash(), tx.getHash())) {
+                                        break;
+                                    }
+                                    insideCnt++;
+                                }
+
+                                EvtContract ec = new EvtContract(bi.getAddress().toBytes(),
+                                        bi.getData(), blk.getHash(), blk.getNumber(), cnt,
+                                        ByteUtil.toHexString(lg), false, insideCnt, tx.getHash());
+
+                                _fltr.add(ec);
+                            }
+                        }));
+                    }
+                }
+            }
+        }
+    }
 
     @SuppressWarnings("rawtypes")
     public ApiAion0(IAionChain ac) {
@@ -139,53 +232,58 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             hdrBlk.eventCallback(
                     new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                         @Override
-                        public void onBlock(IBlockSummary cbs) {
 
-                            Set<Long> keys = installedFilters.keySet();
-                            for (Long key : keys) {
-                                Fltr fltr = installedFilters.get(key);
-                                if (fltr.isExpired()) {
-                                    LOG.debug("<fltr key={} expired removed>", key);
-                                    installedFilters.remove(key);
-                                } else {
-                                    @SuppressWarnings("unchecked")
-                                    List<AionTxReceipt> txrs = ((AionBlockSummary) cbs).getReceipts();
-                                    if (fltr.getType() == Fltr.Type.EVENT
-                                            && !Optional.ofNullable(txrs).orElse(Collections.emptyList()).isEmpty()) {
-                                        FltrCt _fltr = (FltrCt) fltr;
-
-                                        for (AionTxReceipt txr : txrs) {
-                                            AionTransaction tx = txr.getTransaction();
-                                            Address contractAddress = Optional.ofNullable(tx.getTo())
-                                                    .orElse(tx.getContractAddress());
-
-                                            Integer cnt = 0;
-                                            txr.getLogInfoList().forEach(bi -> bi.getTopics().forEach(lg -> {
-                                                if (_fltr.isFor(contractAddress, ByteUtil.toHexString(lg))) {
-                                                    IBlock<AionTransaction, ?> blk = (cbs).getBlock();
-                                                    List<AionTransaction> txList = blk.getTransactionsList();
-                                                    int insideCnt = 0;
-                                                    for (AionTransaction t : txList) {
-                                                        if (Arrays.equals(t.getHash(), tx.getHash())) {
-                                                            break;
-                                                        }
-                                                        insideCnt++;
-                                                    }
-
-                                                    EvtContract ec = new EvtContract(bi.getAddress().toBytes(),
-                                                            bi.getData(), blk.getHash(), blk.getNumber(), cnt,
-                                                            ByteUtil.toHexString(lg), false, insideCnt, tx.getHash());
-
-                                                    _fltr.add(ec);
-                                                }
-                                            }));
-                                        }
-                                    }
-                                }
-                            }
-                        }
+//                        public void onBlock(IBlockSummary cbs) {
+//
+//                            Set<Long> keys = installedFilters.keySet();
+//                            for (Long key : keys) {
+//                                Fltr fltr = installedFilters.get(key);
+//                                if (fltr.isExpired()) {
+//                                    LOG.debug("<fltr key={} expired removed>", key);
+//                                    installedFilters.remove(key);
+//                                } else {
+//                                    @SuppressWarnings("unchecked")
+//                                    List<AionTxReceipt> txrs = ((AionBlockSummary) cbs).getReceipts();
+//                                    if (fltr.getType() == Fltr.Type.EVENT
+//                                            && !Optional.ofNullable(txrs).orElse(Collections.emptyList()).isEmpty()) {
+//                                        FltrCt _fltr = (FltrCt) fltr;
+//
+//                                        for (AionTxReceipt txr : txrs) {
+//                                            AionTransaction tx = txr.getTransaction();
+//                                            Address contractAddress = Optional.ofNullable(tx.getTo())
+//                                                    .orElse(tx.getContractAddress());
+//
+//                                            Integer cnt = 0;
+//                                            txr.getLogInfoList().forEach(bi -> bi.getTopics().forEach(lg -> {
+//                                                if (_fltr.isFor(contractAddress, ByteUtil.toHexString(lg))) {
+//                                                    IBlock<AionTransaction, ?> blk = (cbs).getBlock();
+//                                                    List<AionTransaction> txList = blk.getTransactionsList();
+//                                                    int insideCnt = 0;
+//                                                    for (AionTransaction t : txList) {
+//                                                        if (Arrays.equals(t.getHash(), tx.getHash())) {
+//                                                            break;
+//                                                        }
+//                                                        insideCnt++;
+//                                                    }
+//
+//                                                    EvtContract ec = new EvtContract(bi.getAddress().toBytes(),
+//                                                            bi.getData(), blk.getHash(), blk.getNumber(), cnt,
+//                                                            ByteUtil.toHexString(lg), false, insideCnt, tx.getHash());
+//
+//                                                    _fltr.add(ec);
+//                                                }
+//                                            }));
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
                     });
         }
+
+
+
+
     }
 
     public byte[] process(byte[] request, byte[] socketId) {

@@ -134,27 +134,22 @@ public class AionPendingStateImpl
          */
         @Override
         public void run() {
-            boolean normal;
             while (go) {
                 IEvent e = null;
                 try {
                     e = callbackEvt.take();
-                    normal = true;
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
-                    normal = false;
                 }
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
                 }
 
-                if (normal) {
-                    if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                        processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
-                    } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()) {
-                        go = false;
-                    }
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
+                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()) {
+                    go = false;
                 }
             }
         }
@@ -214,7 +209,12 @@ public class AionPendingStateImpl
                             if (evt == null) {
                                 throw new NullPointerException();
                             }
-                            callbackEvt.add(evt);
+                            try {
+                                callbackEvt.add(evt);
+                            } catch (Exception e) {
+                                LOG.error("{}", e.toString());
+                            }
+
                         }
                     });
         }
