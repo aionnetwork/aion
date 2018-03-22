@@ -51,12 +51,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * @author chris lin, ali sharif
- *
  * RPC server implementation, based on josn rpc 2.0 spec: http://www.jsonrpc.org/specification
  *
  * Limitations: only handles positional parameters (no support for by-name parameters)
  *
+ * @author chris lin, ali sharif
  */
 public final class HttpServer
 {
@@ -317,6 +316,7 @@ public final class HttpServer
     private ServerSocketChannel tcpServer;
     private Thread tInbound;
     private volatile boolean start; // no need to make it atomic boolean. volatile does the job
+    private ExecutorService workers;
 
     // configuration parameters
     private final String ip;
@@ -349,6 +349,16 @@ public final class HttpServer
 
 
         this.api = new ApiWeb3Aion(AionImpl.inst());
+
+        // create a pool of 3 at first, expand to 6 if we can't keep up
+        this.workers = new ThreadPoolExecutor(
+                3,
+                6,
+                60,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10),
+                new RpcThreadFactory()
+        );
 
         this.start = false;
     }
@@ -494,49 +504,61 @@ public final class HttpServer
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
     }
 
-    public void respond(SocketChannel sc, byte[] readBytes) {
-        try {
-            // for empty requests, just close the socket channel
-            if (readBytes.length > 0) {
-                String msg = new String(readBytes, "UTF-8").trim();
-                String response = null;
+    private class TaskRespond implements Runnable {
 
-                // cors preflight or options query
-                if (msg.startsWith("OPTIONS")) {
-                    response = handleOptions(sc, msg);
-                } else {
-                    String[] msgFrags = msg.split(CF);
-                    int docBreaker = 0;
-                    int len = msgFrags.length;
+        private SocketChannel sc;
+        private byte[] readBytes;
 
-                    for (int i = 0; i < len; i++) {
-                        if (msgFrags[i].isEmpty())
-                            docBreaker = i;
-                    }
-                    if (docBreaker + 2 == len) {
-                        String requestBody = msgFrags[docBreaker + 1];
-                        char firstChar = requestBody.charAt(0);
-                        if (firstChar == '{')
-                            response = handleSingle(requestBody);
-                        else if (firstChar == '[')
-                            response = handleBatch(requestBody);
-                    }
-                }
+        public TaskRespond(SocketChannel sc, byte[] readBytes) {
+            this.sc = sc;
+            this.readBytes = readBytes;
+        }
 
-                if (response == null) {
-                    response = composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString());
-                }
-
-                writeResponse(sc, response);
-            }
-        } catch (Exception e) {
-            LOG.debug("<rpc-worker - failed to process incoming request. closing socketchannel>", e);
-        } finally {
+        @Override
+        public void run() {
             try {
-                System.out.println("sc.close();");
-                sc.close();
-            } catch (IOException e) {
-                LOG.error("<rpc-worker - socketchannel failed to close [8]>", e);
+                // for empty requests, just close the socket channel
+                if (readBytes.length > 0) {
+                    String msg = new String(readBytes, "UTF-8").trim();
+                    String response = null;
+
+                    // cors preflight or options query
+                    if (msg.startsWith("OPTIONS")) {
+                        response = handleOptions(sc, msg);
+                    } else {
+                        String[] msgFrags = msg.split(CF);
+                        int docBreaker = 0;
+                        int len = msgFrags.length;
+
+                        for (int i = 0; i < len; i++) {
+                            if (msgFrags[i].isEmpty())
+                                docBreaker = i;
+                        }
+                        if (docBreaker + 2 == len) {
+                            String requestBody = msgFrags[docBreaker + 1];
+                            char firstChar = requestBody.charAt(0);
+                            if (firstChar == '{')
+                                response = handleSingle(requestBody);
+                            else if (firstChar == '[')
+                                response = handleBatch(requestBody);
+                        }
+                    }
+
+                    if (response == null) {
+                        response = composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString());
+                    }
+
+                    writeResponse(sc, response);
+                }
+            } catch (Exception e) {
+                LOG.debug("<rpc-worker - failed to process incoming request. closing socketchannel. msg: {}>", new String(readBytes).trim(), e);
+            } finally {
+                try {
+                    System.out.println("sc.close();");
+                    sc.close();
+                } catch (IOException e) {
+                    LOG.error("<rpc-worker - socketchannel failed to close [8]>", e);
+                }
             }
         }
     }
@@ -579,7 +601,7 @@ public final class HttpServer
                                 ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
                                 while (sc.read(readBuffer) > 0) { }
                                 // dispatch to worker here
-                                respond(sc, readBuffer.array());
+                                workers.submit(new TaskRespond(sc, readBuffer.array()));
                             } catch (Exception e) {
                                 closeSocket((SocketChannel) sk.channel());
                             }

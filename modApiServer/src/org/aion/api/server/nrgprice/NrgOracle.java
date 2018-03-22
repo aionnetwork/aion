@@ -12,6 +12,16 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.slf4j.Logger;
 
+import java.util.concurrent.atomic.AtomicLong;
+
+/**
+ * Serves as the recommendor of nrg prices based on some observation strategy
+ * Currently uses the blockPrice strategy
+ *
+ * This class is thread safe: process blocks from one thread at a time.
+ *
+ * @author ali sharif
+ */
 public class NrgOracle {
     private static final int BLK_TRAVERSE_ON_INSTANTIATION = 128;
     private static final long CACHE_FLUSH_BLKCOUNT = 1;
@@ -23,7 +33,8 @@ public class NrgOracle {
 
     // flush the recommendation every CACHE_FLUSH_BLKCOUNT blocks
     private long cacheFlushCounter;
-    private long recommendation;
+    private volatile long recommendation;
+    private final Object blockProcessLock = new Object();
 
     INrgPriceAdvisor advisor;
 
@@ -73,19 +84,18 @@ public class NrgOracle {
     }
 
     private void processBlock(AionBlockSummary blockSummary) {
-        AionBlock blk = (AionBlock) blockSummary.getBlock();
-        advisor.processBlock(blk);
-        cacheFlushCounter--;
+        synchronized (blockProcessLock) {
+            AionBlock blk = (AionBlock) blockSummary.getBlock();
+            advisor.processBlock(blk);
+            cacheFlushCounter--;
+            if (cacheFlushCounter <= 0) {
+                recommendation = advisor.computeRecommendation();
+                cacheFlushCounter = CACHE_FLUSH_BLKCOUNT;
+            }
+        }
     }
 
     public long getNrgPrice() {
-        // rationale: if no new blocks have come in, just serve the info in the cache,
-        //
-        if (cacheFlushCounter <= 0) {
-            recommendation = advisor.computeRecommendation();
-            cacheFlushCounter = CACHE_FLUSH_BLKCOUNT;
-        }
-
         return recommendation;
     }
 }

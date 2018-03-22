@@ -58,18 +58,33 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public abstract class ApiAion extends Api {
+    // these variables get accessed by the api worker threads.
+    // need to guarantee one of:
+    // 1. all access to variables protected by some lock
+    // 2. underlying datastructure provides concurrency guarntees
+
+    // delegate concurrency to underlying object
     protected NrgOracle nrgOracle;
-    protected IAionChain ac;
-    protected final static short FLTRS_MAX = 1024;
-    protected final long DEFAULT_NRG_LIMIT = 500_000L;
-    protected AtomicLong fltrIndex = new AtomicLong(0);
-    protected Map<Long, Fltr> installedFilters = null;
-    protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
+    protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
+
+    // using java.util.concurrent library objects
+    protected AtomicLong fltrIndex = null; // AtomicLong
+    protected Map<Long, Fltr> installedFilters = null; // ConcurrentHashMap
+    protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts; // Collections.synchronizedMap
+
+    // 'safe-publishing' idiom
+    protected volatile double reportedHashrate = 0; // volatile, used only for 'publishing'
+
+    // thread safe because value never changing, can be safely read by multiple threads
     protected final String[] compilers = new String[] {"solidity"};
+    protected final long DEFAULT_NRG_LIMIT = 500_000L;
+    protected final short FLTRS_MAX = 1024;
+    protected final String clientVersion = computeClientVersion();
 
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
+        this.fltrIndex = new AtomicLong(0);
 
         // register events
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
@@ -508,7 +523,7 @@ public abstract class ApiAion extends Api {
     // follows the ethereum standard for web3 compliance. DO NOT DEPEND ON IT.
     // Will be changed to Aion-defined spec later
     // https://github.com/ethereum/wiki/wiki/Client-Version-Strings
-    public String clientVersion() {
+    private String computeClientVersion() {
         try {
             Pattern shortVersion = Pattern.compile("(\\d\\.\\d).*");
             Matcher matcher = shortVersion.matcher(System.getProperty("java.version"));
@@ -565,8 +580,6 @@ public abstract class ApiAion extends Api {
 
         return Double.toString(hashrate);
     }
-
-    protected volatile double reportedHashrate = 0;
 
     // hashrate in sol/s should just be a hexadecimal representation of a BigNumber
     // right now, assuming only one external miner is connected to the kernel

@@ -12,6 +12,8 @@ class RpcThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        return new Thread(r, "rpc-worker-" + tnum.getAndIncrement());
+        Thread t = new Thread(r, "rpc-worker-" + tnum.getAndIncrement());
+        t.setPriority(Thread.MIN_PRIORITY);
+        return t;
     }
 }

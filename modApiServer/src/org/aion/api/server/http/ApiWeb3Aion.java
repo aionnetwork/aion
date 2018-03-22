@@ -145,7 +145,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     // --------------------------------------------------------------------
 
     RpcMsg web3_clientVersion() {
-        return new RpcMsg(clientVersion());
+        return new RpcMsg(this.clientVersion);
     }
 
     RpcMsg web3_sha3(JSONArray _params) {

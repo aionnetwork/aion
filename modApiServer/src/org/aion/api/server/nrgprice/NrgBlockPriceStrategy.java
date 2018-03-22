@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
-/* Implementation of strategy adopted by Ethereum mainstream clients in early 2018 of using the
+/**
+ * Implementation of strategy adopted by Ethereum mainstream clients in early 2018 of using the
  * notion of 'blockPrice': minimum nrgPriced transaction in a block that did not originate from the proposer
  * of that block. This algorithm recommends the Nth percentile blockPrice observed over the last M blocks
  *
@@ -21,6 +22,10 @@ import java.util.concurrent.ArrayBlockingQueue;
  * A transaction based design alternatively has been observed in the wild to have a positive feedback
  * effect where large numbers of people following the recommendation will tend the recommendation upward
  *
+ * This class is NOT thread-safe
+ * Policy: holder class (NrgOracle) should provide any concurrency guarantees it needs to
+ *
+ * @author ali sharif
  */
 public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransaction> {
 
@@ -101,6 +106,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
     @Override
     public void processBlock(AionBlock blk) {
         Long blkPrice = getBlkPrice(blk);
+
         if (blkPrice != null) {
             if (!blkPriceQ.offer(blkPrice)) {
                 blkPriceQ.poll();
