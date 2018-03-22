@@ -65,7 +65,7 @@ public class TaskWrite implements Runnable {
 		if (!USE_QUEUE_BUFFER_UNSEND_MSG) {
 
 			// it's better replace atomic variable here by just lock.
-			while (!channelBuffer.onWrite.get()) {
+			while (channelBuffer.onWrite.get()) {
 				try {
 					Thread.sleep(1);
 				} catch (Exception e) {
