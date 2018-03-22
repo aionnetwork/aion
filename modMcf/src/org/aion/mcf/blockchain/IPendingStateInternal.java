@@ -20,14 +20,11 @@
  *******************************************************************************/
 package org.aion.mcf.blockchain;
 
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
-
-import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
+
+import java.util.List;
 
 /**
  * Internal pending state interface.
@@ -40,12 +37,6 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
 
     // called by onBest
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
-
-    List<Tx> addToTxCache(Tx tx);
-
-    List<Tx> getSeqCacheTx(Map<BigInteger, Tx> txmap, Address addr, BigInteger bn);
-
-    Map<BigInteger,Tx> getCacheTx(Address from);
 
     void shutDown();
 }

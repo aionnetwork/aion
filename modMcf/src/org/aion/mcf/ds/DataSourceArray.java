@@ -50,13 +50,13 @@ public class DataSourceArray<V> implements Flushable {
     }
 
     public V set(long index, V value) {
-        if (index >= size()) {
-            setSize(index + 1);
-        }
         if (index <= Integer.MAX_VALUE) {
             src.put(ByteUtil.intToBytes((int) index), value);
         } else {
             src.put(ByteUtil.longToBytes(index), value);
+        }
+        if (index >= size()) {
+            setSize(index + 1);
         }
         return value;
     }

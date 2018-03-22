@@ -88,7 +88,7 @@ final class TaskShowStatus implements Runnable {
                     + "/" + this.networkStatus.getTargetBestBlockHash() + "]";
 
             // print to std output
-            System.out.print(status);
+            System.out.println(status);
 
             // print to report file
             if (printReport) {
