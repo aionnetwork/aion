@@ -80,8 +80,6 @@ public class AionPendingStateImpl
         }
     }
 
-    private CfgAion cfg = CfgAion.inst();
-
     private IAionBlockchain blockchain;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
@@ -143,6 +141,7 @@ public class AionPendingStateImpl
             e.printStackTrace();
         }
 
+        CfgAion cfg = CfgAion.inst();
         this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
     }
 
@@ -179,7 +178,7 @@ public class AionPendingStateImpl
         return pendingState;
     }
 
-    public synchronized int getPendingTxSize() {
+    private int getPendingTxSize() {
         return this.txPool.size();
     }
 
@@ -304,7 +303,7 @@ public class AionPendingStateImpl
     /**
      * Executes pending tx on the latest best block Fires pending state update
      *
-     * @param tx
+     * @param tx transaction come from API or P2P
      * @param txNonce
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
@@ -359,7 +358,7 @@ public class AionPendingStateImpl
             if (b1.getNumber() < b2.getNumber()) {
                 b2 = blockchain.getBlockByHash(b2.getParentHash());
             }
-            if (b1 == null || b2 == null) {
+            if (b2 == null) {
                 // shouldn't happen
                 throw new RuntimeException("Pending state can't find common ancestor: one of blocks has a gap");
             }
@@ -578,25 +577,8 @@ public class AionPendingStateImpl
         return this.pendingState.getNonce(addr);
     }
 
-    @Override
-    public synchronized List<AionTransaction> addToTxCache(AionTransaction tx) {
-        Map<BigInteger, AionTransaction> txmap = getCacheTx(tx.getFrom());
-        if (txmap == null) {
-            txmap = new HashMap<>();
-        }
-        txmap.put(new BigInteger(1, tx.getNonce()), tx);
-
-        return this.pendingTxCache.addCacheTx(txmap, tx.getFrom());
-    }
-
-    @Override
-    public synchronized List<AionTransaction> getSeqCacheTx(Map<BigInteger, AionTransaction> txmap, Address addr, BigInteger bn) {
-        return this.pendingTxCache.getSeqCacheTx(txmap, addr, bn);
-    }
-
-    @Override
-    public Map<BigInteger, AionTransaction> getCacheTx(Address from) {
-        return this.pendingTxCache.geCacheTx(from);
+    private List<AionTransaction> addToTxCache(AionTransaction tx) {
+        return this.pendingTxCache.addCacheTx(tx);
     }
 
     @Override
