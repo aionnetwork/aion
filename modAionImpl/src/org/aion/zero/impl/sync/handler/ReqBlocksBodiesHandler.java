@@ -64,7 +64,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(256));
+    private final static Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(256));
 
     public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
@@ -78,6 +78,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
+
             // limit number of blocks
             List<byte[]> hashes = reqBlocks.getBlocksHashes();
             hashes = hashes.size() > max ? hashes.subList(0, max) : hashes;
