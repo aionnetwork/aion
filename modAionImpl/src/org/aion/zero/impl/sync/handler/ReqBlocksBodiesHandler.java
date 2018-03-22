@@ -64,7 +64,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(256));
+    private Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(1024));
 
     public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
@@ -93,8 +93,8 @@ public final class ReqBlocksBodiesHandler extends Handler {
                 } else {
                     AionBlock block = blockchain.getBlockByHash(hash);
                     if (block != null) {
-                        blockBodies.add(block.getEncoded());
-                        cache.put(ByteArrayWrapper.wrap(hash), block.getEncoded());
+                        blockBodies.add(block.getEncodedBody());
+                        cache.put(ByteArrayWrapper.wrap(hash), block.getEncodedBody());
                     } else {
                         // not found
                         break;
