@@ -30,7 +30,7 @@ import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
-import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
 import org.aion.mcf.mine.AbstractMineRunner;
@@ -41,9 +41,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.IAionBlock;
 
 import java.util.*;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.aion.base.util.Hex.toHexString;
 
@@ -79,6 +77,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     // keep a moving average filter for the last 64 STATUS_INTERVALs
     private MAF hashrateMAF;
 
+    private EventExecuteService ees;
+
     /**
      * Miner threads
      */
@@ -86,31 +86,10 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
     private final class EpMiner implements Runnable {
         boolean go = true;
-        /**
-         * When an object implementing interface <code>Runnable</code> is used
-         * to create a thread, starting the thread causes the object's
-         * <code>run</code> method to be called in that separately executing
-         * thread.
-         * <p>
-         * The general contract of the method <code>run</code> is that it may
-         * take any action whatsoever.
-         *
-         * @see Thread#run()
-         */
         @Override
         public void run() {
             while (go) {
-                IEvent e = null;
-                try {
-                    e = callbackEvt.take();
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
-                }
-
+                IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
                     EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
@@ -158,7 +137,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
         registerCallback();
 
-        es.execute(new EpMiner());
+        ees = new EventExecuteService(1000, "EPMiner", Thread.NORM_PRIORITY, LOG);
+        ees.start(new EpMiner());
     }
 
     @Override
@@ -207,6 +187,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                     LOG.error("Failed to stop sealer thread");
                 }
             }
+
         }
     }
 
@@ -298,7 +279,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                                     }
 
                                     try {
-                                        callbackEvt.add(evt);
+                                        ees.add(evt);
                                     } catch (Exception e) {
                                         LOG.error("{}", e.toString());
                                     }
@@ -348,5 +329,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             hashrateMAF.add(hashrate);
             LOG.info("Aion internal miner generating {} solutions per second", hashrate);
         }
+    }
+
+    public void shutdown() {
+        ees.shutdown();
     }
 }

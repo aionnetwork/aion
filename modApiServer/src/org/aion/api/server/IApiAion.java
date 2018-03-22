@@ -73,4 +73,6 @@ public interface IApiAion {
     default TxWaitingMappingUpdate takeTxWait() throws Throwable {
         return txWait.take();
     }
+
+    void shutDown();
 }

@@ -25,16 +25,9 @@
 package org.aion.mcf.mine;
 
 import org.aion.base.type.IBlock;
-import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Abstract Miner.
@@ -60,15 +53,4 @@ public abstract class AbstractMineRunner<BLK extends IBlock<?, ?>> implements IM
     protected abstract void fireMinerStarted();
 
     protected abstract void fireMinerStopped();
-
-
-    protected final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(1000, true);
-
-    protected final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
-        Thread thread = new Thread(arg0, "EpMiner");
-        thread.setPriority(Thread.NORM_PRIORITY);
-        return thread;
-    });
-
-
 }

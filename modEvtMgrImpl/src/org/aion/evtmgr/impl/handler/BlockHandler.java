@@ -24,13 +24,11 @@
 
 package org.aion.evtmgr.impl.handler;
 
-import java.util.List;
 
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
 
 /**
  * @author jay
@@ -58,15 +56,6 @@ public class BlockHandler extends AbstractHandler implements IHandler {
 
                 cb.onEvent(event);
 
-//                switch (event.getCallbackType()) {
-//                    case 0:
-//                        ((EventCallbackA0) cb).onBlock(event.getFuncArgs().get(0));
-//                        break;
-//                    case 2:
-//                        ((EventCallbackA0) cb).onEvent(event);
-//                        break;
-//                    default:
-//                }
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("CB dispatched hashCode[{}] cbType[{}]", cb.hashCode(), event.getCallbackType());

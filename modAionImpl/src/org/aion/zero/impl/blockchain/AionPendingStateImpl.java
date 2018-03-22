@@ -35,8 +35,8 @@ import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -51,7 +51,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.*;
@@ -60,7 +59,6 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.*;
 
 public class AionPendingStateImpl
         implements IPendingStateInternal<org.aion.zero.impl.types.AionBlock, AionTransaction> {
@@ -109,15 +107,7 @@ public class AionPendingStateImpl
 
     private PendingTxCache pendingTxCache;
 
-    private final Map<Address, BigInteger> cachePoolNonce = new LRUMap<>(1000);
-
-    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(1000, true);
-
-    private final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
-        Thread thread = new Thread(arg0, "EpPS");
-        thread.setPriority(Thread.MAX_PRIORITY);
-        return thread;
-    });
+    private EventExecuteService ees;
 
     private final class EpPS implements Runnable {
         boolean go = true;
@@ -135,16 +125,7 @@ public class AionPendingStateImpl
         @Override
         public void run() {
             while (go) {
-                IEvent e = null;
-                try {
-                    e = callbackEvt.take();
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
-                }
+                IEvent e = ees.take();
 
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
@@ -210,7 +191,7 @@ public class AionPendingStateImpl
                                 throw new NullPointerException();
                             }
                             try {
-                                callbackEvt.add(evt);
+                                ees.add(evt);
                             } catch (Exception e) {
                                 LOG.error("{}", e.toString());
                             }
@@ -219,7 +200,8 @@ public class AionPendingStateImpl
                     });
         }
 
-        es.execute(new EpPS());
+        ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
+        ees.start(new EpPS());
     }
 
     private void regBlockEvents() {
@@ -658,9 +640,7 @@ public class AionPendingStateImpl
 
     @Override
     public void shutDown() {
-        callbackEvt.clear();
-        callbackEvt.add(new EventDummy());
-        es.shutdown();
+        ees.shutdown();
     }
 
     @Override

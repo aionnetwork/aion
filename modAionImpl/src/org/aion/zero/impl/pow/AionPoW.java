@@ -26,8 +26,8 @@ package org.aion.zero.impl.pow;
 
 import org.aion.base.type.*;
 import org.aion.base.util.Hex;
+import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.equihash.Solution;
@@ -48,9 +48,6 @@ import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -76,40 +73,14 @@ public class AionPoW {
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
 
-    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(100_000, true);
-
-    private final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
-        Thread thread = new Thread(arg0, "EpPOW");
-        thread.setPriority(Thread.NORM_PRIORITY);
-        return thread;
-    });
+    private EventExecuteService ees;
 
     private final class EpPOW implements Runnable {
         boolean go = true;
-        /**
-         * When an object implementing interface <code>Runnable</code> is used
-         * to create a thread, starting the thread causes the object's
-         * <code>run</code> method to be called in that separately executing
-         * thread.
-         * <p>
-         * The general contract of the method <code>run</code> is that it may
-         * take any action whatsoever.
-         *
-         * @see Thread#run()
-         */
         @Override
         public void run() {
             while (go) {
-                IEvent e = null;
-                try {
-                    e = callbackEvt.take();
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
-                }
+                IEvent e = ees.take();
 
                 if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
                     newPendingTxReceived.set(true);
@@ -156,7 +127,8 @@ public class AionPoW {
             setupHandler();
             registerCallback();
 
-            es.execute(new EpPOW());
+            ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+            ees.start(new EpPOW());
 
             new Thread(() -> {
                 while (!shutDown.get()) {
@@ -204,11 +176,7 @@ public class AionPoW {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
         consensusHandler.eventCallback(
                 new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-//                    @Override
-//                    public void onSolution(ISolution solution) {
-//
-//                        processSolution((Solution) solution);
-//                    }
+
                     @Override
                     public void onEvent(IEvent evt) {
                         if (evt == null) {
@@ -216,7 +184,7 @@ public class AionPoW {
                         }
 
                         try {
-                            callbackEvt.add(evt);
+                            ees.add(evt);
                         } catch (Exception e) {
                             LOG.error("{}", e.toString());
                         }
@@ -233,7 +201,7 @@ public class AionPoW {
                         }
 
                         try {
-                            callbackEvt.add(evt);
+                            ees.add(evt);
                         } catch (Exception e) {
                             LOG.error("{}", e.toString());
                         }
@@ -243,11 +211,7 @@ public class AionPoW {
         IHandler transactionHandler = eventMgr.getHandler(IHandler.TYPE.TX0.getValue());
         transactionHandler.eventCallback(
                 new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-//                    @Override
-//                    public void onPendingTxReceived(ITransaction tx) {
-//                        // set the transaction flag to true
-//                        newPendingTxReceived.set(true);
-//                    }
+
 
                     @Override
                     public void onEvent(IEvent evt) {
@@ -256,7 +220,7 @@ public class AionPoW {
                         }
 
                         try {
-                            callbackEvt.add(evt);
+                            ees.add(evt);
                         } catch (Exception e) {
                             LOG.error("{}", e.toString());
                         }
@@ -348,9 +312,7 @@ public class AionPoW {
     }
 
     public synchronized void shutdown() {
-        callbackEvt.clear();
-        callbackEvt.add(new EventDummy());
-        es.shutdown();
+        ees.shutdown();
         shutDown.set(true);
     }
 }
