@@ -39,45 +39,48 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 class ChannelBuffer {
 
-    int nodeIdHash = 0;
+	int nodeIdHash = 0;
 
-    ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
+	ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
 
-    ByteBuffer bodyBuf = null;
+	ByteBuffer bodyBuf = null;
 
-    Header header = null;
+	Header header = null;
 
-    byte[] body = null;
+	byte[] body = null;
 
-    /**
-     * write flag
-     */
-    public AtomicBoolean onWrite = new AtomicBoolean(false);
+	/**
+	 * write flag
+	 */
+	public AtomicBoolean onWrite = new AtomicBoolean(false);
 
-    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
+	// create a queue to buffer the unsended msg b/c the atomic onWrite is not
+	// available can be simple replace by wait the atomic ready.
+	
+	// public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
 
-    void refreshHeader(){
-        headerBuf.clear();
-        header = null;
-    }
+	void refreshHeader() {
+		headerBuf.clear();
+		header = null;
+	}
 
-    void refreshBody(){
-        bodyBuf = null;
-        body = null;
-    }
+	void refreshBody() {
+		bodyBuf = null;
+		body = null;
+	}
 
-    /**
-     * @return boolean
-     */
-    boolean isHeaderCompleted(){
-        return header != null;
-    }
+	/**
+	 * @return boolean
+	 */
+	boolean isHeaderCompleted() {
+		return header != null;
+	}
 
-    /**
-     * @return boolean
-     */
-    boolean isBodyCompleted() {
-        return this.header != null && this.body != null && body.length == header.getLen();
-    }
+	/**
+	 * @return boolean
+	 */
+	boolean isBodyCompleted() {
+		return this.header != null && this.body != null && body.length == header.getLen();
+	}
 
 }
