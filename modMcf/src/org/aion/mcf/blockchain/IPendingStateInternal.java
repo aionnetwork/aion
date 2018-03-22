@@ -47,4 +47,5 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
 
     Map<BigInteger,Tx> getCacheTx(Address from);
 
+    void shutDown();
 }

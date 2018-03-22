@@ -26,6 +26,8 @@ package org.aion.zero.impl.pow;
 
 import org.aion.base.type.*;
 import org.aion.base.util.Hex;
+import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.equihash.Solution;
@@ -38,17 +40,19 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -73,6 +77,57 @@ public class AionPoW {
 
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
+
+    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(1000, true);
+
+    private final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
+        Thread thread = new Thread(arg0, "EpPOW");
+        thread.setPriority(Thread.NORM_PRIORITY);
+        return thread;
+    });
+
+    private final class EpPOW implements Runnable {
+        boolean go = true;
+        /**
+         * When an object implementing interface <code>Runnable</code> is used
+         * to create a thread, starting the thread causes the object's
+         * <code>run</code> method to be called in that separately executing
+         * thread.
+         * <p>
+         * The general contract of the method <code>run</code> is that it may
+         * take any action whatsoever.
+         *
+         * @see Thread#run()
+         */
+        @Override
+        public void run() {
+            boolean normal;
+            while (go) {
+                IEvent e = null;
+                try {
+                    e = callbackEvt.take();
+                    normal = true;
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                    normal = false;
+                }
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
+                }
+
+                if (normal) {
+                    if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                        // create a new block template every time the best block
+                        // updates.
+                        createNewBlockTemplate();
+                    } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                        go = false;
+                    }
+                }
+            }
+        }
+    }
 
     private final CfgAion config = CfgAion.inst();
 
@@ -103,6 +158,8 @@ public class AionPoW {
 
             setupHandler();
             registerCallback();
+
+            es.execute(new EpPOW());
 
             new Thread(() -> {
                 while (!shutDown.get()) {
@@ -160,10 +217,11 @@ public class AionPoW {
         blockHandler.eventCallback(
                 new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                     @Override
-                    public void onBest(IBlock block, List<?> receipts) {
-                        // create a new block template every time the best block
-                        // updates.
-                        createNewBlockTemplate();
+                    public void onEvent(IEvent evt) {
+                        if (evt == null) {
+                            throw new NullPointerException();
+                        }
+                        callbackEvt.add(evt);
                     }
                 });
 
@@ -262,6 +320,9 @@ public class AionPoW {
     }
 
     public synchronized void shutdown() {
+        callbackEvt.clear();
+        callbackEvt.add(new EventDummy());
+        es.shutdown();
         shutDown.set(true);
     }
 }

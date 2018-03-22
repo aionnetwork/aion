@@ -51,8 +51,6 @@ public abstract class AbstractHandler {
     private AtomicBoolean interrupt = new AtomicBoolean(false);
     private boolean interruptted = false;
 
-    protected ExecutorService es;
-
     protected Thread dispatcher = new Thread(() -> {
         try {
             while (!interrupt.get()) {
@@ -82,10 +80,6 @@ public abstract class AbstractHandler {
         }
     });
 
-    protected AbstractHandler() {
-        this.es = Executors.newWorkStealingPool(3);
-    }
-
     public synchronized boolean addEvent(IEvent _evt) {
         return this.events.add(_evt);
     }
@@ -97,8 +91,6 @@ public abstract class AbstractHandler {
     protected abstract <E extends IEvent> void dispatch(E _e);
 
     public void stop() throws InterruptedException {
-        // In case the thread got stuck into the blocking queue.
-        es.shutdown();
 
         interrupt.set(true);
         this.queue.add(new EventDummy());

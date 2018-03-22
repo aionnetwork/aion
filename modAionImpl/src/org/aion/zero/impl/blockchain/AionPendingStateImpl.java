@@ -36,6 +36,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -50,6 +51,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.*;
@@ -58,6 +60,7 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.*;
 
 public class AionPendingStateImpl
         implements IPendingStateInternal<org.aion.zero.impl.types.AionBlock, AionTransaction> {
@@ -108,6 +111,55 @@ public class AionPendingStateImpl
 
     private final Map<Address, BigInteger> cachePoolNonce = new LRUMap<>(1000);
 
+    private final ArrayBlockingQueue<IEvent> callbackEvt = new ArrayBlockingQueue<>(1000, true);
+
+    private final ExecutorService es = Executors.newFixedThreadPool(1, arg0 -> {
+        Thread thread = new Thread(arg0, "EpPS");
+        thread.setPriority(Thread.MAX_PRIORITY);
+        return thread;
+    });
+
+    private final class EpPS implements Runnable {
+        boolean go = true;
+        /**
+         * When an object implementing interface <code>Runnable</code> is used
+         * to create a thread, starting the thread causes the object's
+         * <code>run</code> method to be called in that separately executing
+         * thread.
+         * <p>
+         * The general contract of the method <code>run</code> is that it may
+         * take any action whatsoever.
+         *
+         * @see Thread#run()
+         */
+        @Override
+        public void run() {
+            boolean normal;
+            while (go) {
+                IEvent e = null;
+                try {
+                    e = callbackEvt.take();
+                    normal = true;
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                    normal = false;
+                }
+
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("PendingState - EpPS q#[{}]", callbackEvt.size());
+                }
+
+                if (normal) {
+                    if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                        processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
+                    } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()) {
+                        go = false;
+                    }
+                }
+            }
+        }
+    }
+
     public synchronized static AionPendingStateImpl inst() {
         if (inst == null) {
             inst = new AionPendingStateImpl(AionRepositoryImpl.inst());
@@ -142,15 +194,15 @@ public class AionPendingStateImpl
             // log here!
             e.printStackTrace();
         }
-
-        this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
     }
+
+
 
     public void init(final AionBlockchainImpl blockchain) {
         this.blockchain = blockchain;
         this.transactionStore = blockchain.getTransactionStore();
         this.evtMgr = blockchain.getEventMgr();
-
+        this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
         this.pendingState = repository.startTracking();
 
         regBlockEvents();
@@ -158,11 +210,16 @@ public class AionPendingStateImpl
         if (blkHandler != null) {
             blkHandler.eventCallback(
                     new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onBest(IBlock _blk, List<?> _receipts) {
-                            processBest((AionBlock) _blk, _receipts);
+                        public void onEvent(IEvent evt) {
+                            if (evt == null) {
+                                throw new NullPointerException();
+                            }
+                            callbackEvt.add(evt);
                         }
                     });
         }
+
+        es.execute(new EpPS());
     }
 
     private void regBlockEvents() {
@@ -597,6 +654,13 @@ public class AionPendingStateImpl
     @Override
     public Map<BigInteger, AionTransaction> getCacheTx(Address from) {
         return this.pendingTxCache.geCacheTx(from);
+    }
+
+    @Override
+    public void shutDown() {
+        callbackEvt.clear();
+        callbackEvt.add(new EventDummy());
+        es.shutdown();
     }
 
     @Override

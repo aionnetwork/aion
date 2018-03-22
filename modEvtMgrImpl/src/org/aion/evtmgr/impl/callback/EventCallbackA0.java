@@ -24,8 +24,7 @@
 
 package org.aion.evtmgr.impl.callback;
 
-import java.util.List;
-
+import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 
@@ -41,7 +40,7 @@ public class EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, IT
     public void onBlock(final IBlockSummary _bs) {
     }
 
-    public void onBest(IBlock _blk, List<?> _receipts) {
+    public void onEvent(IEvent e) {
     }
 
     // Tx events
