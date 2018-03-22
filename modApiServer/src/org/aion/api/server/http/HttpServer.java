@@ -417,12 +417,12 @@ public final class HttpServer
         try {
             String method;
             JSONArray params;
-            String id = "null";
+            Object id = JSONObject.NULL;
 
             try {
                 // not checking for 'jsonrpc' key == 2.0. can pass in anything
                 method = body.getString("method");
-                id = body.get("id") + "";
+                id = body.get("id");
                 params = body.getJSONArray("params");
             } catch (Exception e) {
                 LOG.debug("<rpc-server - invalid rpc request [0]>", e);
@@ -601,16 +601,24 @@ public final class HttpServer
                                 ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
                                 while (sc.read(readBuffer) > 0) { }
                                 // dispatch to worker here
+                                // worker closes the socket after writing to it
                                 workers.submit(new TaskRespond(sc, readBuffer.array()));
                             } catch (Exception e) {
                                 closeSocket((SocketChannel) sk.channel());
                             }
                         }
                     }
+
+                    if (Thread.currentThread().isInterrupted()) {
+                        LOG.debug("<rpc-server - main event loop interrupted [10]>");
+                        break;
+                    }
+
                 } catch (Exception e) {
                     LOG.debug("<rpc-server - main event loop uncaught error [9]>", e);
                 }
             }
+            LOG.debug("<rpc-sever - main event loop returning [11]>");
         }
     }
 
@@ -626,6 +634,55 @@ public final class HttpServer
         } catch (IOException e) {
             LOG.debug("<rpc-server - error closing socket [10]>", e);
         }
+    }
+
+    /*
+
+    private static ApiWeb3Aion api;
+    private Selector selector;
+    private ServerSocketChannel tcpServer;
+    private Thread tInbound;
+    private volatile boolean start; // no need to make it atomic boolean. volatile does the job
+    private ExecutorService workers;
+
+     */
+
+
+     //
+    public void shutdown() throws InterruptedException {
+        start = false;
+
+        // wakeup the selector to run through the event loop one more time before exiting
+        // NOTE: ok to do this from some shutdown thread since sun's implementation of Selector is threadsafe
+        selector.wakeup();
+
+        // graceful(ish) shutdown of thread pool:
+        // NOTE: ok to call workers.*() from some shutdown thread since sun's implementation of ExecutorService is threadsafe
+        workers.shutdown();
+        try {
+            if (!workers.awaitTermination(5, TimeUnit.SECONDS)) {
+                workers.shutdownNow();
+                if (!workers.awaitTermination(5, TimeUnit.SECONDS))
+                    LOG.debug("<rpc-server - main event loop failed to shutdown [11]>");
+            }
+        } catch (InterruptedException ie) {
+            workers.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        // graceful(ish) shutdown of webserver thread
+        try {
+            tInbound.join(3000L);
+            if (tInbound.isAlive()) {
+                tInbound.interrupt();
+
+            }
+        } catch (InterruptedException ie) {
+            tInbound.interrupt();
+            Thread.currentThread().interrupt();
+        }
+
+        LOG.debug("<rpc-server - graceful shutdown complete [-1]>");
     }
 
     public void start() {

@@ -71,6 +71,8 @@ public class NrgOracle {
 
         // check if handler is of type BLOCK, if so attach our event
         if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
+            // TODO: Fixme. Commenting this out for now until I fix this, to relieve pressure from sync
+            /*
             handler.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                 public void onBlock(final IBlockSummary _bs) {
                     LOG.debug("nrg-oracle - onBlock event");
@@ -78,11 +80,14 @@ public class NrgOracle {
                     processBlock(bs);
                 }
             });
+            */
         } else {
             LOG.error("nrg-oracle - invalid handler provided to constructor");
         }
     }
 
+    // TODO: change this strategy from an active recommendation-building to a passive one,
+    // to reduce load from the BlkHdr thread on sync
     private void processBlock(AionBlockSummary blockSummary) {
         synchronized (blockProcessLock) {
             AionBlock blk = (AionBlock) blockSummary.getBlock();

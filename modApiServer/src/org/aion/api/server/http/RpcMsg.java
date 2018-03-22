@@ -44,18 +44,7 @@ public class RpcMsg {
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("jsonrpc", "2.0");
-
-        // try to convert the id to a long since some clients expect this to be a number.
-        // if can't parse long, then just throw back in what the client gave me
-        // formally the spec says this could be a number, string or null
-        try {
-            // don't use Long.decode here since we don't need to support sci-notation or hextolong decoding
-            json.put("id", Long.parseLong(this.id + ""));
-        } catch (Exception e) {
-            json.put("id", this.id);
-        }
-
-
+        json.put("id", this.id);
 
         // according to the json-rpc spec (http://www.jsonrpc.org/specification):
         // error: This member is REQUIRED on error. This member MUST NOT exist if there was no error triggered during invocation.
