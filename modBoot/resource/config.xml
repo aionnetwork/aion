@@ -28,7 +28,7 @@
 	</net>
 	<sync>
 		<blocks-import-max>32</blocks-import-max>
-		<blocks-queue-max>2000</blocks-queue-max>
+		<blocks-queue-max>64</blocks-queue-max>
 		<show-status>false</show-status>
 	</sync>
 	<consensus>
