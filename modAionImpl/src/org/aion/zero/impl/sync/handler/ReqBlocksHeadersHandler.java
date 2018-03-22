@@ -36,6 +36,7 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -49,6 +50,7 @@ import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.mcf.types.BlockIdentifier;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
@@ -69,11 +71,9 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final static int cacheRange = 256;
+    private final ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
-    private final static ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
-
-    private final static Map<Long, A0BlockHeader> cache = new LRUMap<>(cacheRange);
+    private final Map<Long, A0BlockHeader> cache = Collections.synchronizedMap(new LRUMap<>(1024));
 
     public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
@@ -88,61 +88,44 @@ public final class ReqBlocksHeadersHandler extends Handler {
         ReqBlocksHeaders reqHeaders = ReqBlocksHeaders.decode(_msgBytes);
         if (reqHeaders != null) {
 
-            // prepare
-            long fromBlock = reqHeaders.getFromBlock();
+            // limit number of headers
+            long from = reqHeaders.getFromBlock();
             int take = Math.min(reqHeaders.getTake(), max);
-            List<A0BlockHeader> headers;
-            boolean shouldCache = false;
 
-            // should check cache
-            if((blockchain.getBestBlock().getNumber() - fromBlock) <= cacheRange){
-                shouldCache = true;
-                List<A0BlockHeader> cached = new ArrayList<>();
-                cacheLock.readLock().lock();
-                for(long i = fromBlock, m = fromBlock + take; i <= m; i++){
-                    A0BlockHeader b = cache.get(i);
+            // results
+            List<A0BlockHeader> headers = new ArrayList<>();
 
-                    // break if any missing within cached elements
-                    // single its same load with directly query from chain
-                    if(b == null)
+            for (long i = from, m = from + take; i <= m; i++) {
+                A0BlockHeader b = cache.get(i);
+                if (b != null)
+                    headers.add(b);
+                else {
+                    AionBlock ab = blockchain.getBlockByNumber(i);
+
+                    // terminate it if not found
+                    if(ab == null)
                         break;
-                    cached.add(b);
-                }
-                cacheLock.readLock().unlock();
-
-                // not caching completely headers
-                if(cached.size() != take){
-                    headers = this.blockchain.getListOfHeadersStartFrom(
-                            new BlockIdentifier(null, fromBlock), 0, take, false);
-                }
-                else
-                    headers = cached;
-
-            }
-            // out of cache range
-            else {
-                headers = this.blockchain.getListOfHeadersStartFrom(
-                        new BlockIdentifier(null, fromBlock), 0, take, false);
-            }
-
-            if(headers.size() > 0){
-                ResBlocksHeaders rhs = new ResBlocksHeaders(headers);
-                this.p2pMgr.send(_nodeIdHashcode, rhs);
-
-                // save back to cache
-                if(shouldCache){
-                    cacheLock.writeLock().lock();
-                    for(A0BlockHeader h : headers){
+                    else {
+                        A0BlockHeader h = ab.getHeader();
+                        headers.add(h);
                         cache.put(h.getNumber(), h);
                     }
-                    cacheLock.writeLock().unlock();
                 }
-            } // else just ignore
+            }
 
-            this.log.debug("<req-headers from-block={} take={} from-node={}>", fromBlock, take,
+            if (headers.size() > 0)
+                this.p2pMgr.send(_nodeIdHashcode, new ResBlocksHeaders(headers));
+
+            this.log.debug("<req-headers from-block={} take={} from-node={}>",
+                    from,
+                    take,
                     _displayId);
+
         } else
-            this.log.error("<req-headers decode-msg msg-bytes={} from-node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length, _nodeIdHashcode);
+            this.log.error(
+                    "<req-headers decode-msg msg-bytes={} from-node={}>",
+                    _msgBytes == null ? 0 : _msgBytes.length,
+                    _nodeIdHashcode
+            );
     }
 }
