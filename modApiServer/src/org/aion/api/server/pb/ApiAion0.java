@@ -109,6 +109,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                     processBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
+                    if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
+
+                    } else if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue() ){
+                        pendingTxReceived((ITransaction) e.getFuncArgs().get(0));
+                    }
                 } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
                     go = false;
                 }
@@ -124,8 +130,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 LOG.debug("<fltr key={} expired removed>", key);
                 installedFilters.remove(key);
             } else {
-                @SuppressWarnings("unchecked")
-                List<AionTxReceipt> txrs = ((AionBlockSummary) cbs).getReceipts();
+                List<AionTxReceipt> txrs = cbs.getReceipts();
                 if (fltr.getType() == Fltr.Type.EVENT
                         && !Optional.ofNullable(txrs).orElse(Collections.emptyList()).isEmpty()) {
                     FltrCt _fltr = (FltrCt) fltr;
@@ -159,6 +164,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 }
             }
         }
+    }
+
+    private void pendingTxReceived(ITransaction _tx) {
+        installedFilters.values().forEach((f) -> {
+            if (f.getType() == Fltr.Type.TRANSACTION) {
+                f.add(new EvtTx(_tx));
+            }
+        });
     }
 
     @SuppressWarnings("rawtypes")
@@ -232,6 +245,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             hdrBlk.eventCallback(
                     new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
                         @Override
+                        public void onEvent(IEvent evt) {
+                            if (evt == null) {
+                                throw new NullPointerException();
+                            }
+                            try {
+                                callbackEvt.add(evt);
+                            } catch (Exception e) {
+                                LOG.error("{}", e.toString());
+                            }
+                        }
 
 //                        public void onBlock(IBlockSummary cbs) {
 //
