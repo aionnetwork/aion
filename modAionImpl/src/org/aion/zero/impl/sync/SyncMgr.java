@@ -34,7 +34,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
@@ -59,9 +58,6 @@ public final class SyncMgr {
 
     // interval - show status
     private static final int INTERVAL_SHOW_STATUS = 10000;
-
-    // interval - get status from active nodes
-    private static final int INTERVAL_GET_STATUS = 1000;
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
@@ -183,7 +179,7 @@ public final class SyncMgr {
 
         new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
         new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log, importedBlockHashes), "sync-ib").start();
-        new Thread(new TaskGetStatus(this.start, INTERVAL_GET_STATUS, this.p2pMgr, log), "sync-gs").start();
+        new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss").start();
 

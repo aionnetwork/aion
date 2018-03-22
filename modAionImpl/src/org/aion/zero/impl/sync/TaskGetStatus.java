@@ -43,12 +43,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TaskGetStatus implements Runnable {
 
+
+    private final static int intervalTotal = 1000;
+
+    private final static int intervalMin = 100;
+
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
 
     private final AtomicBoolean run;
-
-    private final int interval;
 
     private final IP2pMgr p2p;
 
@@ -56,13 +59,11 @@ final class TaskGetStatus implements Runnable {
 
     /**
      * @param _run      AtomicBoolean
-     * @param _interval int
      * @param _p2p      IP2pMgr
      * @param _log      Logger
      */
-    TaskGetStatus(final AtomicBoolean _run, int _interval, final IP2pMgr _p2p, final Logger _log) {
+    TaskGetStatus(final AtomicBoolean _run, final IP2pMgr _p2p, final Logger _log) {
         this.run = _run;
-        this.interval = _interval;
         this.p2p = _p2p;
         this.log = _log;
     }
@@ -76,11 +77,11 @@ final class TaskGetStatus implements Runnable {
                 for (int id : ids) {
                     p2p.send(id, reqStatus);
 
-                    Thread.sleep(interval / ids.size());
+                    Thread.sleep(Math.max(intervalMin, intervalTotal / ids.size()));
                 }
 
                 if (ids.isEmpty()) {
-                    Thread.sleep(interval);
+                    Thread.sleep(intervalTotal);
                 }
             } catch (InterruptedException e) {
                 break;
