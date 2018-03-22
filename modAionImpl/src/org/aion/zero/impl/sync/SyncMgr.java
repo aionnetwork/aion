@@ -66,7 +66,7 @@ public final class SyncMgr {
 
     private final static int syncBackwordMax = 16;
 
-    private int blocksQueueMax = 2000;
+    private int blocksQueueMax = 64;
 
     private AionBlockchainImpl chain;
 
