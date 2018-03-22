@@ -37,11 +37,8 @@ package org.aion.db.impl;
 import com.google.common.truth.Truth;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.h2.H2MVMap;
-import org.aion.db.impl.h2.H2MVMapWithCache;
 import org.aion.db.impl.leveldb.LevelDB;
-import org.aion.db.impl.leveldb.LevelDBWithCache;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.db.impl.mockdb.MockDBWithCache;
 import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.*;
@@ -120,42 +117,16 @@ public class DriverBaseTest {
                         LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
                         new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true } },
                 // MockDB
-                { "MockDB", MockDB.class.getDeclaredConstructor(String.class), new Object[] { dbNamePrefix } },
-                // H2MVMapWithCache w. autocommit
-                { "H2MVMapWithCache+autocommit",
-                        H2MVMapWithCache.class.getDeclaredConstructor(String.class, String.class, boolean.class,
-                                boolean.class, boolean.class, String.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false, true,
-                                unboundHeapCache, false } },
-                // H2MVMapWithCache wo. autocommit
-                { "H2MVMapWithCache",
-                        H2MVMapWithCache.class.getDeclaredConstructor(String.class, String.class, boolean.class,
-                                boolean.class, boolean.class, String.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false, false,
-                                unboundHeapCache, false } },
-                // LevelDBWithCache w. autocommit
-                { "LevelDBWithCache+autocommit",
-                        LevelDBWithCache.class.getDeclaredConstructor(String.class, String.class, boolean.class,
-                                boolean.class, boolean.class, String.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false, true,
-                                unboundHeapCache, false } },
-                // LevelDBWithCache wo. autocommit
-                { "LevelDBWithCache",
-                        LevelDBWithCache.class.getDeclaredConstructor(String.class, String.class, boolean.class,
-                                boolean.class, boolean.class, String.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false, false,
-                                unboundHeapCache, false } },
-                // MockDBWithCache w. autocommit
-                { "MockDBWithCache+autocommit",
-                        MockDBWithCache.class.getDeclaredConstructor(String.class, boolean.class, String.class,
-                                boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), true, unboundHeapCache, false } },
-                // MockDBWithCache wo. autocommit
-                { "MockDBWithCache",
-                        MockDBWithCache.class.getDeclaredConstructor(String.class, boolean.class, String.class,
-                                boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), false, unboundHeapCache,
-                                false } } });
+                { "MockDB", MockDB.class.getDeclaredConstructor(String.class), new Object[] { dbNamePrefix } } });
+
+        // TODO: reintroduce the following tests
+        // H2MVMapWithCache w. autocommit
+        // H2MVMapWithCache wo. autocommit
+        // LevelDBWithCache w. autocommit
+        // LevelDBWithCache wo. autocommit
+        // MockDBWithCache w. autocommit
+        // MockDBWithCache wo. autocommit
+
     }
 
     private IByteArrayKeyValueDatabase db;

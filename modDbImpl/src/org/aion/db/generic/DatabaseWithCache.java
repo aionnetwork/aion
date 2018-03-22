@@ -32,7 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.db.impl;
+package org.aion.db.generic;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -47,8 +47,6 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 import java.util.*;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Common functionality for database implementations including heap caching functionality.
@@ -57,12 +55,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Alexandra Roatis
  * @implNote Assumes persistent database. Overwrite method if this is not the case.
  */
-public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDatabase {
+public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-
-    /** The lock for the current cache instance.  Does not lock / unlock the underlying data source. */
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /** Underlying database implementation. */
     protected AbstractDB database;
@@ -80,7 +75,13 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
     /** Flag for determining how to handle commits. */
     private boolean enableAutoCommit;
 
-    protected AbstractDatabaseWithCache(boolean enableAutoCommit, String max_cache_size, boolean enableStats) {
+    public DatabaseWithCache(AbstractDB _database, boolean enableAutoCommit, String max_cache_size,
+            boolean enableStats) {
+        this(enableAutoCommit, max_cache_size, enableStats);
+        database = _database;
+    }
+
+    private DatabaseWithCache(boolean enableAutoCommit, String max_cache_size, boolean enableStats) {
         this.enableAutoCommit = enableAutoCommit;
 
         Long val = max_cache_size != null ? Longs.tryParse(max_cache_size) : null;
@@ -180,58 +181,31 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
      */
     @Override
     public boolean isLocked() {
-        // being able to acquire a write lock means that the resource is not locked
-        // only one write lock can be taken at a time, also excluding any concurrent read locks
-        if (lock.writeLock().tryLock()) {
-            lock.writeLock().unlock();
-            return false;
-        } else {
-            return true;
-        }
+        return false;
     }
 
     // IDatabase functionality -----------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean open() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         if (isOpen()) {
-            // releasing write lock and return status
-            lock.writeLock().unlock();
             return true;
         }
 
-        boolean open;
+        LOG.debug("init heap cache {}", this.toString());
 
-        try {
-            LOG.debug("init heap cache {} for {}", this.toString(), database.toString());
+        boolean open = database.open();
 
-            open = database.open();
-
-            // setup cache only id database was opened successfully
-            if (open) {
-                setupLoadingCache(maxSize, statsEnabled);
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        // setup cache only id database was opened successfully
+        if (open) {
+            setupLoadingCache(maxSize, statsEnabled);
         }
 
         return open;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void close() {
-        // acquire write lock
-        lock.writeLock().lock();
 
         LOG.info("Closing database " + this.toString());
 
@@ -249,159 +223,88 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
             loadingCache = null;
             dirtyEntries = null;
 
-            // releasing write lock
-            lock.writeLock().unlock();
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean commit() {
-        // acquire write lock
-        lock.writeLock().lock();
 
         boolean success;
 
-        try {
-            check();
+        check();
 
-            if (enableAutoCommit) {
-                LOG.warn("Commit called on database where automatic commits are already enabled.");
-                if (dirtyEntries != null && dirtyEntries.size() > 0) {
-                    // there should be nothing to commit
-                    LOG.error("Non-permanent data found in the cache where automatic commits are enabled.");
-                }
-                // just return, everything should have already been made permanent
-                success = true;
-            } else {
-                if (dirtyEntries == null) {
-                    LOG.error("Commit called without an initialized cache for storing changes.");
-                    success = false;
-                } else {
-                    // push to data source
-                    success = database.commitCache(dirtyEntries);
-
-                    // the dirty entries now match the storage
-                    dirtyEntries.clear();
-                }
+        if (enableAutoCommit) {
+            LOG.warn("Commit called on database where automatic commits are already enabled.");
+            if (dirtyEntries != null && dirtyEntries.size() > 0) {
+                // there should be nothing to commit
+                LOG.error("Non-permanent data found in the cache where automatic commits are enabled.");
             }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+            // just return, everything should have already been made permanent
+            success = true;
+        } else {
+            if (dirtyEntries == null) {
+                LOG.error("Commit called without an initialized cache for storing changes.");
+                success = false;
+            } else {
+                // push to data source
+                success = database.commitCache(dirtyEntries);
+
+                // the dirty entries now match the storage
+                dirtyEntries.clear();
+            }
         }
 
         return success;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void compact() {
-        // acquire write lock
-        lock.writeLock().lock();
-
-        try {
-            database.compact();
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
-        }
+        database.compact();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Optional<String> getName() {
         return database.getName();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Optional<String> getPath() {
         return database.getPath();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isOpen() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        boolean open = database.isOpen();
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return open;
+        return database.isOpen();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isClosed() {
         return !isOpen();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isAutoCommitEnabled() {
         return enableAutoCommit;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isPersistent() {
         return database.isPersistent();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isCreatedOnDisk() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        boolean onDisk = database.isCreatedOnDisk();
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return onDisk;
+        return database.isCreatedOnDisk();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public long approximateSize() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        long size = database.approximateSize();
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return size;
+        return database.approximateSize();
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + ":" + propertiesInfo();
+        return this.getClass().getSimpleName() + ":" + propertiesInfo() + " over " + this.database.toString();
     }
 
     private String propertiesInfo() {
@@ -413,91 +316,69 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isEmpty() {
-        // acquire read lock
-        lock.readLock().lock();
-
         boolean isEmpty = true;
 
-        try {
-            check();
+        check();
 
-            if (loadingCache.size() > dirtyEntries.size()) {
-                // check loading cache only when greater than dirtyEntries
-                Collection<Optional<byte[]>> values = loadingCache.asMap().values();
-                if (!values.contains(Optional.empty())) {
+        if (loadingCache.size() > dirtyEntries.size()) {
+            // check loading cache only when greater than dirtyEntries
+            Collection<Optional<byte[]>> values = loadingCache.asMap().values();
+            if (!values.contains(Optional.empty())) {
+                // no deletions => all are non-empty
+                isEmpty = false;
+            } else {
+                for (Optional<byte[]> value : values) {
+                    if (!value.equals(Optional.empty())) {
+                        // found an existing (not deleted) value
+                        isEmpty = false;
+                    }
+                }
+            }
+        } else {
+            // if all values are updates check the dirtyEntries
+            if (dirtyEntries.size() > 0) {
+                Collection<byte[]> values = dirtyEntries.values();
+                if (!values.contains(null)) {
                     // no deletions => all are non-empty
                     isEmpty = false;
                 } else {
-                    for (Optional<byte[]> value : values) {
-                        if (!value.equals(Optional.empty())) {
+                    for (byte[] value : values) {
+                        if (value != null) {
                             // found an existing (not deleted) value
                             isEmpty = false;
                         }
                     }
                 }
-            } else {
-                // if all values are updates check the dirtyEntries
-                if (dirtyEntries.size() > 0) {
-                    Collection<byte[]> values = dirtyEntries.values();
-                    if (!values.contains(null)) {
-                        // no deletions => all are non-empty
-                        isEmpty = false;
-                    } else {
-                        for (byte[] value : values) {
-                            if (value != null) {
-                                // found an existing (not deleted) value
-                                isEmpty = false;
-                            }
-                        }
-                    }
-                }
             }
-
-            // so far empty => check the source
-            if (isEmpty) {
-                isEmpty = database.isEmpty();
-            }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
         }
 
+        // so far empty => check the source
+        if (isEmpty) {
+            isEmpty = database.isEmpty();
+        }
         return isEmpty;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Set<byte[]> keys() {
-        // acquire read lock
-        lock.readLock().lock();
 
         Set<byte[]> keys = new HashSet<>();
 
-        try {
-            check();
+        check();
 
-            // add all database keys
-            keys.addAll(database.keys());
+        // add all database keys
+        keys.addAll(database.keys());
 
-            // add updated cached keys
-            dirtyEntries.forEach((k, v) -> {
-                if (v == null) {
-                    keys.remove(k.getData());
-                } else {
-                    keys.add(k.getData());
-                }
-            });
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
+        // add updated cached keys
+        dirtyEntries.forEach((k, v) -> {
+            if (v == null) {
+                keys.remove(k.getData());
+            } else {
+                keys.add(k.getData());
+            }
+        });
 
         return keys;
     }
@@ -510,24 +391,16 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
     public Optional<byte[]> get(byte[] k) {
         AbstractDB.check(k);
 
-        // acquire read lock
-        lock.readLock().lock();
-
         Optional<byte[]> v = Optional.empty();
 
-        try {
-            // this runtime exception should not be caught here
-            check();
+        // this runtime exception should not be caught here
+        check();
 
-            try {
-                // gets the value from the cache or loads it from the database
-                v = this.loadingCache.get(ByteArrayWrapper.wrap(k));
-            } catch (Exception e) {
-                LOG.error("Unable to retrieve value for the given key.", e);
-            }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+        try {
+            // gets the value from the cache or loads it from the database
+            v = this.loadingCache.get(ByteArrayWrapper.wrap(k));
+        } catch (Exception e) {
+            LOG.error("Unable to retrieve value for the given key.", e);
         }
 
         return v;
@@ -537,24 +410,16 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
     public void put(byte[] k, byte[] v) {
         AbstractDB.check(k);
 
-        // acquire write lock
-        lock.writeLock().lock();
+        check();
 
-        try {
-            check();
+        ByteArrayWrapper key = ByteArrayWrapper.wrap(k);
 
-            ByteArrayWrapper key = ByteArrayWrapper.wrap(k);
+        this.loadingCache.put(key, Optional.ofNullable(v));
+        // keeping track of dirty data
+        this.dirtyEntries.put(key, v);
 
-            this.loadingCache.put(key, Optional.ofNullable(v));
-            // keeping track of dirty data
-            this.dirtyEntries.put(key, v);
-
-            if (enableAutoCommit) {
-                flushInternal();
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        if (enableAutoCommit) {
+            flushInternal();
         }
     }
 
@@ -568,27 +433,19 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
     public void putBatch(Map<byte[], byte[]> inputMap) {
         AbstractDB.check(inputMap.keySet());
 
-        // acquire write lock
-        lock.writeLock().lock();
+        check();
 
-        try {
-            check();
+        for (Map.Entry<byte[], byte[]> entry : inputMap.entrySet()) {
+            ByteArrayWrapper key = ByteArrayWrapper.wrap(entry.getKey());
+            byte[] value = entry.getValue();
 
-            for (Map.Entry<byte[], byte[]> entry : inputMap.entrySet()) {
-                ByteArrayWrapper key = ByteArrayWrapper.wrap(entry.getKey());
-                byte[] value = entry.getValue();
+            this.loadingCache.put(key, Optional.ofNullable(value));
+            // keeping track of dirty data
+            this.dirtyEntries.put(key, value);
+        }
 
-                this.loadingCache.put(key, Optional.ofNullable(value));
-                // keeping track of dirty data
-                this.dirtyEntries.put(key, value);
-            }
-
-            if (enableAutoCommit) {
-                flushInternal();
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        if (enableAutoCommit) {
+            flushInternal();
         }
     }
 
@@ -596,26 +453,18 @@ public abstract class AbstractDatabaseWithCache implements IByteArrayKeyValueDat
     public void deleteBatch(Collection<byte[]> keys) {
         AbstractDB.check(keys);
 
-        // acquire write lock
-        lock.writeLock().lock();
+        check();
 
-        try {
-            check();
+        for (byte[] k : keys) {
+            ByteArrayWrapper key = ByteArrayWrapper.wrap(k);
 
-            for (byte[] k : keys) {
-                ByteArrayWrapper key = ByteArrayWrapper.wrap(k);
+            this.loadingCache.put(key, Optional.empty());
+            // keeping track of dirty data
+            this.dirtyEntries.put(key, null);
+        }
 
-                this.loadingCache.put(key, Optional.empty());
-                // keeping track of dirty data
-                this.dirtyEntries.put(key, null);
-            }
-
-            if (enableAutoCommit) {
-                flushInternal();
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        if (enableAutoCommit) {
+            flushInternal();
         }
     }
 

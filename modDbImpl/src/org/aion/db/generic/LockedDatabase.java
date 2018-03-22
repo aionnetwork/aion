@@ -14,25 +14,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Allows more flexibility in using the database implementations, by separating locking form database usage.
  *
- * @param <DB>
- *         a database implementing the {@link IByteArrayKeyValueDatabase} interface.
  * @author Alexandra Roatis
  */
-public class LockedDatabase<DB extends IByteArrayKeyValueDatabase> implements IByteArrayKeyValueDatabase {
+public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
     /** Unlocked database. */
-    private final DB database;
+    private final IByteArrayKeyValueDatabase database;
 
     /** Read-write lock allowing concurrent reads and single write operations. */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public LockedDatabase(DB _unlockedDatabase) {
+    public LockedDatabase(IByteArrayKeyValueDatabase _unlockedDatabase) {
         this.database = _unlockedDatabase;
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " of " + database.toString();
+        return this.getClass().getSimpleName() + " over " + database.toString();
     }
 
     // IDatabase functionality -----------------------------------------------------------------------------------------

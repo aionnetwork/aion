@@ -34,8 +34,6 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
-import org.aion.db.impl.DBVendor;
-
 import java.io.File;
 import java.util.*;
 
@@ -57,13 +55,18 @@ public class DatabaseTestUtils {
         return count;
     }
 
-    public static Object databaseInstanceDefinitions() {
+    public static Object unlockedDatabaseInstanceDefinitions() {
+        return unlockedDatabaseInstanceDefinitionsInternal().toArray();
+    }
+
+    public static List<Object> unlockedDatabaseInstanceDefinitionsInternal() {
 
         Properties sharedProps = new Properties();
         sharedProps.setProperty("db_path", dbPath);
 
         List<Object> parameters = new ArrayList<>();
 
+        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, disabled);
         // adding database variations without heap caching
         sharedProps.setProperty("enable_heap_cache", disabled);
         // the following parameters are irrelevant
@@ -100,7 +103,22 @@ public class DatabaseTestUtils {
             }
         }
 
-        // System.out.println(parameters.size());
+        return parameters;
+    }
+
+    public static Object databaseInstanceDefinitions() {
+
+        List<Object> parameters = new ArrayList<>();
+        List<Object> parametersUnlocked = unlockedDatabaseInstanceDefinitionsInternal();
+
+        for (Object prop : parametersUnlocked) {
+            Properties p = (Properties) ((Properties) prop).clone();
+            p.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, enabled);
+
+            parameters.add(p);
+        }
+
+        parameters.addAll(parametersUnlocked);
 
         return parameters.toArray();
     }

@@ -25,12 +25,6 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
 package org.aion.db.impl;
 
@@ -55,6 +49,9 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * @author Alexandra Roatis
+ */
 @RunWith(JUnitParamsRunner.class)
 public class ConcurrencyTest {
 
@@ -94,11 +91,10 @@ public class ConcurrencyTest {
 
     /**
      * @return parameters for testing
-     *         {@link #}
      */
     @SuppressWarnings("unused")
     private Object databaseInstanceDefinitions() {
-        return DatabaseTestUtils.databaseInstanceDefinitions();
+        return DatabaseTestUtils.unlockedDatabaseInstanceDefinitions();
     }
 
     private void addThread4IsEmpty(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
@@ -207,7 +203,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentAccessOnOpenDatabase(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         // open database
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
@@ -260,7 +257,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPut(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -285,7 +283,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPutBatch(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -310,7 +309,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentUpdate(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         // open database
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
