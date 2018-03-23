@@ -1,16 +1,16 @@
 package org.aion.evtmgr.impl.es;
 
+import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.slf4j.Logger;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class EventExecuteService {
 
-    private ArrayBlockingQueue<IEvent> callbackEvt;
+    private LinkedBlockingQueue<IEvent> callbackEvt;
     private ExecutorService es;
     private static Logger LOG;
     private String thName;
@@ -27,7 +27,7 @@ public class EventExecuteService {
         LOG = log;
         thName = threadName;
 
-        callbackEvt = new ArrayBlockingQueue<>(qSize, true);
+        callbackEvt = new LinkedBlockingQueue(qSize);
 
         es = Executors.newFixedThreadPool(1, arg0 -> {
             Thread thread = new Thread(arg0, threadName);
