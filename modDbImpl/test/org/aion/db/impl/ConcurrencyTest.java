@@ -41,13 +41,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
 
 /**
  * @author Alexandra Roatis
@@ -346,50 +342,6 @@ public class ConcurrencyTest {
         // ensuring close
         db.close();
         assertThat(db.isClosed()).isTrue();
-    }
-
-    /**
-     * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit Wiki on multithreaded code and concurrency</a>
-     */
-    public static void assertConcurrent(final String message, final List<? extends Runnable> runnables,
-            final int maxTimeoutSeconds) throws InterruptedException {
-        final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
-        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
-        try {
-            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
-            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
-            final CountDownLatch allDone = new CountDownLatch(numThreads);
-            for (final Runnable submittedTestRunnable : runnables) {
-                threadPool.submit(() -> {
-                    allExecutorThreadsReady.countDown();
-                    try {
-                        afterInitBlocker.await();
-                        submittedTestRunnable.run();
-                    } catch (final Throwable e) {
-                        exceptions.add(e);
-                    } finally {
-                        allDone.countDown();
-                    }
-                });
-            }
-            // wait until all threads are ready
-            assertTrue(
-                    "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
-                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
-            // start all test runners
-            afterInitBlocker.countDown();
-            assertTrue(message + " timeout! More than" + maxTimeoutSeconds + "seconds",
-                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
-        } finally {
-            threadPool.shutdownNow();
-        }
-        if (!exceptions.isEmpty()) {
-            for (Throwable e : exceptions) {
-                e.printStackTrace();
-            }
-        }
-        assertTrue(message + "failed with " + exceptions.size() + " exception(s):" + exceptions, exceptions.isEmpty());
     }
 
 }
