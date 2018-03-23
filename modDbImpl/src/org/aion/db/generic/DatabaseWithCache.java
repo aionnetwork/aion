@@ -476,6 +476,10 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
      *         since it does not acquire write locks before modifying the data.
      */
     private void flushInternal() {
+        if (isStatsEnabled()) {
+            LOG.debug(this.getName().get() + ": " + getStats().toString());
+        }
+
         // push to data source
         database.commitCache(dirtyEntries);
 

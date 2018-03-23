@@ -27,21 +27,20 @@ package org.aion.zero.impl.db;
 import org.aion.base.db.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.Hex;
-import org.aion.db.impl.AbstractDatabaseWithCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.*;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
-import org.aion.mcf.vm.types.DataWord;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -245,13 +244,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
             if (databaseGroup != null) {
                 for (IByteArrayKeyValueDatabase db : databaseGroup) {
-                    if (db instanceof AbstractDatabaseWithCache) {
-                        // printing heap cache stats when enabled
-                        AbstractDatabaseWithCache dbwc = (AbstractDatabaseWithCache) db;
-                        if (dbwc.isStatsEnabled()) {
-                            LOG.debug(dbwc.getName().get() + ": " + dbwc.getStats().toString());
-                        }
-                    }
                     if (!db.isAutoCommitEnabled()) {
                         db.commit();
                     }
