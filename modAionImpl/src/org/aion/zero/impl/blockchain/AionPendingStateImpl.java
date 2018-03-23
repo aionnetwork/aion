@@ -275,9 +275,9 @@ public class AionPendingStateImpl
     }
 
     private boolean inPool(BigInteger txNonce, Address from) {
-
-        BigInteger bn = this.txPool.bestNonce(from);
-        return bn != null && (bn.compareTo(txNonce) > -1);
+        return false;
+        /*BigInteger bn = this.txPool.bestNonce(from);
+        return bn != null && (bn.compareTo(txNonce) > -1);*/
     }
 
 
