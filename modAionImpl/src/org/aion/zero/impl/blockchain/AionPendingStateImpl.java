@@ -107,8 +107,6 @@ public class AionPendingStateImpl
 
     private EventExecuteService ees;
 
-    private CfgAion cfg;
-
     private final class EpPS implements Runnable {
         boolean go = true;
         /**
@@ -170,10 +168,6 @@ public class AionPendingStateImpl
             // log here!
             e.printStackTrace();
         }
-
-
-        cfg = CfgAion.inst();
-        this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
     }
 
 
@@ -182,7 +176,7 @@ public class AionPendingStateImpl
         this.blockchain = blockchain;
         this.transactionStore = blockchain.getTransactionStore();
         this.evtMgr = blockchain.getEventMgr();
-        this.pendingTxCache = new PendingTxCache(cfg.getTx().getCacheMax());
+        this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax());
         this.pendingState = repository.startTracking();
 
         ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
@@ -311,7 +305,7 @@ public class AionPendingStateImpl
         BigInteger bn = this.txPool.bestNonce(from);
 
 
-        return bn == null ? false : (bn.compareTo(txNonce) > -1);
+        return bn != null && (bn.compareTo(txNonce) > -1);
     }
 
 
