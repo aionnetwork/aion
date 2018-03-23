@@ -236,7 +236,7 @@ public class AionPendingStateImpl
 
                     txNonce = txNonce.add(BigInteger.ONE);
                 } while (cache != null && (tx = cache.get(txNonce)) != null);
-            } else {
+            } /* else {
                 // check repay tx
                 if (dbNonce.get(tx.getFrom()) == null) {
                     dbNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
@@ -250,7 +250,7 @@ public class AionPendingStateImpl
                         }
                     }
                 }
-            }
+            } */
         }
 
         if (LOG.isDebugEnabled()) {
