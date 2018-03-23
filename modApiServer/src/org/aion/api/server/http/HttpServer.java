@@ -25,13 +25,9 @@ package org.aion.api.server.http;
 
 import org.aion.api.server.IRpc;
 import org.aion.api.server.IRpc.Method;
-import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.CfgApi;
-import org.aion.mcf.vm.types.Log;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.config.CfgAion;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -47,8 +43,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * RPC server implementation, based on josn rpc 2.0 spec: http://www.jsonrpc.org/specification
@@ -57,266 +51,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @author chris lin, ali sharif
  */
-public final class HttpServer
+
+// http://rox-xmlrpc.sourceforge.net/niotut/index.html
+// http://www.onjava.com/pub/a/onjava/2004/09/01/nio.html?page=3
+// http://gee.cs.oswego.edu/dl/cpjslides/nio.pdf
+public class HttpServer implements Runnable
 {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    private static RpcMsg process(final IRpc.Method _method, final JSONArray _params) throws Exception
-    {
-        if (LOG.isDebugEnabled())
-            LOG.debug("<request mth=[{}] params={}>", _method.name(), _params.toString());
-
-        RpcMsg response;
-
-        if (_method == null)
-            return new RpcMsg(null, RpcError.METHOD_NOT_FOUND);
-
-        switch (_method) {
-
-        /* -------------------------------------------------------------------------
-        * web3
-        */
-            case web3_clientVersion: {
-                response = api.web3_clientVersion();
-                break;
-
-            }
-            case web3_sha3: {
-                response = api.web3_sha3(_params);
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * net
-         */
-            case net_version: {
-                response = api.net_version();
-                break;
-            }
-            case net_peerCount: {
-                response = api.net_peerCount();
-                break;
-            }
-            case net_listening: {
-                response = api.net_listening();
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * eth
-         */
-            case eth_protocolVersion: {
-                response = api.eth_protocolVersion();
-                break;
-            }
-            case eth_syncing: {
-                response = api.eth_syncing();
-                break;
-            }
-            case eth_coinbase: {
-                response = api.eth_coinbase();
-                break;
-            }
-            case eth_mining: {
-                response = api.eth_mining();
-                break;
-            }
-            case eth_hashrate: {
-                response = api.eth_hashrate();
-                break;
-            }
-            case eth_submitHashrate: {
-                response = api.eth_submitHashrate(_params);
-                break;
-            }
-            case eth_gasPrice: {
-                response = api.eth_gasPrice();
-                break;
-            }
-            case personal_listAccounts:
-            case eth_accounts: {
-                response = api.eth_accounts();
-                break;
-            }
-            case eth_blockNumber: {
-                response = api.eth_blockNumber();
-                break;
-            }
-            case eth_getBalance: {
-                response = api.eth_getBalance(_params);
-                break;
-            }
-            case eth_getStorageAt: {
-                response = api.eth_getStorageAt(_params);
-                break;
-            }
-            case eth_getTransactionCount: {
-                response = api.eth_getTransactionCount(_params);
-                break;
-            }
-            case eth_getBlockTransactionCountByHash: {
-                response = api.eth_getBlockTransactionCountByHash(_params);
-                break;
-            }
-            case eth_getBlockTransactionCountByNumber: {
-                response = api.eth_getBlockTransactionCountByNumber(_params);
-                break;
-            }
-            case eth_getCode: {
-                response = api.eth_getCode(_params);
-                break;
-            }
-            case eth_sign: {
-                response = api.eth_sign(_params);
-                break;
-            }
-            case eth_sendTransaction: {
-                response = api.eth_sendTransaction(_params);
-                break;
-            }
-            case eth_sendRawTransaction: {
-                response = api.eth_sendRawTransaction(_params);
-                break;
-            }
-            case eth_call: {
-                response = api.eth_call(_params);
-                break;
-            }
-            case eth_estimateGas: {
-                response = api.eth_estimateGas(_params);
-                break;
-            }
-            case eth_getBlockByHash: {
-                response = api.eth_getBlockByHash(_params);
-                break;
-            }
-            case eth_getBlockByNumber: {
-                response = api.eth_getBlockByNumber(_params);
-                break;
-            }
-            case eth_getTransactionByHash: {
-                response = api.eth_getTransactionByHash(_params);
-                break;
-            }
-            case eth_getTransactionByBlockHashAndIndex: {
-                response = api.eth_getTransactionByBlockHashAndIndex(_params);
-                break;
-            }
-            case eth_getTransactionByBlockNumberAndIndex: {
-                response = api.eth_getTransactionByBlockNumberAndIndex(_params);
-                break;
-            }
-            case eth_getTransactionReceipt: {
-                response = api.eth_getTransactionReceipt(_params);
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * compiler
-         */
-            case eth_getCompilers: {
-                response = api.eth_getCompilers();
-                break;
-            }
-            case eth_compileSolidity: {
-                response = api.eth_compileSolidity(_params);
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * filters
-         */
-            case eth_newFilter: {
-                response = api.eth_newFilter(_params);
-                break;
-            }
-            case eth_newBlockFilter: {
-                response = api.eth_newBlockFilter();
-                break;
-            }
-            case eth_newPendingTransactionFilter: {
-                response = api.eth_newPendingTransactionFilter();
-                break;
-            }
-            case eth_uninstallFilter: {
-                response = api.eth_uninstallFilter(_params);
-                break;
-            }
-            case eth_getFilterLogs:
-            case eth_getFilterChanges: {
-                response = api.eth_getFilterChanges(_params);
-                break;
-            }
-            case eth_getLogs: {
-                response = api.eth_getLogs(_params);
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * personal
-         */
-            case personal_unlockAccount: {
-                response = api.personal_unlockAccount(_params);
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * debug
-         */
-            case debug_getBlocksByNumber: {
-                response = api.debug_getBlocksByNumber(_params);
-                break;
-            }
-        /* -------------------------------------------------------------------------
-         * stratum pool
-         */
-            case getinfo: {
-                response = api.stratum_getinfo();
-                break;
-            }
-            case getblocktemplate: {
-                response = api.stratum_getblocktemplate();
-                break;
-            }
-            case dumpprivkey: {
-                response = api.stratum_dumpprivkey();
-                break;
-            }
-            case validateaddress: {
-                response = api.stratum_validateaddress(_params);
-                break;
-            }
-            case getdifficulty: {
-                response = api.stratum_getdifficulty();
-                break;
-            }
-            case getmininginfo: {
-                response = api.stratum_getmininginfo();
-                break;
-            }
-            case submitblock: {
-                response = api.stratum_submitblock(_params);
-                break;
-            }
-            case getHeaderByBlockNumber: {
-                response = api.stratum_getHeaderByBlockNumber(_params);
-                break;
-            }
-            case ping: {
-                response = new RpcMsg("pong");
-                break;
-            }
-            default: {
-                response = null;
-                break;
-            }
-        }
-
-        return response;
-    }
-
-    // -----------------------------------------------------------------------------------------------------------
-
-    private static ApiWeb3Aion api;
     private Selector selector;
-    private ServerSocketChannel tcpServer;
+    //private ServerSocketChannel tcpServer;
     private Thread tInbound;
     private volatile boolean start; // no need to make it atomic boolean. volatile does the job
     private ExecutorService workers;
+    private ByteBuffer readBuffer;
+
+    private List<ChangeRequest> pendingChanges = new LinkedList();
+    private Map<SocketChannel, List<ByteBuffer>> pendingData = new HashMap();
 
     // configuration parameters
     private final String ip;
@@ -338,7 +89,42 @@ public final class HttpServer
                                         "Content-Type: application/json";
 
 
-    public HttpServer(final String _ip, final int _port, final String _corsDomain){
+    public static class ChangeRequest {
+        public static final int REGISTER = 1;
+        public static final int CHANGEOPS = 2;
+
+        public SocketChannel socket;
+        public int type;
+        public int ops;
+
+        public ChangeRequest(SocketChannel socket, int type, int ops) {
+            this.socket = socket;
+            this.type = type;
+            this.ops = ops;
+        }
+    }
+
+    public void send(SocketChannel socket, ByteBuffer data) {
+        synchronized (this.pendingChanges) {
+            // Indicate we want the interest ops set changed
+            this.pendingChanges.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+
+            // And queue the data we want written
+            synchronized (this.pendingData) {
+                List queue = (List) this.pendingData.get(socket);
+                if (queue == null) {
+                    queue = new ArrayList();
+                    this.pendingData.put(socket, queue);
+                }
+                queue.add(data);
+            }
+        }
+
+        // Finally, wake up our selecting thread so it can make the required changes
+        this.selector.wakeup();
+    }
+
+    public HttpServer(final String _ip, final int _port, final String _corsDomain) throws IOException {
         this.ip = _ip;
         this.port = _port;
         if (_corsDomain != null && _corsDomain.length() > 0) {
@@ -347,28 +133,24 @@ public final class HttpServer
             this.corsDomain = null;
         }
 
+        // allocate a 1GB big buffer - overkill
+        this.readBuffer = ByteBuffer.allocate(1024 * 1024);
 
-        this.api = new ApiWeb3Aion(AionImpl.inst());
-
-        // create a pool of 3 at first, expand to 6 if we can't keep up
+        // create a pool of 2 at first, expand to 6 if we can't keep up
         this.workers = new ThreadPoolExecutor(
-                3,
-                6,
+                Math.min(Runtime.getRuntime().availableProcessors(), 2),
+                Math.min(Runtime.getRuntime().availableProcessors(), 6),
                 60,
                 TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(10),
                 new RpcThreadFactory()
         );
 
+        this.selector = this.initSelector();
+
         this.start = false;
-    }
 
-    private void writeResponse(final SocketChannel sc, final String response) throws Exception {
-        ByteBuffer data = ByteBuffer.wrap(response.getBytes(CHARSET));
-
-        while (data.hasRemaining()) {
-            sc.write(data);
-        }
+        LOG.info("<rpc-server - started on {}:{}>", ip, port);
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
@@ -504,23 +286,28 @@ public final class HttpServer
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
     }
 
-    private class TaskRespond implements Runnable {
+    private class RpcWorker implements Runnable {
 
+        private HttpServer server;
         private SocketChannel sc;
         private byte[] readBytes;
 
-        public TaskRespond(SocketChannel sc, byte[] readBytes) {
+        public RpcWorker(HttpServer server, SocketChannel sc, byte[] readBytes) {
+            this.server = server;
             this.sc = sc;
             this.readBytes = readBytes;
         }
 
         @Override
         public void run() {
+
+            ByteBuffer data = ByteBuffer.wrap(new byte[0]);
             try {
+                String response = null;
+
                 // for empty requests, just close the socket channel
                 if (readBytes.length > 0) {
                     String msg = new String(readBytes, "UTF-8").trim();
-                    String response = null;
 
                     // cors preflight or options query
                     if (msg.startsWith("OPTIONS")) {
@@ -548,122 +335,162 @@ public final class HttpServer
                         response = composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString());
                     }
 
-                    writeResponse(sc, response);
+                    try {
+                        data = ByteBuffer.wrap(response.getBytes(CHARSET));
+                    } catch (Exception e) {
+                        LOG.debug("<rpc-worker - failed to convert response to bytearray [17]>", e);
+                    }
                 }
             } catch (Exception e) {
                 LOG.debug("<rpc-worker - failed to process incoming request. closing socketchannel. msg: {}>", new String(readBytes).trim(), e);
             } finally {
-                try {
-                    System.out.println("sc.close();");
-                    sc.close();
-                } catch (IOException e) {
-                    LOG.error("<rpc-worker - socketchannel failed to close [8]>", e);
-                }
+                server.send(sc, data);
             }
         }
     }
 
-    private class TaskInbound implements Runnable {
-        @Override
-        public void run() {
-            while (start) {
-                try {
-                    int num;
-                    try{
-                        num = selector.select();
-                    } catch (IOException e){
-                        continue;
-                    }
+    private void accept(SelectionKey sk) throws IOException {
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) sk.channel();
 
-                    if(num == 0)
-                        continue;
-
-                    Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
-
-                    while (keys.hasNext()) {
-                        SelectionKey sk = keys.next();
-                        keys.remove();
-
-                        if(!sk.isValid())
-                            continue;
-
-                        if (sk.isAcceptable()) {
-                            SocketChannel tcpChannel = tcpServer.accept();
-                            tcpChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-                            tcpChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                            tcpChannel.configureBlocking(false);
-                            tcpChannel.register(selector, SelectionKey.OP_READ);
-                        }
-
-                        if (sk.isReadable()) {
-                            try {
-                                SocketChannel sc = (SocketChannel) sk.channel();
-                                ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
-                                while (sc.read(readBuffer) > 0) { }
-                                // dispatch to worker here
-                                // worker closes the socket after writing to it
-                                workers.submit(new TaskRespond(sc, readBuffer.array()));
-                            } catch (Exception e) {
-                                closeSocket((SocketChannel) sk.channel());
-                            }
-                        }
-                    }
-
-                    if (Thread.currentThread().isInterrupted()) {
-                        LOG.debug("<rpc-server - main event loop interrupted [10]>");
-                        break;
-                    }
-
-                } catch (Exception e) {
-                    LOG.debug("<rpc-server - main event loop uncaught error [9]>", e);
-                }
-            }
-            LOG.debug("<rpc-sever - main event loop returning [11]>");
-        }
+        SocketChannel tcpChannel = serverSocketChannel.accept();
+        tcpChannel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        tcpChannel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        tcpChannel.configureBlocking(false);
+        tcpChannel.register(selector, SelectionKey.OP_READ);
     }
 
-    /**
-     * @param _sc SocketChannel
-     */
-    private void closeSocket(final SocketChannel _sc) {
+    private void read(SelectionKey sk) throws IOException {
+        SocketChannel sc = (SocketChannel) sk.channel();
+
+        this.readBuffer.clear();
+
+        // Attempt to read off the channel
+        int bytesRead;
         try {
-            SelectionKey sk = _sc.keyFor(selector);
-            _sc.close();
-            if (sk != null)
-                sk.cancel();
+            bytesRead = sc.read(this.readBuffer);
         } catch (IOException e) {
-            LOG.debug("<rpc-server - error closing socket [10]>", e);
+            // The remote forcibly closed the connection, cancel
+            // the selection key and close the channel.
+            sk.cancel();
+            sc.close();
+            return;
         }
+
+        if (bytesRead == -1) {
+            // Remote entity shut the socket down cleanly. Do the
+            // same from our end and cancel the channel.
+            sk.channel().close();
+            sk.cancel();
+            return;
+        }
+
+        byte[] request = new byte[bytesRead];
+        System.arraycopy(this.readBuffer.array(), 0, request, 0, bytesRead);
+
+        workers.submit(new RpcWorker(this, sc, readBuffer.array()));
     }
 
-    /*
+    public void run() {
+        while (start) {
+            try {
+                // Process any pending changes
+                synchronized (this.pendingChanges) {
+                    Iterator changes = this.pendingChanges.iterator();
+                    while (changes.hasNext()) {
+                        ChangeRequest change = (ChangeRequest) changes.next();
+                        switch (change.type) {
+                            case ChangeRequest.CHANGEOPS:
+                                SelectionKey key = change.socket.keyFor(this.selector);
+                                key.interestOps(change.ops);
+                        }
+                    }
+                    this.pendingChanges.clear();
+                }
 
-    private static ApiWeb3Aion api;
-    private Selector selector;
-    private ServerSocketChannel tcpServer;
-    private Thread tInbound;
-    private volatile boolean start; // no need to make it atomic boolean. volatile does the job
-    private ExecutorService workers;
+                int updatedKeysCount;
+                try{
+                    // wait for an event one of the registered channels
+                    updatedKeysCount = selector.select();
+                } catch (IOException e){
+                    continue;
+                }
 
-     */
+                // nothing to do here. go back and wait on selector.select()
+                if(updatedKeysCount == 0)
+                    continue;
 
+                // iterate over the set of keys for which events are available
+                Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+                while (keys.hasNext()) {
+                    SelectionKey sk = keys.next();
+                    keys.remove();
 
+                    if(!sk.isValid())
+                        continue;
+
+                    if (sk.isAcceptable()) {
+                        this.accept(sk);
+                    } else if (sk.isReadable()) {
+                        this.read(sk);
+                    } else if (sk.isWritable()) {
+                        this.write(sk);
+                    }
+                }
+
+                if (Thread.currentThread().isInterrupted()) {
+                    LOG.debug("<rpc-server - main event loop interrupted [10]>");
+                    break;
+                }
+
+            } catch (Exception e) {
+                LOG.debug("<rpc-server - main event loop uncaught error [9]>", e);
+            }
+        }
+        LOG.debug("<rpc-sever - main event loop returning [11]>");
+    }
+
+    private void write(SelectionKey sk) throws IOException {
+        SocketChannel sc = (SocketChannel) sk.channel();
+
+        synchronized (this.pendingData) {
+            List queue = (List) this.pendingData.get(sc);
+
+            // Write until there's not more data ...
+            while (!queue.isEmpty()) {
+                ByteBuffer buf = (ByteBuffer) queue.get(0);
+                sc.write(buf);
+                if (buf.remaining() > 0) {
+                    // ... or the socket's buffer fills up
+                    break;
+                }
+                queue.remove(0);
+            }
+
+            if (queue.isEmpty()) {
+                // We wrote away all data, so we're no longer interested
+                // in writing on this socket. Close out.
+                //key.interestOps(SelectionKey.OP_READ);
+                sc.close();
+                sc.keyFor(this.selector).cancel();
+            }
+        }
+    }
      //
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         start = false;
 
         // wakeup the selector to run through the event loop one more time before exiting
-        // NOTE: ok to do this from some shutdown thread since sun's implementation of Selector is threadsafe
+        // NOTE: ok to do this from some shutdown thread since sun's implementation of Selector.wakeup() is threadsafe
         selector.wakeup();
 
-        // graceful(ish) shutdown of thread pool:
+        // graceful(ish) shutdown of thread pool
         // NOTE: ok to call workers.*() from some shutdown thread since sun's implementation of ExecutorService is threadsafe
         workers.shutdown();
         try {
             if (!workers.awaitTermination(5, TimeUnit.SECONDS)) {
                 workers.shutdownNow();
                 if (!workers.awaitTermination(5, TimeUnit.SECONDS))
-                    LOG.debug("<rpc-server - main event loop failed to shutdown [11]>");
+                    LOG.debug("<rpc-server - main event loop failed to shutdown [13]>");
             }
         } catch (InterruptedException ie) {
             workers.shutdownNow();
@@ -685,33 +512,18 @@ public final class HttpServer
         LOG.debug("<rpc-server - graceful shutdown complete [-1]>");
     }
 
-    public void start() {
+    private Selector initSelector() throws IOException {
+
         InetSocketAddress address = new InetSocketAddress(this.ip, this.port);
 
-        try{
-            this.tcpServer = ServerSocketChannel.open();
-            this.tcpServer.configureBlocking(false);
-            this.tcpServer.socket().setReuseAddress(true);
-            this.tcpServer.socket().bind(address);
-        } catch (IOException e) {
-            LOG.info("<rpc-server-bind-failed bind={}:{}>", ip, port);
-            System.exit(1);
-        }
+        ServerSocketChannel tcpServer = ServerSocketChannel.open();
+        tcpServer.configureBlocking(false);
+        tcpServer.socket().setReuseAddress(true);
+        tcpServer.socket().bind(address);
 
-        try {
-            selector = Selector.open();
-            tcpServer.register(selector, SelectionKey.OP_ACCEPT);
+        Selector selector = Selector.open();
+        tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            if (LOG.isDebugEnabled())
-                LOG.debug("<rpc-server-start bind={}:{}>", ip, port);
-
-            tInbound = new Thread(new TaskInbound(), "rpc-server");
-            tInbound.setPriority(Thread.NORM_PRIORITY);
-            this.start = true;
-
-            tInbound.start();
-        } catch (IOException ex) {
-            LOG.error("<rpc-server io-exception. potentially server failed to start [11]>");
-        }
+        return selector;
     }
 }
