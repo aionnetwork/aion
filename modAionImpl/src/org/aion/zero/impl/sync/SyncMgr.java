@@ -266,7 +266,7 @@ public final class SyncMgr {
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
         if (importedBlocks.size() > blocksQueueMax) {
-            log.info("imported blocks queue is full!");
+            log.debug("imported blocks queue is full!");
             return;
         }
 

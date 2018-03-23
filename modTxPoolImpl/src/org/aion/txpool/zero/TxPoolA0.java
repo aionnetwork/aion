@@ -262,12 +262,6 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<TX> snapshotAll() {
-        return snapshot(true);
-    }
-
     @Override
     public TX getPoolTx(Address from, BigInteger txNonce) {
         AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
@@ -278,6 +272,11 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     @Override
     public List<TX> snapshot() {
         return snapshot(false);
+    }
+
+    @Override
+    public synchronized List<TX> snapshotAll() {
+        return snapshot(true);
     }
 
     private synchronized List<TX> snapshot(boolean getAll) {
@@ -418,16 +417,4 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }
