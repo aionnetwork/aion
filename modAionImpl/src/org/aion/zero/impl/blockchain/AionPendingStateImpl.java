@@ -276,6 +276,8 @@ public class AionPendingStateImpl
 
     private boolean inPool(BigInteger txNonce, Address from) {
 
+        AionTransaction tx = this.txPool.getPoolTx(from, txNonce);
+
         BigInteger bn = this.txPool.bestNonce(from);
 
 
@@ -314,7 +316,24 @@ public class AionPendingStateImpl
             return false;
         }
 
-        AionTxExecSummary txSum = executeTx(tx, inPool(txNonce, tx.getFrom()));
+        AionTxExecSummary txSum;
+        boolean ip = inPool(txNonce, tx.getFrom());
+        if (ip) {
+            // check energy usage
+            AionTransaction poolTx = txPool.getPoolTx(tx.getFrom(), txNonce);
+            if (poolTx == null) {
+                txSum = executeTx(tx, true);
+            } else {
+                long price = (poolTx.getNrgPrice() << 1);
+                if (price > 0 && price <= tx.getNrgPrice()) {
+                    txSum = executeTx(tx, true);
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            txSum = executeTx(tx, false);
+        }
 
         if (txSum.isRejected()) {
             if (LOG.isErrorEnabled()) {
