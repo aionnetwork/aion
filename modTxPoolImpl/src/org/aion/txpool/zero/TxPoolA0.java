@@ -262,10 +262,20 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<TX> snapshotAll() {
-        return snapshot(true);
+        List<TX> rtn = new ArrayList<>();
+
+        Map<Address, AccountState> accs = this.getFullAcc();
+        for (AccountState as : accs.values()) {
+            for(AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> ae : as.getMap().values()) {
+                rtn.add(this.getMainMap().get(ae.getKey()).getTx());
+            }
+        }
+
+        LOG.info("TxPoolA0.snapshotAll return [{}] TX, poolSize[{}]", rtn.size(), getMainMap().size());
+
+        return rtn;
     }
 
     @Override

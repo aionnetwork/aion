@@ -124,6 +124,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         return this.accountView.get(acc);
     }
 
+    protected Map<Address, AccountState> getFullAcc() {
+        return this.accountView;
+    }
+
     protected List<PoolState> getPoolStateView(Address acc) {
 
         if (this.accountView.get(acc) == null) {
