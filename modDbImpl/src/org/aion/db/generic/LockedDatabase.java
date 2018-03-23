@@ -1,6 +1,9 @@
 package org.aion.db.generic;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.Map;
@@ -23,6 +26,8 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
     /** Read-write lock allowing concurrent reads and single write operations. */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     public LockedDatabase(IByteArrayKeyValueDatabase _unlockedDatabase) {
         this.database = _unlockedDatabase;
@@ -73,11 +78,17 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             success = database.commit();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not return empty status due to ", e);
+            }
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
-            return success;
         }
+        return success;
     }
 
     @Override
@@ -176,11 +187,17 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             size = database.approximateSize();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not return empty status due to ", e);
+            }
         } finally {
             // releasing read lock
             lock.readLock().unlock();
-            return size;
         }
+        return size;
     }
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
@@ -194,11 +211,17 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             isEmpty = database.isEmpty();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not return empty status due to ", e);
+            }
         } finally {
             // releasing read lock
             lock.readLock().unlock();
-            return isEmpty;
         }
+        return isEmpty;
     }
 
     @Override
@@ -212,11 +235,17 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             keys = database.keys();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not return keys due to ", e);
+            }
         } finally {
             // releasing read lock
             lock.readLock().unlock();
-            return keys;
         }
+        return keys;
     }
 
     @Override
@@ -228,11 +257,17 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             value = database.get(key);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not get value for key due to ", e);
+            }
         } finally {
             // releasing read lock
             lock.readLock().unlock();
-            return value;
         }
+        return value;
     }
 
     @Override
@@ -242,6 +277,12 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             database.put(key, value);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not put key-value pair due to ", e);
+            }
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
@@ -255,6 +296,12 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             database.delete(key);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not delete key due to ", e);
+            }
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
@@ -268,6 +315,12 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             database.putBatch(keyValuePairs);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not put batch due to ", e);
+            }
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
@@ -281,6 +334,12 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
         try {
             database.deleteBatch(keys);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not delete batch due to ", e);
+            }
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
