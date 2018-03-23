@@ -64,7 +64,7 @@ public class ObjectDataSource<V> implements Flushable {
         }
     }
 
-    public synchronized void put(byte[] key, V value) {
+    public void put(byte[] key, V value) {
         byte[] bytes = serializer.serialize(value);
         /*
          * src.put(key, bytes); if (cacheOnWrite) { cache.put(new
@@ -75,11 +75,11 @@ public class ObjectDataSource<V> implements Flushable {
         src.put(key, bytes);
     }
 
-    public synchronized void delete(byte[] key) {
+    public void delete(byte[] key) {
         src.delete(key);
     }
 
-    public synchronized V get(byte[] key) {
+    public V get(byte[] key) {
 
         // Fetch the results from cache or database. Return null if doesn't
         // exist.
