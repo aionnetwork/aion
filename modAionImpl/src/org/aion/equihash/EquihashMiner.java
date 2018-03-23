@@ -133,7 +133,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
         setCpuThreads(cfg.getConsensus().getCpuMineThreads());
 
-        ees = new EventExecuteService(1000, "EPMiner", Thread.NORM_PRIORITY, LOG);
+        ees = new EventExecuteService(1000, "EpMiner", Thread.NORM_PRIORITY, LOG);
 
         this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
         registerMinerEvents();
