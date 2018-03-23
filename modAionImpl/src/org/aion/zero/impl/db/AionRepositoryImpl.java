@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -60,7 +60,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
      * used by getSnapShotTo
      *
      * @ATTENTION: when do snap shot, another instance will be created. Make
-     *             sure it is used only by getSnapShotTo
+     *         sure it is used only by getSnapShotTo
      */
     protected AionRepositoryImpl() {
     }
@@ -78,28 +78,15 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                 new RepositoryConfig(new String[] { config.getDb().getVendor() },
                         // config.getDb().getVendorList() database list
                         config.getDb().getVendor(), // database
-                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), // db
-                                                                                                    // path
+                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), // db path
                         -1, // config.getDb().getPrune() prune flag
-                        ContractDetailsAion.getInstance(), // contract details
-                                                           // provider
-                        config.getDb().isAutoCommitEnabled(), // if false,
-                                                              // flush/commit
-                                                              // must be called
-                        config.getDb().isDbCacheEnabled(), // caching inside the
-                                                           // database
-                        config.getDb().isDbCompressionEnabled(), // enables/disable
-                                                                 // the default
-                                                                 // database
-                                                                 // compression
-                        config.getDb().isHeapCacheEnabled(), // uses heap
-                                                             // caching of data
-                        config.getDb().getMaxHeapCacheSize(), // size of the
-                                                              // heap cache
-                        config.getDb().isHeapCacheStatsEnabled())); // enable
-                                                                    // stats for
-                                                                    // heap
-                                                                    // cache
+                        ContractDetailsAion.getInstance(), // contract details provider
+                        config.getDb().isAutoCommitEnabled(), // if false, flush/commit must be called
+                        config.getDb().isDbCacheEnabled(), // caching inside the database
+                        config.getDb().isDbCompressionEnabled(), // default database compression
+                        config.getDb().isHeapCacheEnabled(), // uses heap caching
+                        config.getDb().getMaxHeapCacheSize(), // size of the heap cache
+                        config.getDb().isHeapCacheStatsEnabled())); // stats for heap cache
     }
 
     public static AionRepositoryImpl inst() {
@@ -111,7 +98,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     private void init() {
-        rwLock.writeLock().lock();
         try {
             initializeDatabasesAndCaches();
 
@@ -120,20 +106,17 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                     AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
-            // TODO
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase);
 
             // Setup world trie.
             worldState = createStateTrie();
         } catch (Exception e) { // TODO - If any of the connections failed.
-            e.printStackTrace();
-        } finally{
-            rwLock.writeLock().unlock();
+            LOG.error("Unable to initialize repository.", e);
         }
     }
 
     /**
-     * @implNote  The transaction store is not locked.
+     * @implNote The transaction store is not locked.
      */
     public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
         return this.transactionStore;
@@ -144,8 +127,9 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized void updateBatch(Map<Address, AccountState> stateCache,
+    public void updateBatch(Map<Address, AccountState> stateCache,
             Map<Address, IContractDetails<DataWord>> detailsCache) {
+        rwLock.writeLock().lock();
 
         for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
             Address address = entry.getKey();
@@ -154,13 +138,12 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
             if (accountState.isDeleted()) {
                 // TODO-A: batch operations here
-                rwLock.readLock().lock();
                 try {
                     worldState.delete(address.toBytes());
                 } catch (Exception e) {
                     LOG.error("key deleted exception [{}]", e.toString());
                 } finally {
-                    rwLock.readLock().unlock();
+                    rwLock.writeLock().unlock();
                 }
                 LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
             } else {
@@ -215,21 +198,17 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
         stateCache.clear();
         detailsCache.clear();
+        rwLock.writeLock().unlock();
     }
 
     private void updateContractDetails(final Address address, final IContractDetails<DataWord> contractDetails) {
-        rwLock.readLock().lock();
-        try {
-            detailsDS.update(address, contractDetails);
-        } finally {
-            rwLock.readLock().unlock();
-        }
+        // locked by calling method
+        detailsDS.update(address, contractDetails);
     }
 
     @Override
     public void flush() {
         LOG.debug("------ FLUSH ON " + this.toString());
-        LOG.debug("rwLock.writeLock().lock()");
         rwLock.writeLock().lock();
         try {
             LOG.debug("flushing to disk");
@@ -265,16 +244,19 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     @Override
     public boolean isValidRoot(byte[] root) {
-        return worldState.isValidRoot(root);
+        rwLock.readLock().lock();
+        boolean valid = worldState.isValidRoot(root);
+        rwLock.readLock().unlock();
+        return valid;
     }
 
     @Override
     public void syncToRoot(final byte[] root) {
-        rwLock.readLock().lock();
+        rwLock.writeLock().lock();
         try {
             worldState.setRoot(root);
         } finally {
-            rwLock.readLock().unlock();
+            rwLock.writeLock().unlock();
         }
     }
 
@@ -342,13 +324,9 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         return (account == null) ? BigInteger.ZERO : account.getNonce();
     }
 
-    private synchronized void updateAccountState(Address address, AccountState accountState) {
-        rwLock.readLock().lock();
-        try {
-            worldState.update(address.toBytes(), accountState.getEncoded());
-        } finally {
-            rwLock.readLock().unlock();
-        }
+    private void updateAccountState(Address address, AccountState accountState) {
+        // locked by calling method
+        worldState.update(address.toBytes(), accountState.getEncoded());
     }
 
     /**
@@ -387,7 +365,11 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     @Override
     public boolean hasContractDetails(Address address) {
-        return detailsDS.get(address.toBytes()) != null;
+        rwLock.readLock().lock();
+        boolean hasDetails = detailsDS.get(address.toBytes()) != null;
+        rwLock.readLock().unlock();
+
+        return hasDetails;
     }
 
     /**
@@ -423,7 +405,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     /**
      * @implNote The loaded objects are fresh copies of the original account
-     *           state and contract details.
+     *         state and contract details.
      */
     @Override
     public void loadAccountState(Address address, Map<Address, AccountState> cacheAccounts,
@@ -441,19 +423,28 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized byte[] getRoot() {
-        return worldState.getRootHash();
+    public byte[] getRoot() {
+        rwLock.readLock().lock();
+        byte[] root = worldState.getRootHash();
+        rwLock.readLock().unlock();
+        return root;
     }
 
-    public synchronized void setRoot(byte[] root) {
+    public void setRoot(byte[] root) {
+        rwLock.writeLock().lock();
         worldState.setRoot(root);
+        rwLock.writeLock().unlock();
     }
 
     public void setPruneBlockCount(long pruneBlockCount) {
+        rwLock.writeLock().lock();
         this.pruneBlockCount = pruneBlockCount;
+        rwLock.writeLock().unlock();
     }
 
-    public synchronized void commitBlock(A0BlockHeader blockHeader) {
+    public void commitBlock(A0BlockHeader blockHeader) {
+        rwLock.writeLock().lock();
+
         worldState.sync();
         detailsDS.syncLargeStorage();
 
@@ -462,11 +453,12 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             detailsDS.getStorageDSPrune().storeBlockChanges(blockHeader);
             pruneBlocks(blockHeader);
         }
+        rwLock.writeLock().unlock();
     }
 
     private void pruneBlocks(A0BlockHeader curBlock) {
         if (curBlock.getNumber() > bestBlockNumber) { // pruning only on
-                                                      // increasing blocks
+            // increasing blocks
             long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
             if (pruneBlockNumber >= 0) {
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
@@ -485,7 +477,8 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized IRepository getSnapshotTo(byte[] root) {
+    public IRepository getSnapshotTo(byte[] root) {
+        rwLock.readLock().lock();
 
         AionRepositoryImpl repo = new AionRepositoryImpl();
         repo.blockStore = blockStore;
@@ -498,6 +491,8 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
         repo.worldState = repo.createStateTrie();
         repo.worldState.setRoot(root);
+
+        rwLock.readLock().unlock();
 
         return repo;
     }
@@ -591,6 +586,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     @Override
     public void compact() {
+        rwLock.writeLock().lock();
         if (databaseGroup != null) {
             for (IByteArrayKeyValueDatabase db : databaseGroup) {
                 db.compact();
@@ -598,5 +594,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         } else {
             LOG.error("Database group is null.");
         }
+        rwLock.writeLock().unlock();
     }
 }
