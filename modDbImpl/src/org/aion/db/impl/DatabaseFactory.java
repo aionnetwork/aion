@@ -31,9 +31,6 @@ package org.aion.db.impl;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
-import org.aion.db.impl.AbstractDB;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.IDriver;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
@@ -174,5 +171,12 @@ public abstract class DatabaseFactory {
 
         LOG.error("Invalid database driver provided: {}", driverName);
         return null;
+    }
+
+    /**
+     * @return A mock database.
+     */
+    public static IByteArrayKeyValueDatabase connect(String _dbName) {
+        return new MockDB(_dbName);
     }
 }

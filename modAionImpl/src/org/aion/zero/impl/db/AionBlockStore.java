@@ -46,6 +46,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.math.BigInteger.ZERO;
 import static org.aion.crypto.HashUtil.shortHash;
@@ -53,6 +55,8 @@ import static org.aion.crypto.HashUtil.shortHash;
 public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHeader> {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+
+    protected ReadWriteLock lock = new ReentrantReadWriteLock();
 
     private IByteArrayKeyValueDatabase indexDS;
     private DataSourceArray<List<BlockInfo>> index;
@@ -122,33 +126,49 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     @Override
     public void flush() {
-        blocks.flush();
-        index.flush();
+        lock.writeLock().lock();
         try {
-            if (!blocksDS.isAutoCommitEnabled()) {
-                blocksDS.commit();
+            blocks.flush();
+            index.flush();
+            try {
+                if (!blocksDS.isAutoCommitEnabled()) {
+                    blocksDS.commit();
+                }
+            } catch (Exception e) {
+                LOG.error("Unable to flush blocks data.", e);
             }
-        } catch (Exception e) {
-            LOG.error("Unable to flush blocks data.", e);
-        }
-        try {
-            if (!indexDS.isAutoCommitEnabled()) {
-                indexDS.commit();
+            try {
+                if (!indexDS.isAutoCommitEnabled()) {
+                    indexDS.commit();
+                }
+            } catch (Exception e) {
+                LOG.error("Unable to flush blocks index data.", e);
             }
-        } catch (Exception e) {
-            LOG.error("Unable to flush blocks index data.", e);
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     @Override
     public void saveBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
-        addInternalBlock(block, cummDifficulty, mainChain);
+        lock.writeLock().lock();
+        try {
+            addInternalBlock(block, cummDifficulty, mainChain);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private void addInternalBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
 
         List<BlockInfo> blockInfos =
                 block.getNumber() >= index.size() ? new ArrayList<>() : index.get(block.getNumber());
+
+        // if the blocks are added out of order, the size will be updated without changing the index value
+        // useful for concurrency testing and potential parallel sync
+        if (blockInfos == null) {
+            blockInfos = new ArrayList<>();
+        }
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
