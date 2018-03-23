@@ -25,18 +25,15 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
 package org.aion.db.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
+import org.aion.db.impl.AbstractDB;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.IDriver;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
@@ -46,6 +43,11 @@ import org.slf4j.Logger;
 
 import java.util.Properties;
 
+/**
+ * Returns an instance of {@link IByteArrayKeyValueDatabase} based on the given properties.
+ *
+ * @author Alexandra Roatis
+ */
 public abstract class DatabaseFactory {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -91,6 +93,8 @@ public abstract class DatabaseFactory {
 
     /**
      * If enabled, the topmost database will be the one enforcing the locking functionality.
+     *
+     * @return A database implementation with read-write locks.
      */
     private static IByteArrayKeyValueDatabase connectWithLocks(Properties info) {
         boolean enableHeapCache = Boolean.parseBoolean(info.getProperty(PROP_ENABLE_HEAP_CACHE));
@@ -101,12 +105,18 @@ public abstract class DatabaseFactory {
         }
     }
 
+    /**
+     * @return A database implementation with a caching layer.
+     */
     private static IByteArrayKeyValueDatabase connectWithCache(Properties info) {
         boolean enableAutoCommit = Boolean.parseBoolean(info.getProperty(PROP_ENABLE_AUTO_COMMIT));
         return new DatabaseWithCache(connectBasic(info), enableAutoCommit, info.getProperty(PROP_MAX_HEAP_CACHE_SIZE),
                 Boolean.parseBoolean(info.getProperty(PROP_ENABLE_HEAP_CACHE_STATS)));
     }
 
+    /**
+     * @return A database implementation for each of the vendors in {@link DBVendor}.
+     */
     private static AbstractDB connectBasic(Properties info) {
         DBVendor dbType = DBVendor.fromString(info.getProperty(PROP_DB_TYPE));
 
@@ -148,6 +158,9 @@ public abstract class DatabaseFactory {
         return null;
     }
 
+    /**
+     * @return A database implementation based on a driver implementing the {@link IDriver} interface.
+     */
     public static IByteArrayKeyValueDatabase connect(String driverName, Properties info) {
         try {
             // see if the given name is a valid driver
