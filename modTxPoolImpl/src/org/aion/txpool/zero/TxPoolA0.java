@@ -263,7 +263,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public List<TX> snapshotAll() {
+    public synchronized List<TX> snapshotAll() {
         List<TX> rtn = new ArrayList<>();
 
         Map<Address, AccountState> accs = this.getFullAcc();
