@@ -268,6 +268,12 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return snapshot(true);
     }
 
+    @Override
+    public TX getPoolTx(Address from, BigInteger txNonce) {
+        AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
+        return entry == null ? null : this.getMainMap().get(entry.getKey()).getTx();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public List<TX> snapshot() {

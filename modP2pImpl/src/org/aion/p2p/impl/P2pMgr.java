@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -702,8 +703,15 @@ public final class  P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
-            // workers = Executors.newCachedThreadPool();
+            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16), new ThreadFactory() {
+
+                private AtomicInteger cnt = new AtomicInteger();
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r,"p2p-worker-" + cnt.incrementAndGet());
+                }
+            });
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);

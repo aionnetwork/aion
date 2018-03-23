@@ -52,7 +52,11 @@ public interface ITransaction extends Cloneable {
 
     byte[] getNonce();
 
+    BigInteger getNonceBI();
+
     byte[] getTimeStamp();
+
+    BigInteger getTimeStampBI();
 
     /**
      * Added these two interfaces with refactoring (should be here in the first
