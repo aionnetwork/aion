@@ -57,8 +57,6 @@ public interface ITxPool<TX extends ITransaction> {
 
     long getOutDateTime();
 
-    Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
-
     BigInteger bestNonce(Address addr);
 
     void updateBlkNrgLimit(long nrg);
