@@ -212,7 +212,7 @@ public class AionPendingStateImpl
         int unknownTx = 0;
         List<AionTransaction> newPending = new ArrayList<>();
 
-        Map<Address, BigInteger> dbNonce = new HashMap<>();
+        //Map<Address, BigInteger> dbNonce = new HashMap<>();
         for (AionTransaction tx : transactions) {
             BigInteger txNonce = new BigInteger(1, tx.getNonce());
             BigInteger bestNonce = bestNonce(tx.getFrom());
@@ -471,7 +471,7 @@ public class AionPendingStateImpl
             LOG.trace("PendingStateImpl.flushCachePendingTx: newPendingTx_size[{}]", newPendingTx.size());
         }
 
-        if (newPendingTx != null && !newPendingTx.isEmpty()) {
+        if (!newPendingTx.isEmpty()) {
             addPendingTransactions(newPendingTx);
         }
     }
