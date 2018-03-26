@@ -32,6 +32,8 @@ package org.aion.zero.impl.sync;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
+import org.slf4j.Logger;
+
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,23 +45,24 @@ final class TaskGetHeaders implements Runnable {
 
     private final IP2pMgr p2p;
 
-    private final int syncMax;
-
     private long fromBlock;
+
+    private final int syncMax;
 
     private final BigInteger selfTd;
 
-    TaskGetHeaders(final IP2pMgr _p2p, int _syncMax, long _fromBlock, BigInteger _selfTd){
+    private final Logger log;
+
+    TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log){
         this.p2p = _p2p;
-        this.syncMax = _syncMax;
         this.fromBlock = _fromBlock;
+        this.syncMax = _syncMax;
         this.selfTd = _selfTd;
+        this.log = log;
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-
         Set<Integer> ids = new HashSet<>();
         Collection<INode> preFilter = this.p2p.getActiveNodes().values();
 
@@ -75,13 +78,11 @@ final class TaskGetHeaders implements Runnable {
                 if (!ids.contains(node.getIdHash())) {
                     ids.add(node.getIdHash());
                     ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
-//                    System.out.println(
-//                        "request headers from remote-node=" + node.getIdShort() +
-//                        " remote-td=" + node.getTotalDifficulty().toString(10) +
-//                        " remote-bn=" + node.getBestBlockNumber() +
-//                        " from-block=" + rbh.getFromBlock() +
-//                        " take=" + rbh.getTake()
-//                    );
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("<get-headers from-num={} size={} node={}>", fromBlock, syncMax, node.getIdShort());
+                    }
+
                     this.p2p.send(node.getIdHash(), rbh);
                 }
             }

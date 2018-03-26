@@ -157,6 +157,38 @@ public class TxnPoolTest {
         assertTrue(tp.size() == 10);
     }
 
+    @Test
+    public void remove3() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "100"); // 100 sec
+
+        ITxPool<ITransaction> tp = new TxPoolA0<>(config);
+        List<ITransaction> txl = new ArrayList<>();
+        List<ITransaction> txlrm = new ArrayList<>();
+        int cnt = 20;
+        for (int i = 0; i < cnt; i++) {
+            AionTransaction tx = (AionTransaction) genTransaction(BigInteger.valueOf(i).toByteArray());
+            tx.setNrgConsume(5000L);
+            tx.sign(key.get(0));
+            txl.add(tx);
+            if (i < 10) {
+                txlrm.add(tx);
+            }
+        }
+
+        List rtn = tp.add(txl);
+        assertTrue(rtn.size() == txl.size());
+
+        txl = tp.snapshot();
+        assertTrue(txl.size() == cnt);
+
+        Map<Address, BigInteger> account = new HashMap<>();
+        account.put(txl.get(0).getFrom(), BigInteger.valueOf(10));
+        rtn = tp.remove(account);
+        assertTrue(rtn.size() == 10);
+        assertTrue(tp.size() == 10);
+    }
+
     private ITransaction genTransaction(byte[] nonce) {
         return new AionTransaction(nonce, Address.wrap(key.get(0).getAddress()),
                 Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
