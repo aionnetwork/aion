@@ -539,18 +539,17 @@ public class AionPendingStateImpl
                 LOG.debug("clearPending block#[{}] tx#[{}]", block.getNumber(), txList.size());
             }
 
-
-            txList.parallelStream().forEach( tx -> {
+            for (AionTransaction tx  : txList) {
                 if (accountNonce.get(tx.getFrom()) != null) {
-                    return;
+                    continue;
                 }
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("clear address {}", tx.getFrom().toString());
                 }
 
-                accountNonce.put(tx.getFrom(), bestNonce(tx.getFrom()));
-            });
+                accountNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
+            }
         }
 
         if (!accountNonce.isEmpty()) {

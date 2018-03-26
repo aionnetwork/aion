@@ -180,9 +180,14 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             AccountState as = this.getAccView(en1.getKey());
             Iterator<Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>> it = as.getMap().entrySet().iterator();
 
-            while (it.hasNext() && en1.getValue().compareTo(it.next().getKey()) > 0) {
-                bwList.add(it.next().getValue().getKey());
-                it.remove();
+            while (it.hasNext()) {
+                Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>> en = it.next();
+                if (en1.getValue().compareTo(en.getKey()) > 0) {
+                    bwList.add(en.getValue().getKey());
+                    it.remove();
+                } else {
+                    break;
+                }
             }
 
             Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
@@ -199,7 +204,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 }
             });
 
-            as.isDirty();
+            as.setDirty();
         }
 
         List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
@@ -218,15 +223,24 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 if (this.getTimeView().get(timestamp).isEmpty()) {
                     this.getTimeView().remove(timestamp);
                 }
+
+                this.getMainMap().remove(bw);
             }
         });
 
+        this.updateAccPoolState();
+        this.updateFeeMap();
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("TxPoolA0.remove {} TX", removedTxl.size());
+        }
 
         return removedTxl;
     }
 
 
     @Override
+    @Deprecated
     public synchronized List<TX> remove(List<TX> txs) {
 
         List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());

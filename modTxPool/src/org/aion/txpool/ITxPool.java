@@ -47,6 +47,7 @@ public interface ITxPool<TX extends ITransaction> {
     // return TX if the TX add success, if the pool already has the same nonce tx. return the old tx.
     TX add(TX tx);
 
+    @Deprecated
     List<TX> remove(List<TX> tx);
 
     List<TX> remove(Map<Address, BigInteger> accNonce);
