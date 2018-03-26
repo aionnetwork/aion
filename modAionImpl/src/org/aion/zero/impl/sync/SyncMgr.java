@@ -245,8 +245,10 @@ public final class SyncMgr {
             }
 
             // break if not consisting
-            if(prev != null && current.getNumber() != (prev.getNumber() + 1))
-                break;
+            if(prev != null && (current.getNumber() != (prev.getNumber() + 1) || !Arrays.equals(current.getParentHash(), prev.getHash()))) {
+                log.debug("<inconsistent-block-headers>");
+                return;
+            }
 
             // add if not cached
             if(!importedBlockHashes.containsKey(ByteArrayWrapper.wrap(current.getHash())))
@@ -270,7 +272,7 @@ public final class SyncMgr {
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
         if (importedBlocks.size() > blocksQueueMax) {
-            log.debug("Imported blocks queue is full. Stop validating income bodies");
+            log.debug("Imported blocks queue is full. Stop validating incoming bodies");
             return;
         }
 
