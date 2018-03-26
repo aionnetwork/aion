@@ -112,6 +112,16 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return false;
         }
 
+        @Override
+        public int getMaxFdAllocSize() {
+            return 1024;
+        }
+
+        // default levelDB setting, may want to change this later
+        @Override
+        public int getBlockSize() {
+            return 4096;
+        }
     };
 
     protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig) {
@@ -279,6 +289,15 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     return false;
                 }
 
+                @Override
+                public int getMaxFdAllocSize() {
+                    return 1024;
+                }
+
+                @Override
+                public int getBlockSize() {
+                    return 4096;
+                }
             };
         }
 

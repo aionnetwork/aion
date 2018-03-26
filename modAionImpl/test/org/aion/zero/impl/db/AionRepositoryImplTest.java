@@ -117,6 +117,16 @@ public class AionRepositoryImplTest {
             return false;
         }
 
+        // TODO: these are still set to old parameters
+        @Override
+        public int getMaxFdAllocSize() {
+            return 32;
+        }
+
+        @Override
+        public int getBlockSize() {
+            return 10 * 1024 * 1024;
+        }
     };
 
     @Test

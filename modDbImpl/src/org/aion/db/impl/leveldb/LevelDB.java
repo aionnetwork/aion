@@ -52,10 +52,35 @@ import java.util.Set;
  */
 public class LevelDB extends AbstractDB {
 
+    private final int maxOpenFiles;
+    private final int blockSize;
+
     private DB db;
 
-    public LevelDB(String name, String path, boolean enableCache, boolean enableCompression) {
+    public LevelDB(String name,
+                   String path,
+                   boolean enableCache,
+                   boolean enableCompression,
+                   int maxOpenFiles,
+                   int blockSize) {
         super(name, path, enableCache, enableCompression);
+        this.maxOpenFiles = maxOpenFiles;
+        this.blockSize = blockSize;
+    }
+
+    /**
+     * <p>Original constructor for LevelDB, to keep compatibility with tests, for
+     * future use the user should set the {@link #maxOpenFiles} and {@link #blockSize}
+     * directly.</p>
+     *
+     * <p>Note: the values set in this constructor are not optimal, only historical.</p>
+     */
+    @Deprecated
+    public LevelDB(String name,
+                   String path,
+                   boolean enableCache,
+                   boolean enableCompression) {
+        this(name, path, enableCache, enableCompression, LevelDBConstants.MAX_OPEN_FILES, LevelDBConstants.BLOCK_SIZE);
     }
 
     @Override
@@ -68,12 +93,12 @@ public class LevelDB extends AbstractDB {
 
         options.createIfMissing(true);
         options.compressionType(enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
-        options.blockSize(10 * 1024 * 1024);
+        options.blockSize(this.blockSize);
         options.writeBufferSize(DEFAULT_WRITE_BUFFER_SIZE_BYTES); // (levelDb default: 8mb)
         options.cacheSize(enableDbCache ? DEFAULT_CACHE_SIZE_BYTES : 0);
         options.paranoidChecks(true);
         options.verifyChecksums(true);
-        options.maxOpenFiles(32);
+        options.maxOpenFiles(this.maxOpenFiles);
 
         return options;
     }

@@ -27,16 +27,23 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.aion.base.util.Utils;
 import org.aion.db.impl.DBVendor;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author chris
  */
 public class CfgDb {
+
+    public final int MIN_FD_OPEN_ALLOC = 1024;
+    public final String DEFAULT_BLOCK_SIZE = "16kB";
 
     public CfgDb() {
         this.vendor = DBVendor.LEVELDB.toValue();
@@ -49,6 +56,8 @@ public class CfgDb {
         // size 0 means unbound
         this.max_heap_cache_size = "1024";
         this.enable_heap_cache_stats = false;
+        this.block_size = 16 * (int) Utils.KILO_BYTE;
+        this.max_fd_open_alloc = MIN_FD_OPEN_ALLOC;
     }
 
     protected String path;
@@ -63,6 +72,22 @@ public class CfgDb {
     private String max_heap_cache_size;
     private boolean enable_heap_cache_stats;
 
+    /**
+     * <p>The maximum block size</p>
+     *
+     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
+     */
+    private int block_size;
+
+    /**
+     * <p>The maximum allocated file descriptor that will be allocated per
+     * database, therefore the total amount of file descriptors that are required is
+     * {@code NUM_DB * max_fd_open_alloc}
+     *
+     * This parameter is specified to {@link org.aion.db.impl.leveldb.LevelDB}</p>
+     */
+    private int max_fd_open_alloc;
+
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
         while (sr.hasNext()) {
@@ -71,30 +96,49 @@ public class CfgDb {
             case XMLStreamReader.START_ELEMENT:
                 String elementName = sr.getLocalName().toLowerCase();
                 switch (elementName) {
-                case "path":
-                    this.path = Cfg.readValue(sr);
-                    break;
-                case "vendor":
-                    this.vendor = Cfg.readValue(sr);
-                    break;
-                case "enable_auto_commit":
-                    this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "enable_db_cache":
-                    this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "enable_db_compression":
-                    this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "enable_heap_cache":
-                    this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "max_heap_cache_size":
-                    this.max_heap_cache_size = Cfg.readValue(sr);
-                    break;
-                case "enable_heap_cache_stats":
-                    this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
+                    case "path":
+                        this.path = Cfg.readValue(sr);
+                        break;
+                    case "vendor":
+                        this.vendor = Cfg.readValue(sr);
+                        break;
+                    case "enable_auto_commit":
+                        this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
+                    case "enable_db_cache":
+                        this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
+                    case "enable_db_compression":
+                        this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
+                    case "enable_heap_cache":
+                        this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
+                    case "max_heap_cache_size":
+                        this.max_heap_cache_size = Cfg.readValue(sr);
+                        break;
+                    case "enable_heap_cache_stats":
+                        this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
+                    case "block_size": {
+                        Optional<Long> maybeSize = Utils.parseSize(Cfg.readValue(sr));
+                        // TODO: ideally we should log out a message indicating we failed to parse
+                        if (maybeSize.isPresent()) {
+                            long s = maybeSize.get();
+
+                            // check for overflow
+                            // TODO: this is very non-descriptive behaviour, need to doc this properly
+                            if (s > Integer.MAX_VALUE)
+                                break;
+                            this.block_size = (int) s;
+                        }
+                        break;
+                    }
+                    case "max_fd_alloc_size": {
+                        int i = Integer.parseInt(Cfg.readValue(sr));
+                        this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
+                        break;
+                    }
                 default:
                     Cfg.skipElement(sr);
                     break;
@@ -156,6 +200,16 @@ public class CfgDb {
             xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheStatsEnabled()));
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("block_size");
+            xmlWriter.writeCharacters(DEFAULT_BLOCK_SIZE);
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("max_fd_alloc_size");
+            xmlWriter.writeCharacters(String.valueOf(MIN_FD_OPEN_ALLOC));
+            xmlWriter.writeEndElement();
+
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
@@ -204,6 +258,14 @@ public class CfgDb {
 
     public void setHeapCacheEnabled(boolean enable_heap_cache) {
         this.enable_heap_cache = enable_heap_cache;
+    }
+
+    public int getFdOpenAllocSize() {
+        return this.max_fd_open_alloc;
+    }
+
+    public int getBlockSize() {
+        return this.block_size;
     }
 }
 
