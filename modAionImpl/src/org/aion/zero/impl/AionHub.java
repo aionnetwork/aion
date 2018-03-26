@@ -158,7 +158,8 @@ public class AionHub {
                 this.cfg.getReports().isEnabled(), reportsFolder);
 
         this.syncMgr = SyncMgr.inst();
-        this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
+        this.syncMgr.init(this.p2pMgr, this.eventMgr,
+                this.cfg.getSync().getBlocksBackwardMax(), this.cfg.getSync().getBlocksImportMax(),
                 this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus(),
                 this.cfg.getReports().isEnabled(), reportsFolder);
 

@@ -45,18 +45,18 @@ final class TaskGetHeaders implements Runnable {
 
     private final IP2pMgr p2p;
 
-    private final int syncMax;
-
     private long fromBlock;
+
+    private final int syncMax;
 
     private final BigInteger selfTd;
 
     private final Logger log;
 
-    TaskGetHeaders(final IP2pMgr _p2p, int _syncMax, long _fromBlock, BigInteger _selfTd, Logger log){
+    TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log){
         this.p2p = _p2p;
-        this.syncMax = _syncMax;
         this.fromBlock = _fromBlock;
+        this.syncMax = _syncMax;
         this.selfTd = _selfTd;
         this.log = log;
     }

@@ -62,12 +62,10 @@ public final class SyncMgr {
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    // default how many blocks forward to sync based on current block number
-    private int syncForwardMax = 32;
+    private int syncBackwardMax = 16;
+    private int syncImportMax = 32;
 
-    private final static int syncBackwordMax = 16;
-
-    private int blocksQueueMax = 64;
+    private int blocksQueueMax = 64; // block header wrappers
 
     private AionBlockchainImpl chain;
 
@@ -177,12 +175,13 @@ public final class SyncMgr {
 //        }
     }
 
-    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncForwardMax,
+    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncBackwardMax, final int _syncImportMax,
             final int _blocksQueueMax, final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
         this.p2pMgr = _p2pMgr;
         this.chain = AionBlockchainImpl.inst();
         this.evtMgr = _evtMgr;
-        this.syncForwardMax = _syncForwardMax;
+        this.syncBackwardMax = _syncBackwardMax;
+        this.syncImportMax = _syncImportMax;
         this.blocksQueueMax = _blocksQueueMax;
 
         this.blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
@@ -206,7 +205,7 @@ public final class SyncMgr {
     }
 
     private void getHeaders(BigInteger _selfTd){
-        workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, Math.max(1, this.chain.getBestBlock().getNumber() - syncBackwordMax), _selfTd, log));
+        workers.submit(new TaskGetHeaders(p2pMgr, Math.max(1, this.chain.getBestBlock().getNumber() + 1 - syncBackwardMax), this.syncImportMax, _selfTd, log));
     }
 
     /**
