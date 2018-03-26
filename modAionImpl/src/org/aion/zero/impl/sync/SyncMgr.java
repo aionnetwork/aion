@@ -218,8 +218,7 @@ public final class SyncMgr {
 
         if (log.isDebugEnabled()) {
             log.debug(
-                    "<incoming-headers size={} from-num={} to-num={} node={}>",
-                    _headers.size(),
+                    "<incoming-headers from-num={} to-num={} node={}>",
                     _headers.get(0).getNumber(),
                     _headers.get(_headers.size() - 1).getNumber(),
                     _displayId
@@ -291,8 +290,7 @@ public final class SyncMgr {
             return;
 
         if (log.isDebugEnabled()) {
-            log.debug("<incoming-bodies size={} from-num={} to-num={} node={}>",
-                    blocks.size(),
+            log.debug("<incoming-bodies from-num={} to-num={} node={}>",
                     blocks.get(0).getNumber(),
                     blocks.get(blocks.size() - 1).getNumber(),
                     _displayId);
