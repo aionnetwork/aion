@@ -60,7 +60,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
 
     protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    protected static final int DEFAULT_CACHE_SIZE_BYTES = 512 * 1024 * 1024; // 512mb
+    protected static final int DEFAULT_CACHE_SIZE_BYTES = 128 * 1024 * 1024; // 128mb
     protected static final int DEFAULT_WRITE_BUFFER_SIZE_BYTES = 16 * 1024 * 1024; // 16mb
 
     protected final String name;
