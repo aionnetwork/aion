@@ -134,7 +134,7 @@ public class CfgDb {
                         }
                         break;
                     }
-                    case "max_fd_open_alloc": {
+                    case "max_fd_alloc_size": {
                         int i = Integer.parseInt(Cfg.readValue(sr));
                         this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
                         break;
@@ -206,7 +206,7 @@ public class CfgDb {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("max_fd_open_alloc");
+            xmlWriter.writeStartElement("max_fd_alloc_size");
             xmlWriter.writeCharacters(String.valueOf(MIN_FD_OPEN_ALLOC));
             xmlWriter.writeEndElement();
 
