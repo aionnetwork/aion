@@ -92,27 +92,22 @@ final class TaskGetBodies implements Runnable {
 
             int idHash = hw.getNodeIdHash();
             List<A0BlockHeader> headers = hw.getHeaders();
-            HeadersWrapper hwPrevious = headersSent.get(idHash);
+            if (headers.isEmpty()) {
+                continue;
+            }
 
-            // already sent, check timeout and add it back if
-            // not timeout yet
+            HeadersWrapper hwPrevious = headersSent.get(idHash);
             if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
                 this.headersSent.put(idHash, hw);
-                List<byte[]> headerHashes = new ArrayList<>();
-                for (A0BlockHeader h : headers) {
-                    headerHashes.add(h.getHash());
+
+                if (log.isDebugEnabled()) {
+                    log.debug("<get-bodies from-num={} to-num={} node={}>",
+                            headers.get(0).getNumber(),
+                            headers.get(headers.size() - 1).getNumber(),
+                            hw.getDisplayId());
                 }
 
-                if (!headerHashes.isEmpty()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("<get-bodies from-num={} to-num={} node={}>",
-                                headers.get(0).getNumber(),
-                                headers.get(headers.size() - 1).getNumber(),
-                                hw.getDisplayId());
-                    }
-
-                    this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
-                }
+                this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             }
         }
     }
