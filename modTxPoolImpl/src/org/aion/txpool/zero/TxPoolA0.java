@@ -191,8 +191,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
-
-            this.getPoolStateView(en1.getKey()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
+            if (this.getPoolStateView(en1.getKey()) != null) {
+                this.getPoolStateView(en1.getKey()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
+            }
 
             fee.parallelStream().forEach(bi -> {
                 this.getFeeView().get(bi).entrySet().removeIf(
