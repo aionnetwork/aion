@@ -44,6 +44,8 @@ public class CfgDb {
 
     public final int MIN_FD_OPEN_ALLOC = 1024;
     public final String DEFAULT_BLOCK_SIZE = "16kB";
+    public final String DEFAULT_WRITE_BUFFER_SIZE = "128mB";
+    public final String DEFAULT_CACHE_SIZE = "16mB";
 
     public CfgDb() {
         this.vendor = DBVendor.LEVELDB.toValue();
@@ -56,8 +58,16 @@ public class CfgDb {
         // size 0 means unbound
         this.max_heap_cache_size = "1024";
         this.enable_heap_cache_stats = false;
+
+        // corresponds to DEFAULT_BLOCK_SIZE
         this.block_size = 16 * (int) Utils.KILO_BYTE;
         this.max_fd_open_alloc = MIN_FD_OPEN_ALLOC;
+
+        // corresponds to DEFAULT_WRITE_BUFFER_SIZE
+        this.write_buffer_size = 128 * (int) Utils.MEGA_BYTE;
+
+        // corresponds to DEFAULT_CACHE_SIZE
+        this.cache_size = 128 * (int) Utils.MEGA_BYTE;
     }
 
     protected String path;
@@ -82,11 +92,37 @@ public class CfgDb {
     /**
      * <p>The maximum allocated file descriptor that will be allocated per
      * database, therefore the total amount of file descriptors that are required is
-     * {@code NUM_DB * max_fd_open_alloc}
+     * {@code NUM_DB * max_fd_open_alloc}</p>
      *
-     * This parameter is specified to {@link org.aion.db.impl.leveldb.LevelDB}</p>
+     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
      */
     private int max_fd_open_alloc;
+
+    /**
+     * <p>The size of the write buffer that will be applied per database, for more
+     * information, see <a href="https://github.com/google/leveldb/blob/master/include/leveldb/options.h">here</a></p>
+     *
+     * From LevelDB docs:
+     *
+     * <p>Amount of data to build up in memory (backed by an unsorted log
+     * on disk) before converting to a sorted on-disk file.</p>
+     *
+     * <p>Larger values increase performance, especially during bulk loads.
+     * Up to two write buffers may be held in memory at the same time,
+     * so you may wish to adjust this parameter to control memory usage.
+     * Also, a larger write buffer will result in a longer recovery time
+     * the next time the database is opened.</p>
+     *
+     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
+     */
+    private int write_buffer_size;
+
+    /**
+     * <p>Specify the size of the cache used by LevelDB</p>
+     *
+     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
+     */
+    private int cache_size;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -121,22 +157,20 @@ public class CfgDb {
                         this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
                         break;
                     case "block_size": {
-                        Optional<Long> maybeSize = Utils.parseSize(Cfg.readValue(sr));
-                        // TODO: ideally we should log out a message indicating we failed to parse
-                        if (maybeSize.isPresent()) {
-                            long s = maybeSize.get();
-
-                            // check for overflow
-                            // TODO: this is very non-descriptive behaviour, need to doc this properly
-                            if (s > Integer.MAX_VALUE)
-                                break;
-                            this.block_size = (int) s;
-                        }
+                        this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.block_size);
                         break;
                     }
                     case "max_fd_alloc_size": {
                         int i = Integer.parseInt(Cfg.readValue(sr));
                         this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
+                        break;
+                    }
+                    case "write_buffer_size": {
+                        this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
+                        break;
+                    }
+                    case "cache_size": {
+                        this.cache_size = parseFileSizeSafe(Cfg.readValue(sr), this.cache_size);
                         break;
                     }
                 default:
@@ -148,6 +182,22 @@ public class CfgDb {
                 break loop;
             }
         }
+    }
+
+    private static int parseFileSizeSafe(String input, int fallback) {
+        if (input == null || input.isEmpty())
+            return fallback;
+
+        Optional<Long> maybeSize = Utils.parseSize(input);
+        if (!maybeSize.isPresent())
+            return fallback;
+
+        // present
+        long size = maybeSize.get();
+        if (size > Integer.MAX_VALUE || size <= 0)
+            return fallback;
+
+        return (int) size;
     }
 
     public String toXML() {
@@ -208,6 +258,16 @@ public class CfgDb {
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("max_fd_alloc_size");
             xmlWriter.writeCharacters(String.valueOf(MIN_FD_OPEN_ALLOC));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("write_buffer_size");
+            xmlWriter.writeCharacters(String.valueOf(DEFAULT_WRITE_BUFFER_SIZE));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("cache_size");
+            xmlWriter.writeCharacters(String.valueOf(DEFAULT_CACHE_SIZE));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t");
