@@ -205,6 +205,11 @@ public final class SyncMgr {
     }
 
     private void getHeaders(BigInteger _selfTd){
+        if (importedBlocks.size() > blocksQueueMax) {
+            log.debug("Imported blocks queue is full. Stop requesting headers");
+            return;
+        }
+
         workers.submit(new TaskGetHeaders(p2pMgr, Math.max(1, this.chain.getBestBlock().getNumber() + 1 - syncBackwardMax), this.syncImportMax, _selfTd, log));
     }
 
@@ -240,8 +245,10 @@ public final class SyncMgr {
             }
 
             // break if not consisting
-            if(prev != null && current.getNumber() != (prev.getNumber() + 1))
-                break;
+            if(prev != null && (current.getNumber() != (prev.getNumber() + 1) || !Arrays.equals(current.getParentHash(), prev.getHash()))) {
+                log.debug("<inconsistent-block-headers>");
+                return;
+            }
 
             // add if not cached
             if(!importedBlockHashes.containsKey(ByteArrayWrapper.wrap(current.getHash())))
@@ -265,7 +272,7 @@ public final class SyncMgr {
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
         if (importedBlocks.size() > blocksQueueMax) {
-            log.debug("imported blocks queue is full!");
+            log.debug("Imported blocks queue is full. Stop validating incoming bodies");
             return;
         }
 
