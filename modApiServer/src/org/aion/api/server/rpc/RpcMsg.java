@@ -1,4 +1,4 @@
-package org.aion.api.server.http;
+package org.aion.api.server.rpc;
 
 import org.json.JSONObject;
 

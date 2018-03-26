@@ -97,12 +97,6 @@ public abstract class ApiAion extends Api {
         return 2;
     }
 
-    // --Commented out by Inspection START (02/02/18 6:57 PM):
-    // public int getProtocolVersion() {
-    // return 0;
-    // }
-    // --Commented out by Inspection STOP (02/02/18 6:57 PM)
-
     public Map<Long, Fltr> getInstalledFltrs() {
         return installedFilters;
     }
@@ -118,8 +112,7 @@ public abstract class ApiAion extends Api {
     }
 
     public AionBlock getBlockTemplate() {
-        // TODO: Change to follow onBlockTemplate event mode defined in internal
-        // miner
+        // TODO: Change to follow onBlockTemplate event mode defined in internal miner
         // TODO: Track multiple block templates
         AionBlock bestPendingState = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
 
@@ -525,15 +518,11 @@ public abstract class ApiAion extends Api {
     // https://github.com/ethereum/wiki/wiki/Client-Version-Strings
     private String computeClientVersion() {
         try {
-            Pattern shortVersion = Pattern.compile("(\\d\\.\\d).*");
-            Matcher matcher = shortVersion.matcher(System.getProperty("java.version"));
-            matcher.matches();
-
             return Arrays.asList(
                     "Aion(J)",
                     "v" + Version.KERNEL_VERSION,
                     System.getProperty("os.name"),
-                    "Java" + matcher.group(1))
+                    "Java-" + System.getProperty("java.version"))
                     .stream()
                     .collect(Collectors.joining("/"));
         }

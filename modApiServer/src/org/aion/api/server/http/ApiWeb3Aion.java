@@ -25,12 +25,12 @@
 package org.aion.api.server.http;
 
 import org.aion.api.server.ApiAion;
-import org.aion.api.server.IRpc;
 import org.aion.api.server.nrgprice.NrgOracle;
+import org.aion.api.server.rpc.RpcError;
+import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.*;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
@@ -38,7 +38,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.equihash.Solution;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallbackA0;
-import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -64,20 +63,19 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
-import static org.aion.base.util.ByteUtil.numBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
 
 /**
  * @author chris lin, ali sharif
  * TODO: make implementation pass all spec tests: https://github.com/ethereum/rpc-tests
  */
-final class ApiWeb3Aion extends ApiAion implements IRpc {
+public class ApiWeb3Aion extends ApiAion {
 
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private static HashMap<String, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
 
-    ApiWeb3Aion(final IAionChain _ac) {
+    public ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
@@ -107,6 +105,9 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (txHr != null) {
             txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
 
+                // commenting this out because of lack support for old web3 client that we are using
+                // TODO: re-enable this when we upgrade our web3 client
+                /*
                 public void onPendingTxUpdate(final ITxReceipt _txRcpt, final EventTx.STATE _state, final IBlock _blk) {
                     ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
                     if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
@@ -115,6 +116,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                         pendingReceipts.remove(txHashW);
                     }
                 }
+                */
 
                 public void onPendingTxReceived(ITransaction _tx) {
                     // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
@@ -144,34 +146,34 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     // Ethereum-Compliant JSON RPC Specification Implementation
     // --------------------------------------------------------------------
 
-    RpcMsg web3_clientVersion() {
+    public RpcMsg web3_clientVersion() {
         return new RpcMsg(this.clientVersion);
     }
 
-    RpcMsg web3_sha3(JSONArray _params) {
+    public RpcMsg web3_sha3(JSONArray _params) {
         String _data = _params.get(0) + "";
 
         return new RpcMsg(TypeConverter.toJsonHex(HashUtil.keccak256(ByteUtil.hexStringToBytes(_data))));
     }
 
-    RpcMsg net_version() {
+    public RpcMsg net_version() {
         return new RpcMsg(chainId());
     }
 
-    RpcMsg net_peerCount() {
+    public RpcMsg net_peerCount() {
         return new RpcMsg(peerCount());
     }
 
-    RpcMsg net_listening() {
+    public RpcMsg net_listening() {
         // currently, p2p manager is always listening for peers and is active
         return new RpcMsg(true);
     }
 
-    RpcMsg eth_protocolVersion() {
+    public RpcMsg eth_protocolVersion() {
         return new RpcMsg(p2pProtocolVersion());
     }
 
-    RpcMsg eth_syncing() {
+    public RpcMsg eth_syncing() {
         SyncInfo syncInfo = getSync();
         if (!syncInfo.done) {
             JSONObject obj = new JSONObject();
@@ -187,37 +189,37 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    RpcMsg eth_coinbase() {
+    public RpcMsg eth_coinbase() {
         return new RpcMsg(getCoinbase());
     }
 
-    RpcMsg eth_mining() {
+    public RpcMsg eth_mining() {
         return new RpcMsg(isMining());
     }
 
-    RpcMsg eth_hashrate() {
+    public RpcMsg eth_hashrate() {
         return new RpcMsg(getHashrate());
     }
 
-    RpcMsg eth_submitHashrate(JSONArray _params) {
+    public RpcMsg eth_submitHashrate(JSONArray _params) {
         String _hashrate = _params.get(0) + "";
         String _clientId = _params.get(1) + "";
         return new RpcMsg(setReportedHashrate(_hashrate, _clientId));
     }
 
-    RpcMsg eth_gasPrice() {
+    public RpcMsg eth_gasPrice() {
         return new RpcMsg(TypeConverter.toJsonHex(getRecommendedNrgPrice()));
     }
 
-    RpcMsg eth_accounts() {
+    public RpcMsg eth_accounts() {
         return new RpcMsg(new JSONArray(getAccounts()));
     }
 
-    RpcMsg eth_blockNumber() {
+    public RpcMsg eth_blockNumber() {
         return new RpcMsg(getBestBlock().getNumber());
     }
 
-    RpcMsg eth_getBalance(JSONArray _params) {
+    public RpcMsg eth_getBalance(JSONArray _params) {
         String _address = _params.get(0) + "";
         Object _bnOrId = _params.opt(1);
 
@@ -231,7 +233,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(balance));
     }
 
-    RpcMsg eth_getStorageAt(JSONArray _params) {
+    public RpcMsg eth_getStorageAt(JSONArray _params) {
         String _address = _params.get(0) + "";
         String _index = _params.get(1) + "";
         Object _bnOrId = _params.opt(2);
@@ -260,7 +262,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
     }
 
-    RpcMsg eth_getTransactionCount(JSONArray _params) {
+    public RpcMsg eth_getTransactionCount(JSONArray _params) {
         String _address = _params.get(0) + "";
         Object _bnOrId = _params.opt(1);
 
@@ -273,7 +275,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(getRepoByJsonBlockId(bnOrId).getNonce(address)));
     }
 
-    RpcMsg eth_getBlockTransactionCountByHash(JSONArray _params) {
+    public RpcMsg eth_getBlockTransactionCountByHash(JSONArray _params) {
         String _hash = _params.get(0) + "";
 
         byte[] hash = ByteUtil.hexStringToBytes(_hash);
@@ -285,7 +287,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(n));
     }
 
-    RpcMsg eth_getBlockTransactionCountByNumber(JSONArray _params) {
+    public RpcMsg eth_getBlockTransactionCountByNumber(JSONArray _params) {
         String _bnOrId = _params.get(0) + "";
 
         List<AionTransaction> list = getTransactionsByBlockId(_bnOrId);
@@ -296,7 +298,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(n));
     }
 
-    RpcMsg eth_getCode(JSONArray _params) {
+    public RpcMsg eth_getCode(JSONArray _params) {
         String _address = _params.get(0) + "";
         Object _bnOrId = _params.opt(1);
 
@@ -314,7 +316,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(code));
     }
 
-    RpcMsg eth_sign(JSONArray _params) {
+    public RpcMsg eth_sign(JSONArray _params) {
         String _address = _params.get(0) + "";
         String _message = _params.get(1) + "";
 
@@ -330,7 +332,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(key.sign(messageHash).getSignature()));
     }
 
-    RpcMsg eth_sendTransaction(JSONArray _params) {
+    public RpcMsg eth_sendTransaction(JSONArray _params) {
         JSONObject _tx = _params.getJSONObject(0);
 
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
@@ -349,7 +351,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(response));
     }
 
-    RpcMsg eth_sendRawTransaction(JSONArray _params) {
+    public RpcMsg eth_sendRawTransaction(JSONArray _params) {
         String _rawTx = _params.get(0) + "";
 
         if (_rawTx.equals("null"))
@@ -361,7 +363,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
     }
 
-    RpcMsg eth_call(JSONArray _params) {
+    public RpcMsg eth_call(JSONArray _params) {
         JSONObject _tx = _params.getJSONObject(0);
         Object _bnOrId = _params.opt(1);
 
@@ -389,7 +391,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(receipt.getExecutionResult()));
     }
 
-    RpcMsg eth_estimateGas(JSONArray _params) {
+    public RpcMsg eth_estimateGas(JSONArray _params) {
         JSONObject _tx = _params.getJSONObject(0);
 
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
@@ -398,7 +400,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(estimate.toHexString());
     }
 
-    RpcMsg eth_getBlockByHash(JSONArray _params) {
+    public RpcMsg eth_getBlockByHash(JSONArray _params) {
         String _hash = _params.get(0) + "";
         boolean _fullTx = _params.optBoolean(1, false);
 
@@ -414,7 +416,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    RpcMsg eth_getBlockByNumber(JSONArray _params) {
+    public RpcMsg eth_getBlockByNumber(JSONArray _params) {
         String _bnOrId = _params.get(0) + "";
         boolean _fullTx = _params.optBoolean(1, false);
 
@@ -434,7 +436,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    RpcMsg eth_getTransactionByHash(JSONArray _params) {
+    public RpcMsg eth_getTransactionByHash(JSONArray _params) {
         String _hash = _params.get(0) + "";
 
         byte[] txHash = ByteUtil.hexStringToBytes(_hash);
@@ -450,7 +452,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(Tx.InfoToJSON(txInfo, b));
     }
 
-    RpcMsg eth_getTransactionByBlockHashAndIndex(JSONArray _params) {
+    public RpcMsg eth_getTransactionByBlockHashAndIndex(JSONArray _params) {
         String _hash = _params.get(0) + "";
         String _index = _params.get(1) + "";
 
@@ -470,7 +472,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(Tx.AionTransactionToJSON(txs.get(idx), b, idx));
     }
 
-    RpcMsg eth_getTransactionByBlockNumberAndIndex(JSONArray _params) {
+    public RpcMsg eth_getTransactionByBlockNumberAndIndex(JSONArray _params) {
         String _bnOrId = _params.get(0) + "";
         String _index = _params.get(1) + "";
 
@@ -490,17 +492,21 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(Tx.AionTransactionToJSON(txs.get(idx), b, idx));
     }
 
-    RpcMsg eth_getTransactionReceipt(JSONArray _params) {
+    public RpcMsg eth_getTransactionReceipt(JSONArray _params) {
         String _hash = _params.get(0) + "";
 
         byte[] txHash = TypeConverter.StringHexToByteArray(_hash);
         TxRecpt r = getTransactionReceipt(txHash);
 
+        // commenting this out because of lack support for old web3 client that we are using
+        // TODO: re-enable this when we upgrade our web3 client
+        /*
         // if we can't find the receipt on the mainchain, try looking for it in pending receipts cache
         if (r == null) {
             AionTxReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(txHash));
             r = new TxRecpt(pendingReceipt, null, null, null, true);
         }
+        */
 
         if (r == null)
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no receipt was found'
@@ -512,11 +518,11 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * compiler
      */
 
-    RpcMsg eth_getCompilers() {
+    public RpcMsg eth_getCompilers() {
         return new RpcMsg(new JSONArray(this.compilers));
     }
 
-    RpcMsg eth_compileSolidity(JSONArray _params) {
+    public RpcMsg eth_compileSolidity(JSONArray _params) {
         String _contract = _params.get(0) + "";
 
         @SuppressWarnings("unchecked")
@@ -546,7 +552,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * onus on the user to flush the filter of the historical data, before depending on it for up-to-date values.
      * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
      */
-    RpcMsg eth_newFilter(JSONArray _params) {
+    public RpcMsg eth_newFilter(JSONArray _params) {
         JSONObject _filterObj = _params.getJSONObject(0);
 
         ArgFltr rf = ArgFltr.fromJSON(_filterObj);
@@ -590,25 +596,25 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
-    RpcMsg eth_newBlockFilter() {
+    public RpcMsg eth_newBlockFilter() {
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrBlk());
         return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
-    RpcMsg eth_newPendingTransactionFilter() {
+    public RpcMsg eth_newPendingTransactionFilter() {
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrTx());
         return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
-    RpcMsg eth_uninstallFilter(JSONArray _params) {
+    public RpcMsg eth_uninstallFilter(JSONArray _params) {
         String _id = _params.get(0) + "";
 
         return new RpcMsg(installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue()) != null);
     }
 
-    RpcMsg eth_getFilterChanges(JSONArray _params) {
+    public RpcMsg eth_getFilterChanges(JSONArray _params) {
         String _id = _params.get(0) + "";
 
         long id = TypeConverter.StringHexToBigInteger(_id).longValue();
@@ -629,7 +635,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(response);
     }
 
-    RpcMsg eth_getLogs(JSONArray _params) {
+    public RpcMsg eth_getLogs(JSONArray _params) {
         RpcMsg filterMsg = eth_newFilter(_params);
         if (filterMsg.getError() != null || filterMsg.getResult() == null)
             return filterMsg;
@@ -645,7 +651,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * personal
      */
 
-    RpcMsg personal_unlockAccount(JSONArray _params) {
+    public RpcMsg personal_unlockAccount(JSONArray _params) {
         String _account = _params.get(0) + "";
         String _password = _params.get(1) + "";
         Object _duration = _params.opt(2);
@@ -661,7 +667,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * debug
      */
 
-    RpcMsg debug_getBlocksByNumber(JSONArray _params) {
+    public RpcMsg debug_getBlocksByNumber(JSONArray _params) {
         String _bnOrId = _params.get(0) + "";
         boolean _fullTx = _params.optBoolean(1, false);
 
@@ -688,7 +694,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * stratum pool
      */
 
-    RpcMsg stratum_getinfo() {
+    public RpcMsg stratum_getinfo() {
         JSONObject obj = new JSONObject();
 
         obj.put("balance", 0);
@@ -702,7 +708,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(obj);
     }
 
-    RpcMsg stratum_getblocktemplate() {
+    public RpcMsg stratum_getblocktemplate() {
         // TODO: Change this to a synchronized map implementation mapping
         // block hashes to the block. Allow multiple block templates at same height.
         templateMapLock.writeLock().lock();
@@ -738,11 +744,11 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(obj);
     }
 
-    RpcMsg stratum_dumpprivkey() {
+    public RpcMsg stratum_dumpprivkey() {
         return new RpcMsg("");
     }
 
-    RpcMsg stratum_validateaddress(JSONArray _params) {
+    public RpcMsg stratum_validateaddress(JSONArray _params) {
         /*
          * "isvalid" : true|false, (boolean) If the address is valid or not.
          * If not, this is the only property returned. "address" :
@@ -778,12 +784,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(obj);
     }
 
-    RpcMsg stratum_getdifficulty() {
+    public RpcMsg stratum_getdifficulty() {
         // TODO: This needs to be refactored to return valid data
         return new RpcMsg(0x4000);
     }
 
-    RpcMsg stratum_getmininginfo() {
+    public RpcMsg stratum_getmininginfo() {
         AionBlock bestBlock = getBestBlock();
 
         JSONObject obj = new JSONObject();
@@ -800,7 +806,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(obj);
     }
 
-    RpcMsg stratum_submitblock(JSONArray _params) {
+    public RpcMsg stratum_submitblock(JSONArray _params) {
         Object nce = _params.opt(0);
         Object soln = _params.opt(1);
         Object hdrHash = _params.opt(2);
@@ -841,7 +847,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         return new RpcMsg(obj);
     }
 
-    RpcMsg stratum_getHeaderByBlockNumber(JSONArray _params) {
+    public RpcMsg stratum_getHeaderByBlockNumber(JSONArray _params) {
         Object _blockNum = _params.opt(0);
 
         JSONObject obj = new JSONObject();

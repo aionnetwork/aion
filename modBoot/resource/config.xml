@@ -3,7 +3,14 @@
 	<mode>aion</mode>
 	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
-		<rpc active="true" ip="127.0.0.1" port="8545"></rpc>
+		<rpc active="true" ip="127.0.0.1" port="8545">
+			<!--comma separated list, domains from which to accept cross origin requests (browser enforced)-->
+			<corsdomain>false</corsdomain>
+			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
+			<enabled> web3,eth,personal</enabled>
+			<!--size of thread pool allocated for rpc requests-->
+			<threads>1</threads>
+		</rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
 		<nrg>
 			<default>1E9</default>

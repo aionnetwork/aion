@@ -41,6 +41,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -121,13 +122,13 @@ public class Aion {
 
         HttpServer rpcServer = null;
         if(cfg.getApi().getRpc().getActive()) {
-            tInbound = new Thread(new TaskInbound(), "rpc-server");
-            tInbound.setPriority(Thread.NORM_PRIORITY);
-            this.start = true;
-
-            tInbound.start();
-
-            rpcServer = new HttpServer(cfg.getApi().getRpc().getIp(), cfg.getApi().getRpc().getPort(), "*");
+            CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
+            rpcServer = new HttpServer(
+                    rpcCfg.getIp(),
+                    rpcCfg.getPort(),
+                    rpcCfg.getAllowedOrigins(),
+                    rpcCfg.getEnabled(),
+                    rpcCfg.getMaxthread());
             rpcServer.start();
         }
 

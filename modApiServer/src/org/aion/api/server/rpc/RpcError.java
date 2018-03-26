@@ -1,4 +1,4 @@
-package org.aion.api.server.http;
+package org.aion.api.server.rpc;
 
 /**
  * @author ali sharif
@@ -73,6 +73,7 @@ public enum RpcError {
     METHOD_NOT_FOUND(-32601, "Method not found"),
     INVALID_PARAMS(-32602, "Invalid params"),
     INTERNAL_ERROR(-32603, "Internal error"),
+    SERVER_OVERLOAD(-32005, "Server under load; worker queue full"),
 
     // custom error codes
     UNAUTHORIZED(1, "Unauthorized"),

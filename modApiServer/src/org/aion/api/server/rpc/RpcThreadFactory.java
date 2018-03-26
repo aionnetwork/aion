@@ -1,13 +1,12 @@
-package org.aion.api.server.http;
+package org.aion.api.server.rpc;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author chris
+ * @author chris lin
  */
-class RpcThreadFactory implements ThreadFactory {
-    // TODO: for debugging. remove in production
+public class RpcThreadFactory implements ThreadFactory {
     private final AtomicInteger tnum = new AtomicInteger(1);
 
     @Override

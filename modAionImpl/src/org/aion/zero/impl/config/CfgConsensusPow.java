@@ -47,7 +47,7 @@ public final class CfgConsensusPow extends CfgConsensus {
     CfgConsensusPow() {
         this.mining = true;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
-        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1);
+        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors
         this.extraData = "AION";
     }
 
