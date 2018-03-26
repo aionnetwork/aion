@@ -141,10 +141,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("ApiAionA0.onPendingTransactionUpdate - the pending Tx state : [{}]", _state.getValue());
-                pendingStatus.add(new TxPendingStatus(txHashW, getMsgIdMapping().get(txHashW).getValue(),
-                        getMsgIdMapping().get(txHashW).getKey(), _state.getValue(), ByteArrayWrapper
-                        .wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? ByteUtil.EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult())));
             }
+
+            pendingStatus.add(new TxPendingStatus(txHashW, getMsgIdMapping().get(txHashW).getValue(),
+                    getMsgIdMapping().get(txHashW).getKey(), _state.getValue(), ByteArrayWrapper
+                    .wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? ByteUtil.EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult())));
 
             if (_state.isPending()) {
                 pendingReceipts.put(txHashW, ((AionTxReceipt) _txRcpt));

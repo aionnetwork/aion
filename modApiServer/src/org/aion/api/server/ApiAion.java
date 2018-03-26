@@ -61,6 +61,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
+
 public abstract class ApiAion extends Api {
     protected NrgOracle nrgOracle;
     protected IAionChain ac;
@@ -90,14 +92,15 @@ public abstract class ApiAion extends Api {
             while (go) {
 
                 IEvent  e = ees.take();
-
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                     onBlock((AionBlockSummary)e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
                     if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
-                        pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), (EventTx.STATE)e.getFuncArgs().get(1));
+                        pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), GETSTATE((int)e.getFuncArgs().get(1)));
                     } else if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue() ){
-                        pendingTxReceived((ITransaction) e.getFuncArgs().get(0));
+                        for (ITransaction tx : (List<ITransaction>) e.getFuncArgs().get(0)) {
+                            pendingTxReceived(tx);
+                        }
                     }
                 } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
                     go = false;
