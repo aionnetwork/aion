@@ -173,6 +173,60 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
+    public synchronized List<TX> remove(Map<Address, BigInteger> accNonce) {
+
+        List<ByteArrayWrapper> bwList = new ArrayList<>();
+        for (Map.Entry<Address, BigInteger> en1 : accNonce.entrySet()) {
+            AccountState as = this.getAccView(en1.getKey());
+            Iterator<Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>> it = as.getMap().entrySet().iterator();
+
+            while (it.hasNext() && en1.getValue().compareTo(it.next().getKey()) > 0) {
+                bwList.add(it.next().getValue().getKey());
+                it.remove();
+            }
+
+            Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
+
+            this.getPoolStateView(en1.getKey()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
+
+            fee.parallelStream().forEach(bi -> {
+                this.getFeeView().get(bi).entrySet().removeIf(
+                        byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue()
+                                .getAddress().equals(en1.getKey()));
+
+                if (this.getFeeView().get(bi).isEmpty()) {
+                    this.getFeeView().remove(bi);
+                }
+            });
+
+            as.isDirty();
+        }
+
+        List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
+        bwList.parallelStream().forEach( bw -> {
+            if (this.getMainMap().get(bw) != null) {
+                ITransaction tx = this.getMainMap().get(bw).getTx().clone();
+                removedTxl.add((TX)tx);
+
+                long timestamp = tx.getTimeStampBI().longValue()/ multiplyM;
+                if (this.getTimeView().get(timestamp) == null) {
+                    LOG.error("Txpool.remove can't find the timestamp in the map [{}]", tx.toString());
+                    return;
+                }
+
+                this.getTimeView().get(timestamp).remove(bw);
+                if (this.getTimeView().get(timestamp).isEmpty()) {
+                    this.getTimeView().remove(timestamp);
+                }
+            }
+        });
+
+
+        return removedTxl;
+    }
+
+
+    @Override
     public synchronized List<TX> remove(List<TX> txs) {
 
         List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());

@@ -49,6 +49,8 @@ public interface ITxPool<TX extends ITransaction> {
 
     List<TX> remove(List<TX> tx);
 
+    List<TX> remove(Map<Address, BigInteger> accNonce);
+
     int size();
 
     List<TX> snapshot();
