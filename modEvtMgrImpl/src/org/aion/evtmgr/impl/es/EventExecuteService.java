@@ -1,5 +1,7 @@
 package org.aion.evtmgr.impl.es;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -14,8 +16,9 @@ public class EventExecuteService {
     private ExecutorService es;
     private static Logger LOG;
     private String thName;
+    private Set<Integer> filter;
 
-    public EventExecuteService(final int qSize, final String threadName, final int threadPriority, final Logger log) {
+    public EventExecuteService(final int qSize, final String threadName, final int threadPriority, final Logger log ) {
         if (threadName == null || log == null ) {
             throw new NullPointerException();
         }
@@ -26,6 +29,8 @@ public class EventExecuteService {
 
         LOG = log;
         thName = threadName;
+
+        filter = new HashSet<>();
 
         callbackEvt = new LinkedBlockingQueue(qSize);
 
@@ -63,10 +68,17 @@ public class EventExecuteService {
         if (event == null) {
             throw new NullPointerException();
         }
-        try {
-            return callbackEvt.add(event);
-        } catch (IllegalStateException e) {
-            LOG.error("ExecutorService Q is full!");
+
+        int sn = (event.getEventType() << 8) + event.getCallbackType();
+
+        if (filter.contains(sn)) {
+            try {
+                return callbackEvt.add(event);
+            } catch (IllegalStateException e) {
+                LOG.error("ExecutorService Q is full!");
+                return false;
+            }
+        } else {
             return false;
         }
     }
@@ -76,5 +88,10 @@ public class EventExecuteService {
         callbackEvt.clear();
         callbackEvt.add(new EventDummy());
         es.shutdown();
+    }
+
+    public void setFilter(Set<Integer> filter) {
+        this.filter = filter;
+        this.filter.add(0);//Poison Pill
     }
 }
