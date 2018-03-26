@@ -386,6 +386,11 @@ public class AionHub {
             }
         }
 
+        if (getPendingState() != null) {
+            getPendingState().shutDown();
+            LOG.info("<shutdown-pendingState>");
+        }
+
         LOG.info("shutting down consensus...");
         pow.shutdown();
         LOG.info("shutdown consensus... Done!");

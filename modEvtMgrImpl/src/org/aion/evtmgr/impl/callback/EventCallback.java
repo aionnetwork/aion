@@ -22,40 +22,39 @@
  *     
  ******************************************************************************/
 
-package org.aion.api.server;
+package org.aion.evtmgr.impl.callback;
 
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
-import org.aion.api.server.pb.TxWaitingMappingUpdate;
-import org.aion.api.server.types.Fltr;
-import org.aion.api.server.types.TxPendingStatus;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.zero.types.AionTxReceipt;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.IEventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.slf4j.Logger;
 
-public interface IApiAion {
+/**
+ * @author jay
+ *
+ */
+@SuppressWarnings("hiding")
+public class EventCallback implements IEventCallback {
+    EventExecuteService ees;
+    static Logger LOG;
+    public EventCallback(EventExecuteService _ees, Logger log) {
+        if (_ees == null || log == null) {
+            throw new NullPointerException();
+        }
 
-    byte[] parseMsgReq(byte[] request, byte[] msgHash);
+        ees = _ees;
+        LOG = log;
+    }
 
-    Map<Long, Fltr> getFilter();
+    public void onEvent(IEvent evt) {
+        if (evt == null) {
+            throw new NullPointerException();
+        }
 
-    Map<ByteArrayWrapper, AionTxReceipt> getPendingReceipts();
-
-    LinkedBlockingQueue<TxPendingStatus> getPendingStatus();
-
-    LinkedBlockingQueue<TxWaitingMappingUpdate> getTxWait();
-
-    // General Level
-    byte getApiVersion();
-
-    byte getApiHeaderLen();
-
-    int getTxHashLen();
-
-    byte[] process(byte[] request, byte[] socketId);
-
-    Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> getMsgIdMapping();
-
-    void shutDown();
-
-    TxWaitingMappingUpdate takeTxWait() throws Throwable;
+        try {
+            ees.add(evt);
+        } catch (Exception e) {
+            LOG.error("{}", e.toString());
+        }
+    }
 }

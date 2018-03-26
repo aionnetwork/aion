@@ -374,6 +374,10 @@ public final class HttpServer
         }
     }
 
+    public static void shutdown() {
+        api.shutDown();
+    }
+
     private static class ProcessInbound extends Thread
     {
         public void run() {
