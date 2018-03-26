@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 public class CfgDb {
 
     public final int MIN_FD_OPEN_ALLOC = 1024;
-    public final String DEFAULT_BLOCK_SIZE = "4kB";
+    public final String DEFAULT_BLOCK_SIZE = "16kB";
 
     public CfgDb() {
         this.vendor = DBVendor.LEVELDB.toValue();
@@ -56,7 +56,7 @@ public class CfgDb {
         // size 0 means unbound
         this.max_heap_cache_size = "1024";
         this.enable_heap_cache_stats = false;
-        this.block_size = 16 * (int) Utils.MEGA_BYTE;
+        this.block_size = 16 * (int) Utils.KILO_BYTE;
         this.max_fd_open_alloc = MIN_FD_OPEN_ALLOC;
     }
 
