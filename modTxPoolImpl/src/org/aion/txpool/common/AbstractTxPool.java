@@ -100,7 +100,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
     public abstract List<TX> add(List<TX> txl);
 
-    public abstract boolean add(TX tx);
+    public abstract TX add(TX tx);
 
     public abstract List<TX> remove(List<TX> txl);
 
@@ -122,6 +122,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
         this.accountView.computeIfAbsent(acc, k -> new AccountState());
         return this.accountView.get(acc);
+    }
+
+    protected Map<Address, AccountState> getFullAcc() {
+        return this.accountView;
     }
 
     protected List<PoolState> getPoolStateView(Address acc) {

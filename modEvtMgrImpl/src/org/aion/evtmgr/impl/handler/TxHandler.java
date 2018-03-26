@@ -52,22 +52,24 @@ public class TxHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                switch (event.getCallbackType()) {
-                case 0:
-                    ((EventCallbackA0) cb).onPendingTxStateChange();
-                    break;
-                case 1:
-                    ((EventCallbackA0) cb).onPendingTxUpdate(event.getFuncArgs().get(0),
-                            EventTx.STATE.GETSTATE((int) event.getFuncArgs().get(1)), event.getFuncArgs().get(2));
-                    break;
-                case 2:
-                    List<Object> pendingTx = (List<Object>) event.getFuncArgs().get(0);
-                    for (Object o : pendingTx) {
-                        ((EventCallbackA0) cb).onPendingTxReceived(o);
+                es.execute(() -> {
+                    switch (event.getCallbackType()) {
+                    case 0:
+                        ((EventCallbackA0) cb).onPendingTxStateChange();
+                        break;
+                    case 1:
+                        ((EventCallbackA0) cb).onPendingTxUpdate(event.getFuncArgs().get(0),
+                                EventTx.STATE.GETSTATE((int) event.getFuncArgs().get(1)), event.getFuncArgs().get(2));
+                        break;
+                    case 2:
+                        List<Object> pendingTx = (List<Object>) event.getFuncArgs().get(0);
+                        for (Object o : pendingTx) {
+                            ((EventCallbackA0) cb).onPendingTxReceived(o);
+                        }
+                        break;
+                    default:
                     }
-                    break;
-                default:
-                }
+                });
             }
         }
     }

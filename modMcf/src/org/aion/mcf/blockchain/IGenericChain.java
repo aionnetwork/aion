@@ -47,6 +47,4 @@ public interface IGenericChain<BLK extends IBlock, BH extends AbstractBlockHeade
 
     void flush();
 
-    void updateBestKnownBlock(IBlockIdentifier _identifier);
-
 }

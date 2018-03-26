@@ -50,18 +50,20 @@ public class ConsensusHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                switch (event.getCallbackType()) {
-                case 0:
-                    ((EventCallbackA0) cb).onSyncDone();
-                    break;
-                case 1:
-                    ((EventCallbackA0) cb).onBlockTemplate(event.getFuncArgs().get(0));
-                    break;
-                case 2:
-                    ((EventCallbackA0) cb).onSolution(event.getFuncArgs().get(0));
-                    break;
-                default:
-                }
+                es.execute(() -> {
+                    switch (event.getCallbackType()) {
+                    case 0:
+                        ((EventCallbackA0) cb).onSyncDone();
+                        break;
+                    case 1:
+                        ((EventCallbackA0) cb).onBlockTemplate(event.getFuncArgs().get(0));
+                        break;
+                    case 2:
+                        ((EventCallbackA0) cb).onSolution(event.getFuncArgs().get(0));
+                        break;
+                    default:
+                    }
+                });
             }
         }
     }

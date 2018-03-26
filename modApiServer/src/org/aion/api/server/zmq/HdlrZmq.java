@@ -24,6 +24,8 @@
 
 package org.aion.api.server.zmq;
 
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.IHdlr;
@@ -36,9 +38,6 @@ import org.aion.base.util.NativeLoader;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class HdlrZmq implements IHdlr {
 
@@ -91,7 +90,7 @@ public class HdlrZmq implements IHdlr {
             entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
         }
 
-        this.api.getQueue().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
+        this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
                 txWait.getState(), txWait.getTxResult()));
 
         // INCLUDED(3);
@@ -108,7 +107,7 @@ public class HdlrZmq implements IHdlr {
     }
 
     public LinkedBlockingQueue<TxPendingStatus> getTxStatusQueue() {
-        return this.api.getQueue();
+        return this.api.getPendingStatus();
     }
 
     public byte[] toRspMsg(byte[] msgHash, int txCode) {
@@ -130,6 +129,6 @@ public class HdlrZmq implements IHdlr {
 
     public void shutdown() {
         this.getTxStatusQueue().add(new TxPendingStatus(null, null, null, 0, null));
-        this.api.txWait.add(new TxWaitingMappingUpdate(null, 0, null));
+        this.api.getTxWait().add(new TxWaitingMappingUpdate(null, 0, null));
     }
 }

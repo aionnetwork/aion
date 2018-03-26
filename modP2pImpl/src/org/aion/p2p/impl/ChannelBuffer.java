@@ -54,7 +54,7 @@ class ChannelBuffer {
      */
     public AtomicBoolean onWrite = new AtomicBoolean(false);
 
-    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(10);
+    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
 
     void refreshHeader(){
         headerBuf.clear();

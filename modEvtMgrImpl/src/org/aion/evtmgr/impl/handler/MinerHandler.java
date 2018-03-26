@@ -49,24 +49,26 @@ public class MinerHandler extends AbstractHandler implements IHandler {
             }
 
             for (IEventCallback cb : this.eventCallback) {
-                switch (event.getCallbackType()) {
-                case 0:
-                    ((EventCallbackA0) cb).onMiningStarted();
-                    break;
-                case 1:
-                    ((EventCallbackA0) cb).onMiningStopped();
-                    break;
-                case 2:
-                    ((EventCallbackA0) cb).onBlockMiningStarted(event.getFuncArgs().get(0));
-                    break;
-                case 3:
-                    ((EventCallbackA0) cb).onBlockMined(event.getFuncArgs().get(0));
-                    break;
-                case 4:
-                    ((EventCallbackA0) cb).onBlockMiningCanceled(event.getFuncArgs().get(0));
-                    break;
-                default:
-                }
+                es.execute(() -> {
+                    switch (event.getCallbackType()) {
+                    case 0:
+                        ((EventCallbackA0) cb).onMiningStarted();
+                        break;
+                    case 1:
+                        ((EventCallbackA0) cb).onMiningStopped();
+                        break;
+                    case 2:
+                        ((EventCallbackA0) cb).onBlockMiningStarted(event.getFuncArgs().get(0));
+                        break;
+                    case 3:
+                        ((EventCallbackA0) cb).onBlockMined(event.getFuncArgs().get(0));
+                        break;
+                    case 4:
+                        ((EventCallbackA0) cb).onBlockMiningCanceled(event.getFuncArgs().get(0));
+                        break;
+                    default:
+                    }
+                });
             }
         }
     }

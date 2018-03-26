@@ -156,9 +156,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         blockInfo.setMainChain(mainChain); // FIXME: maybe here I should force reset main chain for all uncles on that level
 
         blockInfos.add(blockInfo);
-        index.set(block.getNumber(), blockInfos);
 
         blocks.put(block.getHash(), block);
+        index.set(block.getNumber(), blockInfos);
     }
 
     public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number) {
@@ -565,7 +565,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
-        while (firstBlock > lastBlock) {
+        while (firstBlock > lastBlock && firstBlock >= 0) {
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
 
             writer.append("Blocks at level " + firstBlock + ":");
