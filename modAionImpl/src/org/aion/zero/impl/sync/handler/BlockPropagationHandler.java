@@ -44,6 +44,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import java.util.Map;
@@ -87,14 +88,14 @@ public class BlockPropagationHandler {
 
     private final IP2pMgr p2pManager;
 
-    private final BlockHeaderValidator blockHeaderValidator;
+    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     public BlockPropagationHandler(final int cacheSize,
                                    final IAionBlockchain blockchain,
                                    final IP2pMgr p2pManager,
-                                   BlockHeaderValidator headerValidator) {
+                                   BlockHeaderValidator<A0BlockHeader> headerValidator) {
         this.cacheSize = cacheSize;
 
         // all accesses to cacheMap are guarded by instance
@@ -133,7 +134,7 @@ public class BlockPropagationHandler {
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
-        if (!this.blockHeaderValidator.validate(block.getHeader()))
+        if (!this.blockHeaderValidator.validate(block.getHeader(), log))
             return PropStatus.DROPPED;
 
         // guarantees if multiple requests of same block appears, only one goes through

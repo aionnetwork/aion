@@ -118,16 +118,24 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
 
     @Override
     public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
-        return new BlockHeaderValidator<A0BlockHeader>(Arrays.asList(
-                new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()), new EnergyConsumedRule(),
-                new AionPOWRule(), new EquihashSolutionRule(this.getEquihashValidator())));
+        return new BlockHeaderValidator<>(
+                Arrays.asList(
+                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                        new EnergyConsumedRule(),
+                        new AionPOWRule(),
+                        new EquihashSolutionRule(this.getEquihashValidator())
+                ));
     }
 
     @Override
     public ParentBlockHeaderValidator<A0BlockHeader> createParentHeaderValidator() {
-        return new ParentBlockHeaderValidator<A0BlockHeader>(Arrays.asList(new BlockNumberRule<A0BlockHeader>(),
-                new TimeStampRule<A0BlockHeader>(), new EnergyLimitRule(this.getConstants().getEnergyDivisorLimit(),
-                        this.getConstants().getEnergyLowerBound())));
+        return new ParentBlockHeaderValidator<>(
+                Arrays.asList(
+                        new BlockNumberRule<>(),
+                        new TimeStampRule<>(),
+                        new EnergyLimitRule(this.getConstants().getEnergyDivisorLimitLong(),
+                            this.getConstants().getEnergyLowerBoundLong())
+                ));
     }
 
     public static BigInteger FOUR = BigInteger.valueOf(4);

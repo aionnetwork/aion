@@ -27,19 +27,20 @@ package org.aion.mcf.valid;
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
-import org.aion.mcf.types.AbstractBlockHeader;
+
+import java.util.List;
 
 /**
- *
+ * A class of rules that requires memory of the previous block
  */
 public abstract class DependentBlockHeaderRule<BH extends IBlockHeader> extends AbstractValidRule
         implements IBlockHeaderValidRule<BH> {
 
-    @Override
-    public Class getEntityClass() {
-        return AbstractBlockHeader.class;
-    }
-
-    abstract public boolean validate(BH header, BH dependency);
-
+    /**
+     * Validates a dependant rule, where {@code header} represents the current
+     * block, and {@code dependency} represents the {@code memory} required to validate
+     * whether the current block is correct. Most likely the {@code memory} refers
+     * to the previous block
+     */
+    abstract public boolean validate(BH header, BH dependency, List<RuleError> errors);
 }

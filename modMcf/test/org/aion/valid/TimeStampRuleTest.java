@@ -1,11 +1,15 @@
 package org.aion.valid;
 
 import org.aion.base.type.IBlockHeader;
+import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.impl.valid.TimeStampRule;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
@@ -37,9 +41,10 @@ public class TimeStampRuleTest {
         // define return value for method getNumber()
         when(mockHeader.getTimestamp()).thenReturn(661987L);
         when(mockDependency.getTimestamp()).thenReturn(661986L);
+        List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency);
+        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency, errors);
 
         // test output
         assertThat(actual).isTrue();
@@ -54,9 +59,10 @@ public class TimeStampRuleTest {
         // define return value for method getNumber()
         when(mockHeader.getTimestamp()).thenReturn(661987L);
         when(mockDependency.getTimestamp()).thenReturn(661987L);
+        List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency);
+        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency, errors);
 
         // test output
         assertThat(actual).isFalse();
@@ -72,9 +78,10 @@ public class TimeStampRuleTest {
         // define return value for method getNumber()
         when(mockHeader.getTimestamp()).thenReturn(661987L);
         when(mockDependency.getTimestamp()).thenReturn(661988L);
+        List<IValidRule.RuleError> errors = new LinkedList<>();
 
         // generate output
-        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency);
+        boolean actual = new TimeStampRule<>().validate(mockHeader, mockDependency, errors);
 
         // test output
         assertThat(actual).isFalse();
