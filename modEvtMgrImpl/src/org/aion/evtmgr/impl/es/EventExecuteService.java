@@ -31,6 +31,7 @@ public class EventExecuteService {
         thName = threadName;
 
         filter = new HashSet<>();
+        filter.add(0);
 
         callbackEvt = new LinkedBlockingQueue(qSize);
 
