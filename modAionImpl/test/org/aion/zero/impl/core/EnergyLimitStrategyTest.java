@@ -1,5 +1,6 @@
 package org.aion.zero.impl.core;
 
+import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.types.A0BlockHeader;
@@ -8,6 +9,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -16,8 +19,9 @@ import static org.mockito.Mockito.when;
 public class EnergyLimitStrategyTest {
 
     private static final ChainConfiguration config = new ChainConfiguration();
-    private static final EnergyLimitRule rule = new EnergyLimitRule(config.getConstants().getEnergyDivisorLimit(),
-                                                                    config.getConstants().getEnergyLowerBound());
+    private static final EnergyLimitRule rule =
+            new EnergyLimitRule(config.getConstants().getEnergyDivisorLimitLong(),
+                                config.getConstants().getEnergyLowerBoundLong());
 
     @Mock
     A0BlockHeader inputHeader;
@@ -36,7 +40,11 @@ public class EnergyLimitStrategyTest {
     private void validateHeaders(long energy, long parentEnergy) {
         when(parentHeader.getEnergyLimit()).thenReturn(parentEnergy);
         when(header.getEnergyLimit()).thenReturn(energy);
-        assertThat(rule.validate(header, parentHeader)).isTrue();
+
+        List<IValidRule.RuleError> errors = new ArrayList<>();
+
+        assertThat(rule.validate(header, parentHeader, errors)).isTrue();
+        assertThat(errors).isEmpty();
     }
 
     @Test

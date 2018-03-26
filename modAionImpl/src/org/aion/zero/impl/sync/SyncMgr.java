@@ -106,6 +106,8 @@ public final class SyncMgr {
 
     private Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
 
+    private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+
     private static final class AionSyncMgrHolder {
         static final SyncMgr INSTANCE = new SyncMgr();
     }
@@ -183,6 +185,8 @@ public final class SyncMgr {
         this.syncForwardMax = _syncForwardMax;
         this.blocksQueueMax = _blocksQueueMax;
 
+        this.blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
+
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
@@ -226,13 +230,12 @@ public final class SyncMgr {
         }
 
         // filter imported block headers
-        BlockHeaderValidator<A0BlockHeader> headerValidator = new ChainConfiguration().createBlockHeaderValidator();
         List<A0BlockHeader> filtered = new ArrayList<>();
         A0BlockHeader prev = null;
         for(A0BlockHeader current : _headers){
 
             // ignore this batch if any invalidated header
-            if(!headerValidator.validate(current)) {
+            if(!this.blockHeaderValidator.validate(current, log)) {
                 log.debug("<invalid-header num={} hash={}>", current.getNumber(), current.getHash());
                 return;
             }

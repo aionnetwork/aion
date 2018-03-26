@@ -43,6 +43,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 
@@ -52,6 +54,8 @@ import static org.mockito.Mockito.when;
 
 
 public class ChainConfigurationTest {
+
+    private static final Logger log = LoggerFactory.getLogger(ChainConfigurationTest.class);
 
     @Mock
     A0BlockHeader header;
@@ -91,7 +95,7 @@ public class ChainConfigurationTest {
         
         ChainConfiguration chainConfig = new ChainConfiguration();
         BlockHeaderValidator<A0BlockHeader> blockHeaderValidator = chainConfig.createBlockHeaderValidator();
-        blockHeaderValidator.validate(header);
+        blockHeaderValidator.validate(header, log);
     }
 
     @Test

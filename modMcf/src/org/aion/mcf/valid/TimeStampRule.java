@@ -22,11 +22,13 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.valid;
+package org.aion.mcf.valid;
 
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
+
+import java.util.List;
 
 /**
  * Validates whether the timestamp of the current block is > the timestamp of
@@ -35,14 +37,15 @@ import org.aion.mcf.valid.DependentBlockHeaderRule;
 public class TimeStampRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
 
     @Override
-    public boolean validate(BH header, BH dependency) {
-        errors.clear();
+    public boolean validate(BH header, BH dependency, List<RuleError> errors) {
         if (header.getTimestamp() <= dependency.getTimestamp()) {
-            errors.add(String.format("#%d: the block timestamp is not less than the parentBlock's timestamp",
-                    header.getTimestamp()));
+            addError("timestamp ("
+                    + header.getTimestamp()
+                    + ") is not greater than parent timestamp ("
+                    + dependency.getTimestamp()
+                    + ")", errors);
             return false;
         }
-
         return true;
     }
 }
