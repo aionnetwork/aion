@@ -20,6 +20,29 @@
  *******************************************************************************/
 package org.aion.mcf.trie;
 
+import static java.util.Arrays.copyOfRange;
+import static org.aion.base.util.ByteArrayWrapper.wrap;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.base.util.ByteUtil.matchingNibbleLength;
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.rlp.CompactEncoder.binToNibbles;
+import static org.aion.rlp.CompactEncoder.hasTerminator;
+import static org.aion.rlp.CompactEncoder.packNibbles;
+import static org.aion.rlp.CompactEncoder.unpackToNibbles;
+import static org.aion.rlp.RLP.calcElementPrefixSize;
+import static org.spongycastle.util.Arrays.concatenate;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.FastByteComparisons;
@@ -29,19 +52,6 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
-
-import java.io.*;
-import java.util.*;
-
-import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteArrayWrapper.wrap;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.base.util.ByteUtil.matchingNibbleLength;
-import static org.aion.base.util.ByteUtil.toHexString;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.rlp.CompactEncoder.*;
-import static org.aion.rlp.RLP.calcElementPrefixSize;
-import static org.spongycastle.util.Arrays.concatenate;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure
@@ -654,79 +664,6 @@ public class TrieImpl implements Trie {
                 e.printStackTrace();
             }
 
-            int keysHeaderSize = RLP.getEncodeLongElementHeaderLength(keysTotalSize);
-            int valsHeaderSize = RLP.getEncodeListHeaderLength(valsTotalSize);
-            int listHeaderSize = RLP.getEncodeListHeaderLength(keysTotalSize + keysHeaderSize
-                    + valsTotalSize + valsHeaderSize +
-                    root.length);
-
-            byte[] rlpData = new byte[keysTotalSize + keysHeaderSize + valsTotalSize + valsHeaderSize
-                    + listHeaderSize + root.length];
-
-            // Fill in rlpData
-            int pos = 0;
-            pos = RLP.encodeListHeader(keysTotalSize + keysHeaderSize
-                    + valsTotalSize + valsHeaderSize +
-                    root.length,listHeaderSize, rlpData, pos );
-            pos = RLP.encodeLongElementHeader(keysTotalSize, keysHeaderSize, rlpData, pos);
-
-            int valsPos = (listHeaderSize + keysHeaderSize + keysTotalSize);
-            RLP.encodeListHeader(valsTotalSize, valsHeaderSize, rlpData, valsPos);
-
-            int rootPos = (listHeaderSize + keysHeaderSize + keysTotalSize + valsTotalSize + valsHeaderSize);
-            System.arraycopy(root, 0, rlpData, rootPos, root.length);
-
-            int k_2=listHeaderSize+keysHeaderSize+keysTotalSize+valsHeaderSize;
-            for(ByteArrayWrapper key: keys){
-                Node node = map.get(key);
-
-                if(node == null) {
-                    continue;
-                }
-
-                System.arraycopy(key.getData(),0, rlpData, pos, key.getData().length);
-                pos += key.getData().length;
-
-                k_2 = RLP.encodeElement(node.getValue().getData(), rlpData, k_2);
-            }
-
-            return rlpData;
-        }
-    }
-
-    public byte[] serialize_old() {
-
-        synchronized (cache) {
-            Map<ByteArrayWrapper, Node> map = getCache().getNodes();
-
-            int keysTotalSize = 0;
-            int valsTotalSize = 0;
-
-            Set<ByteArrayWrapper> keys = map.keySet();
-            for (ByteArrayWrapper key : keys) {
-                Node node = map.get(key);
-                if (node == null) {
-                    continue;
-                }
-
-                byte[] keyBytes = key.getData();
-                keysTotalSize += keyBytes.length;
-
-                byte[] valBytes = node.getValue().getData();
-                valsTotalSize += valBytes.length + calcElementPrefixSize(valBytes);
-            }
-
-            byte[] root = null;
-            try {
-                ByteArrayOutputStream b = new ByteArrayOutputStream();
-                ObjectOutputStream o = new ObjectOutputStream(b);
-                o.writeObject(this.getRoot());
-                root = b.toByteArray();
-                root = RLP.encodeElement(root);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             byte[] keysHeader = RLP.encodeLongElementHeader(keysTotalSize);
             byte[] valsHeader = RLP.encodeListHeader(valsTotalSize);
             byte[] listHeader = RLP.encodeListHeader(
@@ -735,6 +672,9 @@ public class TrieImpl implements Trie {
             byte[] rlpData = new byte[keysTotalSize + keysHeader.length + valsTotalSize + valsHeader.length
                     + listHeader.length + root.length];
 
+            // copy headers:
+            // [ rlp_list_header, rlp_keys_header, rlp_keys, rlp_vals_header,
+            // rlp_val]
             System.arraycopy(listHeader, 0, rlpData, 0, listHeader.length);
             System.arraycopy(keysHeader, 0, rlpData, listHeader.length, keysHeader.length);
             System.arraycopy(valsHeader, 0, rlpData, (listHeader.length + keysHeader.length + keysTotalSize),
