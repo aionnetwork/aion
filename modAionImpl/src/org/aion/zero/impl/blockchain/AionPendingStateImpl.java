@@ -542,6 +542,7 @@ public class AionPendingStateImpl
     }
 
 //    @SuppressWarnings("unchecked")
+//    @Deprecated
 //    private void clearPending(IAionBlock block, List<AionTxReceipt> receipts) {
 //
 //        List<AionTransaction> txList = block.getTransactionsList();
