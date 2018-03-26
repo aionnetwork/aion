@@ -2,7 +2,7 @@ package org.aion.valid;
 
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
-import org.aion.zero.impl.valid.TimeStampRule;
+import org.aion.mcf.valid.TimeStampRule;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

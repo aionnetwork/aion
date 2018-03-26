@@ -75,7 +75,7 @@ public class AionPOWRuleTest {
         boolean result = rule.validate(mockHeader, errors);
 
         assertThat(result).isTrue();
-        assertThat(errors).isNotEmpty();
+        assertThat(errors).isEmpty();
     }
 
     @Test

@@ -24,7 +24,6 @@
 package org.aion.zero.impl.blockchain;
 
 import org.aion.base.type.Address;
-import org.aion.base.util.BIUtil;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
@@ -37,7 +36,6 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.equihash.EquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.mine.IMiner;

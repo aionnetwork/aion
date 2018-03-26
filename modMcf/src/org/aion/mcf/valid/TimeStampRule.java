@@ -22,7 +22,7 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.valid;
+package org.aion.mcf.valid;
 
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.types.AbstractBlockHeader;
