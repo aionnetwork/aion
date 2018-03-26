@@ -24,38 +24,25 @@
 
 package org.aion.api.server;
 
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.api.server.pb.TxWaitingMappingUpdate;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.zero.types.AionTxReceipt;
-import org.apache.commons.collections4.map.LRUMap;
-
-import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public interface IApiAion {
-    int MAP_SIZE = 50000;
-    LinkedBlockingQueue<TxPendingStatus> txPendingStatus = new LinkedBlockingQueue<>();
-    LinkedBlockingQueue<TxWaitingMappingUpdate> txWait = new LinkedBlockingQueue<>();
-    Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> msgIdMapping = Collections
-            .synchronizedMap(new LRUMap<>(MAP_SIZE, 100));
 
-    default byte[] parseMsgReq(byte[] request, byte[] msgHash) {
-        int headerLen = msgHash == null ? this.getApiHeaderLen() : this.getApiHeaderLen() + msgHash.length;
-        return ByteBuffer.allocate(request.length - headerLen).put(request, headerLen, request.length - headerLen)
-                .array();
-    }
+    byte[] parseMsgReq(byte[] request, byte[] msgHash);
 
     Map<Long, Fltr> getFilter();
 
     Map<ByteArrayWrapper, AionTxReceipt> getPendingReceipts();
 
-    default LinkedBlockingQueue<TxPendingStatus> getQueue() {
-        return txPendingStatus;
-    }
+    LinkedBlockingQueue<TxPendingStatus> getPendingStatus();
+
+    LinkedBlockingQueue<TxWaitingMappingUpdate> getTxWait();
 
     // General Level
     byte getApiVersion();
@@ -66,11 +53,7 @@ public interface IApiAion {
 
     byte[] process(byte[] request, byte[] socketId);
 
-    default Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> getMsgIdMapping() {
-        return msgIdMapping;
-    }
+    Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> getMsgIdMapping();
 
-    default TxWaitingMappingUpdate takeTxWait() throws Throwable {
-        return txWait.take();
-    }
+    TxWaitingMappingUpdate takeTxWait() throws Throwable;
 }
