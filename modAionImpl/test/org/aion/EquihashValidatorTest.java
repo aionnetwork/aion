@@ -235,9 +235,24 @@ public class EquihashValidatorTest {
         OptimizedEquiValidator ov = new OptimizedEquiValidator(n, k);
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
+        long start = 0;
+        long end = 0;
+
+        start = System.nanoTime();
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        end = System.nanoTime();
+
+        System.out.println("Java validation runtime: " + (end-start));
+
+        start = System.nanoTime();
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
+        end = System.nanoTime();
+
+        System.out.println("Native validation runtime: " + (end-start));
 
         assertEquals(true, isValid);
+        assertEquals(true, isValidNative);
+
     }
 
     // Change solution index 0
@@ -409,8 +424,11 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
+
     }
 
     // Swap solution index 0 with solution index 4
@@ -755,8 +773,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     // Swap the first pair of indices with next pair
@@ -928,8 +948,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     // Swap second last and last pairs
@@ -1037,8 +1059,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     // Sort solution and submit sorted array
@@ -1148,8 +1172,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n / (k + 1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     //First solution index is duplicated
@@ -1257,8 +1283,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     // Duplicate first half of solution
@@ -1366,8 +1394,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     //Delete last 8 solutions
@@ -1474,8 +1504,10 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
 
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
     }
 
     // Call validator multiple times to ensure all states correctly cleared between calls
@@ -1583,24 +1615,37 @@ public class EquihashValidatorTest {
         byte[] minimal = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
 
         boolean isValid = ov.isValidSolution(minimal, header, nonce);
+        boolean isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
+
         assertEquals(true, isValid);
+        assertEquals(true, isValidNative);
+
 
         isValid = ov.isValidSolution(minimal, header, nonce);
+        isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
         assertEquals(true, isValid);
+        assertEquals(true, isValidNative);
+
 
         solution[0] = solution[0] + 1;
         byte[] minimal_updated = EquiUtils.getMinimalFromIndices(solution, n/(k+1));
         isValid = ov.isValidSolution(minimal_updated, header, nonce);
+        isValidNative = ov.isValidSolutionNative(minimal_updated, header, nonce);
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
 
         solution[0] = solution[0] - 1;
         nonce[0] = (byte)(nonce[0] + 8);
         isValid = ov.isValidSolution(minimal, header, nonce);
+        isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
         assertEquals(false, isValid);
+        assertEquals(false, isValidNative);
 
         nonce[0] = (byte)1;
         isValid = ov.isValidSolution(minimal, header, nonce);
+        isValidNative = ov.isValidSolutionNative(minimal, header, nonce);
         assertEquals(true, isValid);
+        assertEquals(true, isValidNative);
     }
 
 }
