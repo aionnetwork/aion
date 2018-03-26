@@ -796,12 +796,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 Map<Address, BigInteger> nonceCache = new HashMap<>();
 
-                for (AionTransaction tx : txs) {
-                    if (!TXValidator.isValid(tx)) {
-                        LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
-                        return false;
-                    }
+                if (txs.parallelStream().anyMatch(tx -> !TXValidator.isValid(tx))) {
+                    LOG.error("Some transactions in the block are invalid");
+                    return false;
+                }
 
+                for (AionTransaction tx : txs) {
                     Address txSender = tx.getFrom();
 
                     BigInteger expectedNonce = nonceCache.get(txSender);
