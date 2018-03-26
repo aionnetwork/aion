@@ -118,6 +118,11 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
     }
 
     @Override
+    public void flush() {
+        blkPriceQ.clear();
+    }
+
+    @Override
     public long computeRecommendation() {
         // if I'm still hungry, then I can't give a good enough prediction yet.
         // if I'm still hungry, and if the chain is being supported by proof of work, the miners will accept

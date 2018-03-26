@@ -18,44 +18,50 @@ import java.util.concurrent.atomic.AtomicLong;
  * Serves as the recommendor of nrg prices based on some observation strategy
  * Currently uses the blockPrice strategy
  *
- * This class is thread safe: process blocks from one thread at a time.
+ * This class is thread safe: getNrgPrice() synchronized on object's intrinsic lock.
  *
  * @author ali sharif
  */
 public class NrgOracle {
-    private static final int BLK_TRAVERSE_ON_INSTANTIATION = 128;
-    private static final long CACHE_FLUSH_BLKCOUNT = 1;
-
     private static final int BLKPRICE_WINDOW = 20;
     private static final int BLKPRICE_PERCENTILE = 60;
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    // flush the recommendation every CACHE_FLUSH_BLKCOUNT blocks
-    private long cacheFlushCounter;
-    private volatile long recommendation;
-    private final Object blockProcessLock = new Object();
+    private long tsLastCompute;
+    private long lastBlkProcessed;
 
-    INrgPriceAdvisor advisor;
+    private long recommendation;
 
-    /*   This constructor could take considerable time (since it warms up the recommendation engine)
-     *   Please keep the BLK_TRAVERSE_ON_INSTANTIATION number reasonably small, to construct this object fast.
-     */
+    private INrgPriceAdvisor advisor;
+    private IAionBlockchain blockchain;
+    
     public NrgOracle(IAionBlockchain blockchain, IHandler handler, long nrgPriceDefault, long nrgPriceMax) {
 
         // get default and max nrg from the config
-        cacheFlushCounter = 0;
-        recommendation = nrgPriceDefault;
+        this.recommendation = nrgPriceDefault;
+        this.tsLastCompute = -1;
+        this.lastBlkProcessed = -1;
 
-        advisor = new NrgBlockPriceStrategy(nrgPriceDefault, nrgPriceMax, BLKPRICE_WINDOW, BLKPRICE_PERCENTILE);
+        this.advisor = new NrgBlockPriceStrategy(nrgPriceDefault, nrgPriceMax, BLKPRICE_WINDOW, BLKPRICE_PERCENTILE);
+        this.blockchain = blockchain;
+    }
 
-        // warm up the NrgPriceAdvisor with historical data
-        // rationale for doing this in the constructor: if you don't find any transaction within the first 128 blocks
-        // (at a 10s block time, that's ~20min), the miners should be willing to accept any transactions (given they meet
-        // thier lower bound threshold)
+    // if we don't find any transaction within the last 64 blocks
+    // (at 10s block time, ~10min), miners should be willing to accept transactions at defaultPrice
+    private static final int MAX_BLK_TRAVERSE = 64;
+    private void buildRecommendation() {
         AionBlock lastBlock = blockchain.getBestBlock();
+
+        long blkDiff = lastBlock.getNumber() - lastBlkProcessed;
+        if (blkDiff > BLKPRICE_WINDOW) {
+            advisor.flush();
+        }
+
+        long blkTraverse = Math.min(MAX_BLK_TRAVERSE, blkDiff);
+
         int itr = 0;
-        while (itr < BLK_TRAVERSE_ON_INSTANTIATION) {
+        while (itr < blkTraverse) {
             advisor.processBlock(lastBlock);
 
             if (!advisor.isHungry()) break; // recommendation engine warmed up to give good advice
@@ -69,38 +75,27 @@ public class NrgOracle {
             itr--;
         }
 
-        // check if handler is of type BLOCK, if so attach our event
-        if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
-            // TODO: Fixme. Commenting this out for now until I fix this, to relieve pressure from sync
-            /*
-            handler.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                public void onBlock(final IBlockSummary _bs) {
-                    LOG.debug("nrg-oracle - onBlock event");
-                    AionBlockSummary bs = (AionBlockSummary) _bs;
-                    processBlock(bs);
-                }
-            });
-            */
-        } else {
-            LOG.error("nrg-oracle - invalid handler provided to constructor");
-        }
+        recommendation = advisor.computeRecommendation();
+        tsLastCompute = System.currentTimeMillis();
+        lastBlkProcessed = lastBlock.getNumber();
     }
 
-    // TODO: change this strategy from an active recommendation-building to a passive one,
-    // to reduce load from the BlkHdr thread on sync
-    private void processBlock(AionBlockSummary blockSummary) {
-        synchronized (blockProcessLock) {
-            AionBlock blk = (AionBlock) blockSummary.getBlock();
-            advisor.processBlock(blk);
-            cacheFlushCounter--;
-            if (cacheFlushCounter <= 0) {
-                recommendation = advisor.computeRecommendation();
-                cacheFlushCounter = CACHE_FLUSH_BLKCOUNT;
-            }
+    /**
+     * Lazy nrg price computation strategy: if you need the kernel to recommend nrg price, you should be prepared
+     * to give up some compute-time on the caller thread (most likely api worker thread).
+     *
+     * Not an important enough computation to be a consumer on the event system.
+     *
+     * If multiple consumers want nrgPrice simultaneously, all will be blocked until the recommendation is built
+     * and cached. Future consumers read the cached value until cache flush.
+     */
+    private static final long CACHE_FLUSH_MILLIS = 20_000; // 20s
+    public synchronized long getNrgPrice() {
+        long tsNow = System.currentTimeMillis();
+        if (tsNow - tsLastCompute > CACHE_FLUSH_MILLIS) {
+            buildRecommendation();
         }
-    }
 
-    public long getNrgPrice() {
         return recommendation;
     }
 }

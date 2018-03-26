@@ -75,7 +75,7 @@ public class RpcProcessor {
 
         // protect user from over-allocating resources to api.
         // rationale: a sophisticated user would recompile the api-server with appropriate threading restrictions
-        int fixedPoolSize = Math.min(Runtime.getRuntime().availableProcessors(), tpoolMaxSize);
+        int fixedPoolSize = Math.min(Runtime.getRuntime().availableProcessors()-1, tpoolMaxSize);
         // create fixed thread pool of size defined by user
         this.workers = new ThreadPoolExecutor(
                 fixedPoolSize,
