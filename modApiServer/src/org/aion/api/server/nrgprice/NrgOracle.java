@@ -35,7 +35,7 @@ public class NrgOracle {
 
     private INrgPriceAdvisor advisor;
     private IAionBlockchain blockchain;
-    
+
     public NrgOracle(IAionBlockchain blockchain, IHandler handler, long nrgPriceDefault, long nrgPriceMax) {
 
         // get default and max nrg from the config
@@ -60,8 +60,7 @@ public class NrgOracle {
 
         long blkTraverse = Math.min(MAX_BLK_TRAVERSE, blkDiff);
 
-        int itr = 0;
-        while (itr < blkTraverse) {
+        while (blkTraverse > 0) {
             advisor.processBlock(lastBlock);
 
             if (!advisor.isHungry()) break; // recommendation engine warmed up to give good advice
@@ -72,7 +71,7 @@ public class NrgOracle {
                 break;
 
             lastBlock = blockchain.getBlockByHash(lastBlock.getParentHash());
-            itr--;
+            blkTraverse--;
         }
 
         recommendation = advisor.computeRecommendation();
@@ -89,7 +88,7 @@ public class NrgOracle {
      * If multiple consumers want nrgPrice simultaneously, all will be blocked until the recommendation is built
      * and cached. Future consumers read the cached value until cache flush.
      */
-    private static final long CACHE_FLUSH_MILLIS = 20_000; // 20s
+    private static final long CACHE_FLUSH_MILLIS = 20_000L; // 20s
     public synchronized long getNrgPrice() {
         long tsNow = System.currentTimeMillis();
         if (tsNow - tsLastCompute > CACHE_FLUSH_MILLIS) {
