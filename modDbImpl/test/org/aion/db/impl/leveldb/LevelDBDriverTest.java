@@ -62,6 +62,8 @@ public class LevelDBDriverTest {
         props.setProperty("db_type", dbVendor);
         props.setProperty("db_name", dbName);
         props.setProperty("db_path", dbPath);
+        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
 
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNotNull(db);
@@ -81,7 +83,6 @@ public class LevelDBDriverTest {
     }
 
     // TODO: parametrize tests with null inputs
-
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullName() {
         new LevelDB(null, dbPath, false, false);

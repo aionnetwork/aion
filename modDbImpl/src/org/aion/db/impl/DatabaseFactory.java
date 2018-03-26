@@ -64,6 +64,9 @@ public abstract class DatabaseFactory {
     private static final String PROP_ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
     private static final String PROP_MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
 
+    public static final String PROP_MAX_FD_ALLOC = "max_fd_alloc_size";
+    public static final String PROP_BLOCK_SIZE = "block_size";
+
     public static IByteArrayKeyValueDatabase connect(Properties info) {
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(PROP_DB_TYPE));
@@ -110,12 +113,22 @@ public abstract class DatabaseFactory {
         // select database implementation
         switch (dbType) {
             case LEVELDB:
+                // grab leveldb specific parameters
+                int max_fd_alloc_size = Integer.parseInt(info.getProperty(PROP_MAX_FD_ALLOC));
+                int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE));
+
                 if (enableHeapCache) {
-                    return new LevelDBWithCache(dbName, dbPath, enableDbCache, enableDbCompression, enableAutoCommit,
+                    return new LevelDBWithCache(dbName,
+                            dbPath,
+                            enableDbCache,
+                            enableDbCompression,
+                            enableAutoCommit,
                             info.getProperty(PROP_MAX_HEAP_CACHE_SIZE),
-                            Boolean.parseBoolean(info.getProperty(PROP_ENABLE_HEAP_CACHE_STATS)));
+                            Boolean.parseBoolean(info.getProperty(PROP_ENABLE_HEAP_CACHE_STATS)),
+                            max_fd_alloc_size,
+                            block_size);
                 } else {
-                    return new LevelDB(dbName, dbPath, enableDbCache, enableDbCompression);
+                    return new LevelDB(dbName, dbPath, enableDbCache, enableDbCompression, max_fd_alloc_size, block_size);
                 }
             case H2:
                 if (enableHeapCache) {
