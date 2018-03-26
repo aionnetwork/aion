@@ -32,6 +32,7 @@ package org.aion.zero.impl.sync;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.slf4j.Logger;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,46 +43,50 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TaskGetStatus implements Runnable {
 
+
+    private final static int intervalTotal = 1000;
+
+    private final static int intervalMin = 100;
+
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
 
     private final AtomicBoolean run;
-
-    private final int interval;
 
     private final IP2pMgr p2p;
 
     private final Logger log;
 
     /**
-     *
-     * @param _run AtomicBoolean
-     * @param _interval int
-     * @param _p2p IP2pMgr
-     * @param _log Logger
+     * @param _run      AtomicBoolean
+     * @param _p2p      IP2pMgr
+     * @param _log      Logger
      */
-    TaskGetStatus(final AtomicBoolean _run, int _interval, final IP2pMgr _p2p, final Logger _log){
+    TaskGetStatus(final AtomicBoolean _run, final IP2pMgr _p2p, final Logger _log) {
         this.run = _run;
-        this.interval = _interval;
         this.p2p = _p2p;
         this.log = _log;
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-        while(this.run.get()){
+        while (this.run.get()) {
             Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-            for (int id : ids) {
-                p2p.send(id, reqStatus);
-            }
+
             try {
-                Thread.sleep(interval);
+                for (int id : ids) {
+                    p2p.send(id, reqStatus);
+
+                    Thread.sleep(Math.max(intervalMin, intervalTotal / ids.size()));
+                }
+
+                if (ids.isEmpty()) {
+                    Thread.sleep(intervalTotal);
+                }
             } catch (InterruptedException e) {
-                this.log.info("<sync-gs shutdown>");
-                return;
+                break;
             }
         }
-        this.log.info("<sync-gs shutdown>");
+        log.info("<sync-gs shutdown>");
     }
 }

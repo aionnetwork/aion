@@ -158,7 +158,7 @@ public class PendingTxCacheTest {
         map.put(Address.wrap(key.get(0).getAddress()), BigInteger.TWO);
 
         newCache = cache.flush(map);
-        assertTrue(newCache.size() == 8);
+        assertTrue(newCache.size() == 1);
 
         Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);

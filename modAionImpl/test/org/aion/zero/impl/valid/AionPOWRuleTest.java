@@ -34,6 +34,7 @@
  ******************************************************************************/
 package org.aion.zero.impl.valid;
 
+import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.impl.valid.AionPOWRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
@@ -42,6 +43,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -66,12 +69,13 @@ public class AionPOWRuleTest {
         // so basically all bytes are valid
         when(mockHeader.getHeaderBytes(any(Boolean.class))).thenReturn(predefinedValidByteString);
         when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
+        List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
-        boolean result = rule.validate(mockHeader);
+        boolean result = rule.validate(mockHeader, errors);
 
         assertThat(result).isTrue();
-        assertThat(rule.getErrors()).isEmpty();
+        assertThat(errors).isEmpty();
     }
 
     @Test
@@ -84,12 +88,13 @@ public class AionPOWRuleTest {
         // so basically all bytes are valid
         when(mockHeader.getHeaderBytes(any(Boolean.class))).thenReturn(predefinedValidByteString);
         when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
+        List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
-        boolean result = rule.validate(mockHeader);
+        boolean result = rule.validate(mockHeader, errors);
 
         assertThat(result).isTrue();
-        assertThat(rule.getErrors()).isEmpty();
+        assertThat(errors).isEmpty();
     }
 
     @Test
@@ -102,11 +107,12 @@ public class AionPOWRuleTest {
         // so basically all bytes are valid
         when(mockHeader.getHeaderBytes(any(Boolean.class))).thenReturn(predefinedValidByteString);
         when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
+        List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
-        boolean result = rule.validate(mockHeader);
+        boolean result = rule.validate(mockHeader, errors);
 
         assertThat(result).isFalse();
-        assertThat(rule.getErrors()).isNotEmpty();
+        assertThat(errors).isNotEmpty();
     }
 }

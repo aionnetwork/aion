@@ -24,11 +24,11 @@
 package org.aion.zero.impl.blockchain;
 
 import org.aion.base.type.Address;
-import org.aion.base.util.BIUtil;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
+import org.aion.zero.impl.core.EnergyLimitStrategy;
 import org.aion.zero.impl.core.RewardsCalculator;
 import org.aion.zero.impl.valid.*;
 import org.aion.zero.types.A0BlockHeader;
@@ -36,7 +36,6 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.equihash.EquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.mine.IMiner;
@@ -60,6 +59,8 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
+    protected EnergyLimitStrategy energyLimitStrategy;
+
     protected Address tokenBridgingOwnerAddress;
 
     public ChainConfiguration() {
@@ -71,14 +72,13 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
         DiffCalc diffCalcInternal = new DiffCalc(constants);
         RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants);
 
-        // adapter class, use this for now because we don't know which
-        // difficulty
-        // algorithm to select
         this.difficultyCalculatorAdapter = (current, parent) -> diffCalcInternal.calcDifficultyTarget(
                 BigInteger.valueOf(current.getTimestamp()), BigInteger.valueOf(parent.getTimestamp()),
                 parent.getDifficultyBI());
-
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
+
+        this.energyLimitStrategy = new EnergyLimitStrategy();
+        this.energyLimitStrategy.setConstants(this);
     }
 
     public IBlockConstants getConstants() {
@@ -116,33 +116,30 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
 
     @Override
     public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
-        return new BlockHeaderValidator<A0BlockHeader>(Arrays.asList(
-                new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()), new EnergyConsumedRule(),
-                new AionPOWRule(), new EquihashSolutionRule(this.getEquihashValidator())));
+        return new BlockHeaderValidator<>(
+                Arrays.asList(
+                        new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
+                        new EnergyConsumedRule(),
+                        new AionPOWRule(),
+                        new EquihashSolutionRule(this.getEquihashValidator())
+                ));
     }
 
     @Override
     public ParentBlockHeaderValidator<A0BlockHeader> createParentHeaderValidator() {
-        return new ParentBlockHeaderValidator<A0BlockHeader>(Arrays.asList(new BlockNumberRule<A0BlockHeader>(),
-                new TimeStampRule<A0BlockHeader>(), new EnergyLimitRule(this.getConstants().getEnergyDivisorLimit(),
-                        this.getConstants().getEnergyLowerBound())));
+        return new ParentBlockHeaderValidator<>(
+                Arrays.asList(
+                        new BlockNumberRule<>(),
+                        new TimeStampRule<>(),
+                        new EnergyLimitRule(this.getConstants().getEnergyDivisorLimitLong(),
+                            this.getConstants().getEnergyLowerBoundLong())
+                ));
     }
 
     public static BigInteger FOUR = BigInteger.valueOf(4);
     public static BigInteger FIVE = BigInteger.valueOf(5);
 
     public long calcEnergyLimit(A0BlockHeader parentHeader) {
-        // work primarily with BigIntegers to prevent overflow
-        BigInteger parentEnergyLimit = BigInteger.valueOf(parentHeader.getEnergyLimit());
-        BigInteger parentEnergyConsumed = BigInteger.valueOf(parentHeader.getEnergyConsumed());
-
-        BigInteger increaseLowerBound = parentEnergyLimit.multiply(FOUR).divide(FIVE);
-
-        if (parentEnergyConsumed.compareTo(increaseLowerBound) > 0) {
-            BigInteger accValue = parentEnergyLimit.divide(this.getConstants().getEnergyDivisorLimit());
-            return BIUtil.max(getConstants().getEnergyLowerBound(), parentEnergyLimit.add(accValue)).longValueExact();
-        } else {
-            return BIUtil.max(getConstants().getEnergyLowerBound(), parentEnergyLimit).longValueExact();
-        }
+        return energyLimitStrategy.targetEnergyLimitStrategy(parentHeader);
     }
 }

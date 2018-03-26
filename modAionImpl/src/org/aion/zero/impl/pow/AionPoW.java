@@ -24,19 +24,20 @@
 
 package org.aion.zero.impl.pow;
 
-import org.aion.base.type.*;
 import org.aion.base.util.Hex;
-import org.aion.mcf.blockchain.IPendingState;
-import org.aion.mcf.core.ImportResult;
 import org.aion.equihash.Solution;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.IPendingState;
+import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -74,6 +75,30 @@ public class AionPoW {
     private AtomicBoolean shutDown = new AtomicBoolean();
     private SyncMgr syncMgr;
 
+    private EventExecuteService ees;
+
+    private final class EpPOW implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+
+                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                    newPendingTxReceived.set(true);
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    // create a new block template every time the best block
+                    // updates.
+                    createNewBlockTemplate();
+                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                    processSolution((Solution) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
     private final CfgAion config = CfgAion.inst();
 
     /**
@@ -102,7 +127,12 @@ public class AionPoW {
             this.syncMgr = SyncMgr.inst();
 
             setupHandler();
+
+            ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+
             registerCallback();
+
+            ees.start(new EpPOW());
 
             new Thread(() -> {
                 while (!shutDown.get()) {
@@ -148,34 +178,13 @@ public class AionPoW {
      */
     public void registerCallback() {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
-        consensusHandler.eventCallback(
-                new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                    @Override
-                    public void onSolution(ISolution solution) {
-                        processSolution((Solution) solution);
-                    }
-                });
+        consensusHandler.eventCallback(new EventCallback(ees, LOG));
 
         IHandler blockHandler = eventMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
-        blockHandler.eventCallback(
-                new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                    @Override
-                    public void onBest(IBlock block, List<?> receipts) {
-                        // create a new block template every time the best block
-                        // updates.
-                        createNewBlockTemplate();
-                    }
-                });
+        blockHandler.eventCallback(new EventCallback(ees, LOG));
 
         IHandler transactionHandler = eventMgr.getHandler(IHandler.TYPE.TX0.getValue());
-        transactionHandler.eventCallback(
-                new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                    @Override
-                    public void onPendingTxReceived(ITransaction tx) {
-                        // set the transaction flag to true
-                        newPendingTxReceived.set(true);
-                    }
-                });
+        transactionHandler.eventCallback(new EventCallback(ees, LOG));
     }
 
     /**
@@ -262,6 +271,7 @@ public class AionPoW {
     }
 
     public synchronized void shutdown() {
+        ees.shutdown();
         shutDown.set(true);
     }
 }

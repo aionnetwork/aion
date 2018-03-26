@@ -14,6 +14,7 @@ import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.base.util.ByteUtil.intToBytes;
+import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.junit.Assert.*;
 
@@ -479,6 +480,37 @@ public class TrieTest {
         assertNotEquals(trie.hashCode(), trie2.hashCode()); // avoid possibility that its just a reference copy
         assertEquals(Hex.toHexString(trie.getRootHash()), Hex.toHexString(trie2.getRootHash()));
         assertTrue(trie.equals(trie2));
+    }
+
+    @Test
+    public void testTrieSerialization() {
+        TrieImpl trie = new TrieImpl(null);
+
+        String val_1 = "1000000000000000000000000000000000000000000000000000000000000000";
+        String val_2 = "2000000000000000000000000000000000000000000000000000000000000000";
+        String val_3 = "3000000000000000000000000000000000000000000000000000000000000000";
+
+        trie.update(Hex.decode(val_1), Hex.decode(val_1));
+        trie.update(Hex.decode(val_2), Hex.decode(val_2));
+        trie.update(Hex.decode(val_3), Hex.decode(val_3));
+
+        byte[] ser_old = trie.serialize_old();
+        byte[] ser_new = trie.serialize();
+
+        assertArrayEquals(ser_old, ser_new);
+    }
+
+    @Test
+    public void testMassiveTrieSerialization() {
+        TrieImpl trie = new TrieImpl(null);
+        for(String s : randomValues) {
+            trie.update(s.getBytes(), s.getBytes());
+        }
+
+        byte[] ser_old = trie.serialize_old();
+        byte[] ser_new = trie.serialize();
+
+        assertArrayEquals(ser_old, ser_new);
     }
 
 }

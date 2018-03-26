@@ -36,6 +36,8 @@ package org.aion.mcf.blockchain.valid;
 
 import org.aion.base.type.IBlockHeader;
 
+import java.util.List;
+
 /**
  * Block header validation rules.
  *
@@ -43,6 +45,6 @@ import org.aion.base.type.IBlockHeader;
  */
 public interface IBlockHeaderValidRule<BH extends IBlockHeader> extends IValidRule {
 
-    boolean validate(BH header, BH dependency);
+    boolean validate(BH header, BH dependency, List<RuleError> errors);
 
 }
