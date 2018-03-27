@@ -240,6 +240,10 @@ public class HashUtil {
         return Blake2bNative.blake256(in1, in2);
     }
 
+    public static byte[][] getSolutionHash(byte[] personalization, byte[] nonce, int[] indices, byte[] header) {
+        return Blake2bNative.getSolutionHash(personalization, nonce, indices, header);
+    }
+
     /**
      * blake2b 128-bit digest variant
      *

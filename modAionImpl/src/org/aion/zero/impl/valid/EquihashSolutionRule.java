@@ -47,7 +47,7 @@ public class EquihashSolutionRule extends BlockHeaderRule<A0BlockHeader> {
 
     @Override
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
-        if (!validator.isValidSolution(header.getSolution(), header.getHeaderBytes(true), header.getNonce())) {
+        if (!validator.isValidSolutionNative(header.getSolution(), header.getHeaderBytes(true), header.getNonce())) {
             addError("Invalid solution", errors);
             return false;
         }
