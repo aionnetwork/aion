@@ -33,6 +33,7 @@ import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -151,10 +152,10 @@ public abstract class DatabaseFactory {
         switch (dbType) {
             case LEVELDB: {
                 // grab leveldb specific parameters
-                int max_fd_alloc_size = Integer.parseInt(info.getProperty(PROP_MAX_FD_ALLOC));
-                int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE));
-                int write_buffer_size = Integer.parseInt(info.getProperty(PROP_WRITE_BUFFER_SIZE));
-                int cache_size = Integer.parseInt(info.getProperty(PROP_CACHE_SIZE));
+                int max_fd_alloc_size = Integer.parseInt(info.getProperty(PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES)));
+                int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE)));
+                int write_buffer_size = Integer.parseInt(info.getProperty(PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE)));
+                int cache_size = Integer.parseInt(info.getProperty(PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE)));
 
                 return new LevelDB(dbName,
                         dbPath,
@@ -164,7 +165,7 @@ public abstract class DatabaseFactory {
                         block_size,
                         write_buffer_size,
                         cache_size);
-                }
+            }
             case H2:
                 return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
             default:
