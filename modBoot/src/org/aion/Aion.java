@@ -143,6 +143,8 @@ public class Aion {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 LOG.info("Starting shutdown process...");
 
+                HttpServer.shutdown();
+
                 if (holder.pp != null) {
                     LOG.info("Shutting down zmq ProtocolProcessor");
                     try {
@@ -156,6 +158,7 @@ public class Aion {
                 if (holder.miner != null) {
                     LOG.info("Shutting down sealer");
                     holder.miner.stopMining();
+                    holder.miner.shutdown();
                     LOG.info("Shutdown sealer... Done!");
                 }
 

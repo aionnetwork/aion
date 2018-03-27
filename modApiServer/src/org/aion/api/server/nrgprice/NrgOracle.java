@@ -1,16 +1,20 @@
 package org.aion.api.server.nrgprice;
 
-import org.aion.api.server.nrgprice.INrgPriceAdvisor;
-import org.aion.api.server.nrgprice.NrgBlockPriceStrategy;
-import org.aion.base.type.*;
+
+import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.slf4j.Logger;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class NrgOracle {
     private static final int BLK_TRAVERSE_ON_INSTANTIATION = 128;
@@ -26,6 +30,25 @@ public class NrgOracle {
     private long recommendation;
 
     INrgPriceAdvisor advisor;
+
+    private EventExecuteService ees;
+
+
+    private final class EpNrg implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                    processBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
 
     /*   This constructor could take considerable time (since it warms up the recommendation engine)
      *   Please keep the BLK_TRAVERSE_ON_INSTANTIATION number reasonably small, to construct this object fast.
@@ -58,18 +81,26 @@ public class NrgOracle {
             itr--;
         }
 
+        ees = new EventExecuteService(1000, "EpNrg", Thread.NORM_PRIORITY, LOG);
+        ees.setFilter(setEventFilter());
+
         // check if handler is of type BLOCK, if so attach our event
         if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
-            handler.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                public void onBlock(final IBlockSummary _bs) {
-                    LOG.debug("nrg-oracle - onBlock event");
-                    AionBlockSummary bs = (AionBlockSummary) _bs;
-                    processBlock(bs);
-                }
-            });
+            handler.eventCallback(new EventCallback(ees, LOG));
         } else {
             LOG.error("nrg-oracle - invalid handler provided to constructor");
         }
+
+        ees.start(new EpNrg());
+    }
+
+    private Set<Integer> setEventFilter() {
+        Set<Integer> eventSN = new HashSet<>();
+
+        int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+
+        return eventSN;
     }
 
     private void processBlock(AionBlockSummary blockSummary) {
@@ -87,5 +118,9 @@ public class NrgOracle {
         }
 
         return recommendation;
+    }
+
+    public void shutDown() {
+        ees.shutdown();
     }
 }

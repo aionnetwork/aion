@@ -32,4 +32,6 @@ public interface IMineRunner {
     boolean isMining();
 
     double getHashrate();
+
+    void shutdown();
 }

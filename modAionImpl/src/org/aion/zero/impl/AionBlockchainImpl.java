@@ -47,6 +47,7 @@ import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.BlockIdentifier;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
+import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.vm.TransactionExecutor;
@@ -121,7 +122,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
 
-    private DependentBlockHeaderRule<A0BlockHeader> parentHeaderValidator;
+    private ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<BlockIdentifier>();
 
@@ -748,18 +749,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public boolean isValid(A0BlockHeader header) {
-        if (!this.blockHeaderValidator.validate(header)) {
-            if (LOG.isErrorEnabled()) {
-                LOG.error(this.blockHeaderValidator.getErrors().toString());
-            }
+        if (!this.blockHeaderValidator.validate(header, LOG)) {
             return false;
         }
 
-        if (!this.parentHeaderValidator.validate(header, this.getParent(header).getHeader())) {
-            if (LOG.isErrorEnabled()) {
-                LOG.error(parentHeaderValidator.getErrors().toString());
-            }
-
+        if (!this.parentHeaderValidator.validate(header, this.getParent(header).getHeader(), LOG)) {
             return false;
         }
         return true;
@@ -802,12 +796,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 Map<Address, BigInteger> nonceCache = new HashMap<>();
 
-                for (AionTransaction tx : txs) {
-                    if (!TXValidator.isValid(tx)) {
-                        LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
-                        return false;
-                    }
+                if (txs.parallelStream().anyMatch(tx -> !TXValidator.isValid(tx))) {
+                    LOG.error("Some transactions in the block are invalid");
+                    return false;
+                }
 
+                for (AionTransaction tx : txs) {
                     Address txSender = tx.getFrom();
 
                     BigInteger expectedNonce = nonceCache.get(txSender);

@@ -70,6 +70,7 @@ public class ProtocolProcessor implements Runnable {
     }
 
     public void shutdown() throws InterruptedException {
+        handler.shutDown();
         proxy.shutdown();
     }
 

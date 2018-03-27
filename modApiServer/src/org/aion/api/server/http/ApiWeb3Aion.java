@@ -29,7 +29,9 @@ import org.aion.api.server.IRpc;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.*;
+import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
@@ -37,7 +39,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.Solution;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -64,7 +66,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
-import static org.aion.base.util.ByteUtil.numBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
 
 final class ApiWeb3Aion extends ApiAion implements IRpc {
@@ -76,6 +77,41 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     private static HashMap<String, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
 
+    protected void onBlock(AionBlockSummary cbs) {
+        installedFilters.keySet().forEach((k) -> {
+            Fltr f = installedFilters.get(k);
+            if (f.isExpired()) {
+                LOG.debug("<Filter: expired, key={}>", k);
+                installedFilters.remove(k);
+            } else if (f.onBlock(cbs)) {
+                LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), cbs.getBlock().getNumber());
+            }
+        });
+    }
+
+    protected void pendingTxReceived(ITransaction _tx) {
+        // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
+        // in the onBlock event. eviction done here "just in case ..."
+        installedFilters.keySet().forEach((k) -> {
+            Fltr f = installedFilters.get(k);
+            if (f.isExpired()) {
+                LOG.debug("<filter expired, key={}>", k);
+                installedFilters.remove(k);
+            } else if(f.onTransaction(_tx)) {
+                LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
+            }
+        });
+    }
+
+    protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+        ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
+        if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
+            pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
+        } else {
+            pendingReceipts.remove(txHashW);
+        }
+    }
+
     ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
@@ -83,52 +119,16 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         templateMapLock = new ReentrantReadWriteLock();
 
 
+        startES("EpWeb3");
         // Fill data on block and transaction events into the filters and pending receipts
         IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHr != null) {
-            blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                public void onBlock(final IBlockSummary _bs) {
-                    AionBlockSummary bs = (AionBlockSummary) _bs;
-                    installedFilters.keySet().forEach((k) -> {
-                        Fltr f = installedFilters.get(k);
-                        if (f.isExpired()) {
-                            LOG.debug("<Filter: expired, key={}>", k);
-                            installedFilters.remove(k);
-                        } else if (f.onBlock(bs)) {
-                            LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), bs.getBlock().getNumber());
-                        }
-                    });
-                }
-            });
+            blkHr.eventCallback(new EventCallback(ees, LOG));
         }
 
         IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
         if (txHr != null) {
-            txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-                public void onPendingTxUpdate(final ITxReceipt _txRcpt, final EventTx.STATE _state, final IBlock _blk) {
-                    ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
-                    if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
-                        pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
-                    } else {
-                        pendingReceipts.remove(txHashW);
-                    }
-                }
-
-                public void onPendingTxReceived(ITransaction _tx) {
-                    // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
-                    // in the onBlock event. eviction done here "just in case ..."
-                    installedFilters.keySet().forEach((k) -> {
-                        Fltr f = installedFilters.get(k);
-                        if (f.isExpired()) {
-                            LOG.debug("<filter expired, key={}>", k);
-                            installedFilters.remove(k);
-                        } else if(f.onTransaction(_tx)) {
-                            LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
-                        }
-                    });
-                }
-            });
+            txHr.eventCallback(new EventCallback(ees, LOG));
         }
 
         // instantiate nrg price oracle
@@ -137,6 +137,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
         this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
+
     }
 
     // --------------------------------------------------------------------
@@ -877,5 +878,10 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             LOG.debug("err on parsing block number #" + _bnOrId);
             return null;
         }
+    }
+
+    void shutDown() {
+        nrgOracle.shutDown();
+        shutDownES();
     }
 }

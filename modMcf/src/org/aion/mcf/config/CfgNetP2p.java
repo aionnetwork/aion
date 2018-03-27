@@ -41,6 +41,8 @@ public final class CfgNetP2p {
         this.showStatus = false;
         this.showLog = false;
         this.bootlistSyncOnly = false;
+        this.maxTempNodes = 128;
+        this.maxActiveNodes = 128;
     }
 
     private String ip;
@@ -54,6 +56,10 @@ public final class CfgNetP2p {
     private boolean showLog;
 
     private boolean bootlistSyncOnly;
+
+    private int maxTempNodes;
+
+    private int maxActiveNodes;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -80,6 +86,12 @@ public final class CfgNetP2p {
                     break;
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                case "max-temp-nodes":
+                    this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
+                    break;
+                case "max-active-nodes":
+                    this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
                     break;
                 default:
                     // Cfg.skipElement(sr);
@@ -120,6 +132,16 @@ public final class CfgNetP2p {
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("show-status");
             xmlWriter.writeCharacters(this.showStatus + "");
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("max-temp-nodes");
+            xmlWriter.writeCharacters(this.maxTempNodes + "");
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("max-active-nodes");
+            xmlWriter.writeCharacters(this.maxActiveNodes + "");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
@@ -164,4 +186,12 @@ public final class CfgNetP2p {
     }
 
     public boolean getBootlistSyncOnly() { return bootlistSyncOnly; }
+
+    public int getMaxTempNodes() {
+        return maxTempNodes;
+    }
+
+    public int getMaxActiveNodes() {
+        return maxActiveNodes;
+    }
 }

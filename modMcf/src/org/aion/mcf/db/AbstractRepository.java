@@ -153,6 +153,8 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 //                            + "\".\nPlease select a driver from the following vendor list: " + vendorListString);
         }
 
+        // TODO: these parameters should be converted to enum
+        // should correspond with those listed in {@code DatabaseFactory}
         Properties sharedProps = new Properties();
         sharedProps.setProperty("db_type", this.cfg.getActiveVendor());
         sharedProps.setProperty("db_path", this.cfg.getDbPath());
@@ -162,6 +164,10 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
         sharedProps.setProperty("enable_heap_cache", String.valueOf(this.cfg.isHeapCacheEnabled()));
         sharedProps.setProperty("max_heap_cache_size", this.cfg.getMaxHeapCacheSize());
         sharedProps.setProperty("enable_heap_cache_stats", String.valueOf(this.cfg.isHeapCacheStatsEnabled()));
+        sharedProps.setProperty("max_fd_alloc_size", String.valueOf(this.cfg.getMaxFdAllocSize()));
+        sharedProps.setProperty("block_size", String.valueOf(this.cfg.getBlockSize()));
+        sharedProps.setProperty("write_buffer_size", String.valueOf(this.cfg.getWriteBufferSize()));
+        sharedProps.setProperty("cache_size", String.valueOf(this.cfg.getCacheSize()));
 
         try {
             databaseGroup = new ArrayList<>();

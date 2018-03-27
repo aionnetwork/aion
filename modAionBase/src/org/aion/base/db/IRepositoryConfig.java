@@ -71,4 +71,12 @@ public interface IRepositoryConfig {
      * @return
      */
     String getMaxHeapCacheSize();
+
+    int getMaxFdAllocSize();
+
+    int getBlockSize();
+
+    int getWriteBufferSize();
+
+    int getCacheSize();
 }

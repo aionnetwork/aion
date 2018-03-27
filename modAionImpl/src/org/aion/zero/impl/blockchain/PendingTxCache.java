@@ -195,7 +195,7 @@ public class PendingTxCache {
                 }
 
                 if (cacheTxMap.get(addr).get(bn) != null) {
-                    processableTx.addAll(findSeqTx(bn, addr));
+                    processableTx.add(cacheTxMap.get(addr).get(bn));
                 }
             }
         }

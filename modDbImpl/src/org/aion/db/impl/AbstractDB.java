@@ -57,7 +57,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     protected static final int DEFAULT_CACHE_SIZE_BYTES = 128 * 1024 * 1024; // 128mb
-    protected static final int DEFAULT_WRITE_BUFFER_SIZE_BYTES = 10 * 1024 * 1024; // 10mb
+    protected static final int DEFAULT_WRITE_BUFFER_SIZE_BYTES = 16 * 1024 * 1024; // 16mb
 
     protected final String name;
     protected String path = null;

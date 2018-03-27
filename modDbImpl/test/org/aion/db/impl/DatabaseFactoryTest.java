@@ -39,6 +39,7 @@ import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.MockDBDriver;
 import org.junit.Test;
@@ -47,7 +48,6 @@ import java.io.File;
 import java.util.Properties;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class DatabaseFactoryTest {
@@ -72,6 +72,11 @@ public class DatabaseFactoryTest {
 
         // LEVELDB
         props.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.LEVELDB.toValue());
+        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
+
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(LevelDB.class.getSimpleName());
@@ -116,7 +121,7 @@ public class DatabaseFactoryTest {
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(H2MVMap.class.getSimpleName());
-    
+
         // DatabaseWithCache class
         props.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.MOCKDB.toValue());
         props.setProperty(DatabaseFactory.PROP_ENABLE_HEAP_CACHE, "true");

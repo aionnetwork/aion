@@ -76,17 +76,20 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
                 new RepositoryConfig(new String[] { config.getDb().getVendor() },
-                        // config.getDb().getVendorList() database list
-                        config.getDb().getVendor(), // database
-                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), // db path
-                        -1, // config.getDb().getPrune() prune flag
-                        ContractDetailsAion.getInstance(), // contract details provider
-                        config.getDb().isAutoCommitEnabled(), // if false, flush/commit must be called
-                        config.getDb().isDbCacheEnabled(), // caching inside the database
-                        config.getDb().isDbCompressionEnabled(), // default database compression
-                        config.getDb().isHeapCacheEnabled(), // uses heap caching
-                        config.getDb().getMaxHeapCacheSize(), // size of the heap cache
-                        config.getDb().isHeapCacheStatsEnabled())); // stats for heap cache
+                        config.getDb().getVendor(),
+                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(),
+                        -1,
+                        ContractDetailsAion.getInstance(),
+                        config.getDb().isAutoCommitEnabled(),
+                        config.getDb().isDbCacheEnabled(),
+                        config.getDb().isDbCompressionEnabled(),
+                        config.getDb().isHeapCacheEnabled(),
+                        config.getDb().getMaxHeapCacheSize(),
+                        config.getDb().isHeapCacheStatsEnabled(),
+                        config.getDb().getFdOpenAllocSize(),
+                        config.getDb().getBlockSize(),
+                        config.getDb().getWriteBufferSize(),
+                        config.getDb().getCacheSize()));
     }
 
     public static AionRepositoryImpl inst() {

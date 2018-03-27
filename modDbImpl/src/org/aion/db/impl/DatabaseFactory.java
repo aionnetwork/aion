@@ -64,6 +64,12 @@ public abstract class DatabaseFactory {
 
     public static final String PROP_ENABLE_LOCKING = "enable_locking";
 
+    public static final String PROP_MAX_FD_ALLOC = "max_fd_alloc_size";
+    public static final String PROP_BLOCK_SIZE = "block_size";
+
+    public static final String PROP_WRITE_BUFFER_SIZE = "write_buffer_size";
+    public static final String PROP_CACHE_SIZE = "cache_size";
+
     public static IByteArrayKeyValueDatabase connect(Properties info) {
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(PROP_DB_TYPE));
@@ -143,8 +149,22 @@ public abstract class DatabaseFactory {
 
         // select database implementation
         switch (dbType) {
-            case LEVELDB:
-                return new LevelDB(dbName, dbPath, enableDbCache, enableDbCompression);
+            case LEVELDB: {
+                // grab leveldb specific parameters
+                int max_fd_alloc_size = Integer.parseInt(info.getProperty(PROP_MAX_FD_ALLOC));
+                int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE));
+                int write_buffer_size = Integer.parseInt(info.getProperty(PROP_WRITE_BUFFER_SIZE));
+                int cache_size = Integer.parseInt(info.getProperty(PROP_CACHE_SIZE));
+
+                return new LevelDB(dbName,
+                        dbPath,
+                        enableDbCache,
+                        enableDbCompression,
+                        max_fd_alloc_size,
+                        block_size,
+                        write_buffer_size,
+                        cache_size);
+                }
             case H2:
                 return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
             default:

@@ -25,14 +25,10 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
 package org.aion.db.impl;
+
+import org.aion.db.impl.leveldb.LevelDBConstants;
 
 import java.io.File;
 import java.util.*;
@@ -79,6 +75,10 @@ public class DatabaseTestUtils {
         sharedProps.setProperty("enable_auto_commit", enabled);
         sharedProps.setProperty("max_heap_cache_size", "0");
         sharedProps.setProperty("max_heap_cache_size", disabled);
+        sharedProps.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        sharedProps.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        sharedProps.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        sharedProps.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         // all vendor options
         for (DBVendor vendor : vendors) {
@@ -130,7 +130,7 @@ public class DatabaseTestUtils {
     }
 
     private static void addDatabaseWithCacheAndCompression(DBVendor vendor, Properties sharedProps,
-            List<Object> parameters) {
+                                                           List<Object> parameters) {
         if (vendor != DBVendor.MOCKDB) {
             // enable/disable db_cache
             for (String db_cache : options) {
@@ -159,7 +159,7 @@ public class DatabaseTestUtils {
      * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit Wiki on multithreaded code and concurrency</a>
      */
     public static void assertConcurrent(final String message, final List<? extends Runnable> runnables,
-            final int maxTimeoutSeconds) throws InterruptedException {
+                                        final int maxTimeoutSeconds) throws InterruptedException {
         final int numThreads = runnables.size();
         final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
         final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
