@@ -35,6 +35,7 @@
 package org.aion.db.impl;
 
 import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 
 import java.io.File;
 import java.util.*;
@@ -70,6 +71,10 @@ public class DatabaseTestUtils {
         sharedProps.setProperty("enable_auto_commit", enabled);
         sharedProps.setProperty("max_heap_cache_size", "0");
         sharedProps.setProperty("max_heap_cache_size", disabled);
+        sharedProps.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        sharedProps.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        sharedProps.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        sharedProps.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         // all vendor options
         for (DBVendor vendor : vendors) {

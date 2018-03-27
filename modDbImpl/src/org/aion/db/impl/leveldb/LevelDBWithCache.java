@@ -38,11 +38,47 @@ import org.aion.db.impl.AbstractDatabaseWithCache;
 
 public class LevelDBWithCache extends AbstractDatabaseWithCache {
 
-    public LevelDBWithCache(String name, String path, boolean enableCache, boolean enableCompression,
-            boolean enableAutoCommit, String max_cache_size, boolean enableStats) {
+    public LevelDBWithCache(String name,
+                            String path,
+                            boolean enableCache,
+                            boolean enableCompression,
+                            boolean enableAutoCommit,
+                            String max_cache_size,
+                            boolean enableStats,
+                            int maxOpenFiles,
+                            int blockSize,
+                            int writeBufferSize,
+                            int cacheSize) {
         // when to commit is directed by this implementation
         super(enableAutoCommit, max_cache_size, enableStats);
         // the underlying database will always commit
-        database = new LevelDB(name, path, enableCache, enableCompression);
+        database = new LevelDB(name,
+                path,
+                enableCache,
+                enableCompression,
+                maxOpenFiles,
+                blockSize,
+                writeBufferSize,
+                cacheSize);
+    }
+
+    public LevelDBWithCache(String name,
+                            String path,
+                            boolean enableCache,
+                            boolean enableCompression,
+                            boolean enableAutoCommit,
+                            String max_cache_size,
+                            boolean enableStats) {
+        this(   name,
+                path,
+                enableCache,
+                enableCompression,
+                enableAutoCommit,
+                max_cache_size,
+                enableStats,
+                LevelDBConstants.MAX_OPEN_FILES,
+                LevelDBConstants.BLOCK_SIZE,
+                LevelDBConstants.WRITE_BUFFER_SIZE,
+                LevelDBConstants.CACHE_SIZE);
     }
 }

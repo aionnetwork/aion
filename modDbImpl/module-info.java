@@ -7,4 +7,5 @@ module aion.db.impl {
     requires h2.mvstore;
 
 	exports org.aion.db.impl;
+	exports org.aion.db.impl.leveldb;
 }
