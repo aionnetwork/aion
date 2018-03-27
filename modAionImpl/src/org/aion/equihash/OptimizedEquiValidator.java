@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.aion.base.util.ByteUtil.*;
 
@@ -91,7 +92,7 @@ public class OptimizedEquiValidator {
      * @return True if valid solution based on block header and nonce
      * @throws NullPointerException
      */
-    public synchronized boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
+    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -292,19 +293,14 @@ public class OptimizedEquiValidator {
      * Check if duplicates are present in the solutions index array
      */
     private boolean hasDuplicate(int[] indices) {
-        int[] cpy = Arrays.copyOfRange(indices, 0, indices.length);
-        Arrays.sort(cpy);
-        for (int i = 1; i < cpy.length; i++) {
-            if (cpy[i] <= cpy[i - 1]) {
-                return true;
-            }
+        //TODO: Switch this to a threadLocal implementation; avoid for now until threading strategy is determined.
+        Set<Integer> indexSet = new HashSet<>(512);
 
-//        for(int index: indices) {
-//            if(!indexSet.add(index))
-//                return true;
-//        }
-//        indexSet.clear();
+        for(int index: indices) {
+            if(!indexSet.add(index))
+                return true;
         }
+
         return false;
     }
 }

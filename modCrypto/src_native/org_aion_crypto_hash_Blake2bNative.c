@@ -44,7 +44,9 @@ JNIEXPORT jbyteArray JNICALL Java_org_aion_crypto_hash_Blake2bNative_blake256
     jsize inLen = (*env)->GetArrayLength(env, in);
 
     uint8_t out[HASH_LEN];
-    blake2b(out, HASH_LEN, inBuf, inLen, NULL, 0);
+    //blake2b(out, HASH_LEN, inBuf, inLen, NULL, 0);
+
+    blake2b(out, inBuf, NULL, HASH_LEN, inLen, 0);
 
     jbyteArray ret = (*env)->NewByteArray(env, HASH_LEN);
     (*env)->SetByteArrayRegion(env, ret, 0, HASH_LEN, out);
@@ -107,7 +109,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_aion_crypto_hash_Blake2bNative_genSoluti
     jbyteArray hashes = (*env)->NewByteArray(env, HASHOUT/HASHESPERBLAKE);
     jobjectArray outer = (*env)->NewObjectArray(env, indicesSize, byteClass, hashes);
 
-
     // Generate hashes
     int i;
     for(i = 0; i < indicesSize; i++){
@@ -123,15 +124,6 @@ JNIEXPORT jobjectArray JNICALL Java_org_aion_crypto_hash_Blake2bNative_genSoluti
         blake2b_final(&state, blakehash, HASHOUT);
 
         memcpy(indexHash, blakehash + (indices[i] % HASHESPERBLAKE) * (N+7)/8, (N+7)/8);
-        //if(i == 0){
-//            int k;
-//            for(k = 0; k < 54; k++){
-//                printf("%x", blakehash[k]);
-//            }
-//            printf("\n");
-
-        //}
-
 
         jbyteArray hash = (*env)->NewByteArray(env, HASHOUT/HASHESPERBLAKE);
         (*env)->SetByteArrayRegion(env, hash, 0, HASHOUT/HASHESPERBLAKE, indexHash);

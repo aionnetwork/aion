@@ -302,6 +302,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
                 .append(txTrieRoot.length).append(suffix);
         toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot)).append("  receiptTrieRoot: ")
                 .append(receiptTrieRoot.length).append(suffix);
+        toStringBuff.append("  logsBloom=").append(toHexString(logsBloom)).append(suffix);
         toStringBuff.append("  difficulty=").append(toHexString(difficulty)).append("  difficulty: ")
                 .append(difficulty.length).append(suffix);
         toStringBuff.append("  number=").append(number).append(suffix);
