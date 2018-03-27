@@ -36,7 +36,7 @@ package org.aion.zero.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.trie.JournalPruneDataSource;
+// import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -89,7 +89,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) ((AionRepositoryImpl) chain.getRepository()).getWorldState();
-        IByteArrayKeyValueDatabase database = ((JournalPruneDataSource) trie.getCache().getDb()).getSrc();
+        IByteArrayKeyValueDatabase database = (IByteArrayKeyValueDatabase) trie.getCache().getDb();
 
         for (byte[] key : statesToDelete) {
             database.delete(key);
@@ -140,7 +140,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) ((AionRepositoryImpl) chain.getRepository()).getWorldState();
-        IByteArrayKeyValueDatabase database = ((JournalPruneDataSource) trie.getCache().getDb()).getSrc();
+        IByteArrayKeyValueDatabase database = (IByteArrayKeyValueDatabase) trie.getCache().getDb();
 
         for (byte[] key : statesToDelete) {
             database.delete(key);
@@ -189,7 +189,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) ((AionRepositoryImpl) chain.getRepository()).getWorldState();
-        IByteArrayKeyValueDatabase database = ((JournalPruneDataSource) trie.getCache().getDb()).getSrc();
+        IByteArrayKeyValueDatabase database = (IByteArrayKeyValueDatabase) trie.getCache().getDb();
 
         List<byte[]> statesToDelete = new ArrayList<>();
         statesToDelete.addAll(database.keys());

@@ -37,7 +37,7 @@ import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.trie.JournalPruneDataSource;
+// import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
 
 /**
@@ -45,7 +45,7 @@ import org.aion.mcf.types.AbstractBlock;
  */
 public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransaction>, BH extends IBlockHeader> {
 
-    private JournalPruneDataSource<BLK, BH> storageDSPrune;
+    // private JournalPruneDataSource<BLK, BH> storageDSPrune;
     private IRepositoryConfig repoConfig;
 
     private IByteArrayKeyValueDatabase detailsSrc;
@@ -66,7 +66,7 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransacti
             IByteArrayKeyValueDatabase storageSrc) {
         this.detailsSrc = detailsSrc;
         this.storageSrc = storageSrc;
-        this.storageDSPrune = new JournalPruneDataSource<>(storageSrc);
+        // this.storageDSPrune = new JournalPruneDataSource<>(storageSrc);
         return this;
     }
 
@@ -95,7 +95,7 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransacti
 
         // Found something from cache or database, return it by decoding it.
         IContractDetails<DataWord> detailsImpl = repoConfig.contractDetailsImpl();
-        detailsImpl.setDataSource(storageDSPrune);
+        detailsImpl.setDataSource(storageSrc);
         detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
         // if it is present.
 
@@ -164,7 +164,7 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransacti
 
             // Decode the details.
             IContractDetails<DataWord> detailsImpl = repoConfig.contractDetailsImpl();
-            detailsImpl.setDataSource(storageDSPrune);
+            detailsImpl.setDataSource(storageSrc);
             detailsImpl.decode(rawDetails.get()); // We can safely get as we
             // checked if it is present.
 
@@ -173,9 +173,9 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransacti
         }
     }
 
-    public JournalPruneDataSource<BLK, BH> getStorageDSPrune() {
+    /* public JournalPruneDataSource<BLK, BH> getStorageDSPrune() {
         return storageDSPrune;
-    }
+    } */
 
     public synchronized Set<ByteArrayWrapper> keys() {
         // TODO - @yao do we wanted a sorted set?
