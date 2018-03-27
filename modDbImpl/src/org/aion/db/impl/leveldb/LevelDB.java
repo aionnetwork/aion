@@ -107,8 +107,8 @@ public class LevelDB extends AbstractDB {
         options.createIfMissing(true);
         options.compressionType(enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
         options.blockSize(this.blockSize);
-        options.writeBufferSize(DEFAULT_WRITE_BUFFER_SIZE_BYTES); // (levelDb default: 8mb)
-        options.cacheSize(enableDbCache ? DEFAULT_CACHE_SIZE_BYTES : 0);
+        options.writeBufferSize(this.writeBufferSize); // (levelDb default: 8mb)
+        options.cacheSize(enableDbCache ? this.cacheSize : 0);
         options.paranoidChecks(true);
         options.verifyChecksums(true);
         options.maxOpenFiles(this.maxOpenFiles);
