@@ -181,7 +181,15 @@ public final class  P2pMgr implements IP2pMgr {
                 if (nodeMgr.activeNodesSize() >= maxActiveNodes) {
                     if (showLog)
                         System.out.println("<p2p-tcp-connect-peer pass max-active-nodes>");
-                    return;
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        if (showLog)
+                            System.out.println("<p2p-tcp-interrupted>");
+                        return;
+                    }
+                    continue;
                 }
 
                 Node node;
@@ -194,7 +202,7 @@ public final class  P2pMgr implements IP2pMgr {
                     }
                 } catch (InterruptedException e) {
                     if (showLog)
-                        System.out.println("<p2p outbound-connect-io-exception>");
+                        System.out.println("<p2p-tcp-interrupted>");
                     return;
                 }
                 int nodeIdHash = node.getIdHash();
