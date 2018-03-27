@@ -72,7 +72,7 @@ public final class ResBlocksHeadersHandler extends Handler {
             List<A0BlockHeader> headers = resHeaders.getHeaders();
             if(headers != null && headers.size() > 0){
                 this.log.debug(
-                        "<res-headers from-block={} take={} from-node={}>",
+                        "<res-headers from-number={} size={} node={}>",
                         headers.get(0).getNumber(),
                         headers.size(),
                         _displayId
@@ -80,13 +80,13 @@ public final class ResBlocksHeadersHandler extends Handler {
                 this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, _displayId, headers);
             } else {
                 this.log.error(
-                    "<res-headers empty-headers from-node={} >",
+                    "<res-headers empty-headers node={} >",
                     _displayId
                 );
             }
         } else
             this.log.error(
-                    "<res-headers decode-msg msg-bytes={} from-node={} >",
+                    "<res-headers decode-msg msg-bytes={} node={} >",
                     _msgBytes.length,
                     _displayId
             );

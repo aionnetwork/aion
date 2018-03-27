@@ -38,6 +38,7 @@ import java.io.Writer;
  */
 public final class CfgSync {
 
+    private int blocksBackwardMax;
     private int blocksImportMax;
 
     private int blocksQueueMax;
@@ -45,7 +46,9 @@ public final class CfgSync {
     private boolean showStatus;
 
     public CfgSync() {
+        this.blocksBackwardMax = 16;
         this.blocksImportMax = 32;
+
         this.blocksQueueMax = 64;
         this.showStatus = false;
     }
@@ -58,6 +61,9 @@ public final class CfgSync {
             case XMLStreamReader.START_ELEMENT:
                 String elementName = sr.getLocalName().toLowerCase();
                 switch (elementName) {
+                case "blocks-backward-max":
+                    this.blocksBackwardMax = Integer.parseInt(Cfg.readValue(sr));
+                    break;
                 case "blocks-import-max":
                     this.blocksImportMax = Integer.parseInt(Cfg.readValue(sr));
                     break;
@@ -90,6 +96,12 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("sync");
 
+            // sub-element blocks-backward-max
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("blocks-backward-max");
+            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeEndElement();
+
             // sub-element blocks-import-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-import-max");
@@ -121,6 +133,10 @@ public final class CfgSync {
         } catch (IOException | XMLStreamException e) {
             return "";
         }
+    }
+
+    public int getBlocksBackwardMax() {
+        return this.blocksBackwardMax;
     }
 
     public int getBlocksImportMax() {

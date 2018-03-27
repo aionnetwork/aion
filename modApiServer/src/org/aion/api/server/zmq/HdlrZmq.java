@@ -55,6 +55,10 @@ public class HdlrZmq implements IHdlr {
         LOGGER.info("AionAPI Implementation Initiated");
     }
 
+    public void shutDown() {
+        api.shutDown();
+    }
+
     public byte[] process(byte[] request, byte[] socketId) {
         try {
             return this.api.process(request, socketId);

@@ -72,7 +72,6 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     }
 
     public AionBlock(byte[] rawData) {
-        LOG.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
     }
 

@@ -53,5 +53,4 @@ public abstract class AbstractMineRunner<BLK extends IBlock<?, ?>> implements IM
     protected abstract void fireMinerStarted();
 
     protected abstract void fireMinerStopped();
-
 }

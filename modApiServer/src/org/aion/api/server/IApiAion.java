@@ -55,5 +55,7 @@ public interface IApiAion {
 
     Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> getMsgIdMapping();
 
+    void shutDown();
+
     TxWaitingMappingUpdate takeTxWait() throws Throwable;
 }

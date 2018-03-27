@@ -7,4 +7,5 @@ module aion.evtmgr.impl {
     exports org.aion.evtmgr.impl.handler;
     exports org.aion.evtmgr.impl.mgr;
     exports org.aion.evtmgr.impl.evt;
+    exports org.aion.evtmgr.impl.es;
 }

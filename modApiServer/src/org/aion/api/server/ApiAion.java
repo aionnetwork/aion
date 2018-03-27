@@ -30,11 +30,16 @@ import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
+import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
+import org.aion.evtmgr.IHandler;
+import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.zero.impl.AionGenesis;
@@ -43,6 +48,7 @@ import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -50,12 +56,12 @@ import org.aion.zero.types.AionTxReceipt;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
     protected NrgOracle nrgOracle;
@@ -67,6 +73,8 @@ public abstract class ApiAion extends Api {
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
     protected String[] compilers = new String[] {"solidity"};
 
+    protected EventExecuteService ees;
+
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
@@ -76,6 +84,34 @@ public abstract class ApiAion extends Api {
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
     }
+
+    public final class EpApi implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+
+                IEvent  e = ees.take();
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                    onBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
+                    if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
+                        pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), GETSTATE((int)e.getFuncArgs().get(1)));
+                    } else if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue() ){
+                        for (ITransaction tx : (List<ITransaction>) e.getFuncArgs().get(0)) {
+                            pendingTxReceived(tx);
+                        }
+                    }
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
+    protected abstract void onBlock(AionBlockSummary cbs);
+    protected abstract void pendingTxReceived(ITransaction _tx);
+    protected abstract void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state);
 
     // General Level
     public byte getApiVersion() {
@@ -588,5 +624,28 @@ public abstract class ApiAion extends Api {
 
     public long getDefaultNrgLimit() {
         return DEFAULT_NRG_LIMIT;
+    }
+
+    protected void startES(String thName) {
+
+        ees = new EventExecuteService(100_000, thName, Thread.MIN_PRIORITY, LOG);
+        ees.setFilter(setEvtfilter());
+        ees.start(new EpApi());
+    }
+
+    private Set<Integer> setEvtfilter() {
+        Set<Integer> eventSN = new HashSet<>();
+        int sn = IHandler.TYPE.TX0.getValue() << 8;
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue());
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXUPDATE0.getValue());
+
+        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+
+        return eventSN;
+    }
+
+    protected void shutDownES() {
+        ees.shutdown();
     }
 }
