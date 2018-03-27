@@ -335,7 +335,7 @@ public class ApiWeb3Aion extends ApiAion {
     public RpcMsg eth_sendTransaction(JSONArray _params) {
         JSONObject _tx = _params.getJSONObject(0);
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
         if (txParams == null)
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Please check your transaction object.");
 
@@ -367,7 +367,7 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject _tx = _params.getJSONObject(0);
         Object _bnOrId = _params.opt(1);
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
         if (_bnOrId != null && !_bnOrId.equals(null))
@@ -394,7 +394,7 @@ public class ApiWeb3Aion extends ApiAion {
     public RpcMsg eth_estimateGas(JSONArray _params) {
         JSONObject _tx = _params.getJSONObject(0);
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
         NumericalValue estimate = new NumericalValue(estimateGas(txParams));
 
         return new RpcMsg(estimate.toHexString());

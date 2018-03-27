@@ -588,6 +588,11 @@ public abstract class ApiAion extends Api {
         return this.nrgOracle.getNrgPrice();
     }
 
+    // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design
+    public NrgOracle getNrgOracle() {
+        return this.nrgOracle;
+    }
+
     public long getDefaultNrgLimit() {
         return DEFAULT_NRG_LIMIT;
     }

@@ -1,18 +1,12 @@
 package org.aion.api.server.nrgprice;
 
-import org.aion.api.server.nrgprice.INrgPriceAdvisor;
-import org.aion.api.server.nrgprice.NrgBlockPriceStrategy;
-import org.aion.base.type.*;
+import org.aion.api.server.nrgprice.strategy.NrgBlockPrice;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionBlockSummary;
 import org.slf4j.Logger;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Serves as the recommendor of nrg prices based on some observation strategy
@@ -28,9 +22,7 @@ public class NrgOracle {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    private long tsLastCompute;
     private long lastBlkProcessed;
-
     private long recommendation;
 
     private INrgPriceAdvisor advisor;
@@ -40,21 +32,20 @@ public class NrgOracle {
 
         // get default and max nrg from the config
         this.recommendation = nrgPriceDefault;
-        this.tsLastCompute = -1;
         this.lastBlkProcessed = -1;
 
-        this.advisor = new NrgBlockPriceStrategy(nrgPriceDefault, nrgPriceMax, BLKPRICE_WINDOW, BLKPRICE_PERCENTILE);
+        this.advisor = new NrgBlockPrice(nrgPriceDefault, nrgPriceMax, BLKPRICE_WINDOW, BLKPRICE_PERCENTILE);
         this.blockchain = blockchain;
     }
 
-    // if we don't find any transaction within the last 64 blocks
+    // if we don't find any transaction within the last N blocks
     // (at 10s block time, ~10min), miners should be willing to accept transactions at defaultPrice
     private static final int MAX_BLK_TRAVERSE = 64;
     private void buildRecommendation() {
         AionBlock lastBlock = blockchain.getBestBlock();
 
         long blkDiff = lastBlock.getNumber() - lastBlkProcessed;
-        if (blkDiff > BLKPRICE_WINDOW) {
+        if (blkDiff > MAX_BLK_TRAVERSE) {
             advisor.flush();
         }
 
@@ -62,8 +53,6 @@ public class NrgOracle {
 
         while (blkTraverse > 0) {
             advisor.processBlock(lastBlock);
-
-            if (!advisor.isHungry()) break; // recommendation engine warmed up to give good advice
 
             // traverse up the chain to feed the recommendation engine
             long parentBlockNumber = lastBlock.getNumber() - 1;
@@ -75,7 +64,6 @@ public class NrgOracle {
         }
 
         recommendation = advisor.computeRecommendation();
-        tsLastCompute = System.currentTimeMillis();
         lastBlkProcessed = lastBlock.getNumber();
     }
 
@@ -88,10 +76,10 @@ public class NrgOracle {
      * If multiple consumers want nrgPrice simultaneously, all will be blocked until the recommendation is built
      * and cached. Future consumers read the cached value until cache flush.
      */
-    private static final long CACHE_FLUSH_MILLIS = 20_000L; // 20s
+    private static final long CACHE_FLUSH_BLKS = 1;
     public synchronized long getNrgPrice() {
-        long tsNow = System.currentTimeMillis();
-        if (tsNow - tsLastCompute > CACHE_FLUSH_MILLIS) {
+        long blkNow = blockchain.getBestBlock().getNumber();
+        if (blkNow - lastBlkProcessed > CACHE_FLUSH_BLKS) {
             buildRecommendation();
         }
 
