@@ -46,11 +46,20 @@ public class LevelDBWithCache extends AbstractDatabaseWithCache {
                             String max_cache_size,
                             boolean enableStats,
                             int maxOpenFiles,
-                            int blockSize) {
+                            int blockSize,
+                            int writeBufferSize,
+                            int cacheSize) {
         // when to commit is directed by this implementation
         super(enableAutoCommit, max_cache_size, enableStats);
         // the underlying database will always commit
-        database = new LevelDB(name, path, enableCache, enableCompression, maxOpenFiles, blockSize);
+        database = new LevelDB(name,
+                path,
+                enableCache,
+                enableCompression,
+                maxOpenFiles,
+                blockSize,
+                writeBufferSize,
+                cacheSize);
     }
 
     public LevelDBWithCache(String name,
@@ -60,7 +69,16 @@ public class LevelDBWithCache extends AbstractDatabaseWithCache {
                             boolean enableAutoCommit,
                             String max_cache_size,
                             boolean enableStats) {
-        this(name, path, enableCache, enableCompression, enableAutoCommit,
-                max_cache_size, enableStats, 32, 10 * 1024 * 1024);
+        this(   name,
+                path,
+                enableCache,
+                enableCompression,
+                enableAutoCommit,
+                max_cache_size,
+                enableStats,
+                LevelDBConstants.MAX_OPEN_FILES,
+                LevelDBConstants.BLOCK_SIZE,
+                LevelDBConstants.WRITE_BUFFER_SIZE,
+                LevelDBConstants.CACHE_SIZE);
     }
 }

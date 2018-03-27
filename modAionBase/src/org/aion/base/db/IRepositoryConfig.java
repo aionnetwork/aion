@@ -75,4 +75,8 @@ public interface IRepositoryConfig {
     int getMaxFdAllocSize();
 
     int getBlockSize();
+
+    int getWriteBufferSize();
+
+    int getCacheSize();
 }

@@ -47,6 +47,9 @@ public class RepositoryConfig implements IRepositoryConfig {
     private final int block_size;
     private final int max_fd_alloc_size;
 
+    private final int write_buffer_size;
+    private final int cache_size;
+
     @Override
     public String[] getVendorList() {
         return vendorList;
@@ -112,6 +115,16 @@ public class RepositoryConfig implements IRepositoryConfig {
         return this.block_size;
     }
 
+    @Override
+    public int getWriteBufferSize() {
+        return this.write_buffer_size;
+    }
+
+    @Override
+    public int getCacheSize() {
+        return this.cache_size;
+    }
+
     public RepositoryConfig(final String[] vendorList, //
                             final String activeVendor, //
                             final String dbPath, //
@@ -124,7 +137,9 @@ public class RepositoryConfig implements IRepositoryConfig {
                             final String max_heap_cache_size, //
                             final boolean enable_heap_cache_stats,
                             final int max_fd_alloc_size,
-                            final int block_size) { //
+                            final int block_size,
+                            final int write_buffer_size,
+                            final int cache_size) { //
 
         this.vendorList = vendorList;
         this.activeVendor = activeVendor;
@@ -144,6 +159,9 @@ public class RepositoryConfig implements IRepositoryConfig {
 
         this.max_fd_alloc_size = max_fd_alloc_size;
         this.block_size = block_size;
+
+        this.write_buffer_size = write_buffer_size;
+        this.cache_size = cache_size;
     }
 
 }

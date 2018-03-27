@@ -40,6 +40,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.mcf.core.AccountState;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
@@ -117,15 +118,25 @@ public class AionRepositoryImplTest {
             return false;
         }
 
-        // TODO: these are still set to old parameters
         @Override
         public int getMaxFdAllocSize() {
-            return 32;
+            return LevelDBConstants.MAX_OPEN_FILES;
+        }
+
+        // default levelDB setting, may want to change this later
+        @Override
+        public int getBlockSize() {
+            return LevelDBConstants.BLOCK_SIZE;
         }
 
         @Override
-        public int getBlockSize() {
-            return 10 * 1024 * 1024;
+        public int getWriteBufferSize() {
+            return LevelDBConstants.WRITE_BUFFER_SIZE;
+        }
+
+        @Override
+        public int getCacheSize() {
+            return LevelDBConstants.CACHE_SIZE;
         }
     };
 

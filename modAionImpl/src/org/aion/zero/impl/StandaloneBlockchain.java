@@ -29,6 +29,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.mcf.core.AccountState;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -114,13 +115,23 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         @Override
         public int getMaxFdAllocSize() {
-            return 1024;
+            return LevelDBConstants.MAX_OPEN_FILES;
         }
 
         // default levelDB setting, may want to change this later
         @Override
         public int getBlockSize() {
-            return 4096;
+            return LevelDBConstants.BLOCK_SIZE;
+        }
+
+        @Override
+        public int getWriteBufferSize() {
+            return LevelDBConstants.WRITE_BUFFER_SIZE;
+        }
+
+        @Override
+        public int getCacheSize() {
+            return LevelDBConstants.CACHE_SIZE;
         }
     };
 
@@ -291,12 +302,23 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                 @Override
                 public int getMaxFdAllocSize() {
-                    return 1024;
+                    return LevelDBConstants.MAX_OPEN_FILES;
+                }
+
+                // default levelDB setting, may want to change this later
+                @Override
+                public int getBlockSize() {
+                    return LevelDBConstants.BLOCK_SIZE;
                 }
 
                 @Override
-                public int getBlockSize() {
-                    return 4096;
+                public int getWriteBufferSize() {
+                    return LevelDBConstants.WRITE_BUFFER_SIZE;
+                }
+
+                @Override
+                public int getCacheSize() {
+                    return LevelDBConstants.CACHE_SIZE;
                 }
             };
         }

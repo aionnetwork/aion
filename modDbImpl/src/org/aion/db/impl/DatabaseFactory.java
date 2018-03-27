@@ -67,6 +67,9 @@ public abstract class DatabaseFactory {
     public static final String PROP_MAX_FD_ALLOC = "max_fd_alloc_size";
     public static final String PROP_BLOCK_SIZE = "block_size";
 
+    public static final String PROP_WRITE_BUFFER_SIZE = "write_buffer_size";
+    public static final String PROP_CACHE_SIZE = "cache_size";
+
     public static IByteArrayKeyValueDatabase connect(Properties info) {
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(PROP_DB_TYPE));
@@ -116,6 +119,8 @@ public abstract class DatabaseFactory {
                 // grab leveldb specific parameters
                 int max_fd_alloc_size = Integer.parseInt(info.getProperty(PROP_MAX_FD_ALLOC));
                 int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE));
+                int write_buffer_size = Integer.parseInt(info.getProperty(PROP_WRITE_BUFFER_SIZE));
+                int cache_size = Integer.parseInt(info.getProperty(PROP_CACHE_SIZE));
 
                 if (enableHeapCache) {
                     return new LevelDBWithCache(dbName,
@@ -126,9 +131,18 @@ public abstract class DatabaseFactory {
                             info.getProperty(PROP_MAX_HEAP_CACHE_SIZE),
                             Boolean.parseBoolean(info.getProperty(PROP_ENABLE_HEAP_CACHE_STATS)),
                             max_fd_alloc_size,
-                            block_size);
+                            block_size,
+                            write_buffer_size,
+                            cache_size);
                 } else {
-                    return new LevelDB(dbName, dbPath, enableDbCache, enableDbCompression, max_fd_alloc_size, block_size);
+                    return new LevelDB(dbName,
+                            dbPath,
+                            enableDbCache,
+                            enableDbCompression,
+                            max_fd_alloc_size,
+                            block_size,
+                            write_buffer_size,
+                            cache_size);
                 }
             case H2:
                 if (enableHeapCache) {

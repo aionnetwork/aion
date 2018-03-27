@@ -54,6 +54,8 @@ public class LevelDB extends AbstractDB {
 
     private final int maxOpenFiles;
     private final int blockSize;
+    private final int writeBufferSize;
+    private final int cacheSize;
 
     private DB db;
 
@@ -62,10 +64,14 @@ public class LevelDB extends AbstractDB {
                    boolean enableCache,
                    boolean enableCompression,
                    int maxOpenFiles,
-                   int blockSize) {
+                   int blockSize,
+                   int writeBufferSize,
+                   int cacheSize) {
         super(name, path, enableCache, enableCompression);
         this.maxOpenFiles = maxOpenFiles;
         this.blockSize = blockSize;
+        this.writeBufferSize = writeBufferSize;
+        this.cacheSize = cacheSize;
     }
 
     /**
@@ -80,7 +86,14 @@ public class LevelDB extends AbstractDB {
                    String path,
                    boolean enableCache,
                    boolean enableCompression) {
-        this(name, path, enableCache, enableCompression, LevelDBConstants.MAX_OPEN_FILES, LevelDBConstants.BLOCK_SIZE);
+        this(   name,
+                path,
+                enableCache,
+                enableCompression,
+                LevelDBConstants.MAX_OPEN_FILES,
+                LevelDBConstants.BLOCK_SIZE,
+                LevelDBConstants.WRITE_BUFFER_SIZE,
+                LevelDBConstants.CACHE_SIZE);
     }
 
     @Override

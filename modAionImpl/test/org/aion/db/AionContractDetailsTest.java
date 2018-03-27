@@ -119,9 +119,20 @@ public class AionContractDetailsTest {
             return LevelDBConstants.MAX_OPEN_FILES;
         }
 
+        // default levelDB setting, may want to change this later
         @Override
         public int getBlockSize() {
             return LevelDBConstants.BLOCK_SIZE;
+        }
+
+        @Override
+        public int getWriteBufferSize() {
+            return LevelDBConstants.WRITE_BUFFER_SIZE;
+        }
+
+        @Override
+        public int getCacheSize() {
+            return LevelDBConstants.CACHE_SIZE;
         }
     };
 

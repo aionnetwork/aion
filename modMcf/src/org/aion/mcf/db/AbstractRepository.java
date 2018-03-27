@@ -165,6 +165,8 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
         sharedProps.setProperty("enable_heap_cache_stats", String.valueOf(this.cfg.isHeapCacheStatsEnabled()));
         sharedProps.setProperty("max_fd_alloc_size", String.valueOf(this.cfg.getMaxFdAllocSize()));
         sharedProps.setProperty("block_size", String.valueOf(this.cfg.getBlockSize()));
+        sharedProps.setProperty("write_buffer_size", String.valueOf(this.cfg.getWriteBufferSize()));
+        sharedProps.setProperty("cache_size", String.valueOf(this.cfg.getCacheSize()));
 
         try {
             databaseGroup = new ArrayList<>();

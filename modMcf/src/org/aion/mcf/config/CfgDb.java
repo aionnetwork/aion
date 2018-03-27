@@ -67,7 +67,7 @@ public class CfgDb {
         this.write_buffer_size = 128 * (int) Utils.MEGA_BYTE;
 
         // corresponds to DEFAULT_CACHE_SIZE
-        this.cache_size = 128 * (int) Utils.MEGA_BYTE;
+        this.cache_size = 16 * (int) Utils.MEGA_BYTE;
     }
 
     protected String path;
@@ -326,6 +326,14 @@ public class CfgDb {
 
     public int getBlockSize() {
         return this.block_size;
+    }
+
+    public int getWriteBufferSize() {
+        return this.write_buffer_size;
+    }
+
+    public int getCacheSize() {
+        return this.cache_size;
     }
 }
 

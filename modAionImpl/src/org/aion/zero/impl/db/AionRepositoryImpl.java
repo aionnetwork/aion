@@ -88,7 +88,9 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                         config.getDb().getMaxHeapCacheSize(),
                         config.getDb().isHeapCacheStatsEnabled(),
                         config.getDb().getFdOpenAllocSize(),
-                        config.getDb().getBlockSize()));
+                        config.getDb().getBlockSize(),
+                        config.getDb().getWriteBufferSize(),
+                        config.getDb().getCacheSize()));
     }
 
     public static AionRepositoryImpl inst() {
