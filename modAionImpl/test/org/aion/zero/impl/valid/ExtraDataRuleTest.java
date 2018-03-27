@@ -34,6 +34,7 @@
  ******************************************************************************/
 package org.aion.zero.impl.valid;
 
+import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.types.A0BlockHeader;
@@ -41,6 +42,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
@@ -63,9 +67,12 @@ public class ExtraDataRuleTest {
 
         when(mockHeader.getExtraData()).thenReturn(EMPTY_BYTE_ARR);
 
+        List<IValidRule.RuleError> errors = new ArrayList<>();
+
         AionExtraDataRule dataRule = new AionExtraDataRule(constants.getMaximumExtraDataSize());
-        boolean res = dataRule.validate(mockHeader);
+        boolean res = dataRule.validate(mockHeader, errors);
         assertThat(res).isEqualTo(true);
+        assertThat(errors).isEmpty();
     }
 
     // even though this should never happen in production
@@ -73,9 +80,12 @@ public class ExtraDataRuleTest {
     public void testNullByteArray() {
         when(mockHeader.getExtraData()).thenReturn(null);
 
+        List<IValidRule.RuleError> errors = new ArrayList<>();
+
         AionExtraDataRule dataRule = new AionExtraDataRule(constants.getMaximumExtraDataSize());
-        boolean res = dataRule.validate(mockHeader);
+        boolean res = dataRule.validate(mockHeader, errors);
         assertThat(res).isEqualTo(true);
+        assertThat(errors).isEmpty();
     }
 
     @Test
@@ -84,8 +94,11 @@ public class ExtraDataRuleTest {
 
         when(mockHeader.getExtraData()).thenReturn(LARGE_BYTE_ARRAY);
 
+        List<IValidRule.RuleError> errors = new ArrayList<>();
+
         AionExtraDataRule dataRule = new AionExtraDataRule(constants.getMaximumExtraDataSize());
-        boolean res = dataRule.validate(mockHeader);
+        boolean res = dataRule.validate(mockHeader, errors);
         assertThat(res).isEqualTo(false);
+        assertThat(errors).isNotEmpty();
     }
 }

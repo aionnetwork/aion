@@ -38,4 +38,5 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
     // called by onBest
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
+    void shutDown();
 }

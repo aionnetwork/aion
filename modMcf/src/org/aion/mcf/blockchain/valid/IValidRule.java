@@ -34,19 +34,18 @@
  ******************************************************************************/
 package org.aion.mcf.blockchain.valid;
 
-import java.util.List;
-
 /**
  * Valication rules interface.
  *
  */
 public interface IValidRule {
+    public static class RuleError {
+        public final Class<?> errorClass;
+        public final String error;
 
-    /**
-     * Returns errors occurred during most recent validation run
-     *
-     * @return list of errors
-     */
-    List<String> getErrors();
-
+        public RuleError(Class<?> errorClass, String error) {
+            this.errorClass = errorClass;
+            this.error = error;
+        }
+    }
 }

@@ -17,30 +17,35 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
+ *     
  ******************************************************************************/
+
 package org.aion.mcf.valid;
 
 import org.aion.base.type.IBlockHeader;
-import org.aion.mcf.blockchain.valid.AbstractValidRule;
-import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
+import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.valid.DependentBlockHeaderRule;
 
 import java.util.List;
 
 /**
- * A class of rules that requires memory of the previous block
+ * Validates whether the timestamp of the current block is > the timestamp of
+ * the parent block
  */
-public abstract class DependentBlockHeaderRule<BH extends IBlockHeader> extends AbstractValidRule
-        implements IBlockHeaderValidRule<BH> {
+public class TimeStampRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
 
-    /**
-     * Validates a dependant rule, where {@code header} represents the current
-     * block, and {@code dependency} represents the {@code memory} required to validate
-     * whether the current block is correct. Most likely the {@code memory} refers
-     * to the previous block
-     */
-    abstract public boolean validate(BH header, BH dependency, List<RuleError> errors);
+    @Override
+    public boolean validate(BH header, BH dependency, List<RuleError> errors) {
+        if (header.getTimestamp() <= dependency.getTimestamp()) {
+            addError("timestamp ("
+                    + header.getTimestamp()
+                    + ") is not greater than parent timestamp ("
+                    + dependency.getTimestamp()
+                    + ")", errors);
+            return false;
+        }
+        return true;
+    }
 }

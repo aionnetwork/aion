@@ -106,8 +106,8 @@ final class TaskImportBlocks implements Runnable {
                 long t1 = System.currentTimeMillis();
                 ImportResult importResult = this.chain.tryToConnect(b);
                 long t2 = System.currentTimeMillis();
-                log.debug("<import-status: node = {}, number = {}, hash = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                        bw.getDisplayId(), b.getNumber(), Hex.toHexString(b.getHash()),
+                log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        bw.getDisplayId(), b.getNumber(),
                         b.getTransactionsList().size(), importResult, t2 - t1);
 
                 switch (importResult) {

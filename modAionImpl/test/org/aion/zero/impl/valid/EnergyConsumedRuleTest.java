@@ -34,6 +34,7 @@
  ******************************************************************************/
 package org.aion.zero.impl.valid;
 
+import org.aion.mcf.blockchain.valid.IValidRule;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -44,6 +45,11 @@ import static org.mockito.Mockito.when;
 
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EnergyConsumedRuleTest {
 
@@ -64,9 +70,11 @@ public class EnergyConsumedRuleTest {
         when(mockHeader.getEnergyLimit()).thenReturn(upperBound);
 
         EnergyConsumedRule rule = new EnergyConsumedRule();
-        boolean ret = rule.validate(mockHeader);
+        List<IValidRule.RuleError> errors = new ArrayList<>();
+
+        boolean ret = rule.validate(mockHeader, errors);
         assertThat(ret).isTrue();
-        assertThat(rule.getErrors()).isEmpty();
+        assertThat(errors).isEmpty();
 
         // now test the upper bound consumed == bound
         when(mockHeader.getEnergyConsumed()).thenReturn(upperBound);
@@ -81,10 +89,11 @@ public class EnergyConsumedRuleTest {
 
         when(mockHeader.getEnergyConsumed()).thenReturn(energyConsumed);
         when(mockHeader.getEnergyLimit()).thenReturn(upperBound);
+        List<IValidRule.RuleError> errors = new ArrayList<>();
 
         EnergyConsumedRule rule = new EnergyConsumedRule();
-        boolean ret = rule.validate(mockHeader);
+        boolean ret = rule.validate(mockHeader, errors);
         assertThat(ret).isFalse();
-        assertThat(rule.getErrors()).isNotEmpty();
+        assertThat(errors).isNotEmpty();
     }
 }

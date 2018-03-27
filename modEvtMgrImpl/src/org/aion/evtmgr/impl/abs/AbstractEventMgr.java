@@ -62,7 +62,7 @@ public abstract class AbstractEventMgr {
         for (Map.Entry<IHandler, IHandler> m : this.handlers.entrySet()) {
             if (m.getKey() != null) {
                 if (LOG.isInfoEnabled()) {
-                    LOG.info("AbstractEventMgr.shutDown ", m.getKey().getClass().getSimpleName());
+                    LOG.info("AbstractEventMgr.shutdown ", m.getKey().getClass().getSimpleName());
                 }
                 m.getKey().stop();
             }

@@ -27,6 +27,7 @@ package org.aion.zero.impl.valid;
 import static org.aion.base.util.BIUtil.isEqual;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
@@ -37,7 +38,6 @@ import org.aion.mcf.valid.DependentBlockHeaderRule;
 
 /**
  * Checks block's difficulty against calculated difficulty value
- *
  */
 public class AionDifficultyRule extends DependentBlockHeaderRule<A0BlockHeader> {
 
@@ -48,18 +48,21 @@ public class AionDifficultyRule extends DependentBlockHeaderRule<A0BlockHeader> 
     }
 
     @Override
-    public boolean validate(A0BlockHeader header, A0BlockHeader parent) {
-        errors.clear();
-
+    public boolean validate(A0BlockHeader header, A0BlockHeader parent, List<RuleError> errors) {
         BigInteger calcDifficulty = this.diffCalc.calculateDifficulty(header, parent);
         BigInteger difficulty = header.getDifficultyBI();
 
         if (!isEqual(difficulty, calcDifficulty)) {
-
-            errors.add(String.format("#%d: difficulty != calcDifficulty", header.getNumber()));
+            addError(formatError(calcDifficulty, difficulty), errors);
             return false;
         }
-
         return true;
+    }
+
+    private static String formatError(BigInteger expectedDifficulty, BigInteger actualDifficulty) {
+        return "difficulty ("
+                + actualDifficulty
+                + ") != expected difficulty ("
+                + expectedDifficulty + ")";
     }
 }

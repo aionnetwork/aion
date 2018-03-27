@@ -51,8 +51,6 @@ public abstract class AbstractHandler {
     private AtomicBoolean interrupt = new AtomicBoolean(false);
     private boolean interruptted = false;
 
-    protected ExecutorService es;
-
     protected Thread dispatcher = new Thread(() -> {
         try {
             while (!interrupt.get()) {
@@ -82,10 +80,6 @@ public abstract class AbstractHandler {
         }
     });
 
-    protected AbstractHandler() {
-        this.es = Executors.newWorkStealingPool(3);
-    }
-
     public synchronized boolean addEvent(IEvent _evt) {
         return this.events.add(_evt);
     }
@@ -94,11 +88,7 @@ public abstract class AbstractHandler {
         return this.events.add(_evt);
     }
 
-    protected abstract <E extends IEvent> void dispatch(E _e);
-
     public void stop() throws InterruptedException {
-        // In case the thread got stuck into the blocking queue.
-        es.shutdown();
 
         interrupt.set(true);
         this.queue.add(new EventDummy());
@@ -121,6 +111,20 @@ public abstract class AbstractHandler {
 
         if (LOG.isInfoEnabled()) {
             LOG.info("Handler {} dispatcher closed!", this.getType());
+        }
+    }
+
+
+    public <E extends IEvent> void dispatch(E event) {
+        if (this.typeEqual(event.getEventType())) {
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
+            }
+
+            for (IEventCallback cb : this.eventCallback) {
+                cb.onEvent(event);
+            }
         }
     }
 

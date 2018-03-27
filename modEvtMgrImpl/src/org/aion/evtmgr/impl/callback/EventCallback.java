@@ -22,27 +22,39 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.valid;
+package org.aion.evtmgr.impl.callback;
 
-import org.aion.base.type.IBlockHeader;
-import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.valid.DependentBlockHeaderRule;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.IEventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.slf4j.Logger;
 
 /**
- * Validates whether the timestamp of the current block is > the timestamp of
- * the parent block
+ * @author jay
+ *
  */
-public class TimeStampRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
-
-    @Override
-    public boolean validate(BH header, BH dependency) {
-        errors.clear();
-        if (header.getTimestamp() <= dependency.getTimestamp()) {
-            errors.add(String.format("#%d: the block timestamp is not less than the parentBlock's timestamp",
-                    header.getTimestamp()));
-            return false;
+@SuppressWarnings("hiding")
+public class EventCallback implements IEventCallback {
+    EventExecuteService ees;
+    static Logger LOG;
+    public EventCallback(EventExecuteService _ees, Logger log) {
+        if (_ees == null || log == null) {
+            throw new NullPointerException();
         }
 
-        return true;
+        ees = _ees;
+        LOG = log;
+    }
+
+    public void onEvent(IEvent evt) {
+        if (evt == null) {
+            throw new NullPointerException();
+        }
+
+        try {
+            ees.add(evt);
+        } catch (Exception e) {
+            LOG.error("{}", e.toString());
+        }
     }
 }

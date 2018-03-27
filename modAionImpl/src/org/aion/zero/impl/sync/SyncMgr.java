@@ -34,6 +34,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
@@ -61,12 +62,10 @@ public final class SyncMgr {
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    // default how many blocks forward to sync based on current block number
-    private int syncForwardMax = 32;
+    private int syncBackwardMax = 16;
+    private int syncImportMax = 32;
 
-    private final static int syncBackwordMax = 16;
-
-    private int blocksQueueMax = 64;
+    private int blocksQueueMax = 64; // block header wrappers
 
     private AionBlockchainImpl chain;
 
@@ -93,9 +92,19 @@ public final class SyncMgr {
     private final BlockingQueue<BlocksWrapper> importedBlocks = new LinkedBlockingQueue<>();
 
     //private ExecutorService workers = Executors.newFixedThreadPool(5);
-    private ExecutorService workers = Executors.newCachedThreadPool();
+    private ExecutorService workers = Executors.newCachedThreadPool(new ThreadFactory() {
+
+        private AtomicInteger cnt = new AtomicInteger(0);
+
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "sync-gh-" + cnt.incrementAndGet());
+        }
+    });
 
     private Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
+
+    private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
 
     private static final class AionSyncMgrHolder {
         static final SyncMgr INSTANCE = new SyncMgr();
@@ -166,18 +175,21 @@ public final class SyncMgr {
 //        }
     }
 
-    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncForwardMax,
+    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncBackwardMax, final int _syncImportMax,
             final int _blocksQueueMax, final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
         this.p2pMgr = _p2pMgr;
         this.chain = AionBlockchainImpl.inst();
         this.evtMgr = _evtMgr;
-        this.syncForwardMax = _syncForwardMax;
+        this.syncBackwardMax = _syncBackwardMax;
+        this.syncImportMax = _syncImportMax;
         this.blocksQueueMax = _blocksQueueMax;
+
+        this.blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders), "sync-gh").start();
+        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, log), "sync-gb").start();
         new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log, importedBlockHashes), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
@@ -193,21 +205,13 @@ public final class SyncMgr {
     }
 
     private void getHeaders(BigInteger _selfTd){
-        workers.submit(new TaskGetHeaders(p2pMgr, this.syncForwardMax, Math.max(1, this.chain.getBestBlock().getNumber() - syncBackwordMax), _selfTd));
-    }
+        if (importedBlocks.size() > blocksQueueMax) {
+            log.debug("Imported blocks queue is full. Stop requesting headers");
+            return;
+        }
 
-    //    void getHeaders(int _nodeId, String _displayId, long _fromBlock){
-    //        ReqBlocksHeaders rbh = new ReqBlocksHeaders(_fromBlock, this.syncForwardMax);
-    //        System.out.println(
-    //                "try-request headers from remote-node=" + _displayId +
-    //                        " remote-td=" + node.getTotalDifficulty().toString(10) +
-    //                        " remote-bn=" + node.getBestBlockNumber() +
-    //                        " jump=" + jump +
-    //                        " from-block=" + rbh.getFromBlock() +
-    //                        " take=" + rbh.getTake()
-    //        );
-    //        p2pMgr.send(_nodeId, );
-    //    }
+        workers.submit(new TaskGetHeaders(p2pMgr, Math.max(1, this.chain.getBestBlock().getNumber() + 1 - syncBackwardMax), this.syncImportMax, _selfTd, log));
+    }
 
     /**
      *
@@ -220,21 +224,31 @@ public final class SyncMgr {
             return;
         }
 
+        if (log.isDebugEnabled()) {
+            log.debug(
+                    "<incoming-headers from-num={} to-num={} node={}>",
+                    _headers.get(0).getNumber(),
+                    _headers.get(_headers.size() - 1).getNumber(),
+                    _displayId
+            );
+        }
+
         // filter imported block headers
-        BlockHeaderValidator<A0BlockHeader> headerValidator = new ChainConfiguration().createBlockHeaderValidator();
         List<A0BlockHeader> filtered = new ArrayList<>();
         A0BlockHeader prev = null;
         for(A0BlockHeader current : _headers){
 
             // ignore this batch if any invalidated header
-            if(!headerValidator.validate(current)) {
+            if(!this.blockHeaderValidator.validate(current, log)) {
                 log.debug("<invalid-header num={} hash={}>", current.getNumber(), current.getHash());
                 return;
             }
 
             // break if not consisting
-            if(prev != null && current.getNumber() != (prev.getNumber() + 1))
-                break;
+            if(prev != null && (current.getNumber() != (prev.getNumber() + 1) || !Arrays.equals(current.getParentHash(), prev.getHash()))) {
+                log.debug("<inconsistent-block-headers>");
+                return;
+            }
 
             // add if not cached
             if(!importedBlockHashes.containsKey(ByteArrayWrapper.wrap(current.getHash())))
@@ -246,14 +260,6 @@ public final class SyncMgr {
         // _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
         if(filtered.size() > 0)
             importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
-
-        log.debug(
-            "<incoming-headers size={} from-num={} to-num={} from-node={}>",
-                filtered.size(),
-                filtered.get(0).getNumber(),
-                filtered.get(filtered.size() - 1).getNumber(),
-                _displayId
-        );
     }
 
     /**
@@ -266,7 +272,7 @@ public final class SyncMgr {
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
         if (importedBlocks.size() > blocksQueueMax) {
-            log.info("imported blocks queue is full!");
+            log.debug("Imported blocks queue is full. Stop validating incoming bodies");
             return;
         }
 
@@ -282,7 +288,7 @@ public final class SyncMgr {
         while (headerIt.hasNext() && bodyIt.hasNext()) {
             AionBlock block = AionBlock.createBlockFromNetwork(headerIt.next(), bodyIt.next());
             if (block == null) {
-                log.error("<assemble-and-validate-blocks from-node={}>", _displayId);
+                log.error("<assemble-and-validate-blocks node={}>", _displayId);
                 break;
             } else
                 blocks.add(block);
@@ -292,18 +298,15 @@ public final class SyncMgr {
         if (m == 0)
             return;
 
-
         if (log.isDebugEnabled()) {
-            log.debug("<incoming-bodies size={} from-num={} to-num={} from-node={}>", blocks.size(),
-                    blocks.get(0).getNumber(), blocks.get(blocks.size() - 1).getNumber(), _displayId);
+            log.debug("<incoming-bodies from-num={} to-num={} node={}>",
+                    blocks.get(0).getNumber(),
+                    blocks.get(blocks.size() - 1).getNumber(),
+                    _displayId);
         }
 
         // add batch
         importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
-
-        log.debug("<incoming-bodies size={} from-num={} to-num={} from-node={}>", m, blocks.get(0).getNumber(),
-                blocks.get(blocks.size() - 1).getNumber(), _displayId);
-
     }
     
     public long getNetworkBestBlockNumber() {
