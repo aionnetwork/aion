@@ -45,14 +45,17 @@ public class TaskWrite implements Runnable {
     private SocketChannel sc;
     private Msg msg;
     private ChannelBuffer channelBuffer;
+    private P2pMgr p2pMgr;
 
     TaskWrite(
-            final ExecutorService _workers,
+            ExecutorService _workers,
             boolean _showLog,
             String _nodeShortId,
-            final SocketChannel _sc,
-            final Msg _msg,
-            final ChannelBuffer _cb
+            SocketChannel _sc,
+            Msg _msg,
+            ChannelBuffer _cb,
+            P2pMgr p2pMgr
+
     ) {
         this.workers = _workers;
         this.showLog = _showLog;
@@ -60,12 +63,14 @@ public class TaskWrite implements Runnable {
         this.sc = _sc;
         this.msg = _msg;
         this.channelBuffer = _cb;
+        this.p2pMgr = p2pMgr;
     }
 
     private void clearChannelBuffer() {
         channelBuffer.refreshHeader();
         channelBuffer.refreshBody();
         channelBuffer.messages.clear();
+        p2pMgr.removeActive(channelBuffer.nodeIdHash);
     }
 
     @Override
@@ -116,7 +121,7 @@ public class TaskWrite implements Runnable {
                     Msg msg = channelBuffer.messages.poll();
                     if (msg != null) {
                         //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
-                        workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));
+                        workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer, p2pMgr));
                     }
                 }
             }
