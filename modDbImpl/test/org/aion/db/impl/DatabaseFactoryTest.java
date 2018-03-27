@@ -110,6 +110,10 @@ public class DatabaseFactoryTest {
 
         // LEVELDB
         props.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.LEVELDB.toValue());
+        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
@@ -158,6 +162,10 @@ public class DatabaseFactoryTest {
 
         // LEVELDB
         props.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.LEVELDB.toValue());
+        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
@@ -204,6 +212,10 @@ public class DatabaseFactoryTest {
 
         // LEVELDB
         props.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.LEVELDB.toValue());
+        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
