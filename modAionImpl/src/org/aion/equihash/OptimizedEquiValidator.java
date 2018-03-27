@@ -44,7 +44,7 @@ public class OptimizedEquiValidator {
     private int collisionBitLength;
     private int collisionByteLength;
     private int solutionWidth;
-    private HashSet<Integer> indexSet;
+    //private HashSet<Integer> indexSet;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
     int iter = 0;
 
@@ -63,7 +63,7 @@ public class OptimizedEquiValidator {
         this.solutionWidth = (1 << k) * (collisionBitLength + 1) / 8;
         this.initState = this.InitialiseState();
         this.hashes = new byte[512][indicesHashLength];
-        this.indexSet = new HashSet<>();
+        //this.indexSet = new HashSet<>();
     }
 
     /**
@@ -122,7 +122,7 @@ public class OptimizedEquiValidator {
         return verify(blockHeader, nonce, blake, indices, 0, hash, k);
     }
 
-    public synchronized boolean isValidSolutionNative(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
+    public boolean isValidSolutionNative(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -292,12 +292,19 @@ public class OptimizedEquiValidator {
      * Check if duplicates are present in the solutions index array
      */
     private boolean hasDuplicate(int[] indices) {
-        for(int index: indices) {
-            if(!indexSet.add(index))
+        int[] cpy = Arrays.copyOfRange(indices, 0, indices.length);
+        Arrays.sort(cpy);
+        for (int i = 1; i < cpy.length; i++) {
+            if (cpy[i] <= cpy[i - 1]) {
                 return true;
-        }
-        indexSet.clear();
+            }
 
+//        for(int index: indices) {
+//            if(!indexSet.add(index))
+//                return true;
+//        }
+//        indexSet.clear();
+        }
         return false;
     }
 }
