@@ -31,6 +31,7 @@ package org.aion.db;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.log.AionLoggerFactory;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
@@ -66,25 +67,30 @@ public class BlockStoreConcurrencyTest {
 
         AionLoggerFactory.init(cfg);
 
-        Properties sharedProps = new Properties();
-        sharedProps.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.LEVELDB.toValue());
-        sharedProps.setProperty(DatabaseFactory.PROP_DB_PATH, "resources/test_blockstore");
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "false");
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_AUTO_COMMIT, "true");
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_DB_CACHE, "true");
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_DB_COMPRESSION, "true");
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_HEAP_CACHE, "false");
-        sharedProps.setProperty(DatabaseFactory.PROP_MAX_HEAP_CACHE_SIZE, "0");
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_HEAP_CACHE_STATS, "false");
+        Properties props = new Properties();
+        props.setProperty(DatabaseFactory.PROP_DB_TYPE, DBVendor.LEVELDB.toValue());
+        props.setProperty(DatabaseFactory.PROP_DB_PATH, "resources/test_blockstore");
+        props.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "false");
+        props.setProperty(DatabaseFactory.PROP_ENABLE_AUTO_COMMIT, "true");
+        props.setProperty(DatabaseFactory.PROP_ENABLE_DB_CACHE, "true");
+        props.setProperty(DatabaseFactory.PROP_ENABLE_DB_COMPRESSION, "true");
+        props.setProperty(DatabaseFactory.PROP_ENABLE_HEAP_CACHE, "false");
+        props.setProperty(DatabaseFactory.PROP_MAX_HEAP_CACHE_SIZE, "0");
+        props.setProperty(DatabaseFactory.PROP_ENABLE_HEAP_CACHE_STATS, "false");
+        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
+
 
         // opening index db
-        sharedProps.setProperty(DatabaseFactory.PROP_DB_NAME, "index");
-        IByteArrayKeyValueDatabase index = DatabaseFactory.connect(sharedProps);
+        props.setProperty(DatabaseFactory.PROP_DB_NAME, "index");
+        IByteArrayKeyValueDatabase index = DatabaseFactory.connect(props);
         index.open();
 
         // opening blocks db
-        sharedProps.setProperty(DatabaseFactory.PROP_DB_NAME, "block");
-        IByteArrayKeyValueDatabase block = DatabaseFactory.connect(sharedProps);
+        props.setProperty(DatabaseFactory.PROP_DB_NAME, "block");
+        IByteArrayKeyValueDatabase block = DatabaseFactory.connect(props);
         block.open();
 
         sourceBlockstore = new AionBlockStore(index, block);
