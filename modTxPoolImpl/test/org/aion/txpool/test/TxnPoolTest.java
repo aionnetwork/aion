@@ -59,30 +59,26 @@ public class TxnPoolTest {
     private static List<ECKey> key;
     private static List<ECKey> key2;
 
-
     @Before
     public void Setup() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+
         int keyCnt = 10;
+        key = new ArrayList<>();
 
-        if (key == null) {
-            key = new ArrayList<>();
-            System.out.println("gen key list----------------");
-            for (int i = 0; i < keyCnt; i++) {
-                key.add(ECKeyFac.inst().create());
-            }
-            System.out.println("gen key list finished-------");
+        System.out.println("gen key list----------------");
+        for (int i = 0; i < keyCnt; i++) {
+            key.add(ECKeyFac.inst().create());
         }
+        System.out.println("gen key list finished-------");
 
-        if (key2 == null) {
-            keyCnt = 10000;
-            key2 = new ArrayList<>();
-            System.out.println("gen key list 2--------------");
-            for (int i = 0; i < keyCnt; i++) {
-                key2.add(ECKeyFac.inst().create());
-            }
-            System.out.println("gen key list 2 finished-----");
+        keyCnt = 10000;
+        key2 = new ArrayList<>();
+        System.out.println("gen key list 2--------------");
+        for (int i = 0; i < keyCnt; i++) {
+            key2.add(ECKeyFac.inst().create());
         }
+        System.out.println("gen key list 2 finished-----");
     }
 
     @Test
