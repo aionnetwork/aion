@@ -44,8 +44,8 @@ public class CfgDb {
 
     public final int MIN_FD_OPEN_ALLOC = 1024;
     public final String DEFAULT_BLOCK_SIZE = "16kB";
-    public final String DEFAULT_WRITE_BUFFER_SIZE = "128mB";
-    public final String DEFAULT_CACHE_SIZE = "16mB";
+    public final String DEFAULT_WRITE_BUFFER_SIZE = "16mB";
+    public final String DEFAULT_CACHE_SIZE = "128mB";
 
     public CfgDb() {
         this.vendor = DBVendor.LEVELDB.toValue();
@@ -64,10 +64,10 @@ public class CfgDb {
         this.max_fd_open_alloc = MIN_FD_OPEN_ALLOC;
 
         // corresponds to DEFAULT_WRITE_BUFFER_SIZE
-        this.write_buffer_size = 128 * (int) Utils.MEGA_BYTE;
+        this.write_buffer_size = 16 * (int) Utils.MEGA_BYTE;
 
         // corresponds to DEFAULT_CACHE_SIZE
-        this.cache_size = 16 * (int) Utils.MEGA_BYTE;
+        this.cache_size = 128 * (int) Utils.MEGA_BYTE;
     }
 
     protected String path;

@@ -46,8 +46,8 @@
 		<enable_db_compression>true</enable_db_compression>
 		<max_fd_alloc_size>1024</max_fd_alloc_size>
 		<block_size>16kB</block_size>
-		<write_buffer_size>128mB</write_buffer_size>
-		<cache_size>16mB</cache_size>
+		<write_buffer_size>16mB</write_buffer_size>
+		<cache_size>128mB</cache_size>
 	</db>
 	<log>
 		<GEN>INFO</GEN>
