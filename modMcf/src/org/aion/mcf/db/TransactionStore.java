@@ -23,9 +23,7 @@
  ******************************************************************************/
 package org.aion.mcf.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.aion.base.db.Flushable;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.FastByteComparisons;
@@ -36,10 +34,18 @@ import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 
-public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>>
-        extends ObjectDataSource<List<INFO>> {
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>> implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final Object object = new Object();
+    private ObjectDataSource<List<INFO>> source;
+
+    public TransactionStore(IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
+        source = new ObjectDataSource(src, serializer);
+    }
 
     public boolean put(INFO tx) {
         byte[] txHash = tx.getReceipt().getTransaction().getHash();
@@ -47,7 +53,7 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
         List<INFO> existingInfos = null;
         synchronized (lastSavedTxHash) {
             if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
-                existingInfos = get(txHash);
+                existingInfos = source.get(txHash);
             }
         }
 
@@ -61,13 +67,13 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
             }
         }
         existingInfos.add(tx);
-        put(txHash, existingInfos);
+        source.put(txHash, existingInfos);
 
         return true;
     }
 
     public INFO get(byte[] txHash, byte[] blockHash) {
-        List<INFO> existingInfos = get(txHash);
+        List<INFO> existingInfos = source.get(txHash);
         for (INFO info : existingInfos) {
             if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
                 return info;
@@ -76,25 +82,17 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
         return null;
     }
 
-    public TransactionStore(IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
-        super(src, serializer);
-        // withCacheSize(256);
-        withCacheOnWrite(true);
+    public List<INFO> get(byte[] key) {
+        return source.get(key);
     }
 
     @Override
     public void flush() {
-        if (!getSrc().isAutoCommitEnabled()) {
-            getSrc().commit();
-        }
+        source.flush();
     }
 
     @Override
     public void close() {
-        try {
-            super.close();
-        } catch (Exception e) {
-            throw e;
-        }
+        source.close();
     }
 }
