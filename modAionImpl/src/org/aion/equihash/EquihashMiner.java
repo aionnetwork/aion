@@ -93,7 +93,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                 IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
                     EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
                     go = false;
                 }
             }
@@ -134,12 +134,22 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         setCpuThreads(cfg.getConsensus().getCpuMineThreads());
 
         ees = new EventExecuteService(1000, "EpMiner", Thread.NORM_PRIORITY, LOG);
+        ees.setFilter(setEvtFilter());
 
         this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
         registerMinerEvents();
         registerCallback();
 
         ees.start(new EpMiner());
+    }
+
+    private Set<Integer> setEvtFilter() {
+        Set<Integer> eventSN = new HashSet<>();
+
+        int sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
+        eventSN.add(sn + EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue());
+
+        return eventSN;
     }
 
     @Override

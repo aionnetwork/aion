@@ -13,6 +13,9 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.slf4j.Logger;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class NrgOracle {
     private static final int BLK_TRAVERSE_ON_INSTANTIATION = 128;
     private static final long CACHE_FLUSH_BLKCOUNT = 1;
@@ -40,7 +43,7 @@ public class NrgOracle {
 
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                     processBlock((AionBlockSummary)e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
                     go = false;
                 }
             }
@@ -79,6 +82,8 @@ public class NrgOracle {
         }
 
         ees = new EventExecuteService(1000, "EpNrg", Thread.NORM_PRIORITY, LOG);
+        ees.setFilter(setEventFilter());
+
         // check if handler is of type BLOCK, if so attach our event
         if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
             handler.eventCallback(new EventCallback(ees, LOG));
@@ -87,6 +92,15 @@ public class NrgOracle {
         }
 
         ees.start(new EpNrg());
+    }
+
+    private Set<Integer> setEventFilter() {
+        Set<Integer> eventSN = new HashSet<>();
+
+        int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+
+        return eventSN;
     }
 
     private void processBlock(AionBlockSummary blockSummary) {

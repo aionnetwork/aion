@@ -31,7 +31,7 @@ package org.aion.evtmgr;
 public interface IHandler {
 
     enum TYPE {
-        DUMMY(0), TX0(1), BLOCK0(2), MINER0(3), CONSENSUS(4);
+        POISONPILL(0), TX0(1), BLOCK0(2), MINER0(3), CONSENSUS(4);
 
         final static int MAX = 8;
 

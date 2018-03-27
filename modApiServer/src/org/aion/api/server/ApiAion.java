@@ -102,7 +102,7 @@ public abstract class ApiAion extends Api {
                             pendingTxReceived(tx);
                         }
                     }
-                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
                     go = false;
                 }
             }
@@ -629,7 +629,20 @@ public abstract class ApiAion extends Api {
     protected void startES(String thName) {
 
         ees = new EventExecuteService(100_000, thName, Thread.MIN_PRIORITY, LOG);
+        ees.setFilter(setEvtfilter());
         ees.start(new EpApi());
+    }
+
+    private Set<Integer> setEvtfilter() {
+        Set<Integer> eventSN = new HashSet<>();
+        int sn = IHandler.TYPE.TX0.getValue() << 8;
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue());
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXUPDATE0.getValue());
+
+        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+
+        return eventSN;
     }
 
     protected void shutDownES() {

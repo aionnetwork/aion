@@ -127,7 +127,7 @@ public class AionPendingStateImpl
 
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
-                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()) {
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
             }
@@ -180,6 +180,7 @@ public class AionPendingStateImpl
         this.pendingState = repository.startTracking();
 
         ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
+        ees.setFilter(setEvtFilter());
 
         regBlockEvents();
         IHandler blkHandler = this.evtMgr.getHandler(2);
@@ -188,6 +189,15 @@ public class AionPendingStateImpl
         }
 
         ees.start(new EpPS());
+    }
+
+    private Set<Integer> setEvtFilter() {
+        Set<Integer> eventSN = new HashSet<>();
+
+        int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
+
+        return eventSN;
     }
 
     private void regBlockEvents() {

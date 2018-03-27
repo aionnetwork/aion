@@ -46,10 +46,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -92,7 +89,7 @@ public class AionPoW {
                     createNewBlockTemplate();
                 } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
                     processSolution((Solution) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.DUMMY.getValue()){
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
                     go = false;
                 }
             }
@@ -129,9 +126,10 @@ public class AionPoW {
             setupHandler();
 
             ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+            ees.setFilter(setEvtFilter());
+
 
             registerCallback();
-
             ees.start(new EpPOW());
 
             new Thread(() -> {
@@ -158,7 +156,7 @@ public class AionPoW {
     /**
      * Sets up the consensus event handler.
      */
-    public void setupHandler() {
+    private void setupHandler() {
         List<IEvent> txEvts = new ArrayList<>();
         txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0));
         txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0));
@@ -169,6 +167,20 @@ public class AionPoW {
         events.add(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
         events.add(new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION));
         eventMgr.registerEvent(events);
+    }
+
+    private Set<Integer> setEvtFilter() {
+        Set<Integer> eventSN = new HashSet<>();
+        int sn = IHandler.TYPE.TX0.getValue() << 8;
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue());
+
+        sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
+        eventSN.add(sn + EventConsensus.CALLBACK.ON_SOLUTION.getValue());
+
+        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
+
+        return eventSN;
     }
 
     /**
