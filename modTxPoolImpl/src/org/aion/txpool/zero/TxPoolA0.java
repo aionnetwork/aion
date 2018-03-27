@@ -196,12 +196,13 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             fee.parallelStream().forEach(bi -> {
-                this.getFeeView().get(bi).entrySet().removeIf(
-                        byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue()
-                                .getAddress().equals(en1.getKey()));
+                if (this.getFeeView().get(bi) != null) {
+                    this.getFeeView().get(bi).entrySet().removeIf(
+                            byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue().getAddress().equals(en1.getKey()));
 
-                if (this.getFeeView().get(bi).isEmpty()) {
-                    this.getFeeView().remove(bi);
+                    if (this.getFeeView().get(bi).isEmpty()) {
+                        this.getFeeView().remove(bi);
+                    }
                 }
             });
 
