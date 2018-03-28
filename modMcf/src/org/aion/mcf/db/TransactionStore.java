@@ -39,7 +39,8 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>> implements Flushable, Closeable {
+public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>>
+        implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final Object object = new Object();
     private final ObjectDataSource<List<INFO>> source;
@@ -53,62 +54,74 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
     public boolean put(INFO tx) {
         lock.writeLock().lock();
 
-        byte[] txHash = tx.getReceipt().getTransaction().getHash();
+        try {
+            byte[] txHash = tx.getReceipt().getTransaction().getHash();
 
-        List<INFO> existingInfos = null;
-        if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
-            existingInfos = source.get(txHash);
-        }
+            List<INFO> existingInfos = null;
+            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
+                existingInfos = source.get(txHash);
+            }
 
-        if (existingInfos == null) {
-            existingInfos = new ArrayList<>();
-        } else {
-            for (AbstractTxInfo<TXR, TX> info : existingInfos) {
-                if (FastByteComparisons.equal(info.getBlockHash(), tx.getBlockHash())) {
-                    lock.writeLock().unlock();
-                    return false;
+            if (existingInfos == null) {
+                existingInfos = new ArrayList<>();
+            } else {
+                for (AbstractTxInfo<TXR, TX> info : existingInfos) {
+                    if (FastByteComparisons.equal(info.getBlockHash(), tx.getBlockHash())) {
+                        return false;
+                    }
                 }
             }
-        }
-        existingInfos.add(tx);
-        source.put(txHash, existingInfos);
+            existingInfos.add(tx);
+            source.put(txHash, existingInfos);
 
-        lock.writeLock().unlock();
-        return true;
+            return true;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public INFO get(byte[] txHash, byte[] blockHash) {
         lock.readLock().lock();
 
-        List<INFO> existingInfos = source.get(txHash);
-        for (INFO info : existingInfos) {
-            if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
-                lock.readLock().unlock();
-                return info;
+        try {
+            List<INFO> existingInfos = source.get(txHash);
+            for (INFO info : existingInfos) {
+                if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
+                    return info;
+                }
             }
+            return null;
+        } finally {
+            lock.readLock().unlock();
         }
-        lock.readLock().unlock();
-        return null;
     }
 
     public List<INFO> get(byte[] key) {
         lock.readLock().lock();
-        List<INFO> info = source.get(key);
-        lock.readLock().unlock();
-        return info;
+        try {
+            return source.get(key);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void flush() {
         lock.writeLock().lock();
-        source.flush();
-        lock.writeLock().unlock();
+        try {
+            source.flush();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public void close() {
         lock.writeLock().lock();
-        source.close();
-        lock.writeLock().unlock();
+        try {
+            source.close();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }
