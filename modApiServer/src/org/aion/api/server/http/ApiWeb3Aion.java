@@ -77,10 +77,9 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     // private static AtomicReference<AionBlock> currentMining;
     // TODO: Verify if need to use a concurrent map; locking may allow for use
     // of a simple map
-    private static HashMap<String, AionBlock> templateMap;
+    private static HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
-
 
     protected void onBlock(AionBlockSummary cbs) {
         installedFilters.keySet().forEach((k) -> {
@@ -123,7 +122,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
         evtMgr = this.ac.getAionHub().getEventMgr();
-
 
         startES("EpWeb3");
         // Fill data on block and transaction events into the filters and pending receipts
@@ -674,21 +672,66 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     public Object stratum_getblocktemplate() {
         // TODO: Change this to a synchronized map implementation mapping
-        // block hashes to the block. Allow multiple block templates at same height.
-        templateMapLock.writeLock().lock();
 
         AionBlock bestBlock = getBlockTemplate();
+        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getStaticHash());
+        // Read template map; if block already contained chain has not moved forward, simply return the same block.
+//        try {
+//            templateMapLock.readLock().lock();
+//            if (!templateMap.containsKey(bestBlock.getHeader().getStaticHash())) {
+//
+//                // Unable to find previously created blockTemplate; add it to the map
+//                try {
+//                    templateMapLock.writeLock().lock();
+//
+//                    // Check first entry in the map; if its height is higher a sync may
+//                    // have switch branches, abandon current work to start on new branch
+//                    if (!templateMap.keySet().isEmpty()) {
+//                        if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
+//                            // Found a higher block, clear any remaining cached entries and start on new height
+//                            templateMap.clear();
+//                        }
+//                    }
+//
+//                    templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
+//                } finally {
+//                    templateMapLock.writeLock().unlock();
+//                }
+//            }
+//        } finally {
+//            templateMapLock.readLock().unlock();
+//        }
 
-        // Check first entry in the map; if its height is higher a sync may
-        // have switch branches, abandon current work to start on new branch
-        if (!templateMap.keySet().isEmpty()) {
-            if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
-                // Found a higher block, clear any remaining cached entries and start on new height
-                templateMap.clear();
+        //Check if block template has already been returned
+        boolean isContained = false;
+        try {
+            templateMapLock.readLock().lock();
+            if(templateMap.containsKey(key)) {
+                isContained = true;
             }
+        } finally {
+            templateMapLock.readLock().unlock();
         }
 
-        templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
+        System.out.println(toHexString(key.getData()) + "   " +isContained);
+
+        // Template not present in map; add it before returning
+        if(!isContained) {
+            try{
+                templateMapLock.writeLock().lock();
+
+                if (!templateMap.keySet().isEmpty()) {
+                    if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
+                        // Found a higher block, clear any remaining cached entries and start on new height
+//                        templateMap.clear();
+                    }
+                }
+                templateMap.put(key, bestBlock);
+
+            }finally {
+                templateMapLock.writeLock().unlock();
+            }
+        }
 
         JSONObject coinbaseaux = new JSONObject();
         coinbaseaux.put("flags", "062f503253482f");
@@ -702,8 +745,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
         obj.put("coinbaseaux", coinbaseaux);
         obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
-
-        templateMapLock.writeLock().unlock();
 
         return obj;
     }
@@ -774,39 +815,29 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (nce != null && soln != null && hdrHash != null && ts != null &&
                 !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
 
-            templateMapLock.writeLock().lock();
+            String hdr = (String) hdrHash;
+            ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes(hdr));
 
-            AionBlock bestBlock = templateMap.get(hdrHash + "");
+            try {
+                templateMapLock.writeLock().lock();
 
-//            boolean successfulSubmit = false;
-//            // TODO Clean up this section once decided on event vs direct call
-//            if (bestBlock != null) {
-//                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16)));
-//            }
-//
-//            if (successfulSubmit) {
-//                // Found a solution for this height and successfully submitted, clear all entries for next height
-//                LOG.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-//                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-//                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
-//                templateMap.clear();
-//            }
+                AionBlock bestBlock = templateMap.get(key);
 
-            if(bestBlock != null) {
+                if (bestBlock != null) {
 
-                IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
-                ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
-                        hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
-                evtMgr.newEvent(ev);
+                    IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
+                    ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
+                            hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
+                    evtMgr.newEvent(ev);
 
-                LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
-
-                templateMap.clear();
+                    LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    templateMap.remove(key);
+                }
+            } finally {
+                templateMapLock.writeLock().unlock();
             }
-
-            templateMapLock.writeLock().unlock();
 
             // TODO: Simplified response for now, need to provide better feedback to caller in next update
             obj.put("result", true);

@@ -47,6 +47,7 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -56,7 +57,10 @@ import org.aion.zero.types.AionTxReceipt;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -72,6 +76,12 @@ public abstract class ApiAion extends Api {
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
     protected String[] compilers = new String[] {"solidity"};
+    protected short SYNC_LIMIT = 16;
+    protected short BLOCK_DELAY = 30 * 1000;
+    private ReentrantLock blockTemplateLock;
+    // Grab genesis block from DB as a placeholder until generate new blocks
+    private volatile AionBlock miningBlock;
+
 
     protected EventExecuteService ees;
 
@@ -83,6 +93,20 @@ public abstract class ApiAion extends Api {
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+
+        blockTemplateLock = new ReentrantLock();
+
+        // Create a dummy block to allow bootstrap miningBlock in case need to sync
+        createPlaceholderBlock();
+
+        // Start a timer to get actual block template after 10 seconds allowing the kernel to fully start
+        TimerTask ct = new TimerTask() {
+            public void run() {
+                createBlockTemplate();
+            }
+        };
+        Timer t = new Timer("API_create_block_template_timer");
+        t.schedule(ct, BLOCK_DELAY);
     }
 
     public final class EpApi implements Runnable {
@@ -91,7 +115,7 @@ public abstract class ApiAion extends Api {
         public void run() {
             while (go) {
 
-                IEvent  e = ees.take();
+                IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                     onBlock((AionBlockSummary)e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
@@ -102,6 +126,8 @@ public abstract class ApiAion extends Api {
                             pendingTxReceived(tx);
                         }
                     }
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    createBlockTemplate();
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
                     go = false;
                 }
@@ -138,16 +164,69 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
+    // Create a new block template after a block has been mined; either from the network or mined locally
+    private void createBlockTemplate() {
+
+        // Keep using dummy block while syncing to avoid putting own node on side chain
+        if (this.ac.getAionHub().getSyncMgr().getNetworkBestBlockNumber() - this.ac.getBlockchain().getBestBlock().getNumber() > SYNC_LIMIT) {
+            return;
+        }
+
+        blockTemplateLock.lock();
+
+//        AionBlock bestPendingState = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+//
+//        AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
+//        ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
+//
+//        miningBlock = ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
+
+
+        System.out.println("Create Block Template");
+        AionBlock bestBlock = ac.getBlockchain().getBlockByNumber(ac.getBlockchain().getBestBlock().getNumber());
+
+        System.out.println("BestBlock: " + bestBlock);
+
+        List<AionTransaction> txs = pendingState.getPendingTransactions();
+
+        System.out.println(txs.size());
+
+        ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
+
+        blockTemplateLock.unlock();
+    }
+    // Create placeholder block returned by getBlockTemplate until the chain is synced
+    private void createPlaceholderBlock(){
+        byte[] parentHash = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        Address coinbase = new Address(parentHash); // Shortcut for dummy block
+        byte[] logsBloom = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        byte[] difficulty = {100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        long number = 0;
+        long timestamp = 0;
+        byte[] extraData = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        byte[] nonce = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        byte[] receiptsRoot = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        byte[] transactionsRoot = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        byte[] stateRoot = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
+        byte[] solutions = {0};
+        long energyConsumed = 0;
+        long energyLimit = 0;
+
+        miningBlock = new AionBlock(parentHash, coinbase, logsBloom, difficulty, number,
+        timestamp, extraData, nonce, receiptsRoot, transactionsRoot,
+        stateRoot, transactionsList, solutions, energyConsumed, energyLimit);
+    }
+
     public AionBlock getBlockTemplate() {
-        // TODO: Change to follow onBlockTemplate event mode defined in internal
-        // miner
-        // TODO: Track multiple block templates
-        AionBlock bestPendingState = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
-
-        AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
-        ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
-
-        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
+        return this.miningBlock;
     }
 
     public AionBlock getBlockByHash(byte[] hash) {
@@ -628,7 +707,7 @@ public abstract class ApiAion extends Api {
 
     protected void startES(String thName) {
 
-        ees = new EventExecuteService(100_000, thName, Thread.MIN_PRIORITY, LOG);
+        ees = new EventExecuteService(100_000, thName, Thread.NORM_PRIORITY, LOG);
         ees.setFilter(setEvtfilter());
         ees.start(new EpApi());
     }
@@ -641,6 +720,7 @@ public abstract class ApiAion extends Api {
 
         sn = IHandler.TYPE.BLOCK0.getValue() << 8;
         eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
 
         return eventSN;
     }
