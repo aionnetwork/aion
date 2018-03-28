@@ -24,6 +24,7 @@
 			<port>30303</port>
 			<discover>false</discover>
 			<show-status>false</show-status>
+			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
 	<sync>
