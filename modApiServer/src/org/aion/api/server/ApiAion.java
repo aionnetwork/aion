@@ -77,7 +77,7 @@ public abstract class ApiAion extends Api {
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
     protected String[] compilers = new String[] {"solidity"};
     protected short SYNC_LIMIT = 16;
-    protected short BLOCK_DELAY = 30 * 1000;
+    protected short BLOCK_DELAY = 5 * 1000;
     private ReentrantLock blockTemplateLock;
     // Grab genesis block from DB as a placeholder until generate new blocks
     private volatile AionBlock miningBlock;
@@ -174,7 +174,7 @@ public abstract class ApiAion extends Api {
 
         blockTemplateLock.lock();
 
-//        AionBlock bestPendingState = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+        AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
 //
 //        AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
 //        ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
@@ -182,16 +182,16 @@ public abstract class ApiAion extends Api {
 //        miningBlock = ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
 
 
-        System.out.println("Create Block Template");
-        AionBlock bestBlock = ac.getBlockchain().getBlockByNumber(ac.getBlockchain().getBestBlock().getNumber());
+//        AionBlock bestBlock = ac.getBlockchain().getBlockByNumber(ac.getBlockchain().getBestBlock().getNumber());
 
-        System.out.println("BestBlock: " + bestBlock);
+        System.out.println(bestBlock);
 
         List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-        System.out.println(txs.size());
+        miningBlock = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
 
-        ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
+        System.out.println(miningBlock);
+
 
         blockTemplateLock.unlock();
     }

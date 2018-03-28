@@ -723,7 +723,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                 if (!templateMap.keySet().isEmpty()) {
                     if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
                         // Found a higher block, clear any remaining cached entries and start on new height
-//                        templateMap.clear();
+                        templateMap.clear();
                     }
                 }
                 templateMap.put(key, bestBlock);
@@ -822,6 +822,9 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                 templateMapLock.writeLock().lock();
 
                 AionBlock bestBlock = templateMap.get(key);
+
+
+                System.out.println("Best Block: " + bestBlock);
 
                 if (bestBlock != null) {
 
