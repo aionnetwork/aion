@@ -69,7 +69,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
 
-        indexDS = index;
+        this.indexDS = index;
         this.index = new DataSourceArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
         this.blocksDS = blocks;
 
@@ -90,46 +90,48 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public AionBlock getBestBlock() {
         lock.readLock().lock();
 
-        Long maxLevel = getMaxNumber();
-        if (maxLevel < 0) {
-            lock.readLock().unlock();
-            return null;
-        }
+        try {
+            Long maxLevel = getMaxNumber();
+            if (maxLevel < 0) {
+                return null;
+            }
 
-        AionBlock bestBlock = getChainBlockByNumber(maxLevel);
-        if (bestBlock != null) {
-            lock.readLock().unlock();
+            AionBlock bestBlock = getChainBlockByNumber(maxLevel);
+            if (bestBlock != null) {
+                return bestBlock;
+            }
+
+            while (bestBlock == null) {
+                --maxLevel;
+                bestBlock = getChainBlockByNumber(maxLevel);
+            }
+
             return bestBlock;
+        } finally {
+            lock.readLock().unlock();
         }
-
-        while (bestBlock == null) {
-            --maxLevel;
-            bestBlock = getChainBlockByNumber(maxLevel);
-        }
-
-        lock.readLock().unlock();
-        return bestBlock;
     }
 
     public byte[] getBlockHashByNumber(long blockNumber) {
         lock.readLock().lock();
 
-        if (blockNumber < 0L || blockNumber >= index.size()) {
-            lock.readLock().unlock();
-            return null;
-        }
-
-        List<BlockInfo> blockInfos = index.get(blockNumber);
-
-        for (BlockInfo blockInfo : blockInfos) {
-            if (blockInfo.isMainChain()) {
-                lock.readLock().unlock();
-                return blockInfo.getHash();
+        try {
+            if (blockNumber < 0L || blockNumber >= index.size()) {
+                return null;
             }
-        }
 
-        lock.readLock().unlock();
-        return null;
+            List<BlockInfo> blockInfos = index.get(blockNumber);
+
+            for (BlockInfo blockInfo : blockInfos) {
+                if (blockInfo.isMainChain()) {
+                    return blockInfo.getHash();
+                }
+            }
+
+            return null;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
@@ -167,13 +169,17 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private void addInternalBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
-        List<BlockInfo> blockInfos =
-                block.getNumber() >= index.size() ? new ArrayList<>() : index.get(block.getNumber());
+        long blockNumber = block.getNumber();
+        List<BlockInfo> blockInfos = blockNumber >= index.size() ? new ArrayList<>() : index.get(blockNumber);
 
         // if the blocks are added out of order, the size will be updated without changing the index value
         // useful for concurrency testing and potential parallel sync
         if (blockInfos == null) {
+            LOG.error("Null block information found at " + blockNumber + " when data should exist.");
             blockInfos = new ArrayList<>();
         }
 
@@ -191,59 +197,62 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number) {
         lock.readLock().lock();
 
-        List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> result = new ArrayList<>();
+        try {
+            List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> result = new ArrayList<>();
 
-        if (number >= index.size()) {
-            lock.readLock().unlock();
+            if (number >= index.size()) {
+                return result;
+            }
+
+            List<BlockInfo> blockInfos = index.get(number);
+
+            for (BlockInfo blockInfo : blockInfos) {
+
+                byte[] hash = blockInfo.getHash();
+                AionBlock block = blocks.get(hash);
+
+                result.add(Map.entry(block, Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
+            }
+
             return result;
+        } finally {
+            lock.readLock().unlock();
         }
-
-        List<BlockInfo> blockInfos = index.get(number);
-
-        for (BlockInfo blockInfo : blockInfos) {
-
-            byte[] hash = blockInfo.getHash();
-            AionBlock block = blocks.get(hash);
-
-            result.add(Map.entry(block, Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
-        }
-
-        lock.readLock().unlock();
-        return result;
     }
 
     @Override
     public AionBlock getChainBlockByNumber(long number) {
         lock.readLock().lock();
-        long size = index.size();
-        if (number < 0L || number >= size) {
-            lock.readLock().unlock();
-            return null;
-        }
 
-        List<BlockInfo> blockInfos = index.get(number);
-
-        for (BlockInfo blockInfo : blockInfos) {
-
-            if (blockInfo.isMainChain()) {
-
-                byte[] hash = blockInfo.getHash();
-                AionBlock blk = blocks.get(hash);
-                lock.readLock().unlock();
-                return blk;
+        try {
+            long size = index.size();
+            if (number < 0L || number >= size) {
+                return null;
             }
-        }
 
-        lock.readLock().unlock();
-        return null;
+            List<BlockInfo> blockInfos = index.get(number);
+
+            for (BlockInfo blockInfo : blockInfos) {
+                if (blockInfo.isMainChain()) {
+                    byte[] hash = blockInfo.getHash();
+                    return blocks.get(hash);
+                }
+            }
+
+            return null;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public AionBlock getBlockByHash(byte[] hash) {
         lock.readLock().lock();
-        AionBlock blk = blocks.get(hash);
-        lock.readLock().unlock();
-        return blk;
+        try {
+            return blocks.get(hash);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
@@ -254,95 +263,116 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     @Override
     public BigInteger getTotalDifficultyForHash(byte[] hash) {
         lock.readLock().lock();
-        IAionBlock block = this.getBlockByHash(hash);
-        if (block == null) {
-            lock.readLock().unlock();
-            return ZERO;
-        }
 
-        Long level = block.getNumber();
-        List<BlockInfo> blockInfos = index.get(level.intValue());
-        for (BlockInfo blockInfo : blockInfos) {
-            if (Arrays.equals(blockInfo.getHash(), hash)) {
-                lock.readLock().unlock();
-                return blockInfo.getCummDifficulty();
+        try {
+            IAionBlock block = this.getBlockByHash(hash);
+            if (block == null) {
+                return ZERO;
             }
-        }
 
-        lock.readLock().unlock();
-        return ZERO;
+            Long level = block.getNumber();
+            List<BlockInfo> blockInfos = index.get(level.intValue());
+            for (BlockInfo blockInfo : blockInfos) {
+                if (Arrays.equals(blockInfo.getHash(), hash)) {
+                    return blockInfo.getCummDifficulty();
+                }
+            }
+
+            return ZERO;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public BigInteger getTotalDifficulty() {
         lock.readLock().lock();
-        long maxNumber = getMaxNumber();
 
-        List<BlockInfo> blockInfos = index.get(maxNumber);
-        for (BlockInfo blockInfo : blockInfos) {
-            if (blockInfo.isMainChain()) {
-                lock.readLock().unlock();
-                return blockInfo.getCummDifficulty();
-            }
-        }
+        try {
+            long maxNumber = getMaxNumber();
 
-        while (true) {
-            --maxNumber;
-            List<BlockInfo> infos = getBlockInfoForLevel(maxNumber);
-
-            for (BlockInfo blockInfo : infos) {
+            List<BlockInfo> blockInfos = index.get(maxNumber);
+            for (BlockInfo blockInfo : blockInfos) {
                 if (blockInfo.isMainChain()) {
-                    lock.readLock().unlock();
                     return blockInfo.getCummDifficulty();
                 }
             }
+
+            while (true) {
+                --maxNumber;
+                List<BlockInfo> infos = getBlockInfoForLevel(maxNumber);
+
+                for (BlockInfo blockInfo : infos) {
+                    if (blockInfo.isMainChain()) {
+                        return blockInfo.getCummDifficulty();
+                    }
+                }
+            }
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
     @Override
     public long getMaxNumber() {
         lock.readLock().lock();
-        // the index size is always >= 0
-        long bestIndex = index.size();
-        lock.readLock().unlock();
-        return bestIndex - 1L;
+
+        try {
+            // the index size is always >= 0
+            return index.size() - 1L;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long number) {
         lock.readLock().lock();
 
-        List<AionBlock> blocks = getListBlocksEndWith(hash, number);
-        List<byte[]> hashes = new ArrayList<>(blocks.size());
+        try {
+            List<AionBlock> blocks = getListBlocksEndWith(hash, number);
+            List<byte[]> hashes = new ArrayList<>(blocks.size());
 
-        for (IAionBlock b : blocks) {
-            hashes.add(b.getHash());
+            for (IAionBlock b : blocks) {
+                hashes.add(b.getHash());
+            }
+
+            return hashes;
+        } finally {
+            lock.readLock().unlock();
         }
-
-        lock.readLock().unlock();
-        return hashes;
     }
 
     @Override
     public List<A0BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
         lock.readLock().lock();
+        try {
+            List<AionBlock> blocks = getListBlocksEndWith(hash, qty);
+            List<A0BlockHeader> headers = new ArrayList<>(blocks.size());
 
-        List<AionBlock> blocks = getListBlocksEndWith(hash, qty);
-        List<A0BlockHeader> headers = new ArrayList<>(blocks.size());
+            for (IAionBlock b : blocks) {
+                headers.add(b.getHeader());
+            }
 
-        for (IAionBlock b : blocks) {
-            headers.add(b.getHeader());
+            return headers;
+        } finally {
+            lock.readLock().unlock();
         }
-
-        lock.readLock().unlock();
-        return headers;
     }
 
     @Override
     public List<AionBlock> getListBlocksEndWith(byte[] hash, long qty) {
-        return getListBlocksEndWithInner(hash, qty);
+        lock.readLock().lock();
+        try {
+            return getListBlocksEndWithInner(hash, qty);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private List<AionBlock> getListBlocksEndWithInner(byte[] hash, long qty) {
         // locks acquired by calling method
         AionBlock block = this.blocks.get(hash);
@@ -368,52 +398,57 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public void reBranch(AionBlock forkBlock) {
         lock.writeLock().lock();
 
-        IAionBlock bestBlock = getBestBlock();
+        try {
+            IAionBlock bestBlock = getBestBlock();
 
-        long currentLevel = Math.max(bestBlock.getNumber(), forkBlock.getNumber());
+            long currentLevel = Math.max(bestBlock.getNumber(), forkBlock.getNumber());
 
-        // 1. First ensure that you are one the save level
-        IAionBlock forkLine = forkBlock;
-        if (forkBlock.getNumber() > bestBlock.getNumber()) {
+            // 1. First ensure that you are one the save level
+            IAionBlock forkLine = forkBlock;
+            if (forkBlock.getNumber() > bestBlock.getNumber()) {
 
-            while (currentLevel > bestBlock.getNumber()) {
-                List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
-                BlockInfo blockInfo = getBlockInfoForHash(blocks, forkLine.getHash());
-                if (blockInfo != null) {
-                    blockInfo.setMainChain(true);
-                    setBlockInfoForLevel(currentLevel, blocks);
-                } else {
-                    LOG.error("Null block information found at " + currentLevel + " when information should exist.");
+                while (currentLevel > bestBlock.getNumber()) {
+                    List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
+                    BlockInfo blockInfo = getBlockInfoForHash(blocks, forkLine.getHash());
+                    if (blockInfo != null) {
+                        blockInfo.setMainChain(true);
+                        setBlockInfoForLevel(currentLevel, blocks);
+                    } else {
+                        LOG.error("Null block information found at " + currentLevel + " when data should exist.");
+                    }
+                    forkLine = getBlockByHash(forkLine.getParentHash());
+                    --currentLevel;
                 }
-                forkLine = getBlockByHash(forkLine.getParentHash());
-                --currentLevel;
             }
-        }
 
-        IAionBlock bestLine = bestBlock;
-        if (bestBlock.getNumber() > forkBlock.getNumber()) {
+            IAionBlock bestLine = bestBlock;
+            if (bestBlock.getNumber() > forkBlock.getNumber()) {
 
-            while (currentLevel > forkBlock.getNumber()) {
+                while (currentLevel > forkBlock.getNumber()) {
 
-                List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
-                BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
-                if (blockInfo != null) {
-                    blockInfo.setMainChain(false);
-                    setBlockInfoForLevel(currentLevel, blocks);
-                } else {
-                    LOG.error("Null block information found at " + currentLevel + " when information should exist.");
+                    List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
+                    BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
+                    if (blockInfo != null) {
+                        blockInfo.setMainChain(false);
+                        setBlockInfoForLevel(currentLevel, blocks);
+                    } else {
+                        LOG.error("Null block information found at " + currentLevel + " when data should exist.");
+                    }
+                    bestLine = getBlockByHash(bestLine.getParentHash());
+                    --currentLevel;
                 }
-                bestLine = getBlockByHash(bestLine.getParentHash());
-                --currentLevel;
             }
+
+            // 2. Loop back on each level until common block
+            loopBackToCommonBlock(bestLine, forkLine);
+        } finally {
+            lock.writeLock().unlock();
         }
-
-        // 2. Loop back on each level until common block
-        loopBackToCommonBlock(bestLine, forkLine);
-
-        lock.writeLock().unlock();
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private void loopBackToCommonBlock(IAionBlock bestLine, IAionBlock forkLine) {
         long currentLevel = bestLine.getNumber();
 
@@ -455,121 +490,126 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public void revert(long previousLevel) {
         lock.writeLock().lock();
 
-        IAionBlock bestBlock = getBestBlock();
+        try {
+            IAionBlock bestBlock = getBestBlock();
 
-        long currentLevel = bestBlock.getNumber();
+            long currentLevel = bestBlock.getNumber();
 
-        // ensure that the given level is lower than current
-        if (previousLevel >= currentLevel) {
-            lock.writeLock().unlock();
-            return;
-        }
-
-        // walk back removing blocks greater than the given level value
-        IAionBlock bestLine = bestBlock;
-        while (currentLevel > previousLevel) {
-
-            // remove all the blocks at that level
-            List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
-            if (currentLevelBlocks == null || currentLevelBlocks.size() == 0) {
-                blocks.delete(bestLine.getHash());
-                LOG.error("Null block information found at " + currentLevel + " when information should exist.");
-            } else {
-                for (BlockInfo bk_info : currentLevelBlocks) {
-                    blocks.delete(bk_info.getHash());
-                }
+            // ensure that the given level is lower than current
+            if (previousLevel >= currentLevel) {
+                return;
             }
 
-            // remove the level
-            index.remove(currentLevel);
-            if (bestLine != null) {
-                bestLine = getBlockByHash(bestLine.getParentHash());
-            } else {
-                // attempt to find another block at the parent level
-                bestLine = getChainBlockByNumber(currentLevel - 1);
-            }
-            --currentLevel;
-        }
+            // walk back removing blocks greater than the given level value
+            IAionBlock bestLine = bestBlock;
+            while (currentLevel > previousLevel) {
 
-        if (bestLine == null) {
-            LOG.error("Block at level #" + previousLevel + " is null. Reverting further back may be required.");
-        } else {
-            // update the main chain based on difficulty, if needed
-            List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
-            BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
-
-            // no side chains at this level
-            if (blocks.size() == 1 && blockInfo != null) {
-                if (!blockInfo.isMainChain()) {
-                    blockInfo.setMainChain(true);
-                    setBlockInfoForLevel(previousLevel, blocks);
-                }
-            } else {
-                if (blockInfo == null) {
-                    LOG.error("Null block information found at " + previousLevel + " when information should exist. "
-                            + "Rebuilding information.");
-
-                    // recreate missing block info
-                    blockInfo = new BlockInfo();
-                    blockInfo.setCummDifficulty(getTotalDifficultyForHash(bestLine.getParentHash())
-                            .add(bestLine.getHeader().getDifficultyBI()));
-                    blockInfo.setHash(bestLine.getHash());
-                    blocks.add(blockInfo);
-                }
-
-                // check for max total difficulty
-                BlockInfo maxTDInfo = blockInfo;
-                for (BlockInfo info : blocks) {
-                    if (info.getCummDifficulty().compareTo(maxTDInfo.getCummDifficulty()) > 0) {
-                        maxTDInfo = info;
+                // remove all the blocks at that level
+                List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
+                if (currentLevelBlocks == null || currentLevelBlocks.size() == 0) {
+                    blocks.delete(bestLine.getHash());
+                    LOG.error("Null block information found at " + currentLevel + " when information should exist.");
+                } else {
+                    for (BlockInfo bk_info : currentLevelBlocks) {
+                        blocks.delete(bk_info.getHash());
                     }
                 }
 
-                // 2. Loop back on each level until common block
-                IAionBlock forkLine = getBlockByHash(maxTDInfo.getHash());
-                loopBackToCommonBlock(bestLine, forkLine);
+                // remove the level
+                index.remove(currentLevel);
+                if (bestLine != null) {
+                    bestLine = getBlockByHash(bestLine.getParentHash());
+                } else {
+                    // attempt to find another block at the parent level
+                    bestLine = getChainBlockByNumber(currentLevel - 1);
+                }
+                --currentLevel;
             }
-        }
 
-        lock.writeLock().unlock();
+            if (bestLine == null) {
+                LOG.error("Block at level #" + previousLevel + " is null. Reverting further back may be required.");
+            } else {
+                // update the main chain based on difficulty, if needed
+                List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
+                BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
+
+                // no side chains at this level
+                if (blocks.size() == 1 && blockInfo != null) {
+                    if (!blockInfo.isMainChain()) {
+                        blockInfo.setMainChain(true);
+                        setBlockInfoForLevel(previousLevel, blocks);
+                    }
+                } else {
+                    if (blockInfo == null) {
+                        LOG.error("Null block information found at " + previousLevel + " when data should exist. "
+                                + "Rebuilding information.");
+
+                        // recreate missing block info
+                        blockInfo = new BlockInfo();
+                        blockInfo.setCummDifficulty(getTotalDifficultyForHash(bestLine.getParentHash())
+                                .add(bestLine.getHeader().getDifficultyBI()));
+                        blockInfo.setHash(bestLine.getHash());
+                        blocks.add(blockInfo);
+                    }
+
+                    // check for max total difficulty
+                    BlockInfo maxTDInfo = blockInfo;
+                    for (BlockInfo info : blocks) {
+                        if (info.getCummDifficulty().compareTo(maxTDInfo.getCummDifficulty()) > 0) {
+                            maxTDInfo = info;
+                        }
+                    }
+
+                    // 2. Loop back on each level until common block
+                    IAionBlock forkLine = getBlockByHash(maxTDInfo.getHash());
+                    loopBackToCommonBlock(bestLine, forkLine);
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public void pruneAndCorrect() {
         lock.writeLock().lock();
 
-        IAionBlock block = getBestBlock();
-        long initialLevel = block.getNumber();
-        long level = initialLevel;
+        try {
+            IAionBlock block = getBestBlock();
+            long initialLevel = block.getNumber();
+            long level = initialLevel;
 
-        // top down pruning of nodes on side chains
-        while (level > 0) {
-            pruneSideChains(block);
-            block = getBlockByHash(block.getParentHash());
-            if (block == null) {
-                LOG.error("Block #" + (level - 1) + " missing from the database. "
-                        + "Cannot proceed with block pruning and total difficulty updates.");
-                lock.writeLock().unlock();
-                return;
+            // top down pruning of nodes on side chains
+            while (level > 0) {
+                pruneSideChains(block);
+                block = getBlockByHash(block.getParentHash());
+                if (block == null) {
+                    LOG.error("Block #" + (level - 1) + " missing from the database. "
+                            + "Cannot proceed with block pruning and total difficulty updates.");
+                    return;
+                }
+                level = block.getNumber();
             }
-            level = block.getNumber();
+
+            // prune genesis
+            pruneSideChains(block);
+
+            // bottom up repair of information
+            BigInteger parentTotalDifficulty = block.getCumulativeDifficulty();
+            level = 1;
+            while (level <= initialLevel) {
+                parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
+                LOG.info("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
+                level++;
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
-
-        // prune genesis
-        pruneSideChains(block);
-
-        // bottom up repair of information
-        BigInteger parentTotalDifficulty = block.getCumulativeDifficulty();
-        level = 1;
-        while (level <= initialLevel) {
-            parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
-            LOG.info("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
-            level++;
-        }
-
-        lock.writeLock().unlock();
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private void pruneSideChains(IAionBlock block) {
         // current level
         long level = block.getNumber();
@@ -604,6 +644,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         setBlockInfoForLevel(level, levelBlocks);
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private BigInteger correctTotalDifficulty(long level, BigInteger parentTotalDifficulty) {
         List<BlockInfo> levelBlocks = getBlockInfoForLevel(level);
 
@@ -625,60 +668,64 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
         lock.readLock().lock();
 
-        long firstBlock = getMaxNumber();
-        long lastBlock = firstBlock - numberOfBlocks;
+        try {
+            long firstBlock = getMaxNumber();
+            long lastBlock = firstBlock - numberOfBlocks;
 
-        File file = new File(reportsFolder, System.currentTimeMillis() + "-blocks-report.out");
+            File file = new File(reportsFolder, System.currentTimeMillis() + "-blocks-report.out");
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
-        while (firstBlock > lastBlock && firstBlock >= 0) {
-            List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
+            while (firstBlock > lastBlock && firstBlock >= 0) {
+                List<BlockInfo> levelBlocks = getBlockInfoForLevel(firstBlock);
 
-            writer.append("Blocks at level " + firstBlock + ":");
-            writer.newLine();
-
-            for (BlockInfo bi : levelBlocks) {
-                writer.append(
-                        "Hash: " + Hex.toHexString(bi.getHash()) + " Total Difficulty: " + bi.getCummDifficulty());
+                writer.append("Blocks at level " + firstBlock + ":");
                 writer.newLine();
+
+                for (BlockInfo bi : levelBlocks) {
+                    writer.append(
+                            "Hash: " + Hex.toHexString(bi.getHash()) + " Total Difficulty: " + bi.getCummDifficulty());
+                    writer.newLine();
+                }
+                writer.newLine();
+
+                firstBlock--;
             }
-            writer.newLine();
 
-            firstBlock--;
+            writer.close();
+        } finally {
+            lock.readLock().unlock();
         }
-
-        writer.close();
-
-        lock.readLock().unlock();
-
     }
 
     public List<byte[]> getListHashesStartWith(long number, long maxBlocks) {
         lock.readLock().lock();
 
-        List<byte[]> result = new ArrayList<>();
+        try {
+            List<byte[]> result = new ArrayList<>();
 
-        int i;
-        for (i = 0; i < maxBlocks; ++i) {
-            List<BlockInfo> blockInfos = index.get(number);
-            if (blockInfos == null) {
-                break;
-            }
-
-            for (BlockInfo blockInfo : blockInfos) {
-                if (blockInfo.isMainChain()) {
-                    result.add(blockInfo.getHash());
+            int i;
+            for (i = 0; i < maxBlocks; ++i) {
+                List<BlockInfo> blockInfos = index.get(number);
+                if (blockInfos == null) {
                     break;
                 }
+
+                for (BlockInfo blockInfo : blockInfos) {
+                    if (blockInfo.isMainChain()) {
+                        result.add(blockInfo.getHash());
+                        break;
+                    }
+                }
+
+                ++number;
             }
+            maxBlocks -= i;
 
-            ++number;
+            return result;
+        } finally {
+            lock.readLock().unlock();
         }
-        maxBlocks -= i;
-
-        lock.readLock().unlock();
-        return result;
     }
 
     public static class BlockInfo implements Serializable {
@@ -808,36 +855,48 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     public void printChain() {
         lock.readLock().lock();
 
-        Long number = getMaxNumber();
+        try {
+            Long number = getMaxNumber();
 
-        for (int i = 0; i < number; ++i) {
-            List<BlockInfo> levelInfos = index.get(i);
+            for (int i = 0; i < number; ++i) {
+                List<BlockInfo> levelInfos = index.get(i);
 
-            if (levelInfos != null) {
-                System.out.print(i);
-                for (BlockInfo blockInfo : levelInfos) {
-                    if (blockInfo.isMainChain()) {
-                        System.out.print(" [" + shortHash(blockInfo.getHash()) + "] ");
-                    } else {
-                        System.out.print(" " + shortHash(blockInfo.getHash()) + " ");
+                if (levelInfos != null) {
+                    System.out.print(i);
+                    for (BlockInfo blockInfo : levelInfos) {
+                        if (blockInfo.isMainChain()) {
+                            System.out.print(" [" + shortHash(blockInfo.getHash()) + "] ");
+                        } else {
+                            System.out.print(" " + shortHash(blockInfo.getHash()) + " ");
+                        }
                     }
+                    System.out.println();
                 }
-                System.out.println();
             }
+        } finally {
+            lock.readLock().unlock();
         }
-        lock.readLock().unlock();
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private List<BlockInfo> getBlockInfoForLevel(long level) {
         // locks acquired by calling method
         return index.get(level);
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private void setBlockInfoForLevel(long level, List<BlockInfo> infos) {
         // locks acquired by calling method
         index.set(level, infos);
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
         for (BlockInfo blockInfo : blocks) {
             if (Arrays.equals(hash, blockInfo.getHash())) {
