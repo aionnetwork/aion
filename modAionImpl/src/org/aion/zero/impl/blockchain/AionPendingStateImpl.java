@@ -119,35 +119,35 @@ public class AionPendingStateImpl
     class TxBuffTask extends TimerTask {
         @Override
         public void run() {
+            synchronized (txBuffer) {
+                synchronized (txPool) {
+                    Set<AionTransaction> newBufferTx = txBuffer.keySet();
+                    //synchronized (newBufferTx) {
+                    List<AionTransaction> txs = txPool.add(newBufferTx.stream().collect(Collectors.toList()));
 
-            List<AionTransaction> newBufferTx;
-            //synchronized (pendingState) {
-                newBufferTx = txBuffer.keySet().stream().collect(Collectors.toList());
-
-                List<AionTransaction> txs = txPool.add(newBufferTx);
-
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("txBufferSize {} return size {}", newBufferTx.size(), txs.size());
-                }
-
-                int cnt = 0;
-                Iterator<AionTransaction> it = newBufferTx.iterator();
-                while (it.hasNext()) {
-                    AionTransaction tx = it.next();
-                    if (txs.get(cnt) != null && !txs.get(cnt).equals(tx)) {
-                        AionTxReceipt rp = new AionTxReceipt();
-                        rp.setTransaction(txs.get(cnt));
-                        receivedTxs.remove(ByteArrayWrapper.wrap(txs.get(cnt++).getHash()));
-                        fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("txBufferSize {} return size {}", newBufferTx.size(), txs.size());
                     }
 
-                    fireTxUpdate(txBuffer.get(tx).getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
+                    int cnt = 0;
+                    Iterator<AionTransaction> it = newBufferTx.iterator();
+                    while (it.hasNext()) {
+                        AionTransaction tx = it.next();
+                        if (txs.get(cnt) != null && !txs.get(cnt).equals(tx)) {
+                            AionTxReceipt rp = new AionTxReceipt();
+                            rp.setTransaction(txs.get(cnt));
+                            receivedTxs.remove(ByteArrayWrapper.wrap(txs.get(cnt++).getHash()));
+                            fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
+                        }
+
+                        fireTxUpdate(txBuffer.get(tx).getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
+                    }
+
+                    AionImpl.inst().broadcastTransactions(newBufferTx.stream().collect(Collectors.toList()));
+
+                    txBuffer.clear();
                 }
-
-
-                AionImpl.inst().broadcastTransactions(newBufferTx);
-                txBuffer.clear();
-            //}
+            }
         }
     }
 
@@ -214,8 +214,6 @@ public class AionPendingStateImpl
         }
     }
 
-
-
     public void init(final AionBlockchainImpl blockchain) {
         this.blockchain = blockchain;
         this.transactionStore = blockchain.getTransactionStore();
@@ -235,11 +233,10 @@ public class AionPendingStateImpl
 
         //scheduler.schedule(txHdlr, 200, TimeUnit.MILLISECONDS);
         //scheduler.execute(txHdlr);
-        timer.schedule(new TxBuffTask(), 5000, 200);
+        timer.schedule(new TxBuffTask(), 10000, 200);
 
         ees.start(new EpPS());
 
-        best.set(blockchain.getBestBlock());
     }
 
     private Set<Integer> setEvtFilter() {
@@ -435,9 +432,9 @@ public class AionPendingStateImpl
             if (LOG.isTraceEnabled()) {
                 LOG.trace("addPendingTransactionImpl: [{}]", tx.toString());
             }
-
+            synchronized (txBuffer) {
                 txBuffer.put(tx, txSum);
-
+            }
 
 //            AionTransaction rtn = this.txPool.add(tx);
 //            if (rtn != null && !rtn.equals(tx)) {
@@ -756,5 +753,10 @@ public class AionPendingStateImpl
     @Override
     public String getVersion() {
         return this.txPool.getVersion();
+    }
+
+    @Override
+    public void updateBest() {
+        getBestBlock();
     }
 }
