@@ -127,7 +127,7 @@ public class BlockPropagationHandler {
         });
     }
 
-    public PropStatus processIncomingBlock(final int nodeId, final AionBlock block) {
+    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
 
         if (block == null)
             return PropStatus.DROPPED;
@@ -162,7 +162,11 @@ public class BlockPropagationHandler {
         boolean sent = send(block, nodeId);
 
         // process
+        long t1 = System.currentTimeMillis();
         ImportResult result = this.blockchain.tryToConnect(block);
+        long t2 = System.currentTimeMillis();
+        log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                _displayId, block.getNumber(), block.getTransactionsList().size(), result, t2 - t1);
 
         // process resulting state
         if (sent && result.isSuccessful())

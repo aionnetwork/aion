@@ -76,7 +76,7 @@ public final class BroadcastNewBlockHandler extends Handler {
 
         AionBlock block = new AionBlock(rawdata);
 
-        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, block);
+        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
 
         if (this.log.isDebugEnabled()) {
             String hash = block.getShortHash();
