@@ -39,7 +39,7 @@ final class SyncStatics {
 
     private long startBlock;
 
-    private long avgBlocksPerSec;
+    private double avgBlocksPerSec;
 
     SyncStatics(long _startBlock){
         this.start = System.currentTimeMillis();
@@ -48,10 +48,10 @@ final class SyncStatics {
     }
 
     synchronized void update(long _blockNumber){
-        avgBlocksPerSec = (_blockNumber - startBlock) * 1000 / (System.currentTimeMillis() - start);
+        avgBlocksPerSec = (double) (_blockNumber - startBlock) * 1000 / (System.currentTimeMillis() - start);
     }
 
-    synchronized long getAvgBlocksPerSec(){
+    synchronized double getAvgBlocksPerSec(){
         return this.avgBlocksPerSec;
     }
 }

@@ -241,6 +241,10 @@ public final class SyncMgr {
             // ignore this batch if any invalidated header
             if(!this.blockHeaderValidator.validate(current, log)) {
                 log.debug("<invalid-header num={} hash={}>", current.getNumber(), current.getHash());
+
+                // Print header to allow debugging
+                log.debug("Invalid header: {}", current.toString());
+
                 return;
             }
 

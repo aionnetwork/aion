@@ -33,7 +33,7 @@ import org.aion.db.impl.DatabaseFactory;
 //import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.trie.JournalPruneDataSource;
+// import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.mcf.vm.types.DataWord;
@@ -84,7 +84,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
-    protected JournalPruneDataSource<BLK, BH> stateDSPrune;
+    // protected JournalPruneDataSource<BLK, BH> stateDSPrune;
     protected DetailsDataStore<BLK, BH> detailsDS;
 
     // Read Write Lock
@@ -152,6 +152,8 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 //                            + "\".\nPlease select a driver from the following vendor list: " + vendorListString);
         }
 
+        // TODO: these parameters should be converted to enum
+        // should correspond with those listed in {@code DatabaseFactory}
         Properties sharedProps = new Properties();
         sharedProps.setProperty("db_type", this.cfg.getActiveVendor());
         sharedProps.setProperty("db_path", this.cfg.getDbPath());
@@ -161,6 +163,10 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
         sharedProps.setProperty("enable_heap_cache", String.valueOf(this.cfg.isHeapCacheEnabled()));
         sharedProps.setProperty("max_heap_cache_size", this.cfg.getMaxHeapCacheSize());
         sharedProps.setProperty("enable_heap_cache_stats", String.valueOf(this.cfg.isHeapCacheStatsEnabled()));
+        sharedProps.setProperty("max_fd_alloc_size", String.valueOf(this.cfg.getMaxFdAllocSize()));
+        sharedProps.setProperty("block_size", String.valueOf(this.cfg.getBlockSize()));
+        sharedProps.setProperty("write_buffer_size", String.valueOf(this.cfg.getWriteBufferSize()));
+        sharedProps.setProperty("cache_size", String.valueOf(this.cfg.getCacheSize()));
 
         try {
             databaseGroup = new ArrayList<>();
@@ -194,7 +200,9 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
-            stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
+            // disabling use of JournalPruneDataSource until functionality properly tested
+            // TODO-AR: enable pruning with the JournalPruneDataSource
+            // stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
             pruneBlockCount = pruneEnabled ? this.cfg.getPrune() : -1;
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;

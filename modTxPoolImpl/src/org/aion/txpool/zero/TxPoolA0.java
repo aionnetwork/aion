@@ -265,9 +265,11 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             long timestamp = tx.getTimeStampBI().longValue()/ multiplyM;
-            if (this.getTimeView().get(timestamp).remove(bw)) {
-                if (this.getTimeView().get(timestamp).isEmpty()) {
-                    this.getTimeView().remove(timestamp);
+            if (this.getTimeView().get(timestamp) != null) {
+                if (this.getTimeView().get(timestamp).remove(bw)) {
+                    if (this.getTimeView().get(timestamp).isEmpty()) {
+                        this.getTimeView().remove(timestamp);
+                    }
                 }
             }
 
@@ -276,15 +278,18 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
             if (!checkedAddress.contains(address)) {
 
-                this.getPoolStateView(tx.getFrom()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
+                if (this.getPoolStateView(tx.getFrom()) != null) {
+                    this.getPoolStateView(tx.getFrom()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
+                }
 
                 fee.parallelStream().forEach(bi -> {
-                    this.getFeeView().get(bi).entrySet().removeIf(
-                            byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue()
-                                    .getAddress().equals(address));
+                    if (this.getFeeView().get(bi) != null) {
+                        this.getFeeView().get(bi).entrySet().removeIf(
+                                byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue().getAddress().equals(address));
 
-                    if (this.getFeeView().get(bi).isEmpty()) {
-                        this.getFeeView().remove(bi);
+                        if (this.getFeeView().get(bi).isEmpty()) {
+                            this.getFeeView().remove(bi);
+                        }
                     }
                 });
 
