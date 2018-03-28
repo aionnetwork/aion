@@ -81,7 +81,7 @@ public class AionPendingStateImpl
         }
     }
 
-    private static final int MAX_TX_POOL_SIZE = 2048; // around 4 blocks
+    private static final int MAX_TX_POOL_SIZE = 4096;
 
     private IAionBlockchain blockchain;
 
@@ -663,7 +663,15 @@ public class AionPendingStateImpl
             AionTxExecSummary txSum = executeTx(tx, false);
             AionTxReceipt receipt = txSum.getReceipt();
             receipt.setTransaction(tx);
-            fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
+
+            if (txSum.isRejected()) {
+                LOG.warn("Invalid transaction in txpool: {}", tx);
+                txPool.remove(Collections.singletonList(tx));
+
+                fireTxUpdate(receipt, PendingTransactionState.DROPPED, block);
+            } else {
+                fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
+            }
         }
     }
 
