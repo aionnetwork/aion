@@ -45,14 +45,11 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire write lock
         lock.writeLock().lock();
 
-        boolean open = false;
-
         try {
-            open = database.open();
+            return database.open();
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
-            return open;
         }
     }
 
@@ -74,21 +71,14 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire write lock
         lock.writeLock().lock();
 
-        boolean success = false;
-
         try {
-            success = database.commit();
+            return database.commit();
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw e;
-            } else {
-                LOG.error("Could not return empty status due to ", e);
-            }
+            throw e;
         } finally {
             // releasing write lock
             lock.writeLock().unlock();
         }
-        return success;
     }
 
     @Override
@@ -121,14 +111,11 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire read lock
         lock.readLock().lock();
 
-        boolean open = false;
-
         try {
-            open = database.isOpen();
+            return database.isOpen();
         } finally {
             // releasing read lock
             lock.readLock().unlock();
-            return open;
         }
     }
 
@@ -167,14 +154,11 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire read lock
         lock.readLock().lock();
 
-        boolean onDisk = false;
-
         try {
-            onDisk = database.isCreatedOnDisk();
+            return database.isCreatedOnDisk();
         } finally {
             // releasing read lock
             lock.readLock().unlock();
-            return onDisk;
         }
     }
 
@@ -183,21 +167,14 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire read lock
         lock.readLock().lock();
 
-        long size = -1L;
-
         try {
-            size = database.approximateSize();
+            return database.approximateSize();
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw e;
-            } else {
-                LOG.error("Could not return empty status due to ", e);
-            }
+            throw e;
         } finally {
             // releasing read lock
             lock.readLock().unlock();
         }
-        return size;
     }
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
@@ -207,21 +184,14 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire read lock
         lock.readLock().lock();
 
-        boolean isEmpty = true;
-
         try {
-            isEmpty = database.isEmpty();
+            return database.isEmpty();
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw e;
-            } else {
-                LOG.error("Could not return empty status due to ", e);
-            }
+            throw e;
         } finally {
             // releasing read lock
             lock.readLock().unlock();
         }
-        return isEmpty;
     }
 
     @Override
@@ -229,23 +199,14 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire read lock
         lock.readLock().lock();
 
-        // initializing to null to limit object creation
-        // the called database should create the instance
-        Set<byte[]> keys = null;
-
         try {
-            keys = database.keys();
+            return database.keys();
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw e;
-            } else {
-                LOG.error("Could not return keys due to ", e);
-            }
+            throw e;
         } finally {
             // releasing read lock
             lock.readLock().unlock();
         }
-        return keys;
     }
 
     @Override
@@ -253,21 +214,14 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
         // acquire read lock
         lock.readLock().lock();
 
-        Optional<byte[]> value = Optional.empty();
-
         try {
-            value = database.get(key);
+            return database.get(key);
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw e;
-            } else {
-                LOG.error("Could not get value for key due to ", e);
-            }
+            throw e;
         } finally {
             // releasing read lock
             lock.readLock().unlock();
         }
-        return value;
     }
 
     @Override
