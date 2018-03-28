@@ -145,6 +145,7 @@ public class BlockPropagationHandler {
             this.cacheMap.put(hashWrapped, true);
         }
 
+        /*
         AionBlock bestBlock = this.blockchain.getBestBlock();
 
         // assumption is that we are on the correct chain
@@ -155,6 +156,7 @@ public class BlockPropagationHandler {
         // this implies we only propagate blocks from our own chain
         if (!bestBlock.isParentOf(block))
             return PropStatus.DROPPED;
+        */
 
         // send
         boolean sent = send(block, nodeId);
