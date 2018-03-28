@@ -42,9 +42,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>> implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final Object object = new Object();
-    private ObjectDataSource<List<INFO>> source;
+    private final ObjectDataSource<List<INFO>> source;
 
-    protected ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionStore(IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
         source = new ObjectDataSource(src, serializer);
