@@ -12,8 +12,8 @@ public class EnergyLimitStrategy {
     private long blockLowerLimit;
     private long energyLimitDivisor;
     private static final long targetLimit = 10000000L;
-
     private volatile boolean initialized = false;
+
 
     public EnergyLimitStrategy() {
         // nothing
@@ -21,7 +21,7 @@ public class EnergyLimitStrategy {
 
     public void setConstants(ChainConfiguration config) {
         IBlockConstants constants = config.getConstants();
-        this.blockLowerLimit = constants.getEnergyLowerBound().longValue();
+        this.blockLowerLimit = constants.getEnergyLowerBoundLong();
         this.energyLimitDivisor = constants.getEnergyDivisorLimitLong();
         this.initialized = true;
     }
@@ -38,12 +38,18 @@ public class EnergyLimitStrategy {
         if (!initialized)
             throw new IllegalStateException();
 
-        return targetedEnergyLimitStrategy(parentEnergyLimit,
+        return clampMin(targetedEnergyLimitStrategy(parentEnergyLimit,
                 this.blockLowerLimit,
                 this.energyLimitDivisor,
-                targetLimit);
+                targetLimit));
     }
 
+    public long clampMin(long energy) {
+        return Math.max(energy, this.blockLowerLimit);
+    }
+
+    // following are underlying strategy implementations, do not use this
+    // instead prefer to instantiate
 
     /**
      * Underlying implementation, do not use this, instead instantiate an
@@ -51,9 +57,9 @@ public class EnergyLimitStrategy {
      * by providing {@link ChainConfiguration}
      */
     public static long targetedEnergyLimitStrategy(final long parentEnergyLimit,
-                                                    final long blockLowerLimit,
-                                                    final long energyLimitDivisor,
-                                                    final long targetLimit) {
+                                                   final long blockLowerLimit,
+                                                   final long energyLimitDivisor,
+                                                   final long targetLimit) {
 
         // find the distance between the targetLimit and parentEnergyLimit
         // capped by the targetLimit (the bounds in which the shift is valid)
@@ -65,6 +71,44 @@ public class EnergyLimitStrategy {
 
         // clamp at the block lower limit
         return Math.max(blockLowerLimit, parentEnergyLimit + delta);
+    }
+
+    /**
+     * Alternative strategy, specify an upper and lower bound for energy, and allow
+     * the function to adjust within those bounds.
+     */
+    public static long clampedDecayingEnergyLimitStrategy(final long pastEnergyLimit,
+                                                          final long pastEnergyConsumed,
+                                                          final long clampUpperBound,
+                                                          final long clampLowerBound,
+                                                          final long energyLimitDivisor) {
+        // clamps
+        if (pastEnergyLimit < clampLowerBound)
+            return pastEnergyLimit + pastEnergyLimit / energyLimitDivisor;
+
+        if (pastEnergyLimit > clampLowerBound)
+            return pastEnergyLimit - pastEnergyLimit / energyLimitDivisor;
+
+        // implies this function can go beyond the clamps, but we should
+        // self correct at next iteration anyways
+        return decayingEnergyLimitStrategy(pastEnergyLimit, pastEnergyConsumed, energyLimitDivisor);
+    }
+
+
+    /**
+     * <p>A distance based energy limit strategy for upwards movement, coupled with
+     * a persistant decay parameter. Will always return a non-negative result.</p>
+     *
+     * <p>Function has an upword movement bound of 1/3 * d, and a downward movement
+     * bound of d, d = energy limit movement bounds</p>
+     */
+    public static long decayingEnergyLimitStrategy(final long pastEnergyLimit,
+                                                   final long pastEnergyConsumed,
+                                                   final long energyLimitDivisor) {
+        // set upwards boundary to 75%
+        long gu = (pastEnergyConsumed * 4) / 3;
+        long fn = (gu - pastEnergyLimit) / energyLimitDivisor;
+        return Math.max(0, pastEnergyLimit + fn);
     }
 
     /**
