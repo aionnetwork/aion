@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -77,34 +77,23 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
                 new RepositoryConfig(new String[] { config.getDb().getVendor() },
-                        // config.getDb().getVendorList() database list
-                        config.getDb().getVendor(), // database
-                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), // db
-                                                                                                    // path
-                        -1, // config.getDb().getPrune() prune flag
-                        ContractDetailsAion.getInstance(), // contract details
-                                                           // provider
-                        config.getDb().isAutoCommitEnabled(), // if false,
-                                                              // flush/commit
-                                                              // must be called
-                        config.getDb().isDbCacheEnabled(), // caching inside the
-                                                           // database
-                        config.getDb().isDbCompressionEnabled(), // enables/disable
-                                                                 // the default
-                                                                 // database
-                                                                 // compression
-                        config.getDb().isHeapCacheEnabled(), // uses heap
-                                                             // caching of data
-                        config.getDb().getMaxHeapCacheSize(), // size of the
-                                                              // heap cache
-                        config.getDb().isHeapCacheStatsEnabled())); // enable
-                                                                    // stats for
-                                                                    // heap
-                                                                    // cache
+                        config.getDb().getVendor(),
+                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(),
+                        -1,
+                        ContractDetailsAion.getInstance(),
+                        config.getDb().isAutoCommitEnabled(),
+                        config.getDb().isDbCacheEnabled(),
+                        config.getDb().isDbCompressionEnabled(),
+                        config.getDb().isHeapCacheEnabled(),
+                        config.getDb().getMaxHeapCacheSize(),
+                        config.getDb().isHeapCacheStatsEnabled(),
+                        config.getDb().getFdOpenAllocSize(),
+                        config.getDb().getBlockSize(),
+                        config.getDb().getWriteBufferSize(),
+                        config.getDb().getCacheSize()));
     }
 
     public static AionRepositoryImpl inst() {
-
         return AionRepositoryImplHolder.inst;
     }
 
@@ -136,7 +125,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     private Trie createStateTrie() {
-        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
+        return new SecureTrie(stateDatabase).withPruningEnabled(pruneBlockCount >= 0);
     }
 
     @Override
@@ -455,14 +444,17 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         worldState.sync();
         detailsDS.syncLargeStorage();
 
-        if (pruneBlockCount >= 0) {
+        // temporarily removed since never used
+        /* if (pruneBlockCount >= 0) {
             stateDSPrune.storeBlockChanges(blockHeader);
             detailsDS.getStorageDSPrune().storeBlockChanges(blockHeader);
             pruneBlocks(blockHeader);
-        }
+        } */
     }
 
-    private void pruneBlocks(A0BlockHeader curBlock) {
+    // TODO-AR: reenable state pruning
+    // temporarily removed since never used
+    /* private void pruneBlocks(A0BlockHeader curBlock) {
         if (curBlock.getNumber() > bestBlockNumber) { // pruning only on
                                                       // increasing blocks
             long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
@@ -470,13 +462,13 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
                 if (pruneBlockHash != null) {
                     A0BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
-                    stateDSPrune.prune(header);
-                    detailsDS.getStorageDSPrune().prune(header);
+                    // stateDSPrune.prune(header);
+                    // detailsDS.getStorageDSPrune().prune(header);
                 }
             }
         }
         bestBlockNumber = curBlock.getNumber();
-    }
+    } */
 
     public Trie getWorldState() {
         return worldState;
@@ -489,7 +481,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         repo.blockStore = blockStore;
         repo.cfg = cfg;
         repo.stateDatabase = this.stateDatabase;
-        repo.stateDSPrune = this.stateDSPrune;
+        // repo.stateDSPrune = this.stateDSPrune;
         repo.pruneBlockCount = this.pruneBlockCount;
         repo.detailsDS = this.detailsDS;
         repo.isSnapshot = true;

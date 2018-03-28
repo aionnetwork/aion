@@ -409,4 +409,16 @@ public class NodeMgr implements INodeMgr {
             }
         }
     }
+
+    /**
+     * Remove an active node if exists.
+     *
+     * @param nodeIdHash
+     */
+    public void removeActive(int nodeIdHash, P2pMgr p2pMgr) {
+        Node node = activeNodes.remove(nodeIdHash);
+        if (node != null) {
+            p2pMgr.closeSocket(node.getChannel());
+        }
+    }
 }

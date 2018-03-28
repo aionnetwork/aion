@@ -45,14 +45,17 @@ public class TaskWrite implements Runnable {
     private SocketChannel sc;
     private Msg msg;
     private ChannelBuffer channelBuffer;
+    private P2pMgr p2pMgr;
 
     TaskWrite(
-            final ExecutorService _workers,
+            ExecutorService _workers,
             boolean _showLog,
             String _nodeShortId,
-            final SocketChannel _sc,
-            final Msg _msg,
-            final ChannelBuffer _cb
+            SocketChannel _sc,
+            Msg _msg,
+            ChannelBuffer _cb,
+            P2pMgr p2pMgr
+
     ) {
         this.workers = _workers;
         this.showLog = _showLog;
@@ -60,13 +63,25 @@ public class TaskWrite implements Runnable {
         this.sc = _sc;
         this.msg = _msg;
         this.channelBuffer = _cb;
+        this.p2pMgr = p2pMgr;
+    }
+
+    private void clearChannelBuffer() {
+        channelBuffer.refreshHeader();
+        channelBuffer.refreshBody();
+        channelBuffer.messages.clear();
+        p2pMgr.removeActive(channelBuffer.nodeIdHash);
     }
 
     @Override
     public void run() {
-        boolean closed = false;
+        // reset allocated buffer and clear messages if the channel is closed
+        if (channelBuffer.isClosed.get()) {
+            clearChannelBuffer();
+            return;
+        }
 
-        if (this.channelBuffer.onWrite.compareAndSet(false, true)) {
+        if (channelBuffer.onWrite.compareAndSet(false, true)) {
             /*
              * @warning header set len (body len) before header encode
              */
@@ -92,26 +107,27 @@ public class TaskWrite implements Runnable {
                 if (showLog) {
                     System.out.println("<p2p closed-channel-exception node=" + this.nodeShortId + ">");
                 }
-                closed = true;
+                channelBuffer.isClosed.set(true);
             } catch (IOException ex2) {
                 if (showLog) {
                     System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + ">");
                 }
             } finally {
-                this.channelBuffer.onWrite.set(false);
-                if (!closed) {
-                    Msg msg = this.channelBuffer.messages.poll();
+                channelBuffer.onWrite.set(false);
+
+                if (channelBuffer.isClosed.get()) {
+                    clearChannelBuffer();
+                } else {
+                    Msg msg = channelBuffer.messages.poll();
                     if (msg != null) {
                         //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
-                        workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));
+                        workers.submit(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer, p2pMgr));
                     }
-                } else {
-                    this.channelBuffer.messages.clear();
                 }
             }
         } else {
             // message may get dropped here when the message queue is full.
-            this.channelBuffer.messages.offer(msg);
+            channelBuffer.messages.offer(msg);
         }
     }
 }
