@@ -38,8 +38,11 @@ import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.Solution;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -76,6 +79,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     // of a simple map
     private static HashMap<String, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
+    private IEventMgr evtMgr;
+
 
     protected void onBlock(AionBlockSummary cbs) {
         installedFilters.keySet().forEach((k) -> {
@@ -117,23 +122,24 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
+        evtMgr = this.ac.getAionHub().getEventMgr();
 
 
         startES("EpWeb3");
         // Fill data on block and transaction events into the filters and pending receipts
-        IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
+        IHandler blkHr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHr != null) {
             blkHr.eventCallback(new EventCallback(ees, LOG));
         }
 
-        IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
+        IHandler txHr = evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
         if (txHr != null) {
             txHr.eventCallback(new EventCallback(ees, LOG));
         }
 
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
-        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
+        IHandler hldr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
         this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
@@ -772,17 +778,31 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
             AionBlock bestBlock = templateMap.get(hdrHash + "");
 
-            boolean successfulSubmit = false;
-            // TODO Clean up this section once decided on event vs direct call
-            if (bestBlock != null) {
-                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16)));
-            }
+//            boolean successfulSubmit = false;
+//            // TODO Clean up this section once decided on event vs direct call
+//            if (bestBlock != null) {
+//                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16)));
+//            }
+//
+//            if (successfulSubmit) {
+//                // Found a solution for this height and successfully submitted, clear all entries for next height
+//                LOG.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+//                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+//                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+//                templateMap.clear();
+//            }
 
-            if (successfulSubmit) {
-                // Found a solution for this height and successfully submitted, clear all entries for next height
-                LOG.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+            if(bestBlock != null) {
+
+                IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
+                ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
+                        hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
+                evtMgr.newEvent(ev);
+
+                LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
                         bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
                         bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+
                 templateMap.clear();
             }
 

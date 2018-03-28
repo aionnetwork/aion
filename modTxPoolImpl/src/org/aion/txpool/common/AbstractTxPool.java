@@ -501,7 +501,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("addr[{}] bn[{}] txnonce[{}]", addr.toString(), bestNonce.get(addr).toString(), bn.toString());
+            LOG.debug("addr[{}] bn[{}] txnonce[{}]", addr.toString(), bestNonce.get(addr) == null ? "-1" : bestNonce.get(addr).toString(), bn.toString());
         }
 
         if (bestNonce.get(addr) == null || bestNonce.get(addr).compareTo(bn) < 0) {

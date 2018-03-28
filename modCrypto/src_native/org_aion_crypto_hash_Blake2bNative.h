@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jbyteArray JNICALL Java_org_aion_crypto_hash_Blake2bNative_blake256
   (JNIEnv *, jclass, jbyteArray);
 
+/*
+ * Class:     org_aion_crypto_hash_Blake2bNative
+ * Method:    genSolutionHash
+ * Signature: ([B[B[I[B)[[B
+ */
+JNIEXPORT jobjectArray JNICALL Java_org_aion_crypto_hash_Blake2bNative_genSolutionHash
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jintArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

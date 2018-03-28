@@ -75,20 +75,13 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         private static CfgAion config = CfgAion.inst();
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
-                new RepositoryConfig(new String[] { config.getDb().getVendor() },
-                        config.getDb().getVendor(),
-                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(),
-                        -1,
-                        ContractDetailsAion.getInstance(),
-                        config.getDb().isAutoCommitEnabled(),
-                        config.getDb().isDbCacheEnabled(),
-                        config.getDb().isDbCompressionEnabled(),
-                        config.getDb().isHeapCacheEnabled(),
-                        config.getDb().getMaxHeapCacheSize(),
-                        config.getDb().isHeapCacheStatsEnabled(),
-                        config.getDb().getFdOpenAllocSize(),
-                        config.getDb().getBlockSize(),
-                        config.getDb().getWriteBufferSize(),
+                new RepositoryConfig(new String[] { config.getDb().getVendor() }, config.getDb().getVendor(),
+                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), -1,
+                        ContractDetailsAion.getInstance(), config.getDb().isAutoCommitEnabled(),
+                        config.getDb().isDbCacheEnabled(), config.getDb().isDbCompressionEnabled(),
+                        config.getDb().isHeapCacheEnabled(), config.getDb().getMaxHeapCacheSize(),
+                        config.getDb().isHeapCacheStatsEnabled(), config.getDb().getFdOpenAllocSize(),
+                        config.getDb().getBlockSize(), config.getDb().getWriteBufferSize(),
                         config.getDb().getCacheSize()));
     }
 
@@ -126,7 +119,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     private Trie createStateTrie() {
-        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
+        return new SecureTrie(stateDatabase).withPruningEnabled(pruneBlockCount >= 0);
     }
 
     @Override
@@ -451,15 +444,18 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         worldState.sync();
         detailsDS.syncLargeStorage();
 
-        if (pruneBlockCount >= 0) {
+        // temporarily removed since never used
+        /* if (pruneBlockCount >= 0) {
             stateDSPrune.storeBlockChanges(blockHeader);
             detailsDS.getStorageDSPrune().storeBlockChanges(blockHeader);
             pruneBlocks(blockHeader);
-        }
+        } */
         rwLock.writeLock().unlock();
     }
 
-    private void pruneBlocks(A0BlockHeader curBlock) {
+    // TODO-AR: reenable state pruning
+    // temporarily removed since never used
+    /* private void pruneBlocks(A0BlockHeader curBlock) {
         if (curBlock.getNumber() > bestBlockNumber) { // pruning only on
             // increasing blocks
             long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
@@ -467,13 +463,13 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
                 if (pruneBlockHash != null) {
                     A0BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
-                    stateDSPrune.prune(header);
-                    detailsDS.getStorageDSPrune().prune(header);
+                    // stateDSPrune.prune(header);
+                    // detailsDS.getStorageDSPrune().prune(header);
                 }
             }
         }
         bestBlockNumber = curBlock.getNumber();
-    }
+    } */
 
     public Trie getWorldState() {
         return worldState;
@@ -487,7 +483,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         repo.blockStore = blockStore;
         repo.cfg = cfg;
         repo.stateDatabase = this.stateDatabase;
-        repo.stateDSPrune = this.stateDSPrune;
+        // repo.stateDSPrune = this.stateDSPrune;
         repo.pruneBlockCount = this.pruneBlockCount;
         repo.detailsDS = this.detailsDS;
         repo.isSnapshot = true;

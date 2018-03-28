@@ -36,6 +36,8 @@ package org.aion.crypto;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertArrayEquals;
+
 /**
  * @author jin
  */
@@ -47,6 +49,9 @@ public class HashBench {
         final byte[] input = HashUtil.h256("test".getBytes());
         final int COUNT = 1000;
 
+        byte[] outputJ = new byte[32];
+        byte[] outputN = new byte[32];
+
         // warm up
         for (int i = 0; i < COUNT; i++) {
             HashUtil.blake256(input);
@@ -56,7 +61,7 @@ public class HashBench {
         // blake2b
         long ts = System.nanoTime();
         for (int i = 0; i < COUNT; i++) {
-            HashUtil.blake256(input);
+            outputJ = HashUtil.blake256(input);
         }
         long te = System.nanoTime();
         System.out.println(" Blake2b       : " + (te - ts) / COUNT + " ns / call");
@@ -64,9 +69,11 @@ public class HashBench {
         // blake2b native
         ts = System.nanoTime();
         for (int i = 0; i < COUNT; i++) {
-            HashUtil.blake256Native(input);
+            outputN = HashUtil.blake256Native(input);
         }
         te = System.nanoTime();
         System.out.println(" Blake2b native: " + (te - ts) / COUNT + " ns / call");
+
+        assertArrayEquals(outputJ, outputN);
     }
 }
