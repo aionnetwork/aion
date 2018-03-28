@@ -155,7 +155,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("new tx!");
+                    LOG.debug("new tx! n[{}]", tx.getNonceBI().toString());
                 }
                 newPendingTx.add(tx);
             }
@@ -165,10 +165,18 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         this.getMainMap().putAll(mainMap);
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("new add tx! np[{}] tx[{}]", newPendingTx.size(), txl.size());
+        }
+
+        if (newPendingTx.size() != txl.size()) {
+            LOG.error("error");
+        }
+
         return newPendingTx;
     }
 
-    public List<TX> getOutdatedList() {
+    public synchronized List<TX> getOutdatedList() {
         return this.getOutdatedListImpl();
     }
 
@@ -362,6 +370,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         if (LOG.isInfoEnabled()) {
             LOG.info("TxPoolA0.snapshot All return [{}] TX, poolSize[{}]", rtn.size(), getMainMap().size());
+
+            if (rtn.size() != getMainMap().size()) {
+                LOG.error("size does not match!");
+            }
         }
 
         return rtn;
