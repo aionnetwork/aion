@@ -27,7 +27,7 @@ public class ClampedDecayStrategy extends DecayStrategy {
      */
     @Override
     protected long getEnergyLimitInternal(A0BlockHeader header) {
-        long out = super.getEnergyLimit(header);
+        long out = super.getEnergyLimitInternal(header);
         long prevEnergyLimit = header.getEnergyLimit();
 
         // clamps

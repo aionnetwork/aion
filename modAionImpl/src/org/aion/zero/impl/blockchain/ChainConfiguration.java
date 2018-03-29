@@ -60,8 +60,6 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
 
-    protected CfgConsensusPow config;
-
     protected Address tokenBridgingOwnerAddress;
 
     public ChainConfiguration() {
@@ -69,10 +67,6 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     }
 
     public ChainConfiguration(BlockConstants constants) {
-        this(constants, CfgAion.inst().getConsensus());
-    }
-
-    public ChainConfiguration(BlockConstants constants, CfgConsensusPow config) {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
         RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants);
@@ -81,7 +75,6 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                 BigInteger.valueOf(current.getTimestamp()), BigInteger.valueOf(parent.getTimestamp()),
                 parent.getDifficultyBI());
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
-        this.config = config;
     }
 
     public IBlockConstants getConstants() {

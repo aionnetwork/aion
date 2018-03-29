@@ -1,4 +1,4 @@
-package org.aion.zero.impl.core;
+package org.aion.zero.impl.core.energy;
 
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.api.BlockConstants;
