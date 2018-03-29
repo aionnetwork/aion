@@ -734,6 +734,13 @@ public class AionPendingStateImpl
             LOG.info("{}", tx.toString());
         }
 
+        txn = txPool.snapshot();
+        LOG.info("");
+        LOG.info("=========== Snapshot");
+        for (AionTransaction tx : txn) {
+            LOG.info("{}", tx.toString());
+        }
+
         LOG.info("");
         LOG.info("=========== Pool best nonce");
         for (Address addr : addrs) {
