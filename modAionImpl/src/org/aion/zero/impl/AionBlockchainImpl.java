@@ -82,6 +82,11 @@ import static java.util.Collections.emptyList;
 import static org.aion.base.util.BIUtil.isMoreThan;
 import static org.aion.mcf.core.ImportResult.*;
 
+// TODO: clean and clarify best block
+// bestKnownBlock - block with the highest block number
+// pubBestBlock - block with the highest total difficulty
+// bestBlock - current best block inside the blockchain implementation
+
 /**
  * Core blockchain consensus algorithms, the rule within this class decide
  * whether the correct chain from branches and dictates the placement of items
@@ -499,7 +504,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // update best block reference
         if (ret == IMPORTED_BEST) {
-            setBestBlock(block);
+            pubBestBlock = bestBlock;
         }
 
         // fire block events
@@ -972,6 +977,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (LOG.isDebugEnabled()) {
             LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
         }
+
+        setBestBlock(block);
     }
 
     public boolean hasParentOnTheChain(AionBlock block) {
@@ -985,7 +992,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public synchronized void setBestBlock(AionBlock block) {
         bestBlock = block;
-        pubBestBlock = block;
         updateBestKnownBlock(block);
     }
 
