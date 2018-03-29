@@ -25,12 +25,6 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
 package org.aion.db.impl;
 
@@ -47,14 +41,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
 
+/**
+ * @author Alexandra Roatis
+ */
 @RunWith(JUnitParamsRunner.class)
 public class ConcurrencyTest {
 
@@ -94,11 +87,10 @@ public class ConcurrencyTest {
 
     /**
      * @return parameters for testing
-     *         {@link #}
      */
     @SuppressWarnings("unused")
     private Object databaseInstanceDefinitions() {
-        return DatabaseTestUtils.databaseInstanceDefinitions();
+        return DatabaseTestUtils.unlockedDatabaseInstanceDefinitions();
     }
 
     private void addThread4IsEmpty(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
@@ -207,7 +199,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentAccessOnOpenDatabase(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         // open database
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
@@ -260,7 +253,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPut(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -285,7 +279,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentPutBatch(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -310,7 +305,8 @@ public class ConcurrencyTest {
     @Test
     @Parameters(method = "databaseInstanceDefinitions")
     public void testConcurrentUpdate(Properties dbDef) throws InterruptedException {
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_DB_NAME, DatabaseTestUtils.dbName + getNext());
+        dbDef.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
         // open database
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
@@ -346,50 +342,6 @@ public class ConcurrencyTest {
         // ensuring close
         db.close();
         assertThat(db.isClosed()).isTrue();
-    }
-
-    /**
-     * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit Wiki on multithreaded code and concurrency</a>
-     */
-    public static void assertConcurrent(final String message, final List<? extends Runnable> runnables,
-            final int maxTimeoutSeconds) throws InterruptedException {
-        final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
-        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
-        try {
-            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
-            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
-            final CountDownLatch allDone = new CountDownLatch(numThreads);
-            for (final Runnable submittedTestRunnable : runnables) {
-                threadPool.submit(() -> {
-                    allExecutorThreadsReady.countDown();
-                    try {
-                        afterInitBlocker.await();
-                        submittedTestRunnable.run();
-                    } catch (final Throwable e) {
-                        exceptions.add(e);
-                    } finally {
-                        allDone.countDown();
-                    }
-                });
-            }
-            // wait until all threads are ready
-            assertTrue(
-                    "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
-                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
-            // start all test runners
-            afterInitBlocker.countDown();
-            assertTrue(message + " timeout! More than" + maxTimeoutSeconds + "seconds",
-                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
-        } finally {
-            threadPool.shutdownNow();
-        }
-        if (!exceptions.isEmpty()) {
-            for (Throwable e : exceptions) {
-                e.printStackTrace();
-            }
-        }
-        assertTrue(message + "failed with " + exceptions.size() + " exception(s):" + exceptions, exceptions.isEmpty());
     }
 
 }

@@ -37,8 +37,6 @@ package org.aion.db.impl.mockdb;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.impl.mockdb.MockDB;
-import org.aion.db.impl.mockdb.MockDBDriver;
 import org.junit.Before;
 import org.junit.Test;
 

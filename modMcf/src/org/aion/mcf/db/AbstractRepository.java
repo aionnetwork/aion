@@ -105,6 +105,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
      * Initializes all necessary databases and caches.
      *
      * @throws Exception
+     * @implNote This function is not locked. Locking must be done from calling function.
      */
     protected void initializeDatabasesAndCaches() throws Exception {
         /*
