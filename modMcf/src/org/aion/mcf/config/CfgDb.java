@@ -43,8 +43,8 @@ import java.util.regex.Pattern;
 public class CfgDb {
 
     public final int MIN_FD_OPEN_ALLOC = 1024;
-    public final String DEFAULT_BLOCK_SIZE = "16kB";
-    public final String DEFAULT_WRITE_BUFFER_SIZE = "16mB";
+    public final String DEFAULT_BLOCK_SIZE = "16mB";
+    public final String DEFAULT_WRITE_BUFFER_SIZE = "64mB";
     public final String DEFAULT_CACHE_SIZE = "128mB";
 
     public CfgDb() {
@@ -60,11 +60,11 @@ public class CfgDb {
         this.enable_heap_cache_stats = false;
 
         // corresponds to DEFAULT_BLOCK_SIZE
-        this.block_size = 16 * (int) Utils.KILO_BYTE;
+        this.block_size = 16 * (int) Utils.MEGA_BYTE;
         this.max_fd_open_alloc = MIN_FD_OPEN_ALLOC;
 
         // corresponds to DEFAULT_WRITE_BUFFER_SIZE
-        this.write_buffer_size = 16 * (int) Utils.MEGA_BYTE;
+        this.write_buffer_size = 64 * (int) Utils.MEGA_BYTE;
 
         // corresponds to DEFAULT_CACHE_SIZE
         this.cache_size = 128 * (int) Utils.MEGA_BYTE;

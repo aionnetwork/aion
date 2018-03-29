@@ -29,7 +29,6 @@ import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.core.DiffCalc;
-import org.aion.zero.impl.core.EnergyLimitStrategy;
 import org.aion.zero.impl.core.RewardsCalculator;
 import org.aion.zero.impl.valid.*;
 import org.aion.zero.types.A0BlockHeader;
@@ -60,9 +59,6 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
-    protected EnergyLimitStrategy energyLimitStrategy;
-
-    protected CfgConsensusPow config;
 
     protected Address tokenBridgingOwnerAddress;
 
@@ -71,10 +67,6 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     }
 
     public ChainConfiguration(BlockConstants constants) {
-        this(constants, CfgAion.inst().getConsensus());
-    }
-
-    public ChainConfiguration(BlockConstants constants, CfgConsensusPow config) {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
         RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants);
@@ -83,10 +75,6 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                 BigInteger.valueOf(current.getTimestamp()), BigInteger.valueOf(parent.getTimestamp()),
                 parent.getDifficultyBI());
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
-
-        this.energyLimitStrategy = new EnergyLimitStrategy();
-        this.energyLimitStrategy.setConstants(this);
-        this.config = config;
     }
 
     public IBlockConstants getConstants() {
@@ -142,9 +130,5 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                         new EnergyLimitRule(this.getConstants().getEnergyDivisorLimitLong(),
                             this.getConstants().getEnergyLowerBoundLong())
                 ));
-    }
-
-    public long calcEnergyLimit(A0BlockHeader parentHeader) {
-        return energyLimitStrategy.targetEnergyLimitStrategy(parentHeader);
     }
 }

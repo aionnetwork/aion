@@ -1,6 +1,6 @@
 package org.aion.zero.impl.config;
 
-import org.aion.zero.impl.core.EnergyStrategies;
+import org.aion.zero.impl.core.energy.EnergyStrategies;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import static org.aion.zero.impl.core.EnergyStrategies.CLAMPED_DECAYING;
-import static org.aion.zero.impl.core.EnergyStrategies.MONOTONIC;
+import static org.aion.zero.impl.core.energy.EnergyStrategies.CLAMPED_DECAYING;
+import static org.aion.zero.impl.core.energy.EnergyStrategies.MONOTONIC;
 
 /**
  * Defines options for energy strategy, currently we only support
@@ -26,7 +26,7 @@ public class CfgEnergyStrategy {
     private EnergyStrategies strategy = EnergyStrategies.CLAMPED_DECAYING;
 
     /**
-     * Coefficients for {@link org.aion.zero.impl.core.EnergyStrategies#CLAMPED_DECAYING}
+     * Coefficients for {@link EnergyStrategies#CLAMPED_DECAYING}
      */
     private long lowerBound = 7_000_000L;
     private long upperBound = 15_000_000L;
@@ -34,7 +34,7 @@ public class CfgEnergyStrategy {
     private static final String LOWER_BOUND = "lower-bound";
 
     /**
-     * Coefficients for {@link org.aion.zero.impl.core.EnergyStrategies#TARGETTED}
+     * Coefficients for {@link EnergyStrategies#TARGETTED}
      */
     private long target = 10_000_000L;
     private static final String TARGET = "target";
@@ -68,6 +68,10 @@ public class CfgEnergyStrategy {
                                 parseTarget(sr);
                                 sr.next();
                                 break;
+                            case DECAYING:
+                                strategy = EnergyStrategies.DECAYING;
+                                sr.next();
+                                break;
                         }
                     }
                     it++;
@@ -95,11 +99,8 @@ public class CfgEnergyStrategy {
             xmlWriter.writeStartElement(CLAMPED_DECAYING.getLabel());
             xmlWriter.writeAttribute(UPPER_BOUND, String.valueOf(this.upperBound));
             xmlWriter.writeAttribute(LOWER_BOUND, String.valueOf(this.lowerBound));
-            xmlWriter.writeCharacters(this + "");
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeEndElement();
             xml = strWriter.toString();
             strWriter.flush();
             strWriter.close();
@@ -150,5 +151,21 @@ public class CfgEnergyStrategy {
                     throw new IllegalArgumentException("unexpected entry");
             }
         }
+    }
+
+    public EnergyStrategies getStrategy() {
+        return this.strategy;
+    }
+
+    public long getTarget() {
+        return this.target;
+    }
+
+    public long getLowerBound() {
+        return this.lowerBound;
+    }
+
+    public long getUpperBound() {
+        return this.upperBound;
     }
 }
