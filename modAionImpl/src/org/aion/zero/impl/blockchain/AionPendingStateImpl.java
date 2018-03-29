@@ -260,6 +260,11 @@ public class AionPendingStateImpl
             BigInteger bestNonce = bestNonce(tx.getFrom());
 
             if (txNonce.compareTo(bestNonce) > 0) {
+
+                if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
+                    AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
+                }
+
                 addToTxCache(tx);
 
                 LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
@@ -707,6 +712,10 @@ public class AionPendingStateImpl
 
     private List<AionTransaction> addToTxCache(AionTransaction tx) {
         return this.pendingTxCache.addCacheTx(tx);
+    }
+
+    private boolean isInTxCache(Address addr, BigInteger nonce) {
+        return this.pendingTxCache.isInCache(addr, nonce);
     }
 
     @Override
