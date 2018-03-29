@@ -504,6 +504,10 @@ public class AionPendingStateImpl
             IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
             this.evtMgr.newEvent(evtChange);
         }
+
+        if (CfgAion.inst().getTx().isPoolDump()) {
+            DumpPool();
+        }
     }
 
     private void flushCachePendingTx() {
