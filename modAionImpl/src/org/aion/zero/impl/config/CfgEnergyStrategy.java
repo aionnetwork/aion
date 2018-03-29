@@ -68,6 +68,10 @@ public class CfgEnergyStrategy {
                                 parseTarget(sr);
                                 sr.next();
                                 break;
+                            case DECAYING:
+                                strategy = EnergyStrategies.DECAYING;
+                                sr.next();
+                                break;
                         }
                     }
                     it++;

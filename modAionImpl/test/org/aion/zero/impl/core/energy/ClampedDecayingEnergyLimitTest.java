@@ -3,12 +3,18 @@ package org.aion.zero.impl.core.energy;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
+@RunWith(Parameterized.class)
 public class ClampedDecayingEnergyLimitTest {
 
     @Mock
@@ -25,52 +31,44 @@ public class ClampedDecayingEnergyLimitTest {
             clampUpperBound,
             clampLowerBound);
 
+    private final long parentEnergyLimit;
+    private final long parentEnergyConsumed;
+    private final long expectedDelta;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
     }
 
-    // we expect a decay of energyLimit / 1024 (presently)
-    // the values are hard coded (on purpose)
-    @Test
-    public void testDecayFactor() {
-        final long energyLimit = 10_000_000L;
-        final long energyConsumed = 0L;
-        final long expectedDrop = 10_000_000L / energyLimitDivisor;
-
-        when(mockHeader.getEnergyLimit()).thenReturn(energyLimit);
-        when(mockHeader.getEnergyConsumed()).thenReturn(energyConsumed);
-
-        long limit = strategy.getEnergyLimit(mockHeader);
-        assertThat(limit).isEqualTo(energyLimit - expectedDrop);
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {10_000_000L, 0L, - (10_000_000L / energyLimitDivisor)},
+                {10_000_000L, 7_500_000L, 0L},
+                {10_000_000L, 10_000_000L, 10_000_000L / 3 / energyLimitDivisor},
+                {6_000_000L, 0L, 6_000_000L / energyLimitDivisor},
+                {16_000_000L, 16_000_000L, - 16_000_000L / energyLimitDivisor}
+        });
     }
 
-    // we expect a breakevent point at 3/4 consumption
-    @Test
-    public void testDecayBreakEven() {
-        final long energyLimit = 10_000_000L;
-        final long energyConsumed = 7_500_000L;
-        final long expectedDelta = 0L;
-
-        when(mockHeader.getEnergyLimit()).thenReturn(energyLimit);
-        when(mockHeader.getEnergyConsumed()).thenReturn(energyConsumed);
-
-        long limit = strategy.getEnergyLimit(mockHeader);
-        assertThat(limit).isEqualTo(energyLimit - expectedDelta);
+    public ClampedDecayingEnergyLimitTest(final long parentEnergyLimit,
+                                          final long parentEnergyConsumed,
+                                          final long expectedDelta) {
+        this.parentEnergyLimit = parentEnergyLimit;
+        this.parentEnergyConsumed = parentEnergyConsumed;
+        this.expectedDelta = expectedDelta;
     }
 
-    // expect a maximum increase of 1/3 delta
-    @Test
-    public void testUpperBound() {
-        final long energyLimit = 10_000_000L;
-        final long energyConsumed = 10_000_000L;
-        final long expectedDelta = energyLimit / 3 / energyLimitDivisor;
-
+    private void assertLimits(long energyLimit, long energyConsumed, long expected) {
         when(mockHeader.getEnergyLimit()).thenReturn(energyLimit);
         when(mockHeader.getEnergyConsumed()).thenReturn(energyConsumed);
 
         long limit = strategy.getEnergyLimit(mockHeader);
-        assertThat(limit).isEqualTo(energyLimit + expectedDelta);
+        assertThat(limit).isEqualTo(energyLimit + expected);
+    }
+
+    @Test
+    public void test() {
+        assertLimits(this.parentEnergyLimit, this.parentEnergyConsumed, this.expectedDelta);
     }
 }

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum EnergyStrategies {
-    MONOTONIC("monotonic"),
+    MONOTONIC("monotonic-increase"),
     CLAMPED_DECAYING("clamped-decay"),
     DECAYING("decaying"),
     TARGETTED("targetted");
