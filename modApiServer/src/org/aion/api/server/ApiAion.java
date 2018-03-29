@@ -24,7 +24,6 @@
 
 package org.aion.api.server;
 
-import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;

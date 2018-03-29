@@ -724,6 +724,62 @@ public class AionPendingStateImpl
     }
 
     @Override
+    public synchronized void DumpPool() {
+        List<AionTransaction> txn = txPool.snapshotAll();
+        Set<Address> addrs = new HashSet<>();
+        LOG.info("");
+        LOG.info("=========== SnapshotAll");
+        for (AionTransaction tx : txn) {
+            addrs.add(tx.getFrom());
+            LOG.info("{}", tx.toString());
+        }
+
+        LOG.info("");
+        LOG.info("=========== Pool best nonce");
+        for (Address addr : addrs) {
+            LOG.info("{} {}", addr.toString(), txPool.bestNonce(addr));
+        }
+
+        LOG.info("");
+        LOG.info("=========== Cache pending tx");
+        for(Address addr : pendingTxCache.getCacheTxAccount()) {
+            Map<BigInteger, AionTransaction> cacheMap = pendingTxCache.geCacheTx(addr);
+            if (cacheMap != null) {
+                for (AionTransaction tx : cacheMap.values()) {
+                    LOG.info("{}", tx.toString());
+                }
+            }
+        }
+
+
+        LOG.info("");
+        LOG.info("=========== Cache pending tx");
+        Set<Address> cacheAddr = pendingTxCache.getCacheTxAccount();
+        for(Address addr : cacheAddr) {
+            Map<BigInteger, AionTransaction> cacheMap = pendingTxCache.geCacheTx(addr);
+            if (cacheMap != null) {
+                for (AionTransaction tx : cacheMap.values()) {
+                    LOG.info("{}", tx.toString());
+                }
+            }
+        }
+
+        LOG.info("");
+        LOG.info("=========== db nonce");
+        addrs.addAll(cacheAddr);
+        for (Address addr : addrs) {
+            LOG.info("{} {}", addr.toString(), this.repository.getNonce(addr));
+        }
+
+        LOG.info("");
+        LOG.info("=========== ps nonce");
+        addrs.addAll(cacheAddr);
+        for (Address addr : addrs) {
+            LOG.info("{} {}", addr.toString(), this.pendingState.getNonce(addr));
+        }
+    }
+
+    @Override
     public String getVersion() {
         return this.txPool.getVersion();
     }
