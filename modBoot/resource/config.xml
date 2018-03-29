@@ -24,12 +24,14 @@
 			<port>30303</port>
 			<discover>false</discover>
 			<show-status>false</show-status>
+			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
 	<sync>
+		<blocks-backward-max>16</blocks-backward-max>
 		<blocks-import-max>32</blocks-import-max>
 		<blocks-queue-max>64</blocks-queue-max>
-		<show-status>false</show-status>
+		<show-status>true</show-status>
 	</sync>
 	<consensus>
 		<mining>true</mining>
@@ -43,11 +45,11 @@
 		<enable_heap_cache>false</enable_heap_cache>
 		<max_heap_cache_size>1024</max_heap_cache_size>
 		<enable_db_cache>true</enable_db_cache>
-		<enable_db_compression>true</enable_db_compression>
-		<max_fd_alloc_size>1024</max_fd_alloc_size>
-		<block_size>16kB</block_size>
-		<write_buffer_size>16mB</write_buffer_size>
-		<cache_size>128mB</cache_size>
+		<enable_db_compression>false</enable_db_compression>
+		<max_fd_alloc_size>128</max_fd_alloc_size>
+		<block_size>16mB</block_size>
+		<write_buffer_size>64mB</write_buffer_size>
+		<cache_size>256mB</cache_size>
 	</db>
 	<log>
 		<GEN>INFO</GEN>

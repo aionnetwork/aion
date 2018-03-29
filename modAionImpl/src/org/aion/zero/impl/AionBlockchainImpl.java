@@ -497,6 +497,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
+        // update best block reference
+        if (ret == IMPORTED_BEST) {
+            setBestBlock(block);
+        }
+
+        // fire block events
         if (ret.isSuccessful()) {
             if (this.evtMgr != null) {
 
@@ -962,8 +968,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (LOG.isDebugEnabled())
             LOG.debug("Block saved: number: {}, hash: {}, TD: {}", block.getNumber(), block.getShortHash(),
                     totalDifficulty);
-
-        setBestBlock(block);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());

@@ -81,6 +81,8 @@ public class AionPendingStateImpl
         }
     }
 
+    private static final int MAX_TX_POOL_SIZE = 4096;
+
     private IAionBlockchain blockchain;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
@@ -262,6 +264,11 @@ public class AionPendingStateImpl
 
                 LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
             } else if (txNonce.equals(bestNonce)) {
+                if (txPool.size() >= MAX_TX_POOL_SIZE) {
+                    addToTxCache(tx);
+                    continue;
+                }
+
                 Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
 
                 do {
@@ -275,7 +282,7 @@ public class AionPendingStateImpl
                     }
 
                     txNonce = txNonce.add(BigInteger.ONE);
-                } while (cache != null && (tx = cache.get(txNonce)) != null);
+                } while (cache != null && (tx = cache.get(txNonce)) != null && txPool.size() < MAX_TX_POOL_SIZE);
             } /* else {
                 // check repay tx
                 if (dbNonce.get(tx.getFrom()) == null) {
@@ -656,7 +663,15 @@ public class AionPendingStateImpl
             AionTxExecSummary txSum = executeTx(tx, false);
             AionTxReceipt receipt = txSum.getReceipt();
             receipt.setTransaction(tx);
-            fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
+
+            if (txSum.isRejected()) {
+                LOG.warn("Invalid transaction in txpool: {}", tx);
+                txPool.remove(Collections.singletonList(tx));
+
+                fireTxUpdate(receipt, PendingTransactionState.DROPPED, block);
+            } else {
+                fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
+            }
         }
     }
 
