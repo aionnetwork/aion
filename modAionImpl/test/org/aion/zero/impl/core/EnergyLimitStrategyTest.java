@@ -101,10 +101,9 @@ public class EnergyLimitStrategyTest {
         System.out.println("this may take a short while");
         EnergyLimitStrategy strategy = new EnergyLimitStrategy();
         strategy.setConstants(config);
-
-        // 1 million iterations
+        
         int cycle_counter = 0;
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 1000; i++) {
             long parentEnergyLimit = randLong(5000, 20000000);
             long energyLimit = strategy.targetEnergyLimitStrategy(parentEnergyLimit);
             validateHeaders(energyLimit, parentEnergyLimit);
