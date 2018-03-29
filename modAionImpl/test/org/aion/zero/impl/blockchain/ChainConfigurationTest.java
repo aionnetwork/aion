@@ -37,7 +37,6 @@ package org.aion.zero.impl.blockchain;
 import org.aion.equihash.EquiUtils;
 import org.aion.equihash.Equihash;
 import org.aion.mcf.valid.BlockHeaderValidator;
-import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,15 +95,6 @@ public class ChainConfigurationTest {
         ChainConfiguration chainConfig = new ChainConfiguration();
         BlockHeaderValidator<A0BlockHeader> blockHeaderValidator = chainConfig.createBlockHeaderValidator();
         blockHeaderValidator.validate(header, log);
-    }
-
-    @Test
-    public void testIntegrationEnergyLimitCalc() {
-        when(header.getEnergyLimit()).thenReturn(10000000L);
-
-        ChainConfiguration config = new ChainConfiguration();
-        long out = config.calcEnergyLimit(header);
-        assertThat(out).isEqualTo(10000000L);
     }
 
     // assuming 100000 block ramp
