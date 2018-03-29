@@ -1,7 +1,10 @@
 package org.aion.zero.impl.core;
 
 import org.aion.mcf.blockchain.valid.IValidRule;
+import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
+import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
@@ -16,7 +19,7 @@ import java.util.Random;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
-public class EnergyLimitStrategyTest {
+public class TargettedEnergyLimitStrategyTest {
 
     private static final ChainConfiguration config = new ChainConfiguration();
     private static final EnergyLimitRule rule =
@@ -47,32 +50,45 @@ public class EnergyLimitStrategyTest {
         assertThat(errors).isEmpty();
     }
 
+    BlockConstants constants = new BlockConstants();
+
     @Test
     public void testTargettedEnergyLimitLowerBound() {
-        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
-        strategy.setConstants(config);
-        long energyLimit = strategy.targetEnergyLimitStrategy(5000L);
+        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
+                constants.getEnergyLowerBoundLong(),
+                constants.getEnergyDivisorLimitLong(),
+                10_000_000L);
+
+        when(header.getEnergyLimit()).thenReturn(5000L);
+        long energyLimit = strategy.getEnergyLimit(header);
         validateHeaders(energyLimit, 5000L);
     }
 
     @Test
     public void testTargettedEnergyLimitEqual() {
-        final long targetLimit = 10000000L;
+        final long targetLimit = 10_000_000L;
+        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
+                constants.getEnergyLowerBoundLong(),
+                constants.getEnergyDivisorLimitLong(),
+                10_000_000L);
 
-        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
-        strategy.setConstants(config);
-        long energyLimit = strategy.targetEnergyLimitStrategy(targetLimit);
-        validateHeaders(energyLimit, targetLimit);
+        when(header.getEnergyLimit()).thenReturn(targetLimit);
+        long energyLimit = strategy.getEnergyLimit(header);
         assertThat(energyLimit).isEqualTo(targetLimit);
     }
 
     @Test
     public void testTargettedEnergyLimitDeltaLowerBound() {
-        final long parentEnergyLimit = 20000000L;
+        final long parentEnergyLimit = 20_000_000L;
 
-        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
-        strategy.setConstants(config);
-        long energyLimit = strategy.targetEnergyLimitStrategy(parentEnergyLimit);
+        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
+                constants.getEnergyLowerBoundLong(),
+                constants.getEnergyDivisorLimitLong(),
+                10_000_000L);
+
+        when(header.getEnergyLimit()).thenReturn(parentEnergyLimit);
+
+        long energyLimit = strategy.getEnergyLimit(header);
 
         validateHeaders(energyLimit, parentEnergyLimit);
         assertThat(energyLimit).isEqualTo(parentEnergyLimit - parentEnergyLimit / 1024L);
@@ -80,12 +96,16 @@ public class EnergyLimitStrategyTest {
 
     @Test
     public void testTargettedEnergyLimitDeltaUpperBound() {
-        final long parentEnergyLimit = 5000000L;
+        final long parentEnergyLimit = 5_000_000L;
 
-        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
-        strategy.setConstants(config);
-        long energyLimit = strategy.targetEnergyLimitStrategy(parentEnergyLimit);
+        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
+                constants.getEnergyLowerBoundLong(),
+                constants.getEnergyDivisorLimitLong(),
+                10_000_000L);
 
+        when(header.getEnergyLimit()).thenReturn(parentEnergyLimit);
+
+        long energyLimit = strategy.getEnergyLimit(header);
         validateHeaders(energyLimit, parentEnergyLimit);
         assertThat(energyLimit).isEqualTo(parentEnergyLimit + parentEnergyLimit / 1024L);
     }
@@ -99,13 +119,17 @@ public class EnergyLimitStrategyTest {
     public void fuzzTest() {
         System.out.println("generating random inputs and testing...");
         System.out.println("this may take a short while");
-        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
-        strategy.setConstants(config);
-        
+        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
+                constants.getEnergyLowerBoundLong(),
+                constants.getEnergyDivisorLimitLong(),
+                10_000_000L);
+
         int cycle_counter = 0;
         for (int i = 0; i < 1000; i++) {
             long parentEnergyLimit = randLong(5000, 20000000);
-            long energyLimit = strategy.targetEnergyLimitStrategy(parentEnergyLimit);
+
+            when(header.getEnergyLimit()).thenReturn(parentEnergyLimit);
+            long energyLimit = strategy.getEnergyLimit(header);
             validateHeaders(energyLimit, parentEnergyLimit);
 
             if (i % 100000 == 0) {
@@ -119,13 +143,17 @@ public class EnergyLimitStrategyTest {
     // desired limit
     @Test
     public void testConvergence() {
-        EnergyLimitStrategy strategy = new EnergyLimitStrategy();
+        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
+                constants.getEnergyLowerBoundLong(),
+                constants.getEnergyDivisorLimitLong(),
+                10_000_000L);
 
-        for (int k = 0; k < 100; k++) {
-            strategy.setConstants(config);
+        for (int k = 0; k < 5; k++) {
             long parentEnergy = randLong(5000, 20_000_000);
             for (int i = 0; i < 100_000; i++) {
-                parentEnergy = strategy.targetEnergyLimitStrategy(parentEnergy);
+
+                when(header.getEnergyLimit()).thenReturn(parentEnergy);
+                parentEnergy = strategy.getEnergyLimit(header);
             }
             assertThat(parentEnergy).isEqualTo(10_000_000L);
         }
