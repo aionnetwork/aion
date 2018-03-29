@@ -81,7 +81,7 @@ public class AionPendingStateImpl
         }
     }
 
-    private static final int MAX_TX_POOL_SIZE = 4096;
+    private static final int MAX_VALIDATED_PENDING_TXS = 8192;
 
     private IAionBlockchain blockchain;
 
@@ -264,7 +264,7 @@ public class AionPendingStateImpl
 
                 LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
             } else if (txNonce.equals(bestNonce)) {
-                if (txPool.size() >= MAX_TX_POOL_SIZE) {
+                if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
                     addToTxCache(tx);
                     continue;
                 }
@@ -282,7 +282,7 @@ public class AionPendingStateImpl
                     }
 
                     txNonce = txNonce.add(BigInteger.ONE);
-                } while (cache != null && (tx = cache.get(txNonce)) != null && txPool.size() < MAX_TX_POOL_SIZE);
+                } while (cache != null && (tx = cache.get(txNonce)) != null && txPool.size() < MAX_VALIDATED_PENDING_TXS);
             } /* else {
                 // check repay tx
                 if (dbNonce.get(tx.getFrom()) == null) {
