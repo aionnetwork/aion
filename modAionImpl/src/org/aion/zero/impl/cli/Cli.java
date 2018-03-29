@@ -297,7 +297,4 @@ public class Cli {
         return RecoveryUtils.revertTo(block);
     }
 
-    private void DumpPoolTx() {
-        PoolDumpUtils.dumpPool();
-    }
 }

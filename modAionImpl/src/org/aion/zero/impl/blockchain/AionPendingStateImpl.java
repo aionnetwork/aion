@@ -742,18 +742,6 @@ public class AionPendingStateImpl
 
         LOG.info("");
         LOG.info("=========== Cache pending tx");
-        for(Address addr : pendingTxCache.getCacheTxAccount()) {
-            Map<BigInteger, AionTransaction> cacheMap = pendingTxCache.geCacheTx(addr);
-            if (cacheMap != null) {
-                for (AionTransaction tx : cacheMap.values()) {
-                    LOG.info("{}", tx.toString());
-                }
-            }
-        }
-
-
-        LOG.info("");
-        LOG.info("=========== Cache pending tx");
         Set<Address> cacheAddr = pendingTxCache.getCacheTxAccount();
         for(Address addr : cacheAddr) {
             Map<BigInteger, AionTransaction> cacheMap = pendingTxCache.geCacheTx(addr);

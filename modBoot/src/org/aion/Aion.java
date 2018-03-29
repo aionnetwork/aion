@@ -143,7 +143,7 @@ public class Aion {
         
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 LOG.info("Starting shutdown process...");
-                PoolDumpUtils.dumpPool();
+                PoolDumpUtils.dumpPool(ac.getAionHub());
 
                 HttpServer.shutdown();
 
