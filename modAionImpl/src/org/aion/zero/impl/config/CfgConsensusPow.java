@@ -97,6 +97,7 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     String toXML() {
         final XMLOutputFactory output = XMLOutputFactory.newInstance();
+        output.setProperty("escapeCharacters", false);
         XMLStreamWriter xmlWriter;
         String xml;
         try {
@@ -128,6 +129,8 @@ public final class CfgConsensusPow extends CfgConsensus {
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("nrg-strategy");
             xmlWriter.writeCharacters(this.cfgEnergyStrategy.toXML());
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();

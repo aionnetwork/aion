@@ -99,11 +99,8 @@ public class CfgEnergyStrategy {
             xmlWriter.writeStartElement(CLAMPED_DECAYING.getLabel());
             xmlWriter.writeAttribute(UPPER_BOUND, String.valueOf(this.upperBound));
             xmlWriter.writeAttribute(LOWER_BOUND, String.valueOf(this.lowerBound));
-            xmlWriter.writeCharacters(this + "");
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeEndElement();
             xml = strWriter.toString();
             strWriter.flush();
             strWriter.close();
