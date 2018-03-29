@@ -65,6 +65,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.aion.base.util.Hex.toHexString;
 import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
@@ -167,14 +168,15 @@ public abstract class ApiAion extends Api {
     // Create a new block template after a block has been mined; either from the network or mined locally
     private void createBlockTemplate() {
 
-        // Keep using dummy block while syncing to avoid putting own node on side chain
-        if (this.ac.getAionHub().getSyncMgr().getNetworkBestBlockNumber() - this.ac.getBlockchain().getBestBlock().getNumber() > SYNC_LIMIT) {
-            return;
-        }
+        try {
+            // Keep using dummy block while syncing to avoid putting own node on side chain
+            if ((this.ac.getAionHub().getSyncMgr().getNetworkBestBlockNumber() - this.ac.getBlockchain().getBestBlock().getNumber()) > SYNC_LIMIT) {
+                return;
+            }
 
-        blockTemplateLock.lock();
+            blockTemplateLock.lock();
 
-        AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+            AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
 //
 //        AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
 //        ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
@@ -184,16 +186,16 @@ public abstract class ApiAion extends Api {
 
 //        AionBlock bestBlock = ac.getBlockchain().getBlockByNumber(ac.getBlockchain().getBestBlock().getNumber());
 
-        System.out.println(bestBlock);
+            System.out.println("API Best block hash: " + toHexString(bestBlock.getHash()));
 
-        List<AionTransaction> txs = pendingState.getPendingTransactions();
+            List<AionTransaction> txs = pendingState.getPendingTransactions();
 
-        miningBlock = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
+            miningBlock = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
 
-        System.out.println(miningBlock);
-
-
-        blockTemplateLock.unlock();
+            System.out.println(miningBlock);
+        } finally {
+            blockTemplateLock.unlock();
+        }
     }
     // Create placeholder block returned by getBlockTemplate until the chain is synced
     private void createPlaceholderBlock(){
@@ -207,7 +209,7 @@ public abstract class ApiAion extends Api {
                             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
                             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
                             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        byte[] difficulty = {100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        byte[] difficulty = {100,100,100,100,0,0,0,0,0,0,0,0,0,0,0,0};
         long number = 0;
         long timestamp = 0;
         byte[] extraData = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -219,10 +221,15 @@ public abstract class ApiAion extends Api {
         byte[] solutions = {0};
         long energyConsumed = 0;
         long energyLimit = 0;
+        try {
+            blockTemplateLock.lock();
+            miningBlock = new AionBlock(parentHash, coinbase, logsBloom, difficulty, number,
+                    timestamp, extraData, nonce, receiptsRoot, transactionsRoot,
+                    stateRoot, transactionsList, solutions, energyConsumed, energyLimit);
+        } finally {
+            blockTemplateLock.unlock();
+        }
 
-        miningBlock = new AionBlock(parentHash, coinbase, logsBloom, difficulty, number,
-        timestamp, extraData, nonce, receiptsRoot, transactionsRoot,
-        stateRoot, transactionsList, solutions, energyConsumed, energyLimit);
     }
 
     public AionBlock getBlockTemplate() {

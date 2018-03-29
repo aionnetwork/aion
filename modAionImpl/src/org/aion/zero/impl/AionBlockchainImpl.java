@@ -80,6 +80,7 @@ import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
 import static org.aion.base.util.BIUtil.isMoreThan;
+import static org.aion.base.util.Hex.toHexString;
 import static org.aion.mcf.core.ImportResult.*;
 
 /**
@@ -320,7 +321,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
         if (txInfo == null) {
-            LOG.warn("Can't find block from main chain for transaction " + Hex.toHexString(hash));
+            LOG.warn("Can't find block from main chain for transaction " + toHexString(hash));
             return null;
         }
 
@@ -383,6 +384,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
+        System.out.println("Best block hash: " + toHexString(bestBlock.getHash()));
         this.bestBlock = getBlockStore().getBlockByHash(bestBlockHash);
         totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
         this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
@@ -432,9 +434,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
             if (LOG.isInfoEnabled())
                 LOG.info("branching: from = {}/{}, to = {}/{}",
                         savedState.savedBest.getNumber(),
-                        Hex.toHexString(savedState.savedBest.getHash()),
+                        toHexString(savedState.savedBest.getHash()),
                         block.getNumber(),
-                        Hex.toHexString(block.getHash()));
+                        toHexString(block.getHash()));
             // main branch become this branch
             // cause we proved that total difficulty
             // is greater
@@ -462,14 +464,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return INVALID_BLOCK;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Try connect block hash: {}, number: {}", Hex.toHexString(block.getHash()).substring(0, 6),
+            LOG.debug("Try connect block hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
         }
 
         if (getBlockStore().getMaxNumber() >= block.getNumber() && getBlockStore().isBlockExist(block.getHash())) {
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Block already exist hash: {}, number: {}", Hex.toHexString(block.getHash()).substring(0, 6),
+                LOG.debug("Block already exist hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
                         block.getNumber());
             }
 
@@ -661,7 +663,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 LOG.warn("BLOCK: State conflict or received invalid block. block: {} worldstate {} mismatch",
                         block.getNumber(), worldStateRootHash);
-                LOG.warn("Conflict block dump: {}", Hex.toHexString(block.getEncoded()));
+                LOG.warn("Conflict block dump: {}", toHexString(block.getEncoded()));
 
                 track.rollback();
                 // block is bad so 'rollback' the state root to the original
@@ -671,7 +673,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 if (this.config.getExitOnBlockConflict()) {
                     chainStats.lostConsensus();
                     System.out.println(
-                            "CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + Hex.toHexString(block.getEncoded()));
+                            "CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + toHexString(block.getEncoded()));
                     System.exit(1);
                 } else {
                     return null;
@@ -779,8 +781,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             isValid = isValid(block.getHeader());
 
             // Sanity checks
-            String trieHash = Hex.toHexString(block.getTxTrieRoot());
-            String trieListHash = Hex.toHexString(calcTxTrie(block.getTransactionsList()));
+            String trieHash = toHexString(block.getTxTrieRoot());
+            String trieListHash = toHexString(calcTxTrie(block.getTransactionsList()));
 
             if (!trieHash.equals(trieListHash)) {
                 LOG.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);

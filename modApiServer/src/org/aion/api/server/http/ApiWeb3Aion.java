@@ -815,11 +815,11 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (nce != null && soln != null && hdrHash != null && ts != null &&
                 !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
 
-            String hdr = (String) hdrHash;
-            ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes(hdr));
-
             try {
                 templateMapLock.writeLock().lock();
+
+                String hdr = (String) hdrHash;
+                ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes(hdr));
 
                 AionBlock bestBlock = templateMap.get(key);
 
@@ -828,14 +828,27 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
                 if (bestBlock != null) {
 
-                    IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
-                    ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
-                            hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
-                    evtMgr.newEvent(ev);
+//                    IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
+//                    ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
+//                            hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
+//                    evtMgr.newEvent(ev);
+//
+//                    LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+//                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+//                            bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+
+                    bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
+                    bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
+                    bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
+
+
+                    AionImpl.inst().addNewMinedBlock(bestBlock);
+
 
                     LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                            bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+
                     templateMap.remove(key);
                 }
             } finally {
