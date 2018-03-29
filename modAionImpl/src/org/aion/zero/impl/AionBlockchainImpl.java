@@ -384,7 +384,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
-        System.out.println("Best block hash: " + toHexString(bestBlock.getHash()));
         this.bestBlock = getBlockStore().getBlockByHash(bestBlockHash);
         totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
         this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());

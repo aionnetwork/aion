@@ -44,6 +44,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -161,21 +162,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         } else {
             return nb;
         }
-    }
-
-    // AION Mining Pool
-    // TODO Test multiple threads submitting blocks
-    synchronized boolean submitBlock(Solution solution) {
-
-        AionBlock block = (AionBlock) solution.getBlock();
-
-        // set the nonce and solution
-        block.getHeader().setNonce(solution.getNonce());
-        block.getHeader().setSolution(solution.getSolution());
-        block.getHeader().setTimestamp(solution.getTimeStamp());
-
-        // This can be improved
-        return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();
     }
 
     // --------------------------------------------------------------------
@@ -675,34 +661,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
         AionBlock bestBlock = getBlockTemplate();
         ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getStaticHash());
-        // Read template map; if block already contained chain has not moved forward, simply return the same block.
-//        try {
-//            templateMapLock.readLock().lock();
-//            if (!templateMap.containsKey(bestBlock.getHeader().getStaticHash())) {
-//
-//                // Unable to find previously created blockTemplate; add it to the map
-//                try {
-//                    templateMapLock.writeLock().lock();
-//
-//                    // Check first entry in the map; if its height is higher a sync may
-//                    // have switch branches, abandon current work to start on new branch
-//                    if (!templateMap.keySet().isEmpty()) {
-//                        if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
-//                            // Found a higher block, clear any remaining cached entries and start on new height
-//                            templateMap.clear();
-//                        }
-//                    }
-//
-//                    templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
-//                } finally {
-//                    templateMapLock.writeLock().unlock();
-//                }
-//            }
-//        } finally {
-//            templateMapLock.readLock().unlock();
-//        }
 
-        //Check if block template has already been returned
+        // Read template map; if block already contained chain has not moved forward, simply return the same block.
         boolean isContained = false;
         try {
             templateMapLock.readLock().lock();
@@ -712,8 +672,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         } finally {
             templateMapLock.readLock().unlock();
         }
-
-        System.out.println(toHexString(key.getData()) + "   " +isContained);
 
         // Template not present in map; add it before returning
         if(!isContained) {
@@ -818,13 +776,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             try {
                 templateMapLock.writeLock().lock();
 
-                String hdr = (String) hdrHash;
-                ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes(hdr));
+                ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
 
                 AionBlock bestBlock = templateMap.get(key);
 
 
-                System.out.println("Best Block: " + bestBlock);
+//                System.out.println("Best Block: " + bestBlock);
 
                 if (bestBlock != null) {
 
@@ -842,14 +799,19 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                     bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
 
 
-                    AionImpl.inst().addNewMinedBlock(bestBlock);
-
-
-                    LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
-
-                    templateMap.remove(key);
+                    ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
+                    System.out.println("Import Result: " + importResult);
+                    if(importResult == ImportResult.IMPORTED_BEST || importResult == ImportResult.IMPORTED_NOT_BEST) {
+                        createBlockTemplate(); //Aggressively create a new block template; if left out template generate may get stuck
+                        templateMap.remove(key);
+                        LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                                bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    } else {
+                        LOG.info("Unable to submit block via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                                bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    }
                 }
             } finally {
                 templateMapLock.writeLock().unlock();
