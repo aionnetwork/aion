@@ -265,7 +265,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     @Override
     public byte[] getBestBlockHash() {
-        return this.pubBestBlock.getHash();
+        return getBestBlock().getHash();
     }
 
     /**
@@ -280,7 +280,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     @Override
     public long getSize() {
-        return this.pubBestBlock.getNumber() + 1;
+        return getBestBlock().getNumber() + 1;
     }
 
     /**
@@ -997,7 +997,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public AionBlock getBestBlock() {
-        return this.pubBestBlock;
+        return pubBestBlock == null ? bestBlock : pubBestBlock;
     }
 
     @Override
