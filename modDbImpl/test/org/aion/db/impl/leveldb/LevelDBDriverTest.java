@@ -37,7 +37,6 @@ package org.aion.db.impl.leveldb;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.impl.leveldb.LevelDB;
 import org.junit.Test;
 
 import java.io.File;

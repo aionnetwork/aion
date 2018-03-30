@@ -37,6 +37,9 @@ import org.aion.db.impl.DBVendor;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
+import org.aion.zero.impl.core.energy.EnergyStrategies;
+import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -348,6 +351,14 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 @Override
                 public int getFlushInterval() {
                     return 1;
+                }
+
+                @Override
+                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
+                    return new TargetStrategy(
+                            configuration.getConstants().getEnergyLowerBoundLong(),
+                            configuration.getConstants().getEnergyDivisorLimitLong(),
+                            10_000_000L);
                 }
 
             } : this.a0Config;

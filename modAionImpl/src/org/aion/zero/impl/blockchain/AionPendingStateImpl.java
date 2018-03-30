@@ -84,6 +84,8 @@ public class AionPendingStateImpl
         }
     }
 
+    private static final int MAX_VALIDATED_PENDING_TXS = 8192;
+
     private IAionBlockchain blockchain;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
@@ -309,10 +311,20 @@ public class AionPendingStateImpl
             BigInteger bestNonce = bestNonce(tx.getFrom());
 
             if (txNonce.compareTo(bestNonce) > 0) {
+
+                if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
+                    AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
+                }
+
                 addToTxCache(tx);
 
                 LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
             } else if (txNonce.equals(bestNonce)) {
+                if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
+                    addToTxCache(tx);
+                    continue;
+                }
+
                 Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
 
                 do {
@@ -326,7 +338,7 @@ public class AionPendingStateImpl
                     }
 
                     txNonce = txNonce.add(BigInteger.ONE);
-                } while (cache != null && (tx = cache.get(txNonce)) != null);
+                } while (cache != null && (tx = cache.get(txNonce)) != null && txPool.size() < MAX_VALIDATED_PENDING_TXS);
             } /* else {
                 // check repay tx
                 if (dbNonce.get(tx.getFrom()) == null) {
@@ -693,7 +705,15 @@ public class AionPendingStateImpl
             AionTxExecSummary txSum = executeTx(tx, false);
             AionTxReceipt receipt = txSum.getReceipt();
             receipt.setTransaction(tx);
-            fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
+
+            if (txSum.isRejected()) {
+                LOG.warn("Invalid transaction in txpool: {}", tx);
+                txPool.remove(Collections.singletonList(tx));
+
+                fireTxUpdate(receipt, PendingTransactionState.DROPPED, block);
+            } else {
+                fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
+            }
         }
     }
 
@@ -731,6 +751,10 @@ public class AionPendingStateImpl
 
     private List<AionTransaction> addToTxCache(AionTransaction tx) {
         return this.pendingTxCache.addCacheTx(tx);
+    }
+
+    private boolean isInTxCache(Address addr, BigInteger nonce) {
+        return this.pendingTxCache.isInCache(addr, nonce);
     }
 
     @Override
