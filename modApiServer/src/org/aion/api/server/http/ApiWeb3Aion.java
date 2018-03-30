@@ -136,13 +136,14 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             txHr.eventCallback(new EventCallback(ees, LOG));
         }
 
+        /*
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
         IHandler hldr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
         this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
-
+        */
     }
 
     // --------------------------------------------------------------------
@@ -463,12 +464,14 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     public Object eth_getTransactionReceipt(String _txHash) {
         byte[] txHash = TypeConverter.StringHexToByteArray(_txHash);
         TxRecpt r = getTransactionReceipt(txHash);
-
-        // if we can't find the receipt on the mainchain, try looking for it in pending receipts cache
+        /*
+        // Disable for now since our web3 client doesn't support this feature.
+        // If we can't find the receipt on the mainchain, try looking for it in pending receipts cache
         if (r == null) {
             AionTxReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(txHash));
             r = new TxRecpt(pendingReceipt, null, null, null, true);
         }
+        */
 
         if (r == null) return null;
 
@@ -896,7 +899,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     }
 
     void shutDown() {
-        nrgOracle.shutDown();
+        //nrgOracle.shutDown();
         shutDownES();
     }
 }

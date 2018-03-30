@@ -70,7 +70,7 @@ import static org.aion.base.util.Hex.toHexString;
 import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
-    protected NrgOracle nrgOracle;
+    //protected NrgOracle nrgOracle;
     protected IAionChain ac;
     protected final static short FLTRS_MAX = 1024;
     protected final long DEFAULT_NRG_LIMIT = 500_000L;
@@ -644,7 +644,8 @@ public abstract class ApiAion extends Api {
     }
 
     public long getRecommendedNrgPrice() {
-        return this.nrgOracle.getNrgPrice();
+        return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        //return this.nrgOracle.getNrgPrice();
     }
 
     public long getDefaultNrgLimit() {

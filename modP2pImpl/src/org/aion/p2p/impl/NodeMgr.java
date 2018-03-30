@@ -185,6 +185,10 @@ public class NodeMgr implements INodeMgr {
         this.seedIps.add(_ip);
     }
 
+    public boolean isSeedIp(String _ip) {
+        return this.seedIps.contains(_ip);
+    }
+
     void inboundNodeAdd(final Node _n) {
         updateMetric(_n);
         inboundNodes.put(_n.getChannel().hashCode(), _n);

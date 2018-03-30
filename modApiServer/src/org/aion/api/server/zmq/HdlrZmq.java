@@ -84,25 +84,18 @@ public class HdlrZmq implements IHdlr {
             LOGGER.error("zmq takeTxWait failed! " + e.getMessage());
         }
         Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
-        while (entry == null) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                LOGGER.error("HdlrZmq.getTxWait exception " + e.getMessage());
+
+        if (entry != null) {
+            this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
+                    txWait.getState(), txWait.getTxResult()));
+
+            // INCLUDED(3);
+            if (txWait.getState() == 1 || txWait.getState() == 2) {
+                this.api.getPendingReceipts().put(txWait.getTxHash(), txWait.getTxReceipt());
+            } else {
+                this.api.getPendingReceipts().remove(txWait.getTxHash());
+                this.api.getMsgIdMapping().remove(txWait.getTxHash());
             }
-            entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
-        }
-
-        this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
-                txWait.getState(), txWait.getTxResult()));
-
-        // INCLUDED(3);
-        if (txWait.getState() == 1 || txWait.getState() == 2) {
-            this.api.getPendingReceipts().put(txWait.getTxHash(), txWait.getTxReceipt());
-        } else {
-            this.api.getPendingReceipts().remove(txWait.getTxHash());
-            this.api.getMsgIdMapping().remove(txWait.getTxHash());
         }
     }
 

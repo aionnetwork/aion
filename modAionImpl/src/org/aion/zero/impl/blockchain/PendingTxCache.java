@@ -202,6 +202,13 @@ public class PendingTxCache {
 
         return processableTx;
     }
+    public boolean isInCache(Address addr , BigInteger nonce) {
+        if (this.cacheTxMap.get(addr) != null) {
+            return (this.cacheTxMap.get(addr).get(nonce) != null);
+        }
+
+        return false;
+    }
 
     Set<Address> getCacheTxAccount() {
         return new HashSet<>(this.cacheTxMap.keySet());
