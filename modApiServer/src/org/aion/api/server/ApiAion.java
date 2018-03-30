@@ -654,7 +654,7 @@ public abstract class ApiAion extends Api {
 
     protected void startES(String thName) {
 
-        ees = new EventExecuteService(100_000, thName, Thread.NORM_PRIORITY, LOG);
+        ees = new EventExecuteService(100_000, thName, Thread.MIN_PRIORITY, LOG);
         ees.setFilter(setEvtfilter());
         ees.start(new EpApi());
     }
@@ -667,7 +667,6 @@ public abstract class ApiAion extends Api {
 
         sn = IHandler.TYPE.BLOCK0.getValue() << 8;
         eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
-        eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
 
         return eventSN;
     }
