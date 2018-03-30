@@ -31,14 +31,13 @@
 
 package org.aion.zero.impl.cli;
 
-import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
-import org.aion.mcf.config.Cfg;
-import org.aion.zero.impl.AionHub;
-import org.aion.zero.impl.Version;
-import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.mcf.account.Keystore;
+import org.aion.mcf.config.Cfg;
+import org.aion.zero.impl.Version;
+import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
 import java.util.UUID;
@@ -296,4 +295,5 @@ public class Cli {
 
         return RecoveryUtils.revertTo(block);
     }
+
 }

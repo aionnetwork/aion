@@ -41,4 +41,6 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
     void shutDown();
 
     void updateBest();
+
+    void DumpPool();
 }
