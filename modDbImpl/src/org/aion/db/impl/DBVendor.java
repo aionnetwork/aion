@@ -34,6 +34,8 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
+import org.aion.db.impl.rocksdb.RocksWrapperDB;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +47,8 @@ public enum DBVendor {
     UNKNOWN("unknown", false), //
     /** Using an instance of {@link org.aion.db.impl.leveldb.LevelDB}. */
     LEVELDB("leveldb", true), //
-    /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
+    /** Using an instance of {@link RocksWrapperDB}. */
+    ROCKSDB("rocksdb", false),
     H2("h2", true), //
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
     MOCKDB("mockdb", false);
