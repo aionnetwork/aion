@@ -510,8 +510,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     }
 
     protected BigInteger getBestNonce(Address addr) {
-        if(addr == null) {
-            throw new NullPointerException();
+        if(addr == null || bestNonce.get(addr) == null) {
+            return BigInteger.ONE.negate();
         }
 
         return bestNonce.get(addr);

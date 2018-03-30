@@ -24,7 +24,6 @@
 
 package org.aion.api.server;
 
-import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
@@ -400,7 +399,7 @@ public abstract class ApiAion extends Api {
             try {
                 synchronized (pendingState) {
                     byte[] nonce = !(_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
-                            : pendingState.bestNonce(Address.wrap(key.getAddress())).toByteArray();
+                            : pendingState.bestPendingStateNonce(Address.wrap(key.getAddress())).toByteArray();
 
                     AionTransaction tx = new AionTransaction(nonce, from, null, _params.getValue().toByteArray(),
                             _params.getData(), _params.getNrg(), _params.getNrgPrice());
@@ -484,7 +483,7 @@ public abstract class ApiAion extends Api {
             synchronized (pendingState) {
                 // TODO : temp set nrg & price to 1
                 byte[] nonce = (!_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
-                        : pendingState.bestNonce(Address.wrap(key.getAddress())).toByteArray();
+                        : pendingState.bestPendingStateNonce(Address.wrap(key.getAddress())).toByteArray();
 
                 AionTransaction tx = new AionTransaction(nonce, _params.getTo(), _params.getValue().toByteArray(),
                         _params.getData(), _params.getNrg(), _params.getNrgPrice());
@@ -526,7 +525,7 @@ public abstract class ApiAion extends Api {
     }
 
 //    private synchronized BigInteger getTxNonce(ECKey key) {
-//        return pendingState.bestNonce();
+//        return pendingState.bestPendingStateNonce();
 //    }
 
 //    private synchronized BigInteger getTxNonce(ECKey key, boolean add) {

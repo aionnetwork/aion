@@ -346,6 +346,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     @Override
     public TX getPoolTx(Address from, BigInteger txNonce) {
+        if (from == null || txNonce == null) {
+            LOG.error("TxPoolA0.getPoolTx null args");
+            return null;
+        }
         AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
         return entry == null ? null : this.getMainMap().get(entry.getKey()).getTx();
     }
@@ -453,7 +457,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return "0.1.0";
     }
 
-    public BigInteger bestNonce(Address addr) {
+    public BigInteger bestPoolNonce(Address addr) {
         return getBestNonce(addr);
     }
 
