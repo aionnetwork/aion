@@ -49,7 +49,7 @@ public final class CfgSync {
         this.blocksBackwardMax = 16;
         this.blocksImportMax = 32;
 
-        this.blocksQueueMax = 64;
+        this.blocksQueueMax = 48;
         this.showStatus = false;
     }
 

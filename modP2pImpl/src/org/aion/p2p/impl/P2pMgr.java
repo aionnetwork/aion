@@ -297,7 +297,7 @@ public final class  P2pMgr implements IP2pMgr {
                     }
 
                     //selectorLock.lock();
-                    //nodeMgr.rmTimeOutActives(P2pMgr.this);
+                    nodeMgr.rmTimeOutActives(P2pMgr.this);
                     //selectorLock.unlock();
 
                 } catch (Exception e) {

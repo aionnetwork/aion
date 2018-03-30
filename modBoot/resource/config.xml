@@ -28,9 +28,9 @@
 		</p2p>
 	</net>
 	<sync>
-		<blocks-backward-max>128</blocks-backward-max>
-		<blocks-import-max>192</blocks-import-max>
-		<blocks-queue-max>64</blocks-queue-max>
+		<blocks-backward-max>16</blocks-backward-max>
+		<blocks-import-max>32</blocks-import-max>
+		<blocks-queue-max>48</blocks-queue-max>
 		<show-status>true</show-status>
 	</sync>
 	<consensus>
