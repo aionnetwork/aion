@@ -337,6 +337,7 @@ public class AionPendingStateImpl
                     if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                         AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
                     }
+
                     addToTxCache(tx);
                     continue;
                 }
