@@ -78,14 +78,10 @@ public abstract class ApiAion extends Api {
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
     protected String[] compilers = new String[] {"solidity"};
-    protected short SYNC_LIMIT = 16;
-    protected short BLOCK_DELAY = 10 * 1000;
     private ReentrantLock blockTemplateLock;
-    // Grab genesis block from DB as a placeholder until generate new blocks
-    private volatile AionBlock miningBlock;
-    private final CfgAion config = CfgAion.inst();
-    private AionBlock dummyBlock;
-
+    private AionBlock currentBestBlock;
+    private volatile AionBlock currentTemplate;
+    private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
 
@@ -99,21 +95,6 @@ public abstract class ApiAion extends Api {
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
 
         blockTemplateLock = new ReentrantLock();
-
-        // Create a dummy block to allow bootstrap miningBlock in case need to sync
-        createPlaceholderBlock();
-
-        // Disable/enable block template generation based on user configuration
-        if(config.getConsensus().getApiGenerateTemplate()) {
-            // Start a timer to get actual block template after 10 seconds allowing the kernel to fully start (Run once)
-            TimerTask ct = new TimerTask() {
-                public void run() {
-                    createBlockTemplate();
-                }
-            };
-            Timer t = new Timer("API_create_block_template_timer");
-            t.schedule(ct, BLOCK_DELAY);
-        }
     }
 
     public final class EpApi implements Runnable {
@@ -125,9 +106,6 @@ public abstract class ApiAion extends Api {
                 IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                     onBlock((AionBlockSummary)e.getFuncArgs().get(0));
-                    if(config.getConsensus().getApiGenerateTemplate()) {
-                        createBlockTemplate();
-                    }
                 } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
                     if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
                         pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), GETSTATE((int)e.getFuncArgs().get(1)));
@@ -172,68 +150,29 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
-    // Create a new block template after a block has been mined; either from the network or mined locally
-    protected void createBlockTemplate() {
+    public AionBlock getBlockTemplate() {
         blockTemplateLock.lock();
         try {
-
             AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+            byte[] bestBlockStaticHash = bestBlock.getHeader().getStaticHash();
 
-            // Return dummy block; prevent miners from flooding the pool and try to prevent sidechains
-            if ((this.ac.getAionHub().getSyncMgr().getNetworkBestBlockNumber() - bestBlock.getNumber()) > SYNC_LIMIT) {
-                this.miningBlock = dummyBlock;
-                return;
+            if(currentBestBlockHash == null || !Arrays.equals(bestBlockStaticHash, currentBestBlockHash)) {
+
+                // Record new best block on the chain
+                currentBestBlock = bestBlock;
+                currentBestBlockHash = currentBestBlock.getHeader().getStaticHash();
+
+                // Generate new block template
+                List<AionTransaction> txs = pendingState.getPendingTransactions();
+
+                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
             }
 
-            // Generate new block
-            List<AionTransaction> txs = pendingState.getPendingTransactions();
-
-            miningBlock = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
-
         } finally {
-            blockTemplateLock.unlock();
-        }
-    }
-
-    // Create placeholder block returned by getBlockTemplate until the chain is synced
-    // Set high difficulty to avoid miners actually finding solutions
-    private void createPlaceholderBlock(){
-        byte[] parentHash = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        Address coinbase = new Address(parentHash); // Shortcut for dummy block
-        byte[] logsBloom = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        byte[] difficulty = {127,127,127,127,127,127,127,127,127,127,127,127,127,127,127,127};
-        long number = 0;
-        long timestamp = 0;
-        byte[] extraData = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        byte[] nonce = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        byte[] receiptsRoot = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        byte[] transactionsRoot = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        byte[] stateRoot = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        List<AionTransaction> transactionsList = new CopyOnWriteArrayList<>();
-        byte[] solutions = {0};
-        long energyConsumed = 0;
-        long energyLimit = 0;
-        try {
             blockTemplateLock.lock();
-            miningBlock = new AionBlock(parentHash, coinbase, logsBloom, difficulty, number,
-                    timestamp, extraData, nonce, receiptsRoot, transactionsRoot,
-                    stateRoot, transactionsList, solutions, energyConsumed, energyLimit);
-            dummyBlock = miningBlock;
-        } finally {
-            blockTemplateLock.unlock();
         }
 
-    }
-
-    public AionBlock getBlockTemplate() {
-        return this.miningBlock;
+        return currentTemplate;
     }
 
     public AionBlock getBlockByHash(byte[] hash) {

@@ -675,6 +675,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
         // Template not present in map; add it before returning
         if(!isContained) {
+
             try{
                 templateMapLock.writeLock().lock();
 
@@ -779,30 +780,15 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                 ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
 
                 AionBlock bestBlock = templateMap.get(key);
-
-
-//                System.out.println("Best Block: " + bestBlock);
-
                 if (bestBlock != null) {
-
-//                    IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
-//                    ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
-//                            hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
-//                    evtMgr.newEvent(ev);
-//
-//                    LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-//                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-//                            bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
 
                     bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
                     bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
                     bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
 
-
+                    // Directly submit to chain for new due to delays using event, explore event submission again
                     ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
-                    System.out.println("Import Result: " + importResult);
                     if(importResult == ImportResult.IMPORTED_BEST || importResult == ImportResult.IMPORTED_NOT_BEST) {
-                        createBlockTemplate(); //Aggressively create a new block template; if left out template generate may get stuck
                         templateMap.remove(key);
                         LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
                                 bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),

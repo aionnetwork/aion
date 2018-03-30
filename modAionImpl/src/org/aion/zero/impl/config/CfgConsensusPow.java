@@ -46,7 +46,6 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     CfgConsensusPow() {
         this.mining = true;
-        this.apiGenerateTemplate = true;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
         this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1);
         this.extraData = "AION";
@@ -59,8 +58,6 @@ public final class CfgConsensusPow extends CfgConsensus {
     private byte cpuMineThreads;
 
     protected String extraData;
-
-    private boolean apiGenerateTemplate;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop: while (sr.hasNext()) {
@@ -81,8 +78,6 @@ public final class CfgConsensusPow extends CfgConsensus {
                 case "extra-data":
                     this.extraData = Cfg.readValue(sr);
                     break;
-                case "api-generate-template":
-                    this.apiGenerateTemplate = Boolean.parseBoolean(Cfg.readValue(sr));
                 default:
                     Cfg.skipElement(sr);
                     break;
@@ -107,11 +102,6 @@ public final class CfgConsensusPow extends CfgConsensus {
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("mining");
             xmlWriter.writeCharacters(this.getMining() + "");
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("api-generate-template");
-            xmlWriter.writeCharacters(this.getApiGenerateTemplate() + "");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
@@ -167,10 +157,4 @@ public final class CfgConsensusPow extends CfgConsensus {
     public String getMinerAddress() {
         return this.minerAddress;
     }
-
-    public boolean getApiGenerateTemplate() {
-        return this.apiGenerateTemplate;
-    }
-
-
 }
