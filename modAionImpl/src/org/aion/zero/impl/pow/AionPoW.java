@@ -123,8 +123,13 @@ public class AionPoW {
             this.eventMgr = eventMgr;
             this.syncMgr = SyncMgr.inst();
 
-            setupHandler();
 
+            // return early if mining is disabled, otherwise we are doing needless
+            // work by generating new block templates on IMPORT_BEST
+            if (!config.getConsensus().getMining())
+                return;
+
+            setupHandler();
             ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
