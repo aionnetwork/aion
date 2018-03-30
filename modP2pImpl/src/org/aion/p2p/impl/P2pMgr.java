@@ -297,7 +297,7 @@ public final class  P2pMgr implements IP2pMgr {
                     }
 
                     //selectorLock.lock();
-                    //nodeMgr.rmTimeOutActives(P2pMgr.this);
+                    nodeMgr.rmTimeOutActives(P2pMgr.this);
                     //selectorLock.unlock();
 
                 } catch (Exception e) {
@@ -411,6 +411,12 @@ public final class  P2pMgr implements IP2pMgr {
 
             String ip = channel.socket().getInetAddress().getHostAddress();
             int port = channel.socket().getPort();
+
+            if (syncSeedsOnly && nodeMgr.isSeedIp(ip)) {
+                // close the channel and return.
+                channel.close();
+                return;
+            }
 
             // Node node = new Node(false, ip);
             Node node = nodeMgr.allocNode(ip, 0, port);

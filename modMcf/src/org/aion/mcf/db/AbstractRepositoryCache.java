@@ -70,8 +70,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
     @Override
     public AccountState createAccount(Address address) {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
             AccountState accountState = new AccountState();
             cachedAccounts.put(address, accountState);
@@ -84,8 +83,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
             return accountState;
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
@@ -116,7 +114,11 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
             return accountState;
         } finally {
-            lockAccounts.readLock().unlock();
+            try {
+                lockAccounts.readLock().unlock();
+            } catch (Exception e) {
+                // there was nothing to unlock
+            }
         }
     }
 
@@ -157,7 +159,12 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
             return contractDetails;
         } finally {
-            lockDetails.readLock().unlock();
+            try {
+                lockDetails.readLock().unlock();
+            } catch (Exception e) {
+                // there was nothing to unlock
+            }
+
         }
     }
 
@@ -186,8 +193,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public void loadAccountState(Address address, Map<Address, AccountState> accounts,
             Map<Address, IContractDetails<DataWord>> details) {
-        lockAccounts.readLock().lock();
-        lockDetails.readLock().lock();
+        fullyReadLock();
 
         try {
             // check if the account is cached locally
@@ -204,8 +210,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
                 details.put(address, new ContractDetailsCacheImpl(contractDetails));
             }
         } finally {
-            lockAccounts.readLock().unlock();
-            lockDetails.readLock().unlock();
+            fullyReadUnlock();
         }
     }
 
@@ -217,26 +222,22 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
      * @apiNote If the account was never stored this call will create it.
      */
     private void loadAccountState(Address address) {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
             repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
     @Override
     public void deleteAccount(Address address) {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
             getAccountState(address).delete();
             getContractDetails(address).setDeleted(true);
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
@@ -288,8 +289,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
     @Override
     public void saveCode(Address address, byte[] code) {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
             // save the code
             // TODO: why not create contract here directly? also need to check that there is no preexisting code!
@@ -301,8 +301,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
             // update the code hash
             getAccountState(address).setCodeHash(h256(code));
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
@@ -353,14 +352,12 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
     @Override
     public void rollback() {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
             cachedAccounts.clear();
             cachedDetails.clear();
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
@@ -377,5 +374,37 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public BSB getBlockStore() {
         return repository.getBlockStore();
+    }
+
+    /**
+     * Lock to prevent writing on both accounts and details.
+     */
+    protected void fullyWriteLock() {
+        lockAccounts.writeLock().lock();
+        lockDetails.writeLock().lock();
+    }
+
+    /**
+     * Unlock to allow writing on both accounts and details.
+     */
+    protected void fullyWriteUnlock() {
+        lockDetails.writeLock().unlock();
+        lockAccounts.writeLock().unlock();
+    }
+
+    /**
+     * Lock for reading both accounts and details.
+     */
+    protected void fullyReadLock() {
+        lockAccounts.readLock().lock();
+        lockDetails.readLock().lock();
+    }
+
+    /**
+     * Unlock reading for both accounts and details.
+     */
+    protected void fullyReadUnlock() {
+        lockDetails.readLock().unlock();
+        lockAccounts.readLock().unlock();
     }
 }

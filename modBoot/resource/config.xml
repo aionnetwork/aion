@@ -20,7 +20,7 @@
 			<node>p2p://f9ea8c08-6f2d-4e64-91a2-d7186d76e096@52.231.206.150:30303</node>
 		</nodes>
 		<p2p>
-			<ip>127.0.0.1</ip>
+			<ip>0.0.0.0</ip>
 			<port>30303</port>
 			<discover>false</discover>
 			<show-status>false</show-status>
@@ -30,7 +30,7 @@
 	<sync>
 		<blocks-backward-max>16</blocks-backward-max>
 		<blocks-import-max>32</blocks-import-max>
-		<blocks-queue-max>64</blocks-queue-max>
+		<blocks-queue-max>48</blocks-queue-max>
 		<show-status>true</show-status>
 	</sync>
 	<consensus>

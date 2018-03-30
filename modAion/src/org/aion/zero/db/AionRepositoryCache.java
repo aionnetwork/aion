@@ -57,8 +57,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
      */
     @Override
     public void flush() {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
             // determine which accounts should get stored
             HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
@@ -99,15 +98,13 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
             cachedAccounts.clear();
             cachedDetails.clear();
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
     @Override
     public void updateBatch(Map<Address, AccountState> accounts, Map<Address, IContractDetails<DataWord>> details) {
-        lockAccounts.writeLock().lock();
-        lockDetails.writeLock().lock();
+        fullyWriteLock();
         try {
 
             for (Map.Entry<Address, AccountState> accEntry : accounts.entrySet()) {
@@ -125,8 +122,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 }
             }
         } finally {
-            lockAccounts.writeLock().unlock();
-            lockDetails.writeLock().unlock();
+            fullyWriteUnlock();
         }
     }
 
