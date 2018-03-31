@@ -136,8 +136,8 @@ public class AionPendingStateImpl
 
         List<AionTransaction> newPending = txPool.add(txs);
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("txBufferSize {} return size {}", txs.size(), newPending.size());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("txBufferSize {} return size {}", txs.size(), newPending.size());
         }
 
         int cnt = 0;
@@ -255,6 +255,7 @@ public class AionPendingStateImpl
 
 
         if (bufferEnable) {
+            LOG.info("TxBuf enable!");
             timer = new Timer("TxBuf");
             timer.schedule(new TxBuffTask(), 10000, 200);
         }
