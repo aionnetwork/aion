@@ -162,9 +162,10 @@ public abstract class ApiAion extends Api {
                 currentBestBlockHash = currentBestBlock.getHeader().getStaticHash();
 
                 // Generate new block template
-                List<AionTransaction> txs = pendingState.getPendingTransactions();
+                AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
+                ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
 
-                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, txs, false);
+                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, new ArrayList<>(ret), false);
             }
 
         } finally {
