@@ -44,6 +44,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -77,10 +78,9 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     // private static AtomicReference<AionBlock> currentMining;
     // TODO: Verify if need to use a concurrent map; locking may allow for use
     // of a simple map
-    private static HashMap<String, AionBlock> templateMap;
+    private static HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
-
 
     protected void onBlock(AionBlockSummary cbs) {
         installedFilters.keySet().forEach((k) -> {
@@ -124,7 +124,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         templateMapLock = new ReentrantReadWriteLock();
         evtMgr = this.ac.getAionHub().getEventMgr();
 
-
         startES("EpWeb3");
         // Fill data on block and transaction events into the filters and pending receipts
         IHandler blkHr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
@@ -164,21 +163,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         } else {
             return nb;
         }
-    }
-
-    // AION Mining Pool
-    // TODO Test multiple threads submitting blocks
-    synchronized boolean submitBlock(Solution solution) {
-
-        AionBlock block = (AionBlock) solution.getBlock();
-
-        // set the nonce and solution
-        block.getHeader().setNonce(solution.getNonce());
-        block.getHeader().setSolution(solution.getSolution());
-        block.getHeader().setTimestamp(solution.getTimeStamp());
-
-        // This can be improved
-        return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();
     }
 
     // --------------------------------------------------------------------
@@ -677,21 +661,39 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
     public Object stratum_getblocktemplate() {
         // TODO: Change this to a synchronized map implementation mapping
-        // block hashes to the block. Allow multiple block templates at same height.
-        templateMapLock.writeLock().lock();
 
         AionBlock bestBlock = getBlockTemplate();
+        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getStaticHash());
 
-        // Check first entry in the map; if its height is higher a sync may
-        // have switch branches, abandon current work to start on new branch
-        if (!templateMap.keySet().isEmpty()) {
-            if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
-                // Found a higher block, clear any remaining cached entries and start on new height
-                templateMap.clear();
+        // Read template map; if block already contained chain has not moved forward, simply return the same block.
+        boolean isContained = false;
+        try {
+            templateMapLock.readLock().lock();
+            if(templateMap.containsKey(key)) {
+                isContained = true;
             }
+        } finally {
+            templateMapLock.readLock().unlock();
         }
 
-        templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
+        // Template not present in map; add it before returning
+        if(!isContained) {
+
+            try{
+                templateMapLock.writeLock().lock();
+
+                if (!templateMap.keySet().isEmpty()) {
+                    if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
+                        // Found a higher block, clear any remaining cached entries and start on new height
+                        templateMap.clear();
+                    }
+                }
+                templateMap.put(key, bestBlock);
+
+            }finally {
+                templateMapLock.writeLock().unlock();
+            }
+        }
 
         JSONObject coinbaseaux = new JSONObject();
         coinbaseaux.put("flags", "062f503253482f");
@@ -705,8 +707,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
         obj.put("coinbaseaux", coinbaseaux);
         obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
-
-        templateMapLock.writeLock().unlock();
 
         return obj;
     }
@@ -777,39 +777,34 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (nce != null && soln != null && hdrHash != null && ts != null &&
                 !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
 
-            templateMapLock.writeLock().lock();
+            try {
+                templateMapLock.writeLock().lock();
 
-            AionBlock bestBlock = templateMap.get(hdrHash + "");
+                ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
 
-//            boolean successfulSubmit = false;
-//            // TODO Clean up this section once decided on event vs direct call
-//            if (bestBlock != null) {
-//                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16)));
-//            }
-//
-//            if (successfulSubmit) {
-//                // Found a solution for this height and successfully submitted, clear all entries for next height
-//                LOG.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-//                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-//                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
-//                templateMap.clear();
-//            }
+                AionBlock bestBlock = templateMap.get(key);
+                if (bestBlock != null) {
 
-            if(bestBlock != null) {
+                    bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
+                    bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
+                    bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
 
-                IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
-                ev.setFuncArgs(Collections.singletonList(new Solution(bestBlock, hexStringToBytes(nce + ""),
-                        hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16))));
-                evtMgr.newEvent(ev);
-
-                LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
-
-                templateMap.clear();
+                    // Directly submit to chain for new due to delays using event, explore event submission again
+                    ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
+                    if(importResult == ImportResult.IMPORTED_BEST || importResult == ImportResult.IMPORTED_NOT_BEST) {
+                        templateMap.remove(key);
+                        LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                                bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    } else {
+                        LOG.info("Unable to submit block via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                                bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    }
+                }
+            } finally {
+                templateMapLock.writeLock().unlock();
             }
-
-            templateMapLock.writeLock().unlock();
 
             // TODO: Simplified response for now, need to provide better feedback to caller in next update
             obj.put("result", true);
