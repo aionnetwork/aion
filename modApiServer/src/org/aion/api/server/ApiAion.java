@@ -42,11 +42,13 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -56,11 +58,15 @@ import org.aion.zero.types.AionTxReceipt;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.aion.base.util.Hex.toHexString;
 import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
@@ -72,6 +78,10 @@ public abstract class ApiAion extends Api {
     protected Map<Long, Fltr> installedFilters = null;
     protected Map<ByteArrayWrapper, AionTxReceipt> pendingReceipts;
     protected String[] compilers = new String[] {"solidity"};
+    private ReentrantLock blockTemplateLock;
+    private AionBlock currentBestBlock;
+    private volatile AionBlock currentTemplate;
+    private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
 
@@ -83,6 +93,8 @@ public abstract class ApiAion extends Api {
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+
+        blockTemplateLock = new ReentrantLock();
     }
 
     public final class EpApi implements Runnable {
@@ -91,7 +103,7 @@ public abstract class ApiAion extends Api {
         public void run() {
             while (go) {
 
-                IEvent  e = ees.take();
+                IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
                     onBlock((AionBlockSummary)e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
@@ -139,15 +151,29 @@ public abstract class ApiAion extends Api {
     }
 
     public AionBlock getBlockTemplate() {
-        // TODO: Change to follow onBlockTemplate event mode defined in internal
-        // miner
-        // TODO: Track multiple block templates
-        AionBlock bestPendingState = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+        blockTemplateLock.lock();
+        try {
+            AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+            byte[] bestBlockStaticHash = bestBlock.getHeader().getStaticHash();
 
-        AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
-        ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
+            if(currentBestBlockHash == null || !Arrays.equals(bestBlockStaticHash, currentBestBlockHash)) {
 
-        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
+                // Record new best block on the chain
+                currentBestBlock = bestBlock;
+                currentBestBlockHash = currentBestBlock.getHeader().getStaticHash();
+
+                // Generate new block template
+                AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
+                ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
+
+                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, new ArrayList<>(ret), false);
+            }
+
+        } finally {
+            blockTemplateLock.unlock();
+        }
+
+        return currentTemplate;
     }
 
     public AionBlock getBlockByHash(byte[] hash) {
