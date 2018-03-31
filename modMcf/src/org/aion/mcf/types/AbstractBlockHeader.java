@@ -37,6 +37,9 @@ public abstract class AbstractBlockHeader {
     public static final int NONCE_LENGTH = 8;
     public static final int SOLUTIONSIZE = 1408;
 
+
+    protected byte version;
+
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     protected byte[] parentHash;
 
@@ -222,5 +225,13 @@ public abstract class AbstractBlockHeader {
 
     public BigInteger getPowBoundaryBI() {
         return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
+    }
+
+    public byte getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(byte version) {
+        this.version = version;
     }
 }

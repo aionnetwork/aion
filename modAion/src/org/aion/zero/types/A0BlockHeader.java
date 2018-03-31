@@ -52,10 +52,11 @@ import org.json.JSONObject;
  */
 public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeader {
 
-    static final int RPL_BH_PARENTHASH = 0, RPL_BH_COINBASE = 1, RPL_BH_STATEROOT = 2, RPL_BH_TXTRIE = 3,
-            RPL_BH_RECEIPTTRIE = 4, RPL_BH_LOGSBLOOM = 5, RPL_BH_DIFFICULTY = 6, RPL_BH_NUMBER = 7,
-            RPL_BH_TIMESTAMP = 8, RPL_BH_EXTRADATA = 9, RPL_BH_NONCE = 10, RPL_BH_SOLUTION = 11,
-            RPL_BH_NRG_CONSUMED = 12, RPL_BH_NRG_LIMIT = 13;
+    static final int RPL_BH_VERSION = 1, RPL_BH_NUMBER = 2, RPL_BH_PARENTHASH = 3,
+            RPL_BH_COINBASE = 4, RPL_BH_STATEROOT = 5, RPL_BH_TXTRIE = 6,
+            RPL_BH_RECEIPTTRIE = 7, RPL_BH_LOGSBLOOM = 8, RPL_BH_DIFFICULTY = 9,
+            RPL_BH_EXTRADATA = 10, RPL_BH_NRG_CONSUMED = 11, RPL_BH_NRG_LIMIT = 12,
+            RPL_BH_TIMESTAMP = 13, RPL_BH_NONCE = 14, RPL_BH_SOLUTION = 15;
 
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
@@ -94,44 +95,66 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     public A0BlockHeader(RLPList rlpHeader) {
 
+        // Version
+        byte[] versionBytes = rlpHeader.get(RPL_BH_VERSION).getRLPData();
+        this.version = versionBytes.length == 1 ? versionBytes[0] : 0;
+
+        // Number
+        byte[] nrBytes = rlpHeader.get(RPL_BH_NUMBER).getRLPData();
+        this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
+
+        // ParentHash
         this.parentHash = rlpHeader.get(RPL_BH_PARENTHASH).getRLPData();
 
+        // CoinBase
         byte[] data = rlpHeader.get(RPL_BH_COINBASE).getRLPData();
         this.coinbase = (data == null) ? Address.EMPTY_ADDRESS()
                 : Address.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
 
+        // StateRoot
         this.stateRoot = rlpHeader.get(RPL_BH_STATEROOT).getRLPData();
 
+        // TxTrieRoot
         this.txTrieRoot = rlpHeader.get(RPL_BH_TXTRIE).getRLPData();
         if (this.txTrieRoot == null) {
             this.txTrieRoot = EMPTY_TRIE_HASH;
         }
 
+        // ReceiptTrieRoot
         this.receiptTrieRoot = rlpHeader.get(RPL_BH_RECEIPTTRIE).getRLPData();
         if (this.receiptTrieRoot == null) {
             this.receiptTrieRoot = EMPTY_TRIE_HASH;
         }
 
+        // LogsBloom
         this.logsBloom = rlpHeader.get(RPL_BH_LOGSBLOOM).getRLPData();
+
+        // Difficulty
         this.difficulty = rlpHeader.get(RPL_BH_DIFFICULTY).getRLPData();
 
-        byte[] nrBytes = rlpHeader.get(RPL_BH_NUMBER).getRLPData();
+        // ExtraData
+        this.extraData = rlpHeader.get(RPL_BH_EXTRADATA).getRLPData();
+
+        // Energy Consumed
+        byte[] energyConsumedBytes = rlpHeader.get(RPL_BH_NRG_CONSUMED).getRLPData();
+        this.energyConsumed = energyConsumedBytes == null ? 0 : (new BigInteger(1, energyConsumedBytes).longValue());
+
+        // Energy Limit
+        byte[] energyLimitBytes = rlpHeader.get(RPL_BH_NRG_LIMIT).getRLPData();
+        this.energyLimit = energyLimitBytes == null ? 0 : (new BigInteger(1, energyLimitBytes).longValue());
+
+        // Timestamp
         byte[] tsBytes = rlpHeader.get(RPL_BH_TIMESTAMP).getRLPData();
 
         // TODO: not a huge concern, but how should we handle possible
         // overflows?
-        this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
         this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
 
-        this.extraData = rlpHeader.get(RPL_BH_EXTRADATA).getRLPData();
+        // Nonce
         this.nonce = rlpHeader.get(RPL_BH_NONCE).getRLPData();
+
+        // Solution
         this.solution = rlpHeader.get(RPL_BH_SOLUTION).getRLPData();
-
-        byte[] energyConsumedBytes = rlpHeader.get(RPL_BH_NRG_CONSUMED).getRLPData();
-        byte[] energyLimitBytes = rlpHeader.get(RPL_BH_NRG_LIMIT).getRLPData();
-
-        this.energyConsumed = energyConsumedBytes == null ? 0 : (new BigInteger(1, energyConsumedBytes).longValue());
-        this.energyLimit = energyLimitBytes == null ? 0 : (new BigInteger(1, energyLimitBytes).longValue());
     }
 
     /**
@@ -141,6 +164,12 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
      *            Block header to copy
      */
     public A0BlockHeader(A0BlockHeader toCopy) {
+
+        // Copy version
+        this.version = toCopy.getVersion();
+
+        // Copy block number
+        this.number = toCopy.getNumber();
 
         // Copy elements in parentHash
         this.parentHash = new byte[toCopy.getParentHash().length];
@@ -169,15 +198,18 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         this.difficulty = new byte[toCopy.getDifficulty().length];
         System.arraycopy(toCopy.getDifficulty(), 0, this.difficulty, 0, this.difficulty.length);
 
-        // Copy block number
-        this.number = toCopy.getNumber();
-
-        // Copy timestamp
-        this.timestamp = toCopy.getTimestamp();
-
         // Copy extra data
         this.extraData = new byte[toCopy.getExtraData().length];
         System.arraycopy(toCopy.getExtraData(), 0, this.extraData, 0, this.extraData.length);
+
+        // Copy energyConsumed
+        this.energyConsumed = toCopy.getEnergyConsumed();
+
+        // Copy energyLimit
+        this.energyLimit = toCopy.getEnergyLimit();
+
+        // Copy timestamp
+        this.timestamp = toCopy.getTimestamp();
 
         // Copy nonce
         this.nonce = new byte[toCopy.getNonce().length];
@@ -186,12 +218,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         // Copy solution
         this.solution = new byte[toCopy.getSolution().length];
         System.arraycopy(toCopy.getSolution(), 0, this.solution, 0, this.solution.length);
-
-        // Copy energyConsumed
-        this.energyConsumed = toCopy.getEnergyConsumed();
-
-        // Copy energyLimit
-        this.energyLimit = toCopy.getEnergyLimit();
     }
 
     protected A0BlockHeader(byte[] parentHash, Address coinbase, byte[] logsBloom, byte[] difficulty, long number,
