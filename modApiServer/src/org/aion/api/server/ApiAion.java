@@ -169,7 +169,7 @@ public abstract class ApiAion extends Api {
             }
 
         } finally {
-            blockTemplateLock.lock();
+            blockTemplateLock.unlock();
         }
 
         return currentTemplate;
