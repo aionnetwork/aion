@@ -288,7 +288,9 @@ public class AionPoW {
     }
 
     public synchronized void shutdown() {
-        ees.shutdown();
-        shutDown.set(true);
+        if(ees != null) {
+            ees.shutdown();
+            shutDown.set(true);
+        }
     }
 }
