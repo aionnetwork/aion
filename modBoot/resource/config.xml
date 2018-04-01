@@ -20,7 +20,7 @@
 			<!--max NRG price recommended by oracle-->
 			<max>100E9</max>
 			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
-			<enable-oracle>false</enable-oracle>
+			<oracle-enabled>false</oracle-enabled>
 		</nrg-recommendation>
 	</api>
 	<net>

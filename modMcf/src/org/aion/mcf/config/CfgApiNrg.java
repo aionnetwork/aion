@@ -55,9 +55,7 @@ public final class CfgApiNrg {
     public long getNrgPriceMax() {
         return this.maxPrice;
     }
-    public boolean isOracleEnabled() {
-        return oracleEnabled;
-    }
+    public boolean isOracleEnabled() { return this.oracleEnabled; }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -67,7 +65,7 @@ public final class CfgApiNrg {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
-                        case "enable-oracle":
+                        case "oracle-enabled":
                             try {
                                 oracleEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
@@ -138,7 +136,7 @@ public final class CfgApiNrg {
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeComment("enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice");
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("enable-oracle");
+            xmlWriter.writeStartElement("oracle-enabled");
             xmlWriter.writeCharacters(String.valueOf(this.oracleEnabled));
             xmlWriter.writeEndElement();
 

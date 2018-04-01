@@ -119,21 +119,25 @@ public abstract class ApiAion extends Api {
         @Override
         public void run() {
             while (go) {
-
-                IEvent e = ees.take();
-                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
-                    onBlock((AionBlockSummary)e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
-                    if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
-                        pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), GETSTATE((int)e.getFuncArgs().get(1)));
-                    } else if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue() ){
-                        for (ITransaction tx : (List<ITransaction>) e.getFuncArgs().get(0)) {
-                            pendingTxReceived(tx);
+                try {
+                    IEvent e = ees.take();
+                    if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                        onBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                    } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
+                        if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
+                            pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), GETSTATE((int)e.getFuncArgs().get(1)));
+                        } else if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue() ){
+                            for (ITransaction tx : (List<ITransaction>) e.getFuncArgs().get(0)) {
+                                pendingTxReceived(tx);
+                            }
                         }
+                    } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                        go = false;
                     }
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
-                    go = false;
+                } catch (Exception e) {
+                    LOG.debug("EpApi - excepted out", e);
                 }
+
             }
         }
     }

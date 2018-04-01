@@ -43,7 +43,7 @@ public class RpcProcessor {
                     "Vary: Origin" + CRLF +
                     "Content-Type: application/json";
 
-    private Map<String, RpcMethods.RpcMethod> enabledEndpoints;
+    RpcMethods apiHolder;
 
     private ExecutorService workers;
 
@@ -69,9 +69,7 @@ public class RpcProcessor {
                 }
             }
         }
-
-        this.enabledEndpoints = RpcMethods.composite(enabled);
-
+        apiHolder = new RpcMethods(enabled);
 
         // protect user from over-allocating resources to api.
         // rationale: a sophisticated user would recompile the api-server with appropriate threading restrictions
@@ -163,7 +161,7 @@ public class RpcProcessor {
                 return new RpcMsg(null, RpcError.INVALID_REQUEST).toJson();
             }
 
-            RpcMethods.RpcMethod rpc = enabledEndpoints.get(method);
+            RpcMethods.RpcMethod rpc = apiHolder.get(method);
             if (rpc == null) {
                 LOG.debug("rpc-server - invalid method: {} [1]", method);
                 return new RpcMsg(null, RpcError.METHOD_NOT_FOUND).setId(id).toJson();
@@ -353,5 +351,7 @@ public class RpcProcessor {
             workers.shutdownNow();
             Thread.currentThread().interrupt();
         }
+
+        apiHolder.shutdown();
     }
 }

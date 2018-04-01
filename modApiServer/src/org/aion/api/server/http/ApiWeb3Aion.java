@@ -624,7 +624,7 @@ public class ApiWeb3Aion extends ApiAion {
             }
         }
 
-        return null;
+        return filter;
     }
 
     public RpcMsg eth_newFilter(JSONArray _params) {
@@ -1025,7 +1025,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    void shutDown() {
+    public void shutdown() {
         shutDownES();
     }
 }

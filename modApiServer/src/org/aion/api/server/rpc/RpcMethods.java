@@ -14,51 +14,56 @@ import java.util.Map;
 public class RpcMethods {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
+    private ApiWeb3Aion api;
+    private final Map<String, Map<String, RpcMethod>> groupMap;
+    private Map<String, RpcMethod> enabledEndpoints;
 
-    // TODO: find a way to autogen options in config using this enum, without generating circular module dependency
-    // (right now it's manual)
-    public enum Group {
-        PING (ping),
-        WEB3 (web3),
-        NET (net),
-        DEBUG (debug),
-        PERSONAL (personal),
-        ETH (eth),
-        STRATUM (stratum);
+    public RpcMethods(List<String> enabledGroups) {
+        api = new ApiWeb3Aion(AionImpl.inst());
 
-        private final Map<String, RpcMethod> refmap;
+        // find a way to autogen options in config using this enum, without generating circular
+        // module dependency (right now it's manual)
+        groupMap = Map.ofEntries(
+                Map.entry("ping", ping),
+                Map.entry("web3", web3),
+                Map.entry("net", net),
+                Map.entry("debug", debug),
+                Map.entry("personal", personal),
+                Map.entry("eth", eth),
+                Map.entry("stratum", stratum)
+        );
 
-        Group(Map<String, RpcMethod> refmap) {
-            this.refmap = refmap;
-        }
-
-        public Map<String, RpcMethod> getRefmap() {
-            return refmap;
-        }
+        enabledEndpoints = composite(enabledGroups);
     }
 
-    public static Map<String, RpcMethod> composite(List<String> groups) {
+    public RpcMethod get(String name) {
+        return enabledEndpoints.get(name);
+    }
+
+    public void shutdown() {
+        api.shutdown();
+    }
+
+    private Map<String, RpcMethod> composite(List<String> groups) {
         Map<String, RpcMethod> composite = new HashMap<>();
 
         // add the ping endpoint by default
         composite.putAll(ping);
 
         for(String group : groups) {
-            Group g = null;
+            Map<String, RpcMethod> g = null;
             try {
-                g = Group.valueOf(group.toUpperCase());
+                g = groupMap.get(group.toLowerCase());
             } catch (Exception e) {
                 LOG.debug("rpc-methods - unable to recognize api group name: " + group);
                 continue;
             }
-            composite.putAll(g.getRefmap());
+            if (g != null)
+                composite.putAll(g);
         }
 
         return composite;
     }
-
-    // awkward, and non-testable, but readable.
-    private static ApiWeb3Aion api = new ApiWeb3Aion(AionImpl.inst());
 
     // jdk8 lambdas infer interface method, making our constant declaration pretty.
     public interface RpcMethod {
@@ -68,14 +73,14 @@ public class RpcMethods {
     /**
      * ping
      */
-    public static final Map<String, RpcMethod> ping = Map.ofEntries(
+    private final Map<String, RpcMethod> ping = Map.ofEntries(
             Map.entry("ping", (params) -> new RpcMsg("pong"))
     );
 
     /**
      * web3
      */
-    public static final Map<String, RpcMethod> web3 = Map.ofEntries(
+    private final Map<String, RpcMethod> web3 = Map.ofEntries(
             Map.entry("web3_clientVersion", (params) -> api.web3_clientVersion()),
             Map.entry("web3_sha3", (params) -> api.web3_sha3(params))
     );
@@ -83,7 +88,7 @@ public class RpcMethods {
     /**
      * net
      */
-    public static final Map<String, RpcMethod> net = Map.ofEntries(
+    private final Map<String, RpcMethod> net = Map.ofEntries(
             Map.entry("net_version", (params) -> api.net_version()),
             Map.entry("net_listening", (params) -> api.net_listening()),
             Map.entry("net_peerCount", (params) -> api.net_peerCount())
@@ -92,14 +97,14 @@ public class RpcMethods {
     /**
      * debug
      */
-    public static final Map<String, RpcMethod> debug = Map.ofEntries(
+    private final Map<String, RpcMethod> debug = Map.ofEntries(
             Map.entry("debug_getBlocksByNumber", (params) -> api.debug_getBlocksByNumber(params))
     );
 
     /**
      * personal
      */
-    public static final Map<String, RpcMethod> personal = Map.ofEntries(
+    private final Map<String, RpcMethod> personal = Map.ofEntries(
             Map.entry("personal_unlockAccount", (params) -> api.personal_unlockAccount(params)),
             Map.entry("personal_listAccounts", (params) -> api.eth_accounts())
     );
@@ -107,7 +112,7 @@ public class RpcMethods {
     /**
      * eth
      */
-    public static final Map<String, RpcMethod> eth = Map.ofEntries(
+    private final Map<String, RpcMethod> eth = Map.ofEntries(
             Map.entry("eth_getCompilers", (params) -> api.eth_getCompilers()),
             Map.entry("eth_compileSolidity", (params) -> api.eth_compileSolidity(params)),
 
@@ -150,7 +155,7 @@ public class RpcMethods {
     /**
      * stratum
      */
-    public static final Map<String, RpcMethod> stratum = Map.ofEntries(
+    private final Map<String, RpcMethod> stratum = Map.ofEntries(
             Map.entry("validateaddress", (params) -> api.stratum_validateaddress(params)),
             Map.entry("dumpprivkey", (params) -> api.stratum_dumpprivkey()),
             Map.entry("getdifficulty", (params) -> api.stratum_getdifficulty()),

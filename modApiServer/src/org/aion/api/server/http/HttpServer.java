@@ -109,7 +109,6 @@ public class HttpServer implements Runnable {
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
         } catch (Exception e) {
             LOG.info("<rpc-server - failed to bind on {}:{}>", ip, port, e);
-
         }
 
         server = new Thread(this::run, "rpc-server");
