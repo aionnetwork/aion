@@ -94,7 +94,7 @@ public class HttpServer implements Runnable {
         port = _port;
 
         // allocate a 128mb buffer
-        readBuffer = ByteBuffer.allocate(1024 * 32);
+        readBuffer = ByteBuffer.allocate(1024 * 128);
     }
 
     public void start() {

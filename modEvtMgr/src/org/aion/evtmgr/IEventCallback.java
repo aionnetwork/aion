@@ -29,5 +29,5 @@ package org.aion.evtmgr;
  *
  */
 public interface IEventCallback {
-
+    void onEvent(IEvent e);
 }

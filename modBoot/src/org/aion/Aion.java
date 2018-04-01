@@ -153,6 +153,7 @@ public class Aion {
         ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
         
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+
             LOG.info("Starting shutdown process...");
 
             if (holder.rpc != null) {
@@ -175,6 +176,7 @@ public class Aion {
             if (holder.miner != null) {
                 LOG.info("Shutting down sealer");
                 holder.miner.stopMining();
+                holder.miner.shutdown();
                 LOG.info("Shutdown sealer... Done!");
             }
 

@@ -44,6 +44,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import java.util.Map;
@@ -87,14 +88,14 @@ public class BlockPropagationHandler {
 
     private final IP2pMgr p2pManager;
 
-    private final BlockHeaderValidator blockHeaderValidator;
+    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     public BlockPropagationHandler(final int cacheSize,
                                    final IAionBlockchain blockchain,
                                    final IP2pMgr p2pManager,
-                                   BlockHeaderValidator headerValidator) {
+                                   BlockHeaderValidator<A0BlockHeader> headerValidator) {
         this.cacheSize = cacheSize;
 
         // all accesses to cacheMap are guarded by instance
@@ -126,14 +127,14 @@ public class BlockPropagationHandler {
         });
     }
 
-    public PropStatus processIncomingBlock(final int nodeId, final AionBlock block) {
+    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
 
         if (block == null)
             return PropStatus.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
-        if (!this.blockHeaderValidator.validate(block.getHeader()))
+        if (!this.blockHeaderValidator.validate(block.getHeader(), log))
             return PropStatus.DROPPED;
 
         // guarantees if multiple requests of same block appears, only one goes through
@@ -144,6 +145,7 @@ public class BlockPropagationHandler {
             this.cacheMap.put(hashWrapped, true);
         }
 
+        /*
         AionBlock bestBlock = this.blockchain.getBestBlock();
 
         // assumption is that we are on the correct chain
@@ -154,12 +156,17 @@ public class BlockPropagationHandler {
         // this implies we only propagate blocks from our own chain
         if (!bestBlock.isParentOf(block))
             return PropStatus.DROPPED;
+        */
 
         // send
         boolean sent = send(block, nodeId);
 
         // process
+        long t1 = System.currentTimeMillis();
         ImportResult result = this.blockchain.tryToConnect(block);
+        long t2 = System.currentTimeMillis();
+        log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                _displayId, block.getNumber(), block.getTransactionsList().size(), result, t2 - t1);
 
         // process resulting state
         if (sent && result.isSuccessful())

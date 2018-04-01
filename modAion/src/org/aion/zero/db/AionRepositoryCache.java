@@ -20,9 +20,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
  ******************************************************************************/
-
 package org.aion.zero.db;
 
 import org.aion.base.db.IContractDetails;
@@ -47,76 +45,84 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public synchronized IRepositoryCache startTracking() {
+    public IRepositoryCache startTracking() {
         return new AionRepositoryCache(this);
     }
 
     /**
      * @implNote To maintain intended functionality this method does not call
-     *           the parent's {@code flush()} method. The changes are propagated
-     *           to the parent through calling the parent's
-     *           {@code updateBatch()} method.
+     *         the parent's {@code flush()} method. The changes are propagated
+     *         to the parent through calling the parent's
+     *         {@code updateBatch()} method.
      */
     @Override
-    public synchronized void flush() {
-
-        // determine which accounts should get stored
-        HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
-        for (Map.Entry<Address, AccountState> entry : cachedAccounts.entrySet()) {
-            AccountState account = entry.getValue();
-            if (account != null && account.isDirty() && account.isEmpty()) {
-                // ignore contract state for empty accounts at storage
-                cachedDetails.remove(entry.getKey());
-            } else {
-                cleanedCacheAccounts.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        // determine which contracts should get stored
-        for (Map.Entry<Address, IContractDetails<DataWord>> entry : cachedDetails.entrySet()) {
-            IContractDetails<DataWord> ctd = entry.getValue();
-            // TODO: this functionality will be improved with the switch to a
-            // different ContractDetails implementation
-            if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
-                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctd;
-                contractDetailsCache.commit();
-
-                if (contractDetailsCache.origContract == null && repository.hasContractDetails(entry.getKey())) {
-                    // in forked block the contract account might not exist thus
-                    // it is created without
-                    // origin, but on the main chain details can contain data
-                    // which should be merged
-                    // into a single storage trie so both branches with
-                    // different stateRoots are valid
-                    contractDetailsCache.origContract = repository.getContractDetails(entry.getKey());
-                    contractDetailsCache.commit();
+    public void flush() {
+        fullyWriteLock();
+        try {
+            // determine which accounts should get stored
+            HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
+            for (Map.Entry<Address, AccountState> entry : cachedAccounts.entrySet()) {
+                AccountState account = entry.getValue();
+                if (account != null && account.isDirty() && account.isEmpty()) {
+                    // ignore contract state for empty accounts at storage
+                    cachedDetails.remove(entry.getKey());
+                } else {
+                    cleanedCacheAccounts.put(entry.getKey(), entry.getValue());
                 }
             }
+
+            // determine which contracts should get stored
+            for (Map.Entry<Address, IContractDetails<DataWord>> entry : cachedDetails.entrySet()) {
+                IContractDetails<DataWord> ctd = entry.getValue();
+                // TODO: this functionality will be improved with the switch to a
+                // different ContractDetails implementation
+                if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
+                    ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctd;
+                    contractDetailsCache.commit();
+
+                    if (contractDetailsCache.origContract == null && repository.hasContractDetails(entry.getKey())) {
+                        // in forked block the contract account might not exist thus
+                        // it is created without
+                        // origin, but on the main chain details can contain data
+                        // which should be merged
+                        // into a single storage trie so both branches with
+                        // different stateRoots are valid
+                        contractDetailsCache.origContract = repository.getContractDetails(entry.getKey());
+                        contractDetailsCache.commit();
+                    }
+                }
+            }
+
+            repository.updateBatch(cleanedCacheAccounts, cachedDetails);
+
+            cachedAccounts.clear();
+            cachedDetails.clear();
+        } finally {
+            fullyWriteUnlock();
         }
-
-        repository.updateBatch(cleanedCacheAccounts, cachedDetails);
-
-        cachedAccounts.clear();
-        cachedDetails.clear();
     }
 
     @Override
-    public synchronized void updateBatch(Map<Address, AccountState> accounts,
-            Map<Address, IContractDetails<DataWord>> details) {
+    public void updateBatch(Map<Address, AccountState> accounts, Map<Address, IContractDetails<DataWord>> details) {
+        fullyWriteLock();
+        try {
 
-        for (Map.Entry<Address, AccountState> accEntry : accounts.entrySet()) {
-            this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
-        }
-
-        for (Map.Entry<Address, IContractDetails<DataWord>> ctdEntry : details.entrySet()) {
-            ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctdEntry.getValue();
-            if (contractDetailsCache.origContract != null
-                    && !(contractDetailsCache.origContract instanceof AionContractDetailsImpl)) {
-                // TODO: what's the purpose of this implementation?
-                cachedDetails.put(ctdEntry.getKey(), contractDetailsCache.origContract);
-            } else {
-                cachedDetails.put(ctdEntry.getKey(), contractDetailsCache);
+            for (Map.Entry<Address, AccountState> accEntry : accounts.entrySet()) {
+                this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
+
+            for (Map.Entry<Address, IContractDetails<DataWord>> ctdEntry : details.entrySet()) {
+                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctdEntry.getValue();
+                if (contractDetailsCache.origContract != null
+                        && !(contractDetailsCache.origContract instanceof AionContractDetailsImpl)) {
+                    // TODO: what's the purpose of this implementation?
+                    cachedDetails.put(ctdEntry.getKey(), contractDetailsCache.origContract);
+                } else {
+                    cachedDetails.put(ctdEntry.getKey(), contractDetailsCache);
+                }
+            }
+        } finally {
+            fullyWriteUnlock();
         }
     }
 

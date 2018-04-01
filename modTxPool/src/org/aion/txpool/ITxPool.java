@@ -47,7 +47,10 @@ public interface ITxPool<TX extends ITransaction> {
     // return TX if the TX add success, if the pool already has the same nonce tx. return the old tx.
     TX add(TX tx);
 
+    @Deprecated
     List<TX> remove(List<TX> tx);
+
+    List<TX> remove(Map<Address, BigInteger> accNonce);
 
     int size();
 
@@ -56,8 +59,6 @@ public interface ITxPool<TX extends ITransaction> {
     List<TX> getOutdatedList();
 
     long getOutDateTime();
-
-    Map.Entry<BigInteger, BigInteger> bestNonceSet(Address addr);
 
     BigInteger bestNonce(Address addr);
 
@@ -68,4 +69,5 @@ public interface ITxPool<TX extends ITransaction> {
 
     List<TX> snapshotAll();
 
+    TX getPoolTx(Address from, BigInteger txNonce);
 }

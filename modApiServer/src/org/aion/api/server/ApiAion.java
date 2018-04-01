@@ -30,19 +30,27 @@ import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
+import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
+import org.aion.evtmgr.IHandler;
+import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -50,14 +58,19 @@ import org.aion.zero.types.AionTxReceipt;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.aion.base.util.Hex.toHexString;
+import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
+
 public abstract class ApiAion extends Api {
+
     // these variables get accessed by the api worker threads.
     // need to guarantee one of:
     // 1. all access to variables protected by some lock
@@ -81,6 +94,13 @@ public abstract class ApiAion extends Api {
     protected final short FLTRS_MAX = 1024;
     protected final String clientVersion = computeClientVersion();
 
+    private ReentrantLock blockTemplateLock;
+    private AionBlock currentBestBlock;
+    private volatile AionBlock currentTemplate;
+    private byte[] currentBestBlockHash;
+
+    protected EventExecuteService ees;
+
     public ApiAion(final IAionChain _ac) {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
@@ -90,7 +110,37 @@ public abstract class ApiAion extends Api {
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
+
+        blockTemplateLock = new ReentrantLock();
     }
+
+    public final class EpApi implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+
+                IEvent e = ees.take();
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                    onBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()) {
+                    if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXUPDATE0.getValue()) {
+                        pendingTxUpdate((ITxReceipt) e.getFuncArgs().get(0), GETSTATE((int)e.getFuncArgs().get(1)));
+                    } else if (e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue() ){
+                        for (ITransaction tx : (List<ITransaction>) e.getFuncArgs().get(0)) {
+                            pendingTxReceived(tx);
+                        }
+                    }
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
+    protected abstract void onBlock(AionBlockSummary cbs);
+    protected abstract void pendingTxReceived(ITransaction _tx);
+    protected abstract void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state);
 
     // General Level
     public byte getApiVersion() {
@@ -112,14 +162,30 @@ public abstract class ApiAion extends Api {
     }
 
     public AionBlock getBlockTemplate() {
-        // TODO: Change to follow onBlockTemplate event mode defined in internal miner
-        // TODO: Track multiple block templates
-        AionBlock bestPendingState = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
 
-        AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
-        ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
+        blockTemplateLock.lock();
+        try {
+            AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
+            byte[] bestBlockStaticHash = bestBlock.getHeader().getStaticHash();
 
-        return ac.getAionHub().getBlockchain().createNewBlock(bestPendingState, new ArrayList<>(ret), false);
+            if(currentBestBlockHash == null || !Arrays.equals(bestBlockStaticHash, currentBestBlockHash)) {
+
+                // Record new best block on the chain
+                currentBestBlock = bestBlock;
+                currentBestBlockHash = currentBestBlock.getHeader().getStaticHash();
+
+                // Generate new block template
+                AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
+                ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
+
+                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, new ArrayList<>(ret), false);
+            }
+
+        } finally {
+            blockTemplateLock.unlock();
+        }
+
+        return currentTemplate;
     }
 
     public AionBlock getBlockByHash(byte[] hash) {
@@ -598,5 +664,27 @@ public abstract class ApiAion extends Api {
 
     public long getDefaultNrgLimit() {
         return DEFAULT_NRG_LIMIT;
+    }
+
+    protected void startES(String thName) {
+        ees = new EventExecuteService(100_000, thName, Thread.MIN_PRIORITY, LOG);
+        ees.setFilter(setEvtfilter());
+        ees.start(new EpApi());
+    }
+
+    private Set<Integer> setEvtfilter() {
+        Set<Integer> eventSN = new HashSet<>();
+        int sn = IHandler.TYPE.TX0.getValue() << 8;
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue());
+        eventSN.add(sn + EventTx.CALLBACK.PENDINGTXUPDATE0.getValue());
+
+        sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+        eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+
+        return eventSN;
+    }
+
+    protected void shutDownES() {
+        ees.shutdown();
     }
 }

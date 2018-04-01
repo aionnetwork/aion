@@ -44,23 +44,5 @@ import org.aion.mcf.types.AbstractBlockHeader;
  * @param <BH>
  */
 public abstract class BlockHeaderRule<BH extends AbstractBlockHeader> extends AbstractValidRule {
-
-    protected List<BlockHeaderRule<BH>> rules;
-
-    @Override
-    public Class getEntityClass() {
-        return BlockHeaderRule.class;
-    }
-
-    public boolean validate(BH header) {
-        errors.clear();
-
-        for (BlockHeaderRule<BH> rule : rules) {
-            if (!rule.validate(header)) {
-                errors.addAll(rule.getErrors());
-                return false;
-            }
-        }
-        return true;
-    }
+    public abstract boolean validate(BH header, List<RuleError> errors);
 }

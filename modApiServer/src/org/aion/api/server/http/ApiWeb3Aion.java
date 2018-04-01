@@ -30,14 +30,19 @@ import org.aion.api.server.rpc.RpcError;
 import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.*;
+import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
-import org.aion.equihash.Solution;
+import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -72,8 +77,52 @@ import static org.aion.base.util.ByteUtil.toHexString;
 public class ApiWeb3Aion extends ApiAion {
 
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
-    private static HashMap<String, AionBlock> templateMap;
+    private static HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
+    private IEventMgr evtMgr;
+
+    protected void onBlock(AionBlockSummary cbs) {
+        if (isFilterEnabled) {
+            installedFilters.keySet().forEach((k) -> {
+                Fltr f = installedFilters.get(k);
+                if (f.isExpired()) {
+                    LOG.debug("<Filter: expired, key={}>", k);
+                    installedFilters.remove(k);
+                } else if (f.onBlock(cbs)) {
+                    LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), cbs.getBlock().getNumber());
+                }
+            });
+        }
+    }
+
+    protected void pendingTxReceived(ITransaction _tx) {
+        if (isFilterEnabled) {
+            // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
+            // in the onBlock event. eviction done here "just in case ..."
+            installedFilters.keySet().forEach((k) -> {
+                Fltr f = installedFilters.get(k);
+                if (f.isExpired()) {
+                    LOG.debug("<filter expired, key={}>", k);
+                    installedFilters.remove(k);
+                } else if (f.onTransaction(_tx)) {
+                    LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
+                }
+            });
+        }
+    }
+
+    protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+        // commenting this out because of lack support for old web3 client that we are using
+        // TODO: re-enable this when we upgrade our web3 client
+        /*
+        ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
+        if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
+            pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
+        } else {
+            pendingReceipts.remove(txHashW);
+        }
+        */
+    }
 
     // doesn't need to be protected for concurrent access, since only one write in the constructor.
     private boolean isFilterEnabled;
@@ -83,62 +132,8 @@ public class ApiWeb3Aion extends ApiAion {
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
+
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
-
-        if (isFilterEnabled) {
-            // Fill data on block and transaction events into the filters and pending receipts
-            IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
-            if (blkHr != null) {
-                blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                    public void onBlock(final IBlockSummary _bs) {
-                        AionBlockSummary bs = (AionBlockSummary) _bs;
-                        installedFilters.keySet().forEach((k) -> {
-                            Fltr f = installedFilters.get(k);
-                            if (f.isExpired()) {
-                                LOG.debug("<Filter: expired, key={}>", k);
-                                installedFilters.remove(k);
-                            } else if (f.onBlock(bs)) {
-                                LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), bs.getBlock().getNumber());
-                            }
-                        });
-                    }
-                });
-            }
-
-            IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
-            if (txHr != null) {
-                txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-                    // commenting this out because of lack support for old web3 client that we are using
-                    // TODO: re-enable this when we upgrade our web3 client
-                /*
-                public void onPendingTxUpdate(final ITxReceipt _txRcpt, final EventTx.STATE _state, final IBlock _blk) {
-                    ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
-                    if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
-                        pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
-                    } else {
-                        pendingReceipts.remove(txHashW);
-                    }
-                }
-                */
-
-                    public void onPendingTxReceived(ITransaction _tx) {
-                        // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
-                        // in the onBlock event. eviction done here "just in case ..."
-                        installedFilters.keySet().forEach((k) -> {
-                            Fltr f = installedFilters.get(k);
-                            if (f.isExpired()) {
-                                LOG.debug("<filter expired, key={}>", k);
-                                installedFilters.remove(k);
-                            } else if(f.onTransaction(_tx)) {
-                                LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
-                            }
-                        });
-                    }
-                });
-            }
-        }
-
 
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
@@ -150,6 +145,40 @@ public class ApiWeb3Aion extends ApiAion {
             oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
 
         this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
+
+        evtMgr = this.ac.getAionHub().getEventMgr();
+
+        startES("EpWeb3");
+
+        // Fill data on block and transaction events into the filters and pending receipts
+        IHandler blkHr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
+        if (blkHr != null) {
+            blkHr.eventCallback(new EventCallback(ees, LOG));
+        }
+
+        IHandler txHr = evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
+        if (txHr != null) {
+            txHr.eventCallback(new EventCallback(ees, LOG));
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // Mining Pool
+    // --------------------------------------------------------------------
+
+    /* Return a reference to the AIONBlock without converting values to hex
+     * Requied for the mining pool implementation
+     */
+    AionBlock getBlockRaw(int bn) {
+        // long bn = this.parseBnOrId(_bnOrId);
+        AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
+        if (nb == null) {
+            if (LOG.isDebugEnabled())
+                LOG.debug("<get-block-raw bn={} err=not-found>", bn);
+            return null;
+        } else {
+            return nb;
+        }
     }
 
     // --------------------------------------------------------------------
@@ -512,6 +541,7 @@ public class ApiWeb3Aion extends ApiAion {
         // TODO: re-enable this when we upgrade our web3 client
         /*
         // if we can't find the receipt on the mainchain, try looking for it in pending receipts cache
+        /*
         if (r == null) {
             AionTxReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(txHash));
             r = new TxRecpt(pendingReceipt, null, null, null, true);
@@ -749,21 +779,39 @@ public class ApiWeb3Aion extends ApiAion {
 
     public RpcMsg stratum_getblocktemplate() {
         // TODO: Change this to a synchronized map implementation mapping
-        // block hashes to the block. Allow multiple block templates at same height.
-        templateMapLock.writeLock().lock();
 
         AionBlock bestBlock = getBlockTemplate();
+        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getStaticHash());
 
-        // Check first entry in the map; if its height is higher a sync may
-        // have switch branches, abandon current work to start on new branch
-        if (!templateMap.keySet().isEmpty()) {
-            if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
-                // Found a higher block, clear any remaining cached entries and start on new height
-                templateMap.clear();
+        // Read template map; if block already contained chain has not moved forward, simply return the same block.
+        boolean isContained = false;
+        try {
+            templateMapLock.readLock().lock();
+            if(templateMap.containsKey(key)) {
+                isContained = true;
             }
+        } finally {
+            templateMapLock.readLock().unlock();
         }
 
-        templateMap.put(toHexString(bestBlock.getHeader().getStaticHash()), bestBlock);
+        // Template not present in map; add it before returning
+        if(!isContained) {
+
+            try{
+                templateMapLock.writeLock().lock();
+
+                if (!templateMap.keySet().isEmpty()) {
+                    if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
+                        // Found a higher block, clear any remaining cached entries and start on new height
+                        templateMap.clear();
+                    }
+                }
+                templateMap.put(key, bestBlock);
+
+            }finally {
+                templateMapLock.writeLock().unlock();
+            }
+        }
 
         JSONObject coinbaseaux = new JSONObject();
         coinbaseaux.put("flags", "062f503253482f");
@@ -777,8 +825,6 @@ public class ApiWeb3Aion extends ApiAion {
         obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
         obj.put("coinbaseaux", coinbaseaux);
         obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
-
-        templateMapLock.writeLock().unlock();
 
         return new RpcMsg(obj);
     }
@@ -856,25 +902,34 @@ public class ApiWeb3Aion extends ApiAion {
         if (nce != null && soln != null && hdrHash != null && ts != null &&
                 !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
 
-            templateMapLock.writeLock().lock();
+            try {
+                templateMapLock.writeLock().lock();
 
-            AionBlock bestBlock = templateMap.get(hdrHash + "");
+                ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
 
-            boolean successfulSubmit = false;
-            // TODO Clean up this section once decided on event vs direct call
-            if (bestBlock != null) {
-                successfulSubmit = submitBlock(new Solution(bestBlock, hexStringToBytes(nce + ""), hexStringToBytes(soln + ""), Long.parseLong(ts + "", 16)));
+                AionBlock bestBlock = templateMap.get(key);
+                if (bestBlock != null) {
+
+                    bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
+                    bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
+                    bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
+
+                    // Directly submit to chain for new due to delays using event, explore event submission again
+                    ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
+                    if(importResult == ImportResult.IMPORTED_BEST || importResult == ImportResult.IMPORTED_NOT_BEST) {
+                        templateMap.remove(key);
+                        LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                                bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    } else {
+                        LOG.info("Unable to submit block via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
+                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                                bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
+                    }
+                }
+            } finally {
+                templateMapLock.writeLock().unlock();
             }
-
-            if (successfulSubmit) {
-                // Found a solution for this height and successfully submitted, clear all entries for next height
-                LOG.info("block sealed via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
-                        bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                        bestBlock.getHeader().getDifficultyBI().toString(), bestBlock.getTransactionsList().size());
-                templateMap.clear();
-            }
-
-            templateMapLock.writeLock().unlock();
 
             // TODO: Simplified response for now, need to provide better feedback to caller in next update
             obj.put("result", true);
@@ -970,29 +1025,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    private AionBlock getBlockRaw(int bn) {
-        // long bn = this.parseBnOrId(_bnOrId);
-        AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (nb == null) {
-            if (LOG.isDebugEnabled())
-                LOG.debug("<get-block-raw bn={} err=not-found>", bn);
-            return null;
-        } else {
-            return nb;
-        }
-    }
-
-    // TODO Test multiple threads submitting blocks
-    private synchronized boolean submitBlock(Solution solution) {
-
-        AionBlock block = (AionBlock) solution.getBlock();
-
-        // set the nonce and solution
-        block.getHeader().setNonce(solution.getNonce());
-        block.getHeader().setSolution(solution.getSolution());
-        block.getHeader().setTimestamp(solution.getTimeStamp());
-
-        // This can be improved
-        return (AionImpl.inst().addNewMinedBlock(block)).isSuccessful();
+    void shutDown() {
+        shutDownES();
     }
 }

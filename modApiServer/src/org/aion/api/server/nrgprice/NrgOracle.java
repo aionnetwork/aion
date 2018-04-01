@@ -16,6 +16,7 @@ import org.slf4j.Logger;
  *
  * @author ali sharif
  */
+
 public class NrgOracle {
 
     public enum Strategy { SIMPLE, BLK_PRICE }
@@ -32,6 +33,7 @@ public class NrgOracle {
 
     private INrgPriceAdvisor advisor;
     private IAionBlockchain blockchain;
+
 
     public NrgOracle(IAionBlockchain blockchain, long nrgPriceDefault, long nrgPriceMax, Strategy strategy) {
 
@@ -95,14 +97,14 @@ public class NrgOracle {
     public synchronized long getNrgPrice() {
         switch (strategy) {
             case BLK_PRICE:
-                long blkNow = blockchain.getBestBlock().getNumber();
-                if (blkNow - lastBlkProcessed > CACHE_FLUSH_BLKS) {
-                    try {
+                try {
+                    long blkNow = blockchain.getBestBlock().getNumber();
+                    if (blkNow - lastBlkProcessed > CACHE_FLUSH_BLKS) {
                         buildRecommendation();
-                    } catch (Exception e) {
-                        LOG.error("<nrg-oacle - buildRecommendation() threw. returning default nrg recommendation just-in-case");
-                        return nrgPriceDefault;
                     }
+                } catch (Exception e) {
+                    LOG.error("<nrg-oacle - buildRecommendation() threw. returning default nrg recommendation just-in-case");
+                    return nrgPriceDefault;
                 }
                 break;
             default:

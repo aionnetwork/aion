@@ -44,6 +44,12 @@ public class RepositoryConfig implements IRepositoryConfig {
     private String max_heap_cache_size;
     private boolean enable_heap_cache_stats;
 
+    private final int block_size;
+    private final int max_fd_alloc_size;
+
+    private final int write_buffer_size;
+    private final int cache_size;
+
     @Override
     public String[] getVendorList() {
         return vendorList;
@@ -97,20 +103,43 @@ public class RepositoryConfig implements IRepositoryConfig {
     @Override
     public boolean isHeapCacheStatsEnabled() {
         return enable_heap_cache_stats;
+    }
 
+    @Override
+    public int getMaxFdAllocSize() {
+        return this.max_fd_alloc_size;
+    }
+
+    @Override
+    public int getBlockSize() {
+        return this.block_size;
+    }
+
+    @Override
+    public int getWriteBufferSize() {
+        return this.write_buffer_size;
+    }
+
+    @Override
+    public int getCacheSize() {
+        return this.cache_size;
     }
 
     public RepositoryConfig(final String[] vendorList, //
-            final String activeVendor, //
-            final String dbPath, //
-            final int prune, //
-            final DetailsProvider detailsProvider, //
-            final boolean enable_auto_commit, //
-            final boolean enable_db_cache, //
-            final boolean enable_db_compression, //
-            final boolean enable_heap_cache, //
-            final String max_heap_cache_size, //
-            final boolean enable_heap_cache_stats) { //
+                            final String activeVendor, //
+                            final String dbPath, //
+                            final int prune, //
+                            final DetailsProvider detailsProvider, //
+                            final boolean enable_auto_commit, //
+                            final boolean enable_db_cache, //
+                            final boolean enable_db_compression, //
+                            final boolean enable_heap_cache, //
+                            final String max_heap_cache_size, //
+                            final boolean enable_heap_cache_stats,
+                            final int max_fd_alloc_size,
+                            final int block_size,
+                            final int write_buffer_size,
+                            final int cache_size) { //
 
         this.vendorList = vendorList;
         this.activeVendor = activeVendor;
@@ -127,6 +156,12 @@ public class RepositoryConfig implements IRepositoryConfig {
         this.enable_heap_cache = enable_heap_cache;
         this.max_heap_cache_size = max_heap_cache_size;
         this.enable_heap_cache_stats = enable_heap_cache_stats;
+
+        this.max_fd_alloc_size = max_fd_alloc_size;
+        this.block_size = block_size;
+
+        this.write_buffer_size = write_buffer_size;
+        this.cache_size = cache_size;
     }
 
 }

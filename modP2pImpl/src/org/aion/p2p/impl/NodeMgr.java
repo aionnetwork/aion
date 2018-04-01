@@ -185,6 +185,10 @@ public class NodeMgr implements INodeMgr {
         this.seedIps.add(_ip);
     }
 
+    public boolean isSeedIp(String _ip) {
+        return this.seedIps.contains(_ip);
+    }
+
     void inboundNodeAdd(final Node _n) {
         updateMetric(_n);
         inboundNodes.put(_n.getChannel().hashCode(), _n);
@@ -407,6 +411,18 @@ public class NodeMgr implements INodeMgr {
                     System.out.println("<error on-close-stream-writer>");
                 }
             }
+        }
+    }
+
+    /**
+     * Remove an active node if exists.
+     *
+     * @param nodeIdHash
+     */
+    public void removeActive(int nodeIdHash, P2pMgr p2pMgr) {
+        Node node = activeNodes.remove(nodeIdHash);
+        if (node != null) {
+            p2pMgr.closeSocket(node.getChannel());
         }
     }
 }

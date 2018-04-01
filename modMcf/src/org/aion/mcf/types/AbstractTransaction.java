@@ -32,6 +32,8 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
+import java.math.BigInteger;
+
 public abstract class AbstractTransaction implements ITransaction {
 
     private static final int nrgDigits = 64;
@@ -119,4 +121,8 @@ public abstract class AbstractTransaction implements ITransaction {
     public abstract void setNrgConsume(long consume);
 
     public abstract byte getType();
+
+    public abstract BigInteger getNonceBI();
+
+    public abstract BigInteger getTimeStampBI();
 }

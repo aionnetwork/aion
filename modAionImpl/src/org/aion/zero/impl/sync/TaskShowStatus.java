@@ -80,15 +80,15 @@ final class TaskShowStatus implements Runnable {
             AionBlock selfBest = this.chain.getBestBlock();
             String selfTd = this.chain.getTotalDifficulty().toString(10);
 
-            String status = "[sync-status avg-import=" + this.statics.getAvgBlocksPerSec() //
-                    + "b/s" //
+            String status = "[sync-status avg-import=" + String.format("%.2f", this.statics.getAvgBlocksPerSec()) //
+                    + " b/s" //
                     + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10) //
                     + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus.getTargetBestBlockNumber() //
                     + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) //
                     + "/" + this.networkStatus.getTargetBestBlockHash() + "]";
 
             // print to std output
-            System.out.print(status);
+            System.out.println(status);
 
             // print to report file
             if (printReport) {

@@ -34,31 +34,12 @@
  ******************************************************************************/
 package org.aion.mcf.blockchain.valid;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import org.slf4j.Logger;
 
-/**
- * abstract validatation rule.
- *
- */
 public abstract class AbstractValidRule implements IValidRule {
 
-    protected List<String> errors = new LinkedList<>();
-
-    @Override
-    public List<String> getErrors() {
-        return errors;
+    public void addError(String error, List<RuleError> errors) {
+        errors.add(new RuleError(this.getClass(), error));
     }
-
-    public void logErrors(Logger logger) {
-        if (logger.isErrorEnabled()) {
-            for (String msg : errors) {
-                logger.warn("{} invalid: {}", getEntityClass().getSimpleName(), msg);
-            }
-        }
-    }
-
-    abstract public Class<?> getEntityClass();
 }

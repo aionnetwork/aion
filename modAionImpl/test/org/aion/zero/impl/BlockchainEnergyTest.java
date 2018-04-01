@@ -100,7 +100,7 @@ public class BlockchainEnergyTest {
 
         // proceed with connecting the next block, should observe an increase in energyLimit
         AionBlock secondBlock = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
-        assertThat(secondBlock.getNrgLimit()).isGreaterThan(block.getNrgLimit());
+        assertThat(secondBlock.getNrgLimit()).isEqualTo(block.getNrgLimit());
         System.out.println(String.format("%d > %d", secondBlock.getNrgLimit(), block.getNrgLimit()));
     }
 }

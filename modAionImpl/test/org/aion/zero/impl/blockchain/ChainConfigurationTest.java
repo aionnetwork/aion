@@ -37,12 +37,13 @@ package org.aion.zero.impl.blockchain;
 import org.aion.equihash.EquiUtils;
 import org.aion.equihash.Equihash;
 import org.aion.mcf.valid.BlockHeaderValidator;
-import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 
@@ -52,6 +53,8 @@ import static org.mockito.Mockito.when;
 
 
 public class ChainConfigurationTest {
+
+    private static final Logger log = LoggerFactory.getLogger(ChainConfigurationTest.class);
 
     @Mock
     A0BlockHeader header;
@@ -91,16 +94,7 @@ public class ChainConfigurationTest {
         
         ChainConfiguration chainConfig = new ChainConfiguration();
         BlockHeaderValidator<A0BlockHeader> blockHeaderValidator = chainConfig.createBlockHeaderValidator();
-        blockHeaderValidator.validate(header);
-    }
-
-    @Test
-    public void testIntegrationEnergyLimitCalc() {
-        when(header.getEnergyLimit()).thenReturn(10000000L);
-
-        ChainConfiguration config = new ChainConfiguration();
-        long out = config.calcEnergyLimit(header);
-        assertThat(out).isEqualTo(10000000L);
+        blockHeaderValidator.validate(header, log);
     }
 
     // assuming 100000 block ramp
