@@ -115,6 +115,10 @@ public class RpcProcessor {
     }
 
     private String composeRpcResponse(String _respBody, String _reqHeader) {
+        return composeRpcResponse(_respBody, _reqHeader, false);
+    }
+
+    private String composeRpcResponse(String _respBody, String _reqHeader, boolean forceCors) {
         String respBody;
         if (_respBody == null) {
             respBody = new RpcMsg(null, RpcError.INTERNAL_ERROR).toString();
@@ -126,8 +130,11 @@ public class RpcProcessor {
         String respHeader = POST_TEMPLATE;
         respHeader += CRLF + "Content-Length: " + bodyLength;
 
+        if (forceCors) {
+            respHeader += CRLF + "Access-Control-Allow-Origin: *";
+        }
         // bother with parsing the origin header, only if cors is enabled
-        if (_reqHeader != null && corsEnabled) {
+        else if (_reqHeader != null && corsEnabled) {
             String origin = parseOriginHeader(_reqHeader);
             if (isOriginAllowed(origin)) {
                 respHeader += CRLF + "Access-Control-Allow-Origin: " + origin;
@@ -284,7 +291,7 @@ public class RpcProcessor {
                 if (readBytes.length > 0) {
                     String msg = new String(readBytes, "UTF-8").trim();
 
-                    // cors preflight or options query
+                    // cors-preflight or options query
                     if (msg.startsWith("OPTIONS")) {
                         response = handleOptions(sc, msg);
                     } else {
@@ -318,8 +325,15 @@ public class RpcProcessor {
                     }
                 }
             } catch (Exception e) {
-                LOG.debug("<rpc-worker - failed to process incoming request. closing socketchannel. msg: {}>", new String(readBytes).trim(), e);
+                LOG.debug("<rpc-worker - failed to process incoming request>", e);
+                try {
+                    data = ByteBuffer.wrap(composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString(), null, true).getBytes(CHARSET));
+                } catch (Exception f) {
+                    LOG.debug("<rpc-worker - failed to convert response to bytearray [18]>", f);
+                }
             } finally {
+                // in any case, respond with empty byte array, even if it's empty, since most http client implementations
+                // treat empty responses as 5xx errors anyway
                 server.send(sc, data);
             }
         }

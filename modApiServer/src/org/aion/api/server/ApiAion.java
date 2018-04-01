@@ -585,7 +585,10 @@ public abstract class ApiAion extends Api {
     }
 
     public long getRecommendedNrgPrice() {
-        return this.nrgOracle.getNrgPrice();
+        if (this.nrgOracle != null)
+            return this.nrgOracle.getNrgPrice();
+        else
+            return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
     }
 
     // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design

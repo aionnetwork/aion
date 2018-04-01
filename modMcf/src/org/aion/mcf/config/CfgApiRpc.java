@@ -48,6 +48,7 @@ public final class CfgApiRpc {
         this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal"));
         this.allowedOrigins = new ArrayList<>(Arrays.asList("false"));
         this.maxthread = 1;
+        this.filtersEnabled = true;
     }
 
     private boolean active;
@@ -56,6 +57,7 @@ public final class CfgApiRpc {
     private List<String> enabled;
     private List<String> allowedOrigins;
     private int maxthread;
+    private boolean filtersEnabled;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         // get the attributes
@@ -83,7 +85,7 @@ public final class CfgApiRpc {
                                 );
                             }
                             break;
-                        case "enabled":
+                        case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
                             this.enabled = new ArrayList<>(
                                     Stream.of(cs.split(","))
@@ -98,9 +100,17 @@ public final class CfgApiRpc {
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            // filter out large thread counts
+                            // filter out negative thread counts
                             if (t > 0)
                                 this.maxthread = t;
+                            break;
+                        case "filters-enabled":
+                            try {
+                                filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
+                                e.printStackTrace();
+                            }
                             break;
                         default:
                             Cfg.skipElement(sr);
@@ -134,7 +144,6 @@ public final class CfgApiRpc {
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeComment("comma separated list, domains from which to accept cross origin requests (browser enforced)");
-
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("corsdomain");
             xmlWriter.writeCharacters(String.join(",", this.getAllowedOrigins()));
@@ -142,18 +151,23 @@ public final class CfgApiRpc {
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeComment("comma-separated list, APIs available: web3,net,debug,personal,eth,stratum");
-
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("enabled");
+            xmlWriter.writeStartElement("apis-enabled");
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeComment("size of thread pool allocated for rpc requests");
-
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("threads");
             xmlWriter.writeCharacters(this.getMaxthread() + "");
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("enable web3 filters. some web3 clients depend on this and wont work as expected if turned off");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("filters-enabled");
+            xmlWriter.writeCharacters(String.valueOf(this.filtersEnabled));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
@@ -186,4 +200,7 @@ public final class CfgApiRpc {
         return enabled;
     }
     public int getMaxthread() { return maxthread; }
+    public boolean isFiltersEnabled() {
+        return filtersEnabled;
+    }
 }

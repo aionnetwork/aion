@@ -75,38 +75,42 @@ public class ApiWeb3Aion extends ApiAion {
     private static HashMap<String, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
 
+    // doesn't need to be protected for concurrent access, since only one write in the constructor.
+    private boolean isFilterEnabled;
+
     public ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
+        isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
 
+        if (isFilterEnabled) {
+            // Fill data on block and transaction events into the filters and pending receipts
+            IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
+            if (blkHr != null) {
+                blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
+                    public void onBlock(final IBlockSummary _bs) {
+                        AionBlockSummary bs = (AionBlockSummary) _bs;
+                        installedFilters.keySet().forEach((k) -> {
+                            Fltr f = installedFilters.get(k);
+                            if (f.isExpired()) {
+                                LOG.debug("<Filter: expired, key={}>", k);
+                                installedFilters.remove(k);
+                            } else if (f.onBlock(bs)) {
+                                LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), bs.getBlock().getNumber());
+                            }
+                        });
+                    }
+                });
+            }
 
-        // Fill data on block and transaction events into the filters and pending receipts
-        IHandler blkHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
-        if (blkHr != null) {
-            blkHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                public void onBlock(final IBlockSummary _bs) {
-                    AionBlockSummary bs = (AionBlockSummary) _bs;
-                    installedFilters.keySet().forEach((k) -> {
-                        Fltr f = installedFilters.get(k);
-                        if (f.isExpired()) {
-                            LOG.debug("<Filter: expired, key={}>", k);
-                            installedFilters.remove(k);
-                        } else if (f.onBlock(bs)) {
-                            LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), bs.getBlock().getNumber());
-                        }
-                    });
-                }
-            });
-        }
+            IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
+            if (txHr != null) {
+                txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
 
-        IHandler txHr = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
-        if (txHr != null) {
-            txHr.eventCallback(new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-
-                // commenting this out because of lack support for old web3 client that we are using
-                // TODO: re-enable this when we upgrade our web3 client
+                    // commenting this out because of lack support for old web3 client that we are using
+                    // TODO: re-enable this when we upgrade our web3 client
                 /*
                 public void onPendingTxUpdate(final ITxReceipt _txRcpt, final EventTx.STATE _state, final IBlock _blk) {
                     ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
@@ -118,28 +122,34 @@ public class ApiWeb3Aion extends ApiAion {
                 }
                 */
 
-                public void onPendingTxReceived(ITransaction _tx) {
-                    // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
-                    // in the onBlock event. eviction done here "just in case ..."
-                    installedFilters.keySet().forEach((k) -> {
-                        Fltr f = installedFilters.get(k);
-                        if (f.isExpired()) {
-                            LOG.debug("<filter expired, key={}>", k);
-                            installedFilters.remove(k);
-                        } else if(f.onTransaction(_tx)) {
-                            LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
-                        }
-                    });
-                }
-            });
+                    public void onPendingTxReceived(ITransaction _tx) {
+                        // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
+                        // in the onBlock event. eviction done here "just in case ..."
+                        installedFilters.keySet().forEach((k) -> {
+                            Fltr f = installedFilters.get(k);
+                            if (f.isExpired()) {
+                                LOG.debug("<filter expired, key={}>", k);
+                                installedFilters.remove(k);
+                            } else if(f.onTransaction(_tx)) {
+                                LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
+                            }
+                        });
+                    }
+                });
+            }
         }
+
 
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
-        IHandler hldr = _ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
-        this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
+
+        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
+            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+
+        this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
     }
 
     // --------------------------------------------------------------------
@@ -552,11 +562,7 @@ public class ApiWeb3Aion extends ApiAion {
      * onus on the user to flush the filter of the historical data, before depending on it for up-to-date values.
      * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
      */
-    public RpcMsg eth_newFilter(JSONArray _params) {
-        JSONObject _filterObj = _params.getJSONObject(0);
-
-        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
-
+    private FltrLg createFilter(ArgFltr rf) {
         FltrLg filter = new FltrLg();
         filter.setTopics(rf.topics);
         filter.setContractAddress(rf.address);
@@ -566,7 +572,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         if (bnFrom == null || bnTo == null || bnFrom == -1 || bnTo == -1) {
             LOG.debug("jsonrpc - eth_newFilter(): from, to block parse failed");
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
+            return null;
         }
 
         final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(bnFrom);
@@ -588,6 +594,22 @@ public class ApiWeb3Aion extends ApiAion {
             }
         }
 
+        return null;
+    }
+
+    public RpcMsg eth_newFilter(JSONArray _params) {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
+        JSONObject _filterObj = _params.getJSONObject(0);
+
+        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
+
+        FltrLg filter = createFilter(rf);
+        if (filter == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
+
         // "install" the filter after populating historical data;
         // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
         long id = fltrIndex.getAndIncrement();
@@ -597,32 +619,36 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public RpcMsg eth_newBlockFilter() {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrBlk());
         return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
     public RpcMsg eth_newPendingTransactionFilter() {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrTx());
         return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
     public RpcMsg eth_uninstallFilter(JSONArray _params) {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
         String _id = _params.get(0) + "";
 
         return new RpcMsg(installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue()) != null);
     }
 
-    public RpcMsg eth_getFilterChanges(JSONArray _params) {
-        String _id = _params.get(0) + "";
-
-        long id = TypeConverter.StringHexToBigInteger(_id).longValue();
-        Fltr filter = installedFilters.get(id);
-
-        if (filter == null)
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Filter not found.");
-
+    private JSONArray buildFilterResponse(Fltr filter) {
         Object[] events = filter.poll();
         JSONArray response = new JSONArray();
         for (Object event : events) {
@@ -631,20 +657,33 @@ public class ApiWeb3Aion extends ApiAion {
                 response.put(((Evt) event).toJSON());
             }
         }
+        return response;
+    }
 
-        return new RpcMsg(response);
+    public RpcMsg eth_getFilterChanges(JSONArray _params) {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
+        String _id = _params.get(0) + "";
+
+        long id = TypeConverter.StringHexToBigInteger(_id).longValue();
+        Fltr filter = installedFilters.get(id);
+
+        if (filter == null)
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Filter not found.");
+
+        return new RpcMsg(buildFilterResponse(filter));
     }
 
     public RpcMsg eth_getLogs(JSONArray _params) {
-        RpcMsg filterMsg = eth_newFilter(_params);
-        if (filterMsg.getError() != null || filterMsg.getResult() == null)
-            return filterMsg;
+        JSONObject _filterObj = _params.getJSONObject(0);
+        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
+        FltrLg filter = createFilter(rf);
+        if (filter == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
 
-        String id = filterMsg.getResult() + "";
-        JSONArray idArg = new JSONArray().put(id);
-        RpcMsg response = eth_getFilterChanges(idArg);
-        eth_uninstallFilter(idArg);
-        return response;
+        return new RpcMsg(buildFilterResponse(filter));
     }
 
     /* -------------------------------------------------------------------------

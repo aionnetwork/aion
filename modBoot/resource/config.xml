@@ -7,15 +7,21 @@
 			<!--comma separated list, domains from which to accept cross origin requests (browser enforced)-->
 			<corsdomain>false</corsdomain>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
-			<enabled> web3,eth,personal</enabled>
+			<apis-enabled> web3,eth,personal</apis-enabled>
 			<!--size of thread pool allocated for rpc requests-->
 			<threads>1</threads>
+			<!--enable web3 filters. some web3 clients depend on this and wont work as expected if turned off-->
+			<filters-enabled>true</filters-enabled>
 		</rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
-		<nrg>
+		<nrg-recommendation>
+			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
 			<default>1E9</default>
+			<!--max NRG price recommended by oracle-->
 			<max>100E9</max>
-		</nrg>
+			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
+			<enable-oracle>false</enable-oracle>
+		</nrg-recommendation>
 	</api>
 	<net>
 		<id>0</id>

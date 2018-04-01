@@ -52,6 +52,10 @@ import java.util.*;
 public class HttpServer implements Runnable {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
+    // maximum number of times the main thread can exception out without dying
+    // rationale: if there is an infinite loop, this will
+    public static final int THREAD_ACCEPTABLE_FAIL_COUNT = 1000;
+
     private Selector selector;
     private ServerSocketChannel tcpServer;
 
@@ -206,7 +210,7 @@ public class HttpServer implements Runnable {
     public void run() {
         int failcount = 0;
         while (!Thread.currentThread().isInterrupted()) {
-            if (failcount > 10) {
+            if (failcount > THREAD_ACCEPTABLE_FAIL_COUNT) {
                 LOG.info("<rpc-server - SERVER DIED due to unhandlable exception.");
                 break;
             }

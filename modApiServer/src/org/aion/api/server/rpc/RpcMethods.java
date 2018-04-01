@@ -93,7 +93,7 @@ public class RpcMethods {
      * debug
      */
     public static final Map<String, RpcMethod> debug = Map.ofEntries(
-            Map.entry("debug_getBlocksByNumber", (params) -> api.web3_clientVersion())
+            Map.entry("debug_getBlocksByNumber", (params) -> api.debug_getBlocksByNumber(params))
     );
 
     /**

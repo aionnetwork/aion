@@ -136,6 +136,8 @@ public class NrgBlockPriceAveraging extends NrgPriceAdvisor<AionBlock, AionTrans
     @Override
     @SuppressWarnings("Duplicates")
     public void processBlock(AionBlock blk) {
+        if (blk == null) return;
+
         Long blkPrice = getBlkPrice(blk);
 
         if (blkPrice != null) {

@@ -108,6 +108,8 @@ public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
     @Override
     @SuppressWarnings("Duplicates")
     public void processBlock(AionBlock blk) {
+        if (blk == null) return;
+
         Long blkPrice = getBlkPrice(blk);
 
         if (blkPrice != null) {
