@@ -31,7 +31,7 @@ public class MainIOLoop implements Runnable {
 
     private volatile boolean needsToSelectAgain = false;
 
-    private static final Logger log = LoggerFactory.getLogger("NET");
+    //private static final Logger log = LoggerFactory.getLogger("NET");
 
     // event-bus related
 
@@ -270,7 +270,6 @@ public class MainIOLoop implements Runnable {
         this.eventBus.addEvent(() -> {
             try {
                 if (!channel.isOpen()) {
-                    System.out.println("could not write, channel was closed");
                     return;
                 }
 
@@ -278,7 +277,7 @@ public class MainIOLoop implements Runnable {
                     channel.write(buffer);
                 }
             } catch (IOException e) {
-                log.error("Failed to write to buffer", e);
+                //log.error("Failed to write to buffer", e);
             }
         });
         wakeup(isEventLoopThread());
@@ -298,7 +297,7 @@ public class MainIOLoop implements Runnable {
                 try {
                     channel.close();
                 } catch (IOException e) {
-                    log.error("failed to close channel", e);
+                    //log.error("failed to close channel", e);
                 }
             }
         });
