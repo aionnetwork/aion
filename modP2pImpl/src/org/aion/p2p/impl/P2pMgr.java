@@ -861,14 +861,19 @@ public final class  P2pMgr implements IP2pMgr {
     @Override
     public void send(int _nodeIdHashcode, final Msg _msg) {
         Node node = this.nodeMgr.getActiveNode(_nodeIdHashcode);
-        if (node != null) {
+        if (node != null && node.getChannel() != null) {
             SelectionKey sk = node.getChannel().keyFor(selector);
 
             if (sk != null) {
                 Object attachment = sk.attachment();
                 if (attachment != null)
-                    workers.submit(
-                            new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), _msg, (ChannelBuffer) attachment, this));
+                    try {
+                        workers.submit(new TaskWrite(workers, showLog, node.getIdShort(), node.getChannel(), _msg, (ChannelBuffer) attachment, this));
+                    } catch (RejectedExecutionException e) {
+                        if (showLog) {
+                            System.out.println("<p2p send-RejectedExecutionException>" + e.toString());
+                        }
+                    }
             }
         }
     }
