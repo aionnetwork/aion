@@ -58,6 +58,7 @@ public final class CfgAion extends Cfg {
         this.db = new CfgDb();
         this.log = new CfgLog();
         this.tx = new CfgTx();
+        this.reports = new CfgReports();
     }
 
     private static class CfgAionHolder {
@@ -188,6 +189,9 @@ public final class CfgAion extends Cfg {
                     case "tx":
                         this.tx.fromXML(sr);
                         break;
+                    case "reports":
+                        this.reports.fromXML(sr);
+                        break;
                     default:
                         skipElement(sr);
                         break;
@@ -289,6 +293,7 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getDb().toXML());
             sw.writeCharacters(this.getLog().toXML());
             sw.writeCharacters(this.getTx().toXML());
+            sw.writeCharacters(this.getReports().toXML());
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();

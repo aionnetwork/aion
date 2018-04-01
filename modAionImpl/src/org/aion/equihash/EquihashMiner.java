@@ -24,11 +24,12 @@
 
 package org.aion.equihash;
 
-import org.aion.base.type.*;
+import org.aion.base.util.MAF;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
 import org.aion.mcf.mine.AbstractMineRunner;
@@ -74,10 +75,32 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     // Status scheduler
     private ScheduledThreadPoolExecutor scheduledWorkers;
 
+    // keep a moving average filter for the last 64 STATUS_INTERVALs
+    private MAF hashrateMAF;
+
+    private EventExecuteService ees;
+
     /**
      * Miner threads
      */
     private List<Thread> threads = new ArrayList<>();
+
+    private final class EpMiner implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+                if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
+                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
+
 
     /**
      * Singleton instance
@@ -104,14 +127,29 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         this.n = CfgAion.getN();
         this.k = CfgAion.getK();
         this.miner = new Equihash(n, k);
+
         scheduledWorkers = new ScheduledThreadPoolExecutor(1);
+        hashrateMAF = new MAF(64);
 
         setCpuThreads(cfg.getConsensus().getCpuMineThreads());
 
+        ees = new EventExecuteService(1000, "EpMiner", Thread.NORM_PRIORITY, LOG);
+        ees.setFilter(setEvtFilter());
+
         this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
         registerMinerEvents();
-
         registerCallback();
+
+        ees.start(new EpMiner());
+    }
+
+    private Set<Integer> setEvtFilter() {
+        Set<Integer> eventSN = new HashSet<>();
+
+        int sn = IHandler.TYPE.CONSENSUS.getValue() << 8;
+        eventSN.add(sn + EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue());
+
+        return eventSN;
     }
 
     @Override
@@ -160,6 +198,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                     LOG.error("Failed to stop sealer thread");
                 }
             }
+
         }
     }
 
@@ -242,12 +281,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             if (this.evtMgr != null) {
                 IHandler hdrCons = this.evtMgr.getHandler(4);
                 if (hdrCons != null) {
-                    hdrCons.eventCallback(
-                            new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                                public void onBlockTemplate(IBlock block) {
-                                    EquihashMiner.this.onBlockTemplate((AionBlock) block);
-                                }
-                            });
+                    hdrCons.eventCallback(new EventCallback(ees, LOG));
                 }
             } else {
                 LOG.error("event manager is null");
@@ -279,13 +313,22 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
-    private class ShowMiningStatusTask implements Runnable {
+    @Override
+    public double getHashrate() {
+        return hashrateMAF.getAverage();
+    }
 
+    private class ShowMiningStatusTask implements Runnable {
         @Override
         public void run() {
             Thread.currentThread().setName("miner_status");
-            LOG.info("Aion internal miner generating {} solutions per second",
-                    (double) miner.totalSolGenerated.getAndSet(0) / STATUS_INTERVAL);
+            double hashrate = (double) miner.totalSolGenerated.getAndSet(0) / STATUS_INTERVAL;
+            hashrateMAF.add(hashrate);
+            LOG.info("Aion internal miner generating {} solutions per second", hashrate);
         }
+    }
+
+    public void shutdown() {
+        ees.shutdown();
     }
 }

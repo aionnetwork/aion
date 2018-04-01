@@ -52,27 +52,6 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     private final Compiler solc = Compiler.getInstance();
     protected final AionPendingStateImpl pendingState = AionPendingStateImpl.inst();
 
-    public long parseBnOrId(String _bnOrId) {
-        if ("earliest".equalsIgnoreCase(_bnOrId)) {
-            return 0;
-        } else if ("latest".equalsIgnoreCase(_bnOrId)) {
-            return getBestBlock().getNumber();
-        } else if ("pending".equalsIgnoreCase(_bnOrId)) {
-            return -1;
-        } else {
-            try {
-                if (_bnOrId.startsWith("0x")) {
-                    return TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
-                } else {
-                    return Long.parseLong(_bnOrId);
-                }
-            } catch (NumberFormatException e) {
-                LOG.debug("err on parsing block number #" + _bnOrId);
-                return 0;
-            }
-        }
-    }
-
     public abstract String getCoinbase();
 
     public abstract byte getApiVersion();

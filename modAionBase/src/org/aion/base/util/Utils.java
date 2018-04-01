@@ -42,6 +42,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
@@ -237,5 +239,86 @@ public class Utils {
             }
             return ret.toString();
         }
+    }
+
+
+    private static final Pattern matchPattern = Pattern.compile("^([0-9]+)([a-zA-Z]+)$");
+    public static final long KILO_BYTE = 1024;
+    public static final long MEGA_BYTE = 1048576;
+    public static final long GIGA_BYTE = 1073741824;
+    /**
+     * <p>
+     * Matches file sizes based on fileSize string, in the format:
+     * [numericalValue][sizeDescriptor]
+     * </p>
+     *
+     * <p>
+     * Examples of acceptable formats:
+     *
+     * <li>
+     *   <ul>10b</ul>
+     *   <ul>10B</ul>
+     *   <ul>10K</ul>
+     *   <ul>10KB</ul>
+     *   <ul>10kB</ul>
+     *   <ul>10M</ul>
+     *   <ul>10mB</ul>
+     *   <ul>10MB</ul>
+     *   <ul>10G</ul>
+     *   <ul>10gB</ul>
+     *   <ul>10GB</ul>
+     * </li>
+     * </p>
+     *
+     * <p>
+     * Commas are <b>not</b> accepted by the parser, and are considered invalid.
+     *
+     * Note: Anything beyond {@code gigaByte (GB, G, gB)} is not considered valid, and will
+     * be treated as a parse exception.
+     *
+     * Note: this function assumes the binary representation of magnitudes,
+     * therefore 1kB (kiloByte) is not {@code 1000 bytes} but rather {@code 1024 bytes}.
+     * </p>
+     *
+     * @param fileSize file size string
+     * @return {@code Optional.of(fileSizeInt)} if we were able to successfully decode
+     * the filesize string, otherwise outputs {@code Optional.empty()} indicating that
+     * we were unable to decode the file size string, this usually refers to some
+     * sort of syntactic error made by the user.
+     */
+    public static Optional<Long> parseSize(String fileSize) {
+        Matcher m = matchPattern.matcher(fileSize);
+        // if anything does not match
+        if (!m.find()) {
+            return Optional.empty();
+        }
+
+        String numerical = m.group(1);
+        String sizeSuffix = m.group(2);
+
+        long size = Integer.parseInt(numerical);
+        switch (sizeSuffix) {
+            case "B":
+                break;
+            case "K":
+            case "kB":
+            case "KB":
+                // process kiloByte (1024 * byte) here
+                size = size * KILO_BYTE;
+                break;
+            case "M":
+            case "mB":
+            case "MB":
+                size = size * MEGA_BYTE;
+                break;
+            case "G":
+            case "gB":
+            case "GB":
+                size = size * GIGA_BYTE;
+                break;
+            default:
+                return Optional.empty();
+        }
+        return Optional.of(size);
     }
 }

@@ -33,6 +33,7 @@ import java.util.Objects;
 /**
  * @author chris
  */
+// NOTE: only used by java api
 public class FltrCt extends Fltr {
 
     private byte[] contractAddress;
@@ -47,9 +48,8 @@ public class FltrCt extends Fltr {
 
     private long expireTime;
 
-    public FltrCt(byte[] contractAddress, String toBlock, String fromBlock, List<String> topics, List<byte[]> addrs,
-            long time) {
-        super(Fltr.Type.EVENT);
+    public FltrCt(byte[] contractAddress, String toBlock, String fromBlock, List<String> topics, List<byte[]> addrs, long time) {
+        super(Type.EVENT);
         this.contractAddress = contractAddress;
         this.toBlock = toBlock;
         this.setFromBlock(fromBlock);

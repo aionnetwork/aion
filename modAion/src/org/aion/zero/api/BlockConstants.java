@@ -43,19 +43,23 @@ public class BlockConstants implements IBlockConstants {
      * The lower bound of difficulty, this value is currently set to 32 to
      * accomodate for single node testing.
      */
-    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(16);
+    private static final long MINIMUM_DIFFICULTY_LONG = 16;
+    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(MINIMUM_DIFFICULTY_LONG);
 
     /**
      * Divisor for the maximum increase or decrease in energyLimit from one
      * block to the next.
      */
-    private static final BigInteger ENERGY_LIMIT_DIVISOR = BigInteger.valueOf(1024);
-    private static final BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(2048);
+    private static final long ENERGY_LIMIT_DIVISOR_LONG = 1024;
+    private static final long DIFFICULTY_BOUND_DIVISOR_LONG = 2048;
+    private static final BigInteger ENERGY_LIMIT_DIVISOR = BigInteger.valueOf(ENERGY_LIMIT_DIVISOR_LONG);
+    private static final BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(DIFFICULTY_BOUND_DIVISOR_LONG);
 
     /**
      * The lowest possible value of energy, cannot be lower than this bound
      */
-    private static final BigInteger ENERGY_LOWER_BOUND = BigInteger.valueOf(5000);
+    private static final long ENERGY_LOWER_BOUND_LONG = 5000;
+    private static final BigInteger ENERGY_LOWER_BOUND = BigInteger.valueOf(ENERGY_LOWER_BOUND_LONG);
 
     public static int DURATION_LIMIT = 8;
 
@@ -106,8 +110,18 @@ public class BlockConstants implements IBlockConstants {
     }
 
     @Override
+    public long getEnergyDivisorLimitLong() {
+        return ENERGY_LIMIT_DIVISOR_LONG;
+    }
+
+    @Override
     public BigInteger getDifficultyBoundDivisor() {
         return DIFFICULTY_BOUND_DIVISOR;
+    }
+
+    @Override
+    public long getDifficultyBoundDivisorLong() {
+        return DIFFICULTY_BOUND_DIVISOR_LONG;
     }
 
     @Override
@@ -166,6 +180,10 @@ public class BlockConstants implements IBlockConstants {
      * The lower bound for energy calculations, energy should not go below this
      * value
      */
+    public long getEnergyLowerBoundLong() {
+        return ENERGY_LOWER_BOUND_LONG;
+    }
+
     public BigInteger getEnergyLowerBound() {
         return ENERGY_LOWER_BOUND;
     }

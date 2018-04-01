@@ -27,6 +27,7 @@ package org.aion;
 
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.util.ServiceLoader;
 
@@ -86,12 +87,13 @@ public class Aion {
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         System.out.println(                
-                        "                     ______                  \n" +
-                        "      .'.       |  .~      ~.  |..          |\n" +
-                        "    .'   `.     | |          | |  ``..      |\n" +
-                        "  .''''''''`.   | |          | |      ``..  |\n" +
-                        ".'           `. |  `.______.'  |          ``|\n\n" +                          
-                        "                     NETWORK\n\n"
+                        "                     _____                  \n" +
+                        "      .'.       |  .~     ~.  |..          |\n" +
+                        "    .'   `.     | |         | |  ``..      |\n" +
+                        "  .''''''''`.   | |         | |      ``..  |\n" +
+                        ".'           `. |  `._____.'  |          ``|\n\n" +
+                        "                    NETWORK  v" + KERNEL_VERSION +
+                                "\n\n"
                 );
 
         IAionChain ac = AionFactory.create();
@@ -118,8 +120,7 @@ public class Aion {
             zmqThread.start();
         }
 
-        
-        HttpServer.start(ac.getAionHub().getP2pMgr());
+        HttpServer.start();
 
         /*
          * This is a hack, but used to let us pass zmqThread into thread
@@ -142,6 +143,8 @@ public class Aion {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 LOG.info("Starting shutdown process...");
 
+                HttpServer.shutdown();
+
                 if (holder.pp != null) {
                     LOG.info("Shutting down zmq ProtocolProcessor");
                     try {
@@ -155,6 +158,7 @@ public class Aion {
                 if (holder.miner != null) {
                     LOG.info("Shutting down sealer");
                     holder.miner.stopMining();
+                    holder.miner.shutdown();
                     LOG.info("Shutdown sealer... Done!");
                 }
 

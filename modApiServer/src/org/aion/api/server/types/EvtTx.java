@@ -25,14 +25,14 @@
 package org.aion.api.server.types;
 
 import org.aion.api.server.types.Fltr.Type;
+import org.aion.base.type.ITransaction;
 import org.aion.base.util.TypeConverter;
-import org.aion.zero.types.AionTransaction;
 
 public class EvtTx extends Evt {
     
-    private final AionTransaction tx;
+    private final ITransaction tx;
 
-    public EvtTx(AionTransaction tx) {
+    public EvtTx(ITransaction tx) {
         this.tx = tx;
     }
     
@@ -45,5 +45,4 @@ public class EvtTx extends Evt {
     public String toJSON() {
         return TypeConverter.toJsonHex(tx.getHash());
     }
-    
 }

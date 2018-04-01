@@ -59,26 +59,30 @@ public class TxnPoolTest {
     private static List<ECKey> key;
     private static List<ECKey> key2;
 
+
     @Before
     public void Setup() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
-
         int keyCnt = 10;
-        key = new ArrayList<>();
 
-        System.out.println("gen key list----------------");
-        for (int i = 0; i < keyCnt; i++) {
-            key.add(ECKeyFac.inst().create());
+        if (key == null) {
+            key = new ArrayList<>();
+            System.out.println("gen key list----------------");
+            for (int i = 0; i < keyCnt; i++) {
+                key.add(ECKeyFac.inst().create());
+            }
+            System.out.println("gen key list finished-------");
         }
-        System.out.println("gen key list finished-------");
 
-        keyCnt = 10000;
-        key2 = new ArrayList<>();
-        System.out.println("gen key list 2--------------");
-        for (int i = 0; i < keyCnt; i++) {
-            key2.add(ECKeyFac.inst().create());
+        if (key2 == null) {
+            keyCnt = 10000;
+            key2 = new ArrayList<>();
+            System.out.println("gen key list 2--------------");
+            for (int i = 0; i < keyCnt; i++) {
+                key2.add(ECKeyFac.inst().create());
+            }
+            System.out.println("gen key list 2 finished-----");
         }
-        System.out.println("gen key list 2 finished-----");
     }
 
     @Test
@@ -157,6 +161,38 @@ public class TxnPoolTest {
         assertTrue(tp.size() == 10);
     }
 
+    @Test
+    public void remove3() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "100"); // 100 sec
+
+        ITxPool<ITransaction> tp = new TxPoolA0<>(config);
+        List<ITransaction> txl = new ArrayList<>();
+        List<ITransaction> txlrm = new ArrayList<>();
+        int cnt = 20;
+        for (int i = 0; i < cnt; i++) {
+            AionTransaction tx = (AionTransaction) genTransaction(BigInteger.valueOf(i).toByteArray());
+            tx.setNrgConsume(5000L);
+            tx.sign(key.get(0));
+            txl.add(tx);
+            if (i < 10) {
+                txlrm.add(tx);
+            }
+        }
+
+        List rtn = tp.add(txl);
+        assertTrue(rtn.size() == txl.size());
+
+        txl = tp.snapshot();
+        assertTrue(txl.size() == cnt);
+
+        Map<Address, BigInteger> account = new HashMap<>();
+        account.put(txl.get(0).getFrom(), BigInteger.valueOf(10));
+        rtn = tp.remove(account);
+        assertTrue(rtn.size() == 10);
+        assertTrue(tp.size() == 10);
+    }
+
     private ITransaction genTransaction(byte[] nonce) {
         return new AionTransaction(nonce, Address.wrap(key.get(0).getAddress()),
                 Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
@@ -198,8 +234,6 @@ public class TxnPoolTest {
     }
 
     @Test
-    @Ignore
-
     public void snapshot() throws Throwable {
         Properties config = new Properties();
         config.put("txn-timeout", "10"); // 10 sec
@@ -315,6 +349,77 @@ public class TxnPoolTest {
         tp.add(txnl);
 
         assertTrue(tp.size() == 1);
+    }
+
+    @Test
+    public void addRepeatedTxn2() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "10");
+
+        ITxPool<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 10;
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransaction(nonce);
+            ((AionTransaction) txn).sign(key.get(0));
+            txn.setNrgConsume(50);
+            txnl.add(txn);
+        }
+
+        tp.add(txnl);
+        assertTrue(tp.size() == cnt);
+
+        byte[] nonce = new byte[Long.BYTES];
+        nonce[Long.BYTES - 1] = (byte) 5;
+        ITransaction txn = genTransaction(nonce);
+        ((AionTransaction) txn).sign(key.get(0));
+        txn.setNrgConsume(500);
+        tp.add(txn);
+
+        List<ITransaction> snapshot = tp.snapshot();
+        assertTrue(snapshot.size() == cnt);
+
+        assertTrue(snapshot.get(5).equals(txn));
+    }
+
+    @Test
+    public void addRepeatedTxn3() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "10");
+
+        ITxPool<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 10;
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransaction(nonce);
+            ((AionTransaction) txn).sign(key.get(0));
+            txn.setNrgConsume(50);
+            txnl.add(txn);
+        }
+
+        tp.add(txnl);
+        tp.snapshot();
+        assertTrue(tp.size() == cnt);
+
+        byte[] nonce = new byte[Long.BYTES];
+        nonce[Long.BYTES - 1] = (byte) 5;
+        ITransaction txn = genTransaction(nonce);
+        ((AionTransaction) txn).sign(key.get(0));
+        txn.setNrgConsume(500);
+        tp.add(txn);
+
+        List<ITransaction> snapshot = tp.snapshot();
+        assertTrue(snapshot.size() == cnt);
+
+        assertTrue(snapshot.get(5).equals(txn));
     }
 
     @Test
@@ -516,102 +621,6 @@ public class TxnPoolTest {
         assertTrue(nl.size() == 2);
         assertTrue(nl.get(0).compareTo(BigInteger.valueOf(26)) == 0);
         assertTrue(nl.get(1).compareTo(BigInteger.valueOf(325 / 25)) == 0);
-    }
-
-    @Test
-    public void bestNonceSet() throws Throwable {
-        Properties config = new Properties();
-        config.put("txn-timeout", "100");
-
-        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
-
-        List<ITransaction> txnl = new ArrayList<>();
-        int cnt = 25;
-        for (int i = 0; i < cnt; i++) {
-            byte[] nonce = new byte[Long.BYTES];
-            nonce[Long.BYTES - 1] = (byte) i;
-
-            ITransaction txn = genTransaction(nonce);
-
-            ((AionTransaction) txn).sign(key.get(0));
-            txn.setNrgConsume(i + 1);
-            txnl.add(txn);
-        }
-        tp.add(txnl);
-        assertTrue(tp.size() == cnt);
-
-        // sort the inserted txs
-        tp.snapshot();
-        Map.Entry<BigInteger, BigInteger> nonce = tp.bestNonceSet(Address.wrap(key.get(0).getAddress()));
-
-        assertTrue(nonce.getKey().equals(BigInteger.ZERO));
-        assertTrue(nonce.getValue().equals(BigInteger.valueOf(cnt - 1)));
-    }
-
-    @Test
-    public void bestNonceSet2() throws Throwable {
-        Properties config = new Properties();
-        config.put("txn-timeout", "100");
-
-        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
-
-        List<ITransaction> txnl = new ArrayList<>();
-        int cnt = 26;
-        for (int i = 0; i < cnt; i++) {
-            byte[] nonce = new byte[Long.BYTES];
-            nonce[Long.BYTES - 1] = (byte) i;
-
-            ITransaction txn = genTransaction(nonce);
-
-            ((AionTransaction) txn).sign(key.get(0));
-            txn.setNrgConsume(i + 1);
-            txnl.add(txn);
-        }
-
-        tp.add(txnl);
-        assertTrue(tp.size() == cnt);
-
-        // sort the inserted txs
-        tp.snapshot();
-        Map.Entry<BigInteger, BigInteger> nonce = tp.bestNonceSet(Address.wrap(key.get(0).getAddress()));
-
-        assertTrue(nonce.getKey().equals(BigInteger.ZERO));
-        assertTrue(nonce.getValue().equals(BigInteger.valueOf(cnt - 1)));
-    }
-
-    @Test
-    public void bestNonceSet3() throws Throwable {
-        Properties config = new Properties();
-        config.put("txn-timeout", "100");
-
-        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
-
-        List<ITransaction> txnl = new ArrayList<>();
-        int cnt = 20;
-        for (int i = 0; i < cnt; i++) {
-            byte[] nonce = new byte[Long.BYTES];
-            nonce[Long.BYTES - 1] = (byte) i;
-
-            ITransaction txn = genTransaction(nonce);
-
-            ((AionTransaction) txn).sign(key.get(0));
-            txn.setNrgConsume(i + 1);
-            txnl.add(txn);
-        }
-
-        byte[] nonce = new byte[Long.BYTES];
-        nonce[Long.BYTES - 1] = (byte) 22;
-        ITransaction txn = genTransaction(nonce);
-        txnl.add(txn);
-        tp.add(txnl);
-        assertTrue(tp.size() == cnt);
-
-        // sort the inserted txs
-        tp.snapshot();
-        Map.Entry<BigInteger, BigInteger> nonceSet = tp.bestNonceSet(Address.wrap(key.get(0).getAddress()));
-
-        assertTrue(nonceSet.getKey().equals(BigInteger.ZERO));
-        assertTrue(nonceSet.getValue().equals(BigInteger.valueOf(cnt - 1)));
     }
 
     @Test

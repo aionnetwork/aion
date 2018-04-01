@@ -25,6 +25,7 @@
 package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -124,6 +125,10 @@ public class AionImpl implements IAionChain {
     @SuppressWarnings("unchecked")
     @Override
     public void broadcastTransaction(AionTransaction transaction) {
+        broadcastTransactions(Collections.singletonList(transaction));
+    }
+
+    public void broadcastTransactions(List<AionTransaction> transaction) {
         A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
 
         TxBroadcaster.getInstance().submitTransaction(txTask);
@@ -132,7 +137,7 @@ public class AionImpl implements IAionChain {
     public long estimateTxNrg(AionTransaction tx, IAionBlock block) {
 
         if (tx.getSignature() == null) {
-            tx.sign(ECKeyFac.inst().fromPrivate(Address.ZERO_ADDRESS().toBytes()));
+            tx.sign(ECKeyFac.inst().fromPrivate(new byte[64]));
         }
 
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
@@ -151,7 +156,7 @@ public class AionImpl implements IAionChain {
     @Override
     public AionTxReceipt callConstant(AionTransaction tx, IAionBlock block) {
         if (tx.getSignature() == null) {
-            tx.sign(ECKeyFac.inst().fromPrivate(new byte[32]));
+            tx.sign(ECKeyFac.inst().fromPrivate(new byte[64]));
         }
 
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();

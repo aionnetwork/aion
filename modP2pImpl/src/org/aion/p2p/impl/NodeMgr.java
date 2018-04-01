@@ -96,7 +96,7 @@ public class NodeMgr implements INodeMgr {
      *
      * @param selfShortId String
      */
-    void dumpNodeInfo(String selfShortId) {
+    public String dumpNodeInfo(String selfShortId) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         sb.append(String.format("================================================================== p2p-status-%6s ==================================================================\n", selfShortId));
@@ -147,7 +147,7 @@ public class NodeMgr implements INodeMgr {
             }
         }
         sb.append("\n");
-        System.out.println(sb.toString());
+        return sb.toString();
     }
 
     private void updateMetric(final Node _n) {
@@ -192,6 +192,10 @@ public class NodeMgr implements INodeMgr {
      */
     void seedIpAdd(String _ip){
         this.seedIps.add(_ip);
+    }
+
+    public boolean isSeedIp(String _ip) {
+        return this.seedIps.contains(_ip);
     }
 
     void inboundNodeAdd(final Node _n) {
@@ -297,9 +301,9 @@ public class NodeMgr implements INodeMgr {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
             node.setConnection("outbound");
-            INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
+            INode previous = activeNodes.put(_nodeIdHash, node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(((Node) previous).getChannel());
             else {
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
@@ -319,9 +323,9 @@ public class NodeMgr implements INodeMgr {
         if (node != null) {
             node.setConnection("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
-            INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
+            INode previous = activeNodes.put(node.getIdHash(), node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(((Node) previous).getChannel());
             else {
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
@@ -436,6 +440,18 @@ public class NodeMgr implements INodeMgr {
                     System.out.println("<error on-close-stream-writer>");
                 }
             }
+        }
+    }
+
+    /**
+     * Remove an active node if exists.
+     *
+     * @param nodeIdHash
+     */
+    public void removeActive(int nodeIdHash, P2pMgr p2pMgr) {
+        Node node = activeNodes.remove(nodeIdHash);
+        if (node != null) {
+            p2pMgr.closeSocket(node.getChannel());
         }
     }
 }

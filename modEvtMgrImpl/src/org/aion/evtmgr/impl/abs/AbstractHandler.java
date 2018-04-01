@@ -27,9 +27,7 @@ package org.aion.evtmgr.impl.abs;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.aion.evtmgr.IEvent;
@@ -50,40 +48,37 @@ public abstract class AbstractHandler {
     protected Set<IEvent> events = new HashSet<>();
     protected BlockingQueue<IEvent> queue = new LinkedBlockingQueue<IEvent>();
     protected List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
-    protected AtomicBoolean interrupt = new AtomicBoolean(false);
+    private AtomicBoolean interrupt = new AtomicBoolean(false);
     private boolean interruptted = false;
 
-    protected Thread dispatcher = new Thread() {
-        @Override
-        public void run() {
-            try {
-                while (!interrupt.get()) {
-                    IEvent e = queue.take();
-                    if (e.getEventType() != EventDummy.getTypeStatic() && events.contains(e)) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("dispatcher e[{}]", e.getEventType());
-                        }
+    protected Thread dispatcher = new Thread(() -> {
+        try {
+            while (!interrupt.get()) {
+                IEvent e = queue.take();
+                if (e.getEventType() != EventDummy.getTypeStatic() && events.contains(e)) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("dispatcher e[{}]", e.getEventType());
+                    }
 
-                        try {
-                            dispatch(e);
-                        } catch (Exception ex) {
-                            LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}", e.getEventType(), e.getCallbackType(), ex);
-                        }
+                    try {
+                        dispatch(e);
+                    } catch (Exception ex) {
+                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}", e.getEventType(), e.getCallbackType(), ex);
                     }
                 }
-
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("dispatcher interrupted!");
-                }
-
-                queue.clear();
-                interruptted = true;
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
+
+            if (LOG.isInfoEnabled()) {
+                LOG.info("dispatcher interrupted!");
+            }
+
+            queue.clear();
+            interruptted = true;
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-    };
+    });
 
     public synchronized boolean addEvent(IEvent _evt) {
         return this.events.add(_evt);
@@ -93,10 +88,8 @@ public abstract class AbstractHandler {
         return this.events.add(_evt);
     }
 
-    protected abstract <E extends IEvent> void dispatch(E _e);
-
     public void stop() throws InterruptedException {
-        // In case the thread got stuck into the blocking queue.
+
         interrupt.set(true);
         this.queue.add(new EventDummy());
 
@@ -121,6 +114,20 @@ public abstract class AbstractHandler {
         }
     }
 
+
+    public <E extends IEvent> void dispatch(E event) {
+        if (this.typeEqual(event.getEventType())) {
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
+            }
+
+            for (IEventCallback cb : this.eventCallback) {
+                cb.onEvent(event);
+            }
+        }
+    }
+
     public synchronized void eventCallback(IEventCallback _evtCallback) {
         this.eventCallback.add(_evtCallback);
     }
@@ -132,6 +139,7 @@ public abstract class AbstractHandler {
     }
 
     public void start() {
+
         if (!this.dispatcher.isAlive()) {
             this.dispatcher.start();
         }

@@ -5,6 +5,10 @@
 	<api>
 		<rpc active="true" ip="127.0.0.1" port="8545"></rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
+		<nrg>
+			<default>1E9</default>
+			<max>100E9</max>
+		</nrg>
 	</api>
 	<net>
 		<id>0</id>
@@ -16,28 +20,42 @@
 			<node>p2p://f9ea8c08-6f2d-4e64-91a2-d7186d76e096@52.231.206.150:30303</node>
 		</nodes>
 		<p2p>
-			<ip>127.0.0.1</ip>
+			<ip>0.0.0.0</ip>
 			<port>30303</port>
 			<discover>false</discover>
 			<show-status>false</show-status>
+			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
 	<sync>
-		<blocks-import-max>192</blocks-import-max>
-		<blocks-queue-max>2000</blocks-queue-max>
-		<show-status>false</show-status>
+		<blocks-backward-max>16</blocks-backward-max>
+		<blocks-import-max>32</blocks-import-max>
+		<blocks-queue-max>48</blocks-queue-max>
+		<show-status>true</show-status>
 	</sync>
 	<consensus>
 		<mining>true</mining>
 		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
 		<cpu-mine-threads>2</cpu-mine-threads>
 		<extra-data>AION</extra-data>
+		<nrg-strategy>
+			<!-- <monotonic-increase></monotonic-increase> -->
+			<!-- <decaying></decaying> -->
+			<!-- <targetted target="10000000"></targetted> -->
+			<clamped-decay upper-bound="15000000" lower-bound="7000000"></clamped-decay>
+		</nrg-strategy>
 	</consensus>
 	<db>
 		<path>database</path>
 		<vendor>leveldb</vendor>
+		<enable_heap_cache>false</enable_heap_cache>
+		<max_heap_cache_size>1024</max_heap_cache_size>
 		<enable_db_cache>true</enable_db_cache>
-		<enable_db_compression>true</enable_db_compression>
+		<enable_db_compression>false</enable_db_compression>
+		<max_fd_alloc_size>1024</max_fd_alloc_size>
+		<block_size>16mB</block_size>
+		<write_buffer_size>64mB</write_buffer_size>
+		<cache_size>128mB</cache_size>
 	</db>
 	<log>
 		<GEN>INFO</GEN>

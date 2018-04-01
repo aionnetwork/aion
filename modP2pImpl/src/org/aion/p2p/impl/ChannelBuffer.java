@@ -57,7 +57,12 @@ public class ChannelBuffer {
      */
     public AtomicBoolean onWrite = new AtomicBoolean(false);
 
-    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(10);
+    /**
+     * Indicates whether this channel is closed.
+     */
+    public AtomicBoolean isClosed = new AtomicBoolean(false);
+
+    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
 
     void refreshHeader(){
         headerBuf.clear();

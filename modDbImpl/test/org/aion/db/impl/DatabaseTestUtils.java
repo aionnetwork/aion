@@ -25,19 +25,19 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
 package org.aion.db.impl;
 
-import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
 
 public class DatabaseTestUtils {
 
@@ -57,19 +57,28 @@ public class DatabaseTestUtils {
         return count;
     }
 
-    public static Object databaseInstanceDefinitions() {
+    public static Object unlockedDatabaseInstanceDefinitions() {
+        return unlockedDatabaseInstanceDefinitionsInternal().toArray();
+    }
+
+    public static List<Object> unlockedDatabaseInstanceDefinitionsInternal() {
 
         Properties sharedProps = new Properties();
         sharedProps.setProperty("db_path", dbPath);
 
         List<Object> parameters = new ArrayList<>();
 
+        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, disabled);
         // adding database variations without heap caching
         sharedProps.setProperty("enable_heap_cache", disabled);
         // the following parameters are irrelevant
         sharedProps.setProperty("enable_auto_commit", enabled);
         sharedProps.setProperty("max_heap_cache_size", "0");
         sharedProps.setProperty("max_heap_cache_size", disabled);
+        sharedProps.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        sharedProps.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        sharedProps.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        sharedProps.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         // all vendor options
         for (DBVendor vendor : vendors) {
@@ -100,13 +109,28 @@ public class DatabaseTestUtils {
             }
         }
 
-        // System.out.println(parameters.size());
+        return parameters;
+    }
+
+    public static Object databaseInstanceDefinitions() {
+
+        List<Object> parameters = new ArrayList<>();
+        List<Object> parametersUnlocked = unlockedDatabaseInstanceDefinitionsInternal();
+
+        for (Object prop : parametersUnlocked) {
+            Properties p = (Properties) ((Properties) prop).clone();
+            p.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, enabled);
+
+            parameters.add(p);
+        }
+
+        parameters.addAll(parametersUnlocked);
 
         return parameters.toArray();
     }
 
     private static void addDatabaseWithCacheAndCompression(DBVendor vendor, Properties sharedProps,
-            List<Object> parameters) {
+                                                           List<Object> parameters) {
         if (vendor != DBVendor.MOCKDB) {
             // enable/disable db_cache
             for (String db_cache : options) {
@@ -129,5 +153,49 @@ public class DatabaseTestUtils {
         byte[] result = new byte[length];
         new Random().nextBytes(result);
         return result;
+    }
+
+    /**
+     * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit Wiki on multithreaded code and concurrency</a>
+     */
+    public static void assertConcurrent(final String message, final List<? extends Runnable> runnables,
+                                        final int maxTimeoutSeconds) throws InterruptedException {
+        final int numThreads = runnables.size();
+        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+        try {
+            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
+            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
+            final CountDownLatch allDone = new CountDownLatch(numThreads);
+            for (final Runnable submittedTestRunnable : runnables) {
+                threadPool.submit(() -> {
+                    allExecutorThreadsReady.countDown();
+                    try {
+                        afterInitBlocker.await();
+                        submittedTestRunnable.run();
+                    } catch (final Throwable e) {
+                        exceptions.add(e);
+                    } finally {
+                        allDone.countDown();
+                    }
+                });
+            }
+            // wait until all threads are ready
+            assertTrue(
+                    "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
+                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
+            // start all test runners
+            afterInitBlocker.countDown();
+            assertTrue(message + " timeout! More than" + maxTimeoutSeconds + "seconds",
+                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
+        } finally {
+            threadPool.shutdownNow();
+        }
+        if (!exceptions.isEmpty()) {
+            for (Throwable e : exceptions) {
+                e.printStackTrace();
+            }
+        }
+        assertTrue(message + "failed with " + exceptions.size() + " exception(s):" + exceptions, exceptions.isEmpty());
     }
 }

@@ -24,6 +24,8 @@
 package org.aion.zero.impl;
 
 import org.aion.base.type.Address;
+import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
+import org.aion.zero.impl.core.energy.EnergyStrategies;
 
 public interface A0BCConfig {
 
@@ -56,4 +58,9 @@ public interface A0BCConfig {
      * Retrieves the number indicating how many blocks between each flush
      */
     int getFlushInterval();
+
+    /**
+     * Retrieves the selected energy strategy algorithm
+     */
+    AbstractEnergyStrategyLimit getEnergyLimitStrategy();
 }

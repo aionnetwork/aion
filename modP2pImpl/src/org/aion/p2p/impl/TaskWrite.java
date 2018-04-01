@@ -29,11 +29,9 @@ import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl.selector.MainIOLoop;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author chris

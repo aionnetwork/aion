@@ -67,11 +67,12 @@ public final class P2pMgr implements IP2pMgr {
     private ResHandshake1 cachedResHandshake1;
     private ResHandshake cachedResHandshake;
 
-    final boolean showLog;
     private final int maxTempNodes;
     private final int maxActiveNodes;
+
     private final boolean syncSeedsOnly;
     private final boolean showStatus;
+    final boolean showLog;
     private final int selfNetId;
     private final String selfRevision;
     private final byte[] selfNodeId;
@@ -80,10 +81,14 @@ public final class P2pMgr implements IP2pMgr {
     private final byte[] selfIp;
     private final int selfPort;
     private final boolean upnpEnable;
+
     private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
     private final Set<Short> versions = new HashSet<>();
+
     private NodeMgr nodeMgr = new NodeMgr();
     private ServerSocketChannel tcpServer;
+    private Selector selector;
+
     private ScheduledThreadPoolExecutor scheduledWorkers;
     private ExecutorService workers;
     private AtomicBoolean start = new AtomicBoolean(true);
@@ -134,7 +139,6 @@ public final class P2pMgr implements IP2pMgr {
         cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp, this.selfPort);
         cachedResHandshake = new ResHandshake(true);
         cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
-
         this.ioLoop = new MainIOLoop(SelectorProvider.provider());
     }
 
@@ -178,14 +182,6 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public void dropActive(Integer _nodeIdHash) {
         this.nodeMgr.dropActive(_nodeIdHash, this);
-    }
-
-    public int getNodeIdHash() {
-        return this.selfNodeIdHash;
-    }
-
-    public byte[] getNodeId() {
-        return this.selfNodeId;
     }
 
     /**
@@ -271,14 +267,11 @@ public final class P2pMgr implements IP2pMgr {
      * @param _sk SelectionKey
      * @throws IOException IOException
      */
-    protected void read(final SelectionKey _sk) throws IOException {
+    private void read(final SelectionKey _sk) throws IOException {
 
-        // this should never happen, we always allocate a new channel when the
-        // server socket accepts a new connection through OP_ACCEPT
         if (_sk.attachment() == null) {
             throw new IOException("attachment is null");
         }
-
         ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
         // read header
@@ -313,7 +306,7 @@ public final class P2pMgr implements IP2pMgr {
 
         // print route
         // System.out.println("read " + ver + "-" + ctrl + "-" + act);
-        switch (ver) {
+        switch(ver){
             case Ver.V0:
                 switch (ctrl) {
                     case Ctrl.NET:
@@ -341,12 +334,13 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @return boolean TODO: implementation
+     * @return boolean
+     * TODO: implementation
      */
-    private boolean handshakeRuleCheck(int netId) {
+    private boolean handshakeRuleCheck(int netId){
 
         // check net id
-        if (netId != selfNetId)
+        if(netId != selfNetId)
             return false;
 
         // check supported protocol versions
@@ -354,25 +348,25 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _buffer      ChannelBuffer
+     * @param _buffer ChannelBuffer
      * @param _channelHash int
-     * @param _nodeId      byte[]
-     * @param _netId       int
-     * @param _port        int
-     * @param _revision    byte[]
-     *                     <p>
-     *                     Construct node info after handshake request success
+     * @param _nodeId byte[]
+     * @param _netId int
+     * @param _port int
+     * @param _revision byte[]
+     *
+     * Construct node info after handshake request success
      */
-    private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId, int _port, final byte[] _revision) {
+    private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId, int _port, final byte[] _revision){
         Node node = nodeMgr.getInboundNode(_channelHash);
         if (node != null) {
-            if (handshakeRuleCheck(_netId)) {
+            if(handshakeRuleCheck(_netId)){
                 _buffer.nodeIdHash = Arrays.hashCode(_nodeId);
                 node.setId(_nodeId);
                 node.setPort(_port);
 
                 // handshake 1
-                if (_revision != null) {
+                if(_revision != null){
                     String binaryVersion;
                     try {
                         binaryVersion = new String(_revision, "UTF-8");
@@ -391,7 +385,7 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
+    private void handleResHandshake(int _nodeIdHash, String _binaryVersion){
         Node node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
         if (node != null) {
             node.refreshTimestamp();
@@ -509,6 +503,8 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public void run() {
         try {
+            selector = Selector.open();
+
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
             workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
             // workers = Executors.newCachedThreadPool();
@@ -585,7 +581,7 @@ public final class P2pMgr implements IP2pMgr {
             short ver = h.getVer();
             byte ctrl = h.getCtrl();
             if (Ver.filter(ver) != Ver.UNKNOWN && Ctrl.filter(ctrl) != Ctrl.UNKNOWN) {
-                if (!versions.contains(ver)) {
+                if(!versions.contains(ver)){
                     versions.add(ver);
                 }
 
@@ -626,8 +622,13 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public String version() {
-        return "0.1.0";
+    public List<Short> versions() {
+        return new ArrayList<Short>(versions);
+    }
+
+    @Override
+    public int chainId() {
+        return this.selfNetId;
     }
 
     private final class HandleInboundEvent implements Task {
@@ -823,6 +824,8 @@ public final class P2pMgr implements IP2pMgr {
                     //selectorLock.unlock();
 
                 } catch (Exception e) {
+                    e.printStackTrace();
+                    // TODO: do something
                 }
             }
         }

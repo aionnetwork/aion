@@ -39,8 +39,8 @@ public class LastThousands {
 
         List<P2pMgr> examiners = new ArrayList<>();
 
-        for(int i = port + 1; i < maxPort; i++){
-            if(checkPort(ip, i)){
+        for(int i = port + 1; i <= maxPort; i++){
+            if(checkPort(ip, i)) {
                 System.out.println("examiner " + i);
                 P2pMgr examiner = new P2pMgr(0, "", UUID.randomUUID().toString(), ip, i,  testerP2p, false, max, max, false, true, true);
                 examiners.add(examiner);
@@ -62,8 +62,6 @@ public class LastThousands {
         for(P2pMgr examiner : examiners){
             assertEquals(max, tester.getActiveNodes().size());
         }
-
-        Thread.sleep(100000);
         tester.shutdown();
         for(P2pMgr examiner : examiners){
             examiner.shutdown();

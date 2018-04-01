@@ -20,17 +20,9 @@ public class MockDB extends AbstractDB {
 
     // IDatabase functionality -----------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean open() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         if (isOpen()) {
-            // releasing write lock and return status
-            lock.writeLock().unlock();
             return true;
         }
 
@@ -39,20 +31,11 @@ public class MockDB extends AbstractDB {
         // using a regular map since synchronization is handled through the read-write lock
         kv = new HashMap<>();
 
-        // releasing write lock
-        lock.writeLock().unlock();
-
         return isOpen();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void close() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         // release resources if needed
         if (kv != null) {
             LOG.info("Closing database " + this.toString());
@@ -62,223 +45,112 @@ public class MockDB extends AbstractDB {
 
         // set map to null
         kv = null;
-
-        // releasing write lock
-        lock.writeLock().unlock();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isOpen() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        boolean open = kv != null;
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return open;
+        return kv != null;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isPersistent() {
         return false;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isCreatedOnDisk() {
         return false;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public long approximateSize() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        try {
-            check();
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
-
+        check();
         return -1L;
     }
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isEmpty() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        boolean status;
-
-        try {
-            check();
-
-            status = kv.isEmpty();
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
-
-        return status;
+        check();
+        return kv.isEmpty();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Set<byte[]> keys() {
-        // acquire read lock
-        lock.readLock().lock();
-
         Set<byte[]> set = new HashSet<>();
 
-        try {
-            check();
+        check();
 
-            kv.keySet().forEach(k -> set.add(k.getData()));
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
+        kv.keySet().forEach(k -> set.add(k.getData()));
 
         // empty when retrieval failed
         return set;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public byte[] getInternal(byte[] k) {
         return kv.get(ByteArrayWrapper.wrap(k));
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void put(byte[] k, byte[] v) {
         check(k);
+        check();
 
-        // acquire write lock
-        lock.writeLock().lock();
-
-        try {
-            check();
-
-            if (v == null) {
-                kv.remove(ByteArrayWrapper.wrap(k));
-            } else {
-                kv.put(ByteArrayWrapper.wrap(k), v);
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        if (v == null) {
+            kv.remove(ByteArrayWrapper.wrap(k));
+        } else {
+            kv.put(ByteArrayWrapper.wrap(k), v);
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void delete(byte[] k) {
         check(k);
+        check();
 
-        // acquire write lock
-        lock.writeLock().lock();
-
-        try {
-            check();
-
-            kv.remove(ByteArrayWrapper.wrap(k));
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
-        }
+        kv.remove(ByteArrayWrapper.wrap(k));
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void putBatch(Map<byte[], byte[]> inputMap) {
         check(inputMap.keySet());
 
-        // acquire write lock
-        lock.writeLock().lock();
+        // this runtime exception should not be caught here
+        check();
 
         try {
-            // this runtime exception should not be caught here
-            check();
-
-            try {
-                // simply do a put, because setting a kv pair to null is same as delete
-                inputMap.forEach((key, value) -> {
-                    if (value == null) {
-                        kv.remove(ByteArrayWrapper.wrap(key));
-                    } else {
-                        kv.put(ByteArrayWrapper.wrap(key), value);
-                    }
-                });
-            } catch (Exception e) {
-                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+            // simply do a put, because setting a kv pair to null is same as delete
+            inputMap.forEach((key, value) -> {
+                if (value == null) {
+                    kv.remove(ByteArrayWrapper.wrap(key));
+                } else {
+                    kv.put(ByteArrayWrapper.wrap(key), value);
+                }
+            });
+        } catch (Exception e) {
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
         check(keys);
 
-        // acquire write lock
-        lock.writeLock().lock();
+        // this runtime exception should not be caught here
+        check();
 
         try {
-            // this runtime exception should not be caught here
-            check();
-
-            try {
-                keys.forEach((e) -> kv.remove(ByteArrayWrapper.wrap(e)));
-            } catch (Exception e) {
-                LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+            keys.forEach((e) -> kv.remove(ByteArrayWrapper.wrap(e)));
+        } catch (Exception e) {
+            LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
         }
     }
 
     // AbstractDB functionality ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        // acquire write lock
-        lock.writeLock().lock();
-
         boolean success = false;
 
         try {
@@ -296,17 +168,8 @@ public class MockDB extends AbstractDB {
             success = true;
         } catch (Exception e) {
             LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
         }
 
         return success;
     }
 }
-
-
-
-
-
-

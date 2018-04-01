@@ -47,20 +47,22 @@ public class TxRecptLg {
 
     public String transactionIndex;
 
-    public <TX extends ITransaction> TxRecptLg(Log bloomInfo, @SuppressWarnings("rawtypes") IBlock b, int txIndex,
-            TX tx, int logIdx) {
+    // true when the log was removed, due to a chain reorganization. false if its a valid log.
+    public boolean removed;
+
+    public <TX extends ITransaction> TxRecptLg(Log logInfo, IBlock b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
         this.logIndex = TypeConverter.toJsonHex(logIdx);
         this.blockNumber = b == null ? null : TypeConverter.toJsonHex(b.getNumber());
         this.blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
-        this.transactionIndex = b == null ? null : TypeConverter.toJsonHex(txIndex);
+        this.transactionIndex = (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
         this.transactionHash = TypeConverter.toJsonHex(tx.getHash());
         this.address = (tx == null || tx.getTo() == null) ? "" : TypeConverter.toJsonHex(tx.getTo().toBytes());
-        this.data = TypeConverter.toJsonHex(bloomInfo.getData());
+        this.data = TypeConverter.toJsonHex(logInfo.getData());
+        this.removed = !isMainchain;
 
-        this.topics = new String[bloomInfo.getTopics().size()];
+        this.topics = new String[logInfo.getTopics().size()];
         for (int i = 0, m = this.topics.length; i < m; i++) {
-            this.topics[i] = TypeConverter.toJsonHex(bloomInfo.getTopics().get(i));
+            this.topics[i] = TypeConverter.toJsonHex(logInfo.getTopics().get(i));
         }
     }
-
 }

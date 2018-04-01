@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -27,21 +27,20 @@ package org.aion.zero.impl.db;
 import org.aion.base.db.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.Hex;
-import org.aion.db.impl.AbstractDatabaseWithCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.types.*;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
-import org.aion.mcf.vm.types.DataWord;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -61,7 +60,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
      * used by getSnapShotTo
      *
      * @ATTENTION: when do snap shot, another instance will be created. Make
-     *             sure it is used only by getSnapShotTo
+     *         sure it is used only by getSnapShotTo
      */
     protected AionRepositoryImpl() {
     }
@@ -76,35 +75,17 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         private static CfgAion config = CfgAion.inst();
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
-                new RepositoryConfig(new String[] { config.getDb().getVendor() },
-                        // config.getDb().getVendorList() database list
-                        config.getDb().getVendor(), // database
-                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), // db
-                                                                                                    // path
-                        -1, // config.getDb().getPrune() prune flag
-                        ContractDetailsAion.getInstance(), // contract details
-                                                           // provider
-                        config.getDb().isAutoCommitEnabled(), // if false,
-                                                              // flush/commit
-                                                              // must be called
-                        config.getDb().isDbCacheEnabled(), // caching inside the
-                                                           // database
-                        config.getDb().isDbCompressionEnabled(), // enables/disable
-                                                                 // the default
-                                                                 // database
-                                                                 // compression
-                        config.getDb().isHeapCacheEnabled(), // uses heap
-                                                             // caching of data
-                        config.getDb().getMaxHeapCacheSize(), // size of the
-                                                              // heap cache
-                        config.getDb().isHeapCacheStatsEnabled())); // enable
-                                                                    // stats for
-                                                                    // heap
-                                                                    // cache
+                new RepositoryConfig(new String[] { config.getDb().getVendor() }, config.getDb().getVendor(),
+                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), -1,
+                        ContractDetailsAion.getInstance(), config.getDb().isAutoCommitEnabled(),
+                        config.getDb().isDbCacheEnabled(), config.getDb().isDbCompressionEnabled(),
+                        config.getDb().isHeapCacheEnabled(), config.getDb().getMaxHeapCacheSize(),
+                        config.getDb().isHeapCacheStatsEnabled(), config.getDb().getFdOpenAllocSize(),
+                        config.getDb().getBlockSize(), config.getDb().getWriteBufferSize(),
+                        config.getDb().getCacheSize()));
     }
 
     public static AionRepositoryImpl inst() {
-
         return AionRepositoryImplHolder.inst;
     }
 
@@ -121,112 +102,114 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                     AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
-            // TODO
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase);
 
             // Setup world trie.
             worldState = createStateTrie();
         } catch (Exception e) { // TODO - If any of the connections failed.
-            e.printStackTrace();
+            LOG.error("Unable to initialize repository.", e);
         }
     }
 
+    /**
+     * @implNote The transaction store is not locked within the repository implementation.
+     */
     public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
         return this.transactionStore;
     }
 
     private Trie createStateTrie() {
-        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
+        return new SecureTrie(stateDatabase).withPruningEnabled(pruneBlockCount >= 0);
     }
 
     @Override
-    public synchronized void updateBatch(Map<Address, AccountState> stateCache,
+    public void updateBatch(Map<Address, AccountState> stateCache,
             Map<Address, IContractDetails<DataWord>> detailsCache) {
+        rwLock.writeLock().lock();
 
-        for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
-            Address address = entry.getKey();
-            AccountState accountState = entry.getValue();
-            IContractDetails<DataWord> contractDetails = detailsCache.get(address);
+        try {
+            for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
+                Address address = entry.getKey();
+                AccountState accountState = entry.getValue();
+                IContractDetails<DataWord> contractDetails = detailsCache.get(address);
 
-            if (accountState.isDeleted()) {
-                // TODO-A: batch operations here
-                rwLock.readLock().lock();
-                try {
-                    worldState.delete(address.toBytes());
-                } catch (Exception e) {
-                    LOG.error("key deleted exception [{}]", e.toString());
-                } finally {
-                    rwLock.readLock().unlock();
-                }
-                LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
-            } else {
-
-                if (!contractDetails.isDirty()) {
-                    // code added because contract details are not reliably
-                    // marked as dirty at present
-                    // TODO: issue above will be solved with the conversion to a
-                    // ContractState class
-                    if (accountState.isDirty()) {
-                        updateAccountState(address, accountState);
-
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]", Hex.toHexString(address.toBytes()),
-                                    accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
-                        }
-                    }
-                    continue;
-                }
-
-                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetails;
-                if (contractDetailsCache.origContract == null) {
-                    contractDetailsCache.origContract = this.cfg.contractDetailsImpl();
-
+                if (accountState.isDeleted()) {
+                    // TODO-A: batch operations here
                     try {
-                        contractDetailsCache.origContract.setAddress(address);
+                        worldState.delete(address.toBytes());
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        LOG.error("contractDetailsCache setAddress exception [{}]", e.toString());
+                        LOG.error("key deleted exception [{}]", e.toString());
+                    }
+                    LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
+                } else {
+
+                    if (!contractDetails.isDirty()) {
+                        // code added because contract details are not reliably
+                        // marked as dirty at present
+                        // TODO: issue above will be solved with the conversion to a
+                        // ContractState class
+                        if (accountState.isDirty()) {
+                            updateAccountState(address, accountState);
+
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
+                                        Hex.toHexString(address.toBytes()), accountState.getNonce(),
+                                        accountState.getBalance(), contractDetails.getStorage());
+                            }
+                        }
+                        continue;
                     }
 
-                    contractDetailsCache.commit();
-                }
+                    ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) contractDetails;
+                    if (contractDetailsCache.origContract == null) {
+                        contractDetailsCache.origContract = this.cfg.contractDetailsImpl();
 
-                contractDetails = contractDetailsCache.origContract;
+                        try {
+                            contractDetailsCache.origContract.setAddress(address);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            LOG.error("contractDetailsCache setAddress exception [{}]", e.toString());
+                        }
 
-                updateContractDetails(address, contractDetails);
+                        contractDetailsCache.commit();
+                    }
 
-                if (!Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH)) {
-                    accountState.setStateRoot(contractDetails.getStorageHash());
-                }
+                    contractDetails = contractDetailsCache.origContract;
 
-                updateAccountState(address, accountState);
+                    updateContractDetails(address, contractDetails);
 
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]", Hex.toHexString(address.toBytes()),
-                            accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
+                    if (!Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH)) {
+                        accountState.setStateRoot(contractDetails.getStorageHash());
+                    }
+
+                    updateAccountState(address, accountState);
+
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]", Hex.toHexString(address.toBytes()),
+                                accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
+                    }
                 }
             }
-        }
 
-        LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
-        stateCache.clear();
-        detailsCache.clear();
+            LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+            stateCache.clear();
+            detailsCache.clear();
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
-    private synchronized void updateContractDetails(final Address address,
-            final IContractDetails<DataWord> contractDetails) {
-        rwLock.readLock().lock();
-        try {
-            detailsDS.update(address, contractDetails);
-        } finally {
-            rwLock.readLock().unlock();
-        }
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
+    private void updateContractDetails(final Address address, final IContractDetails<DataWord> contractDetails) {
+        // locked by calling method
+        detailsDS.update(address, contractDetails);
     }
 
     @Override
     public void flush() {
         LOG.debug("------ FLUSH ON " + this.toString());
-        LOG.debug("rwLock.writeLock().lock()");
         rwLock.writeLock().lock();
         try {
             LOG.debug("flushing to disk");
@@ -241,13 +224,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
             if (databaseGroup != null) {
                 for (IByteArrayKeyValueDatabase db : databaseGroup) {
-                    if (db instanceof AbstractDatabaseWithCache) {
-                        // printing heap cache stats when enabled
-                        AbstractDatabaseWithCache dbwc = (AbstractDatabaseWithCache) db;
-                        if (dbwc.isStatsEnabled()) {
-                            LOG.debug(dbwc.getName().get() + ": " + dbwc.getStats().toString());
-                        }
-                    }
                     if (!db.isAutoCommitEnabled()) {
                         db.commit();
                     }
@@ -269,31 +245,30 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     @Override
     public boolean isValidRoot(byte[] root) {
-        return worldState.isValidRoot(root);
-    }
-
-    @Override
-    public synchronized void syncToRoot(final byte[] root) {
         rwLock.readLock().lock();
         try {
-            worldState.setRoot(root);
+            return worldState.isValidRoot(root);
         } finally {
             rwLock.readLock().unlock();
         }
     }
 
     @Override
-    public synchronized IRepositoryCache startTracking() {
+    public void syncToRoot(final byte[] root) {
+        rwLock.writeLock().lock();
+        try {
+            worldState.setRoot(root);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public IRepositoryCache startTracking() {
         return new AionRepositoryCache(this);
     }
 
-    // @Override
-    public synchronized void dumpState(IAionBlock block, long nrgUsed, int txNumber, byte[] txHash) {
-        return;
-
-    }
-
-    public synchronized String getTrieDump() {
+    public String getTrieDump() {
         rwLock.readLock().lock();
         try {
             return worldState.getTrieDump();
@@ -302,43 +277,38 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         }
     }
 
-    public synchronized void dumpTrie(IAionBlock block) {
-        return;
-
-    }
-
     @Override
-    public synchronized BigInteger getBalance(Address address) {
+    public BigInteger getBalance(Address address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getBalance();
     }
 
     @Override
-    public synchronized DataWord getStorageValue(Address address, DataWord key) {
+    public DataWord getStorageValue(Address address, DataWord key) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? null : details.get(key);
     }
 
     @Override
-    public synchronized int getStorageSize(Address address) {
+    public int getStorageSize(Address address) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? 0 : details.getStorageSize();
     }
 
     @Override
-    public synchronized Set<DataWord> getStorageKeys(Address address) {
+    public Set<DataWord> getStorageKeys(Address address) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptySet() : details.getStorageKeys();
     }
 
     @Override
-    public synchronized Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
+    public Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
     @Override
-    public synchronized byte[] getCode(Address address) {
+    public byte[] getCode(Address address) {
         AccountState accountState = getAccountState(address);
 
         if (accountState == null) {
@@ -352,24 +322,33 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized BigInteger getNonce(Address address) {
+    public BigInteger getNonce(Address address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getNonce();
     }
 
-    private synchronized void updateAccountState(Address address, AccountState accountState) {
-        rwLock.readLock().lock();
-        try {
-            worldState.update(address.toBytes(), accountState.getEncoded());
-        } finally {
-            rwLock.readLock().unlock();
-        }
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
+    private void updateAccountState(Address address, AccountState accountState) {
+        // locked by calling method
+        worldState.update(address.toBytes(), accountState.getEncoded());
     }
 
+    /**
+     * @inheritDoc
+     * @implNote Any other method calling this can rely on the fact that
+     *         the contract details returned is a newly created object by {@link IContractDetails#getSnapshotTo(byte[])}.
+     *         Since this querying method it locked, the methods calling it
+     *         <b>may not need to be locked or synchronized</b>, depending on the specific use case.
+     */
     @Override
-    public synchronized IContractDetails<DataWord> getContractDetails(Address address) {
+    public IContractDetails<DataWord> getContractDetails(Address address) {
         rwLock.readLock().lock();
+
         try {
+            IContractDetails<DataWord> details;
+
             // That part is important cause if we have
             // to sync details storage according the trie root
             // saved in the account
@@ -378,12 +357,12 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             if (accountState != null) {
                 storageRoot = getAccountState(address).getStateRoot();
             }
-            IContractDetails<DataWord> details = detailsDS.get(address.toBytes());
+
+            details = detailsDS.get(address.toBytes());
 
             if (details != null) {
                 details = details.getSnapshotTo(storageRoot);
             }
-
             return details;
         } finally {
             rwLock.readLock().unlock();
@@ -392,22 +371,34 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     @Override
     public boolean hasContractDetails(Address address) {
-        return detailsDS.get(address.toBytes()) != null;
-    }
-
-    @Override
-    public synchronized AccountState getAccountState(Address address) {
-        // TODO
         rwLock.readLock().lock();
         try {
-            AccountState result = null;
+            return detailsDS.get(address.toBytes()) != null;
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * @inheritDoc
+     * @implNote Any other method calling this can rely on the fact that
+     *         the account state returned is a newly created object.
+     *         Since this querying method it locked, the methods calling it
+     *         <b>may not need to be locked or synchronized</b>, depending on the specific use case.
+     */
+    @Override
+    public AccountState getAccountState(Address address) {
+        rwLock.readLock().lock();
+
+        AccountState result = null;
+
+        try {
             byte[] accountData = worldState.get(address.toBytes());
 
             if (accountData.length != 0) {
                 result = new AccountState(accountData);
                 LOG.debug("New AccountSate [{}], State [{}]", address.toString(), result.toString());
             }
-
             return result;
         } finally {
             rwLock.readLock().unlock();
@@ -421,10 +412,10 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     /**
      * @implNote The loaded objects are fresh copies of the original account
-     *           state and contract details.
+     *         state and contract details.
      */
     @Override
-    public synchronized void loadAccountState(Address address, Map<Address, AccountState> cacheAccounts,
+    public void loadAccountState(Address address, Map<Address, AccountState> cacheAccounts,
             Map<Address, IContractDetails<DataWord>> cacheDetails) {
 
         AccountState account = getAccountState(address);
@@ -439,65 +430,94 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public synchronized byte[] getRoot() {
-        return worldState.getRootHash();
-    }
-
-    public synchronized void setRoot(byte[] root) {
-        worldState.setRoot(root);
-    }
-
-    public void setPruneBlockCount(long pruneBlockCount) {
-        this.pruneBlockCount = pruneBlockCount;
-    }
-
-    public synchronized void commitBlock(A0BlockHeader blockHeader) {
-        worldState.sync();
-        detailsDS.syncLargeStorage();
-
-        if (pruneBlockCount >= 0) {
-            stateDSPrune.storeBlockChanges(blockHeader);
-            detailsDS.getStorageDSPrune().storeBlockChanges(blockHeader);
-            pruneBlocks(blockHeader);
+    public byte[] getRoot() {
+        rwLock.readLock().lock();
+        try {
+            return worldState.getRootHash();
+        } finally {
+            rwLock.readLock().unlock();
         }
     }
 
-    private void pruneBlocks(A0BlockHeader curBlock) {
+    public void setRoot(byte[] root) {
+        rwLock.writeLock().lock();
+        try {
+            worldState.setRoot(root);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    public void setPruneBlockCount(long pruneBlockCount) {
+        rwLock.writeLock().lock();
+        try {
+            this.pruneBlockCount = pruneBlockCount;
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    public void commitBlock(A0BlockHeader blockHeader) {
+        rwLock.writeLock().lock();
+
+        try {
+            worldState.sync();
+            detailsDS.syncLargeStorage();
+
+            // temporarily removed since never used
+        /* if (pruneBlockCount >= 0) {
+            stateDSPrune.storeBlockChanges(blockHeader);
+            detailsDS.getStorageDSPrune().storeBlockChanges(blockHeader);
+            pruneBlocks(blockHeader);
+        } */
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    // TODO-AR: reenable state pruning
+    // temporarily removed since never used
+    /* private void pruneBlocks(A0BlockHeader curBlock) {
         if (curBlock.getNumber() > bestBlockNumber) { // pruning only on
-                                                      // increasing blocks
+            // increasing blocks
             long pruneBlockNumber = curBlock.getNumber() - pruneBlockCount;
             if (pruneBlockNumber >= 0) {
                 byte[] pruneBlockHash = blockStore.getBlockHashByNumber(pruneBlockNumber);
                 if (pruneBlockHash != null) {
                     A0BlockHeader header = blockStore.getBlockByHash(pruneBlockHash).getHeader();
-                    stateDSPrune.prune(header);
-                    detailsDS.getStorageDSPrune().prune(header);
+                    // stateDSPrune.prune(header);
+                    // detailsDS.getStorageDSPrune().prune(header);
                 }
             }
         }
         bestBlockNumber = curBlock.getNumber();
-    }
+    } */
 
     public Trie getWorldState() {
         return worldState;
     }
 
     @Override
-    public synchronized IRepository getSnapshotTo(byte[] root) {
+    public IRepository getSnapshotTo(byte[] root) {
+        rwLock.readLock().lock();
 
-        AionRepositoryImpl repo = new AionRepositoryImpl();
-        repo.blockStore = blockStore;
-        repo.cfg = cfg;
-        repo.stateDatabase = this.stateDatabase;
-        repo.stateDSPrune = this.stateDSPrune;
-        repo.pruneBlockCount = this.pruneBlockCount;
-        repo.detailsDS = this.detailsDS;
-        repo.isSnapshot = true;
+        try {
+            AionRepositoryImpl repo = new AionRepositoryImpl();
+            repo.blockStore = blockStore;
+            repo.cfg = cfg;
+            repo.stateDatabase = this.stateDatabase;
+            // repo.stateDSPrune = this.stateDSPrune;
+            repo.pruneBlockCount = this.pruneBlockCount;
+            repo.detailsDS = this.detailsDS;
+            repo.isSnapshot = true;
 
-        repo.worldState = repo.createStateTrie();
-        repo.worldState.setRoot(root);
+            repo.worldState = repo.createStateTrie();
+            repo.worldState.setRoot(root);
 
-        return repo;
+            return repo;
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     /**
@@ -508,7 +528,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     public void close() {
         rwLock.writeLock().lock();
         try {
-
             try {
                 if (detailsDS != null) {
                     detailsDS.close();
@@ -589,12 +608,17 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     @Override
     public void compact() {
-        if (databaseGroup != null) {
-            for (IByteArrayKeyValueDatabase db : databaseGroup) {
-                db.compact();
+        rwLock.writeLock().lock();
+        try {
+            if (databaseGroup != null) {
+                for (IByteArrayKeyValueDatabase db : databaseGroup) {
+                    db.compact();
+                }
+            } else {
+                LOG.error("Database group is null.");
             }
-        } else {
-            LOG.error("Database group is null.");
+        } finally {
+            rwLock.writeLock().unlock();
         }
     }
 }

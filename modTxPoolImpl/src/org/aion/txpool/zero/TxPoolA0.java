@@ -94,8 +94,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public synchronized boolean add(TX tx) {
-        return !this.add(Collections.singletonList(tx)).isEmpty();
+    public synchronized TX add(TX tx) {
+        List<TX> rtn = this.add(Collections.singletonList(tx)) ;
+        return  rtn.isEmpty() ? null : rtn.get(0);
     }
 
     /**
@@ -116,19 +117,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         List<TX> newPendingTx = new ArrayList<>();
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
-
         for (TX tx : txl) {
-            // Gen temp mainTxMap
-            byte[] hash = tx.getHash();
 
-            if (hash == null) {
-                if (LOG.isWarnEnabled()) {
-                    LOG.warn("the tx hash is empty skip this tx [{}]!", tx);
-                }
-                continue;
-            }
-
-            ByteArrayWrapper bw = ByteArrayWrapper.wrap(hash);
+            ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getHash());
             if (this.getMainMap().get(bw) != null) {
                 if (LOG.isWarnEnabled()) {
                     LOG.warn("The tx hash existed in the pool! [{}]", ByteUtils.toHexString(bw.getData()));
@@ -141,9 +132,35 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             mainMap.put(bw, new TXState(tx));
-            newPendingTx.add(tx);
 
-            setBestNonce(tx.getFrom(), new BigInteger(1, tx.getNonce()));
+            BigInteger txNonce = tx.getNonceBI();
+            BigInteger bn = getBestNonce(tx.getFrom());
+
+            if (bn != null && txNonce.compareTo(bn) < 1) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("repay tx, do snapshot!");
+                }
+                snapshot();
+            }
+
+            AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(tx.getFrom()).getMap().get(txNonce);
+            if (entry != null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("repay tx, remove previous tx!");
+                }
+                List oldTx = remove(Collections.singletonList(this.getMainMap().get(entry.getKey()).getTx()));
+
+                if (oldTx != null && !oldTx.isEmpty()) {
+                    newPendingTx.add((TX) oldTx.get(0));
+                }
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("new tx!");
+                }
+                newPendingTx.add(tx);
+            }
+
+            setBestNonce(tx.getFrom(), txNonce);
         }
 
         this.getMainMap().putAll(mainMap);
@@ -156,6 +173,78 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
+    public synchronized List<TX> remove(Map<Address, BigInteger> accNonce) {
+
+        List<ByteArrayWrapper> bwList = new ArrayList<>();
+        for (Map.Entry<Address, BigInteger> en1 : accNonce.entrySet()) {
+            AccountState as = this.getAccView(en1.getKey());
+            Iterator<Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>> it = as.getMap().entrySet().iterator();
+
+            while (it.hasNext()) {
+                Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>> en = it.next();
+                if (en1.getValue().compareTo(en.getKey()) > 0) {
+                    bwList.add(en.getValue().getKey());
+                    it.remove();
+                } else {
+                    break;
+                }
+            }
+
+            Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
+            if (this.getPoolStateView(en1.getKey()) != null) {
+                this.getPoolStateView(en1.getKey()).parallelStream().forEach(ps -> fee.add(ps.getFee()));
+            }
+
+            fee.parallelStream().forEach(bi -> {
+                if (this.getFeeView().get(bi) != null) {
+                    this.getFeeView().get(bi).entrySet().removeIf(
+                            byteArrayWrapperTxDependListEntry -> byteArrayWrapperTxDependListEntry.getValue().getAddress().equals(en1.getKey()));
+
+                    if (this.getFeeView().get(bi).isEmpty()) {
+                        this.getFeeView().remove(bi);
+                    }
+                }
+            });
+
+            as.setDirty();
+        }
+
+        List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
+        bwList.parallelStream().forEach( bw -> {
+            if (this.getMainMap().get(bw) != null) {
+                ITransaction tx = this.getMainMap().get(bw).getTx().clone();
+                removedTxl.add((TX)tx);
+
+                long timestamp = tx.getTimeStampBI().longValue()/ multiplyM;
+                synchronized (this.getTimeView().get(timestamp)) {
+                    if (this.getTimeView().get(timestamp) == null) {
+                        LOG.error("Txpool.remove can't find the timestamp in the map [{}]", tx.toString());
+                        return;
+                    }
+
+                    this.getTimeView().get(timestamp).remove(bw);
+                    if (this.getTimeView().get(timestamp).isEmpty()) {
+                        this.getTimeView().remove(timestamp);
+                    }
+                }
+
+                this.getMainMap().remove(bw);
+            }
+        });
+
+        this.updateAccPoolState();
+        this.updateFeeMap();
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("TxPoolA0.remove {} TX", removedTxl.size());
+        }
+
+        return removedTxl;
+    }
+
+
+    @Override
+    @Deprecated
     public synchronized List<TX> remove(List<TX> txs) {
 
         List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
@@ -172,17 +261,14 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("TxPoolA0.remove:[{}] nonce:[{}]", ByteUtils.toHexString(tx.getHash()),
-                        new BigInteger(1, tx.getNonce()).toString());
+                        tx.getNonceBI().toString());
             }
 
-            long timestamp = new BigInteger(1, tx.getTimeStamp()).longValue()/ multiplyM;
-            if (this.getTimeView().get(timestamp) == null) {
-                continue;
-            }
-
-            this.getTimeView().get(timestamp).remove(bw);
-            if (this.getTimeView().get(timestamp).isEmpty()) {
-                this.getTimeView().remove(timestamp);
+            long timestamp = tx.getTimeStampBI().longValue()/ multiplyM;
+            if (this.getTimeView().get(timestamp).remove(bw)) {
+                if (this.getTimeView().get(timestamp).isEmpty()) {
+                    this.getTimeView().remove(timestamp);
+                }
             }
 
             // remove the all transactions belong to the given address in the feeView
@@ -206,7 +292,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             AccountState as = this.getAccView(tx.getFrom());
-            as.getMap().remove(new BigInteger(1, tx.getNonce()));
+            as.getMap().remove(tx.getNonceBI());
             as.setDirty();
         }
 
@@ -245,32 +331,51 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<TX> snapshotAll() {
-        return snapshot(true);
+    public TX getPoolTx(Address from, BigInteger txNonce) {
+        AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
+        return entry == null ? null : this.getMainMap().get(entry.getKey()).getTx();
+    }
+    
+    @Override
+    public synchronized List<TX> snapshotAll() {
+
+        sortTxn();
+        removeTimeoutTxn();
+
+        List<TX> rtn = new ArrayList<>();
+        for (Map.Entry<Address, AccountState>  as : this.getFullAcc().entrySet()) {
+            for (Map.Entry<ByteArrayWrapper, BigInteger> txMap : as.getValue().getMap().values()) {
+                if (this.getMainMap().get(txMap.getKey()) == null) {
+                    LOG.error("can't find the tx in the mainMap");
+                    continue;
+                }
+
+                rtn.add((TX)this.getMainMap().get(txMap.getKey()).getTx().clone());
+            }
+        }
+
+        if (LOG.isInfoEnabled()) {
+            LOG.info("TxPoolA0.snapshot All return [{}] TX, poolSize[{}]", rtn.size(), getMainMap().size());
+        }
+
+        return rtn;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<TX> snapshot() {
-        return snapshot(false);
-    }
-
-    private synchronized List<TX> snapshot(boolean getAll) {
+    public synchronized List<TX> snapshot() {
         List<TX> rtn = new ArrayList<>();
 
         sortTxn();
         removeTimeoutTxn();
 
-        int cnt_txSz = blkSizeLimit;
-        long cnt_nrg = blkNrgLimit.get();
+        int cnt_txSz = 0;
+        long cnt_nrg = 0;
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
                 .entrySet()) {
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("snapshot fee[{}]", e.getKey().toString());
+                LOG.trace("snapshot  fee[{}]", e.getKey().toString());
             }
 
             Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> tpl = e.getValue();
@@ -282,18 +387,15 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     for (ByteArrayWrapper bw : pair.getValue().getTxList()) {
                         ITransaction itx = this.getMainMap().get(bw).getTx();
 
-                        if (!getAll) {
-                            cnt_txSz -= itx.getEncoded().length;
-                            if (LOG.isTraceEnabled()) {
-                                LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                        itx.getFrom().toString(), new BigInteger(1, itx.getNonce()).toString(),
-                                        itx.getEncoded().length, itx.getNrgConsume());
-                            }
-
-                            cnt_nrg -= itx.getNrgConsume();
+                        cnt_txSz += itx.getEncoded().length;
+                        cnt_nrg += itx.getNrgConsume();
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
+                                    itx.getFrom().toString(), new BigInteger(1, itx.getNonce()).toString(),
+                                    itx.getEncoded().length, itx.getNrgConsume());
                         }
 
-                        if (cnt_txSz > 0 && cnt_nrg > 0) {
+                        if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
                             try {
                                 rtn.add((TX) itx.clone());
                                 if (firstTx) {
@@ -304,17 +406,13 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                 ex.printStackTrace();
 
                                 if (LOG.isErrorEnabled()) {
-                                    LOG.error("Snapshot txn exception", ex.toString());
-                                }
-
-                                if (LOG.isInfoEnabled()) {
-                                    LOG.info("TxPoolA0.snapshot return [{}] TX", rtn.size());
+                                    LOG.error("TxPoolA0.snapshot  exception[{}], return [{}] TX", ex.toString(), rtn.size());
                                 }
                                 return rtn;
                             }
                         } else {
                             if (LOG.isWarnEnabled()) {
-                                LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], txn_number[{}]", cnt_txSz,
+                                LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz,
                                         cnt_nrg, rtn.size());
                             }
 
@@ -338,44 +436,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return "0.1.0";
     }
 
-    @Override
-    public synchronized Map.Entry<BigInteger, BigInteger> bestNonceSet(Address address) {
-
-        List<BigInteger> nonceList = new ArrayList<>();
-        List<PoolState> psl = this.getPoolStateView(address);
-        if (!psl.isEmpty()) {
-            boolean firstPS = true;
-            int combo = 0;
-            BigInteger nextNonce = BigInteger.ZERO;
-
-            for (PoolState ps : psl) {
-                if (firstPS) {
-                    nextNonce = ps.getFirstNonce();
-                    nonceList.add(nextNonce);
-                    nextNonce = nextNonce.add(BigInteger.valueOf(ps.getCombo()));
-                    combo += ps.getCombo();
-                    firstPS = false;
-                } else {
-                    if (ps.getFirstNonce().equals(nextNonce)) {
-                        nextNonce = nextNonce.add(BigInteger.valueOf(ps.getCombo()));
-                        combo += ps.getCombo();
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            nonceList.add(nonceList.get(0).add(BigInteger.valueOf(combo - 1)));
-        }
-
-        return nonceList.size() == 2 ? new AbstractMap.SimpleEntry<>(nonceList.get(0), nonceList.get(1)) : null;
-    }
-
-    public synchronized BigInteger bestNonce(Address addr) {
-        if (addr == null) {
-            throw new NullPointerException();
-        }
-
+    public BigInteger bestNonce(Address addr) {
         return getBestNonce(addr);
     }
 
@@ -404,16 +465,4 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }

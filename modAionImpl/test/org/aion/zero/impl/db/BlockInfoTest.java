@@ -71,9 +71,9 @@ public class BlockInfoTest {
 
         AionBlockStore.BlockInfo deserializedInfo = deserializedBlockInfos.get(0);
 
-        assertThat(deserializedInfo.cummDifficulty).isEqualTo(info.cummDifficulty);
-        assertThat(deserializedInfo.hash).isEqualTo(info.hash);
-        assertThat(deserializedInfo.mainChain).isEqualTo(info.mainChain);
+        assertThat(deserializedInfo.getCummDifficulty()).isEqualTo(info.getCummDifficulty());
+        assertThat(deserializedInfo.getHash()).isEqualTo(info.getHash());
+        assertThat(deserializedInfo.isMainChain()).isEqualTo(info.isMainChain());
     }
 
     @Test
@@ -96,15 +96,15 @@ public class BlockInfoTest {
 
         AionBlockStore.BlockInfo dInfo1 = deserializedBlockInfos.get(0);
 
-        assertThat(dInfo1.cummDifficulty).isEqualTo(info.cummDifficulty);
-        assertThat(dInfo1.hash).isEqualTo(info.hash);
-        assertThat(dInfo1.mainChain).isEqualTo(info.mainChain);
+        assertThat(dInfo1.getCummDifficulty()).isEqualTo(info.getCummDifficulty());
+        assertThat(dInfo1.getHash()).isEqualTo(info.getHash());
+        assertThat(dInfo1.isMainChain()).isEqualTo(info.isMainChain());
 
         AionBlockStore.BlockInfo dInfo2 = deserializedBlockInfos.get(1);
 
-        assertThat(dInfo2.cummDifficulty).isEqualTo(info2.cummDifficulty);
-        assertThat(dInfo2.hash).isEqualTo(info2.hash);
-        assertThat(dInfo2.mainChain).isEqualTo(info2.mainChain);
+        assertThat(dInfo2.getCummDifficulty()).isEqualTo(info2.getCummDifficulty());
+        assertThat(dInfo2.getHash()).isEqualTo(info2.getHash());
+        assertThat(dInfo2.isMainChain()).isEqualTo(info2.isMainChain());
     }
 
     @Test
@@ -114,8 +114,8 @@ public class BlockInfoTest {
         assertThat(des.size()).isEqualTo(1);
 
         AionBlockStore.BlockInfo info = des.get(0);
-        assertThat(info.cummDifficulty).isEqualTo(BigInteger.valueOf(5927284));
+        assertThat(info.getCummDifficulty()).isEqualTo(BigInteger.valueOf(5927284));
         assertThat(Arrays.equals(info.getHash(), ByteUtil.hexStringToBytes("0xbfd84d03d8726c6b3b9221d2cce051b94900a2b1dd6186838a2bd9c47853e7a8"))).isTrue();
-        assertThat(info.mainChain).isTrue();
+        assertThat(info.isMainChain()).isTrue();
     }
 }

@@ -52,10 +52,48 @@ import java.util.Set;
  */
 public class LevelDB extends AbstractDB {
 
+    private final int maxOpenFiles;
+    private final int blockSize;
+    private final int writeBufferSize;
+    private final int cacheSize;
+
     private DB db;
 
-    public LevelDB(String name, String path, boolean enableCache, boolean enableCompression) {
+    public LevelDB(String name,
+                   String path,
+                   boolean enableCache,
+                   boolean enableCompression,
+                   int maxOpenFiles,
+                   int blockSize,
+                   int writeBufferSize,
+                   int cacheSize) {
         super(name, path, enableCache, enableCompression);
+        this.maxOpenFiles = maxOpenFiles;
+        this.blockSize = blockSize;
+        this.writeBufferSize = writeBufferSize;
+        this.cacheSize = cacheSize;
+    }
+
+    /**
+     * <p>Original constructor for LevelDB, to keep compatibility with tests, for
+     * future use the user should set the {@link #maxOpenFiles} and {@link #blockSize}
+     * directly.</p>
+     *
+     * <p>Note: the values set in this constructor are not optimal, only historical.</p>
+     */
+    @Deprecated
+    public LevelDB(String name,
+                   String path,
+                   boolean enableCache,
+                   boolean enableCompression) {
+        this(   name,
+                path,
+                enableCache,
+                enableCompression,
+                LevelDBConstants.MAX_OPEN_FILES,
+                LevelDBConstants.BLOCK_SIZE,
+                LevelDBConstants.WRITE_BUFFER_SIZE,
+                LevelDBConstants.CACHE_SIZE);
     }
 
     @Override
@@ -68,86 +106,62 @@ public class LevelDB extends AbstractDB {
 
         options.createIfMissing(true);
         options.compressionType(enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
-        options.blockSize(10 * 1024 * 1024);
-        options.writeBufferSize(DEFAULT_WRITE_BUFFER_SIZE_BYTES); // (levelDb default: 8mb)
-        options.cacheSize(enableDbCache ? DEFAULT_CACHE_SIZE_BYTES : 0);
+        options.blockSize(this.blockSize);
+        options.writeBufferSize(this.writeBufferSize); // (levelDb default: 8mb)
+        options.cacheSize(enableDbCache ? this.cacheSize : 0);
         options.paranoidChecks(true);
         options.verifyChecksums(true);
-        options.maxOpenFiles(32);
+        options.maxOpenFiles(this.maxOpenFiles);
 
         return options;
     }
 
     // IDatabase functionality -----------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean open() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         if (isOpen()) {
-            // releasing write lock and return status
-            lock.writeLock().unlock();
             return true;
         }
 
-        try {
-            LOG.debug("init database {}", this.toString());
+        LOG.debug("init database {}", this.toString());
 
-            File f = new File(path);
-            File dbRoot = f.getParentFile();
+        File f = new File(path);
+        File dbRoot = f.getParentFile();
 
-            // make the parent directory if not exists
-            if (!dbRoot.exists()) {
-                if (!f.getParentFile().mkdirs()) {
-                    LOG.error("Failed to initialize the database storage for " + this.toString() + ".");
-
-                    // releasing write lock and return status
-                    lock.writeLock().unlock();
-                    return false;
-                }
+        // make the parent directory if not exists
+        if (!dbRoot.exists()) {
+            if (!f.getParentFile().mkdirs()) {
+                LOG.error("Failed to initialize the database storage for " + this.toString() + ".");
+                return false;
             }
+        }
 
-            Options options = setupLevelDbOptions();
+        Options options = setupLevelDbOptions();
+
+        try {
+            db = JniDBFactory.factory.open(f, options);
+        } catch (Exception e1) {
+            LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
 
             try {
-                db = JniDBFactory.factory.open(f, options);
-            } catch (Exception e1) {
-                LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
-
-                try {
-                    // attempt repair
-                    JniDBFactory.factory.repair(f, options);
-                } catch (Exception e2) {
-                    LOG.error("Failed to repair the database " + this.toString() + " due to: ", e2);
-                }
-
-                // close the connection and cleanup if needed
-                close();
+                // attempt repair
+                JniDBFactory.factory.repair(f, options);
+            } catch (Exception e2) {
+                LOG.error("Failed to repair the database " + this.toString() + " due to: ", e2);
             }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+
+            // close the connection and cleanup if needed
+            close();
         }
 
         return isOpen();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void close() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         // do nothing if already closed
         if (db == null) {
-            // releasing write lock
-            lock.writeLock().unlock();
             return;
         }
 
@@ -161,89 +175,43 @@ public class LevelDB extends AbstractDB {
         } finally {
             // ensuring the db is null after close was called
             db = null;
-            // releasing write lock
-            lock.writeLock().unlock();
         }
     }
 
     @Override
     public void compact() {
-        // acquire read lock
-        lock.writeLock().lock();
-
         LOG.info("Compacting " + this.toString() + ".");
-
-        try {
-            db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
-        } finally {
-            // release write lock
-            lock.writeLock().unlock();
-        }
+        db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isOpen() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        boolean open = db != null;
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return open;
+        return db != null;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isCreatedOnDisk() {
-        // acquire read lock
-        lock.readLock().lock();
-
         // working heuristic for Ubuntu: both the LOCK and LOG files should get created on creation
         // TODO: implement a platform independent way to do this
-        boolean onDisk = new File(path, "LOCK").exists() && new File(path, "LOG").exists();
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return onDisk;
+        return new File(path, "LOCK").exists() && new File(path, "LOG").exists();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public long approximateSize() {
-        // acquire read lock
-        lock.readLock().lock();
+        check();
 
-        long count;
+        long count = 0;
 
-        try {
-            check();
+        File[] files = (new File(path)).listFiles();
 
-            count = 0;
-
-            File[] files = (new File(path)).listFiles();
-
-            if (files != null) {
-                for (File f : files) {
-                    if (f.isFile()) {
-                        count += f.length();
-                    }
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile()) {
+                    count += f.length();
                 }
-            } else {
-                count = -1L;
             }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+        } else {
+            count = -1L;
         }
 
         return count;
@@ -251,222 +219,143 @@ public class LevelDB extends AbstractDB {
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isEmpty() {
-        // acquire read lock
-        lock.readLock().lock();
+        check();
 
-        boolean status = true;
+        try (DBIterator itr = db.iterator()) {
+            itr.seekToFirst();
 
-        try {
-            check();
-
-            try (DBIterator itr = db.iterator()) {
-                itr.seekToFirst();
-
-                // check if there is at least one item
-                status = !itr.hasNext();
-            } catch (Exception e) {
-                LOG.error("Unable to extract information from database " + this.toString() + ".", e);
-            }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+            // check if there is at least one item
+            return !itr.hasNext();
+        } catch (Exception e) {
+            LOG.error("Unable to extract information from database " + this.toString() + ".", e);
         }
 
-        return status;
+        return true;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Set<byte[]> keys() {
-        // acquire read lock
-        lock.readLock().lock();
-
         Set<byte[]> set = new HashSet<>();
 
-        try {
-            check();
+        check();
 
-            try (DBIterator itr = db.iterator()) {
-                // extract keys
-                for (itr.seekToFirst(); itr.hasNext(); itr.next()) {
-                    set.add(itr.peekNext().getKey());
-                }
-            } catch (Exception e) {
-                LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
+        try (DBIterator itr = db.iterator()) {
+            // extract keys
+            for (itr.seekToFirst(); itr.hasNext(); itr.next()) {
+                set.add(itr.peekNext().getKey());
             }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+        } catch (Exception e) {
+            LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
         }
 
         // empty when retrieval failed
         return set;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public byte[] getInternal(byte[] k) {
         return db.get(k);
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void put(byte[] k, byte[] v) {
         check(k);
 
-        // acquire read lock
-        lock.readLock().lock();
+        check();
 
-        try {
-            check();
-
-            if (v == null) {
-                db.delete(k);
-            } else {
-                db.put(k, v);
-            }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+        if (v == null) {
+            db.delete(k);
+        } else {
+            db.put(k, v);
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void delete(byte[] k) {
         check(k);
 
-        // acquire read lock
-        lock.readLock().lock();
-
-        try {
-            check();
-            db.delete(k);
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
+        check();
+        db.delete(k);
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void putBatch(Map<byte[], byte[]> inputMap) {
         check(inputMap.keySet());
 
-        // acquire read lock
-        lock.readLock().lock();
+        check();
 
-        try {
-            check();
+        // try-with-resources will automatically close the batch object
+        try (WriteBatch batch = db.createWriteBatch()) {
+            // add put and delete operations to batch
+            for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
+                byte[] key = e.getKey();
+                byte[] value = e.getValue();
 
-            // try-with-resources will automatically close the batch object
-            try (WriteBatch batch = db.createWriteBatch()) {
-                // add put and delete operations to batch
-                for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
-                    byte[] key = e.getKey();
-                    byte[] value = e.getValue();
-
-                    if (value == null) {
-                        batch.delete(key);
-                    } else {
-                        batch.put(key, value);
-                    }
+                if (value == null) {
+                    batch.delete(key);
+                } else {
+                    batch.put(key, value);
                 }
-
-                // bulk atomic update
-                db.write(batch);
-            } catch (DBException e) {
-                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
-            } catch (IOException e) {
-                LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
             }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+
+            // bulk atomic update
+            db.write(batch);
+        } catch (DBException e) {
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+        } catch (IOException e) {
+            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
         check(keys);
 
-        // acquire read lock
-        lock.readLock().lock();
+        check();
 
-        try {
-            check();
-
-            try (WriteBatch batch = db.createWriteBatch()) {
-                // add delete operations to batch
-                for (byte[] k : keys) {
-                    batch.delete(k);
-                }
-
-                // bulk atomic update
-                db.write(batch);
-            } catch (DBException e) {
-                LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
-            } catch (IOException e) {
-                LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+        try (WriteBatch batch = db.createWriteBatch()) {
+            // add delete operations to batch
+            for (byte[] k : keys) {
+                batch.delete(k);
             }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+
+            // bulk atomic update
+            db.write(batch);
+        } catch (DBException e) {
+            LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
+        } catch (IOException e) {
+            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
     }
 
     // AbstractDB functionality ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        // acquire read lock
-        lock.readLock().lock();
-
         boolean success = false;
 
-        try {
-            check();
+        check();
 
-            // try-with-resources will automatically close the batch object
-            try (WriteBatch batch = db.createWriteBatch()) {
-                // add put and delete operations to batch
-                for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
-                    if (e.getValue() == null) {
-                        batch.delete(e.getKey().getData());
-                    } else {
-                        batch.put(e.getKey().getData(), e.getValue());
-                    }
+        // try-with-resources will automatically close the batch object
+        try (WriteBatch batch = db.createWriteBatch()) {
+            // add put and delete operations to batch
+            for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
+                if (e.getValue() == null) {
+                    batch.delete(e.getKey().getData());
+                } else {
+                    batch.put(e.getKey().getData(), e.getValue());
                 }
-
-                // bulk atomic update
-                db.write(batch);
-
-                success = true;
-            } catch (DBException e) {
-                LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-            } catch (IOException e) {
-                LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
             }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+
+            // bulk atomic update
+            db.write(batch);
+
+            success = true;
+        } catch (DBException e) {
+            LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
+        } catch (IOException e) {
+            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
 
         return success;

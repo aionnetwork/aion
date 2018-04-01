@@ -18,17 +18,16 @@
  * Contributors:
  *     Aion foundation.
  *******************************************************************************/
-
 package org.aion.mcf.db;
 
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.vm.types.DataWord;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
@@ -36,6 +35,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.h256;
@@ -60,130 +61,204 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
      * local accounts cache
      */
     protected Map<Address, AccountState> cachedAccounts;
+    protected ReadWriteLock lockAccounts = new ReentrantReadWriteLock();
     /**
      * local contract details cache
      */
     protected Map<Address, IContractDetails<DataWord>> cachedDetails;
+    protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
     @Override
-    public synchronized AccountState createAccount(Address address) {
+    public AccountState createAccount(Address address) {
+        fullyWriteLock();
+        try {
+            AccountState accountState = new AccountState();
+            cachedAccounts.put(address, accountState);
 
-        AccountState accountState = new AccountState();
-        cachedAccounts.put(address, accountState);
+            // TODO: unify contract details initialization from Impl and Track
+            IContractDetails<DataWord> contractDetails = new ContractDetailsCacheImpl(null);
+            // TODO: refactor to use makeDirty() from AbstractState
+            contractDetails.setDirty(true);
+            cachedDetails.put(address, contractDetails);
 
-        // TODO: unify contract details initialization from Impl and Track
-        IContractDetails<DataWord> contractDetails = new ContractDetailsCacheImpl(null);
-        // TODO: refactor to use makeDirty() from AbstractState
-        contractDetails.setDirty(true);
-        cachedDetails.put(address, contractDetails);
-
-        return accountState;
+            return accountState;
+        } finally {
+            fullyWriteUnlock();
+        }
     }
 
     /**
-     * Retrieves the current state of the account associated with the given
-     * address.
+     * Retrieves the current state of the account associated with the given address.
      *
      * @param address
      *         the address of the account of interest
-     * @return a {@link AccountState} object representing the account state as
-     * is stored in the database or cache
-     * @implNote If there is no account associated with the given address, it
-     * will create it.
+     * @return a {@link AccountState} object representing the account state as is stored in the database or cache
+     * @implNote If there is no account associated with the given address, it will create it.
      */
     @Override
-    public synchronized AccountState getAccountState(Address address) {
+    public AccountState getAccountState(Address address) {
+        lockAccounts.readLock().lock();
 
-        // check if the account is cached locally
-        AccountState accountState = this.cachedAccounts.get(address);
+        try {
+            // check if the account is cached locally
+            AccountState accountState = this.cachedAccounts.get(address);
 
-        // when the account is not cached load it from the repository
-        if (accountState == null) {
-            // note that the call below will create the account if never stored
-            this.repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
-            accountState = this.cachedAccounts.get(address);
+            // when the account is not cached load it from the repository
+            if (accountState == null) {
+                // must unlock to perform write operation from loadAccountState(address)
+                lockAccounts.readLock().unlock();
+                loadAccountState(address);
+                lockAccounts.readLock().lock();
+                accountState = this.cachedAccounts.get(address);
+            }
+
+            return accountState;
+        } finally {
+            try {
+                lockAccounts.readLock().unlock();
+            } catch (Exception e) {
+                // there was nothing to unlock
+            }
         }
-
-        return accountState;
     }
 
-    public synchronized boolean hasAccountState(Address address) {
-        AccountState accountState = cachedAccounts.get(address);
+    public boolean hasAccountState(Address address) {
+        lockAccounts.readLock().lock();
+        try {
+            AccountState accountState = cachedAccounts.get(address);
 
-        if (accountState != null) {
-            // checks that the account is not cached as deleted
-            // TODO: may also need to check if the state is empty
-            return !accountState.isDeleted();
-        } else {
-            // check repository when not cached
-            return repository.hasAccountState(address);
+            if (accountState != null) {
+                // checks that the account is not cached as deleted
+                // TODO: may also need to check if the state is empty
+                return !accountState.isDeleted();
+            } else {
+                // check repository when not cached
+                return repository.hasAccountState(address);
+            }
+        } finally {
+            lockAccounts.readLock().unlock();
         }
     }
 
     @Override
-    public synchronized IContractDetails<DataWord> getContractDetails(Address address) {
-        IContractDetails<DataWord> contractDetails = this.cachedDetails.get(address);
+    public IContractDetails<DataWord> getContractDetails(Address address) {
+        lockDetails.readLock().lock();
 
-        if (contractDetails == null) {
-            // loads the address into cache
-            this.repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
-            // retrieves the contract details
-            contractDetails = this.cachedDetails.get(address);
+        try {
+            IContractDetails<DataWord> contractDetails = this.cachedDetails.get(address);
+
+            if (contractDetails == null) {
+                // loads the address into cache
+                // must unlock to perform write operation from loadAccountState(address)
+                lockDetails.readLock().unlock();
+                loadAccountState(address);
+                lockDetails.readLock().lock();
+                // retrieves the contract details
+                contractDetails = this.cachedDetails.get(address);
+            }
+
+            return contractDetails;
+        } finally {
+            try {
+                lockDetails.readLock().unlock();
+            } catch (Exception e) {
+                // there was nothing to unlock
+            }
+
         }
-
-        return contractDetails;
     }
 
     @Override
-    public synchronized boolean hasContractDetails(Address address) {
-        IContractDetails<DataWord> contractDetails = cachedDetails.get(address);
+    public boolean hasContractDetails(Address address) {
+        lockDetails.readLock().lock();
 
-        if (contractDetails == null) {
-            // ask repository when not cached
-            return repository.hasContractDetails(address);
-        } else {
-            // TODO: may also need to check if the details are empty
-            return !contractDetails.isDeleted();
+        try {
+            IContractDetails<DataWord> contractDetails = cachedDetails.get(address);
+
+            if (contractDetails == null) {
+                // ask repository when not cached
+                return repository.hasContractDetails(address);
+            } else {
+                // TODO: may also need to check if the details are empty
+                return !contractDetails.isDeleted();
+            }
+        } finally {
+            lockDetails.readLock().unlock();
         }
     }
 
     /**
-     * @implNote The loaded objects are fresh copies of the locally cached
-     * account state and contract details.
+     * @implNote The loaded objects are fresh copies of the locally cached account state and contract details.
      */
     @Override
-    public synchronized void loadAccountState(Address address, Map<Address, AccountState> accounts,
+    public void loadAccountState(Address address, Map<Address, AccountState> accounts,
             Map<Address, IContractDetails<DataWord>> details) {
+        fullyReadLock();
 
-        // check if the account is cached locally
-        AccountState accountState = this.cachedAccounts.get(address);
-        IContractDetails<DataWord> contractDetails = this.cachedDetails.get(address);
+        try {
+            // check if the account is cached locally
+            AccountState accountState = this.cachedAccounts.get(address);
+            IContractDetails<DataWord> contractDetails = this.cachedDetails.get(address);
 
-        // when account not cached load from repository
-        if (accountState == null) {
-            // load directly to the caches given as parameters
-            repository.loadAccountState(address, accounts, details);
-        } else {
-            // copy the objects if they were cached locally
-            accounts.put(address, new AccountState(accountState));
-            details.put(address, new ContractDetailsCacheImpl(contractDetails));
+            // when account not cached load from repository
+            if (accountState == null) {
+                // load directly to the caches given as parameters
+                repository.loadAccountState(address, accounts, details);
+            } else {
+                // copy the objects if they were cached locally
+                accounts.put(address, new AccountState(accountState));
+                details.put(address, new ContractDetailsCacheImpl(contractDetails));
+            }
+        } finally {
+            fullyReadUnlock();
+        }
+    }
+
+    /**
+     * Loads the state of the account into <b>this object' caches</b>.
+     * Requires write locks on both {@link #lockAccounts} and {@link #lockDetails}.
+     *
+     * @implNote If the calling method has acquired a weaker lock, the lock must be released before calling this method.
+     * @apiNote If the account was never stored this call will create it.
+     */
+    private void loadAccountState(Address address) {
+        fullyWriteLock();
+        try {
+            repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
+        } finally {
+            fullyWriteUnlock();
         }
     }
 
     @Override
-    public synchronized void deleteAccount(Address address) {
-        getAccountState(address).delete();
-        getContractDetails(address).setDeleted(true);
+    public void deleteAccount(Address address) {
+        fullyWriteLock();
+        try {
+            getAccountState(address).delete();
+            getContractDetails(address).setDeleted(true);
+        } finally {
+            fullyWriteUnlock();
+        }
     }
 
     @Override
-    public synchronized BigInteger incrementNonce(Address address) {
-        return getAccountState(address).incrementNonce();
+    public BigInteger incrementNonce(Address address) {
+        lockAccounts.writeLock().lock();
+        try {
+            return getAccountState(address).incrementNonce();
+        } finally {
+            lockAccounts.writeLock().unlock();
+        }
     }
 
     @Override
-    public synchronized BigInteger setNonce(Address address, BigInteger newNonce) {
-        return getAccountState(address).setNonce(newNonce);
+    public BigInteger setNonce(Address address, BigInteger newNonce) {
+        lockAccounts.writeLock().lock();
+        try {
+            return getAccountState(address).setNonce(newNonce);
+        } finally {
+            lockAccounts.writeLock().unlock();
+        }
     }
 
     @Override
@@ -201,32 +276,37 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public synchronized BigInteger addBalance(Address address, BigInteger value) {
-
-        // TODO: where do we ensure that this does not result in a negative
-        // value?
-        AccountState accountState = getAccountState(address);
-        return accountState.addToBalance(value);
+    public BigInteger addBalance(Address address, BigInteger value) {
+        lockAccounts.writeLock().lock();
+        try {
+            // TODO: where do we ensure that this does not result in a negative value?
+            AccountState accountState = getAccountState(address);
+            return accountState.addToBalance(value);
+        } finally {
+            lockAccounts.writeLock().unlock();
+        }
     }
 
     @Override
-    public synchronized void saveCode(Address address, byte[] code) {
+    public void saveCode(Address address, byte[] code) {
+        fullyWriteLock();
+        try {
+            // save the code
+            // TODO: why not create contract here directly? also need to check that there is no preexisting code!
+            IContractDetails<DataWord> contractDetails = getContractDetails(address);
+            contractDetails.setCode(code);
+            // TODO: ensure that setDirty is done by the class itself
+            contractDetails.setDirty(true);
 
-        // save the code
-        // TODO: why not create contract here directly? also need to check that
-        // there is no preexisting code!
-        IContractDetails<DataWord> contractDetails = getContractDetails(address);
-        contractDetails.setCode(code);
-        // TODO: ensure that setDirty is done by the class itself
-        contractDetails.setDirty(true);
-
-        // update the code hash
-        getAccountState(address).setCodeHash(h256(code));
+            // update the code hash
+            getAccountState(address).setCodeHash(h256(code));
+        } finally {
+            fullyWriteUnlock();
+        }
     }
 
     @Override
-    public synchronized byte[] getCode(Address address) {
-
+    public byte[] getCode(Address address) {
         if (!hasAccountState(address)) {
             return EMPTY_BYTE_ARRAY;
         }
@@ -238,37 +318,47 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public synchronized void addStorageRow(Address address, DataWord key, DataWord value) {
-        getContractDetails(address).put(key, value);
+    public void addStorageRow(Address address, DataWord key, DataWord value) {
+        lockDetails.writeLock().lock();
+        try {
+            getContractDetails(address).put(key, value);
+        } finally {
+            lockDetails.writeLock().unlock();
+        }
     }
 
     @Override
-    public synchronized DataWord getStorageValue(Address address, DataWord key) {
+    public DataWord getStorageValue(Address address, DataWord key) {
         return getContractDetails(address).get(key);
     }
 
     @Override
-    public synchronized int getStorageSize(Address address) {
+    public int getStorageSize(Address address) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? 0 : details.getStorageSize();
     }
 
     @Override
-    public synchronized Set<DataWord> getStorageKeys(Address address) {
+    public Set<DataWord> getStorageKeys(Address address) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptySet() : details.getStorageKeys();
     }
 
     @Override
-    public synchronized Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
+    public Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
     @Override
     public void rollback() {
-        cachedAccounts.clear();
-        cachedDetails.clear();
+        fullyWriteLock();
+        try {
+            cachedAccounts.clear();
+            cachedDetails.clear();
+        } finally {
+            fullyWriteUnlock();
+        }
     }
 
     @Override
@@ -284,5 +374,37 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public BSB getBlockStore() {
         return repository.getBlockStore();
+    }
+
+    /**
+     * Lock to prevent writing on both accounts and details.
+     */
+    protected void fullyWriteLock() {
+        lockAccounts.writeLock().lock();
+        lockDetails.writeLock().lock();
+    }
+
+    /**
+     * Unlock to allow writing on both accounts and details.
+     */
+    protected void fullyWriteUnlock() {
+        lockDetails.writeLock().unlock();
+        lockAccounts.writeLock().unlock();
+    }
+
+    /**
+     * Lock for reading both accounts and details.
+     */
+    protected void fullyReadLock() {
+        lockAccounts.readLock().lock();
+        lockDetails.readLock().lock();
+    }
+
+    /**
+     * Unlock reading for both accounts and details.
+     */
+    protected void fullyReadUnlock() {
+        lockDetails.readLock().unlock();
+        lockAccounts.readLock().unlock();
     }
 }

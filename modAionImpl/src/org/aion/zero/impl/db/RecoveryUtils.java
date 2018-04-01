@@ -72,6 +72,8 @@ public class RecoveryUtils {
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
 
+        cfg.getDb().setHeapCacheEnabled(false);
+
         Map<String, String> cfgLog = new HashMap<>();
         cfgLog.put("DB", "INFO");
         cfgLog.put("GEN", "INFO");
