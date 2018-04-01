@@ -31,6 +31,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -105,38 +107,48 @@ public final class  P2pMgr implements IP2pMgr {
         public void run() {
             while (start.get()) {
 
-                int num;
                 try {
-                    num = selector.select(1);
+                    if(selector.select(1) == 0) {
+                        continue;
+                    }
                 } catch (IOException e) {
                     if (showLog)
                         System.out.println("<p2p inbound-select-io-exception>");
                     continue;
-                }
+                } catch (ClosedSelectorException e) {
+                    if (showLog) {
+                        System.out.println("<p2p inbound-select-close-exception>");
+                    }
 
-                if (num == 0)
-                    continue;
+                    return;
+                }
 
                 //selectorLock.lock();
                 Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 
                 while (keys.hasNext()) {
 
-                    final SelectionKey sk = keys.next();
-                    keys.remove();
-
-                    if (!sk.isValid())
-                        continue;
-
-                    if (sk.isAcceptable())
-                        accept();
-
-                    if (sk.isReadable())
+                        final SelectionKey sk = keys.next();
                         try {
-                            read(sk);
+                            keys.remove();
+
+                            if (!sk.isValid())
+                                continue;
+
+                            if (sk.isAcceptable())
+                                accept();
+
+                            if (sk.isReadable()) {
+                                    read(sk);
+                            }
                         } catch (IOException | NullPointerException e) {
                             if (showLog) {
                                 System.out.println("<p2p read-msg-io-exception>");
+                            }
+                            closeSocket((SocketChannel) sk.channel());
+                        } catch (Exception e) {
+                            if (showLog) {
+                                System.out.println("<p2p read-msg-exception>" + e.toString());
                             }
                             closeSocket((SocketChannel) sk.channel());
                         }
@@ -204,12 +216,18 @@ public final class  P2pMgr implements IP2pMgr {
                     if (showLog)
                         System.out.println("<p2p-tcp-interrupted>");
                     return;
+                } catch (Exception e) {
+                    if (showLog)
+                        System.out.println("<p2p-tcp-exception>" + e.toString());
+                    return;
                 }
+
                 int nodeIdHash = node.getIdHash();
                 if (!nodeMgr.getOutboundNodes().containsKey(nodeIdHash) && !nodeMgr.hasActiveNode(nodeIdHash)) {
                     int _port = node.getPort();
+                    SocketChannel channel = null;
                     try {
-                        SocketChannel channel = SocketChannel.open();
+                        channel = SocketChannel.open();
                         if (showLog)
                             System.out.println("<p2p try-connect-" + node.getIpStr() + ">");
                         channel.socket().connect(
@@ -249,6 +267,21 @@ public final class  P2pMgr implements IP2pMgr {
                         if (showLog)
                             System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
                                     + " result=failed>");
+                        try {
+                            channel.close();
+                        } catch (IOException e1) {
+                            System.out.println("<p2p action=close-outbound addr=" + node.getIpStr() + ":" + _port
+                                    + " result=failed>");
+                        }
+                        node.peerMetric.incFailedCount();
+                    } catch (Exception e) {
+                        try {
+                            channel.close();
+                        } catch (IOException e1) {
+                            System.out.println("<p2p action=close-outbound addr=" + node.getIpStr() + ":" + _port
+                                    + " result=exception>" + e.toString());
+                        }
+
                         node.peerMetric.incFailedCount();
                     }
                 }
@@ -301,6 +334,8 @@ public final class  P2pMgr implements IP2pMgr {
                     //selectorLock.unlock();
 
                 } catch (Exception e) {
+                    if (showLog)
+                        System.out.println("<p2p-clear exception>" + e.toString());
                 }
             }
         }
