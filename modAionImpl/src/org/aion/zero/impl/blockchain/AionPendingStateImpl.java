@@ -90,7 +90,7 @@ public class AionPendingStateImpl
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
-    private IRepository repository;
+    private IRepository<org.aion.mcf.core.AccountState, org.aion.mcf.vm.types.DataWord, org.aion.zero.impl.db.AionBlockStore> repository;
 
     private ITxPool<AionTransaction> txPool;
 
@@ -221,9 +221,8 @@ public class AionPendingStateImpl
             txPoolModule = TxPoolModule.getSingleton(prop);
             this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
         } catch (Throwable e) {
-            // TODO Auto-generated catch block
-            // log here!
             e.printStackTrace();
+            System.out.println("TxPoolModule getTxPool fail!" + e.toString());
         }
     }
 
@@ -237,7 +236,7 @@ public class AionPendingStateImpl
         this.evtMgr = blockchain.getEventMgr();
         this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax());
         this.pendingState = repository.startTracking();
-        this.txBuffer = new CopyOnWriteArrayList();
+        this.txBuffer = new CopyOnWriteArrayList<>();
 
         this.bufferEnable = CfgAion.inst().getTx().getBuffer();
         this.dumpPool = CfgAion.inst().getTx().getPoolDump();
@@ -563,7 +562,8 @@ public class AionPendingStateImpl
         IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
         this.evtMgr.newEvent(evtChange);
 
-        if (CfgAion.inst().getTx().getPoolDump()) {
+        // This is for debug purpose, do not use in the regular kernel running.
+        if (this.dumpPool) {
             DumpPool();
         }
     }

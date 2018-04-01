@@ -42,6 +42,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
 
+    private Object lockObj = new Object();
+
     public TxPoolA0() {
         super();
     }
@@ -350,8 +352,11 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             LOG.error("TxPoolA0.getPoolTx null args");
             return null;
         }
-        AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
-        return entry == null ? null : this.getMainMap().get(entry.getKey()).getTx();
+
+        synchronized (lockObj) {
+            AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
+            return entry == null ? null : this.getMainMap().get(entry.getKey()).getTx();
+        }
     }
     
     @Override
@@ -374,10 +379,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         if (LOG.isInfoEnabled()) {
             LOG.info("TxPoolA0.snapshot All return [{}] TX, poolSize[{}]", rtn.size(), getMainMap().size());
+        }
 
-            if (rtn.size() != getMainMap().size()) {
-                LOG.error("size does not match!");
-            }
+        if (rtn.size() != getMainMap().size()) {
+            LOG.error("size does not match!");
         }
 
         return rtn;
@@ -392,6 +397,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         int cnt_txSz = 0;
         long cnt_nrg = 0;
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
+        Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> nonPickedTx = new HashMap<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
                 .entrySet()) {
 
@@ -412,7 +418,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                         cnt_nrg += itx.getNrgConsume();
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                    itx.getFrom().toString(), new BigInteger(1, itx.getNonce()).toString(),
+                                    itx.getFrom().toString(), itx.getNonceBI().toString(),
                                     itx.getEncoded().length, itx.getNrgConsume());
                         }
 
@@ -440,6 +446,51 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                             return rtn;
                         }
                     }
+
+                    ByteArrayWrapper ancestor = pair.getKey();
+                    while (nonPickedTx.get(ancestor)!= null) {
+                        firstTx = true;
+                        for (ByteArrayWrapper bw : nonPickedTx.get(ancestor).getValue().getTxList()) {
+                            ITransaction itx = this.getMainMap().get(bw).getTx();
+
+                            cnt_txSz += itx.getEncoded().length;
+                            cnt_nrg += itx.getNrgConsume();
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
+                                        itx.getFrom().toString(), itx.getNonceBI().toString(), itx.getEncoded().length,
+                                        itx.getNrgConsume());
+                            }
+
+                            if (cnt_txSz < blkSizeLimit && cnt_nrg < blkNrgLimit.get()) {
+                                try {
+                                    rtn.add((TX) itx.clone());
+                                    if (firstTx) {
+                                        snapshotSet.add(bw);
+                                        firstTx = false;
+                                    }
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+
+                                    if (LOG.isErrorEnabled()) {
+                                        LOG.error("TxPoolA0.snapshot  exception[{}], return [{}] TX", ex.toString(), rtn.size());
+                                    }
+                                    return rtn;
+                                }
+                            } else {
+                                if (LOG.isWarnEnabled()) {
+                                    LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz, cnt_nrg,
+                                            rtn.size());
+                                }
+
+                                return rtn;
+                            }
+                        }
+
+                        ancestor = nonPickedTx.get(ancestor).getKey();
+                    }
+                } else {
+                    // one low fee small nonce tx has been picked,and then search from this map.
+                    nonPickedTx.put(pair.getValue().getDependTx(), pair);
                 }
             }
         }
