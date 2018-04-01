@@ -24,6 +24,7 @@
 
 package org.aion.zero.impl.valid;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
@@ -52,7 +53,7 @@ public class EquihashSolutionRule extends BlockHeaderRule<A0BlockHeader> {
         // 32 byte static hash, 8 byte dynamic
         byte[] validationBytes = new byte[40];
         byte[] staticHash = header.getStaticHash();
-        byte[] dynamic = BigInteger.valueOf(header.getTimestamp()).toByteArray();
+        byte[] dynamic = ByteUtil.longToBytes(header.getTimestamp());
 
         System.arraycopy(header.getStaticHash(), 0, validationBytes, 0, staticHash.length);
 

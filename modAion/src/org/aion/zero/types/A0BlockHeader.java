@@ -51,11 +51,11 @@ import org.json.JSONObject;
  */
 public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeader {
 
-    static final int RPL_BH_VERSION = 1, RPL_BH_NUMBER = 2, RPL_BH_PARENTHASH = 3,
-            RPL_BH_COINBASE = 4, RPL_BH_STATEROOT = 5, RPL_BH_TXTRIE = 6,
-            RPL_BH_RECEIPTTRIE = 7, RPL_BH_LOGSBLOOM = 8, RPL_BH_DIFFICULTY = 9,
-            RPL_BH_EXTRADATA = 10, RPL_BH_NRG_CONSUMED = 11, RPL_BH_NRG_LIMIT = 12,
-            RPL_BH_TIMESTAMP = 13, RPL_BH_NONCE = 14, RPL_BH_SOLUTION = 15;
+    static final int RPL_BH_VERSION = 0, RPL_BH_NUMBER = 1, RPL_BH_PARENTHASH = 2,
+            RPL_BH_COINBASE = 3, RPL_BH_STATEROOT = 4, RPL_BH_TXTRIE = 5,
+            RPL_BH_RECEIPTTRIE = 6, RPL_BH_LOGSBLOOM = 7, RPL_BH_DIFFICULTY = 8,
+            RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
+            RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
 
     //TODO: UPdate this
     public JSONObject toJSON() {
@@ -293,12 +293,21 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         byte[] solution = RLP.encodeElement(this.solution);
 
+        /*
+        RPL_BH_VERSION = 0, RPL_BH_NUMBER = 1, RPL_BH_PARENTHASH = 2,
+            RPL_BH_COINBASE = 3, RPL_BH_STATEROOT = 4, RPL_BH_TXTRIE = 5,
+            RPL_BH_RECEIPTTRIE = 6, RPL_BH_LOGSBLOOM = 7, RPL_BH_DIFFICULTY = 8,
+            RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
+            RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
+         */
+
+
         if (withNonce) {
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(RLPversion, number, parentHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty,
-                    timestamp, extraData, nonce, solution, energyConsumed, energyLimit);
+                                  extraData, energyConsumed, energyLimit, timestamp, nonce, solution);
         } else {
-            return RLP.encodeList(parentHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty,
+            return RLP.encodeList(RLPversion, parentHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty,
                     number, timestamp, extraData, solution, energyConsumed, energyLimit);
         }
     }
@@ -744,17 +753,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         }
 
         public A0BlockHeader build() {
+
             this.parentHash = this.parentHash == null ? HashUtil.EMPTY_DATA_HASH : this.parentHash;
             this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase; // the
-            // coinbase
-            // is
-            // fixed
-            // 32
-            // bytes
-            // array
-            // in
-            // the
-            // BlockHeader
             this.stateRoot = this.stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.stateRoot;
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot = this.receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.receiptTrieRoot;

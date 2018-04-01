@@ -560,9 +560,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
 
-        A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder();
-        headerBuilder.withParentHash(parent.getHash()).withCoinbase(minerCoinbase).withNumber(parent.getNumber() + 1)
-                .withTimestamp(time).withExtraData(minerExtraData).withTxTrieRoot(calcTxTrie(txs))
+        A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
+                .withVersion((byte)1)
+                .withParentHash(parent.getHash())
+                .withCoinbase(minerCoinbase)
+                .withNumber(parent.getNumber() + 1)
+                .withTimestamp(time).withExtraData(minerExtraData)
+                .withTxTrieRoot(calcTxTrie(txs))
                 .withEnergyLimit(energyLimit);
         AionBlock block = new AionBlock(headerBuilder.build(), txs);
 

@@ -25,6 +25,8 @@
 package org.aion.equihash;
 
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.aion.base.util.ByteUtil;
 import org.aion.base.util.NativeLoader;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
@@ -116,15 +118,13 @@ public class Equihash {
         // Static header bytes (portion of header which does not change per equihash iteration)
         byte [] staticHeaderBytes = updateHeader.getStaticHash();
 
-        System.out.println("Static length: " + staticHeaderBytes.length);
-
         // Dynamic header bytes
         long timestamp = System.currentTimeMillis() / 1000;
 
         // Dynamic header bytes (portion of header which changes each iteration0
-        byte[] dynamicHeaderBytes = BigInteger.valueOf(timestamp).toByteArray();
+        byte[] dynamicHeaderBytes = ByteUtil.longToBytes(timestamp);
 
-        BigInteger target = valueOf(2).pow(256).divide(new BigInteger(updateHeader.getDifficulty()));
+        BigInteger target = updateHeader.getPowBoundaryBI();
 
         int[][] generatedSolutions;
 
@@ -157,6 +157,8 @@ public class Equihash {
 
             // Found a valid solution
             if (isValidBlock(validationBytes, target)) {
+                System.out.println("Found solution with: " + toHexString(validationBytes) + " Size: " + validationBytes.length);
+                System.out.println("Target: " + toHexString(target.toByteArray()));
                 return new Solution(block, nonce, minimal, timestamp);
             }
         }
