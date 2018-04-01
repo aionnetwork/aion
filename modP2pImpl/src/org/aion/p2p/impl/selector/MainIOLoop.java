@@ -1,7 +1,8 @@
 package org.aion.p2p.impl.selector;
 
 import org.aion.p2p.impl.ChannelBuffer;
-import org.aion.p2p.impl.TaskWrite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,6 +30,8 @@ public class MainIOLoop implements Runnable {
     private long timeoutMillis = 5000L; // 1s
 
     private volatile boolean needsToSelectAgain = false;
+
+    private static final Logger log = LoggerFactory.getLogger("NET");
 
     // event-bus related
 
@@ -64,9 +67,15 @@ public class MainIOLoop implements Runnable {
                     this.currSelector.wakeup();
 
                 try {
+                    long startTime = System.nanoTime();
                     processSelectedKeys();
+                    long endTime = System.nanoTime();
+                    System.out.println("selector_key_proc: " + (endTime - startTime) + "ns");
                 } finally {
+                    long startTime = System.nanoTime();
                     runAllTasks();
+                    long endTime = System.nanoTime();
+                    System.out.println("selector_task_proc: " + (endTime - startTime) + "ns");
                 }
             }
         } catch (Throwable t) {
@@ -269,7 +278,7 @@ public class MainIOLoop implements Runnable {
                     channel.write(buffer);
                 }
             } catch (IOException e) {
-                System.out.println("could not write to buffer");
+                log.error("Failed to write to buffer", e);
             }
         });
         wakeup(isEventLoopThread());
@@ -282,9 +291,16 @@ public class MainIOLoop implements Runnable {
     public void cancelChannel(SocketChannel channel) {
         this.eventBus.addEvent(() -> {
             SelectionKey key = channel.keyFor(this.currSelector);
-            if (key != null)
+            if (key != null) {
                 key.cancel();
-            ((ChannelBuffer) key.attachment()).task.channelUnregistered(channel, null);
+                ((ChannelBuffer) key.attachment()).task.channelUnregistered(channel, null);
+            } else {
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    log.error("failed to close channel", e);
+                }
+            }
         });
     }
 }

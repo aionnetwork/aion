@@ -61,8 +61,7 @@ public class TaskWrite implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName("p2p-write");
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            System.out.println("sending: " + this.msg.getClass().getSimpleName() + " to: " + sc);
             /*
              * @warning header set len (body len) before header encode
              */
