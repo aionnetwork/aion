@@ -1,5 +1,6 @@
 package org.aion.p2p.impl.selector;
 
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 
@@ -25,6 +26,11 @@ public interface Task {
     };
 
     void channelReady(SelectableChannel channel, SelectionKey key);
+
+    // sometimes, writes become pending in which case they must be accepted
+    // by the channel, when OP_WRITE gets triggered, the channel is responsible for
+    // writing the message to the buffer
+    void acceptMessage(SelectableChannel channel, ByteBuffer buffer);
 
     void channelUnregistered(SelectableChannel channel, Throwable cause);
 }

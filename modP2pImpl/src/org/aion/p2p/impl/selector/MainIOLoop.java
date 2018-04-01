@@ -273,14 +273,32 @@ public class MainIOLoop implements Runnable {
                     return;
                 }
 
+                int ret;
                 while (buffer.hasRemaining()) {
-                    channel.write(buffer);
+                    try {
+                        ret = channel.write(buffer);
+                        if (ret == 0) {
+                            // we've hit buffer limit, get selector key and register a write event
+                            SelectionKey key = channel.keyFor(this.currSelector);
+                            if (key == null)
+                                return;
+                            key.interestOps(SelectionKey.OP_WRITE);
+                            break;
+                        }
+                    } finally {
+                        buffer.compact();
+                    }
                 }
             } catch (IOException e) {
                 //log.error("Failed to write to buffer", e);
             }
         });
         wakeup(isEventLoopThread());
+    }
+
+    private void resubmitWrite(ByteBuffer buffer, SelectionKey key, SocketChannel channel) {
+        // theres probably better ways to do this but for now the simplest
+        //
     }
 
     public SelectorProvider getSelectorProvider() {

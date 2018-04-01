@@ -40,8 +40,6 @@ import java.nio.channels.spi.SelectorProvider;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 // import org.aion.p2p.impl.one.msg.Hello;
 
@@ -95,7 +93,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final MainIOLoop ioLoop;
 
-    private final HandleRead handleRead = new HandleRead();
+    private final HandleChannel handleRead = new HandleChannel();
 
     private final HandleInboundEvent handleInbound = new HandleInboundEvent();
 
@@ -487,7 +485,6 @@ public final class P2pMgr implements IP2pMgr {
                 if (hlr == null)
                     continue;
                 node.refreshTimestamp();
-                //System.out.println("I am handle kernel msg !!!!! " + hlr.getHeader().getCtrl() + "-" + hlr.getHeader().getAction() + "-" + hlr.getHeader().getLen());
                 workers.submit(() -> hlr.receive(node.getIdHash(), node.getIdShort(), _msgBytes));
             }
         }
@@ -644,7 +641,7 @@ public final class P2pMgr implements IP2pMgr {
                         socketChan,
                         SelectionKey.OP_READ,
                         P2pMgr.this.nodeMgr,
-                        P2pMgr.this.handleRead);
+                        new HandleChannel());
 
             } catch (IOException e) {
                 if (P2pMgr.this.showLog) {
@@ -652,6 +649,11 @@ public final class P2pMgr implements IP2pMgr {
                     e.printStackTrace();
                 }
             }
+        }
+
+        @Override
+        public void acceptMessage(SelectableChannel channel, ByteBuffer buffer) {
+            // do nothing, dont accept outbound messages from this task
         }
 
         @Override
@@ -666,17 +668,53 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private final class HandleRead implements Task {
+
+    private final class HandleChannel implements Task {
+
+        private final Queue<ByteBuffer> byteBuffers = new LinkedBlockingQueue<>();
 
         @Override
         public void channelReady(SelectableChannel channel, SelectionKey key) {
             try {
-                P2pMgr.this.read(key);
+
+                if (key.isAcceptable())
+                    throw new UnsupportedOperationException("HandleChannel does not support acceptable keys");
+
+                if (key.isReadable())
+                    P2pMgr.this.read(key);
+
+                if (key.isWritable()) {
+                    write(channel);
+                }
             } catch (IOException e) {
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
             }
+        }
+
+        private void write(SelectableChannel channel) throws IOException {
+            SocketChannel chan = (SocketChannel) channel;
+            LOOP:
+            while(!byteBuffers.isEmpty()) {
+                ByteBuffer buf = byteBuffers.peek();
+                // try to write as much as we can
+                int ret;
+                while(buf.hasRemaining()) {
+                    ret = chan.write(buf);
+                    if (ret == 0 && buf.hasRemaining()) {
+                        buf.compact();
+                        break LOOP;
+                    }
+                }
+                // if we finish processing simply remove
+                byteBuffers.remove(buf);
+            }
+        }
+
+        @Override
+        public void acceptMessage(SelectableChannel channel, ByteBuffer buffer) {
+            byteBuffers.add(buffer);
         }
 
         @Override
