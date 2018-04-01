@@ -20,6 +20,11 @@ public interface Task {
         }
 
         @Override
+        public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
+
+        }
+
+        @Override
         public void channelUnregistered(SelectableChannel channel, Throwable cause) {
 
         }
@@ -30,7 +35,7 @@ public interface Task {
     // sometimes, writes become pending in which case they must be accepted
     // by the channel, when OP_WRITE gets triggered, the channel is responsible for
     // writing the message to the buffer
-    void acceptMessage(SelectableChannel channel, ByteBuffer buffer);
+    void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer);
 
     void channelUnregistered(SelectableChannel channel, Throwable cause);
 }

@@ -1,8 +1,6 @@
 package org.aion.p2p.impl.selector;
 
 import org.aion.p2p.impl.ChannelBuffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -70,12 +68,20 @@ public class MainIOLoop implements Runnable {
                     long startTime = System.nanoTime();
                     processSelectedKeys();
                     long endTime = System.nanoTime();
-                    System.out.println("selector_key_proc: " + (endTime - startTime) + "ns");
+
+                    long delta = endTime - startTime;
+                    if (delta > 1000000000) {
+                        System.out.println("warning, selector key took: " + delta + "ns");
+                    }
                 } finally {
                     long startTime = System.nanoTime();
                     runAllTasks();
                     long endTime = System.nanoTime();
-                    System.out.println("selector_task_proc: " + (endTime - startTime) + "ns");
+
+                    long delta = endTime - startTime;
+                    if (delta > 1000000000) {
+                        System.out.println("warning, selector key took: " + delta + "ns");
+                    }
                 }
             }
         } catch (Throwable t) {
@@ -267,32 +273,18 @@ public class MainIOLoop implements Runnable {
      * Submit a new task (this is a write task the base class to serialize messages)
      */
     public void write(ByteBuffer buffer, SocketChannel channel) {
-        this.eventBus.addEvent(() -> {
-            try {
-                if (!channel.isOpen()) {
-                    return;
-                }
+        SelectionKey key = channel.keyFor(this.currSelector);
 
-                int ret;
-                while (buffer.hasRemaining()) {
-                    try {
-                        ret = channel.write(buffer);
-                        if (ret == 0) {
-                            // we've hit buffer limit, get selector key and register a write event
-                            SelectionKey key = channel.keyFor(this.currSelector);
-                            if (key == null)
-                                return;
-                            key.interestOps(SelectionKey.OP_WRITE);
-                            break;
-                        }
-                    } finally {
-                        buffer.compact();
-                    }
-                }
+        if (key == null) {
+            try {
+                channel.close();
             } catch (IOException e) {
-                //log.error("Failed to write to buffer", e);
+                // do nothing here for now, just exit
             }
-        });
+            return;
+        }
+
+        ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
         wakeup(isEventLoopThread());
     }
 

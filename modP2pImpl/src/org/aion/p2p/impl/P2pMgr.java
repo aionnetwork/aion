@@ -160,7 +160,6 @@ public final class P2pMgr implements IP2pMgr {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
         _channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-        _channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
         _channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
     }
 
@@ -652,7 +651,7 @@ public final class P2pMgr implements IP2pMgr {
         }
 
         @Override
-        public void acceptMessage(SelectableChannel channel, ByteBuffer buffer) {
+        public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
             // do nothing, dont accept outbound messages from this task
         }
 
@@ -684,37 +683,44 @@ public final class P2pMgr implements IP2pMgr {
                     P2pMgr.this.read(key);
 
                 if (key.isWritable()) {
-                    write(channel);
+                    write(channel, key);
                 }
             } catch (IOException e) {
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
+                byteBuffers.clear();
             }
         }
 
-        private void write(SelectableChannel channel) throws IOException {
+        private void write(SelectableChannel channel, SelectionKey key) throws IOException {
             SocketChannel chan = (SocketChannel) channel;
-            LOOP:
-            while(!byteBuffers.isEmpty()) {
-                ByteBuffer buf = byteBuffers.peek();
-                // try to write as much as we can
-                int ret;
-                while(buf.hasRemaining()) {
-                    ret = chan.write(buf);
-                    if (ret == 0 && buf.hasRemaining()) {
-                        buf.compact();
-                        break LOOP;
+            try {
+                LOOP:
+                while (!byteBuffers.isEmpty()) {
+                    ByteBuffer buf = byteBuffers.peek();
+                    // try to write as much as we can
+                    int ret;
+                    while (buf.hasRemaining()) {
+                        ret = chan.write(buf);
+                        if (ret == 0 && buf.hasRemaining()) {
+                            buf.compact();
+                            break LOOP;
+                        }
                     }
+                    // if we finish processing simply remove
+                    byteBuffers.remove(buf);
                 }
-                // if we finish processing simply remove
-                byteBuffers.remove(buf);
+            } finally {
+                if (byteBuffers.isEmpty())
+                    key.interestOps(SelectionKey.OP_READ);
             }
         }
 
         @Override
-        public void acceptMessage(SelectableChannel channel, ByteBuffer buffer) {
+        public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
             byteBuffers.add(buffer);
+            key.interestOps(SelectionKey.OP_WRITE);
         }
 
         @Override

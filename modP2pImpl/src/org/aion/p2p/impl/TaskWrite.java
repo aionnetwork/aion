@@ -61,7 +61,6 @@ public class TaskWrite implements Runnable {
 
     @Override
     public void run() {
-            System.out.println("sending: " + this.msg.getClass().getSimpleName() + " to: " + sc);
             /*
              * @warning header set len (body len) before header encode
              */
