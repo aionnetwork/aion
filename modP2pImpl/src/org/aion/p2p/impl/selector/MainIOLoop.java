@@ -65,14 +65,7 @@ public class MainIOLoop implements Runnable {
                     this.currSelector.wakeup();
 
                 try {
-                    long startTime = System.nanoTime();
                     processSelectedKeys();
-                    long endTime = System.nanoTime();
-
-                    long delta = endTime - startTime;
-                    if (delta > 1000000000) {
-                        System.out.println("warning, selector key took: " + delta + "ns");
-                    }
                 } finally {
                     long startTime = System.nanoTime();
                     runAllTasks();
@@ -80,7 +73,7 @@ public class MainIOLoop implements Runnable {
 
                     long delta = endTime - startTime;
                     if (delta > 1000000000) {
-                        System.out.println("warning, selector key took: " + delta + "ns");
+                        System.out.println("warning, selector thread task took: " + delta + "ns");
                     }
                 }
             }
