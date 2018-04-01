@@ -199,6 +199,12 @@ public class TxnPoolTest {
                 ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, 1L);
     }
 
+    private ITransaction genTransactionRandomPrice(byte[] nonce, long price) {
+        return new AionTransaction(nonce, Address.wrap(key.get(0).getAddress()),
+                Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, price);
+    }
+
     @Test
     public void timeout1() throws Throwable {
         Properties config = new Properties();
@@ -324,6 +330,106 @@ public class TxnPoolTest {
 
         // sort the inserted txs
         List<ITransaction> txl = tp.snapshot();
+
+        long nonce = 0;
+        for (ITransaction tx : txl) {
+            assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
+        }
+    }
+
+    @Test
+    public void snapshot5() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "100");
+
+        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 100;
+        Random r = new Random();
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransaction(nonce);
+            ((AionTransaction) txn).sign(key.get(0));
+            txn.setNrgConsume(r.nextInt(1000));
+            txnl.add(txn);
+        }
+        tp.add(txnl);
+        assertTrue(tp.size() == cnt);
+
+        // sort the inserted txs
+        List<ITransaction> txl = tp.snapshot();
+        assertTrue(tp.size() == txl.size());
+        assertTrue(tp.snapshotAll().size() == txl.size());
+
+        long nonce = 0;
+        for (ITransaction tx : txl) {
+            assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
+        }
+    }
+
+    @Test
+    public void snapshot6() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "100");
+
+        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 200;
+        Random r = new Random();
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
+            ((AionTransaction) txn).sign(key.get(0));
+            txn.setNrgConsume(r.nextInt(1000));
+            txnl.add(txn);
+        }
+        tp.add(txnl);
+        assertTrue(tp.size() == cnt);
+
+        // sort the inserted txs
+        List<ITransaction> txl = tp.snapshot();
+        assertTrue(tp.size() == txl.size());
+        assertTrue(tp.snapshotAll().size() == txl.size());
+
+        long nonce = 0;
+        for (ITransaction tx : txl) {
+            assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
+        }
+    }
+
+    @Test
+    public void snapshot7() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "100");
+
+        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 200;
+        Random r = new Random();
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
+
+            ((AionTransaction) txn).sign(key.get(i < 100 ? 0 : 1));
+            txn.setNrgConsume(r.nextInt(1000));
+            txnl.add(txn);
+        }
+        tp.add(txnl);
+        assertTrue(tp.size() == cnt);
+        
+        // sort the inserted txs
+        List<ITransaction> txl = tp.snapshot();
+        assertTrue(tp.size() == txl.size());
+        assertTrue(tp.snapshotAll().size() == txl.size());
 
         long nonce = 0;
         for (ITransaction tx : txl) {
