@@ -104,6 +104,16 @@ public abstract class AbstractBlockHeader {
     // (1344 in 200-9, 1408 in 210,9)
     protected byte[] solution; // The equihash solution in compressed format
 
+    /*
+    * A long value containing energy consumed within this block
+     */
+    protected long energyConsumed;
+
+    /*
+     * A long value containing energy limit of this block
+     */
+    protected long energyLimit;
+
     public byte[] getSolutionSize() {
         return solutionSize;
     }

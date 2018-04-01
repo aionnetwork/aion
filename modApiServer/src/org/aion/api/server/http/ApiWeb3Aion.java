@@ -830,7 +830,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));
-                    obj.put("headerHash", toHexString(HashUtil.h256(header.getHeaderBytes(false))));
+//                    obj.put("headerHash", toHexString(HashUtil.h256(header.getHeaderBytes(false))));
                     obj.putOpt("blockHeader", header.toJSON());
                 } else {
                     obj.put("message", "Fail - Unable to find block" + bnStr);

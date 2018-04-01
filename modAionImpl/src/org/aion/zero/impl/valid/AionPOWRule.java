@@ -39,7 +39,27 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
     @Override
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
         BigInteger boundary = header.getPowBoundaryBI();
-        BigInteger hash = new BigInteger(1, HashUtil.h256(header.getHeaderBytes(false)));
+
+        // 32 byte static hash, 8 byte dynamic, 32 byte nonce, 1408 solution (1480 input)
+        byte[] validationBytes = new byte[1480];
+        byte[] staticHash = header.getStaticHash();
+        byte[] dynamic = BigInteger.valueOf(header.getTimestamp()).toByteArray();
+        byte[] nonce = header.getNonce();
+        byte[] solution = header.getSolution();
+        int pos = 0;
+
+        System.arraycopy(header.getStaticHash(), 0, validationBytes, pos, staticHash.length);
+        pos += staticHash.length;
+
+        System.arraycopy(dynamic, 0, validationBytes, pos, dynamic.length);
+        pos += dynamic.length;
+
+        System.arraycopy(nonce, 0, validationBytes, pos, nonce.length);
+        pos += nonce.length;
+
+        System.arraycopy(nonce, 0, validationBytes, pos, solution.length);
+
+        BigInteger hash = new BigInteger(1, validationBytes);
 
         if (hash.compareTo(boundary) >= 0) {
             addError(formatError(hash, boundary), errors);
