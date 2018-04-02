@@ -37,8 +37,6 @@ import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.channels.spi.SelectorProvider;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -558,6 +556,9 @@ public final class P2pMgr implements IP2pMgr {
         } catch (IOException e) {
             if (showLog)
                 System.out.println("<p2p tcp-server-io-exception>");
+        } catch (Throwable e) {
+            if (showLog)
+                System.out.println("<p2p tcp-server-error>" + e.toString());
         }
     }
 
@@ -659,6 +660,11 @@ public final class P2pMgr implements IP2pMgr {
                     System.out.println("failed to register channel");
                     e.printStackTrace();
                 }
+            } catch (Throwable e) {
+                if (P2pMgr.this.showLog) {
+                    System.out.println("register channel error");
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -734,6 +740,8 @@ public final class P2pMgr implements IP2pMgr {
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
                 byteBuffers.clear();
+            } catch (Throwable e) {
+                System.out.println("<p2p-HandleChannel-throw>" + e.toString());
             }
         }
 
@@ -885,6 +893,11 @@ public final class P2pMgr implements IP2pMgr {
                             System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
                                     + " result=failed>");
                         node.peerMetric.incFailedCount();
+                    } catch (Throwable e) {
+                        if (showLog)
+                            System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
+                                    + " result=error>" + e.toString());
+                        node.peerMetric.incFailedCount();
                     }
                 }
             }
@@ -938,9 +951,9 @@ public final class P2pMgr implements IP2pMgr {
                 } catch (InterruptedException interrupted) {
                     if (showLog)
                         System.out.println("<p2p-clear interrupted>");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    // TODO: do something
+                } catch (Throwable e) {
+                    if (showLog)
+                        System.out.println("<p2p-clear-throw>" + e.toString());
                 }
             }
         }
