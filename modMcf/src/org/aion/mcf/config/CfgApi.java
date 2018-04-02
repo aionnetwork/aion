@@ -69,7 +69,7 @@ public final class CfgApi {
                 case "rpc":
                     this.rpc.fromXML(sr);
                     break;
-                case "nrg":
+                case "nrg-recommendation":
                     this.nrg.fromXML(sr);
                     break;
                 default:

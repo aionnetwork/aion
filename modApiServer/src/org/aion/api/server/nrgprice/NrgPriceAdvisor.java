@@ -10,7 +10,7 @@ public abstract class NrgPriceAdvisor<BLK extends IBlock, TXN extends ITransacti
 
     /* Impose a min & max thresholds on the recommendation output
      */
-    NrgPriceAdvisor(long defaultPrice, long maxPrice) {
+    public NrgPriceAdvisor(long defaultPrice, long maxPrice) {
         this.defaultPrice = defaultPrice;
         this.maxPrice = maxPrice;
     }

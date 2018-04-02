@@ -25,8 +25,9 @@
 package org.aion.api.server.http;
 
 import org.aion.api.server.ApiAion;
-import org.aion.api.server.IRpc;
 import org.aion.api.server.nrgprice.NrgOracle;
+import org.aion.api.server.rpc.RpcError;
+import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
@@ -37,12 +38,9 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
-import org.aion.equihash.Solution;
-import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
@@ -72,59 +70,86 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
 
-final class ApiWeb3Aion extends ApiAion implements IRpc {
+/**
+ * @author chris lin, ali sharif
+ * TODO: make implementation pass all spec tests: https://github.com/ethereum/rpc-tests
+ */
+public class ApiWeb3Aion extends ApiAion {
 
-    // TODO: Verify currentMining will follow kernel block generation schedule.
-    // private static AtomicReference<AionBlock> currentMining;
-    // TODO: Verify if need to use a concurrent map; locking may allow for use
-    // of a simple map
+    // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private static HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private static ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
 
     protected void onBlock(AionBlockSummary cbs) {
-        installedFilters.keySet().forEach((k) -> {
-            Fltr f = installedFilters.get(k);
-            if (f.isExpired()) {
-                LOG.debug("<Filter: expired, key={}>", k);
-                installedFilters.remove(k);
-            } else if (f.onBlock(cbs)) {
-                LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), cbs.getBlock().getNumber());
-            }
-        });
+        if (isFilterEnabled) {
+            installedFilters.keySet().forEach((k) -> {
+                Fltr f = installedFilters.get(k);
+                if (f.isExpired()) {
+                    LOG.debug("<Filter: expired, key={}>", k);
+                    installedFilters.remove(k);
+                } else if (f.onBlock(cbs)) {
+                    LOG.debug("<Filter: append, onBlock type={} blk#={}>", f.getType().name(), cbs.getBlock().getNumber());
+                }
+            });
+        }
     }
 
     protected void pendingTxReceived(ITransaction _tx) {
-        // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
-        // in the onBlock event. eviction done here "just in case ..."
-        installedFilters.keySet().forEach((k) -> {
-            Fltr f = installedFilters.get(k);
-            if (f.isExpired()) {
-                LOG.debug("<filter expired, key={}>", k);
-                installedFilters.remove(k);
-            } else if(f.onTransaction(_tx)) {
-                LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
-            }
-        });
+        if (isFilterEnabled) {
+            // not absolutely neccessary to do eviction on installedFilters here, since we're doing it already
+            // in the onBlock event. eviction done here "just in case ..."
+            installedFilters.keySet().forEach((k) -> {
+                Fltr f = installedFilters.get(k);
+                if (f.isExpired()) {
+                    LOG.debug("<filter expired, key={}>", k);
+                    installedFilters.remove(k);
+                } else if (f.onTransaction(_tx)) {
+                    LOG.info("<filter append, onPendingTransaction fltrSize={} type={} txHash={}>", f.getSize(), f.getType().name(), TypeConverter.toJsonHex(_tx.getHash()));
+                }
+            });
+        }
     }
 
     protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+        // commenting this out because of lack support for old web3 client that we are using
+        // TODO: re-enable this when we upgrade our web3 client
+        /*
         ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
         if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
             pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
         } else {
             pendingReceipts.remove(txHashW);
         }
+        */
     }
 
-    ApiWeb3Aion(final IAionChain _ac) {
+    // doesn't need to be protected for concurrent access, since only one write in the constructor.
+    private boolean isFilterEnabled;
+
+    public ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
+
+        isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
+
+        // instantiate nrg price oracle
+        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
+
+        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
+            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+
+        this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
+
         evtMgr = this.ac.getAionHub().getEventMgr();
 
         startES("EpWeb3");
+
         // Fill data on block and transaction events into the filters and pending receipts
         IHandler blkHr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHr != null) {
@@ -135,15 +160,6 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         if (txHr != null) {
             txHr.eventCallback(new EventCallback(ees, LOG));
         }
-
-        /*
-        // instantiate nrg price oracle
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
-        IHandler hldr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
-        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
-        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
-        this.nrgOracle = new NrgOracle(bc, hldr, nrgPriceDefault, nrgPriceMax);
-        */
     }
 
     // --------------------------------------------------------------------
@@ -169,31 +185,34 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
     // Ethereum-Compliant JSON RPC Specification Implementation
     // --------------------------------------------------------------------
 
-    public Object web3_clientVersion() {
-        return clientVersion();
+    public RpcMsg web3_clientVersion() {
+        return new RpcMsg(this.clientVersion);
     }
 
-    public Object web3_sha3(String _data) {
-        return TypeConverter.toJsonHex(HashUtil.keccak256(ByteUtil.hexStringToBytes(_data)));
+    public RpcMsg web3_sha3(JSONArray _params) {
+        String _data = _params.get(0) + "";
+
+        return new RpcMsg(TypeConverter.toJsonHex(HashUtil.keccak256(ByteUtil.hexStringToBytes(_data))));
     }
 
-    public Object net_version() {
-        return chainId();
+    public RpcMsg net_version() {
+        return new RpcMsg(chainId());
     }
 
-    public Object net_peerCount() {
-        return peerCount();
+    public RpcMsg net_peerCount() {
+        return new RpcMsg(peerCount());
     }
 
-    public Object net_listening() {
-        return true;
+    public RpcMsg net_listening() {
+        // currently, p2p manager is always listening for peers and is active
+        return new RpcMsg(true);
     }
 
-    public Object eth_protocolVersion() {
-        return p2pProtocolVersion();
+    public RpcMsg eth_protocolVersion() {
+        return new RpcMsg(p2pProtocolVersion());
     }
 
-    public Object eth_syncing() {
+    public RpcMsg eth_syncing() {
         SyncInfo syncInfo = getSync();
         if (!syncInfo.done) {
             JSONObject obj = new JSONObject();
@@ -202,42 +221,47 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             obj.put("currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
             obj.put("highestBlock", new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
             obj.put("importMax", new NumericalValue(syncInfo.blksImportMax).toHexString());
-            return obj;
+            return new RpcMsg(obj);
         } else {
             // create obj for when syncing is ongoing
-            return false;
+            return new RpcMsg(false);
         }
     }
 
-    public Object eth_coinbase() {
-        return getCoinbase();
+    public RpcMsg eth_coinbase() {
+        return new RpcMsg(getCoinbase());
     }
 
-    public Object eth_mining() {
-        return isMining();
+    public RpcMsg eth_mining() {
+        return new RpcMsg(isMining());
     }
 
-    public Object eth_hashrate() {
-        return getHashrate();
+    public RpcMsg eth_hashrate() {
+        return new RpcMsg(getHashrate());
     }
 
-    public Object eth_submitHashrate(String _hashrate, String _clientId) {
-        return setReportedHashrate(_hashrate, _clientId);
+    public RpcMsg eth_submitHashrate(JSONArray _params) {
+        String _hashrate = _params.get(0) + "";
+        String _clientId = _params.get(1) + "";
+        return new RpcMsg(setReportedHashrate(_hashrate, _clientId));
     }
 
-    public Object eth_gasPrice() {
-        return TypeConverter.toJsonHex(getRecommendedNrgPrice());
+    public RpcMsg eth_gasPrice() {
+        return new RpcMsg(TypeConverter.toJsonHex(getRecommendedNrgPrice()));
     }
 
-    public Object eth_accounts() {
-        return new JSONArray(getAccounts());
+    public RpcMsg eth_accounts() {
+        return new RpcMsg(new JSONArray(getAccounts()));
     }
 
-    public Object eth_blockNumber() {
-        return getBestBlock().getNumber();
+    public RpcMsg eth_blockNumber() {
+        return new RpcMsg(getBestBlock().getNumber());
     }
 
-    public Object eth_getBalance(String _address, Object _bnOrId) throws Exception {
+    public RpcMsg eth_getBalance(JSONArray _params) {
+        String _address = _params.get(0) + "";
+        Object _bnOrId = _params.opt(1);
+
         Address address = new Address(_address);
 
         String bnOrId = "latest";
@@ -245,56 +269,78 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             bnOrId = _bnOrId + "";
 
         BigInteger balance = getRepoByJsonBlockId(bnOrId).getBalance(address);
-        return TypeConverter.toJsonHex(balance);
+        return new RpcMsg(TypeConverter.toJsonHex(balance));
     }
 
-    public Object eth_getStorageAt(String _address, String _storageIndex, Object _bnOrId) {
+    public RpcMsg eth_getStorageAt(JSONArray _params) {
+        String _address = _params.get(0) + "";
+        String _index = _params.get(1) + "";
+        Object _bnOrId = _params.opt(2);
+
         Address address = new Address(_address);
 
         String bnOrId = "latest";
         if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
-        DataWord key = DataWord.ZERO;
+        DataWord key;
 
         try {
-            key = new DataWord(ByteUtil.hexStringToBytes(_storageIndex));
+            key = new DataWord(ByteUtil.hexStringToBytes(_index));
         } catch (Exception e) {
             // invalid key
             LOG.debug("eth_getStorageAt: invalid storageIndex. Must be <= 16 bytes.");
-            return null;
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
         }
 
+        @SuppressWarnings("unchecked")
         DataWord storageValue = (DataWord) getRepoByJsonBlockId(bnOrId).getStorageValue(address, key);
-        return storageValue != null ? TypeConverter.toJsonHex(storageValue.getData()) : null;
+        if (storageValue != null)
+            return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
+        else
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
     }
 
-    public Object eth_getTransactionCount(String _address, Object _bnOrId) {
+    public RpcMsg eth_getTransactionCount(JSONArray _params) {
+        String _address = _params.get(0) + "";
+        Object _bnOrId = _params.opt(1);
+
         Address address = new Address(_address);
 
         String bnOrId = "latest";
         if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
-        return TypeConverter.toJsonHex(getRepoByJsonBlockId(bnOrId).getNonce(address));
+        return new RpcMsg(TypeConverter.toJsonHex(getRepoByJsonBlockId(bnOrId).getNonce(address)));
     }
 
-    public Object eth_getBlockTransactionCountByHash(String hashString) {
-        byte[] hash = ByteUtil.hexStringToBytes(hashString);
+    public RpcMsg eth_getBlockTransactionCountByHash(JSONArray _params) {
+        String _hash = _params.get(0) + "";
+
+        byte[] hash = ByteUtil.hexStringToBytes(_hash);
         AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
-        if (b == null) return null;
+        if (b == null)
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+
         long n = b.getTransactionsList().size();
-        return TypeConverter.toJsonHex(n);
+        return new RpcMsg(TypeConverter.toJsonHex(n));
     }
 
-    public Object eth_getBlockTransactionCountByNumber(String _bnOrId) {
+    public RpcMsg eth_getBlockTransactionCountByNumber(JSONArray _params) {
+        String _bnOrId = _params.get(0) + "";
+
         List<AionTransaction> list = getTransactionsByBlockId(_bnOrId);
-        if (list == null) return null;
+        if (list == null)
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");;
+
         long n = list.size();
-        return TypeConverter.toJsonHex(n);
+        return new RpcMsg(TypeConverter.toJsonHex(n));
     }
 
-    public Object eth_getCode(String _address, Object _bnOrId) {
+    public RpcMsg eth_getCode(JSONArray _params) {
+        String _address = _params.get(0) + "";
+        Object _bnOrId = _params.opt(1);
+
         Address address = new Address(_address);
 
         String bnOrId = "latest";
@@ -302,64 +348,73 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             bnOrId = _bnOrId + "";
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
-        if (repo == null) return null; // invalid bnOrId
+        if (repo == null) // invalid bnOrId
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
 
         byte[] code = repo.getCode(address);
-        return TypeConverter.toJsonHex(code);
+        return new RpcMsg(TypeConverter.toJsonHex(code));
     }
 
-    public Object eth_sign(String _address, String _message) {
+    public RpcMsg eth_sign(JSONArray _params) {
+        String _address = _params.get(0) + "";
+        String _message = _params.get(1) + "";
+
         Address address = Address.wrap(_address);
         ECKey key = getAccountKey(address.toString());
         if (key == null)
-            return null;
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
 
         // Message starts with Unicode Character 'END OF MEDIUM' (U+0019)
         String message = "\u0019Aion Signed Message:\n" + _message.length() + _message;
         byte[] messageHash = HashUtil.keccak256(message.getBytes());
 
-        String signature = TypeConverter.toJsonHex(key.sign(messageHash).getSignature());
-
-        return signature;
+        return new RpcMsg(TypeConverter.toJsonHex(key.sign(messageHash).getSignature()));
     }
 
-    public Object eth_sendTransaction(JSONObject _tx) {
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
+    public RpcMsg eth_sendTransaction(JSONArray _params) {
+        JSONObject _tx = _params.getJSONObject(0);
+
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        if (txParams == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Please check your transaction object.");
 
         // check for unlocked account
         Address address = txParams.getFrom();
         ECKey key = getAccountKey(address.toString());
-        // TODO: send json-rpc error code + message
+
         if (key == null)
-            return null;
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
 
-        if (txParams != null) {
-            byte[] response = sendTransaction(txParams);
-            return TypeConverter.toJsonHex(response);
-        }
 
-        return null;
+        byte[] response = sendTransaction(txParams);
+        return new RpcMsg(TypeConverter.toJsonHex(response));
     }
 
-    public Object eth_sendRawTransaction(String _rawTx) {
-        if (_rawTx == null)
-            return null;
+    public RpcMsg eth_sendRawTransaction(JSONArray _params) {
+        String _rawTx = _params.get(0) + "";
+
+        if (_rawTx.equals("null"))
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Null raw transaction provided.");
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
         byte[] transactionHash = sendTransaction(rawTransaction);
 
-        return TypeConverter.toJsonHex(transactionHash);
+        return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
     }
 
-    public Object eth_call(JSONObject _tx, Object _bnOrId) {
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
+    public RpcMsg eth_call(JSONArray _params) {
+        JSONObject _tx = _params.getJSONObject(0);
+        Object _bnOrId = _params.opt(1);
+
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
         if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
-        if (bn == null || bn < 0) return null;
+        if (bn == null || bn < 0)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
 
         AionTransaction tx = new AionTransaction(
                 txParams.getNonce().toByteArray(),
@@ -372,121 +427,144 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 
-        return TypeConverter.toJsonHex(receipt.getExecutionResult());
+        return new RpcMsg(TypeConverter.toJsonHex(receipt.getExecutionResult()));
     }
 
-    public Object eth_estimateGas(JSONObject tx) {
-        ArgTxCall txParams = ArgTxCall.fromJSON(tx, getRecommendedNrgPrice(), getDefaultNrgLimit());
+    public RpcMsg eth_estimateGas(JSONArray _params) {
+        JSONObject _tx = _params.getJSONObject(0);
+
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
         NumericalValue estimate = new NumericalValue(estimateGas(txParams));
 
-        return estimate.toHexString();
+        return new RpcMsg(estimate.toHexString());
     }
 
-    public Object eth_getBlockByHash(String _hashString, boolean _fullTx) {
-        byte[] hash = ByteUtil.hexStringToBytes(_hashString);
+    public RpcMsg eth_getBlockByHash(JSONArray _params) {
+        String _hash = _params.get(0) + "";
+        boolean _fullTx = _params.optBoolean(1, false);
+
+        byte[] hash = ByteUtil.hexStringToBytes(_hash);
         AionBlock block = this.ac.getBlockchain().getBlockByHash(hash);
-        BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
 
         if (block == null) {
-            LOG.debug("<get-block bn={} err=not-found>");
-            return null;
+            LOG.debug("<get-block hash={} err=not-found>", _hash);
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         } else {
-            try {
-                return Blk.AionBlockToJson(block, totalDiff, _fullTx);
-            } catch (Exception ex) {
-                if (LOG.isDebugEnabled())
-                    LOG.debug("<get-block bh={} err=exception>", _hashString);
-                return null;
-            }
+            BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
+            return new RpcMsg(Blk.AionBlockToJson(block, totalDiff, _fullTx));
         }
     }
 
-    public Object eth_getBlockByNumber(String _bnOrId, boolean _fullTx) {
+    public RpcMsg eth_getBlockByNumber(JSONArray _params) {
+        String _bnOrId = _params.get(0) + "";
+        boolean _fullTx = _params.optBoolean(1, false);
+
         Long bn = this.parseBnOrId(_bnOrId);
 
         if (bn == null || bn < 0)
-            return null;
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
 
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
 
         if (nb == null) {
-            LOG.debug("<get-block bn={} err=not-found>");
-            return null;
+            LOG.debug("<get-block bn={} err=not-found>", bn);
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         } else {
             BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
-            return Blk.AionBlockToJson(nb, totalDiff, _fullTx);
+            return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
         }
     }
 
-    public Object eth_getTransactionByHash(String _txHash) {
-        byte[] txHash = ByteUtil.hexStringToBytes(_txHash);
-        if (_txHash == null || txHash == null) return null;
+    public RpcMsg eth_getTransactionByHash(JSONArray _params) {
+        String _hash = _params.get(0) + "";
+
+        byte[] txHash = ByteUtil.hexStringToBytes(_hash);
+        if (_hash.equals("null") || txHash == null) return null;
 
         AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
-        if (txInfo == null) return null;
+        if (txInfo == null)
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
 
         AionBlock b = this.ac.getBlockchain().getBlockByHash(txInfo.getBlockHash());
-        if (b == null) return null;
+        if (b == null) return null; // this is actually an internal error
 
-        return Tx.InfoToJSON(txInfo, b);
+        return new RpcMsg(Tx.InfoToJSON(txInfo, b));
     }
 
-    public Object eth_getTransactionByBlockHashAndIndex(String _blockHash,String _index) {
-        byte[] hash = ByteUtil.hexStringToBytes(_blockHash);
-        if (_blockHash == null || hash == null) return null;
+    public RpcMsg eth_getTransactionByBlockHashAndIndex(JSONArray _params) {
+        String _hash = _params.get(0) + "";
+        String _index = _params.get(1) + "";
+
+        byte[] hash = ByteUtil.hexStringToBytes(_hash);
+        if (_hash.equals("null") || hash == null) return null;
 
         AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
-        if (b == null) return null;
+        if (b == null)
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
 
         List<AionTransaction> txs = b.getTransactionsList();
 
         int idx = Integer.decode(_index);
-        if (idx >= txs.size()) return null;
+        if (idx >= txs.size())
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
 
-        return Tx.AionTransactionToJSON(txs.get(idx), b, idx);
+        return new RpcMsg(Tx.AionTransactionToJSON(txs.get(idx), b, idx));
     }
 
-    public Object eth_getTransactionByBlockNumberAndIndex(String _bnOrId, String _index) {
+    public RpcMsg eth_getTransactionByBlockNumberAndIndex(JSONArray _params) {
+        String _bnOrId = _params.get(0) + "";
+        String _index = _params.get(1) + "";
+
         Long bn = parseBnOrId(_bnOrId);
         if (bn == null || bn < 0) return null;
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null) return null;
+        if (b == null)
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
 
         List<AionTransaction> txs = b.getTransactionsList();
 
         int idx = Integer.decode(_index);
-        if (idx >= txs.size()) return null;
+        if (idx >= txs.size())
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
 
-        return Tx.AionTransactionToJSON(txs.get(idx), b, idx);
+        return new RpcMsg(Tx.AionTransactionToJSON(txs.get(idx), b, idx));
     }
 
-    public Object eth_getTransactionReceipt(String _txHash) {
-        byte[] txHash = TypeConverter.StringHexToByteArray(_txHash);
+    public RpcMsg eth_getTransactionReceipt(JSONArray _params) {
+        String _hash = _params.get(0) + "";
+
+        byte[] txHash = TypeConverter.StringHexToByteArray(_hash);
         TxRecpt r = getTransactionReceipt(txHash);
+
+        // commenting this out because of lack support for old web3 client that we are using
+        // TODO: re-enable this when we upgrade our web3 client
         /*
-        // Disable for now since our web3 client doesn't support this feature.
-        // If we can't find the receipt on the mainchain, try looking for it in pending receipts cache
+        // if we can't find the receipt on the mainchain, try looking for it in pending receipts cache
+        /*
         if (r == null) {
             AionTxReceipt pendingReceipt = pendingReceipts.get(new ByteArrayWrapper(txHash));
             r = new TxRecpt(pendingReceipt, null, null, null, true);
         }
         */
 
-        if (r == null) return null;
+        if (r == null)
+            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no receipt was found'
 
-        return r.toJson();
+        return new RpcMsg(r.toJson());
     }
 
     /* -------------------------------------------------------------------------
      * compiler
      */
 
-    public Object eth_getCompilers() {
-        return new JSONArray(this.compilers);
+    public RpcMsg eth_getCompilers() {
+        return new RpcMsg(new JSONArray(this.compilers));
     }
 
-    public Object eth_compileSolidity(String _contract) {
+    public RpcMsg eth_compileSolidity(JSONArray _params) {
+        String _contract = _params.get(0) + "";
+
         @SuppressWarnings("unchecked")
         Map<String, CompiledContr> compiled = contract_compileSolidity(_contract);
         JSONObject obj = new JSONObject();
@@ -494,7 +572,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             CompiledContr cc = compiled.get(key);
             obj.put(key, cc.toJSON());
         }
-        return obj;
+        return new RpcMsg(obj);
     }
 
     /* -------------------------------------------------------------------------
@@ -514,9 +592,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
      * onus on the user to flush the filter of the historical data, before depending on it for up-to-date values.
      * apart from loading historical data, fromBlock & toBlock are ignored when loading events on filter queue
      */
-    public String eth_newFilter(JSONObject _filterObj) {
-        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
-
+    private FltrLg createFilter(ArgFltr rf) {
         FltrLg filter = new FltrLg();
         filter.setTopics(rf.topics);
         filter.setContractAddress(rf.address);
@@ -548,39 +624,61 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             }
         }
 
+        return filter;
+    }
+
+    public RpcMsg eth_newFilter(JSONArray _params) {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
+        JSONObject _filterObj = _params.getJSONObject(0);
+
+        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
+
+        FltrLg filter = createFilter(rf);
+        if (filter == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
+
         // "install" the filter after populating historical data;
         // rationale: until the user gets the id back, the user should not expect the filter to be "installed" anyway.
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, filter);
 
-        return TypeConverter.toJsonHex(id);
+        return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
-    public String eth_newBlockFilter() {
+    public RpcMsg eth_newBlockFilter() {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrBlk());
-        return TypeConverter.toJsonHex(id);
+        return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
-    public String eth_newPendingTransactionFilter() {
+    public RpcMsg eth_newPendingTransactionFilter() {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
         long id = fltrIndex.getAndIncrement();
         installedFilters.put(id, new FltrTx());
-        return TypeConverter.toJsonHex(id);
+        return new RpcMsg(TypeConverter.toJsonHex(id));
     }
 
-    public boolean eth_uninstallFilter(String _id) {
-        return _id != null && installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue()) != null;
+    public RpcMsg eth_uninstallFilter(JSONArray _params) {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
+        String _id = _params.get(0) + "";
+
+        return new RpcMsg(installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue()) != null);
     }
 
-    public Object eth_getFilterChanges(final String _id) {
-        if (_id == null)
-            return null;
-
-        long id = TypeConverter.StringHexToBigInteger(_id).longValue();
-        Fltr filter = installedFilters.get(id);
-
-        if (filter == null) return null;
-
+    private JSONArray buildFilterResponse(Fltr filter) {
         Object[] events = filter.poll();
         JSONArray response = new JSONArray();
         for (Object event : events) {
@@ -589,38 +687,59 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
                 response.put(((Evt) event).toJSON());
             }
         }
-
         return response;
     }
 
-    public Object eth_getFilterLogs(String _id) {
-        return eth_getFilterChanges(_id);
+    public RpcMsg eth_getFilterChanges(JSONArray _params) {
+        if (!isFilterEnabled) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Filters over rpc disabled.");
+        }
+
+        String _id = _params.get(0) + "";
+
+        long id = TypeConverter.StringHexToBigInteger(_id).longValue();
+        Fltr filter = installedFilters.get(id);
+
+        if (filter == null)
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Filter not found.");
+
+        return new RpcMsg(buildFilterResponse(filter));
     }
 
-    public Object eth_getLogs(JSONObject _filterObj) {
-        String id = eth_newFilter(_filterObj);
-        Object response = eth_getFilterChanges(id);
-        eth_uninstallFilter(id);
-        return response;
+    public RpcMsg eth_getLogs(JSONArray _params) {
+        JSONObject _filterObj = _params.getJSONObject(0);
+        ArgFltr rf = ArgFltr.fromJSON(_filterObj);
+        FltrLg filter = createFilter(rf);
+        if (filter == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
+
+        return new RpcMsg(buildFilterResponse(filter));
     }
 
     /* -------------------------------------------------------------------------
      * personal
      */
 
-    public Object personal_unlockAccount(String _account, String _password, Object _duration) {
+    public RpcMsg personal_unlockAccount(JSONArray _params) {
+        String _account = _params.get(0) + "";
+        String _password = _params.get(1) + "";
+        Object _duration = _params.opt(2);
+
         int duration = 300;
         if (_duration != null && !_duration.equals(null))
             duration = new BigInteger(_duration + "").intValueExact();
 
-        return unlockAccount(_account, _password, duration);
+        return new RpcMsg(unlockAccount(_account, _password, duration));
     }
 
     /* -------------------------------------------------------------------------
      * debug
      */
 
-    public Object debug_getBlocksByNumber(String _bnOrId, boolean _fullTransactions) {
+    public RpcMsg debug_getBlocksByNumber(JSONArray _params) {
+        String _bnOrId = _params.get(0) + "";
+        boolean _fullTx = _params.optBoolean(1, false);
+
         Long bn = parseBnOrId(_bnOrId);
 
         if (bn == null || bn < 0)
@@ -628,24 +747,23 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
 
         List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks = ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore()).getBlocksByNumber(bn);
         if (blocks == null) {
-            LOG.debug("<get-block bn={} err=not-found>");
-            return null;
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Blocks requested not found.");
         }
 
         JSONArray response = new JSONArray();
         for (Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>> block : blocks) {
-            JSONObject b = (JSONObject) Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTransactions);
+            JSONObject b = (JSONObject) Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTx);
             b.put("mainchain", block.getValue().getValue());
             response.put(b);
         }
-        return response;
+        return new RpcMsg(response);
     }
 
     /* -------------------------------------------------------------------------
      * stratum pool
      */
 
-    public Object stratum_getinfo() {
+    public RpcMsg stratum_getinfo() {
         JSONObject obj = new JSONObject();
 
         obj.put("balance", 0);
@@ -656,10 +774,10 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.put("genproclimit", 100);
         obj.put("difficulty", 0);
 
-        return obj;
+        return new RpcMsg(obj);
     }
 
-    public Object stratum_getblocktemplate() {
+    public RpcMsg stratum_getblocktemplate() {
         // TODO: Change this to a synchronized map implementation mapping
 
         AionBlock bestBlock = getBlockTemplate();
@@ -708,14 +826,14 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.put("coinbaseaux", coinbaseaux);
         obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
 
-        return obj;
+        return new RpcMsg(obj);
     }
 
-    public Object stratum_dumpprivkey() {
-        return "";
+    public RpcMsg stratum_dumpprivkey() {
+        return new RpcMsg("");
     }
 
-    public Object stratum_validateaddress(String _address) {
+    public RpcMsg stratum_validateaddress(JSONArray _params) {
         /*
          * "isvalid" : true|false, (boolean) If the address is valid or not.
          * If not, this is the only property returned. "address" :
@@ -734,6 +852,8 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
          * the key is HD and available "hdmasterkeyid" : "<hash160>"
          * (string, optional) The Hash160 of the HD master pubkey
          */
+        String _address = _params.get(0) + "";
+
         JSONObject obj = new JSONObject();
 
         obj.put("isvalid", true);
@@ -746,15 +866,15 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.put("hdkeypath", "");
         obj.put("hdmasterkeyid", new byte[0]); // new byte[160]
 
-        return obj;
+        return new RpcMsg(obj);
     }
 
-    public Object stratum_getdifficulty() {
+    public RpcMsg stratum_getdifficulty() {
         // TODO: This needs to be refactored to return valid data
-        return 0x4000;
+        return new RpcMsg(0x4000);
     }
 
-    public Object stratum_getmininginfo() {
+    public RpcMsg stratum_getmininginfo() {
         AionBlock bestBlock = getBestBlock();
 
         JSONObject obj = new JSONObject();
@@ -768,10 +888,15 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         obj.put("pooledtx", 0);
         obj.put("testnet", false);
 
-        return obj;
+        return new RpcMsg(obj);
     }
 
-    public Object stratum_submitblock(Object nce, Object soln, Object hdrHash, Object ts) {
+    public RpcMsg stratum_submitblock(JSONArray _params) {
+        Object nce = _params.opt(0);
+        Object soln = _params.opt(1);
+        Object hdrHash = _params.opt(2);
+        Object ts = _params.opt(3);
+
         JSONObject obj = new JSONObject();
 
         if (nce != null && soln != null && hdrHash != null && ts != null &&
@@ -813,10 +938,12 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             obj.put("code", -1);
         }
 
-        return obj;
+        return new RpcMsg(obj);
     }
 
-    public Object stratum_getHeaderByBlockNumber(Object _blockNum) {
+    public RpcMsg stratum_getHeaderByBlockNumber(JSONArray _params) {
+        Object _blockNum = _params.opt(0);
+
         JSONObject obj = new JSONObject();
 
         if (_blockNum != null && !_blockNum.equals(null)) {
@@ -845,7 +972,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
             obj.put("code", -1);
         }
 
-        return obj;
+        return new RpcMsg(obj);
     }
 
     // --------------------------------------------------------------------
@@ -898,8 +1025,7 @@ final class ApiWeb3Aion extends ApiAion implements IRpc {
         }
     }
 
-    void shutDown() {
-        //nrgOracle.shutDown();
+    public void shutdown() {
         shutDownES();
     }
 }

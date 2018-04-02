@@ -1,76 +1,76 @@
 package org.aion.api.server.nrgprice;
 
-
-import org.aion.evtmgr.IEvent;
+import org.aion.api.server.nrgprice.strategy.NrgBlockPrice;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallback;
-import org.aion.evtmgr.impl.es.EventExecuteService;
-import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionBlockSummary;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
-import java.util.Set;
+/**
+ * Serves as the recommendor of nrg prices based on some observation strategy
+ * Currently uses the blockPrice strategy
+ *
+ * This class is thread safe: getNrgPrice() synchronized on object's intrinsic lock.
+ *
+ * @author ali sharif
+ */
 
 public class NrgOracle {
-    private static final int BLK_TRAVERSE_ON_INSTANTIATION = 128;
-    private static final long CACHE_FLUSH_BLKCOUNT = 1;
+
+    public enum Strategy { SIMPLE, BLK_PRICE }
 
     private static final int BLKPRICE_WINDOW = 20;
     private static final int BLKPRICE_PERCENTILE = 60;
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    // flush the recommendation every CACHE_FLUSH_BLKCOUNT blocks
-    private long cacheFlushCounter;
+    private long lastBlkProcessed;
     private long recommendation;
+    private long nrgPriceDefault;
+    private Strategy strategy;
 
-    INrgPriceAdvisor advisor;
+    private INrgPriceAdvisor advisor;
+    private IAionBlockchain blockchain;
 
-    private EventExecuteService ees;
 
+    public NrgOracle(IAionBlockchain blockchain, long nrgPriceDefault, long nrgPriceMax, Strategy strategy) {
 
-    private final class EpNrg implements Runnable {
-        boolean go = true;
-        @Override
-        public void run() {
-            while (go) {
-                IEvent e = ees.take();
+        // get default and max nrg from the config
+        this.recommendation = nrgPriceDefault;
+        this.lastBlkProcessed = -1;
+        this.nrgPriceDefault = nrgPriceDefault;
+        this.strategy = strategy;
 
-                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
-                    processBlock((AionBlockSummary)e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
-                    go = false;
-                }
-            }
+        switch (strategy) {
+            case BLK_PRICE:
+                this.advisor = new NrgBlockPrice(nrgPriceDefault, nrgPriceMax, BLKPRICE_WINDOW, BLKPRICE_PERCENTILE);
+                this.blockchain = blockchain;
+                break;
+            default:
+                this.advisor = null;
+                this.blockchain = null;
+                break;
         }
     }
 
-    /*   This constructor could take considerable time (since it warms up the recommendation engine)
-     *   Please keep the BLK_TRAVERSE_ON_INSTANTIATION number reasonably small, to construct this object fast.
-     */
-    public NrgOracle(IAionBlockchain blockchain, IHandler handler, long nrgPriceDefault, long nrgPriceMax) {
-
-        // get default and max nrg from the config
-        cacheFlushCounter = 0;
-        recommendation = nrgPriceDefault;
-
-        advisor = new NrgBlockPriceStrategy(nrgPriceDefault, nrgPriceMax, BLKPRICE_WINDOW, BLKPRICE_PERCENTILE);
-
-        // warm up the NrgPriceAdvisor with historical data
-        // rationale for doing this in the constructor: if you don't find any transaction within the first 128 blocks
-        // (at a 10s block time, that's ~20min), the miners should be willing to accept any transactions (given they meet
-        // thier lower bound threshold)
+    // if we don't find any transaction within the last N blocks
+    // (at 10s block time, ~10min), miners should be willing to accept transactions at my defaultPrice
+    private static final int MAX_BLK_TRAVERSE = 64;
+    private void buildRecommendation() {
+        long firstBlockNum = blockchain.getBestBlock().getNumber();
         AionBlock lastBlock = blockchain.getBestBlock();
-        int itr = 0;
-        while (itr < BLK_TRAVERSE_ON_INSTANTIATION) {
+
+        advisor.flush();
+
+        long blkTraverse = MAX_BLK_TRAVERSE;
+
+        while (blkTraverse > 0) {
             advisor.processBlock(lastBlock);
 
-            if (!advisor.isHungry()) break; // recommendation engine warmed up to give good advice
+            if (!advisor.isHungry())
+                break;
 
             // traverse up the chain to feed the recommendation engine
             long parentBlockNumber = lastBlock.getNumber() - 1;
@@ -78,49 +78,40 @@ public class NrgOracle {
                 break;
 
             lastBlock = blockchain.getBlockByHash(lastBlock.getParentHash());
-            itr--;
+            blkTraverse--;
         }
 
-        ees = new EventExecuteService(1000, "EpNrg", Thread.NORM_PRIORITY, LOG);
-        ees.setFilter(setEventFilter());
-
-        // check if handler is of type BLOCK, if so attach our event
-        if (handler != null && handler.getType() == IHandler.TYPE.BLOCK0.getValue()) {
-            handler.eventCallback(new EventCallback(ees, LOG));
-        } else {
-            LOG.error("nrg-oracle - invalid handler provided to constructor");
-        }
-
-        ees.start(new EpNrg());
+        recommendation = advisor.computeRecommendation();
+        lastBlkProcessed = firstBlockNum;
     }
 
-    private Set<Integer> setEventFilter() {
-        Set<Integer> eventSN = new HashSet<>();
-
-        int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
-        eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
-
-        return eventSN;
-    }
-
-    private void processBlock(AionBlockSummary blockSummary) {
-        AionBlock blk = (AionBlock) blockSummary.getBlock();
-        advisor.processBlock(blk);
-        cacheFlushCounter--;
-    }
-
-    public long getNrgPrice() {
-        // rationale: if no new blocks have come in, just serve the info in the cache,
-        //
-        if (cacheFlushCounter <= 0) {
-            recommendation = advisor.computeRecommendation();
-            cacheFlushCounter = CACHE_FLUSH_BLKCOUNT;
+    /**
+     * Lazy nrg price computation strategy: if you need the kernel to recommend nrg price, you should be prepared
+     * to give up some compute-time on the caller thread (most likely api worker thread).
+     *
+     * Not an important enough computation to be a consumer on the event system.
+     *
+     * If multiple consumers want nrgPrice simultaneously, all will be blocked until the recommendation is built
+     * and cached. Future consumers read the cached value until cache flush.
+     */
+    private static final long CACHE_FLUSH_BLKS = 2;
+    public synchronized long getNrgPrice() {
+        switch (strategy) {
+            case BLK_PRICE:
+                try {
+                    long blkNow = blockchain.getBestBlock().getNumber();
+                    if (blkNow - lastBlkProcessed >= CACHE_FLUSH_BLKS) {
+                        buildRecommendation();
+                    }
+                } catch (Exception e) {
+                    LOG.error("<nrg-oacle - buildRecommendation() threw. returning default nrg recommendation just-in-case");
+                    return nrgPriceDefault;
+                }
+                break;
+            default:
+                return nrgPriceDefault;
         }
 
         return recommendation;
-    }
-
-    public void shutDown() {
-        ees.shutdown();
     }
 }

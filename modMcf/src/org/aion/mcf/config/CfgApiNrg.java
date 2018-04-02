@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 /**
  * @author ali sharif
@@ -40,11 +39,14 @@ public final class CfgApiNrg {
     private long defaultPrice;
     private long maxPrice;
 
+    private boolean oracleEnabled;
+
     CfgApiNrg() {
         // recommend setting the defaultPrice to a safe-low known nrg price accepted by most miners on the network
         // (this value fluctuates over time, depending on network conditions)
         this.defaultPrice = 1_000_000_000L; // 1E9 AION
         this.maxPrice = 100_000_000_000L; // 100E9 AION
+        this.oracleEnabled = false; // ship with oracle disabled
     }
 
     public long getNrgPriceDefault() {
@@ -53,6 +55,7 @@ public final class CfgApiNrg {
     public long getNrgPriceMax() {
         return this.maxPrice;
     }
+    public boolean isOracleEnabled() { return this.oracleEnabled; }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -62,6 +65,14 @@ public final class CfgApiNrg {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
+                        case "oracle-enabled":
+                            try {
+                                oracleEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.nrg.enable; using preset: " + this.oracleEnabled);
+                                e.printStackTrace();
+                            }
+                            break;
                         case "default":
                             try {
                                 // using BigDecimal here only because of [BigDecimal -> String -> BigDecimal] preservation property
@@ -99,29 +110,38 @@ public final class CfgApiNrg {
             xmlWriter = output.createXMLStreamWriter(strWriter);
 
             // start element sync
-            xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeStartElement("nrg");
-
-            // sub-element blocks-import-max
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("default");
+            xmlWriter.writeStartElement("nrg-recommendation");
 
             /* BigDecimal -> String -> BigDecimal preserved, according to BigDecimal.toString() javadoc:
              * "If that string representation is converted back to a BigDecimal using the BigDecimal(String)
              * constructor, then the original value will be recovered."
              * This property does NOT hold for toEngineeringString() (which is easier to read)
              */
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("default NRG price used by api if oracle disabled, minimum price recommended by oracle");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("default");
             xmlWriter.writeCharacters((new BigDecimal(defaultPrice)).toString());
             xmlWriter.writeEndElement();
 
-            // sub-element blocks-queue-max
-            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("max NRG price recommended by oracle");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("max");
             xmlWriter.writeCharacters((new BigDecimal(maxPrice)).toString());
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("oracle-enabled");
+            xmlWriter.writeCharacters(String.valueOf(this.oracleEnabled));
+            xmlWriter.writeEndElement();
+
             // close element sync
-            xmlWriter.writeCharacters("\r\n\t");
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
 
             xml = strWriter.toString();
