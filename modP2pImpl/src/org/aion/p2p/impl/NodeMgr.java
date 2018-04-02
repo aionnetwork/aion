@@ -40,7 +40,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class NodeMgr implements INodeMgr {
 
-    private final static int TIMEOUT_ACTIVE_NODES = 30000;
     private final static int TIMEOUT_INBOUND_NODES = 10000;
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
@@ -367,11 +366,20 @@ public class NodeMgr implements INodeMgr {
     }
 
     void rmTimeOutActives(P2pMgr pmgr) {
+        long now = System.currentTimeMillis();
+
+        OptionalDouble average = activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
+        double timeout = average.orElse(3000) * 10;
+        if (pmgr.showLog) {
+            System.out.printf("<p2p average-delay=%.0fms>\n", average.orElse(0));
+        }
+
         Iterator activeIt = activeNodes.keySet().iterator();
         while (activeIt.hasNext()) {
             int key = (int) activeIt.next();
             Node node = getActiveNode(key);
-            if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_ACTIVE_NODES) {
+
+            if (now - node.getTimestamp() > timeout) {
 
                 pmgr.closeSocket(node.getChannel());
                 activeIt.remove();
@@ -440,18 +448,6 @@ public class NodeMgr implements INodeMgr {
                     System.out.println("<error on-close-stream-writer>");
                 }
             }
-        }
-    }
-
-    /**
-     * Remove an active node if exists.
-     *
-     * @param nodeIdHash
-     */
-    public void removeActive(int nodeIdHash, P2pMgr p2pMgr) {
-        Node node = activeNodes.remove(nodeIdHash);
-        if (node != null) {
-            p2pMgr.closeSocket(node.getChannel());
         }
     }
 }

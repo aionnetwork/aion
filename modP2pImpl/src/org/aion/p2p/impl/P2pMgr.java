@@ -831,13 +831,14 @@ public final class P2pMgr implements IP2pMgr {
                     return;
                 }
                 int nodeIdHash = node.getIdHash();
-
+                byte[] nodeIp = node.getIp();
+                int nodePort = node.getPort();
 
                 Map<Integer, INode> map = new HashMap<>();
                 map.putAll(nodeMgr.getOutboundNodes());
                 map.putAll(nodeMgr.getActiveNodesMap());
-                boolean connected = map.values().stream().anyMatch(n ->  n.getIdHash() == nodeIdHash
-                        || n.getIpStr().equals(node.getIpStr()) && n.getPort() == node.getPort());
+                boolean connected = (selfNodeIdHash == nodeIdHash || Arrays.equals(selfIp, nodeIp) && selfPort == nodePort)
+                        || (map.values().stream().anyMatch(n -> n.getIdHash() == nodeIdHash || Arrays.equals(n.getIp(), nodeIp) && n.getPort() == nodePort));
 
                 if (!connected) {
                     int _port = node.getPort();
