@@ -37,6 +37,8 @@ import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.channels.spi.SelectorProvider;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -769,8 +771,17 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void run() {
             Thread.currentThread().setName("p2p-ts");
-            nodeMgr.dumpNodeInfo(selfShortId);
-            //nodeMgr.dumpAllNodeInfo();
+            String status = nodeMgr.dumpNodeInfo(selfShortId);
+            System.out.println(status);
+            // TODO: reenable this
+//            if (printReport) {
+//                try {
+//                    Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-p2p-report.out"),
+//                            status.getBytes());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
         }
     }
 
