@@ -24,6 +24,20 @@
 
 package org.aion.txpool.zero;
 
+import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -34,15 +48,8 @@ import org.aion.txpool.common.AccountState;
 import org.aion.txpool.common.TxDependList;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
-
-    private Object lockObj = new Object();
 
     public TxPoolA0() {
         super();
@@ -89,9 +96,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     public List<BigInteger> getNonceList(Address acc) {
 
         List<BigInteger> nl = Collections.synchronizedList(new ArrayList<>());
-        synchronized (this) {
-            this.getAccView(acc).getMap().entrySet().parallelStream().forEach(e -> nl.add(e.getKey()));
-        }
+        lock.readLock().lock();
+        this.getAccView(acc).getMap().entrySet().parallelStream().forEach(e -> nl.add(e.getKey()));
+        lock.readLock().unlock();
+
         return nl.parallelStream().sorted().collect(Collectors.toList());
     }
 
@@ -188,6 +196,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         List<ByteArrayWrapper> bwList = new ArrayList<>();
         for (Map.Entry<Address, BigInteger> en1 : accNonce.entrySet()) {
             AccountState as = this.getAccView(en1.getKey());
+            lock.writeLock().lock();
             Iterator<Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>> it = as.getMap().entrySet().iterator();
 
             while (it.hasNext()) {
@@ -199,6 +208,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     break;
                 }
             }
+            lock.writeLock().unlock();
 
             Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
             if (this.getPoolStateView(en1.getKey()) != null) {
@@ -238,7 +248,9 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     }
                 }
 
+                lock.writeLock().lock();
                 this.getMainMap().remove(bw);
+                lock.writeLock().unlock();
             }
         });
 
@@ -262,8 +274,13 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         for (TX tx : txs) {
             ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getHash());
-            if (this.getMainMap().remove(bw) == null) {
-                continue;
+            lock.writeLock().lock();
+            try {
+                if (this.getMainMap().remove(bw) == null) {
+                    continue;
+                }
+            } finally {
+                lock.writeLock().unlock();
             }
 
             //noinspection unchecked
@@ -307,7 +324,11 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             AccountState as = this.getAccView(tx.getFrom());
+
+            lock.writeLock().lock();
             as.getMap().remove(tx.getNonceBI());
+            lock.writeLock().unlock();
+
             as.setDirty();
         }
 
@@ -353,10 +374,14 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             return null;
         }
 
-        synchronized (lockObj) {
-            AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
-            return entry == null ? null : this.getMainMap().get(entry.getKey()).getTx();
-        }
+        TX tx;
+
+        lock.readLock().lock();
+        AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
+        tx = (entry == null ? null : (TX)this.getMainMap().get(entry.getKey()).getTx().clone());
+        lock.readLock().unlock();
+
+        return tx;
     }
     
     @Override

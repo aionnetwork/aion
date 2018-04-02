@@ -24,6 +24,7 @@
 
 package org.aion.txpool.common;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -97,6 +98,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     private final List<TX> outDated = new ArrayList<>();
 
     private final Map<Address, BigInteger> bestNonce = new ConcurrentHashMap<>();
+
+    protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public abstract List<TX> add(List<TX> txl);
 
@@ -233,7 +236,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                 timeMap.put(timestamp, lhs);
 
                 if (replacedTx != null) {
-                    long t = new BigInteger(1, replacedTx.getTimeStamp()).longValue()/multiplyM;
+                    long t = replacedTx.getTimeStampBI().longValue()/multiplyM;
                     if (timeMap.get(t) != null) {
                         timeMap.get(t).remove(ByteArrayWrapper.wrap(replacedTx.getHash()));
                     }
@@ -250,7 +253,9 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     this.timeView.get(en.getValue()).remove(bw);
                 }
 
+                lock.writeLock().lock();
                 this.mainMap.remove(bw);
+                lock.writeLock().unlock();
             }
         }
 
@@ -268,8 +273,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             });
 
             accMap.entrySet().parallelStream().forEach(e -> {
+                lock.writeLock().lock();
                 this.accountView.computeIfAbsent(e.getKey(), k -> new AccountState());
                 this.accountView.get(e.getKey()).updateMap(e.getValue());
+                lock.writeLock().unlock();
             });
 
             updateAccPoolState();
@@ -414,7 +421,9 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
         if(!clearAddr.isEmpty()) {
             clearAddr.forEach( addr -> {
+                lock.writeLock().lock();
                 this.accountView.remove(addr);
+                lock.writeLock().unlock();
                 this.bestNonce.remove(addr);
             });
         }

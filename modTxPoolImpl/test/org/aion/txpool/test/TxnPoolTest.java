@@ -425,7 +425,41 @@ public class TxnPoolTest {
         }
         tp.add(txnl);
         assertTrue(tp.size() == cnt);
-        
+
+        // sort the inserted txs
+        List<ITransaction> txl = tp.snapshot();
+        assertTrue(tp.size() == txl.size());
+        assertTrue(tp.snapshotAll().size() == txl.size());
+
+        long nonce = 0;
+        for (ITransaction tx : txl) {
+            assertTrue((new BigInteger(tx.getNonce())).longValue() == nonce++);
+        }
+    }
+
+    @Test
+    public void snapshot8() {
+        Properties config = new Properties();
+        config.put("txn-timeout", "100");
+
+        TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
+
+        List<ITransaction> txnl = new ArrayList<>();
+        int cnt = 200;
+        Random r = new Random();
+        for (int i = 0; i < cnt; i++) {
+            byte[] nonce = new byte[Long.BYTES];
+            nonce[Long.BYTES - 1] = (byte) i;
+
+            ITransaction txn = genTransactionRandomPrice(nonce, r.nextInt(1000));
+
+            ((AionTransaction) txn).sign(key.get(r.nextInt(10)));
+            txn.setNrgConsume(r.nextInt(1000));
+            txnl.add(txn);
+        }
+        tp.add(txnl);
+        assertTrue(tp.size() == cnt);
+
         // sort the inserted txs
         List<ITransaction> txl = tp.snapshot();
         assertTrue(tp.size() == txl.size());
