@@ -24,22 +24,20 @@
 
 package org.aion.zero.impl.blockchain;
 
-import java.math.BigInteger;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.core.ImportResult;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.mine.IMineRunner;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -50,20 +48,32 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.mcf.mine.IMineRunner;
 import org.slf4j.Logger;
+
+import java.math.BigInteger;
+import java.util.*;
 
 public class AionImpl implements IAionChain {
 
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+    private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+    private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
 
     public AionHub aionHub;
 
     private CfgAion cfg;
 
     static private AionImpl inst;
+
+    private Timer timer;
+
+    private List<AionTransaction> broadCastBuffer = new ArrayList<>();
+
+    class TxBroadCastTask extends TimerTask {
+        @Override
+        public void run() {
+            broadCastTxs();
+        }
+    }
 
     public static AionImpl inst() {
         if (inst == null) {
@@ -75,8 +85,23 @@ public class AionImpl implements IAionChain {
     private AionImpl() {
         this.cfg = CfgAion.inst();
         aionHub = new AionHub();
-        LOG.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
+        LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
+
+        timer = new Timer("TxBC");
+        timer.schedule(new TxBroadCastTask(), 5000, 100);
+    }
+
+    private void broadCastTxs() {
+        synchronized (broadCastBuffer) {
+            if (LOG_TX.isTraceEnabled()) {
+                LOG_TX.trace("bcTxTask {}", broadCastBuffer.size());
+            }
+
+            A0TxTask txTask = new A0TxTask(broadCastBuffer, this.aionHub.getP2pMgr());
+            TxBroadcaster.getInstance().submitTransaction(txTask);
+            broadCastBuffer.clear();
+        }
     }
 
     @Override
@@ -99,7 +124,7 @@ public class AionImpl implements IAionChain {
         Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
 
         if (minerCoinbase.equals(Address.EMPTY_ADDRESS())) {
-            LOG.info("Miner address is not set");
+            LOG_GEN.info("Miner address is not set");
             return null;
         }
 
@@ -108,6 +133,10 @@ public class AionImpl implements IAionChain {
 
     @Override
     public void close() {
+
+        if (timer != null) {
+            timer.cancel();
+        }
         aionHub.close();
     }
 
@@ -129,9 +158,14 @@ public class AionImpl implements IAionChain {
     }
 
     public void broadcastTransactions(List<AionTransaction> transaction) {
-        A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
 
-        TxBroadcaster.getInstance().submitTransaction(txTask);
+        if (LOG_TX.isTraceEnabled()) {
+            LOG_TX.trace("broadcastTxs {}", transaction.size());
+        }
+
+        synchronized (broadCastBuffer) {
+            this.broadCastBuffer.addAll(transaction);
+        }
     }
 
     public long estimateTxNrg(AionTransaction tx, IAionBlock block) {
@@ -218,7 +252,7 @@ public class AionImpl implements IAionChain {
         } catch (Exception e) {
             // we may get null pointers here, desire is to isolate
             // the API from these occurances
-            LOG.debug("query request failed ", e);
+            LOG_GEN.debug("query request failed ", e);
             return Optional.empty();
         }
     }
@@ -228,7 +262,7 @@ public class AionImpl implements IAionChain {
         try {
             return Optional.of(this.getAionHub().getSyncMgr().getNetworkBestBlockNumber());
         } catch (Exception e) {
-            LOG.debug("query request failed ", e);
+            LOG_GEN.debug("query request failed ", e);
             return Optional.empty();
         }
     }
@@ -252,7 +286,7 @@ public class AionImpl implements IAionChain {
             // syncing
             return (localBestBlockNumber + 5) < networkBestBlockNumber;
         } catch (Exception e) {
-            LOG.debug("query request failed", e);
+            LOG_GEN.debug("query request failed", e);
             return false;
         }
     }
@@ -262,7 +296,7 @@ public class AionImpl implements IAionChain {
         try {
             return Optional.of(this.aionHub.getStartingBlock().getNumber());
         } catch (Exception e) {
-            LOG.debug("query request failed", e);
+            LOG_GEN.debug("query request failed", e);
             return Optional.empty();
         }
     }
@@ -280,7 +314,7 @@ public class AionImpl implements IAionChain {
 
             return Optional.of(account);
         } catch (Exception e) {
-            LOG.debug("query request failed", e);
+            LOG_GEN.debug("query request failed", e);
             return Optional.empty();
         }
     }
@@ -298,7 +332,7 @@ public class AionImpl implements IAionChain {
 
             return Optional.of(account);
         } catch (Exception e) {
-            LOG.debug("query request failed", e);
+            LOG_GEN.debug("query request failed", e);
             return Optional.empty();
         }
     }
@@ -315,7 +349,7 @@ public class AionImpl implements IAionChain {
 
             return Optional.of(account);
         } catch (Exception e) {
-            LOG.debug("query request failed", e);
+            LOG_GEN.debug("query request failed", e);
             return Optional.empty();
         }
     }
