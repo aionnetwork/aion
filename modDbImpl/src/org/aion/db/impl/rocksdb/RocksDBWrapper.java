@@ -13,7 +13,7 @@ public class RocksDBWrapper extends AbstractDB {
     private final int maxOpenFiles;
     private final int blockSize;
     private final int writeBufferSize;
-    //private final int cacheSize;
+    private final int readBufferSize;
 
     public RocksDBWrapper(String name,
                           String path,
@@ -21,14 +21,14 @@ public class RocksDBWrapper extends AbstractDB {
                           boolean enableDbCompression,
                           int maxOpenFiles,
                           int blockSize,
-                          int writeBufferSize) {
-                             //int cacheSize) {
+                          int writeBufferSize,
+                          int readBufferSize) {
         super(name, path, enableDbCache, enableDbCompression);
 
         this.maxOpenFiles = maxOpenFiles;
         this.blockSize = blockSize;
         this.writeBufferSize = writeBufferSize;
-        //this.cacheSize = cacheSize;
+        this.readBufferSize = readBufferSize;
 
         RocksDB.loadLibrary();
     }
@@ -47,9 +47,8 @@ public class RocksDBWrapper extends AbstractDB {
         /* @Todo (?): The size of one block in arena memory allocation. If <= 0, a proper value is automatically calculated (usually 1/10 of writer_buffer_size). There are two additonal restriction of the The specified size: (1) size should be in the range of [4096, 2 << 30] and (2) be the multiple of the CPU word (which helps with the memory alignment). We'll automatically check and adjust the size number to make sure it conforms to the restrictions. Default: 0 @return the size of an arena block */
         options.setArenaBlockSize(this.blockSize);
         options.setWriteBufferSize(this.writeBufferSize);
-        //options.setCacheSize(); @todo: do we have something like this
+        options.setRandomAccessMaxBufferSize(this.readBufferSize);
         options.setParanoidChecks(true);
-        // options.setVerifyChecksums() @todo:
         options.setMaxOpenFiles(this.maxOpenFiles);
 
         return options;
