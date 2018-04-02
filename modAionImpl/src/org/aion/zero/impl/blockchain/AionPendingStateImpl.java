@@ -247,11 +247,10 @@ public class AionPendingStateImpl
         ees.setFilter(setEvtFilter());
 
         regBlockEvents();
-        IHandler blkHandler = this.evtMgr.getHandler(2);
+        IHandler blkHandler = this.evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
         if (blkHandler != null) {
             blkHandler.eventCallback(new EventCallback(ees, LOG));
         }
-
 
         if (bufferEnable) {
             LOG.info("TxBuf enable!");
@@ -279,6 +278,7 @@ public class AionPendingStateImpl
 
         this.evtMgr.registerEvent(evts);
     }
+
 
     @Override
     public synchronized IRepositoryCache<?, ?, ?> getRepository() {
@@ -323,15 +323,20 @@ public class AionPendingStateImpl
             BigInteger txNonce = tx.getNonceBI();
             BigInteger bestPSNonce = bestPendingStateNonce(tx.getFrom());
 
-            if (txNonce.compareTo(bestPSNonce) > 0) {
+            int cmp = txNonce.compareTo(bestPSNonce);
+
+            if (cmp > 0) {
                 if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                     AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
                 }
 
                 addToTxCache(tx);
 
-                LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
-            } else if (txNonce.equals(bestPSNonce)) {
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                }
+
+            } else if (cmp == 0) {
                 if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
 
                     if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
@@ -339,10 +344,18 @@ public class AionPendingStateImpl
                     }
 
                     addToTxCache(tx);
+
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                    }
+
                     continue;
                 }
 
                 Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("cache: from {}, size {}", tx.getFrom(), cache.size());
+                }
 
                 do {
                     if (addNewTxIfNotExist(tx)) {
@@ -352,6 +365,10 @@ public class AionPendingStateImpl
                         } else {
                             break;
                         }
+                    }
+
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("cache: from {}, nonce {}", tx.getFrom(), txNonce.toString());
                     }
 
                     txNonce = txNonce.add(BigInteger.ONE);
@@ -367,8 +384,8 @@ public class AionPendingStateImpl
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(
                     "Wire transaction list added: total: {}, new: {}, valid (added to pending): {} (current #of known txs: {})",
                     transactions.size(), unknownTx, newPending, receivedTxs.size());
         }
@@ -544,23 +561,16 @@ public class AionPendingStateImpl
 
         best.set(newBlock);
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: updateState");
-        }
         updateState(best.get());
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: txPool.updateBlkNrgLimit");
-        }
         txPool.updateBlkNrgLimit(best.get().getNrgLimit());
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.processBest: flushCachePendingTx");
-        }
         flushCachePendingTx();
 
-        IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
-        this.evtMgr.newEvent(evtChange);
+        List<IEvent> events = new ArrayList<>();
+        events.add(new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0));
+
+        this.evtMgr.newEvents(events);
 
         // This is for debug purpose, do not use in the regular kernel running.
         if (this.dumpPool) {
@@ -716,6 +726,7 @@ public class AionPendingStateImpl
     private void updateState(IAionBlock block) {
 
         pendingState = repository.startTracking();
+
         processTxBuffer();
         List<AionTransaction> pendingTxl = this.txPool.snapshotAll();
 

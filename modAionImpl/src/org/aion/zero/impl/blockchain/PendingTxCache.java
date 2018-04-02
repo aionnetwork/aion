@@ -165,8 +165,20 @@ public class PendingTxCache {
 
             cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
 
-            cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
-            currentSize.addAndGet(txSize);
+            int tempCacheSize = currentSize.get();
+            if (cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()) != null) {
+                int oldTxSize = cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()).getEncoded().length;
+                tempCacheSize -= oldTxSize;
+                cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
+                currentSize.set(tempCacheSize + tx.getEncoded().length);
+            } else {
+                cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
+                currentSize.addAndGet(txSize);
+            }
+        }
+
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("PendingTx add {}, size{}", tx.toString(), cacheTxMap.get(tx.getFrom()).values().size());
         }
 
         return new ArrayList<>(cacheTxMap.get(tx.getFrom()).values());
@@ -224,4 +236,11 @@ public class PendingTxCache {
         return cacheTxMap.get(from);
     }
 
+    public AionTransaction getFirstCacheTx(Address addr) {
+        if (cacheTxMap.get(addr) == null || cacheTxMap.get(addr).isEmpty()) {
+            return null;
+        }
+
+        return cacheTxMap.get(addr).firstEntry().getValue();
+    }
 }

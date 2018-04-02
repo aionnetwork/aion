@@ -101,7 +101,7 @@ public class EventTx extends AbstractEvent implements IEvent {
     }
 
     public enum CALLBACK {
-        PENDINGTXSTATECHANGE0(0), PENDINGTXUPDATE0(1), PENDINGTXRECEIVED0(2), TXEXECUTED0(3);
+        PENDINGTXSTATECHANGE0(0), PENDINGTXUPDATE0(1), PENDINGTXRECEIVED0(2), TXEXECUTED0(3), CACHINGTXUPDATE0(4);
 
         final static int MAX = 127;
         final static int MIN = 0;
