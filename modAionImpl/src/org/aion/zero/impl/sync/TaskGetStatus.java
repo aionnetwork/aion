@@ -29,24 +29,28 @@
 
 package org.aion.zero.impl.sync;
 
+import org.aion.log.AionLoggerFactory;
+import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
+import org.aion.zero.impl.sync.state.SyncPeerSet;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author chris
- * long run
+ * @implNote LONG_RUN
  */
 final class TaskGetStatus implements Runnable {
 
+    private final Logger log;
 
-    private final static int intervalTotal = 1000;
-
-    private final static int intervalMin = 100;
+    private final static int intervalTotal = 5000; // ms
 
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -55,37 +59,50 @@ final class TaskGetStatus implements Runnable {
 
     private final IP2pMgr p2p;
 
-    private final Logger log;
+    private final SyncPeerSet peerSet;
 
     /**
      * @param _run      AtomicBoolean
      * @param _p2p      IP2pMgr
      * @param _log      Logger
      */
-    TaskGetStatus(final AtomicBoolean _run, final IP2pMgr _p2p, final Logger _log) {
+    TaskGetStatus(final AtomicBoolean _run, final IP2pMgr _p2p, final Logger _log, SyncPeerSet peerSet) {
         this.run = _run;
         this.p2p = _p2p;
         this.log = _log;
+
+        this.peerSet = peerSet;
     }
 
     @Override
     public void run() {
-        while (this.run.get()) {
-            Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-
+        RUN_LOOP:
+        while (this.run.get() && !Thread.currentThread().isInterrupted()) {
             try {
-                for (int id : ids) {
-                    p2p.send(id, reqStatus);
-                    Thread.sleep(1000L);
+                List<INode> nodes = new ArrayList<>(p2p.getActiveNodes().values());
+                this.peerSet.updateSet(nodes);
+
+                // these are pretty light messages, we can afford to send them
+                // they can act as sort of a pseudo ping-pong for now
+                for (INode id : nodes) {
+
+                    if (log.isTraceEnabled()) {
+                        log.trace("sending request status to [{}/{}]", id.getIdHash(), id.getIdShort());
+                    }
+
+                    p2p.send(id.getIdHash(), reqStatus);
+                    Thread.sleep(10); // sleep 100ms in between messages
                 }
 
-                if (ids.isEmpty()) {
-                    Thread.sleep(intervalTotal);
+                Thread.sleep(intervalTotal);
+            } catch (Throwable t) {
+                if (t instanceof InterruptedException) {
+                    log.info("<sync-gs shutdown>");
+                    break RUN_LOOP;
                 }
-            } catch (InterruptedException e) {
-                break;
+
+                log.error("caught error", t);
             }
         }
-        log.info("<sync-gs shutdown>");
     }
 }

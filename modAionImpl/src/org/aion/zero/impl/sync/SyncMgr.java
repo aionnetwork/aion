@@ -40,6 +40,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.sync.state.SyncPeerSet;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.evtmgr.IEvent;
@@ -74,6 +75,8 @@ public final class SyncMgr {
     private IEventMgr evtMgr;
 
     private AtomicBoolean start = new AtomicBoolean(true);
+
+    private SyncPeerSet peerSet;
 
     // set as last block number within one batch import when first block for
     // imported success as best
@@ -186,12 +189,14 @@ public final class SyncMgr {
 
         this.blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
+        this.peerSet = new SyncPeerSet();
+
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
         new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, log), "sync-gb").start();
         new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log, importedBlockHashes), "sync-ib").start();
-        new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
+        new Thread(new TaskGetStatus(this.start, this.p2pMgr, log, this.peerSet), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss").start();
 
