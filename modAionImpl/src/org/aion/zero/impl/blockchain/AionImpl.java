@@ -28,6 +28,10 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
@@ -65,6 +69,8 @@ public class AionImpl implements IAionChain {
 
     static private AionImpl inst;
 
+    private final ScheduledExecutorService broadcastTx;
+
     public static AionImpl inst() {
         if (inst == null) {
             inst = new AionImpl();
@@ -77,6 +83,14 @@ public class AionImpl implements IAionChain {
         aionHub = new AionHub();
         LOG.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
+
+        broadcastTx = Executors.newSingleThreadScheduledExecutor();
+        broadcastTx.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Test");
+            }
+        }, 10, 10, TimeUnit.SECONDS);
     }
 
     @Override
