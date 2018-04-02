@@ -128,7 +128,7 @@ final class TaskImportBlocks implements Runnable {
                     default:
                         break;
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     log.error("import exception, {}", e.toString());
                 }
             }
