@@ -763,8 +763,13 @@ public final class P2pMgr implements IP2pMgr {
 
         @Override
         public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
-            byteBuffers.offer(buffer);
-            key.interestOps(SelectionKey.OP_WRITE);
+            if (byteBuffers.offer(buffer)) {
+                key.interestOps(SelectionKey.OP_WRITE);
+            } else {
+                if (P2pMgr.this.showLog) {
+                    System.out.println("message queue is full");
+                }
+            }
         }
 
         @Override
@@ -830,7 +835,16 @@ public final class P2pMgr implements IP2pMgr {
                     return;
                 }
                 int nodeIdHash = node.getIdHash();
-                if (!nodeMgr.getOutboundNodes().containsKey(nodeIdHash) && !nodeMgr.hasActiveNode(nodeIdHash)) {
+                byte[] nodeIp = node.getIp();
+                int nodePort = node.getPort();
+
+                Map<Integer, INode> map = new HashMap<>();
+                map.putAll(nodeMgr.getOutboundNodes());
+                map.putAll(nodeMgr.getActiveNodesMap());
+                boolean connected = (selfNodeIdHash == nodeIdHash || Arrays.equals(selfIp, nodeIp) && selfPort == nodePort)
+                        || (map.values().stream().anyMatch(n -> n.getIdHash() == nodeIdHash || Arrays.equals(n.getIp(), nodeIp) && n.getPort() == nodePort));
+
+                if (!connected) {
                     int _port = node.getPort();
                     try {
                         SocketChannel channel = SocketChannel.open();
