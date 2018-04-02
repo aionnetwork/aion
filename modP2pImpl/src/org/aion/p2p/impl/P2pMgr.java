@@ -715,7 +715,6 @@ public final class P2pMgr implements IP2pMgr {
                         System.out.println("key-stats bb_size: " + byteBuffers.size());
                     }
                 }
-
             } catch (IOException e) {
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered

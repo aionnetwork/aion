@@ -158,11 +158,20 @@ public class MainIOLoop implements Runnable {
         try {
             t.channelReady(key.channel(), key);
             state = 1;
-        } catch (Exception e) {
-            // on any exception, drop
-            key.cancel();
-            t.channelUnregistered(key.channel(), e);
-            state = 2;
+        } catch (Throwable th) {
+
+            // if this was an excepted exception
+            if (th instanceof Exception) {
+                // on any exception, drop
+                key.cancel();
+                t.channelUnregistered(key.channel(), th);
+                state = 2;
+            }
+
+            // otherwise if this was a runtime exception, it could be that
+            // our decoding logic is currently flawed, log out and ignore
+            System.out.println("Selector caught unhandled exception");
+            th.printStackTrace();
         } finally {
             // this should not happen, but handle anyways
             if (state == 0) {
