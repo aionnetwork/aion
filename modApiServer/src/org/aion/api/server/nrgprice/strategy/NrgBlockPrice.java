@@ -1,5 +1,6 @@
-package org.aion.api.server.nrgprice;
+package org.aion.api.server.nrgprice.strategy;
 
+import org.aion.api.server.nrgprice.NrgPriceAdvisor;
 import org.aion.base.type.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -11,7 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
-/* Implementation of strategy adopted by Ethereum mainstream clients in early 2018 of using the
+/**
+ * Implementation of strategy adopted by Ethereum mainstream clients in early 2018 of using the
  * notion of 'blockPrice': minimum nrgPriced transaction in a block that did not originate from the proposer
  * of that block. This algorithm recommends the Nth percentile blockPrice observed over the last M blocks
  *
@@ -21,8 +23,12 @@ import java.util.concurrent.ArrayBlockingQueue;
  * A transaction based design alternatively has been observed in the wild to have a positive feedback
  * effect where large numbers of people following the recommendation will tend the recommendation upward
  *
+ * This class is NOT thread-safe
+ * Policy: holder class (NrgOracle) should provide any concurrency guarantees it needs to
+ *
+ * @author ali sharif
  */
-public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransaction> {
+public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
     private ArrayBlockingQueue<Long> blkPriceQ;
@@ -35,7 +41,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
     int windowSize;
     int recommendationIndex;
 
-    public NrgBlockPriceStrategy(long defaultPrice, long maxPrice, int windowSize, int percentile) {
+    public NrgBlockPrice(long defaultPrice, long maxPrice, int windowSize, int percentile) {
         super(defaultPrice, maxPrice);
 
         // clamp the percentile measure
@@ -68,6 +74,7 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
 
     // notion of "block price" = lowest gas price for all transactions in a block, exluding miner's own transactions
     // returns null if block is empty, invalid input, block filled only with miner's own transactions
+    @SuppressWarnings("Duplicates")
     private Long getBlkPrice(AionBlock blk) {
         if (blk == null)
             return null;
@@ -99,16 +106,25 @@ public class NrgBlockPriceStrategy extends NrgPriceAdvisor<AionBlock, AionTransa
     * blocks are valid signals by miners of acceptable nrg prices
     */
     @Override
+    @SuppressWarnings("Duplicates")
     public void processBlock(AionBlock blk) {
+        if (blk == null) return;
+
         Long blkPrice = getBlkPrice(blk);
+
         if (blkPrice != null) {
             if (!blkPriceQ.offer(blkPrice)) {
                 blkPriceQ.poll();
                 if (!blkPriceQ.offer(blkPrice))
-                    LOG.error("NrgBlockPriceStrategy - problem with backing queue implementation");
+                    LOG.error("NrgBlockPrice - problem with backing queue implementation");
                     // alternatively, we could throw here
             }
         }
+    }
+
+    @Override
+    public void flush() {
+        blkPriceQ.clear();
     }
 
     @Override
