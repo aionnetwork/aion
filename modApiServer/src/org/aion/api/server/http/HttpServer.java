@@ -107,8 +107,9 @@ public class HttpServer implements Runnable {
             tcpServer.socket().setReuseAddress(true);
             tcpServer.socket().bind(address);
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.info("<rpc-server - failed to bind on {}:{}>", ip, port, e);
+            System.exit(1);
         }
 
         server = new Thread(this::run, "rpc-server");
@@ -257,7 +258,7 @@ public class HttpServer implements Runnable {
                         write(sk);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 failcount++;
                 LOG.debug("<rpc-server - main event loop uncaught error [9]>", e);
             }

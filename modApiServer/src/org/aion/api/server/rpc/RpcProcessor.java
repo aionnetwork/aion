@@ -93,7 +93,7 @@ public class RpcProcessor {
 
         for (String allowedOrigin : allowedOrigins) {
             // purposefully do a weak origin check here
-            // TODO: do a real origin check, supporting wildcard-defined origin
+            // TODO: do a real origin check, supporting regex-defined origin
             if (origin.contains(allowedOrigin)) return true;
         }
 
@@ -113,10 +113,6 @@ public class RpcProcessor {
     }
 
     private String composeRpcResponse(String _respBody, String _reqHeader) {
-        return composeRpcResponse(_respBody, _reqHeader, false);
-    }
-
-    private String composeRpcResponse(String _respBody, String _reqHeader, boolean forceCors) {
         String respBody;
         if (_respBody == null) {
             respBody = new RpcMsg(null, RpcError.INTERNAL_ERROR).toString();
@@ -128,14 +124,15 @@ public class RpcProcessor {
         String respHeader = POST_TEMPLATE;
         respHeader += CRLF + "Content-Length: " + bodyLength;
 
-        if (forceCors) {
-            respHeader += CRLF + "Access-Control-Allow-Origin: *";
-        }
         // bother with parsing the origin header, only if cors is enabled
-        else if (_reqHeader != null && corsEnabled) {
-            String origin = parseOriginHeader(_reqHeader);
-            if (isOriginAllowed(origin)) {
-                respHeader += CRLF + "Access-Control-Allow-Origin: " + origin;
+        if (corsEnabled) {
+            if (_reqHeader == null) {
+                respHeader += CRLF + "Access-Control-Allow-Origin: *";
+            } else {
+                String origin = parseOriginHeader(_reqHeader);
+                if (isOriginAllowed(origin)) {
+                    respHeader += CRLF + "Access-Control-Allow-Origin: " + origin;
+                }
             }
         }
 
@@ -322,10 +319,10 @@ public class RpcProcessor {
                         LOG.debug("<rpc-worker - failed to convert response to bytearray [17]>", e);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 LOG.debug("<rpc-worker - failed to process incoming request>", e);
                 try {
-                    data = ByteBuffer.wrap(composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString(), null, true).getBytes(CHARSET));
+                    data = ByteBuffer.wrap(composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString(), null).getBytes(CHARSET));
                 } catch (Exception f) {
                     LOG.debug("<rpc-worker - failed to convert response to bytearray [18]>", f);
                 }
