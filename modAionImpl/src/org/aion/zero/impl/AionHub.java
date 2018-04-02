@@ -154,8 +154,7 @@ public class AionHub {
         this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
                 cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(),
                 cfgNetP2p.getMaxTempNodes(), cfgNetP2p.getMaxActiveNodes(),
-                cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly(),
-                this.cfg.getReports().isEnabled(), reportsFolder);
+                cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly());
 
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(this.p2pMgr, this.eventMgr,

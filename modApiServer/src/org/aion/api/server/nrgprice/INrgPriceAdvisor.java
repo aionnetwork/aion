@@ -16,4 +16,8 @@ public interface INrgPriceAdvisor<BLK extends IBlock, TXN extends ITransaction> 
     /* Retrieve the recommendation stored in internal representation
      */
     long computeRecommendation();
+
+    /* flush all history for recommendation engine
+     */
+    void flush();
 }

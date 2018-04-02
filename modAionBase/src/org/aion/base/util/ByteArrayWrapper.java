@@ -55,23 +55,6 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
         this.hashCode = Arrays.hashCode(data);
     }
 
-    /**
-     * Copy constructor
-     */
-    public ByteArrayWrapper(ByteArrayWrapper other) {
-        if (other == null) {
-            throw new NullPointerException("input ByteArrayWrapper must not be null");
-        }
-
-        if (other.data == null) {
-            throw new NullPointerException("input ByteArrayWrapper data must not be null");
-        }
-
-        this.data = new byte[other.data.length];
-        System.arraycopy(other.data, 0, this.data, 0, other.data.length);
-        this.hashCode = Arrays.hashCode(this.data);
-    }
-
     public boolean equals(Object other) {
         if (!(other instanceof ByteArrayWrapper)) {
             return false;

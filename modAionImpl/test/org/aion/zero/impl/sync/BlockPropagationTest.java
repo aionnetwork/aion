@@ -127,6 +127,10 @@ public class BlockPropagationTest {
         public void send(int _id, Msg _msg) {
 
         }
+
+        @Override
+        public void dropActive(Integer hash) {
+        }
     }
 
     private static List<ECKey> generateDefaultAccounts() {
