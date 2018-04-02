@@ -27,9 +27,12 @@ package org.aion.zero.impl.valid;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.crypto.HashUtil;
+
+import static org.aion.base.util.Hex.toHexString;
 
 /**
  * Checks proof value against its boundary for the block header
@@ -43,12 +46,12 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
         // 32 byte static hash, 8 byte dynamic, 32 byte nonce, 1408 solution (1480 input)
         byte[] validationBytes = new byte[1480];
         byte[] staticHash = header.getStaticHash();
-        byte[] dynamic = BigInteger.valueOf(header.getTimestamp()).toByteArray();
+        byte[] dynamic = ByteUtil.longToBytes(header.getTimestamp());
         byte[] nonce = header.getNonce();
         byte[] solution = header.getSolution();
         int pos = 0;
 
-        System.arraycopy(header.getStaticHash(), 0, validationBytes, pos, staticHash.length);
+        System.arraycopy(staticHash, 0, validationBytes, pos, staticHash.length);
         pos += staticHash.length;
 
         System.arraycopy(dynamic, 0, validationBytes, pos, dynamic.length);
@@ -57,9 +60,9 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
         System.arraycopy(nonce, 0, validationBytes, pos, nonce.length);
         pos += nonce.length;
 
-        System.arraycopy(nonce, 0, validationBytes, pos, solution.length);
+        System.arraycopy(solution, 0, validationBytes, pos, solution.length);
 
-        BigInteger hash = new BigInteger(1, validationBytes);
+        BigInteger hash = new BigInteger(1, HashUtil.h256(validationBytes));
 
         if (hash.compareTo(boundary) >= 0) {
             addError(formatError(hash, boundary), errors);
