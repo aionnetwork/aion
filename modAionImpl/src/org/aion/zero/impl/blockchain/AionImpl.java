@@ -24,22 +24,20 @@
 
 package org.aion.zero.impl.blockchain;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.core.ImportResult;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.mine.IMineRunner;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -50,10 +48,10 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.mcf.mine.IMineRunner;
 import org.slf4j.Logger;
+
+import java.math.BigInteger;
+import java.util.*;
 
 public class AionImpl implements IAionChain {
 
