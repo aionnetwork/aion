@@ -34,7 +34,7 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
-import org.aion.db.impl.rocksdb.RocksWrapperDB;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 import java.util.List;
 import java.util.Map;
@@ -47,8 +47,8 @@ public enum DBVendor {
     UNKNOWN("unknown", false), //
     /** Using an instance of {@link org.aion.db.impl.leveldb.LevelDB}. */
     LEVELDB("leveldb", true), //
-    /** Using an instance of {@link RocksWrapperDB}. */
-    ROCKSDB("rocksdb", false),
+    /** Using an instance of {@link RocksDBWrapper}. */
+    ROCKSDB("rocksdb", true),
     H2("h2", true), //
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
     MOCKDB("mockdb", false);
@@ -62,7 +62,7 @@ public enum DBVendor {
     }
 
     /* map implemented using concurrent hash map */
-    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, H2, MOCKDB);
+    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
 
     private final String value;
     private final boolean persistence;

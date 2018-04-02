@@ -7,7 +7,7 @@ import org.rocksdb.*;
 import java.io.File;
 import java.util.*;
 
-public class RocksWrapperDB extends AbstractDB {
+public class RocksDBWrapper extends AbstractDB {
 
     private RocksDB db;
     private final int maxOpenFiles;
@@ -15,13 +15,13 @@ public class RocksWrapperDB extends AbstractDB {
     private final int writeBufferSize;
     //private final int cacheSize;
 
-    protected RocksWrapperDB(String name,
-                             String path,
-                             boolean enableDbCache,
-                             boolean enableDbCompression,
-                             int maxOpenFiles,
-                             int blockSize,
-                             int writeBufferSize) {
+    public RocksDBWrapper(String name,
+                          String path,
+                          boolean enableDbCache,
+                          boolean enableDbCompression,
+                          int maxOpenFiles,
+                          int blockSize,
+                          int writeBufferSize) {
                              //int cacheSize) {
         super(name, path, enableDbCache, enableDbCompression);
 
