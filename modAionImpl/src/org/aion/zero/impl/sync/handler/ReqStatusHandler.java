@@ -35,18 +35,14 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.slf4j.Logger;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author chris handler for status request from network
@@ -61,15 +57,6 @@ public final class ReqStatusHandler extends Handler {
 
     private byte[] genesisHash;
 
-    private final Map<Integer, Long> reqMap = new ConcurrentHashMap<>();
-
-    private static long RESEND_TIME = 1000; //ms
-
-    private static long TIMEOUT_TIME = 5000; // ms
-
-    private long ticker = 0;
-    private static long TICKER_MAX = 1000000000; // arbitrary
-
     public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
             final byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
@@ -79,66 +66,8 @@ public final class ReqStatusHandler extends Handler {
         this.genesisHash = _genesisHash;
     }
 
-    /**
-     * Cleans up long lasting nodes, ran every N cycles
-     *
-     * @implNote guarded by reqMap
-     */
-    private void cleanup() {
-        long currTime = System.currentTimeMillis();
-        Iterator<Long> mapIt = reqMap.values().iterator();
-        while (mapIt.hasNext()) {
-            Long time = mapIt.next();
-            if (currTime - time > TIMEOUT_TIME)
-                mapIt.remove();
-        }
-    }
-
-    /**
-     * Processes peers, this is mainly to form some memory of the peers we've interacted
-     * with recently. In case they act maliciously against us (spamming us) we should not
-     * respond, and possibly drop them if the behaviour continues
-     *
-     * @implNote guarded by reqMap
-     */
-    private boolean processPeer(int id) {
-
-        if (ticker > TICKER_MAX)
-            ticker = 1;
-
-        // cleanup
-        ticker++;
-
-        if (ticker % 1000 == 0) {
-            cleanup();
-        }
-
-        Long val;
-        if ((val = reqMap.get(id)) == null) {
-            reqMap.put(id, System.currentTimeMillis());
-            return true;
-        }
-
-        long currTime = System.currentTimeMillis();
-        if (currTime - val > RESEND_TIME) {
-            reqMap.put(id, currTime);
-            return true;
-        }
-
-        // if we've sent a message within 1 second, simply ignore
-        return false;
-    }
-
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-        boolean proceed;
-        synchronized (reqMap) {
-            proceed = processPeer(_nodeIdHashcode);
-        }
-
-        if (!proceed)
-            return;
-
         this.log.debug("<req-status node={}>", _displayId);
         ResStatus res = new ResStatus(this.chain.getBestBlock().getNumber(), this.chain.getTotalDifficulty().toByteArray(),
                     this.chain.getBestBlockHash(), this.genesisHash);
