@@ -379,7 +379,7 @@ public class NodeMgr implements INodeMgr {
             int key = (int) activeIt.next();
             Node node = getActiveNode(key);
 
-            if (now - node.getTimestamp() > timeout) {
+            if (now - node.getTimestamp() > timeout || !node.getChannel().isConnected()) {
 
                 pmgr.closeSocket(node.getChannel());
                 activeIt.remove();
