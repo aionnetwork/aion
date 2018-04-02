@@ -226,10 +226,6 @@ public class AionPendingStateImpl
         }
     }
 
-    public AionPendingStateImpl() {
-        super();
-    }
-
     public void init(final AionBlockchainImpl blockchain) {
         this.blockchain = blockchain;
         this.transactionStore = blockchain.getTransactionStore();

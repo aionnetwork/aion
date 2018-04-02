@@ -68,25 +68,6 @@ public class PendingTxCache {
         return (currentSize.get() + txSize) > CacheMax;
     }
 
-    private List<AionTransaction> findSeqTx(BigInteger bn, Address addr) {
-
-        List<AionTransaction> rtn = new ArrayList<>();
-        rtn.add(cacheTxMap.get(addr).get(bn));
-
-        boolean foundNext = true;
-        while(foundNext) {
-            bn = bn.add(BigInteger.ONE);
-            AionTransaction nextTx = cacheTxMap.get(addr).get(bn);
-            if (nextTx == null) {
-                foundNext = false;
-            } else {
-                rtn.add(cacheTxMap.get(addr).get(bn));
-            }
-        }
-
-        return rtn;
-    }
-
     List<AionTransaction> addCacheTx(AionTransaction tx) {
         if (tx == null) {
             throw new NullPointerException();
@@ -236,11 +217,4 @@ public class PendingTxCache {
         return cacheTxMap.get(from);
     }
 
-    public AionTransaction getFirstCacheTx(Address addr) {
-        if (cacheTxMap.get(addr) == null || cacheTxMap.get(addr).isEmpty()) {
-            return null;
-        }
-
-        return cacheTxMap.get(addr).firstEntry().getValue();
-    }
 }
