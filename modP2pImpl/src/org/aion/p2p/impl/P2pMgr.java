@@ -42,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // import org.aion.p2p.impl.one.msg.Hello;
 
@@ -504,8 +505,13 @@ public final class P2pMgr implements IP2pMgr {
             selector = Selector.open();
 
             scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
-            // workers = Executors.newCachedThreadPool();
+            workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16), new ThreadFactory() {
+                private AtomicInteger cnt = new AtomicInteger();
+
+                public Thread newThread(Runnable r) {
+                    return new Thread(r,"p2p-worker-" + cnt.incrementAndGet());
+                }
+            });
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
@@ -672,7 +678,9 @@ public final class P2pMgr implements IP2pMgr {
 
     private final class HandleChannel implements Task {
 
-        private final Queue<ByteBuffer> byteBuffers = new LinkedBlockingQueue<>();
+        private final static int MAX_MESSAGE_QUEUE_SIZE = 128;
+
+        private final Queue<ByteBuffer> byteBuffers = new LinkedBlockingQueue<>(MAX_MESSAGE_QUEUE_SIZE);
 
         @Override
         public void channelReady(SelectableChannel channel, SelectionKey key) {
@@ -751,7 +759,7 @@ public final class P2pMgr implements IP2pMgr {
 
         @Override
         public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
-            byteBuffers.add(buffer);
+            byteBuffers.offer(buffer);
             key.interestOps(SelectionKey.OP_WRITE);
         }
 
@@ -795,6 +803,7 @@ public final class P2pMgr implements IP2pMgr {
                 } catch (InterruptedException e) {
                     if (showLog)
                         System.out.println("<p2p-tcp interrupted>");
+                    break;
                 }
 
                 if (nodeMgr.activeNodesSize() >= maxActiveNodes) {
@@ -908,6 +917,9 @@ public final class P2pMgr implements IP2pMgr {
                     nodeMgr.rmTimeOutActives(P2pMgr.this);
                     //selectorLock.unlock();
 
+                } catch (InterruptedException interrupted) {
+                    if (showLog)
+                        System.out.println("<p2p-clear interrupted>");
                 } catch (Exception e) {
                     e.printStackTrace();
                     // TODO: do something
