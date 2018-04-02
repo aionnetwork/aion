@@ -146,10 +146,8 @@ public class PendingTxCache {
 
             cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
 
-            int tempCacheSize = currentSize.get();
             if (cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()) != null) {
-                int oldTxSize = cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()).getEncoded().length;
-                tempCacheSize -= oldTxSize;
+                int tempCacheSize = currentSize.get() - cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()).getEncoded().length;
                 cacheTxMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
                 currentSize.set(tempCacheSize + tx.getEncoded().length);
             } else {
