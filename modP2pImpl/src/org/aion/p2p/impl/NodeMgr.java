@@ -25,18 +25,18 @@
 
 package org.aion.p2p.impl;
 
-import java.math.BigInteger;
-import java.io.File;
-import java.io.FileInputStream;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.INodeObserver;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.aion.p2p.INode;
-import org.aion.p2p.INodeMgr;
-import javax.xml.stream.*;
 
 public class NodeMgr implements INodeMgr {
 
@@ -51,6 +51,15 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> activeNodes = new ConcurrentHashMap<>();
+
+    private volatile INodeObserver observer;
+
+    public synchronized void registerNodeObserver(INodeObserver observer) {
+        if (this.observer != null) {
+            throw new IllegalStateException("cannot register multiple observers");
+        }
+        this.observer = observer;
+    }
 
     Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
@@ -292,13 +301,16 @@ public class NodeMgr implements INodeMgr {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
             node.setConnection("outbound");
-            INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
+            INode previous = activeNodes.put(_nodeIdHash, node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(((Node) previous).getChannel());
             else {
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
+
+            if (this.observer != null)
+                this.observer.newActiveNode(_nodeIdHash, node.getIp(), node.getPort());
         }
     }
 
@@ -311,13 +323,16 @@ public class NodeMgr implements INodeMgr {
         if (node != null) {
             node.setConnection("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
-            INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
+            INode previous = activeNodes.put(node.getIdHash(), node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(((Node) previous).getChannel());
             else {
                 if (_p2pMgr.showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }
+
+            if (this.observer != null)
+                this.observer.newActiveNode(_channelHashCode, node.getIp(), node.getPort());
         }
     }
 
@@ -362,8 +377,22 @@ public class NodeMgr implements INodeMgr {
                 activeIt.remove();
                 if (pmgr.showLog)
                     System.out.println("<p2p-clear active-timeout>");
+
+                if (this.observer != null)
+                    this.observer.removeActiveNode(key);
             }
         }
+    }
+
+    public void dropActive(Integer nodeIdHash, P2pMgr pmgr) {
+        Node node = activeNodes.remove(nodeIdHash);
+
+        // if we tried to drop a node that is already dropped
+        if (node == null)
+            return;
+
+        this.observer.removeActiveNode(nodeIdHash);
+        pmgr.closeSocket(node.getChannel());
     }
 
     /**
