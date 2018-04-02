@@ -104,7 +104,15 @@ final class TaskImportBlocks implements Runnable {
                 }
 
                 long t1 = System.currentTimeMillis();
-                ImportResult importResult = this.chain.tryToConnect(b);
+
+                ImportResult importResult;
+                try {
+                    importResult = this.chain.tryToConnect(b);
+                } catch (Throwable e) {
+                    log.error("<import-block throw> {}", e.toString());
+                    continue;
+                }
+
                 long t2 = System.currentTimeMillis();
                 log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                         bw.getDisplayId(), b.getNumber(),
