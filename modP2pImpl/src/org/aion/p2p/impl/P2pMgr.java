@@ -759,8 +759,13 @@ public final class P2pMgr implements IP2pMgr {
 
         @Override
         public void acceptMessage(SelectableChannel channel, SelectionKey key, ByteBuffer buffer) {
-            byteBuffers.offer(buffer);
-            key.interestOps(SelectionKey.OP_WRITE);
+            if (byteBuffers.offer(buffer)) {
+                key.interestOps(SelectionKey.OP_WRITE);
+            } else {
+                if (P2pMgr.this.showLog) {
+                    System.out.println("message queue is full");
+                }
+            }
         }
 
         @Override
