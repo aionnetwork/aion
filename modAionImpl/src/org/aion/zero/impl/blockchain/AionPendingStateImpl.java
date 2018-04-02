@@ -270,6 +270,9 @@ public class AionPendingStateImpl
                 LOG.debug("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
             } else if (txNonce.equals(bestNonce)) {
                 if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
+                    if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
+                        AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
+                    }
                     addToTxCache(tx);
                     continue;
                 }
