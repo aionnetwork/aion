@@ -826,7 +826,15 @@ public final class P2pMgr implements IP2pMgr {
                     return;
                 }
                 int nodeIdHash = node.getIdHash();
-                if (!nodeMgr.getOutboundNodes().containsKey(nodeIdHash) && !nodeMgr.hasActiveNode(nodeIdHash)) {
+
+
+                Map<Integer, INode> map = new HashMap<>();
+                map.putAll(nodeMgr.getOutboundNodes());
+                map.putAll(nodeMgr.getActiveNodesMap());
+                boolean connected = map.values().stream().anyMatch(n ->  n.getIdHash() == nodeIdHash
+                        || n.getIpStr().equals(node.getIpStr()) && n.getPort() == node.getPort());
+
+                if (!connected) {
                     int _port = node.getPort();
                     try {
                         SocketChannel channel = SocketChannel.open();
