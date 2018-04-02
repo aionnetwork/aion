@@ -143,6 +143,10 @@ public final class P2pMgr implements IP2pMgr {
         this.ioLoop = new MainIOLoop(SelectorProvider.provider());
     }
 
+    public int getSelfNodeIdHash() {
+        return this.selfNodeIdHash;
+    }
+
     /**
      * @param _node Node
      * @return boolean
@@ -741,7 +745,7 @@ public final class P2pMgr implements IP2pMgr {
                     ByteBuffer buf = byteBuffers.peek();
                     // try to write as much as we can
                     int ret;
-                    while (buf.hasRemaining()) {
+                    while (buf != null && buf.hasRemaining()) {
                         ret = chan.write(buf);
                         if (ret == 0 && buf.hasRemaining()) {
                             buf.compact();
