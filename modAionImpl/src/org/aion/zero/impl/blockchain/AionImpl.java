@@ -69,7 +69,11 @@ public class AionImpl implements IAionChain {
 
     static private AionImpl inst;
 
+    // Executor service to collect and broadcast txs
     private final ScheduledExecutorService broadcastTx;
+    private final int initDelay = 10; //Seconds till start broadcast
+    private final int broadcastLoop = 1; //Time between broadcasting tx
+    private final int maxTxBroadcast = 100; //Max number of tx in a single broadcast
 
     public static AionImpl inst() {
         if (inst == null) {
@@ -90,7 +94,7 @@ public class AionImpl implements IAionChain {
             public void run() {
                 System.out.println("Test");
             }
-        }, 10, 10, TimeUnit.SECONDS);
+        }, initDelay, broadcastLoop, TimeUnit.SECONDS);
     }
 
     @Override
@@ -144,6 +148,10 @@ public class AionImpl implements IAionChain {
 
     public void broadcastTransactions(List<AionTransaction> transaction) {
         A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
+        for(AionTransaction tx : transaction) {
+            
+        }
+
 
         TxBroadcaster.getInstance().submitTransaction(txTask);
     }
