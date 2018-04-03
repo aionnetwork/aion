@@ -238,7 +238,7 @@ public class AionPendingStateImpl
         this.evtMgr = blockchain.getEventMgr();
         this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax());
         this.pendingState = repository.startTracking();
-        this.txBuffer = new CopyOnWriteArrayList<>();
+        this.txBuffer = Collections.synchronizedList(new ArrayList<>());
 
         this.bufferEnable = CfgAion.inst().getTx().getBuffer();
         this.dumpPool = CfgAion.inst().getTx().getPoolDump();
