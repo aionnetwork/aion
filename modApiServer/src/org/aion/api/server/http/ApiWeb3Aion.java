@@ -1006,16 +1006,17 @@ public class ApiWeb3Aion extends ApiAion {
             tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
             int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
 
+            /*
             if (hashQueue.peekFirst() != null) {
                 System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
                 System.out.println("----------------------------------------------------------");
                 System.out.println("isParentHashMatch? " + FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()));
                 System.out.println("blk.getNumber() " + blk.getNumber());
             }
-
             System.out.println("blkNum: " + blk.getNumber() +
                     " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+            */
 
             while(FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()) == false
                     && itr < qSize
@@ -1024,9 +1025,11 @@ public class ApiWeb3Aion extends ApiAion {
                 blk = getBlockByHash(blk.getParentHash());
                 tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
                 itr++;
+                /*
                 System.out.println("blkNum: " + blk.getNumber() +
                         " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
                         " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+                */
             }
 
             // evict out the right number of elements first
@@ -1054,13 +1057,13 @@ public class ApiWeb3Aion extends ApiAion {
                 txnList.put(hash, txnJson);
             }
 
+            /*
             System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
             System.out.println("----------------------------------------------------------");
-
             for (int i = hashQueue.size() - 1; i >= 0; i--) {
                 System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blkObjList.get(hashQueue.get(i)).getNumber());
             }
-
+            */
             this.response = buildResponse();
 
             return this;
@@ -1091,7 +1094,7 @@ public class ApiWeb3Aion extends ApiAion {
 
     public RpcMsg ops_getChainHeadView(JSONArray _params) {
         try {
-            ChainHeadView v = CachedResponse.get(0);
+            ChainHeadView v = CachedResponse.get(CachedResponseType.CHAIN_HEAD.ordinal());
             return new RpcMsg(v.getResponse());
         } catch (Exception e) {
             LOG.error("<rpc-server - cannot get cached response for ops_getChainHeadView: ", e);
