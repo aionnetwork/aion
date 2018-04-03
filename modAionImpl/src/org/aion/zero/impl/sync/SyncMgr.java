@@ -250,7 +250,12 @@ public final class SyncMgr {
 
             // break if not consisting
             if(prev != null && (current.getNumber() != (prev.getNumber() + 1) || !Arrays.equals(current.getParentHash(), prev.getHash()))) {
-                log.debug("<inconsistent-block-headers>");
+                log.debug("<inconsistent-block-headers from={}, num={}, prev+1={}, p_hash={}, prev={}>",
+                        _displayId,
+                        current.getNumber(),
+                        prev.getNumber() + 1,
+                        current.getParentHash(),
+                        prev.getHash());
                 return;
             }
 

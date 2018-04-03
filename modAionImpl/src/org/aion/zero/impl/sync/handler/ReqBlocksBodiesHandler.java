@@ -38,6 +38,7 @@ package org.aion.zero.impl.sync.handler;
 import java.util.*;
 
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -107,7 +108,14 @@ public final class ReqBlocksBodiesHandler extends Handler {
             this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
                     blockBodies.size(), _displayId);
 
-        } else
-            this.log.error("<req-bodies decode-msg>");
+        } else {
+            this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>",
+                    _displayId,
+                    _msgBytes.length);
+
+            if (this.log.isTraceEnabled()) {
+                this.log.trace("req-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
+            }
+        }
     }
 }
