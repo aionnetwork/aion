@@ -407,7 +407,6 @@ public class AionPendingStateImpl
             }
         } else {
             if (!newPending.isEmpty() || !newLargeNonceTx.isEmpty()) {
-                AionImpl.inst().broadcastTransactions(newPending);
                 AionImpl.inst().broadcastTransactions(Stream.concat(newPending.stream(), newLargeNonceTx.stream()).collect(
                         Collectors.toList()));
             }
