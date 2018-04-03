@@ -739,9 +739,10 @@ public final class P2pMgr implements IP2pMgr {
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
+                System.out.println("<p2p-io-exception>: " + e.toString());
                 byteBuffers.clear();
             } catch (Throwable e) {
-                System.out.println("<p2p-HandleChannel-throw>" + e.toString());
+                System.out.println("<p2p-HandleChannel-throw>: " + e.toString());
             }
         }
 
@@ -755,13 +756,15 @@ public final class P2pMgr implements IP2pMgr {
                     int ret;
                     while (buf != null && buf.hasRemaining()) {
                         ret = chan.write(buf);
-                        if (ret == 0 && buf.hasRemaining()) {
-                            buf.compact();
-                            break LOOP;
+                        if (ret <= 0) {
+                            break;
                         }
                     }
+
                     // if we finish processing simply remove
-                    byteBuffers.remove(buf);
+                    if (!buf.hasRemaining()) {
+                        byteBuffers.remove(buf);
+                    }
                 }
             } finally {
                 if (byteBuffers.isEmpty())
