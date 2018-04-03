@@ -24,6 +24,7 @@
 
 package org.aion.txpool.common;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -45,7 +46,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     protected static final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
     protected static final int multiplyM = 1_000_000;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
-    protected static final int SEQUENTAILTXNCOUNT_MAX = 25;
+    private static final int SEQUENTAILTXNCOUNT_MAX = 25;
     protected static long txn_timeout = 86_400; // 1 day by second
     protected static int blkSizeLimit = 16_000_000; // 16MB
     protected final long TXN_TIMEOUT_MIN = 10; // 10s
@@ -97,6 +98,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     private final List<TX> outDated = new ArrayList<>();
 
     private final Map<Address, BigInteger> bestNonce = new ConcurrentHashMap<>();
+
+    protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public abstract List<TX> add(List<TX> txl);
 
@@ -159,7 +162,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         Map<Address, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap = new ConcurrentHashMap<>();
         SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> timeMap = Collections.synchronizedSortedMap(new TreeMap<>());
 
-        //Map<ITransaction, Long> updatedTx = new HashMap<>();
+        Map<ITransaction, Long> updatedTx = new HashMap<>();
         this.mainMap.entrySet().parallelStream().forEach(e -> {
 
             TXState ts = e.getValue();
@@ -194,23 +197,23 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
 
                 // considering same nonce tx, only put the latest tx.
-                //if (nonceMap.get(nonce) != null) {
-                //    try {
-                //        if (this.mainMap.get(nonceMap.get(nonce).getKey()).getTx().getTimeStampBI().compareTo(tx.getTimeStampBI()) < 1) {
-                //            replacedTx = this.mainMap.get(nonceMap.get(nonce).getKey()).getTx();
-                //            updatedTx.put(replacedTx, timestamp);
-                //            nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
-                //
-                //        }
-                //    } catch (Exception ex) {
-                //        LOG.error( "AbsTxPool.sortTxn {} [{}]", ex.toString(), tx.toString());
-                //    }
-                //} else {
+                if (nonceMap.get(nonce) != null) {
+                    try {
+                        if (this.mainMap.get(nonceMap.get(nonce).getKey()).getTx().getTimeStampBI().compareTo(tx.getTimeStampBI()) < 1) {
+                            replacedTx = this.mainMap.get(nonceMap.get(nonce).getKey()).getTx();
+                            updatedTx.put(replacedTx, timestamp);
+                            nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
+
+                        }
+                    } catch (Exception ex) {
+                        LOG.error( "AbsTxPool.sortTxn {} [{}]", ex.toString(), tx.toString());
+                    }
+                } else {
                     nonceMap.put(nonce, new SimpleEntry<>(e.getKey(), nrgCharge));
-                //}
+                }
 
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("AbstractTxPool.sortTxn Put tx into accMap: acc:[{}] mapsize[{}] ", tx.getFrom().toString(), nonceMap.size());
+                    LOG.trace("AbstractTxPool.sortTxn Put tx into accMap: acc:[{}] mapSize[{}] ", tx.getFrom().toString(), nonceMap.size());
                 }
 
                 accMap.put(tx.getFrom(), nonceMap);
@@ -232,27 +235,29 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
                 timeMap.put(timestamp, lhs);
 
-                //if (replacedTx != null) {
-                //    long t = new BigInteger(replacedTx.getTimeStamp()).longValue()/multiplyM;
-                //    if (timeMap.get(t) != null) {
-                //        timeMap.get(t).remove(ByteArrayWrapper.wrap(replacedTx.getHash()));
-                //    }
-                //}
+                if (replacedTx != null) {
+                    long t = replacedTx.getTimeStampBI().longValue()/multiplyM;
+                    if (timeMap.get(t) != null) {
+                        timeMap.get(t).remove(ByteArrayWrapper.wrap(replacedTx.getHash()));
+                    }
+                }
             }
 
             ts.setSorted();
         });
 
-        //if (!updatedTx.isEmpty()) {
-        //    for (Map.Entry<ITransaction, Long> en : updatedTx.entrySet()) {
-        //        ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getHash());
-        //        if (this.timeView.get(en.getValue()) != null) {
-        //            this.timeView.get(en.getValue()).remove(bw);
-        //        }
-        //
-        //        this.mainMap.remove(bw);
-        //    }
-        //}
+        if (!updatedTx.isEmpty()) {
+            for (Map.Entry<ITransaction, Long> en : updatedTx.entrySet()) {
+                ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getHash());
+                if (this.timeView.get(en.getValue()) != null) {
+                    this.timeView.get(en.getValue()).remove(bw);
+                }
+
+                lock.writeLock().lock();
+                this.mainMap.remove(bw);
+                lock.writeLock().unlock();
+            }
+        }
 
         if (!accMap.isEmpty()) {
 
@@ -268,9 +273,10 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             });
 
             accMap.entrySet().parallelStream().forEach(e -> {
+                lock.writeLock().lock();
                 this.accountView.computeIfAbsent(e.getKey(), k -> new AccountState());
-
                 this.accountView.get(e.getKey()).updateMap(e.getValue());
+                lock.writeLock().unlock();
             });
 
             updateAccPoolState();
@@ -289,9 +295,6 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         for (Entry<Address, AccountState> e : this.accountView.entrySet()) {
             AccountState as = e.getValue();
             if (as.isDirty()) {
-                //if (this.poolStateView.get(e.getKey()) != null) {
-                //    this.poolStateView.get(e.getKey()).clear();
-                //}
 
                 if (as.getMap().isEmpty()) {
                     this.poolStateView.remove(e.getKey());
@@ -418,7 +421,9 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
         if(!clearAddr.isEmpty()) {
             clearAddr.forEach( addr -> {
+                lock.writeLock().lock();
                 this.accountView.remove(addr);
+                lock.writeLock().unlock();
                 this.bestNonce.remove(addr);
             });
         }
@@ -510,8 +515,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     }
 
     protected BigInteger getBestNonce(Address addr) {
-        if(addr == null) {
-            throw new NullPointerException();
+        if(addr == null || bestNonce.get(addr) == null) {
+            return BigInteger.ONE.negate();
         }
 
         return bestNonce.get(addr);
@@ -529,11 +534,11 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             return this.tx;
         }
 
-        public boolean sorted() {
+        boolean sorted() {
             return this.sorted;
         }
 
-        public void setSorted() {
+        void setSorted() {
             this.sorted = true;
         }
     }
@@ -544,7 +549,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         private BigInteger firstNonce = BigInteger.ZERO;
         private int combo = 0;
 
-        protected PoolState(BigInteger nonce, BigInteger fee, int combo) {
+        PoolState(BigInteger nonce, BigInteger fee, int combo) {
             this.firstNonce = nonce;
             this.combo = combo;
             this.fee = fee;
@@ -558,11 +563,11 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             return fee;
         }
 
-        public BigInteger getFirstNonce() {
+        BigInteger getFirstNonce() {
             return firstNonce;
         }
 
-        public int getCombo() {
+        int getCombo() {
             return combo;
         }
 

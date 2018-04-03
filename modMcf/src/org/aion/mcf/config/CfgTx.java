@@ -37,9 +37,15 @@ public class CfgTx {
 
     public CfgTx() {
         this.cacheMax = 256;   // by MB;
+        this.buffer = false;
+        this.poolDump =false;
     }
 
     private int cacheMax;
+
+    private boolean buffer;
+
+    private boolean poolDump;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -56,6 +62,12 @@ public class CfgTx {
                     } else if (this.cacheMax > 16384) { // 16GB
                         this.cacheMax = 16384;
                     }
+                    break;
+                case "buffer":
+                    this.buffer = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                case "pooldump":
+                    this.poolDump = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 default:
                     Cfg.skipElement(sr);
@@ -99,6 +111,14 @@ public class CfgTx {
 
     public int getCacheMax() {
         return this.cacheMax;
+    }
+
+    public boolean getBuffer() {
+        return this.buffer;
+    }
+
+    public boolean getPoolDump() {
+        return poolDump;
     }
 }
 

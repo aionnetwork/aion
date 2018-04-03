@@ -73,6 +73,7 @@ public class EventExecuteService {
         int sn = (event.getEventType() << 8) + event.getCallbackType();
 
         if (filter.contains(sn)) {
+
             try {
                 return callbackEvt.add(event);
             } catch (IllegalStateException e) {

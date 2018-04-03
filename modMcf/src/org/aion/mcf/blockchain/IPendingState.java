@@ -41,7 +41,7 @@ public interface IPendingState<TX extends ITransaction> {
 
     List<TX> getPendingTransactions();
 
-    BigInteger bestNonce(Address addr);
+    BigInteger bestPendingStateNonce(Address addr);
 
     String getVersion();
 }
