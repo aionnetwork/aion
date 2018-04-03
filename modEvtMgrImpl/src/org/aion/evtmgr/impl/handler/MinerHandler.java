@@ -24,7 +24,6 @@
 
 package org.aion.evtmgr.impl.handler;
 
-import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
 
@@ -35,30 +34,7 @@ import org.aion.evtmgr.impl.abs.AbstractHandler;
 public class MinerHandler extends AbstractHandler implements IHandler {
 
     public MinerHandler() {
+        super(TYPE.MINER0.getValue());
         dispatcher.setName("MinerHdr");
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.aion.evt.common.IHandler#getType()
-     */
-    public int getType() {
-        return TYPE.MINER0.getValue();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.aion.evt.common.IHandler#onEvent(org.aion.evt.common.IEvent)
-     */
-    @Override
-    public void onEvent(IEvent _evt) {
-        this.queue.add(_evt);
-    }
-
-    @Override
-    public void stop() throws InterruptedException {
-        super.stop();
     }
 }

@@ -64,21 +64,25 @@ public class TaskWrite implements Runnable {
             /*
              * @warning header set len (body len) before header encode
              */
-            byte[] bodyBytes = msg.encode();
-            int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-            Header h = msg.getHeader();
-            h.setLen(bodyLen);
-            byte[] headerBytes = h.encode();
+            try {
+                byte[] bodyBytes = msg.encode();
+                int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
+                Header h = msg.getHeader();
+                h.setLen(bodyLen);
+                byte[] headerBytes = h.encode();
 
-            // print route
-            // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
-            ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
-            buf.put(headerBytes);
-            if (bodyBytes != null)
-                buf.put(bodyBytes);
-            buf.flip();
+                // print route
+                // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+                ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
+                buf.put(headerBytes);
+                if (bodyBytes != null)
+                    buf.put(bodyBytes);
+                buf.flip();
 
-            // send outbound event to ioLoop for I/O
-            this.ioLoop.write(buf, this.sc);
+                // send outbound event to ioLoop for I/O
+                this.ioLoop.write(buf, this.sc);
+            } catch (Throwable e) {
+                System.out.println("<p2p-taskWrite-throw>" + e.toString());
+            }
     }
 }
