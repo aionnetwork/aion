@@ -173,6 +173,38 @@ public class ApiWeb3Aion extends ApiAion {
                 txHr.eventCallback(new EventCallback(ees, LOG));
             }
         }
+
+        // ops-related endpoints
+        // https://github.com/google/guava/wiki/CachesExplained#refresh
+        CachedResponse = CacheBuilder.newBuilder()
+                .maximumSize(1)
+                .expireAfterWrite(4, TimeUnit.MINUTES)
+                .refreshAfterWrite(15, TimeUnit.SECONDS)
+                .build(
+                        new CacheLoader<Integer, ChainHeadView>() {
+                            public ChainHeadView load(Integer key) { // no checked exception
+                                ChainHeadView view = new ChainHeadView(10).update();
+                                return view;
+                            }
+
+                            public ListenableFuture<ChainHeadView> reload(final Integer key, ChainHeadView prev) {
+                                try {
+                                    ListenableFutureTask<ChainHeadView> task = ListenableFutureTask.create(new Callable<ChainHeadView>() {
+                                        public ChainHeadView call() {
+                                            return new ChainHeadView(prev).update();
+                                        }
+                                    });
+                                    cacheUpdateExecutor.execute(task);
+                                    return task;
+                                } catch (Throwable e) {
+                                    LOG.debug("<cache-updater - could not queue up task: ", e);
+                                    throw(e);
+                                } // exception is swallowed by refresh and load. so just log it for our logs
+                            }
+                        });
+
+        cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
     }
 
     // --------------------------------------------------------------------
@@ -838,7 +870,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject response = new JSONObject();
         response.put("blockNumber", latestBlkNum);
-        response.put("balance", accountState.getBalance());
+        response.put("balance", TypeConverter.toJsonHex(accountState.getBalance()));
         response.put("nonce", accountState.getNonce());
 
         return new RpcMsg(response);
@@ -1002,6 +1034,7 @@ public class ApiWeb3Aion extends ApiAion {
             return response;
         }
     }
+
     public class CacheUpdateThreadFactory implements ThreadFactory {
         private final AtomicInteger tnum = new AtomicInteger(1);
 
@@ -1017,36 +1050,8 @@ public class ApiWeb3Aion extends ApiAion {
         CHAIN_HEAD
     }
 
-    private ExecutorService cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(0), new CacheUpdateThreadFactory());
-
-    // https://github.com/google/guava/wiki/CachesExplained#refresh
-    private final LoadingCache<Integer, ChainHeadView> CachedResponse = CacheBuilder.newBuilder()
-            .maximumSize(1)
-            .expireAfterWrite(4, TimeUnit.MINUTES)
-            .refreshAfterWrite(15, TimeUnit.SECONDS)
-            .build(
-                new CacheLoader<Integer, ChainHeadView>() {
-                    public ChainHeadView load(Integer key) { // no checked exception
-                        ChainHeadView view = new ChainHeadView(10).update();
-                        return view;
-                    }
-
-                    public ListenableFuture<ChainHeadView> reload(final Integer key, ChainHeadView prev) {
-                        try {
-                            ListenableFutureTask<ChainHeadView> task = ListenableFutureTask.create(new Callable<ChainHeadView>() {
-                                public ChainHeadView call() {
-                                    return new ChainHeadView(prev).update();
-                                }
-                            });
-                            cacheUpdateExecutor.execute(task);
-                            return task;
-                        } catch (Throwable e) {
-                            LOG.debug("<cache-updater - could not queue up task: ", e);
-                            throw(e);
-                        } // exception is swallowed by refresh and load. so just log it for our logs
-                    }
-                });
+    private ExecutorService cacheUpdateExecutor;
+    private final LoadingCache<Integer, ChainHeadView> CachedResponse;
 
     public RpcMsg ops_getChainHeadView(JSONArray _params) {
         try {

@@ -30,7 +30,8 @@ public class RpcMethods {
                 Map.entry("debug", debug),
                 Map.entry("personal", personal),
                 Map.entry("eth", eth),
-                Map.entry("stratum", stratum)
+                Map.entry("stratum", stratum),
+                Map.entry("ops", ops)
         );
 
         enabledEndpoints = composite(enabledGroups);
@@ -75,7 +76,13 @@ public class RpcMethods {
      * ops
      */
     private final Map<String, RpcMethod> ops = Map.ofEntries(
-            Map.entry("ops", (params) -> api.)
+            Map.entry("ops_getAccountState", (params) -> api.ops_getAccountState(params)),
+            Map.entry("ops_getChainHeadView", (params) -> api.ops_getChainHeadView(params)),
+            Map.entry("eth_getBalance", (params) -> api.eth_getBalance(params)),
+            Map.entry("eth_sendRawTransaction", (params) -> api.eth_sendRawTransaction(params)),
+            Map.entry("eth_getBlockByNumber", (params) -> api.eth_getBlockByNumber(params)),
+            Map.entry("eth_getBlockByHash", (params) -> api.eth_getBlockByHash(params)),
+            Map.entry("eth_getTransactionByHash", (params) -> api.eth_getTransactionByHash(params))
     );
 
     /**
