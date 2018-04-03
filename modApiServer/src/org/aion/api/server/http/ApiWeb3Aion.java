@@ -777,7 +777,7 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(obj);
     }
 
-    public RpcMsg stratum_getblocktemplate() {
+    public RpcMsg stratum_getwork() {
         // TODO: Change this to a synchronized map implementation mapping
 
         AionBlock bestBlock = getBlockTemplate();
@@ -814,7 +814,6 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         JSONObject coinbaseaux = new JSONObject();
-        coinbaseaux.put("flags", "062f503253482f");
 
         JSONObject obj = new JSONObject();
         obj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
@@ -822,9 +821,8 @@ public class ApiWeb3Aion extends ApiAion {
         obj.put("target", toHexString(BigInteger.valueOf(2).pow(256)
                 .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray())); // TODO: Pool eventually calculates itself
         obj.put("transactions", new JSONArray());
-        obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
-        obj.put("coinbaseaux", coinbaseaux);
         obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
+        obj.put("partialHash", toHexString(bestBlock.getHeader().getStaticHash())); // May not be the same as headerHash in future
 
         return new RpcMsg(obj);
     }
