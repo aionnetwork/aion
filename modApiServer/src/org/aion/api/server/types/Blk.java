@@ -98,4 +98,36 @@ public class Blk {
         return obj;
     }
 
+    @SuppressWarnings("Duplicates")
+    public static Object AionBlockOnlyToJson(AionBlock block, BigInteger totalDifficulty) {
+        if (block == null) return null;
+
+        JSONObject obj = new JSONObject();
+        obj.put("number", block.getNumber());
+        obj.put("hash", TypeConverter.toJsonHex(block.getHash()));
+        obj.put("parentHash", TypeConverter.toJsonHex(block.getParentHash()));
+        obj.put("logsBloom", TypeConverter.toJsonHex(block.getLogBloom()));
+        obj.put("transactionsRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
+        obj.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
+        obj.put("receiptsRoot",
+                TypeConverter.toJsonHex(block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
+        obj.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
+        obj.put("totalDifficulty", TypeConverter.toJsonHex(totalDifficulty));
+
+        obj.put("miner", TypeConverter.toJsonHex(block.getCoinbase().toString()));
+        obj.put("timestamp", TypeConverter.toJsonHex(block.getTimestamp()));
+        obj.put("nonce", TypeConverter.toJsonHex(block.getNonce()));
+        obj.put("solution", TypeConverter.toJsonHex(block.getHeader().getSolution()));
+        obj.put("gasUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("gasLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
+        obj.put("nrgUsed", TypeConverter.toJsonHex(block.getHeader().getEnergyConsumed()));
+        obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
+
+        obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
+        obj.put("size", block.getEncoded().length);
+        obj.put("txnCount", block.getTransactionsList().size());
+
+        return obj;
+    }
+
 }

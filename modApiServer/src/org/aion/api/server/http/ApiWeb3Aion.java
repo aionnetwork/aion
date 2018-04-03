@@ -24,6 +24,11 @@
 
 package org.aion.api.server.http;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.rpc.RpcError;
@@ -35,6 +40,7 @@ import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
+import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -42,13 +48,16 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -60,10 +69,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -77,9 +85,11 @@ import static org.aion.base.util.ByteUtil.toHexString;
 public class ApiWeb3Aion extends ApiAion {
 
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
-    private static HashMap<ByteArrayWrapper, AionBlock> templateMap;
-    private static ReadWriteLock templateMapLock;
+    private HashMap<ByteArrayWrapper, AionBlock> templateMap;
+    private ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
+    // doesn't need to be protected for concurrent access, since only one write in the constructor.
+    private boolean isFilterEnabled;
 
     protected void onBlock(AionBlockSummary cbs) {
         if (isFilterEnabled) {
@@ -115,25 +125,24 @@ public class ApiWeb3Aion extends ApiAion {
         // commenting this out because of lack support for old web3 client that we are using
         // TODO: re-enable this when we upgrade our web3 client
         /*
-        ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
-        if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
-            pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
-        } else {
-            pendingReceipts.remove(txHashW);
+        if (isFilterEnabled) {
+            ByteArrayWrapper txHashW = new ByteArrayWrapper(((AionTxReceipt) _txRcpt).getTransaction().getHash());
+            if (_state.isPending() || _state == EventTx.STATE.DROPPED0) {
+                pendingReceipts.put(txHashW, (AionTxReceipt) _txRcpt);
+            } else {
+                pendingReceipts.remove(txHashW);
+            }
         }
         */
     }
-
-    // doesn't need to be protected for concurrent access, since only one write in the constructor.
-    private boolean isFilterEnabled;
 
     public ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
-
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
+
 
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
@@ -146,19 +155,21 @@ public class ApiWeb3Aion extends ApiAion {
 
         this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
 
-        evtMgr = this.ac.getAionHub().getEventMgr();
+        if (isFilterEnabled) {
+            evtMgr = this.ac.getAionHub().getEventMgr();
 
-        startES("EpWeb3");
+            startES("EpWeb3");
 
-        // Fill data on block and transaction events into the filters and pending receipts
-        IHandler blkHr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
-        if (blkHr != null) {
-            blkHr.eventCallback(new EventCallback(ees, LOG));
-        }
+            // Fill data on block and transaction events into the filters and pending receipts
+            IHandler blkHr = evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
+            if (blkHr != null) {
+                blkHr.eventCallback(new EventCallback(ees, LOG));
+            }
 
-        IHandler txHr = evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
-        if (txHr != null) {
-            txHr.eventCallback(new EventCallback(ees, LOG));
+            IHandler txHr = evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
+            if (txHr != null) {
+                txHr.eventCallback(new EventCallback(ees, LOG));
+            }
         }
     }
 
@@ -329,9 +340,21 @@ public class ApiWeb3Aion extends ApiAion {
     public RpcMsg eth_getBlockTransactionCountByNumber(JSONArray _params) {
         String _bnOrId = _params.get(0) + "";
 
-        List<AionTransaction> list = getTransactionsByBlockId(_bnOrId);
-        if (list == null)
+        Long bn = parseBnOrId(_bnOrId);
+        if (bn == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
+
+        // pending transactions
+        if (bn < 0) {
+            long pendingTxCount = this.ac.getAionHub().getPendingState().getPendingTxSize();
+            return new RpcMsg(TypeConverter.toJsonHex(pendingTxCount));
+        }
+
+        AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
+        if (b == null)
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");;
+
+        List<AionTransaction> list = b.getTransactionsList();
 
         long n = list.size();
         return new RpcMsg(TypeConverter.toJsonHex(n));
@@ -760,6 +783,202 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     /* -------------------------------------------------------------------------
+     * operational api
+     */
+
+    // always gets the latest account state
+    public RpcMsg ops_getAccountState(JSONArray _params) {
+        String _address = _params.get(0) + "";
+
+        Address address = new Address(_address);
+
+        long latestBlkNum = this.getBestBlock().getNumber();
+        AccountState accountState = ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
+
+        if (accountState == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
+
+        JSONObject response = new JSONObject();
+        response.put("blockNumber", latestBlkNum);
+        response.put("balance", accountState.getBalance());
+        response.put("nonce", accountState.getNonce());
+
+        return new RpcMsg(response);
+    }
+
+    // always gets the latest 20 blocks and transactions
+    private class ChainHeadView {
+        LinkedList<byte[]> hashQueue;
+
+        JSONObject metrics;
+        Map<byte[], JSONObject> blkList;
+        Map<byte[], AionBlock> blkObjList;
+        Map<byte[], JSONArray> txnList;
+        JSONObject response;
+        int qSize;
+
+        public ChainHeadView(int _qSize) {
+            hashQueue = new LinkedList<>();
+            metrics = new JSONObject();
+            blkList = new HashMap<>();
+            blkObjList = new HashMap<>();
+            txnList = new HashMap<>();
+            response = new JSONObject();
+            qSize = _qSize;
+        }
+
+        private JSONObject getJson(AionBlock _b) {
+            Map.Entry<JSONObject, JSONArray> response;
+            BigInteger totalDiff = ac.getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
+            return (JSONObject) Blk.AionBlockToJson(_b, totalDiff, true);
+        }
+
+        private JSONObject computeMetrics() {
+            Double avgBlockTimeAccumulator = 0D;
+            Double avgHashRateAccumulator = 0D;
+            Double avgDifficultyAccumulator = 0D;
+            BigInteger avgNrgAccumulator = new BigInteger();
+            long txnRateAccumulator = 0L;
+
+            Long lastBlkTimestamp = null;
+
+            Iterator it = mp.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pair = (Map.Entry)it.next();
+                System.out.println(pair.getKey() + " = " + pair.getValue());
+                it.remove(); // avoids a ConcurrentModificationException
+            }
+        }
+
+        public ChainHeadView update() {
+            // get the latest head
+            AionBlock blk = getBestBlock();
+
+            if (FastByteComparisons.equal(hashQueue.getFirst(), blk.getHash())) {
+                return this; // nothing to do
+            }
+
+            // evict data as necessary
+            LinkedList<Map.Entry<byte[],JSONObject>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), getJson(blk)));
+            int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
+            while(!FastByteComparisons.equal(hashQueue.getFirst(), blk.getParentHash())
+                    || itr < qSize
+                    || blk.getNumber() < 2) {
+                blk = getBlockByHash(blk.getParentHash());
+                tempStack.push(Map.entry(blk.getHash(), getJson(blk)));
+            }
+
+            // empty out the stack into the queue
+            while (!tempStack.isEmpty()) {
+                // evict first
+                byte[] tailHash = hashQueue.removeLast();
+                if (tailHash != null) {
+                    blkList.remove(tailHash);
+                    blkObjList.remove(tailHash);
+                    txnList.remove(tailHash);
+                }
+
+                // add to the queue
+                Map.Entry<byte[], JSONObject> element = tempStack.pop();
+                byte[] hash = element.getKey();
+                JSONObject blkJson = element.getValue();
+                JSONArray txnJson = (JSONArray) blkJson.remove("transactions");
+
+                hashQueue.add(blk.getHash());
+                blkList.put(blk.getHash(), blkJson);
+                blkObjList.put(blk.getHash(), blk);
+                txnList.put(blk.getHash(), txnJson);
+            }
+
+
+
+
+
+
+
+
+
+
+            // now, fill queue up data to capacity
+            int remainingCapacity = qSize - hashQueue.size();
+
+            // create a stack of size remainingCapacity and empty it into the hashQueue
+
+
+            LinkedList<byte[]> temp = new LinkedList<byte[]>();
+
+
+
+
+
+
+
+
+
+                }
+
+
+            }
+            else {
+                while (hashQueue.peek() )
+
+            }
+
+
+            BigInteger totalDiff = ac.getAionHub().getBlockStore().getTotalDifficultyForHash(b.getHash());
+            return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
+        }
+    }
+
+    // https://github.com/google/guava/wiki/CachesExplained#refresh
+    private final LoadingCache<Integer, ChainHeadView> CachedLatestBlocks = CacheBuilder.newBuilder()
+            .maximumSize(1)
+            .refreshAfterWrite(15, TimeUnit.SECONDS)
+            .build(
+                new CacheLoader<Integer, ChainHeadView>() {
+                    public ChainHeadView load(Integer key) { // no checked exception
+                        ChainHeadView view = new ChainHeadView(12);
+
+                        AionBlock head = getBestBlock();
+
+
+                    }
+
+                    public ListenableFuture<JSONObject> reload(final Integer key, JSONObject prev) {
+
+
+                            ListenableFutureTask<JSONObject> task = ListenableFutureTask.create(new Callable<JSONObject>() {
+                                public JSONObject call() {
+                                    return getGraphFromDatabase(key);
+                                }
+                            });
+                            executor.execute(task);
+                            return task;
+                        }
+                    }
+                });
+
+    public RpcMsg ops_getLatestBlocksAndTransactions(JSONArray _params) {
+        String _address = _params.get(0) + "";
+
+        Address address = new Address(_address);
+
+        long latestBlkNum = this.getBestBlock().getNumber();
+        AccountState accountState = ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
+
+        if (accountState == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
+
+        JSONObject response = new JSONObject();
+        response.put("blockNumber", latestBlkNum);
+        response.put("balance", accountState.getBalance());
+        response.put("nonce", accountState.getNonce());
+
+        return new RpcMsg(response);
+    }
+
+    /* -------------------------------------------------------------------------
      * stratum pool
      */
 
@@ -990,16 +1209,6 @@ public class ApiWeb3Aion extends ApiAion {
         return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
 
-    private List<AionTransaction> getTransactionsByBlockId(String id) {
-        Long bn = parseBnOrId(id);
-        if (bn == null || bn < 0) return null;
-
-        AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null) return null;
-
-        return b.getTransactionsList();
-    }
-
     private Long parseBnOrId(String _bnOrId) {
         if (_bnOrId == null)
             return null;
@@ -1026,6 +1235,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public void shutdown() {
-        shutDownES();
+        if(isFilterEnabled)
+            shutDownES();
     }
 }

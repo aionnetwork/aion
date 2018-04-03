@@ -220,7 +220,7 @@ public class AionPendingStateImpl
         return pendingState;
     }
 
-    private int getPendingTxSize() {
+    public int getPendingTxSize() {
         return this.txPool.size();
     }
 

@@ -224,8 +224,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE);
             }
 
-
-
             // TODO : create query API for every module
             Message.rsp_protocolVersion rsp = Message.rsp_protocolVersion.newBuilder()
                     .setApi(String.valueOf(this.getApiVersion())).setDb(AionHub.getRepoVersion())

@@ -105,13 +105,12 @@ public abstract class ApiAion extends Api {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
         this.fltrIndex = new AtomicLong(0);
+        this.blockTemplateLock = new ReentrantLock();
 
         // register events
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
-
-        blockTemplateLock = new ReentrantLock();
     }
 
     public final class EpApi implements Runnable {
