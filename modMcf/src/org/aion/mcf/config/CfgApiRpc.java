@@ -47,7 +47,7 @@ public final class CfgApiRpc {
         this.ip = "127.0.0.1";
         this.port = 8545;
         this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal"));
-        this.allowedOrigins = Collections.emptyList();
+        this.allowedOrigins = new ArrayList<>(Arrays.asList("false"));
         this.maxthread = 1;
         this.filtersEnabled = true;
     }
@@ -76,15 +76,11 @@ public final class CfgApiRpc {
                     switch (elementName) {
                         case "corsdomain":
                             String cors = Cfg.readValue(sr).trim();
-                            if (cors.equals("null") || cors.equals("") || cors.equals("false"))
-                                this.allowedOrigins = Collections.emptyList();
-                            else {
-                                this.allowedOrigins = new ArrayList<>(
-                                        Stream.of(cors.split(","))
-                                                .map(String::trim)
-                                                .collect(Collectors.toList())
-                                );
-                            }
+                            this.allowedOrigins = new ArrayList<>(
+                                    Stream.of(cors.split(","))
+                                            .map(String::trim)
+                                            .collect(Collectors.toList())
+                            );
                             break;
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
@@ -161,7 +157,7 @@ public final class CfgApiRpc {
             xmlWriter.writeComment("size of thread pool allocated for rpc requests");
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("threads");
-            xmlWriter.writeCharacters(this.getMaxthread() + "");
+            xmlWriter.writeCharacters(this.maxthread + "");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
