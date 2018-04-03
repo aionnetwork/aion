@@ -145,7 +145,6 @@ public class ApiWeb3Aion extends ApiAion {
         templateMapLock = new ReentrantReadWriteLock();
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
 
-
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
@@ -178,8 +177,10 @@ public class ApiWeb3Aion extends ApiAion {
         // https://github.com/google/guava/wiki/CachesExplained#refresh
         CachedResponse = CacheBuilder.newBuilder()
                 .maximumSize(1)
-                .expireAfterWrite(4, TimeUnit.MINUTES)
-                .refreshAfterWrite(15, TimeUnit.SECONDS)
+                .refreshAfterWrite(5, TimeUnit.SECONDS)
+                //.expireAfterWrite(1, TimeUnit.SECONDS)
+                //.expireAfterWrite(4, TimeUnit.MINUTES)
+                //.refreshAfterWrite(15, TimeUnit.SECONDS)
                 .build(
                         new CacheLoader<Integer, ChainHeadView>() {
                             public ChainHeadView load(Integer key) { // no checked exception
@@ -892,7 +893,7 @@ public class ApiWeb3Aion extends ApiAion {
             blkList = new HashMap<>(cv.blkList);
             blkObjList = new HashMap<>(cv.blkObjList);
             txnList = new HashMap<>(cv.txnList);
-            response = new JSONObject(cv.response);
+            response = new JSONObject(cv.response, JSONObject.getNames(cv.response));
             qSize = cv.qSize;
         }
 
@@ -930,7 +931,13 @@ public class ApiWeb3Aion extends ApiAion {
                 }
             }
 
-            JSONObject metrics = computeMetrics();
+            JSONObject metrics;
+            try {
+                metrics = computeMetrics();
+            } catch (Exception e) {
+                LOG.error("failed to compute metrics.", e);
+                metrics = new JSONObject();
+            }
 
             JSONObject o = new JSONObject();
             o.put("blks", blks);
@@ -946,7 +953,7 @@ public class ApiWeb3Aion extends ApiAion {
             BigInteger nrgAccumulator = new BigInteger("0");
             long txnCount = 0L;
 
-            int count = 0;
+            int count = blkObjList.size();
             Long lastBlkTimestamp = null;
 
             Iterator it = blkObjList.entrySet().iterator();
@@ -956,17 +963,16 @@ public class ApiWeb3Aion extends ApiAion {
 
                 if (lastBlkTimestamp != null) {
                     blkTimeAccumulator += (b.getTimestamp() - lastBlkTimestamp);
-                    lastBlkTimestamp = b.getTimestamp();
                 }
+                lastBlkTimestamp = b.getTimestamp();
 
-                difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
+                difficultyAccumulator = difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
                 lastDifficulty = new BigInteger(b.getDifficulty());
 
-                nrgAccumulator.add(new BigInteger(Long.toString(b.getNrgConsumed())));
+                long nrgConsumed = b.getNrgConsumed();
 
+                nrgAccumulator = nrgAccumulator.add(new BigInteger(Long.toString(b.getNrgConsumed())));
                 txnCount += b.getTransactionsList().size();
-
-                it.remove();
             }
 
 
@@ -990,42 +996,71 @@ public class ApiWeb3Aion extends ApiAion {
             // get the latest head
             AionBlock blk = getBestBlock();
 
-            if (FastByteComparisons.equal(hashQueue.getFirst(), blk.getHash())) {
+            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
             }
 
             // evict data as necessary
-            LinkedList<Map.Entry<byte[],JSONObject>> tempStack = new LinkedList<>();
-            tempStack.push(Map.entry(blk.getHash(), getJson(blk)));
+            LinkedList<Map.Entry<byte[],Map.Entry<AionBlock, JSONObject>>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
             int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
-            while(!FastByteComparisons.equal(hashQueue.getFirst(), blk.getParentHash())
-                    || itr < qSize
-                    || blk.getNumber() < 2) {
-                blk = getBlockByHash(blk.getParentHash());
-                tempStack.push(Map.entry(blk.getHash(), getJson(blk)));
+
+            if (hashQueue.peekFirst() != null) {
+                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
+                System.out.println("----------------------------------------------------------");
+                System.out.println("isParentHashMatch? " + FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()));
+                System.out.println("blk.getNumber() " + blk.getNumber());
             }
 
-            // empty out the stack into the queue
-            while (!tempStack.isEmpty()) {
-                // evict first
-                byte[] tailHash = hashQueue.removeLast();
+            System.out.println("blkNum: " + blk.getNumber() +
+                    " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
+                    " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+
+            while(FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()) == false
+                    && itr < qSize
+                    && blk.getNumber() > 2) {
+
+                blk = getBlockByHash(blk.getParentHash());
+                tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
+                itr++;
+                System.out.println("blkNum: " + blk.getNumber() +
+                        " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
+                        " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+            }
+
+            // evict out the right number of elements first
+            for (int i = 0; i < tempStack.size(); i++) {
+                byte[] tailHash = hashQueue.pollLast();
                 if (tailHash != null) {
                     blkList.remove(tailHash);
                     blkObjList.remove(tailHash);
                     txnList.remove(tailHash);
                 }
+            }
 
+            // empty out the stack into the queue
+            while (!tempStack.isEmpty()) {
                 // add to the queue
-                Map.Entry<byte[], JSONObject> element = tempStack.pop();
+                Map.Entry<byte[], Map.Entry<AionBlock,JSONObject>> element = tempStack.pop();
                 byte[] hash = element.getKey();
-                JSONObject blkJson = element.getValue();
+                AionBlock blkObj = element.getValue().getKey();
+                JSONObject blkJson = element.getValue().getValue();
                 JSONArray txnJson = (JSONArray) blkJson.remove("transactions");
 
-                hashQueue.add(blk.getHash());
-                blkList.put(blk.getHash(), blkJson);
-                blkObjList.put(blk.getHash(), blk);
-                txnList.put(blk.getHash(), txnJson);
+                hashQueue.push(hash);
+                blkList.put(hash, blkJson);
+                blkObjList.put(hash, blkObj);
+                txnList.put(hash, txnJson);
             }
+
+            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
+            System.out.println("----------------------------------------------------------");
+
+            for (int i = hashQueue.size() - 1; i >= 0; i--) {
+                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blkObjList.get(hashQueue.get(i)).getNumber());
+            }
+
+            this.response = buildResponse();
 
             return this;
         }
