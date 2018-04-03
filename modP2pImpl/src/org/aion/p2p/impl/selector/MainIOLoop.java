@@ -65,15 +65,19 @@ public class MainIOLoop implements Runnable {
                     this.currSelector.wakeup();
 
                 try {
+                    long startTime = System.currentTimeMillis();
                     processSelectedKeys();
+                    long endTime = System.currentTimeMillis();
+                    if ((endTime - startTime) > 1000) {
+                        System.out.println("warning, selector thread key proc took: " + (endTime - startTime) + "ms");
+                    }
                 } finally {
-                    long startTime = System.nanoTime();
+                    long startTime = System.currentTimeMillis();
                     runAllTasks();
-                    long endTime = System.nanoTime();
+                    long endTime = System.currentTimeMillis();
 
-                    long delta = endTime - startTime;
-                    if (delta > 1000000000) {
-                        System.out.println("warning, selector thread task took: " + delta + "ns");
+                    if ((endTime - startTime) > 1000) {
+                        System.out.println("warning, selector thread task took: " + (endTime - startTime) + "ms");
                     }
                 }
             }
