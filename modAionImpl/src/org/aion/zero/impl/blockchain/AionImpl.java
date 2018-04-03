@@ -169,8 +169,13 @@ public class AionImpl implements IAionChain {
             LOG_TX.trace("broadcastTxs {}", transaction.size());
         }
 
+        List<AionTransaction> txs = new ArrayList<>();
+        for (AionTransaction tx : transaction) {
+            txs.add(new AionTransaction(tx.getEncoded().clone()));
+        }
+
         synchronized (broadCastBuffer) {
-            this.broadCastBuffer.addAll(transaction);
+            this.broadCastBuffer.addAll(txs);
         }
     }
 
