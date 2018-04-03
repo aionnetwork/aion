@@ -36,6 +36,8 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.util.List;
+
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
@@ -67,7 +69,12 @@ public final class ResBlocksBodiesHandler extends Handler {
         ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
         if(bodies == null) {
-            log.error("<res-bodies-invalid node={}>", _displayId);
+            log.error("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
+
+            if (log.isTraceEnabled()) {
+                log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
+            }
+
         } else {
             if (bodies.isEmpty()) {
                 log.info("<res-bodies-empty node={}>", _displayId);

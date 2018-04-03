@@ -369,7 +369,7 @@ public class NodeMgr implements INodeMgr {
         long now = System.currentTimeMillis();
 
         OptionalDouble average = activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
-        double timeout = average.orElse(20000) * 3;
+        double timeout = average.orElse(4000) * 5;
         if (pmgr.showLog) {
             System.out.printf("<p2p average-delay=%.0fms>\n", average.orElse(0));
         }
@@ -384,7 +384,7 @@ public class NodeMgr implements INodeMgr {
                 pmgr.closeSocket(node.getChannel());
                 activeIt.remove();
                 if (pmgr.showLog)
-                    System.out.println("<p2p-clear active-timeout>");
+                    System.out.println("<p2p-clear-active ip=" + node.getIpStr() +" node=" + node.getIdShort() +">");
 
                 if (this.observer != null)
                     this.observer.removeActiveNode(key);
