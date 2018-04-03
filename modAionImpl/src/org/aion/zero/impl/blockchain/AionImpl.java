@@ -93,15 +93,21 @@ public class AionImpl implements IAionChain {
     }
 
     private void broadCastTxs() {
-        synchronized (broadCastBuffer) {
-            if (LOG_TX.isTraceEnabled()) {
-                LOG_TX.trace("bcTxTask {}", broadCastBuffer.size());
-            }
 
-            A0TxTask txTask = new A0TxTask(broadCastBuffer, this.aionHub.getP2pMgr());
-            TxBroadcaster.getInstance().submitTransaction(txTask);
+        List<AionTransaction> txs = new ArrayList<>();
+        synchronized (broadCastBuffer) {
+            for (AionTransaction tx : broadCastBuffer) {
+                txs.add(new AionTransaction(tx.getEncoded().clone()));
+            }
             broadCastBuffer.clear();
         }
+
+        if (LOG_TX.isTraceEnabled()) {
+            LOG_TX.trace("bcTxTask {}", txs.size());
+        }
+
+        A0TxTask txTask = new A0TxTask(txs, this.aionHub.getP2pMgr());
+        TxBroadcaster.getInstance().submitTransaction(txTask);
     }
 
     @Override
@@ -163,8 +169,13 @@ public class AionImpl implements IAionChain {
             LOG_TX.trace("broadcastTxs {}", transaction.size());
         }
 
+        List<AionTransaction> txs = new ArrayList<>();
+        for (AionTransaction tx : transaction) {
+            txs.add(new AionTransaction(tx.getEncoded().clone()));
+        }
+
         synchronized (broadCastBuffer) {
-            this.broadCastBuffer.addAll(transaction);
+            this.broadCastBuffer.addAll(txs);
         }
     }
 
