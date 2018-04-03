@@ -57,9 +57,12 @@ public class RpcProcessor {
         this.allowedOriginsAll = false;
         this.allowedOrigins = allowedOrigins;
 
-        if (allowedOrigins == null || allowedOrigins.size() == 0) {
+        if (allowedOrigins == null ||
+                allowedOrigins.size() == 0 ||
+                (allowedOrigins.size() == 1 && (allowedOrigins.get(0).equalsIgnoreCase("null") || allowedOrigins.get(0).equals("") || allowedOrigins.get(0).equalsIgnoreCase("false")))) {
             this.allowedOrigins = null;
-        } else {
+        }
+        else {
             this.corsEnabled = true;
             for(String origin : allowedOrigins) {
                 if (origin.equals("*")) {

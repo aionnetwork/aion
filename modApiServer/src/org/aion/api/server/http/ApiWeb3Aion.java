@@ -950,7 +950,8 @@ public class ApiWeb3Aion extends ApiAion {
             long blkTimeAccumulator = 0L;
             BigInteger lastDifficulty = null;
             BigInteger difficultyAccumulator = new BigInteger("0");
-            BigInteger nrgAccumulator = new BigInteger("0");
+            BigInteger nrgConsumedAccumulator = new BigInteger("0");
+            BigInteger nrgLimitAccumulator = new BigInteger("0");
             long txnCount = 0L;
 
             int count = blkObjList.size();
@@ -969,24 +970,24 @@ public class ApiWeb3Aion extends ApiAion {
                 difficultyAccumulator = difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
                 lastDifficulty = new BigInteger(b.getDifficulty());
 
-                long nrgConsumed = b.getNrgConsumed();
-
-                nrgAccumulator = nrgAccumulator.add(new BigInteger(Long.toString(b.getNrgConsumed())));
+                nrgConsumedAccumulator = nrgConsumedAccumulator.add(new BigInteger(Long.toString(b.getNrgConsumed())));
+                nrgLimitAccumulator = nrgLimitAccumulator.add(new BigInteger(Long.toString(b.getNrgLimit())));
                 txnCount += b.getTransactionsList().size();
             }
-
 
             double blkTime = blkTimeAccumulator / (double)count;
             double hashRate = lastDifficulty.longValue() / blkTime;
             double avgDifficulty = difficultyAccumulator.longValue() / (double)count;
-            double avgNrgPerBlock = nrgAccumulator.longValue() / (double)count;
+            double avgNrgConsumedPerBlock = nrgConsumedAccumulator.longValue() / (double)count;
+            double avgNrgLimitPerBlock = nrgLimitAccumulator.longValue() / (double)count;
             double txnPerSec = txnCount / (double)blkTimeAccumulator;
 
             JSONObject metrics = new JSONObject();
             metrics.put("blkTime", blkTime);
             metrics.put("hashRate",hashRate);
             metrics.put("avgDifficulty",avgDifficulty);
-            metrics.put("avgNrgPerBlock",avgNrgPerBlock);
+            metrics.put("avgNrgConsumedPerBlock",avgNrgConsumedPerBlock);
+            metrics.put("avgNrgLimitPerBlock",avgNrgLimitPerBlock);
             metrics.put("txnPerSec",txnPerSec);
 
             return metrics;
