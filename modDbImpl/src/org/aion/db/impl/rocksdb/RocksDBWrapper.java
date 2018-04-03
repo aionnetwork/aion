@@ -247,9 +247,6 @@ public class RocksDBWrapper extends AbstractDB {
 
         // try-with-resources will automatically close the batch object
         try (WriteBatch batch = new WriteBatch()) {
-            WriteOptions writeOptions = new WriteOptions();
-            // @todo: add writeOptions
-
             // add put and delete operations to batch
             for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
                 byte[] key = e.getKey();
@@ -263,7 +260,7 @@ public class RocksDBWrapper extends AbstractDB {
             }
 
             // bulk atomic update
-            db.write(writeOptions, batch);
+            db.write(new WriteOptions(), batch);
         } catch (RocksDBException e) {
             LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
         }
@@ -271,7 +268,21 @@ public class RocksDBWrapper extends AbstractDB {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
+        check(keys);
 
+        check();
+
+        try (WriteBatch batch = new WriteBatch()) {
+            // add delete operations to batch
+            for (byte[] k : keys) {
+                batch.delete(k);
+            }
+
+            // bulk atomic update
+            db.write(new WriteOptions(), batch);
+        } catch (RocksDBException e) {
+            LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
+        }
     }
 
     @Override
@@ -282,9 +293,6 @@ public class RocksDBWrapper extends AbstractDB {
 
         // try-with-resources will automatically close to batch object
         WriteBatch batch = new WriteBatch();
-        WriteOptions writeOptions = new WriteOptions();
-        // @todo: writeOptions
-
 
         try {
             for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
@@ -296,7 +304,7 @@ public class RocksDBWrapper extends AbstractDB {
             }
 
             // bulk automatic update
-            db.write(writeOptions, batch);
+            db.write(new WriteOptions(), batch);
 
             success = true;
         } catch (RocksDBException e) {
