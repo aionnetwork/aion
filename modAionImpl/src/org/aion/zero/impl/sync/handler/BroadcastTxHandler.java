@@ -87,7 +87,6 @@ public final class BroadcastTxHandler extends Handler {
             log.trace("<broadcast-tx from: {} empty>", _displayId);
             return;
         }
-
         pendingState.addPendingTransactions(castRawTx(broadCastTx));
     }
 

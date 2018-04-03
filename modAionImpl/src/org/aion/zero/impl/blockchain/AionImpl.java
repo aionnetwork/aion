@@ -43,6 +43,7 @@ import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.A0TxTask;
 import org.aion.zero.impl.tx.TxBroadcaster;
+import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -64,6 +65,8 @@ public class AionImpl implements IAionChain {
 
     static private AionImpl inst;
 
+    private TxCollector collector;
+
 
     public static AionImpl inst() {
         if (inst == null) {
@@ -78,6 +81,7 @@ public class AionImpl implements IAionChain {
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
 
+        collector = new TxCollector(this.aionHub.getP2pMgr());
     }
 
 
@@ -127,13 +131,15 @@ public class AionImpl implements IAionChain {
     @SuppressWarnings("unchecked")
     @Override
     public void broadcastTransaction(AionTransaction transaction) {
-        broadcastTransactions(Collections.singletonList(transaction));
+        transaction.getEncoded();
+        collector.submitTx(transaction);
     }
 
     public void broadcastTransactions(List<AionTransaction> transaction) {
-
-        A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
-        TxBroadcaster.getInstance().submitTransaction(txTask);
+        for(AionTransaction tx : transaction) {
+            tx.getEncoded();
+        }
+        collector.submitTx(transaction);
     }
 
     public long estimateTxNrg(AionTransaction tx, IAionBlock block) {

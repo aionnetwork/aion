@@ -60,7 +60,7 @@ public interface ITxPool<TX extends ITransaction> {
 
     long getOutDateTime();
 
-    BigInteger bestNonce(Address addr);
+    BigInteger bestPoolNonce(Address addr);
 
     void updateBlkNrgLimit(long nrg);
 
