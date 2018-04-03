@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ver;
@@ -71,8 +72,15 @@ public final class BroadcastNewBlockHandler extends Handler {
         if (_msgBytes == null)
             return;
         byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
-        if (rawdata == null)
+        if (rawdata == null) {
+            log.error("<new-block-handler decode-error, from {} len: {}>",
+                    _displayId,
+                    _msgBytes.length);
+            if (log.isTraceEnabled()) {
+                log.trace("new-block-handler dump: {}", ByteUtil.toHexString(_msgBytes));
+            }
             return;
+        }
 
         AionBlock block = new AionBlock(rawdata);
 

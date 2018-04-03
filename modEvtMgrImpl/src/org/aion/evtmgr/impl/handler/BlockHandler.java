@@ -25,7 +25,6 @@
 package org.aion.evtmgr.impl.handler;
 
 
-import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
 
@@ -37,21 +36,7 @@ public class BlockHandler extends AbstractHandler implements IHandler {
 
     // Default constructor to set name of the thread, simplifies troubleshooting
     public BlockHandler() {
+        super(TYPE.BLOCK0.getValue());
         dispatcher.setName("BlkHdr");
-    }
-
-    @Override
-    public int getType() {
-        return TYPE.BLOCK0.getValue();
-    }
-
-    @Override
-    public void onEvent(IEvent _evt) {
-        this.queue.add(_evt);
-    }
-
-    @Override
-    public void stop() throws InterruptedException {
-        super.stop();
     }
 }

@@ -42,6 +42,9 @@ public class ChannelBuffer {
 
     int nodeIdHash = 0;
 
+    String ip;
+    int port;
+
     ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
 
     ByteBuffer bodyBuf = null;

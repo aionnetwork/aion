@@ -275,18 +275,19 @@ public class MainIOLoop implements Runnable {
      * Submit a new task (this is a write task the base class to serialize messages)
      */
     public void write(ByteBuffer buffer, SocketChannel channel) {
-        SelectionKey key = channel.keyFor(this.currSelector);
-
-        if (key == null) {
-            try {
-                channel.close();
-            } catch (IOException e) {
-                // do nothing here for now, just exit
+        this.eventBus.addEvent(() -> {
+            SelectionKey key = channel.keyFor(this.currSelector);
+            if (key == null) {
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    // do nothing here for now, just exit
+                }
+                return;
             }
-            return;
-        }
 
-        ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
+            ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
+        });
         wakeup(isEventLoopThread());
     }
 

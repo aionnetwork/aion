@@ -104,13 +104,22 @@ final class TaskImportBlocks implements Runnable {
                 }
 
                 long t1 = System.currentTimeMillis();
-                ImportResult importResult = this.chain.tryToConnect(b);
+
+                ImportResult importResult;
+                try {
+                    importResult = this.chain.tryToConnect(b);
+                } catch (Throwable e) {
+                    log.error("<import-block throw> {}", e.toString());
+                    continue;
+                }
+
                 long t2 = System.currentTimeMillis();
                 log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                         bw.getDisplayId(), b.getNumber(),
                         b.getTransactionsList().size(), importResult, t2 - t1);
 
-                switch (importResult) {
+                try {
+                    switch (importResult) {
                     case IMPORTED_BEST:
                         importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
                         break;
@@ -126,6 +135,9 @@ final class TaskImportBlocks implements Runnable {
                         break;
                     default:
                         break;
+                    }
+                } catch (Throwable e) {
+                    log.error("import exception, {}", e.toString());
                 }
             }
             this.statis.update(this.chain.getBestBlock().getNumber());

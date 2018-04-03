@@ -24,7 +24,6 @@
 
 package org.aion.evtmgr.impl.handler;
 
-import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
 
@@ -36,27 +35,7 @@ import org.aion.evtmgr.impl.abs.AbstractHandler;
 public class TxHandler extends AbstractHandler implements IHandler {
 
     public TxHandler() {
+        super(TYPE.TX0.getValue());
         dispatcher.setName("TxHdr");
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.aion.evt.common.IHandler#onEvent(org.aion.evt.common.IEvent)
-     */
-    @Override
-    public void onEvent(IEvent _evt) {
-        // TODO Auto-generated method stub
-        this.queue.add(_evt);
-    }
-
-    @Override
-    public int getType() {
-        return TYPE.TX0.getValue();
-    }
-
-    @Override
-    public void stop() throws InterruptedException {
-        super.stop();
     }
 }

@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -80,7 +81,6 @@ public final class CfgApiRpc {
                                             .map(String::trim)
                                             .collect(Collectors.toList())
                             );
-
                             break;
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
