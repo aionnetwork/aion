@@ -619,6 +619,8 @@ public final class P2pMgr implements IP2pMgr {
         if (node != null) {
             SocketChannel channel = node.getChannel();
             if (channel.isOpen()) {
+                if (showLog)
+                    System.out.println("sending: " + _msg.getClass().getSimpleName() + " to " + channel);
                 this.workers.submit(
                         new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), _msg));
             }
