@@ -739,14 +739,19 @@ public final class P2pMgr implements IP2pMgr {
                     }
                 }
             } catch (IOException e) {
-                System.out.println("<p2p-io-exception ip=" + ((ChannelBuffer)key.attachment()).ip + " cause=\"" + e.toString() +"\">");
+                if (showLog) {
+                    System.out.println("<p2p-io-exception ip=" + ((ChannelBuffer) key.attachment()).ip + " cause=\"" + e.toString() + "\">");
+                }
 
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
                 byteBuffers.clear();
             } catch (Throwable e) {
-                System.out.println("<p2p-HandleChannel-throw>: " + e.toString());
+                // print stack trace for all throwable except IO exception
+                if (showLog) {
+                    e.printStackTrace();
+                }
             }
         }
 
