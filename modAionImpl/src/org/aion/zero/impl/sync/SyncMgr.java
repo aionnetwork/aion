@@ -41,6 +41,7 @@ import org.aion.base.util.Hex;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.sync.state.SyncPeerSet;
+import org.aion.zero.impl.sync.state.SyncPeerState;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.aion.evtmgr.IEvent;
@@ -144,6 +145,11 @@ public final class SyncMgr {
             synchronized (this.networkStatus){
                 BigInteger networkTd = this.networkStatus.getTargetTotalDiff();
                 if(_remoteTotalDiff.compareTo(networkTd) > 0){
+
+                    synchronized (this.peerSet) {
+
+                    }
+
                     String remoteBestBlockHash = Hex.toHexString(_remoteBestBlockHash);
 
                     log.debug(
@@ -194,7 +200,7 @@ public final class SyncMgr {
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, log), "sync-gb").start();
+        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, log, this.peerSet), "sync-gb").start();
         new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log, importedBlockHashes), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, this.p2pMgr, log, this.peerSet), "sync-gs").start();
         if(_showStatus)
@@ -209,13 +215,19 @@ public final class SyncMgr {
         this.evtMgr.registerEvent(events);
     }
 
-    private void getHeaders(BigInteger _selfTd){
+    private void getHeaders(BigInteger _selfTd) {
         if (importedBlocks.size() > blocksQueueMax) {
             log.debug("Imported blocks queue is full. Stop requesting headers");
             return;
         }
 
-        workers.submit(new TaskGetHeaders(p2pMgr, Math.max(1, this.chain.getBestBlock().getNumber() + 1 - syncBackwardMax), this.syncImportMax, _selfTd, log));
+        workers.submit(new TaskGetHeaders(
+                p2pMgr,
+                Math.max(1, this.chain.getBestBlock().getNumber() + 1 - syncBackwardMax),
+                this.syncImportMax,
+                _selfTd,
+                log,
+                peerSet));
     }
 
     /**
@@ -227,6 +239,13 @@ public final class SyncMgr {
     public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, List<A0BlockHeader> _headers) {
         if (_headers == null || _headers.isEmpty()) {
             return;
+        }
+
+        synchronized (this.peerSet) {
+            SyncPeerState peer = this.peerSet.getSyncPeer(_nodeIdHashcode);
+            if (peer != null) {
+                peer.checkReceiveHeadersValid(_headers.get(0).getNumber());
+            }
         }
 
         if (log.isDebugEnabled()) {
@@ -306,6 +325,19 @@ public final class SyncMgr {
         int m = blocks.size();
         if (m == 0)
             return;
+
+        synchronized (this.peerSet) {
+            SyncPeerState syncPeer = this.peerSet.getSyncPeer(_nodeIdHashcode);
+            if (syncPeer != null) {
+                boolean valid = syncPeer.checkReceiveBodiesValid(blocks.get(0).getNumber());
+
+                if (!valid) {
+                    log.warn("received batch of unrequested blocks starting with {} from peer {}",
+                            blocks.get(0).getNumber(),
+                            syncPeer.getShortId());
+                }
+            }
+        }
 
         if (log.isDebugEnabled()) {
             log.debug("<incoming-bodies from-num={} to-num={} node={}>",

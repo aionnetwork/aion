@@ -14,11 +14,22 @@ public class SyncPeerState {
     private final int idHashCode;
 
     /**
-     * Represents our current status of the peer in terms of syncing
+     * Represents our current status of the peer in terms of header
+     * where {@code false} indicates we have not sent a header and
+     * {@code true} indicates that we have.
      *
      * @implNote guarded by {@link #stateLock}
      */
-    private volatile OutboundStatus outboundStatus;
+    private volatile boolean outboundHeaderStatus = false;
+
+    /**
+     * Represents our current status of peer in terms of body where
+     * {@code false} indicates we have not sent a header and {@code true}
+     * indicates that we have
+     *
+     * @implNote guarded by {@link #stateLock}
+     */
+    private volatile boolean outboundBodyStatus = false;
 
     /**
      * When the peer last return a message to us
@@ -57,8 +68,6 @@ public class SyncPeerState {
      * @implNote guarded by {@link #stateLock}
      */
     private BigInteger totalDifficulty = BigInteger.ZERO;
-
-    private boolean isActive = false;
 
     /**
      * Our current perception of the peer, this is not used for anything
@@ -106,8 +115,20 @@ public class SyncPeerState {
         }
     }
 
+    public BigInteger getTotalDifficulty() {
+        return this.totalDifficulty;
+    }
+
+    public String getShortId() {
+        return this.idShort;
+    }
+
+    public int getIdHashCode() {
+        return this.idHashCode;
+    }
+
     public boolean canSendHeaders() {
-        return this.outboundStatus == OutboundStatus.FREE;
+        return !this.outboundHeaderStatus;
     }
 
     /**
@@ -118,11 +139,7 @@ public class SyncPeerState {
      * If this turns out to be too inefficient, we can change it
      */
     public boolean canSendBodies() {
-        return this.outboundStatus == OutboundStatus.POST_HEADER_FREE;
-    }
-
-    public boolean isFree() {
-        return this.outboundStatus == OutboundStatus.FREE;
+        return !this.outboundBodyStatus;
     }
 
     public boolean checkReceiveHeadersValid(long firstHeaderBlockNumber) {
@@ -132,7 +149,7 @@ public class SyncPeerState {
 
                 // this indicates that we received headers even though we did not
                 // request them, for now just accept but log
-                if (this.outboundStatus != OutboundStatus.REQ_HEADER_SENT) {
+                if (!this.outboundHeaderStatus) {
                     return false;
                 }
 
@@ -144,7 +161,7 @@ public class SyncPeerState {
                 }
 
                 // update state indicating the peer is free to use
-                this.outboundStatus = OutboundStatus.POST_HEADER_FREE;
+                this.outboundHeaderStatus = false;
             }
         }
         return true;
@@ -155,19 +172,46 @@ public class SyncPeerState {
             synchronized (stateLock) {
                 updateBodiesTimestamp();
 
-                if (this.outboundStatus != OutboundStatus.REQ_BODY_SENT) {
+                if (!this.outboundBodyStatus) {
                     return false;
                 }
 
-                if (this.lastRequestedBlockHeader != firstBodyBlockNumber) {
+                if (this.lastRequestedBlockBody != firstBodyBlockNumber) {
                     return false;
                 }
 
                 // resolve to the first state, thereby completing the cycle
-                this.outboundStatus = OutboundStatus.FREE;
+                this.outboundBodyStatus = false;
             }
         }
         return true;
+    }
+
+
+    /**
+     * Called to indicate that we have sent a block header request
+     * to this peer.
+     *
+     * @implNote guarded by {@link #stateLock}
+     */
+    public void updateHeadersSent(long startingBlockNumber) {
+        synchronized (stateLock) {
+            this.outboundHeaderStatus = true;
+            this.lastRequestedBlockHeader = startingBlockNumber;
+        }
+    }
+
+    /**
+     * Called to indicate that we have sent a block body request
+     * to this peer.
+     *
+     * @param startingBlockNumber
+     */
+    public void updateBodiesSent(long startingBlockNumber) {
+        synchronized (stateLock) {
+            this.outboundBodyStatus = true;
+            this.lastRequestedBlockBody = startingBlockNumber;
+        }
     }
 
     /**
@@ -201,7 +245,8 @@ public class SyncPeerState {
      * this peer if subsequent events occur repeatedly.
      */
     public void reset() {
-
+        this.outboundBodyStatus = false;
+        this.outboundHeaderStatus = false;
     }
 
     public long getLastReceivedMessageTimestamp() {

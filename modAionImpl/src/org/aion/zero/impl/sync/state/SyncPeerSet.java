@@ -2,6 +2,7 @@ package org.aion.zero.impl.sync.state;
 
 import org.aion.p2p.INode;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,23 +78,40 @@ public class SyncPeerSet {
      * Thread-B -> updateSentBodies()
      * Thread-A -> unlock()
      */
-    public List<SyncPeerState> getFreePeers() {
+    public List<SyncPeerState> getAbleToSendHeaderPeers(BigInteger currentDiff) {
         synchronized (peerSet) {
             return this.peerSet
                     .values()
                     .stream()
-                    .filter(SyncPeerState::isFree)
+                    .filter(SyncPeerState::canSendHeaders)
+                    .filter(p -> p.getTotalDifficulty().compareTo(currentDiff) >= 0)
                     .collect(Collectors.toList());
         }
     }
 
+
     /**
-     * This should be called sporadically as we want to maintain as much state as possible
-     * to avoid forgetting states due to a unstable connection
+     * Same as {@link #getAbleToSendHeaderPeers(BigInteger)} ()} but for block
+     * bodies
      */
+    public List<SyncPeerState> getAbleToSendBodiesPeers(BigInteger currentDiff) {
+        synchronized (peerSet) {
+            return this.peerSet
+                    .values()
+                    .stream()
+                    .filter(SyncPeerState::canSendBodies)
+                    .filter(p -> p.getTotalDifficulty().compareTo(currentDiff) >= 0)
+                    .collect(Collectors.toList());
+        }
+    }
+
     public void removeInactive() {
         synchronized (peerSet) {
             this.peerSet.values().removeIf(v -> v.getLastReceivedMessageTimestamp() > 20_000L);
         }
+    }
+
+    public SyncPeerState getSyncPeer(int hashCode) {
+        return this.peerSet.get(hashCode);
     }
 }

@@ -42,6 +42,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.sync.state.SyncPeerSet;
 import org.slf4j.Logger;
 
 /**
