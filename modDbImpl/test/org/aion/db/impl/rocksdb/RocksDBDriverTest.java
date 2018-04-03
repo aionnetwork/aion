@@ -51,17 +51,17 @@ public class RocksDBDriverTest {
     // TODO: parametrize tests with null inputs
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullName() {
-        new RocksDBWrapper(null, dbPath, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE);
+        new RocksDBWrapper(null, dbPath, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullPath() {
-        new RocksDBWrapper(dbName, null, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE);
+        new RocksDBWrapper(dbName, null, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullNameAndPath() {
-        new RocksDBWrapper(null, null, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE);
+        new RocksDBWrapper(null, null, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE);
     }
 
 }

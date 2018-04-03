@@ -177,6 +177,7 @@ public abstract class DatabaseFactory {
                 int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE)));
                 int write_buffer_size = Integer.parseInt(info.getProperty(PROP_WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE)));
                 int read_buffer_size = Integer.parseInt(info.getProperty(PROP_READ_BUFFER_SIZE, String.valueOf(RocksDBConstants.READ_BUFFER_SIZE)));
+                int cache_size = Integer.parseInt(info.getProperty(PROP_CACHE_SIZE, String.valueOf(RocksDBConstants.CACHE_SIZE)));
 
                 return new RocksDBWrapper(dbName,
                         dbPath,
@@ -185,7 +186,8 @@ public abstract class DatabaseFactory {
                         max_fd_alloc_size,
                         block_size,
                         write_buffer_size,
-                        read_buffer_size);
+                        read_buffer_size,
+                        cache_size);
             }
             case H2:
                 return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);

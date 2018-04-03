@@ -83,7 +83,8 @@ public class DriverBenchmarkTest {
         return Arrays.asList(new Object[][] {
                 { "H2MVMap", new H2MVMap("H2MVMapTest", testDir.getAbsolutePath(), false, false) },
                 { "LevelDB", new LevelDB("LevelDBTest", testDir.getAbsolutePath(), false, false) },
-                { "RocksDb", new RocksDBWrapper("RocksDb", testDir.getAbsolutePath(), false,false , RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE)}, });
+                { "RocksDb", new RocksDBWrapper("RocksDb", testDir.getAbsolutePath(), false,false , RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE )}
+        });
     }
 
     public IByteArrayKeyValueDatabase db;
