@@ -37,6 +37,7 @@ package org.aion.db.impl;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
+import org.aion.db.generic.SpecialLockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
@@ -116,7 +117,7 @@ public class DatabaseFactoryTest {
         props.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName()).isEqualTo(SpecialLockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(LevelDB.class.getSimpleName());
 
         // H2
