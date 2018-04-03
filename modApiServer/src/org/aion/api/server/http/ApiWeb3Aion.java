@@ -27,6 +27,7 @@ package org.aion.api.server.http;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import org.aion.api.server.ApiAion;
@@ -70,7 +71,8 @@ import org.json.JSONObject;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -279,7 +281,17 @@ public class ApiWeb3Aion extends ApiAion {
         if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
-        BigInteger balance = getRepoByJsonBlockId(bnOrId).getBalance(address);
+        if (!bnOrId.equalsIgnoreCase("latest")) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Default block parameter temporarily unsupported");
+        }
+        /*
+        IRepository repo = getRepoByJsonBlockId(bnOrId);
+        if (repo == null) // invalid bnOrId
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        */
+        IRepository repo = this.ac.getRepository();
+
+        BigInteger balance = repo.getBalance(address);
         return new RpcMsg(TypeConverter.toJsonHex(balance));
     }
 
@@ -304,8 +316,18 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
         }
 
+        if (!bnOrId.equalsIgnoreCase("latest")) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Default block parameter temporarily unsupported");
+        }
+        /*
+        IRepository repo = getRepoByJsonBlockId(bnOrId);
+        if (repo == null) // invalid bnOrId
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        */
+        IRepository repo = this.ac.getRepository();
+
         @SuppressWarnings("unchecked")
-        DataWord storageValue = (DataWord) getRepoByJsonBlockId(bnOrId).getStorageValue(address, key);
+        DataWord storageValue = (DataWord) repo.getStorageValue(address, key);
         if (storageValue != null)
             return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
         else
@@ -322,7 +344,17 @@ public class ApiWeb3Aion extends ApiAion {
         if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
-        return new RpcMsg(TypeConverter.toJsonHex(getRepoByJsonBlockId(bnOrId).getNonce(address)));
+        if (!bnOrId.equalsIgnoreCase("latest")) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Default block parameter temporarily unsupported");
+        }
+        /*
+        IRepository repo = getRepoByJsonBlockId(bnOrId);
+        if (repo == null) // invalid bnOrId
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        */
+        IRepository repo = this.ac.getRepository();
+
+        return new RpcMsg(TypeConverter.toJsonHex(repo.getNonce(address)));
     }
 
     public RpcMsg eth_getBlockTransactionCountByHash(JSONArray _params) {
@@ -352,7 +384,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
         if (b == null)
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");;
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
 
         List<AionTransaction> list = b.getTransactionsList();
 
@@ -370,10 +402,16 @@ public class ApiWeb3Aion extends ApiAion {
         if (_bnOrId != null && !_bnOrId.equals(null))
             bnOrId = _bnOrId + "";
 
+        if (!bnOrId.equalsIgnoreCase("latest")) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Default block parameter temporarily unsupported");
+        }
+        /*
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        */
 
+        IRepository repo = this.ac.getRepository();
         byte[] code = repo.getCode(address);
         return new RpcMsg(TypeConverter.toJsonHex(code));
     }
@@ -809,17 +847,25 @@ public class ApiWeb3Aion extends ApiAion {
     // always gets the latest 20 blocks and transactions
     private class ChainHeadView {
         LinkedList<byte[]> hashQueue;
-
-        JSONObject metrics;
         Map<byte[], JSONObject> blkList;
         Map<byte[], AionBlock> blkObjList;
         Map<byte[], JSONArray> txnList;
-        JSONObject response;
-        int qSize;
+
+        private JSONObject response;
+
+        private int qSize;
+
+        public ChainHeadView(ChainHeadView cv) {
+            hashQueue = new LinkedList<>(cv.hashQueue);
+            blkList = new HashMap<>(cv.blkList);
+            blkObjList = new HashMap<>(cv.blkObjList);
+            txnList = new HashMap<>(cv.txnList);
+            response = new JSONObject(cv.response);
+            qSize = cv.qSize;
+        }
 
         public ChainHeadView(int _qSize) {
             hashQueue = new LinkedList<>();
-            metrics = new JSONObject();
             blkList = new HashMap<>();
             blkObjList = new HashMap<>();
             txnList = new HashMap<>();
@@ -833,21 +879,79 @@ public class ApiWeb3Aion extends ApiAion {
             return (JSONObject) Blk.AionBlockToJson(_b, totalDiff, true);
         }
 
-        private JSONObject computeMetrics() {
-            Double avgBlockTimeAccumulator = 0D;
-            Double avgHashRateAccumulator = 0D;
-            Double avgDifficultyAccumulator = 0D;
-            BigInteger avgNrgAccumulator = new BigInteger();
-            long txnRateAccumulator = 0L;
+        private JSONObject buildResponse() {
+            JSONArray blks = new JSONArray();
+            JSONArray txns = new JSONArray();
 
+            // return qSize number of blocks and transactions as json
+            ListIterator li = hashQueue.listIterator(hashQueue.size());
+            while(li.hasPrevious()) {
+                byte[] hash = (byte[]) li.previous();
+                blks.put(blkList.get(hash));
+                JSONArray t = txnList.get(hash);
+                if(txns.length() < qSize) {
+                    for (int i = 0; i < t.length(); i++) {
+                        if (txns.length() < qSize) {
+                            txns.put(t.getJSONObject(i));
+                        }
+                    }
+                }
+            }
+
+            JSONObject metrics = computeMetrics();
+
+            JSONObject o = new JSONObject();
+            o.put("blks", blks);
+            o.put("txns", txns);
+            o.put("metrics", metrics);
+            return o;
+        }
+
+        private JSONObject computeMetrics() {
+            long blkTimeAccumulator = 0L;
+            BigInteger lastDifficulty = null;
+            BigInteger difficultyAccumulator = new BigInteger("0");
+            BigInteger nrgAccumulator = new BigInteger("0");
+            long txnCount = 0L;
+
+            int count = 0;
             Long lastBlkTimestamp = null;
 
-            Iterator it = mp.entrySet().iterator();
+            Iterator it = blkObjList.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry pair = (Map.Entry)it.next();
-                System.out.println(pair.getKey() + " = " + pair.getValue());
-                it.remove(); // avoids a ConcurrentModificationException
+                AionBlock b = (AionBlock)pair.getValue();
+
+                if (lastBlkTimestamp != null) {
+                    blkTimeAccumulator += (b.getTimestamp() - lastBlkTimestamp);
+                    lastBlkTimestamp = b.getTimestamp();
+                }
+
+                difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
+                lastDifficulty = new BigInteger(b.getDifficulty());
+
+                nrgAccumulator.add(new BigInteger(Long.toString(b.getNrgConsumed())));
+
+                txnCount += b.getTransactionsList().size();
+
+                it.remove();
             }
+
+
+            double blkTime = blkTimeAccumulator / (double)count;
+            double hashRate = lastDifficulty.longValue() / blkTime;
+            double avgDifficulty = difficultyAccumulator.longValue() / (double)count;
+            double avgNrgPerBlock = nrgAccumulator.longValue() / (double)count;
+            double txnPerSec = txnCount / (double)blkTimeAccumulator;
+
+            JSONObject metrics = new JSONObject();
+            metrics.put("blkTime", blkTime);
+            metrics.put("hashRate",hashRate);
+            metrics.put("avgDifficulty",avgDifficulty);
+            metrics.put("avgNrgPerBlock",avgNrgPerBlock);
+            metrics.put("txnPerSec",txnPerSec);
+
+            return metrics;
         }
 
         public ChainHeadView update() {
@@ -891,91 +995,67 @@ public class ApiWeb3Aion extends ApiAion {
                 txnList.put(blk.getHash(), txnJson);
             }
 
+            return this;
+        }
 
+        public JSONObject getResponse() {
+            return response;
+        }
+    }
+    public class CacheUpdateThreadFactory implements ThreadFactory {
+        private final AtomicInteger tnum = new AtomicInteger(1);
 
-
-
-
-
-
-
-
-            // now, fill queue up data to capacity
-            int remainingCapacity = qSize - hashQueue.size();
-
-            // create a stack of size remainingCapacity and empty it into the hashQueue
-
-
-            LinkedList<byte[]> temp = new LinkedList<byte[]>();
-
-
-
-
-
-
-
-
-
-                }
-
-
-            }
-            else {
-                while (hashQueue.peek() )
-
-            }
-
-
-            BigInteger totalDiff = ac.getAionHub().getBlockStore().getTotalDifficultyForHash(b.getHash());
-            return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "cache-update-" + tnum.getAndIncrement());
+            t.setPriority(Thread.MIN_PRIORITY);
+            return t;
         }
     }
 
+    private enum CachedResponseType {
+        CHAIN_HEAD
+    }
+
+    private ExecutorService cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(0), new CacheUpdateThreadFactory());
+
     // https://github.com/google/guava/wiki/CachesExplained#refresh
-    private final LoadingCache<Integer, ChainHeadView> CachedLatestBlocks = CacheBuilder.newBuilder()
+    private final LoadingCache<Integer, ChainHeadView> CachedResponse = CacheBuilder.newBuilder()
             .maximumSize(1)
+            .expireAfterWrite(4, TimeUnit.MINUTES)
             .refreshAfterWrite(15, TimeUnit.SECONDS)
             .build(
                 new CacheLoader<Integer, ChainHeadView>() {
                     public ChainHeadView load(Integer key) { // no checked exception
-                        ChainHeadView view = new ChainHeadView(12);
-
-                        AionBlock head = getBestBlock();
-
-
+                        ChainHeadView view = new ChainHeadView(10).update();
+                        return view;
                     }
 
-                    public ListenableFuture<JSONObject> reload(final Integer key, JSONObject prev) {
-
-
-                            ListenableFutureTask<JSONObject> task = ListenableFutureTask.create(new Callable<JSONObject>() {
-                                public JSONObject call() {
-                                    return getGraphFromDatabase(key);
+                    public ListenableFuture<ChainHeadView> reload(final Integer key, ChainHeadView prev) {
+                        try {
+                            ListenableFutureTask<ChainHeadView> task = ListenableFutureTask.create(new Callable<ChainHeadView>() {
+                                public ChainHeadView call() {
+                                    return new ChainHeadView(prev).update();
                                 }
                             });
-                            executor.execute(task);
+                            cacheUpdateExecutor.execute(task);
                             return task;
-                        }
+                        } catch (Throwable e) {
+                            LOG.debug("<cache-updater - could not queue up task: ", e);
+                            throw(e);
+                        } // exception is swallowed by refresh and load. so just log it for our logs
                     }
                 });
 
-    public RpcMsg ops_getLatestBlocksAndTransactions(JSONArray _params) {
-        String _address = _params.get(0) + "";
-
-        Address address = new Address(_address);
-
-        long latestBlkNum = this.getBestBlock().getNumber();
-        AccountState accountState = ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
-
-        if (accountState == null)
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
-
-        JSONObject response = new JSONObject();
-        response.put("blockNumber", latestBlkNum);
-        response.put("balance", accountState.getBalance());
-        response.put("nonce", accountState.getNonce());
-
-        return new RpcMsg(response);
+    public RpcMsg ops_getChainHeadView(JSONArray _params) {
+        try {
+            ChainHeadView v = CachedResponse.get(0);
+            return new RpcMsg(v.getResponse());
+        } catch (Exception e) {
+            LOG.error("<rpc-server - cannot get cached response for ops_getChainHeadView: ", e);
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Cached response retrieve failed.");
+        }
     }
 
     /* -------------------------------------------------------------------------
@@ -1197,7 +1277,9 @@ public class ApiWeb3Aion extends ApiAion {
     // --------------------------------------------------------------------
     // Helper Functions
     // --------------------------------------------------------------------
-
+    /*
+    // potential bug introduced by .getSnapshotTo()
+    // comment out until resolved
     private IRepository getRepoByJsonBlockId(String _bnOrId) {
         Long bn = parseBnOrId(_bnOrId);
         // if you passed in an invalid bnOrId, pending or it's an error
@@ -1208,7 +1290,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
-
+    */
     private Long parseBnOrId(String _bnOrId) {
         if (_bnOrId == null)
             return null;

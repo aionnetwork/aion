@@ -78,8 +78,8 @@ public class RpcProcessor {
         this.workers = new ThreadPoolExecutor(
                 fixedPoolSize,
                 fixedPoolSize,
-                10,
-                TimeUnit.SECONDS,
+                5,
+                TimeUnit.MINUTES,
                 new ArrayBlockingQueue<>(10),
                 new RpcThreadFactory()
         );
