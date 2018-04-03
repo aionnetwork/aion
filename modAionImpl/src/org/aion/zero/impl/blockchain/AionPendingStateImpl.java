@@ -128,36 +128,40 @@ public class AionPendingStateImpl
     }
 
     private synchronized void processTxBuffer() {
-
-        List<AionTransaction> txs = new ArrayList<>();
-        for (AionTxExecSummary s : txBuffer) {
-            txs.add(s.getTransaction());
-        }
-
-        List<AionTransaction> newPending = txPool.add(txs);
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("txBufferSize {} return size {}", txs.size(), newPending.size());
-        }
-
-        int cnt = 0;
-        Iterator<AionTxExecSummary> it = txBuffer.iterator();
-        while (it.hasNext()) {
-            AionTxExecSummary summary = it.next();
-            if (newPending.get(cnt) != null && !newPending.get(cnt).equals(summary.getTransaction())) {
-                AionTxReceipt rp = new AionTxReceipt();
-                rp.setTransaction(newPending.get(cnt));
-                receivedTxs.remove(ByteArrayWrapper.wrap(newPending.get(cnt).getHash()));
-                fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
+        if (!txBuffer.isEmpty()) {
+            List<AionTransaction> txs = new ArrayList<>();
+            for (AionTxExecSummary s : txBuffer) {
+                txs.add(s.getTransaction());
             }
-            cnt++;
 
-            fireTxUpdate(summary.getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
+            List<AionTransaction> newPending = txPool.add(txs);
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("txBufferSize {} return size {}", txs.size(), newPending.size());
+            }
+
+            int cnt = 0;
+            Iterator<AionTxExecSummary> it = txBuffer.iterator();
+            while (it.hasNext()) {
+                AionTxExecSummary summary = it.next();
+                if (newPending.get(cnt) != null && !newPending.get(cnt).equals(summary.getTransaction())) {
+                    AionTxReceipt rp = new AionTxReceipt();
+                    rp.setTransaction(newPending.get(cnt));
+                    receivedTxs.remove(ByteArrayWrapper.wrap(newPending.get(cnt).getHash()));
+                    fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
+                }
+                cnt++;
+
+                fireTxUpdate(summary.getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
+            }
+
+            if (!txs.isEmpty()) {
+                AionImpl.inst().broadcastTransactions(txs);
+
+            }
+
+            txBuffer.clear();
         }
-
-        AionImpl.inst().broadcastTransactions(txs);
-
-        txBuffer.clear();
     }
 
     private final class EpPS implements Runnable {
