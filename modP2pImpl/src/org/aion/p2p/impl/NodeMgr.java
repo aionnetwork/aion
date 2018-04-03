@@ -384,7 +384,7 @@ public class NodeMgr implements INodeMgr {
                 pmgr.closeSocket(node.getChannel());
                 activeIt.remove();
                 if (pmgr.showLog)
-                    System.out.println("<p2p-clear active-timeout>");
+                    System.out.println("<p2p-clear-active ip=" + node.getIpStr() +" node=" + node.getIdShort() +">");
 
                 if (this.observer != null)
                     this.observer.removeActiveNode(key);

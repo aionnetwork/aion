@@ -209,14 +209,17 @@ public final class P2pMgr implements IP2pMgr {
             return;
 
         configChannel(channel);
-        ChannelBuffer buffer = new ChannelBuffer();
-        buffer.task = task;
-
-        loop.attachChannel(channel, ops, buffer, buffer.task);
 
         String ip = channel.socket().getInetAddress().getHostAddress();
         int port = channel.socket().getPort();
         int localPort = channel.socket().getLocalPort();
+
+        ChannelBuffer buffer = new ChannelBuffer();
+        buffer.ip = ip;
+        buffer.port = port;
+        buffer.task = task;
+
+        loop.attachChannel(channel, ops, buffer, buffer.task);
 
         // attach to NodeMgr
         Node node = nodeMgr.allocNode(ip, localPort, port);
@@ -736,10 +739,11 @@ public final class P2pMgr implements IP2pMgr {
                     }
                 }
             } catch (IOException e) {
+                System.out.println("<p2p-io-exception ip=" + ((ChannelBuffer)key.attachment()).ip + " cause=\"" + e.toString() +"\">");
+
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
-                System.out.println("<p2p-io-exception>: " + e.toString());
                 byteBuffers.clear();
             } catch (Throwable e) {
                 System.out.println("<p2p-HandleChannel-throw>: " + e.toString());
@@ -870,6 +874,8 @@ public final class P2pMgr implements IP2pMgr {
                         if (channel.finishConnect() && channel.isConnected()) {
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
+                            rb.ip = node.getIpStr();
+                            rb.port = node.getPort();
                             rb.task = P2pMgr.this.handleRead;
                             P2pMgr.this.ioLoop.attachChannel(channel, SelectionKey.OP_READ, rb, rb.task);
 
@@ -943,7 +949,7 @@ public final class P2pMgr implements IP2pMgr {
                             outboundIt.remove();
 
                             if (showLog)
-                                System.out.println("<p2p-clear outbound-timeout>");
+                                System.out.println("<p2p-clear-outbound ip=" + node.getIpStr() +" node=" + node.getIdShort() +">");
                         }
                     }
 
