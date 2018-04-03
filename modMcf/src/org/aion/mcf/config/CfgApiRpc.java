@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,7 +47,7 @@ public final class CfgApiRpc {
         this.ip = "127.0.0.1";
         this.port = 8545;
         this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal"));
-        this.allowedOrigins = new ArrayList<>(Arrays.asList("false"));
+        this.allowedOrigins = Collections.emptyList();
         this.maxthread = 1;
         this.filtersEnabled = true;
     }
@@ -76,7 +77,7 @@ public final class CfgApiRpc {
                         case "corsdomain":
                             String cors = Cfg.readValue(sr).trim();
                             if (cors.equals("null") || cors.equals("") || cors.equals("false"))
-                                this.allowedOrigins = null;
+                                this.allowedOrigins = Collections.emptyList();
                             else {
                                 this.allowedOrigins = new ArrayList<>(
                                         Stream.of(cors.split(","))
