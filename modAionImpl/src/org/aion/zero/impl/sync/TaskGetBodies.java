@@ -83,35 +83,31 @@ final class TaskGetBodies implements Runnable {
     @Override
     public void run() {
         while (run.get()) {
+            HeadersWrapper hw;
             try {
-                HeadersWrapper hw;
-                try {
-                    hw = headersImported.take();
-                } catch (InterruptedException e) {
-                    continue;
+                hw = headersImported.take();
+            } catch (InterruptedException e) {
+                continue;
+            }
+
+            int idHash = hw.getNodeIdHash();
+            List<A0BlockHeader> headers = hw.getHeaders();
+            if (headers.isEmpty()) {
+                continue;
+            }
+
+            HeadersWrapper hwPrevious = headersSent.get(idHash);
+            if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
+                this.headersSent.put(idHash, hw);
+
+                if (log.isDebugEnabled()) {
+                    log.debug("<get-bodies from-num={} to-num={} node={}>",
+                            headers.get(0).getNumber(),
+                            headers.get(headers.size() - 1).getNumber(),
+                            hw.getDisplayId());
                 }
 
-                int idHash = hw.getNodeIdHash();
-                List<A0BlockHeader> headers = hw.getHeaders();
-                if (headers.isEmpty()) {
-                    continue;
-                }
-
-                HeadersWrapper hwPrevious = headersSent.get(idHash);
-                if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
-                    this.headersSent.put(idHash, hw);
-
-                    if (log.isDebugEnabled()) {
-                        log.debug("<get-bodies from-num={} to-num={} node={}>",
-                                headers.get(0).getNumber(),
-                                headers.get(headers.size() - 1).getNumber(),
-                                hw.getDisplayId());
-                    }
-
-                    this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
-                }
-            } catch (Throwable t) {
-                log.debug("caught top level error: ", t.toString());
+                this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             }
         }
     }
