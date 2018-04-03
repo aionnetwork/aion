@@ -64,16 +64,6 @@ public class AionImpl implements IAionChain {
 
     static private AionImpl inst;
 
-    private Timer timer;
-
-    private List<AionTransaction> broadCastBuffer = new ArrayList<>();
-
-    class TxBroadCastTask extends TimerTask {
-        @Override
-        public void run() {
-            broadCastTxs();
-        }
-    }
 
     public static AionImpl inst() {
         if (inst == null) {
@@ -88,27 +78,8 @@ public class AionImpl implements IAionChain {
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
 
-        timer = new Timer("TxBC");
-        timer.schedule(new TxBroadCastTask(), 5000, 100);
     }
 
-    private void broadCastTxs() {
-
-        List<AionTransaction> txs = new ArrayList<>();
-        synchronized (broadCastBuffer) {
-            for (AionTransaction tx : broadCastBuffer) {
-                txs.add(new AionTransaction(tx.getEncoded().clone()));
-            }
-            broadCastBuffer.clear();
-        }
-
-        if (LOG_TX.isTraceEnabled()) {
-            LOG_TX.trace("bcTxTask {}", txs.size());
-        }
-
-        A0TxTask txTask = new A0TxTask(txs, this.aionHub.getP2pMgr());
-        TxBroadcaster.getInstance().submitTransaction(txTask);
-    }
 
     @Override
     public IPowChain<AionBlock, A0BlockHeader> getBlockchain() {
@@ -139,10 +110,6 @@ public class AionImpl implements IAionChain {
 
     @Override
     public void close() {
-
-        if (timer != null) {
-            timer.cancel();
-        }
         aionHub.close();
     }
 
@@ -165,18 +132,8 @@ public class AionImpl implements IAionChain {
 
     public void broadcastTransactions(List<AionTransaction> transaction) {
 
-        if (LOG_TX.isTraceEnabled()) {
-            LOG_TX.trace("broadcastTxs {}", transaction.size());
-        }
-
-        List<AionTransaction> txs = new ArrayList<>();
-        for (AionTransaction tx : transaction) {
-            txs.add(new AionTransaction(tx.getEncoded().clone()));
-        }
-
-        synchronized (broadCastBuffer) {
-            this.broadCastBuffer.addAll(txs);
-        }
+        A0TxTask txTask = new A0TxTask(transaction, this.aionHub.getP2pMgr());
+        TxBroadcaster.getInstance().submitTransaction(txTask);
     }
 
     public long estimateTxNrg(AionTransaction tx, IAionBlock block) {
