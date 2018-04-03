@@ -695,6 +695,8 @@ public final class P2pMgr implements IP2pMgr {
 
         private final Queue<ByteBuffer> byteBuffers = new LinkedBlockingQueue<>(MAX_MESSAGE_QUEUE_SIZE);
 
+        private long lastMessageQueueOverflow = 0;
+
         @Override
         public void channelReady(SelectableChannel channel, SelectionKey key) {
             try {
@@ -787,7 +789,11 @@ public final class P2pMgr implements IP2pMgr {
                 key.interestOps(SelectionKey.OP_WRITE);
             } else {
                 if (P2pMgr.this.showLog) {
-                    System.out.println("message queue is full");
+                    long now = System.currentTimeMillis();
+                    if (now - lastMessageQueueOverflow > 5000) {
+                        System.out.println("message queue is full");
+                        lastMessageQueueOverflow = now;
+                    }
                 }
             }
         }
