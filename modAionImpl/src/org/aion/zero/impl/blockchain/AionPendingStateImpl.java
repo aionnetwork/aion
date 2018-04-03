@@ -292,7 +292,7 @@ public class AionPendingStateImpl
 
     @Override
     public synchronized List<AionTransaction> getPendingTransactions() {
-            return this.txPool.snapshot();
+        return this.txPool.snapshot();
     }
 
     public synchronized AionBlock getBestBlock() {
@@ -397,6 +397,10 @@ public class AionPendingStateImpl
 
             IEvent evtChange = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
             this.evtMgr.newEvent(evtChange);
+        }
+
+        if (!bufferEnable && !newPending.isEmpty()) {
+            AionImpl.inst().broadcastTransactions(newPending);
         }
 
         return newPending;
