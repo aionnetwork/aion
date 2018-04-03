@@ -62,6 +62,8 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AionPendingStateImpl
         implements IPendingStateInternal<org.aion.zero.impl.types.AionBlock, AionTransaction> {
@@ -318,6 +320,7 @@ public class AionPendingStateImpl
     public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
         int unknownTx = 0;
         List<AionTransaction> newPending = new ArrayList<>();
+        List<AionTransaction> newLargeNonceTx = new ArrayList<>();
 
         for (AionTransaction tx : transactions) {
             BigInteger txNonce = tx.getNonceBI();
@@ -327,26 +330,25 @@ public class AionPendingStateImpl
 
             if (cmp > 0) {
                 if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
-                    AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
-                }
-
-                addToTxCache(tx);
-
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
-                }
-
-            } else if (cmp == 0) {
-                if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
-
-                    if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
-                        AionImpl.inst().broadcastTransactions(Collections.singletonList(tx));
-                    }
-
+                    newLargeNonceTx.add(tx);
+                } else {
                     addToTxCache(tx);
 
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                    }
+                }
+            } else if (cmp == 0) {
+                if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
+
+                    if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
+                        newLargeNonceTx.add(tx);
+                    } else {
+                        addToTxCache(tx);
+
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                        }
                     }
 
                     continue;
@@ -399,8 +401,16 @@ public class AionPendingStateImpl
             this.evtMgr.newEvent(evtChange);
         }
 
-        if (!bufferEnable && !newPending.isEmpty()) {
-            AionImpl.inst().broadcastTransactions(newPending);
+        if (bufferEnable) {
+            if (!newLargeNonceTx.isEmpty()) {
+                AionImpl.inst().broadcastTransactions(newLargeNonceTx);
+            }
+        } else {
+            if (!newPending.isEmpty() || !newLargeNonceTx.isEmpty()) {
+                AionImpl.inst().broadcastTransactions(newPending);
+                AionImpl.inst().broadcastTransactions(Stream.concat(newPending.stream(), newLargeNonceTx.stream()).collect(
+                        Collectors.toList()));
+            }
         }
 
         return newPending;
