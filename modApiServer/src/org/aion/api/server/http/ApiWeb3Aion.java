@@ -27,7 +27,6 @@ package org.aion.api.server.http;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import org.aion.api.server.ApiAion;
@@ -52,7 +51,6 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
@@ -73,7 +71,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -86,6 +83,8 @@ import static org.aion.base.util.ByteUtil.toHexString;
  */
 public class ApiWeb3Aion extends ApiAion {
 
+    private final int OPS_RECENT_ENTITY_COUNT = 36;
+    private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 10;
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private ReadWriteLock templateMapLock;
@@ -175,16 +174,13 @@ public class ApiWeb3Aion extends ApiAion {
 
         // ops-related endpoints
         // https://github.com/google/guava/wiki/CachesExplained#refresh
-        CachedResponse = CacheBuilder.newBuilder()
+        CachedRecentEntities = CacheBuilder.newBuilder()
                 .maximumSize(1)
-                .refreshAfterWrite(5, TimeUnit.SECONDS)
-                //.expireAfterWrite(1, TimeUnit.SECONDS)
-                //.expireAfterWrite(4, TimeUnit.MINUTES)
-                //.refreshAfterWrite(15, TimeUnit.SECONDS)
+                .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
                 .build(
                         new CacheLoader<Integer, ChainHeadView>() {
                             public ChainHeadView load(Integer key) { // no checked exception
-                                ChainHeadView view = new ChainHeadView(10).update();
+                                ChainHeadView view = new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
                                 return view;
                             }
 
@@ -1090,11 +1086,11 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     private ExecutorService cacheUpdateExecutor;
-    private final LoadingCache<Integer, ChainHeadView> CachedResponse;
+    private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
 
     public RpcMsg ops_getChainHeadView(JSONArray _params) {
         try {
-            ChainHeadView v = CachedResponse.get(CachedResponseType.CHAIN_HEAD.ordinal());
+            ChainHeadView v = CachedRecentEntities.get(CachedResponseType.CHAIN_HEAD.ordinal());
             return new RpcMsg(v.getResponse());
         } catch (Exception e) {
             LOG.error("<rpc-server - cannot get cached response for ops_getChainHeadView: ", e);

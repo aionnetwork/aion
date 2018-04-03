@@ -63,6 +63,8 @@ public final class TxRecpt {
 
     public String from;
 
+    public Long nrgLimit;
+
     public Long nrgUsed;
 
     public Long gasPrice;
@@ -117,6 +119,7 @@ public final class TxRecpt {
         this.cumulativeNrgUsed = cumulativeNrgUsed;
         this.nrgUsed = ((AionTxReceipt) receipt).getEnergyUsed();
         this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getNrgPrice();
+        this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getNrg();
 
         if (receipt.getTransaction().getContractAddress() != null)
             this.contractAddress = toJsonHex(receipt.getTransaction().getContractAddress().toString());
@@ -171,6 +174,7 @@ public final class TxRecpt {
         this.txNonce = ByteUtil.byteArrayToLong(tx.getNonce());
         this.txData = tx.getData() == null ? "" : toJsonHex(tx.getData());
         this.gasPrice = tx.getNrgPrice();
+        this.nrgLimit = tx.getNrg();
 
         this.logsBloom = receipt.getBloomFilter().toString();
         this.successful = receipt.isSuccessful();
@@ -193,6 +197,8 @@ public final class TxRecpt {
 
         obj.put("gasPrice", new NumericalValue(gasPrice).toHexString());
         obj.put("nrgPrice", new NumericalValue(gasPrice).toHexString());
+
+        obj.put("gasLimit", new NumericalValue(nrgLimit).toHexString());
 
         obj.put("contractAddress", contractAddress == null ? JSONObject.NULL : contractAddress);
         obj.put("from", from);

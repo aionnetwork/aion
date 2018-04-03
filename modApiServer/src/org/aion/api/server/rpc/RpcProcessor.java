@@ -83,7 +83,7 @@ public class RpcProcessor {
                 fixedPoolSize,
                 5,
                 TimeUnit.MINUTES,
-                new ArrayBlockingQueue<>(10),
+                new ArrayBlockingQueue<>(100),
                 new RpcThreadFactory()
         );
     }
