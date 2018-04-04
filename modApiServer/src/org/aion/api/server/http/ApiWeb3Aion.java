@@ -1166,7 +1166,6 @@ public class ApiWeb3Aion extends ApiAion {
         obj.putOpt("blockHeader", bestBlock.getHeader().toJSON());
         obj.put("coinbaseaux", coinbaseaux);
         obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
-
         return new RpcMsg(obj);
     }
 
@@ -1248,16 +1247,16 @@ public class ApiWeb3Aion extends ApiAion {
 
                 ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
 
-                AionBlock bestBlock = templateMap.remove(key);
+                // Grab copy of best block
+                AionBlock bestBlock = templateMap.get(key);
                 if (bestBlock != null) {
-
                     bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
                     bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
                     bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
 
                     // Directly submit to chain for new due to delays using event, explore event submission again
                     ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
-                    if(importResult == ImportResult.IMPORTED_BEST || importResult == ImportResult.IMPORTED_NOT_BEST) {
+                    if(importResult.isSuccessful()) {
                         templateMap.remove(key);
                         LOG.info("block submitted via api <num={}, hash={}, diff={}, tx={}>", bestBlock.getNumber(),
                                 bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
@@ -1292,13 +1291,12 @@ public class ApiWeb3Aion extends ApiAion {
             try {
                 int bnInt = Integer.decode(bnStr);
                 AionBlock block = getBlockRaw(bnInt);
-
                 if (block != null) {
                     A0BlockHeader header = block.getHeader();
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));
-                    obj.put("headerHash", toHexString(HashUtil.h256(header.getHeaderBytes(false))));
+                    obj.put("headerHash", toHexString(header.getStaticHash()));
                     obj.putOpt("blockHeader", header.toJSON());
                 } else {
                     obj.put("message", "Fail - Unable to find block" + bnStr);
