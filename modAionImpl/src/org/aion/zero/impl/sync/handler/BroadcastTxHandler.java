@@ -35,6 +35,9 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
@@ -45,6 +48,7 @@ import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.AionTransaction;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -62,11 +66,14 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
+    private final Map<Integer, Integer> errorCnt;
+
     public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
+        this.errorCnt = Collections.synchronizedMap(new LRUMap<>(128));
     }
 
     @Override
@@ -84,6 +91,20 @@ public final class BroadcastTxHandler extends Handler {
         }
 
         if (broadCastTx.isEmpty()) {
+            Integer cnt = errorCnt.get(_nodeIdHashcode);
+            if (cnt == null) {
+                errorCnt.put(_nodeIdHashcode, 1);
+            } else {
+                errorCnt.put(_nodeIdHashcode, ++cnt);
+            }
+
+            if (cnt == 3) {
+                p2pMgr.dropActive(_nodeIdHashcode);
+                errorCnt.put(_nodeIdHashcode, 0);
+
+                log.warn("<broadcast-tx drop node: {}>", _displayId);
+            }
+
             log.trace("<broadcast-tx from: {} empty>", _displayId);
             return;
         }
