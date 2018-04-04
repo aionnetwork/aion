@@ -49,6 +49,7 @@ public enum DBVendor {
     LEVELDB("leveldb", true), //
     /** Using an instance of {@link RocksDBWrapper}. */
     ROCKSDB("rocksdb", true),
+    /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
     H2("h2", true), //
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
     MOCKDB("mockdb", false);

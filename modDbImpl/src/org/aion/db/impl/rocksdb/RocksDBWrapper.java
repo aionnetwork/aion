@@ -292,9 +292,8 @@ public class RocksDBWrapper extends AbstractDB {
         check();
 
         // try-with-resources will automatically close to batch object
-        WriteBatch batch = new WriteBatch();
 
-        try {
+        try (WriteBatch batch = new WriteBatch()){
             for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
                 if (e.getValue() == null) {
                     batch.delete(e.getKey().getData());

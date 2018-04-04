@@ -181,8 +181,8 @@ public abstract class DatabaseFactory {
 
                 return new RocksDBWrapper(dbName,
                         dbPath,
-                        true,
-                        true,
+                        enableDbCache,
+                        enableDbCompression,
                         max_fd_alloc_size,
                         block_size,
                         write_buffer_size,
