@@ -32,7 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion;
+package org.aion.equihash;
 
 import org.aion.equihash.Equihash;
 import org.junit.Test;
