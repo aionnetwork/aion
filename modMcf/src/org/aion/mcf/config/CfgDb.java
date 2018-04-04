@@ -45,6 +45,7 @@ public class CfgDb {
     public final int MIN_FD_OPEN_ALLOC = 1024;
     public final String DEFAULT_BLOCK_SIZE = "16mB";
     public final String DEFAULT_WRITE_BUFFER_SIZE = "64mB";
+    public final String DEFAULT_READ_BUFFER_SIZE = "64mB";
     public final String DEFAULT_CACHE_SIZE = "128mB";
 
     public CfgDb() {
@@ -58,6 +59,7 @@ public class CfgDb {
         // size 0 means unbound
         this.max_heap_cache_size = "1024";
         this.enable_heap_cache_stats = false;
+        this.read_buffer_size = 64 * (int) Utils.MEGA_BYTE;
 
         // corresponds to DEFAULT_BLOCK_SIZE
         this.block_size = 16 * (int) Utils.MEGA_BYTE;
@@ -81,6 +83,7 @@ public class CfgDb {
     private boolean enable_heap_cache;
     private String max_heap_cache_size;
     private boolean enable_heap_cache_stats;
+    private int read_buffer_size;
 
     /**
      * <p>The maximum block size</p>
@@ -167,6 +170,10 @@ public class CfgDb {
                     }
                     case "write_buffer_size": {
                         this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
+                        break;
+                    }
+                    case "read_buffer_size": {
+                        this.read_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.read_buffer_size);
                         break;
                     }
                     case "cache_size": {
@@ -266,6 +273,11 @@ public class CfgDb {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("read_buffer_size");
+            xmlWriter.writeCharacters(String.valueOf(DEFAULT_READ_BUFFER_SIZE));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("cache_size");
             xmlWriter.writeCharacters(String.valueOf(DEFAULT_CACHE_SIZE));
             xmlWriter.writeEndElement();
@@ -334,6 +346,10 @@ public class CfgDb {
 
     public int getCacheSize() {
         return this.cache_size;
+    }
+
+    public int getReadBufferSize() {
+        return this.read_buffer_size;
     }
 }
 
