@@ -115,6 +115,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public void errCheck(int nodeIdHashcode, String _displayId) {
+
+        }
+
+        @Override
         public void register(List<Handler> _hs) {
 
         }

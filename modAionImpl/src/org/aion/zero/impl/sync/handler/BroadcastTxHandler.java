@@ -84,7 +84,12 @@ public final class BroadcastTxHandler extends Handler {
         }
 
         if (broadCastTx.isEmpty()) {
-            log.trace("<broadcast-tx from: {} empty>", _displayId);
+            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+
+            if (log.isTraceEnabled()) {
+                log.trace("<broadcast-tx from: {} empty {}>", _displayId);
+
+            }
             return;
         }
         pendingState.addPendingTransactions(castRawTx(broadCastTx));
