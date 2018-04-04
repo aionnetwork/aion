@@ -36,6 +36,8 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.rocksdb.RocksDBConstants;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -70,6 +72,8 @@ public abstract class DatabaseFactory {
     public static final String PROP_BLOCK_SIZE = "block_size";
 
     public static final String PROP_WRITE_BUFFER_SIZE = "write_buffer_size";
+    public static final String PROP_READ_BUFFER_SIZE = "read_buffer_size";
+
     public static final String PROP_CACHE_SIZE = "cache_size";
 
     public static IByteArrayKeyValueDatabase connect(Properties info) {
@@ -169,6 +173,25 @@ public abstract class DatabaseFactory {
                         max_fd_alloc_size,
                         block_size,
                         write_buffer_size,
+                        cache_size);
+            }
+            case ROCKSDB: {
+                // grab rocksdb specific parameters
+
+                int max_fd_alloc_size = Integer.parseInt(info.getProperty(PROP_MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES)));
+                int block_size = Integer.parseInt(info.getProperty(PROP_BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE)));
+                int write_buffer_size = Integer.parseInt(info.getProperty(PROP_WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE)));
+                int read_buffer_size = Integer.parseInt(info.getProperty(PROP_READ_BUFFER_SIZE, String.valueOf(RocksDBConstants.READ_BUFFER_SIZE)));
+                int cache_size = Integer.parseInt(info.getProperty(PROP_CACHE_SIZE, String.valueOf(RocksDBConstants.CACHE_SIZE)));
+
+                return new RocksDBWrapper(dbName,
+                        dbPath,
+                        enableDbCache,
+                        enableDbCompression,
+                        max_fd_alloc_size,
+                        block_size,
+                        write_buffer_size,
+                        read_buffer_size,
                         cache_size);
             }
             case H2:

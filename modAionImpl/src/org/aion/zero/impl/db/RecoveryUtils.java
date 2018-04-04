@@ -28,6 +28,8 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -85,7 +87,6 @@ public class RecoveryUtils {
 
         IBlockStoreBase store = blockchain.getBlockStore();
 
-
         IBlock bestBlock = store.getBestBlock();
         if (bestBlock == null) {
             System.out.println("Empty database. Nothing to do.");
@@ -96,10 +97,62 @@ public class RecoveryUtils {
         store.pruneAndCorrect();
         store.flush();
 
-        // compact database after the changes were applied
-        blockchain.getRepository().compact();
-
         blockchain.getRepository().close();
+    }
+
+    /**
+     * Used by the CLI call.
+     */
+    public static void dbCompact() {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        cfg.getDb().setHeapCacheEnabled(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "INFO");
+        cfgLog.put("GEN", "INFO");
+
+        AionLoggerFactory.init(cfgLog);
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+
+        // compact database after the changes were applied
+        repository.compact();
+        repository.close();
+    }
+
+    /**
+     * Used by the CLI call.
+     */
+    public static void dumpBlocks(long count) {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        cfg.getDb().setHeapCacheEnabled(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "INFO");
+        cfgLog.put("GEN", "INFO");
+
+        AionLoggerFactory.init(cfgLog);
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+
+        AionBlockStore store = repository.getBlockStore();
+        try {
+            store.dumpPastBlocks(count, cfg.getBasePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        repository.close();
     }
 
     /**

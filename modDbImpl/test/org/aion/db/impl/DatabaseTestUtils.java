@@ -45,7 +45,7 @@ public class DatabaseTestUtils {
     static final File testDir = new File(System.getProperty("user.dir"), "tmp");
     private static final String dbPath = testDir.getAbsolutePath();
     private static final Set<String> sizeHeapCache = Set.of("0", "256");
-    private static final Set<DBVendor> vendors = Set.of(DBVendor.MOCKDB, DBVendor.H2, DBVendor.LEVELDB);
+    private static final Set<DBVendor> vendors = Set.of(DBVendor.MOCKDB, DBVendor.H2, DBVendor.LEVELDB, DBVendor.ROCKSDB);
     private static final String enabled = String.valueOf(Boolean.TRUE);
     private static final String disabled = String.valueOf(Boolean.FALSE);
     private static final Set<String> options = Set.of(enabled, disabled);

@@ -33,8 +33,8 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Act;
-import org.aion.p2p.impl.Node;
+import org.aion.p2p.impl.comm.Act;
+import org.aion.p2p.impl.comm.Node;
 import org.junit.Before;
 import org.junit.Test;
 

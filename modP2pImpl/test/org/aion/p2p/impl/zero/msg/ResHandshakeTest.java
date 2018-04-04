@@ -28,7 +28,7 @@ package org.aion.p2p.impl.zero.msg;
 import static org.junit.Assert.*;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Act;
+import org.aion.p2p.impl.comm.Act;
 import org.junit.Test;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,7 +38,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ResHandshakeTest {
 
     @Test
-    public void testRoute(){
+    public void testRoute() {
         ResHandshake mh1 = new ResHandshake(true);
         assertEquals(Ver.V0, mh1.getHeader().getVer());
         assertEquals(Ctrl.NET, mh1.getHeader().getCtrl());
