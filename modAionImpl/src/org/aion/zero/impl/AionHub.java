@@ -138,7 +138,9 @@ public class AionHub {
         loadBlockchain();
 
         this.startingBlock = this.blockchain.getBestBlock();
-        this.mempool.updateBest();
+        if (!cfg.getConsensus().isSeed()) {
+            this.mempool.updateBest();
+        }
 
         String reportsFolder = "";
         if (cfg.getReports().isEnabled()) {
