@@ -35,6 +35,7 @@ import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.utils.ThreadDumper;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
@@ -174,6 +175,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
      */
     private void addInternalBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
         long blockNumber = block.getNumber();
+        byte[] blockHash = block.getHash();
         List<BlockInfo> blockInfos = blockNumber >= index.size() ? new ArrayList<>() : index.get(blockNumber);
 
         // if the blocks are added out of order, the size will be updated without changing the index value
@@ -183,12 +185,27 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             blockInfos = new ArrayList<>();
         }
 
-        BlockInfo blockInfo = new BlockInfo();
+        BlockInfo blockInfo = getBlockInfoForHash(blockInfos, block.getHash());
+
+        if (blockInfo == null) {
+            blockInfo = new BlockInfo();
+        } else {
+            LOG.error("Block info " + blockInfo.toString() + " present for " + blockNumber
+                    + " when data should not exist.");
+            blockInfos.remove(blockInfo);
+        }
+
         blockInfo.setCummDifficulty(cummDifficulty);
         blockInfo.setHash(block.getHash());
         blockInfo.setMainChain(mainChain); // FIXME: maybe here I should force reset main chain for all uncles on that level
 
         blockInfos.add(blockInfo);
+
+        if (!Arrays.equals(block.getHash(), blockInfo.getHash()) || !Arrays.equals(block.getHash(), blockHash)) {
+            LOG.error("Found invalid hash to block mapping: " + "\nSaved hash: " + Hex.toHexString(blockHash)
+                    + "\nBlock info hash: " + blockInfo.getHash() + "\n Block: " + block.toString() + "\n Threads:"
+                    + ThreadDumper.dumpThreadInfo());
+        }
 
         blocks.put(block.getHash(), block);
         index.set(block.getNumber(), blockInfos);
@@ -209,7 +226,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             for (BlockInfo blockInfo : blockInfos) {
 
                 byte[] hash = blockInfo.getHash();
-                AionBlock block = blocks.get(hash);
+                AionBlock block = getBlockByHashInternal(hash);
 
                 result.add(Map.entry(block, Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
             }
@@ -235,7 +252,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             for (BlockInfo blockInfo : blockInfos) {
                 if (blockInfo.isMainChain()) {
                     byte[] hash = blockInfo.getHash();
-                    return blocks.get(hash);
+                    return getBlockByHashInternal(hash);
                 }
             }
 
@@ -245,11 +262,25 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
+    private AionBlock getBlockByHashInternal(byte[] hash) {
+        AionBlock blk = blocks.get(hash);
+
+        if (Arrays.equals(hash, blk.getHash())) {
+            return blk;
+        } else {
+            LOG.error("Found invalid hash " + Hex.toHexString(hash) + " to block mapping: " + blk.toString());
+            return null;
+        }
+    }
+
     @Override
     public AionBlock getBlockByHash(byte[] hash) {
         lock.readLock().lock();
         try {
-            return blocks.get(hash);
+            return getBlockByHashInternal(hash);
         } finally {
             lock.readLock().unlock();
         }
@@ -375,7 +406,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
      */
     private List<AionBlock> getListBlocksEndWithInner(byte[] hash, long qty) {
         // locks acquired by calling method
-        AionBlock block = this.blocks.get(hash);
+        AionBlock block = getBlockByHashInternal(hash);
 
         if (block == null) {
             return new ArrayList<>();
@@ -385,7 +416,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         for (int i = 0; i < qty; ++i) {
             blocks.add(block);
-            block = this.blocks.get(block.getParentHash());
+            block = getBlockByHashInternal(block.getParentHash());
             if (block == null) {
                 break;
             }
@@ -686,6 +717,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                     writer.append(
                             "Hash: " + Hex.toHexString(bi.getHash()) + " Total Difficulty: " + bi.getCummDifficulty());
                     writer.newLine();
+                    AionBlock blk = getBlockByHash(bi.getHash());
+                    if (blk != null) {
+                        writer.append(blk.toString());
+                        writer.newLine();
+                    }
                 }
                 writer.newLine();
 
