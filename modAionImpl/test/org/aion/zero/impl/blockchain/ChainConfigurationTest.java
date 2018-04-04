@@ -103,7 +103,7 @@ public class ChainConfigurationTest {
 
         // Generate 3 solutions
         solutions = equihash.getSolutionsForNonce(inputBytes, header.getNonce());
-        
+
         // compress solution
         byte[] compressedSolution = EquiUtils.getMinimalFromIndices(solutions[0], n/(k+1));
         header.setSolution(compressedSolution);
