@@ -28,6 +28,7 @@ package org.aion.p2p.impl;
 import org.aion.p2p.INode;
 import org.aion.p2p.NodeRandPolicy;
 import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
+import org.aion.p2p.impl2.P2pMgr;
 
 /**
  *
@@ -38,7 +39,7 @@ public final class TaskRequestActiveNodes implements Runnable {
 
     private P2pMgr mgr;
 
-    TaskRequestActiveNodes(final P2pMgr _mgr) {
+    public TaskRequestActiveNodes(final P2pMgr _mgr) {
         this.mgr = _mgr;
     }
 

@@ -25,6 +25,8 @@
 
 package org.aion.p2p.impl;
 
+import org.aion.p2p.impl.comm.NodeMgr;
+
 public class TaskPersistNodes implements Runnable{
     private NodeMgr nodeMgr;
 

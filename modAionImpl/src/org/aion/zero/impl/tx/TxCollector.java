@@ -110,7 +110,9 @@ public class TxCollector {
         // Update last broadcast time
         this.lastBroadcast.set(System.currentTimeMillis());
 
-        TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p));
+        if (!transactions.isEmpty()) {
+            TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p));
+        }
     }
 
     /*

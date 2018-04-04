@@ -42,7 +42,7 @@ public class TaskUPnPManager implements Runnable {
     private int port;
     MiniupnpcLibrary miniupnpc;
 
-    TaskUPnPManager(int port){
+    public TaskUPnPManager(int port){
         this.port = port;
         miniupnpc = MiniupnpcLibrary.INSTANCE;
     }
