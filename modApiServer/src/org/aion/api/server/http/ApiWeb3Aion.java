@@ -1246,7 +1246,7 @@ public class ApiWeb3Aion extends ApiAion {
 
                 ByteArrayWrapper key = new ByteArrayWrapper(hexStringToBytes((String) hdrHash));
 
-                AionBlock bestBlock = templateMap.get(key);
+                AionBlock bestBlock = templateMap.remove(key);
                 if (bestBlock != null) {
 
                     bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
