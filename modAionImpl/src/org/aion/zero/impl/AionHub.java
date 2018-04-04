@@ -42,7 +42,7 @@ import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.impl.P2pMgr;
+import org.aion.p2p.impl2.P2pMgr;
 import org.aion.utils.TaskDumpHeap;
 import org.aion.utils.TaskDumpThreadsAndBlocks;
 import org.aion.vm.PrecompiledContracts;

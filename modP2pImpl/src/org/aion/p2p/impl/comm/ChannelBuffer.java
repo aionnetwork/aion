@@ -22,11 +22,11 @@
  * Aion foundation.
  *
  */
-package org.aion.p2p.impl;
+package org.aion.p2p.impl.comm;
 
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
-import org.aion.p2p.impl.selector.Task;
+import org.aion.p2p.impl2.selector.Task;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -40,55 +40,55 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ChannelBuffer {
 
-    int nodeIdHash = 0;
+	public int nodeIdHash = 0;
 
-    String ip;
-    int port;
+	public String ip;
+	public int port;
 
-    ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
+	public ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
 
-    ByteBuffer bodyBuf = null;
+	public ByteBuffer bodyBuf = null;
 
-    Header header = null;
+	public Header header = null;
 
-    byte[] body = null;
+	public byte[] body = null;
 
-    public Task task;
+	public Task task;
 
-    /**
-     * write flag
-     */
-    public AtomicBoolean onWrite = new AtomicBoolean(false);
+	/**
+	 * write flag
+	 */
+	public AtomicBoolean onWrite = new AtomicBoolean(false);
 
-    /**
-     * Indicates whether this channel is closed.
-     */
-    public AtomicBoolean isClosed = new AtomicBoolean(false);
+	/**
+	 * Indicates whether this channel is closed.
+	 */
+	public AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
+	public BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
 
-    void refreshHeader(){
-        headerBuf.clear();
-        header = null;
-    }
+	public void refreshHeader() {
+		headerBuf.clear();
+		header = null;
+	}
 
-    void refreshBody(){
-        bodyBuf = null;
-        body = null;
-    }
+	public void refreshBody() {
+		bodyBuf = null;
+		body = null;
+	}
 
-    /**
-     * @return boolean
-     */
-    boolean isHeaderCompleted(){
-        return header != null;
-    }
+	/**
+	 * @return boolean
+	 */
+	public boolean isHeaderCompleted() {
+		return header != null;
+	}
 
-    /**
-     * @return boolean
-     */
-    boolean isBodyCompleted() {
-        return this.header != null && this.body != null && body.length == header.getLen();
-    }
+	/**
+	 * @return boolean
+	 */
+	public boolean isBodyCompleted() {
+		return this.header != null && this.body != null && body.length == header.getLen();
+	}
 
 }

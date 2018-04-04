@@ -1,6 +1,6 @@
-package org.aion.p2p.impl.selector;
+package org.aion.p2p.impl2.selector;
 
-import org.aion.p2p.impl.ChannelBuffer;
+import org.aion.p2p.impl.comm.ChannelBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -23,48 +23,29 @@
  *
  */
 
-package org.aion.p2p.impl;
+package org.aion.p2p.impl.comm;
 
-import java.util.HashSet;
-import java.util.Set;
+public final class PeerMetric {
 
-/**
- *
- * @author chris
- *
- */
-public final class Act {
+	private static final int STOP_CONN_AFTER_FAILED_CONN = 2;
+	private static final long FAILED_CONN_RETRY_INTERVAL = 3000;
 
-    static final byte DISCONNECT = 0;
+	int metricFailedConn;
+	private long metricFailedConnTs;
 
-    public static final byte REQ_HANDSHAKE = 1;
+	public boolean shouldNotConn() {
+		return metricFailedConn > STOP_CONN_AFTER_FAILED_CONN
+				&& ((System.currentTimeMillis() - metricFailedConnTs) > FAILED_CONN_RETRY_INTERVAL);
+	}
 
-    public  static final byte RES_HANDSHAKE = 2;
+	public void incFailedCount() {
+		metricFailedConn++;
+		metricFailedConnTs = System.currentTimeMillis();
+	}
 
-    static final byte PING = 3;
-
-    static final byte PONG = 4;
-
-    public static final byte REQ_ACTIVE_NODES = 5;
-
-    public static final byte RES_ACTIVE_NODES = 6;
-
-    static final byte UNKNOWN = Byte.MAX_VALUE;
-
-    private static Set<Byte> active = new HashSet<>() {{
-        add(REQ_HANDSHAKE);
-        add(RES_HANDSHAKE);
-        add(REQ_ACTIVE_NODES);
-        add(RES_ACTIVE_NODES);
-    }};
-
-    /**
-     * @param _act byte
-     * @return byte
-     * method provided to filter any decoded p2p action (byte)
-     */
-    static byte filter(byte _act){
-        return active.contains(_act) ? _act : UNKNOWN;
-    }
+	public void decFailedCount() {
+		if (metricFailedConn > 0)
+			metricFailedConn--;
+	}
 
 }
