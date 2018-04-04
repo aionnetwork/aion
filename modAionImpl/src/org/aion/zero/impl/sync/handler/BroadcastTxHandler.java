@@ -98,14 +98,14 @@ public final class BroadcastTxHandler extends Handler {
                 errorCnt.put(_nodeIdHashcode, ++cnt);
             }
 
-            if (cnt == 3) {
+            if (cnt.intValue() > 2) {
                 p2pMgr.dropActive(_nodeIdHashcode);
                 errorCnt.put(_nodeIdHashcode, 0);
 
                 log.warn("<broadcast-tx drop node: {}>", _displayId);
             }
 
-            log.trace("<broadcast-tx from: {} empty>", _displayId);
+            log.trace("<broadcast-tx from: {} empty {} {}>", _displayId, cnt);
             return;
         }
         pendingState.addPendingTransactions(castRawTx(broadCastTx));
