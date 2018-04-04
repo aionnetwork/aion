@@ -129,6 +129,9 @@ public class Cli {
                         }
                     }
                     break;
+                case "--db-compact":
+                    RecoveryUtils.dbCompact();
+                    break;
                 case "-v":
                     System.out.println("\nVersion");
                     System.out.println("--------------------------------------------");
