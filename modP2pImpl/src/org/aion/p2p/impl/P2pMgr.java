@@ -209,14 +209,17 @@ public final class P2pMgr implements IP2pMgr {
             return;
 
         configChannel(channel);
-        ChannelBuffer buffer = new ChannelBuffer();
-        buffer.task = task;
-
-        loop.attachChannel(channel, ops, buffer, buffer.task);
 
         String ip = channel.socket().getInetAddress().getHostAddress();
         int port = channel.socket().getPort();
         int localPort = channel.socket().getLocalPort();
+
+        ChannelBuffer buffer = new ChannelBuffer();
+        buffer.ip = ip;
+        buffer.port = port;
+        buffer.task = task;
+
+        loop.attachChannel(channel, ops, buffer, buffer.task);
 
         // attach to NodeMgr
         Node node = nodeMgr.allocNode(ip, localPort, port);
@@ -616,6 +619,8 @@ public final class P2pMgr implements IP2pMgr {
         if (node != null) {
             SocketChannel channel = node.getChannel();
             if (channel.isOpen()) {
+                if (showLog)
+                    System.out.println("sending: " + _msg.getClass().getSimpleName() + " to " + channel);
                 this.workers.submit(
                         new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), _msg));
             }
@@ -692,6 +697,8 @@ public final class P2pMgr implements IP2pMgr {
 
         private final Queue<ByteBuffer> byteBuffers = new LinkedBlockingQueue<>(MAX_MESSAGE_QUEUE_SIZE);
 
+        private long lastMessageQueueOverflow = 0;
+
         @Override
         public void channelReady(SelectableChannel channel, SelectionKey key) {
             try {
@@ -699,49 +706,27 @@ public final class P2pMgr implements IP2pMgr {
                 if (key.isAcceptable())
                     throw new UnsupportedOperationException("HandleChannel does not support acceptable keys");
 
-                long startTime = 0, endTime = 0, readEndTime = 0, writeStartTime = 0, writeEndTime = 0;
-
-                if (showLog)
-                    startTime = System.nanoTime();
-
                 if (key.isReadable()) {
                     P2pMgr.this.read(key);
-
-                    if (showLog)
-                        readEndTime = System.nanoTime();
                 }
 
                 if (key.isWritable()) {
-
-                    if (showLog)
-                        writeStartTime = System.nanoTime();
-
                     write(channel, key);
-
-                    if (showLog)
-                        writeEndTime = System.nanoTime();
-                }
-
-                if (showLog) {
-                    endTime = System.nanoTime();
-                    // if greater than 1s, something is wrong
-                    if (endTime - startTime > 1000000000) {
-                        System.out.println("channel: "
-                                + channel
-                                + " key-warning total: "
-                                + (endTime - startTime)
-                                + "ns read: " + (readEndTime - startTime)
-                                + "ns write: " + (writeEndTime - writeStartTime) + "ns");
-                        System.out.println("key-stats bb_size: " + byteBuffers.size());
-                    }
                 }
             } catch (IOException e) {
+                if (showLog) {
+                    System.out.println("<p2p-io-exception ip=" + ((ChannelBuffer) key.attachment()).ip + " cause=\"" + e.toString() + "\">");
+                }
+
                 // on any IO exception, cancel the channel, no need to close it should be
                 // closed when channelUnregistered is triggered
                 P2pMgr.this.ioLoop.cancel(key);
                 byteBuffers.clear();
             } catch (Throwable e) {
-                System.out.println("<p2p-HandleChannel-throw>" + e.toString());
+                // print stack trace for all throwable except IO exception
+                if (showLog) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -755,13 +740,15 @@ public final class P2pMgr implements IP2pMgr {
                     int ret;
                     while (buf != null && buf.hasRemaining()) {
                         ret = chan.write(buf);
-                        if (ret == 0 && buf.hasRemaining()) {
-                            buf.compact();
+                        if (ret <= 0) {
                             break LOOP;
                         }
                     }
+
                     // if we finish processing simply remove
-                    byteBuffers.remove(buf);
+                    if (!buf.hasRemaining()) {
+                        byteBuffers.remove(buf);
+                    }
                 }
             } finally {
                 if (byteBuffers.isEmpty())
@@ -775,7 +762,11 @@ public final class P2pMgr implements IP2pMgr {
                 key.interestOps(SelectionKey.OP_WRITE);
             } else {
                 if (P2pMgr.this.showLog) {
-                    System.out.println("message queue is full");
+                    long now = System.currentTimeMillis();
+                    if (now - lastMessageQueueOverflow > 5000) {
+                        System.out.println("message queue is full");
+                        lastMessageQueueOverflow = now;
+                    }
                 }
             }
         }
@@ -867,6 +858,8 @@ public final class P2pMgr implements IP2pMgr {
                         if (channel.finishConnect() && channel.isConnected()) {
                             ChannelBuffer rb = new ChannelBuffer();
                             rb.nodeIdHash = nodeIdHash;
+                            rb.ip = node.getIpStr();
+                            rb.port = node.getPort();
                             rb.task = P2pMgr.this.handleRead;
                             P2pMgr.this.ioLoop.attachChannel(channel, SelectionKey.OP_READ, rb, rb.task);
 
@@ -940,7 +933,7 @@ public final class P2pMgr implements IP2pMgr {
                             outboundIt.remove();
 
                             if (showLog)
-                                System.out.println("<p2p-clear outbound-timeout>");
+                                System.out.println("<p2p-clear-outbound ip=" + node.getIpStr() +" node=" + node.getIdShort() +">");
                         }
                     }
 

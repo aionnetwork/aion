@@ -35,7 +35,7 @@ public final class Header {
 
     public final static int LEN = 8;
 
-    private final static int MAX_BODY_LEN_BYTES = 2 * 200 * 1024 * 1024;
+    private final static int MAX_BODY_LEN_BYTES = 16 * 1024 * 1024;
     private final short ver;
     private final byte ctrl;
     private final byte action;

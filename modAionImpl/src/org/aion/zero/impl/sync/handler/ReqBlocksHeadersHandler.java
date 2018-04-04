@@ -88,7 +88,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, rbhs);
         } else
-            this.log.error("<req-headers decode-msg msg-bytes={} node={}>",
+            this.log.error("<req-headers decode-error msg-bytes={} node={}>",
                     _msgBytes == null ? 0 : _msgBytes.length, _nodeIdHashcode);
     }
 }

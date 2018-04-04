@@ -63,6 +63,7 @@ final class TaskGetHeaders implements Runnable {
 
     @Override
     public void run() {
+
         Set<Integer> ids = new HashSet<>();
         Collection<INode> preFilter = this.p2p.getActiveNodes().values();
 

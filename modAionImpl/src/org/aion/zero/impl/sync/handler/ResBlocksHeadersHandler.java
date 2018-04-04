@@ -36,6 +36,8 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.util.List;
+
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Ver;
@@ -84,11 +86,16 @@ public final class ResBlocksHeadersHandler extends Handler {
                     _displayId
                 );
             }
-        } else
+        } else {
             this.log.error(
-                    "<res-headers decode-msg msg-bytes={} node={} >",
+                    "<res-headers decode-error msg-bytes={} node={}>",
                     _msgBytes.length,
                     _displayId
             );
+
+            if (this.log.isTraceEnabled()) {
+                this.log.trace("res-headers decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
+            }
+        }
     }
 }
