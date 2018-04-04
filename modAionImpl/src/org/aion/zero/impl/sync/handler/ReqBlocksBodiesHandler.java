@@ -105,10 +105,13 @@ public final class ReqBlocksBodiesHandler extends Handler {
             }
 
             this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
-            this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
-                    blockBodies.size(), _displayId);
+            if (log.isDebugEnabled()) {
+                this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
+                        blockBodies.size(), _displayId);
+            }
 
         } else {
+            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>",
                     _displayId,
                     _msgBytes.length);

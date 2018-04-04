@@ -29,6 +29,7 @@ import org.aion.p2p.*;
 import org.aion.p2p.impl.selector.MainIOLoop;
 import org.aion.p2p.impl.selector.Task;
 import org.aion.p2p.impl.zero.msg.*;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -97,6 +98,8 @@ public final class P2pMgr implements IP2pMgr {
     private final HandleChannel handleRead = new HandleChannel();
 
     private final HandleInboundEvent handleInbound = new HandleInboundEvent();
+
+    private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
 
     /**
      * @param _nodeId         byte[36]
@@ -643,6 +646,23 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public int chainId() {
         return this.selfNetId;
+    }
+
+    public Map<Integer, Integer> getErrCnt() {
+        return errCnt;
+    }
+
+    @Override
+    public void errCheck(int nodeIdHashcode, String _displayId) {
+        Integer cnt = errCnt.get(nodeIdHashcode);
+        errCnt.put(nodeIdHashcode, cnt == null ? 1 : ++cnt);
+
+        if (cnt.intValue() > 2) {
+            dropActive(nodeIdHashcode);
+            errCnt.put(nodeIdHashcode, 0);
+
+            System.out.println("<drop node: " + _displayId == null ? nodeIdHashcode : _displayId + ">");
+        }
     }
 
     private final class HandleInboundEvent implements Task {
