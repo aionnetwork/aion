@@ -102,6 +102,9 @@ public final class P2pMgr implements IP2pMgr {
 
 	private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
 
+	private int errTolerance;
+
+
 	enum Dest {
 		INBOUND, OUTBOUND, ACTIVE;
 	}
@@ -549,7 +552,7 @@ public final class P2pMgr implements IP2pMgr {
 	 */
 	public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[] _bootNodes,
 			boolean _upnpEnable, int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog,
-			boolean _bootlistSyncOnly, boolean _printReport, String _reportFolder) {
+			boolean _bootlistSyncOnly, boolean _printReport, String _reportFolder, int _errorTolerance) {
 		this.selfNetId = _netId;
 		this.selfRevision = _revision;
 		this.selfNodeId = _nodeId.getBytes();
@@ -565,6 +568,7 @@ public final class P2pMgr implements IP2pMgr {
 		this.syncSeedsOnly = _bootlistSyncOnly;
 		this.printReport = _printReport;
 		this.reportFolder = _reportFolder;
+		this.errTolerance = _errorTolerance;
 
 		for (String _bootNode : _bootNodes) {
 			Node node = Node.parseP2p(_bootNode);
@@ -1194,7 +1198,7 @@ public final class P2pMgr implements IP2pMgr {
 	public void errCheck(int nodeIdHashcode, String _displayId) {
 		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
 
-		if (cnt > 2) {
+		if (cnt > this.errTolerance) {
 			dropActive(nodeIdHashcode);
 			errCnt.put(nodeIdHashcode, 0);
 
