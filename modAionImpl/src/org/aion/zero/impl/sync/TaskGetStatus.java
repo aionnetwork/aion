@@ -50,7 +50,7 @@ final class TaskGetStatus implements Runnable {
 
     private final Logger log;
 
-    private final static int intervalTotal = 5000; // ms
+    private final static int intervalTotal = 2000; // ms
 
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();

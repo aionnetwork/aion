@@ -75,7 +75,7 @@ public class SyncPeerState {
      *
      * @implNote guarded by {@link #stateLock}
      */
-    private int rating = 0;
+    // private int rating = 0;
 
     private long lastRequestedBlockHeader = 0;
 
@@ -92,8 +92,17 @@ public class SyncPeerState {
     }
 
     public void processStatusUpdate(final long latestBlockNumber, final BigInteger totalDifficulty) {
+        processStatusUpdateInternal(
+                latestBlockNumber,
+                totalDifficulty,
+                System.currentTimeMillis());
+    }
+
+    public void processStatusUpdateInternal(final long latestBlockNumber,
+                                            final BigInteger totalDifficulty,
+                                            final long timeStamp) {
         synchronized (timestampLock) {
-            this.lastReceivedStatusMessage = System.currentTimeMillis();
+            this.lastReceivedStatusMessage = timeStamp;
             this.lastReceivedMessage = this.lastReceivedStatusMessage;
 
             synchronized (stateLock) {
@@ -110,7 +119,7 @@ public class SyncPeerState {
 
                 this.latestBlockNumber = latestBlockNumber;
                 this.totalDifficulty = totalDifficulty;
-                this.rating++;
+                //this.rating++;
             }
         }
     }
@@ -251,6 +260,10 @@ public class SyncPeerState {
 
     public long getLastReceivedMessageTimestamp() {
         return this.lastReceivedMessage;
+    }
+
+    public long getLastReceivedContentTimestamp() {
+        return Math.max(this.lastReceivedBodiesMessage, this.lastReceivedHeadersMessage);
     }
 
     @Override

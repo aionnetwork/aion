@@ -1,6 +1,9 @@
 package org.aion.zero.impl.sync.state;
 
+import org.aion.log.AionLoggerFactory;
 import org.aion.p2p.INode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -10,6 +13,8 @@ import java.util.stream.Collectors;
  * Represents the set of peers we can currently sync from
  */
 public class SyncPeerSet {
+
+    private static final Logger log = AionLoggerFactory.getLogger("SYNC");
 
     /**
      * The set of peers we consider syncing from
@@ -27,6 +32,19 @@ public class SyncPeerSet {
                 if (peerState != null)
                     newPeers.add(peerState);
             }
+
+            long currentTime = System.currentTimeMillis();
+            // also perform some updates on the peer set
+            for (SyncPeerState peer : this.peerSet.values()) {
+                // if no response for 10 seconds, assume something has gone wrong, reset the state
+                if (currentTime - peer.getLastReceivedContentTimestamp() > 10_000L) {
+                    peer.reset();
+
+                    if (log.isTraceEnabled()) {
+                        log.trace("peer {} inactive for > 10s, resetting", peer.getShortId());
+                    }
+                }
+            }
         }
         return newPeers;
     }
@@ -35,8 +53,17 @@ public class SyncPeerSet {
      * @implNote guarded by {@link #peerSet}
      */
     private SyncPeerState registerPeer(INode node) {
-        if (this.peerSet.keySet().contains(node.getIdHash()))
+        if (this.peerSet.keySet().contains(node.getIdHash())) {
+
+            if (log.isTraceEnabled()) {
+                log.trace("Node {} already exists as peer", node.getIdShort());
+            }
             return null;
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("added {} to SyncPeerSet", node.getIdShort());
+        }
 
         // otherwise this is a new peer
         SyncPeerState state = new SyncPeerState(node.getIdShort(), node.getIdHash());

@@ -129,13 +129,25 @@ public final class SyncMgr {
      *
      */
     public void updateNetworkStatus(
-        String _displayId,
-        long _remoteBestBlockNumber,
-        final byte[] _remoteBestBlockHash,
-        BigInteger _remoteTotalDiff) {
+            int _nodeIdHashCode,
+            String _displayId,
+            long _remoteBestBlockNumber,
+            final byte[] _remoteBestBlockHash,
+            BigInteger _remoteTotalDiff) {
 
         // self
         BigInteger selfTd = this.chain.getTotalDifficulty();
+
+        synchronized (this.peerSet) {
+            SyncPeerState peerstate;
+            if ((peerstate = this.peerSet.getSyncPeer(_nodeIdHashCode)) != null) {
+                peerstate.processStatusUpdate(_remoteBestBlockNumber, _remoteTotalDiff);
+            } else {
+                if (log.isTraceEnabled()) {
+                    log.trace("resolved unrequested sync status from {}", _displayId);
+                }
+            }
+        }
 
         // trigger send headers routine immediately
         if(_remoteTotalDiff.compareTo(selfTd) > 0) {
@@ -145,10 +157,6 @@ public final class SyncMgr {
             synchronized (this.networkStatus){
                 BigInteger networkTd = this.networkStatus.getTargetTotalDiff();
                 if(_remoteTotalDiff.compareTo(networkTd) > 0){
-
-                    synchronized (this.peerSet) {
-
-                    }
 
                     String remoteBestBlockHash = Hex.toHexString(_remoteBestBlockHash);
 
