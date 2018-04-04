@@ -741,7 +741,7 @@ public final class P2pMgr implements IP2pMgr {
                     while (buf != null && buf.hasRemaining()) {
                         ret = chan.write(buf);
                         if (ret <= 0) {
-                            break;
+                            break LOOP;
                         }
                     }
 
