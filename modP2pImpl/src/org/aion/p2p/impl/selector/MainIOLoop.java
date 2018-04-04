@@ -65,15 +65,19 @@ public class MainIOLoop implements Runnable {
                     this.currSelector.wakeup();
 
                 try {
+                    long startTime = System.currentTimeMillis();
                     processSelectedKeys();
+                    long endTime = System.currentTimeMillis();
+                    if ((endTime - startTime) > 1000) {
+                        System.out.println("warning, selector thread key proc took: " + (endTime - startTime) + "ms");
+                    }
                 } finally {
-                    long startTime = System.nanoTime();
+                    long startTime = System.currentTimeMillis();
                     runAllTasks();
-                    long endTime = System.nanoTime();
+                    long endTime = System.currentTimeMillis();
 
-                    long delta = endTime - startTime;
-                    if (delta > 1000000000) {
-                        System.out.println("warning, selector thread task took: " + delta + "ns");
+                    if ((endTime - startTime) > 1000) {
+                        System.out.println("warning, selector thread task took: " + (endTime - startTime) + "ms");
                     }
                 }
             }
@@ -275,18 +279,19 @@ public class MainIOLoop implements Runnable {
      * Submit a new task (this is a write task the base class to serialize messages)
      */
     public void write(ByteBuffer buffer, SocketChannel channel) {
-        SelectionKey key = channel.keyFor(this.currSelector);
-
-        if (key == null) {
-            try {
-                channel.close();
-            } catch (IOException e) {
-                // do nothing here for now, just exit
+        this.eventBus.addEvent(() -> {
+            SelectionKey key = channel.keyFor(this.currSelector);
+            if (key == null) {
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    // do nothing here for now, just exit
+                }
+                return;
             }
-            return;
-        }
 
-        ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
+            ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
+        });
         wakeup(isEventLoopThread());
     }
 

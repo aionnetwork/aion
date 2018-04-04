@@ -42,13 +42,11 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -58,15 +56,10 @@ import org.aion.zero.types.AionTxReceipt;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.aion.base.util.Hex.toHexString;
 import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
@@ -105,13 +98,12 @@ public abstract class ApiAion extends Api {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
         this.fltrIndex = new AtomicLong(0);
+        this.blockTemplateLock = new ReentrantLock();
 
         // register events
         IEventMgr evtMgr = this.ac.getAionHub().getEventMgr();
         evtMgr.registerEvent(Collections.singletonList(new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0)));
         evtMgr.registerEvent(Collections.singletonList(new EventBlock(EventBlock.CALLBACK.ONBLOCK0)));
-
-        blockTemplateLock = new ReentrantLock();
     }
 
     public final class EpApi implements Runnable {
@@ -442,7 +434,7 @@ public abstract class ApiAion extends Api {
             try {
                 synchronized (pendingState) {
                     byte[] nonce = !(_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
-                            : pendingState.bestNonce(Address.wrap(key.getAddress())).toByteArray();
+                            : pendingState.bestPendingStateNonce(Address.wrap(key.getAddress())).toByteArray();
 
                     AionTransaction tx = new AionTransaction(nonce, from, null, _params.getValue().toByteArray(),
                             _params.getData(), _params.getNrg(), _params.getNrgPrice());
@@ -526,7 +518,7 @@ public abstract class ApiAion extends Api {
             synchronized (pendingState) {
                 // TODO : temp set nrg & price to 1
                 byte[] nonce = (!_params.getNonce().equals(BigInteger.ZERO)) ? _params.getNonce().toByteArray()
-                        : pendingState.bestNonce(Address.wrap(key.getAddress())).toByteArray();
+                        : pendingState.bestPendingStateNonce(Address.wrap(key.getAddress())).toByteArray();
 
                 AionTransaction tx = new AionTransaction(nonce, _params.getTo(), _params.getValue().toByteArray(),
                         _params.getData(), _params.getNrg(), _params.getNrgPrice());
@@ -568,7 +560,7 @@ public abstract class ApiAion extends Api {
     }
 
 //    private synchronized BigInteger getTxNonce(ECKey key) {
-//        return pendingState.bestNonce();
+//        return pendingState.bestPendingStateNonce();
 //    }
 
 //    private synchronized BigInteger getTxNonce(ECKey key, boolean add) {

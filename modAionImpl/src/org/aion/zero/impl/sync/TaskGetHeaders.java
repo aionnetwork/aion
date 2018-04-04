@@ -97,7 +97,6 @@ final class TaskGetHeaders implements Runnable {
                     log.debug("<get-headers from-num={} size={} node={}>",
                             fromBlock, syncMax, peer.getShortId());
                 }
-
                 this.p2p.send(peer.getIdHashCode(), rbh);
             }
         }

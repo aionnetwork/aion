@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -282,7 +283,12 @@ public final class SyncMgr {
 
             // break if not consisting
             if(prev != null && (current.getNumber() != (prev.getNumber() + 1) || !Arrays.equals(current.getParentHash(), prev.getHash()))) {
-                log.debug("<inconsistent-block-headers>");
+                log.debug("<inconsistent-block-headers from={}, num={}, prev+1={}, p_hash={}, prev={}>",
+                        _displayId,
+                        current.getNumber(),
+                        prev.getNumber() + 1,
+                        ByteUtil.toHexString(current.getParentHash()),
+                        ByteUtil.toHexString(prev.getHash()));
                 return;
             }
 

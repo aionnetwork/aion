@@ -39,4 +39,10 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
     void processBest(BLK block, List<? extends AbstractTxReceipt<Tx>> receipts);
 
     void shutDown();
+
+    int getPendingTxSize();
+
+    void updateBest();
+
+    void DumpPool();
 }

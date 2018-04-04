@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -75,15 +76,11 @@ public final class CfgApiRpc {
                     switch (elementName) {
                         case "corsdomain":
                             String cors = Cfg.readValue(sr).trim();
-                            if (cors.equals("null") || cors.equals("") || cors.equals("false"))
-                                this.allowedOrigins = null;
-                            else {
-                                this.allowedOrigins = new ArrayList<>(
-                                        Stream.of(cors.split(","))
-                                                .map(String::trim)
-                                                .collect(Collectors.toList())
-                                );
-                            }
+                            this.allowedOrigins = new ArrayList<>(
+                                    Stream.of(cors.split(","))
+                                            .map(String::trim)
+                                            .collect(Collectors.toList())
+                            );
                             break;
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
@@ -160,7 +157,7 @@ public final class CfgApiRpc {
             xmlWriter.writeComment("size of thread pool allocated for rpc requests");
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("threads");
-            xmlWriter.writeCharacters(this.getMaxthread() + "");
+            xmlWriter.writeCharacters(this.maxthread + "");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
