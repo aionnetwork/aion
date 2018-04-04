@@ -27,7 +27,7 @@ package org.aion.p2p.impl.zero.msg;
 
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Act;
+import org.aion.p2p.impl.comm.Act;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
