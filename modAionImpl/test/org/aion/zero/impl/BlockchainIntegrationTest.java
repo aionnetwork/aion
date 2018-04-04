@@ -262,4 +262,46 @@ public class BlockchainIntegrationTest {
         ImportResult connection = bc.tryToConnect(block);
         assertThat(connection).isEqualTo(ImportResult.IMPORTED_BEST);
     }
+
+    /**
+     * This is a special case for testing that the blockchain stores disconnected blocks
+     * if we violate the contract of changing the block contents after importing best
+     *
+     * This behaviour was originally observed when running a pooled miner
+     */
+    @Test
+    public void testDisconnection() {
+        StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts()
+                .build();
+        StandaloneBlockchain bc = bundle.bc;
+
+        // store this as the best block,
+        AionBlock block = bundle.bc.createNewBlock(bc.getGenesis(), Collections.emptyList(), true);
+        byte[] block1Hash = block.getHash();
+
+        // now modify this block to have a different value after connecting
+        ImportResult result = bundle.bc.tryToConnect(block);
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // now modify the block in some way
+        block.getHeader().setEnergyConsumed(42L);
+
+        // now try submitting the block again
+        result = bundle.bc.tryToConnect(block);
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+        // now try creating a new block
+        AionBlock newBlock = bundle.bc.createNewBlock(
+                bundle.bc.getBestBlock(), Collections.emptyList(), true);
+
+        // gets the first main-chain block
+        AionBlock storedBlock1 = bundle.bc.getBlockStore().getChainBlockByNumber(1L);
+        System.out.println(ByteUtil.toHexString(storedBlock1.getHash()));
+        System.out.println(ByteUtil.toHexString(newBlock.getParentHash()));
+
+        assertThat(newBlock.getParentHash()).isNotEqualTo(storedBlock1.getHash());
+        assertThat(newBlock.getParentHash()).isEqualTo(block.getHash());
+    }
 }
