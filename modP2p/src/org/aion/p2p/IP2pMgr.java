@@ -25,9 +25,11 @@
 
 package org.aion.p2p;
 
+import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 
+import org.aion.p2p.IP2pMgr;
 
 /**
  *
@@ -36,45 +38,50 @@ import java.util.Map;
  */
 public interface IP2pMgr {
 
-    /**
-     * @return Map
-     */
-    Map<Integer, INode> getActiveNodes();
-    
-    INodeMgr getNodeMgr();
+	/**
+	 * @return Map
+	 */
+	Map<Integer, INode> getActiveNodes();
 
-    /**
-     * @param _hs
-     *            List<Handler>
-     */
-    void register(final List<Handler> _hs);
+	INodeMgr getNodeMgr();
 
-    /**
-     * @return INode
-     */
-    INode getRandom();
+	/**
+	 * @param _hs
+	 *            List<Handler>
+	 */
+	void register(final List<Handler> _hs);
 
-    /**
-     * @param _id
-     *            int
-     * @param _msg
-     *            Msg
-     */
-    void send(int _id, final Msg _msg);
+	/**
+	 * @return INode
+	 */
+	INode getRandom();
 
-    /**
-     * Used to hook up with kernel to shutdown threads in network module
-     */
-    void shutdown();
+	/**
+	 * @param _id
+	 *            int
+	 * @param _msg
+	 *            Msg
+	 */
+	void send(int _id, final Msg _msg);
 
-    /**
-     * start all p2p process
-     */
-    void run();
+	/**
+	 * Used to hook up with kernel to shutdown threads in network module
+	 */
+	void shutdown();
 
-    void dropActive(Integer _nodeIdHash);
+	/**
+	 * start all p2p process
+	 */
+	void run();
 
-    List<Short> versions();
+	void dropActive(Integer _nodeIdHash);
 
-    int chainId();
+	List<Short> versions();
+
+	int chainId();
+
+	void closeSocket(final SocketChannel _sc);
+
+	boolean isShowLog();
+
 }
