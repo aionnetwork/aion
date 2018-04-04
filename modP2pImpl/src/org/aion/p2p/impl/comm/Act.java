@@ -35,21 +35,21 @@ import java.util.Set;
  */
 public final class Act {
 
-    static final byte DISCONNECT = 0;
+    public static final byte DISCONNECT = 0;
 
     public static final byte REQ_HANDSHAKE = 1;
 
     public  static final byte RES_HANDSHAKE = 2;
 
-    static final byte PING = 3;
+    public static final byte PING = 3;
 
-    static final byte PONG = 4;
+    public static final byte PONG = 4;
 
     public static final byte REQ_ACTIVE_NODES = 5;
 
     public static final byte RES_ACTIVE_NODES = 6;
 
-    static final byte UNKNOWN = Byte.MAX_VALUE;
+    public static final byte UNKNOWN = Byte.MAX_VALUE;
 
     private static Set<Byte> active = new HashSet<>() {{
         add(REQ_HANDSHAKE);
@@ -63,7 +63,7 @@ public final class Act {
      * @return byte
      * method provided to filter any decoded p2p action (byte)
      */
-    static byte filter(byte _act){
+    public static byte filter(byte _act){
         return active.contains(_act) ? _act : UNKNOWN;
     }
 

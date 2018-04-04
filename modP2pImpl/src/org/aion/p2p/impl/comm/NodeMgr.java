@@ -202,7 +202,7 @@ public class NodeMgr implements INodeMgr {
 
 	public void addOutboundNode(final Node _n) {
 		updateMetric(_n);
-		outboundNodes.put(_n.getChannel().hashCode(), _n);
+		outboundNodes.put(_n.getIdHash(), _n);
 	}
 
 	public synchronized Node tempNodesTake() throws InterruptedException {

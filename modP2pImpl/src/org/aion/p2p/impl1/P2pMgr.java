@@ -444,7 +444,6 @@ public final class P2pMgr implements IP2pMgr {
 							node.setPortConnected(channel.socket().getLocalPort());
 
 							nodeMgr.addOutboundNode(node);
-
 							allNid.put(nodeIdHash, node);
 							// selectorLock.unlock();
 
@@ -674,7 +673,6 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	/**
-	 * @param _sc
 	 *            SocketChannel
 	 * @throws IOException
 	 *             IOException
@@ -703,7 +701,6 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	/**
-	 * @param _sc
 	 *            SocketChannel
 	 * @throws IOException
 	 *             IOException
@@ -1117,7 +1114,7 @@ public final class P2pMgr implements IP2pMgr {
 	// this.nodeMgr.clearTempNodes();
 	// }
 
-	int getTempNodesCount() {
+	public int getTempNodesCount() {
 		return nodeMgr.tempNodesSize();
 	}
 
