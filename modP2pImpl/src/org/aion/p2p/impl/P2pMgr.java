@@ -648,20 +648,18 @@ public final class P2pMgr implements IP2pMgr {
         return this.selfNetId;
     }
 
-    public Map<Integer, Integer> getErrCnt() {
-        return errCnt;
-    }
-
     @Override
     public void errCheck(int nodeIdHashcode, String _displayId) {
-        Integer cnt = errCnt.get(nodeIdHashcode);
-        errCnt.put(nodeIdHashcode, cnt == null ? 1 : ++cnt);
 
-        if (cnt.intValue() > 2) {
+        int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
+
+        if (cnt > 2) {
             dropActive(nodeIdHashcode);
             errCnt.put(nodeIdHashcode, 0);
 
-            System.out.println("<drop node: " + _displayId == null ? nodeIdHashcode : _displayId + ">");
+            System.out.println("<drop node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+        } else {
+            errCnt.put(nodeIdHashcode, cnt);
         }
     }
 
