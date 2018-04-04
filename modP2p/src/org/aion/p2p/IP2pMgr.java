@@ -77,4 +77,6 @@ public interface IP2pMgr {
     List<Short> versions();
 
     int chainId();
+
+    void errCheck(int nodeIdHashcode, String _displayId);
 }
