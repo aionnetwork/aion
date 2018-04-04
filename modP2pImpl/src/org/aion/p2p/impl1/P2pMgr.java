@@ -316,17 +316,9 @@ public final class P2pMgr implements IP2pMgr {
 					break;
 				case INBOUND:
 					node = nodeMgr.getInboundNode(mo.nid);
-					/// inbound maybe move to active already.
-					if (node == null)
-						node = nodeMgr.getActiveNode(mo.nid);
-
 					break;
 				case OUTBOUND:
 					node = nodeMgr.getOutboundNode(mo.nid);
-					/// outbound maybe move to active already.
-					if (node == null)
-						node = nodeMgr.getActiveNode(mo.nid);
-
 					break;
 				}
 
@@ -661,7 +653,7 @@ public final class P2pMgr implements IP2pMgr {
 			node.setChannel(channel);
 			nodeMgr.inboundNodeAdd(node);
 
-			allNid.put(node.getIdHash(), node);
+			allNid.put(node.getChannel().hashCode(), node);
 
 		} catch (IOException e) {
 			if (showLog)
@@ -862,7 +854,7 @@ public final class P2pMgr implements IP2pMgr {
 					// workers.submit(new TaskWrite(workers, showLog,
 					// node.getIdShort(), node.getChannel(),
 					// cachedResHandshake1, _buffer, this));
-					sendMsgQue.add(new MsgOut(node.getIdHash(), cachedResHandshake1, Dest.INBOUND));
+					sendMsgQue.add(new MsgOut(node.getChannel().hashCode(), cachedResHandshake1, Dest.INBOUND));
 				}
 				// handshake 0
 				else {
@@ -870,7 +862,7 @@ public final class P2pMgr implements IP2pMgr {
 					// node.getIdShort(), node.getChannel(),
 					// cachedResHandshake, _buffer, this));
 
-					sendMsgQue.add(new MsgOut(node.getIdHash(), cachedResHandshake, Dest.INBOUND));
+					sendMsgQue.add(new MsgOut(node.getChannel().hashCode(), cachedResHandshake, Dest.INBOUND));
 				}
 				nodeMgr.moveInboundToActive(_channelHash, this);
 			}
