@@ -1135,9 +1135,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         // Template not present in map; add it before returning
         if(!isContained) {
-
             try{
                 templateMapLock.writeLock().lock();
+
+                // Deep copy best block to avoid modifying internal best blocks
+                bestBlock = new AionBlock(bestBlock);
 
                 if (!templateMap.keySet().isEmpty()) {
                     if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
