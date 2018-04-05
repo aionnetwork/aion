@@ -1156,7 +1156,7 @@ public class ApiWeb3Aion extends ApiAion {
         LinkedList<byte[]> hashQueue; // more precisely a dequeue
         Map<byte[], JSONObject> blkList;
         Map<byte[], AionBlock> blkObjList;
-        Map<byte[], JSONArray> txnList;
+        Map<byte[], List<AionTransaction>> txnList;
 
         private JSONObject response;
 
@@ -1183,7 +1183,7 @@ public class ApiWeb3Aion extends ApiAion {
         private JSONObject getJson(AionBlock _b) {
             Map.Entry<JSONObject, JSONArray> response;
             BigInteger totalDiff = ac.getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
-            return (JSONObject) Blk.AionBlockToJson(_b, totalDiff, true);
+            return Blk.AionBlockOnlyToJson(_b, totalDiff);
         }
 
         private JSONObject buildResponse() {
@@ -1191,17 +1191,14 @@ public class ApiWeb3Aion extends ApiAion {
             JSONArray txns = new JSONArray();
 
             // return qSize number of blocks and transactions as json
-            ListIterator li = hashQueue.listIterator(hashQueue.size());
-            while(li.hasPrevious()) {
-                byte[] hash = (byte[]) li.previous();
+            ListIterator li = hashQueue.listIterator(0);
+            while(li.hasNext()) {
+                byte[] hash = (byte[]) li.next();
                 blks.put(blkList.get(hash));
-                JSONArray t = txnList.get(hash);
-                if(txns.length() < qSize) {
-                    for (int i = 0; i < t.length(); i++) {
-                        if (txns.length() < qSize) {
-                            txns.put(t.getJSONObject(i));
-                        }
-                    }
+                List<AionTransaction> t = txnList.get(hash);
+
+                for (int i = 0; (i < t.size() && txns.length() <= qSize); i++) {
+                    txns.put(Tx.AionTransactionToJSON(t.get(i), blkObjList.get(hash), i));
                 }
             }
 
@@ -1214,8 +1211,8 @@ public class ApiWeb3Aion extends ApiAion {
             }
 
             JSONObject o = new JSONObject();
-            o.put("blks", blks);
-            o.put("txns", txns);
+            o.put("blocks", blks);
+            o.put("transactions", txns);
             o.put("metrics", metrics);
             return o;
         }
@@ -1323,7 +1320,7 @@ public class ApiWeb3Aion extends ApiAion {
                 byte[] hash = element.getKey();
                 AionBlock blkObj = element.getValue().getKey();
                 JSONObject blkJson = element.getValue().getValue();
-                JSONArray txnJson = (JSONArray) blkJson.remove("transactions");
+                List<AionTransaction> txnJson = blkObj.getTransactionsList();
 
                 hashQueue.push(hash);
                 blkList.put(hash, blkJson);

@@ -39,7 +39,7 @@ import org.json.JSONObject;
  */
 public class Tx {
 
-    public static Object InfoToJSON(AionTxInfo info, AionBlock b)
+    public static JSONObject InfoToJSON(AionTxInfo info, AionBlock b)
     {
         if (info == null) return null;
 
@@ -51,7 +51,7 @@ public class Tx {
         return (AionTransactionToJSON(tx, b, info.getIndex()));
     }
 
-    public static Object AionTransactionToJSON(AionTransaction tx, AionBlock b, int index) {
+    public static JSONObject AionTransactionToJSON(AionTransaction tx, AionBlock b, int index) {
         if (tx == null) return null;
 
         JSONObject json = new JSONObject();

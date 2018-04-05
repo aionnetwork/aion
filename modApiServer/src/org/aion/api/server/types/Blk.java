@@ -99,7 +99,7 @@ public class Blk {
     }
 
     @SuppressWarnings("Duplicates")
-    public static Object AionBlockOnlyToJson(AionBlock block, BigInteger totalDifficulty) {
+    public static JSONObject AionBlockOnlyToJson(AionBlock block, BigInteger totalDifficulty) {
         if (block == null) return null;
 
         JSONObject obj = new JSONObject();
