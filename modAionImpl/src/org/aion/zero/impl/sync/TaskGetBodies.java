@@ -31,6 +31,8 @@ package org.aion.zero.impl.sync;
 
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
+import org.aion.zero.impl.sync.state.SyncPeerSet;
+import org.aion.zero.impl.sync.state.SyncPeerState;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
@@ -60,6 +62,8 @@ final class TaskGetBodies implements Runnable {
 
     private final Logger log;
 
+    private final SyncPeerSet peerSet;
+
     /**
      *
      * @param _p2p IP2pMgr
@@ -72,12 +76,15 @@ final class TaskGetBodies implements Runnable {
             final AtomicBoolean _run,
             final BlockingQueue<HeadersWrapper> _headersImported,
             final ConcurrentHashMap<Integer, HeadersWrapper> _headersSent,
-            final Logger log){
+            final Logger log,
+            final SyncPeerSet peerSet){
         this.p2p = _p2p;
         this.run = _run;
         this.headersImported = _headersImported;
         this.headersSent = _headersSent;
         this.log = log;
+
+        this.peerSet = peerSet;
     }
 
     @Override
@@ -98,6 +105,23 @@ final class TaskGetBodies implements Runnable {
 
             HeadersWrapper hwPrevious = headersSent.get(idHash);
             if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
+
+                synchronized (this.peerSet) {
+                    SyncPeerState peer = this.peerSet.getSyncPeer(idHash);
+
+                    if (peer == null) {
+                        log.warn("tried to send block requests to unknown peer {}", idHash);
+                        return;
+                    }
+
+                    if (!peer.canSendBodies()) {
+                        return;
+                    }
+
+                    // otherwise update the peer state and send
+                    peer.updateBodiesSent(headers.get(0).getNumber());
+                }
+
                 this.headersSent.put(idHash, hw);
 
                 if (log.isDebugEnabled()) {

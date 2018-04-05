@@ -90,7 +90,7 @@ public final class ResStatusHandler extends Handler {
             if(remoteTdBytes != null && remoteBestBlockHash != null){
                 BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
                 node.updateStatus(remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
-                syncMgr.updateNetworkStatus(_displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                syncMgr.updateNetworkStatus(_nodeIdHashcode, _displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
             }
         }
     }

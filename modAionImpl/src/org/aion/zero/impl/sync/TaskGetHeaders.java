@@ -32,6 +32,8 @@ package org.aion.zero.impl.sync;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
+import org.aion.zero.impl.sync.state.SyncPeerSet;
+import org.aion.zero.impl.sync.state.SyncPeerState;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
@@ -43,6 +45,8 @@ import java.util.stream.Collectors;
  */
 final class TaskGetHeaders implements Runnable {
 
+    private static final int NUM_SEND_REQ = 2;
+
     private final IP2pMgr p2p;
 
     private long fromBlock;
@@ -53,40 +57,49 @@ final class TaskGetHeaders implements Runnable {
 
     private final Logger log;
 
-    TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log){
+    private final SyncPeerSet peerSet;
+
+    private final Random random = new Random();
+
+    TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log, SyncPeerSet peerSet){
         this.p2p = _p2p;
         this.fromBlock = _fromBlock;
         this.syncMax = _syncMax;
         this.selfTd = _selfTd;
         this.log = log;
+        this.peerSet = peerSet;
     }
 
     @Override
     public void run() {
+        List<SyncPeerState> sendNodes = new ArrayList<>();
+        synchronized (this.peerSet) {
+            List<SyncPeerState> allPeers = this.peerSet.getAbleToSendHeaderPeers(this.selfTd);
 
-        Set<Integer> ids = new HashSet<>();
-        Collection<INode> preFilter = this.p2p.getActiveNodes().values();
+            for (int i = 0; i < NUM_SEND_REQ; i++) {
+                if (allPeers.isEmpty())
+                    break;
+                SyncPeerState chosenPeer = allPeers.get(this.random.nextInt(allPeers.size()));
+                allPeers.remove(chosenPeer);
+                sendNodes.add(chosenPeer);
+            }
 
-        List<INode> filtered = preFilter.stream().filter(
-                (n) -> n.getTotalDifficulty() != null &&
-                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
-        ).collect(Collectors.toList());
-
-        if (filtered.size() > 0) {
-            Random r = new Random(System.currentTimeMillis());
-            for (int i = 0; i < 2; i++) {
-                INode node = filtered.get(r.nextInt(filtered.size()));
-                if (!ids.contains(node.getIdHash())) {
-                    ids.add(node.getIdHash());
-                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
-
-                    if (log.isDebugEnabled()) {
-                        log.debug("<get-headers from-num={} size={} node={}>", fromBlock, syncMax, node.getIdShort());
-                    }
-
-                    this.p2p.send(node.getIdHash(), rbh);
-                }
+            for (SyncPeerState peer : sendNodes) {
+                peer.updateHeadersSent(this.fromBlock);
             }
         }
+
+        if (!sendNodes.isEmpty()) {
+            for (SyncPeerState peer : sendNodes) {
+                ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
+
+                if (log.isDebugEnabled()) {
+                    log.debug("<get-headers from-num={} size={} node={}>",
+                            fromBlock, syncMax, peer.getShortId());
+                }
+                this.p2p.send(peer.getIdHashCode(), rbh);
+            }
+        }
+        // end
     }
 }
