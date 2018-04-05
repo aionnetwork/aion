@@ -37,5 +37,5 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
-env EVMJIT="-cache=1" ./rt/bin/java -Xms2g \
+env EVMJIT="-cache=1" ./rt/bin/java -Xms2g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./heapdump.hprof \
         -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
