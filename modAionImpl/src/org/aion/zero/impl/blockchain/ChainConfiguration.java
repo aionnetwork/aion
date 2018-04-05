@@ -117,7 +117,8 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                         new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
                         new EnergyConsumedRule(),
                         new AionPOWRule(),
-                        new EquihashSolutionRule(this.getEquihashValidator())
+                        new EquihashSolutionRule(this.getEquihashValidator()),
+                        new AionHeaderVersionRule()
                 ));
     }
 

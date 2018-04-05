@@ -45,9 +45,7 @@ public class OptimizedEquiValidator {
     private int collisionBitLength;
     private int collisionByteLength;
     private int solutionWidth;
-    //private HashSet<Integer> indexSet;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
-    int iter = 0;
 
     private Blake2b.Param initState;
 
@@ -166,7 +164,6 @@ public class OptimizedEquiValidator {
      */
     private void genHash(byte[] blockHeader, byte[] nonce, Blake2b blake, int[] indices, int index, byte[] hash) {
 
-        iter++;
         // Clear blake and re-use
         blake.reset();
 
