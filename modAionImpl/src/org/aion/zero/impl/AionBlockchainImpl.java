@@ -476,10 +476,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private AtomicLong bestBlockNumber = new AtomicLong(0L);
 
     /**
-     * Heuristic for tryToConnect with large block.
+     * Heuristic for skipping the call to tryToConnect with very large or very small block number.
      */
     public boolean skipTryToConnect(long blockNumber) {
-        return blockNumber - 1 > bestBlockNumber.get();
+        long current = bestBlockNumber.get();
+        return blockNumber > current + 32 || blockNumber < current - 32;
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
