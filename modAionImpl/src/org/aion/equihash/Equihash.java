@@ -157,8 +157,6 @@ public class Equihash {
 
             // Found a valid solution
             if (isValidBlock(validationBytes, target)) {
-                System.out.println("Found solution with: " + toHexString(validationBytes) + " Size: " + validationBytes.length);
-                System.out.println("Target: " + toHexString(target.toByteArray()));
                 return new Solution(block, nonce, minimal, timestamp);
             }
         }
@@ -171,7 +169,7 @@ public class Equihash {
      *
      * @param target
      *            Target under which hash must fall below
-     * @return True is the solution meets target conitions; false otherwise.
+     * @return True is the solution meets target conditions; false otherwise.
      */
     private boolean isValidBlock(byte[] validationBytes, BigInteger target) {
         boolean isValid = false;

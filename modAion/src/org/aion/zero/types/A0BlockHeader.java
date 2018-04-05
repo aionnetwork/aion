@@ -26,6 +26,7 @@
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.longToBytes;
+import static org.aion.base.util.ByteUtil.merge;
 import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
@@ -57,9 +58,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
             RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
 
-    //TODO: UPdate this
+    //TODO: Update this
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
+        obj.putOpt("version", toHexString(this.parentHash));
+        obj.putOpt("number", toHexString(longToBytes(this.number)));
         obj.putOpt("parentHash", toHexString(this.parentHash));
         obj.putOpt("coinBase", toHexString(this.coinbase.toBytes()));
         obj.putOpt("stateRoot", toHexString(this.stateRoot));
@@ -67,11 +70,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         obj.putOpt("receiptTrieRoot", toHexString(this.receiptTrieRoot));
         obj.putOpt("logsBloom", toHexString(this.logsBloom));
         obj.putOpt("difficulty", toHexString(this.difficulty));
-        obj.putOpt("timestamp", toHexString(longToBytes(this.timestamp)));
-        obj.putOpt("number", toHexString(longToBytes(this.number)));
         obj.putOpt("extraData", toHexString(this.extraData));
         obj.putOpt("energyConsumed", toHexString(longToBytes(this.energyConsumed)));
         obj.putOpt("energyLimit", toHexString(longToBytes(this.energyLimit)));
+        obj.putOpt("timestamp", toHexString(longToBytes(this.timestamp)));
 
         return obj;
     }
@@ -84,7 +86,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         // Version
         byte[] versionBytes = rlpHeader.get(RPL_BH_VERSION).getRLPData();
-        this.version = versionBytes.length == 1 ? versionBytes[0] : 0;
+        this.version = versionBytes.length == 1 ? versionBytes[0] : 1;
 
         // Number
         byte[] nrBytes = rlpHeader.get(RPL_BH_NUMBER).getRLPData();
@@ -293,15 +295,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         byte[] solution = RLP.encodeElement(this.solution);
 
-        /*
-        RPL_BH_VERSION = 0, RPL_BH_NUMBER = 1, RPL_BH_PARENTHASH = 2,
-            RPL_BH_COINBASE = 3, RPL_BH_STATEROOT = 4, RPL_BH_TXTRIE = 5,
-            RPL_BH_RECEIPTTRIE = 6, RPL_BH_LOGSBLOOM = 7, RPL_BH_DIFFICULTY = 8,
-            RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
-            RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
-         */
-
-
         if (withNonce) {
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(RLPversion, number, parentHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty,
@@ -380,24 +373,14 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     /**
      * Return unencoded bytes of the header
-     *
-     *            If true returns an a byte array excluding the mixHash, nonce
-     *            and solutions, else includes all 3.
-     * @return
+     * @return byte array containing raw header bytes
      */
     public byte[] getHeaderBytes() {
-        return null;
-//        if (mine) {
-//            return merge(this.parentHash, this.coinbase.toBytes(), this.stateRoot, this.txTrieRoot,
-//                    this.receiptTrieRoot, this.logsBloom, this.difficulty, longToBytes(this.timestamp),
-//                    longToBytes(this.number), this.extraData, longToBytes(this.energyConsumed),
-//                    longToBytes(this.energyLimit));
-//        } else {
-//            return merge(this.parentHash, this.coinbase.toBytes(), this.stateRoot, this.txTrieRoot,
-//                    this.receiptTrieRoot, this.logsBloom, this.difficulty, longToBytes(this.timestamp),
-//                    longToBytes(this.number), this.extraData, this.nonce, this.solution,
-//                    longToBytes(this.energyConsumed), longToBytes(this.energyLimit));
-//        }
+
+        return merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+                                 this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                                 this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                                 longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
     }
 
     public static A0BlockHeader fromRLP(byte[] rawData, boolean isUnsafe) throws Exception {
@@ -538,7 +521,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withVersion(byte version) {
             if(isFromUnsafeSource) {
                 Objects.requireNonNull(version);
-                if(version < 0) {
+                if(version < 1) {
                     throw new IllegalArgumentException("Version must be greater than 0");
                 }
             }
@@ -754,8 +737,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public A0BlockHeader build() {
 
+            this.version = this.version == 0 ? 1 : this.version;
             this.parentHash = this.parentHash == null ? HashUtil.EMPTY_DATA_HASH : this.parentHash;
-            this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase; // the
+            this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase;
             this.stateRoot = this.stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.stateRoot;
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot = this.receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.receiptTrieRoot;
@@ -764,11 +748,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             this.extraData = this.extraData == null ? EMPTY_BYTE_ARRAY : this.extraData;
             this.nonce = this.nonce == null ? EMPTY_BYTE_ARRAY : this.nonce;
             this.solution = this.solution == null ? EMPTY_SOLUTION : this.solution;
-
-            /*
-            byte version, long number, byte[] parentHash, Address coinbase, byte[] logsBloom, byte[] difficulty,
-                                    byte[] extraData, long energyConsumed, long energyLimit, long timestamp, byte[] nonce, byte[] solution
-             */
 
             A0BlockHeader header = new A0BlockHeader(this.version, this.number, this.parentHash, this.coinbase, this.logsBloom,
                     this.difficulty, this.extraData, this.energyConsumed,
