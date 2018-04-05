@@ -43,6 +43,8 @@ import com.google.common.io.Files;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
+import org.aion.db.impl.rocksdb.RocksDBConstants;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.db.utils.FileUtils;
 import org.aion.db.utils.repeat.Repeat;
 import org.aion.db.utils.repeat.RepeatRule;
@@ -80,7 +82,9 @@ public class DriverBenchmarkTest {
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 { "H2MVMap", new H2MVMap("H2MVMapTest", testDir.getAbsolutePath(), false, false) },
-                { "LevelDB", new LevelDB("LevelDBTest", testDir.getAbsolutePath(), false, false) }, });
+                { "LevelDB", new LevelDB("LevelDBTest", testDir.getAbsolutePath(), false, false) },
+                { "RocksDb", new RocksDBWrapper("RocksDb", testDir.getAbsolutePath(), false,false , RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE )}
+        });
     }
 
     public IByteArrayKeyValueDatabase db;

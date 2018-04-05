@@ -40,6 +40,8 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
 
     void shutDown();
 
+    int getPendingTxSize();
+
     void updateBest();
 
     void DumpPool();

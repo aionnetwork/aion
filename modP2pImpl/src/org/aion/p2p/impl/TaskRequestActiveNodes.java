@@ -26,6 +26,7 @@
 package org.aion.p2p.impl;
 
 import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.NodeRandPolicy;
 import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
 
@@ -36,16 +37,16 @@ import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
  */
 public final class TaskRequestActiveNodes implements Runnable {
 
-    private P2pMgr mgr;
+	private IP2pMgr mgr;
 
-    TaskRequestActiveNodes(final P2pMgr _mgr) {
-        this.mgr = _mgr;
-    }
+	public TaskRequestActiveNodes(final IP2pMgr _mgr) {
+		this.mgr = _mgr;
+	}
 
-    @Override
-    public void run() {
-        INode node = mgr.getRandom();
-        if (node != null)
-            this.mgr.send(node.getIdHash(), new ReqActiveNodes());
-    }
+	@Override
+	public void run() {
+		INode node = mgr.getRandom();
+		if (node != null)
+			this.mgr.send(node.getIdHash(), new ReqActiveNodes());
+	}
 }
