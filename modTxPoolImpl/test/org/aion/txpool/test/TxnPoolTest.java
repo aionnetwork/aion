@@ -44,8 +44,6 @@ import org.aion.zero.types.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
-import org.junit.Ignore;
-
 
 import java.math.BigInteger;
 import java.util.*;
@@ -805,7 +803,7 @@ public class TxnPoolTest {
     @Test
     /* 100K new transactions in pool around 650ms (cold-call)
 
-       1K new transactions insert to the pool later around 70ms to snap (including sort)
+       1K new transactions insert to the pool later around 250ms to snap (including sort)
      */ public void benchmarkSnapshot2() {
         Properties config = new Properties();
         config.put("txn-timeout", "100");
