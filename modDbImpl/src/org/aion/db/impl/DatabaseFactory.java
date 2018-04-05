@@ -31,6 +31,7 @@ package org.aion.db.impl;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
+import org.aion.db.generic.SpecialLockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
@@ -109,7 +110,11 @@ public abstract class DatabaseFactory {
         if (enableHeapCache) {
             return new LockedDatabase(connectWithCache(info));
         } else {
-            return new LockedDatabase(connectBasic(info));
+            if (DBVendor.fromString(info.getProperty(PROP_DB_TYPE)) == DBVendor.LEVELDB) {
+                return new SpecialLockedDatabase(connectBasic(info));
+            } else {
+                return new LockedDatabase(connectBasic(info));
+            }
         }
     }
 
