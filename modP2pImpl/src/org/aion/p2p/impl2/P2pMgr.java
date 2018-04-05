@@ -26,16 +26,16 @@
 package org.aion.p2p.impl2;
 
 import org.aion.p2p.*;
-import org.aion.p2p.impl2.selector.MainIOLoop;
-import org.aion.p2p.impl2.selector.Task;
 import org.aion.p2p.impl.TaskRequestActiveNodes;
 import org.aion.p2p.impl.TaskUPnPManager;
-import org.aion.p2p.impl2.TaskWrite;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.ChannelBuffer;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.*;
+import org.aion.p2p.impl2.selector.MainIOLoop;
+import org.aion.p2p.impl2.selector.Task;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -104,6 +104,9 @@ public final class P2pMgr implements IP2pMgr {
 	private final HandleChannel handleRead = new HandleChannel();
 
 	private final HandleInboundEvent handleInbound = new HandleInboundEvent();
+
+	private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
+
 
 	/**
 	 * @param _nodeId
@@ -692,6 +695,20 @@ public final class P2pMgr implements IP2pMgr {
 	@Override
 	public int chainId() {
 		return this.selfNetId;
+	}
+
+	@Override
+	public void errCheck(int nodeIdHashcode, String _displayId) {
+		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
+
+		if (cnt > 2) {
+			dropActive(nodeIdHashcode);
+			errCnt.put(nodeIdHashcode, 0);
+
+			System.out.println("<drop node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+		} else {
+			errCnt.put(nodeIdHashcode, cnt);
+		}
 	}
 
 	private final class HandleInboundEvent implements Task {

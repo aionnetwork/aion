@@ -29,8 +29,6 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 
-import org.aion.p2p.IP2pMgr;
-
 /**
  *
  * @author chris
@@ -84,4 +82,5 @@ public interface IP2pMgr {
 
 	boolean isShowLog();
 
+	void errCheck(int nodeIdHashcode, String _displayId);
 }

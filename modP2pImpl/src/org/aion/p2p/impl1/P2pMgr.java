@@ -25,17 +25,20 @@
 
 package org.aion.p2p.impl1;
 
-import java.io.File;
+import org.aion.p2p.*;
+import org.aion.p2p.impl.TaskRequestActiveNodes;
+import org.aion.p2p.impl.TaskUPnPManager;
+import org.aion.p2p.impl.comm.Act;
+import org.aion.p2p.impl.comm.Node;
+import org.aion.p2p.impl.comm.NodeMgr;
+import org.aion.p2p.impl.zero.msg.*;
+import org.apache.commons.collections4.map.LRUMap;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -45,14 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.aion.p2p.*;
-import org.aion.p2p.impl.TaskRequestActiveNodes;
-import org.aion.p2p.impl.TaskUPnPManager;
-import org.aion.p2p.impl.comm.Act;
-import org.aion.p2p.impl.comm.Node;
-import org.aion.p2p.impl.comm.NodeMgr;
 // import org.aion.p2p.impl.one.msg.Hello;
-import org.aion.p2p.impl.zero.msg.*;
 
 /**
  * @author Chris p2p://{uuid}@{ip}:{port} TODO: 1) simplify id bytest to int, ip
@@ -103,6 +99,11 @@ public final class P2pMgr implements IP2pMgr {
 	private ExecutorService workers;
 
 	private Map<Integer, Node> allNid = new HashMap<>();
+
+	private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
+
+	private int errTolerance;
+
 
 	enum Dest {
 		INBOUND, OUTBOUND, ACTIVE;
@@ -551,7 +552,7 @@ public final class P2pMgr implements IP2pMgr {
 	 */
 	public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[] _bootNodes,
 			boolean _upnpEnable, int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog,
-			boolean _bootlistSyncOnly, boolean _printReport, String _reportFolder) {
+			boolean _bootlistSyncOnly, boolean _printReport, String _reportFolder, int _errorTolerance) {
 		this.selfNetId = _netId;
 		this.selfRevision = _revision;
 		this.selfNodeId = _nodeId.getBytes();
@@ -567,6 +568,7 @@ public final class P2pMgr implements IP2pMgr {
 		this.syncSeedsOnly = _bootlistSyncOnly;
 		this.printReport = _printReport;
 		this.reportFolder = _reportFolder;
+		this.errTolerance = _errorTolerance;
 
 		for (String _bootNode : _bootNodes) {
 			Node node = Node.parseP2p(_bootNode);
@@ -1190,5 +1192,19 @@ public final class P2pMgr implements IP2pMgr {
 
 	public boolean isShowLog() {
 		return showLog;
-	};
+	}
+
+	@Override
+	public void errCheck(int nodeIdHashcode, String _displayId) {
+		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
+
+		if (cnt > this.errTolerance) {
+			dropActive(nodeIdHashcode);
+			errCnt.put(nodeIdHashcode, 0);
+
+			System.out.println("<drop node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+		} else {
+			errCnt.put(nodeIdHashcode, cnt);
+		}
+	}
 }

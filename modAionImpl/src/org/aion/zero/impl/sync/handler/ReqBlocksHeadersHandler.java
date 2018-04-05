@@ -81,14 +81,17 @@ public final class ReqBlocksHeadersHandler extends Handler {
         if (reqHeaders != null) {
             long fromBlock = reqHeaders.getFromBlock();
             int take = reqHeaders.getTake();
-            this.log.debug("<req-headers from-number={} size={} node={}>", fromBlock, take,
-                    _displayId);
+            if (log.isDebugEnabled()) {
+                this.log.debug("<req-headers from-number={} size={} node={}>", fromBlock, take, _displayId);
+            }
             List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
                     new BlockIdentifier(null, fromBlock), 0, Math.min(take, max), false);
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, rbhs);
-        } else
-            this.log.error("<req-headers decode-error msg-bytes={} node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length, _nodeIdHashcode);
+        } else {
+            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+            this.log.error("<req-headers decode-error msg-bytes={} node={}>", _msgBytes == null ? 0 : _msgBytes.length,
+                    _nodeIdHashcode);
+        }
     }
 }
