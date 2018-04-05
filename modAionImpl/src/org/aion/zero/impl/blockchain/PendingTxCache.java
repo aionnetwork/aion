@@ -215,8 +215,16 @@ public class PendingTxCache {
         return false;
     }
 
-    Set<Address> getCacheTxAccount() {
-        return new HashSet<>(this.cacheTxMap.keySet());
+    Set<Address> getCacheTxAccount()
+    {
+        Set<Address> acc = new HashSet<>();
+        for (Map.Entry<Address, TreeMap<BigInteger,AionTransaction>> e : this.cacheTxMap.entrySet()) {
+            if (!e.getValue().isEmpty()) {
+                acc.add(e.getKey());
+            }
+        }
+
+        return acc;
     }
 
     Map<BigInteger,AionTransaction> geCacheTx(Address from) {
