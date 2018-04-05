@@ -37,14 +37,21 @@
 			<port>30303</port>
 			<discover>false</discover>
 			<show-status>false</show-status>
+			<show-log>false</show-log>
 			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
 	<sync>
-		<blocks-backward-max>16</blocks-backward-max>
-		<blocks-import-max>32</blocks-import-max>
-		<blocks-queue-max>48</blocks-queue-max>
-		<show-status>true</show-status>
+		<!-- Min number of blocks to go backward -->
+		<blocks-backward-min>8</blocks-backward-min>
+		<!-- Max number of blocks to go backward -->
+		<blocks-backward-max>64</blocks-backward-max>
+		<!-- Max number of blocks to request -->
+		<blocks-request-max>96</blocks-request-max>
+		<!-- Downloaded blocks queue limit. This affects memory footprint -->
+		<blocks-queue-max>32</blocks-queue-max>
+		<!-- Display syncing status -->
+		<show-status>false</show-status>
 	</sync>
 	<consensus>
 		<mining>true</mining>

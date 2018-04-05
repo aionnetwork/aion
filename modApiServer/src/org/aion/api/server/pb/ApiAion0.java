@@ -909,7 +909,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             try {
                 Message.rsp_syncInfo rsp = Message.rsp_syncInfo.newBuilder().setChainBestBlock(sync.chainBestBlkNumber)
                         .setNetworkBestBlock(sync.networkBestBlkNumber).setSyncing(!sync.done)
-                        .setMaxImportBlocks(sync.blksImportMax).build();
+                        .setMaxImportBlocks(sync.blocksRequestMax).build();
 
                 byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
                 return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
