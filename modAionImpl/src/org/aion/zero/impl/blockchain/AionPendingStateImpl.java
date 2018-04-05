@@ -375,8 +375,13 @@ public class AionPendingStateImpl
                     Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
 
                     int limit = 0;
-                    if (!pendingTxCache.getCacheTxAccount().isEmpty()) {
-                        limit = pendingTxCache.getTxRtnLimit() / pendingTxCache.getCacheTxAccount().size();
+                    Set<Address> addr = pendingTxCache.getCacheTxAccount();
+                    if (!addr.isEmpty()) {
+                        limit = pendingTxCache.getTxRtnLimit() / addr.size();
+
+                        if (limit == 0) {
+                            limit = 1;
+                        }
                     }
 
                     if (LOG.isTraceEnabled()) {
