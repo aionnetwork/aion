@@ -478,7 +478,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                     }
 
                     if (this.feeView.get(ps.fee) == null) {
-                        Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> set = new TreeMap<>();
+                        Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> set = new LinkedHashMap<>();
                         set.put(txl.getTxList().get(0), txl);
 
                         if (LOG.isTraceEnabled()) {
