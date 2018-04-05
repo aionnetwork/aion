@@ -35,7 +35,9 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -45,48 +47,63 @@ final class TaskGetHeaders implements Runnable {
 
     private final IP2pMgr p2p;
 
-    private long fromBlock;
-
-    private final int syncMax;
+    private final long selfNumber;
 
     private final BigInteger selfTd;
 
+    private final int backwardMin;
+
+    private final int backwardMax;
+
+    private final int requestMax;
+
     private final Logger log;
 
-    TaskGetHeaders(final IP2pMgr _p2p, long _fromBlock, int _syncMax, BigInteger _selfTd, Logger log){
-        this.p2p = _p2p;
-        this.fromBlock = _fromBlock;
-        this.syncMax = _syncMax;
-        this.selfTd = _selfTd;
+    private final Random random = new Random(System.currentTimeMillis());
+
+    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd,
+                   int backwardMin, int backwardMax, int requestMax, Logger log) {
+        this.p2p = p2p;
+        this.selfNumber = selfNumber;
+        this.selfTd = selfTd;
+        this.backwardMin = backwardMin;
+        this.backwardMax = backwardMax;
+        this.requestMax = requestMax;
         this.log = log;
     }
 
     @Override
     public void run() {
+        // get all active nodes
+        Collection<INode> nodes = this.p2p.getActiveNodes().values();
 
-        Set<Integer> ids = new HashSet<>();
-        Collection<INode> preFilter = this.p2p.getActiveNodes().values();
-
-        List<INode> filtered = preFilter.stream().filter(
+        // filter nodes by total difficulty
+        List<INode> nodesFiltered = nodes.stream().filter(
                 (n) -> n.getTotalDifficulty() != null &&
                         n.getTotalDifficulty().compareTo(this.selfTd) >= 0
         ).collect(Collectors.toList());
-
-        if (filtered.size() > 0) {
-            Random r = new Random(System.currentTimeMillis());
-            for (int i = 0; i < 2; i++) {
-                INode node = filtered.get(r.nextInt(filtered.size()));
-                if (!ids.contains(node.getIdHash())) {
-                    ids.add(node.getIdHash());
-                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(this.fromBlock, this.syncMax);
-
-                    if (log.isDebugEnabled()) {
-                        log.debug("<get-headers from-num={} size={} node={}>", fromBlock, syncMax, node.getIdShort());
-                    }
-
-                    this.p2p.send(node.getIdHash(), rbh);
-                }
-            }
+        if (nodesFiltered.isEmpty()) {
+            return;
         }
+
+        // pick a random node
+        INode node = nodesFiltered.get(random.nextInt(nodesFiltered.size()));
+        long nodeNumber = node.getBestBlockNumber();
+        long from = 0;
+        if (nodeNumber >= selfNumber + 128) {
+            from = Math.max(1, selfNumber - backwardMin);
+        } else if (nodeNumber >= selfNumber - 128) {
+            from = Math.max(1, selfNumber - backwardMax);
+        } else {
+            // no need to request from this node. His TD is probably corrupted.
+            return;
+        }
+
+        // send request
+        if (log.isDebugEnabled()) {
+            log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
+        }
+        ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
+        this.p2p.send(node.getIdHash(), rbh);
     }
 }

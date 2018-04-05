@@ -168,11 +168,11 @@ public final class CfgSync {
         return this.blocksBackwardMax;
     }
 
-    public int getBlocksRequestMaxMax() {
+    public int getBlocksRequestMax() {
         return this.blocksRequestMax;
     }
 
-    public int getBlocksResponseMaxMax() {
+    public int getBlocksResponseMax() {
         return this.blocksResponseMax;
     }
 

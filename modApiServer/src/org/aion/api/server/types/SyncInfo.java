@@ -34,6 +34,11 @@ public class SyncInfo {
 
     public long networkBestBlkNumber;
 
-    public int blksImportMax;
-    
+    public int blocksBackwardMin;
+
+    public int blocksBackwardMax;
+
+    public int blocksRequestMax;
+
+    public int blocksResponseMax;
 }
