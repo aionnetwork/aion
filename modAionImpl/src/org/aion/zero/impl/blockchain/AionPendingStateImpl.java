@@ -60,7 +60,6 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -331,7 +330,6 @@ public class AionPendingStateImpl
             if (cmp > 0) {
                 if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                     newLargeNonceTx.add(tx);
-                } else {
                     addToTxCache(tx);
 
                     if (LOG.isTraceEnabled()) {
@@ -343,7 +341,6 @@ public class AionPendingStateImpl
 
                     if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                         newLargeNonceTx.add(tx);
-                    } else {
                         addToTxCache(tx);
 
                         if (LOG.isTraceEnabled()) {
