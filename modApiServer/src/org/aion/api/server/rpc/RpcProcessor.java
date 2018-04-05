@@ -148,14 +148,14 @@ public class RpcProcessor {
     private JSONObject processObject(JSONObject body) {
         try {
             String method;
-            JSONArray params;
+            Object params;
             Object id = JSONObject.NULL;
 
             try {
                 // not checking for 'jsonrpc' key == 2.0. can pass in anything
                 method = body.getString("method");
                 id = body.get("id");
-                params = body.getJSONArray("params");
+                params = body.opt("params");
             } catch (Exception e) {
                 LOG.debug("<rpc-server - invalid rpc request [0]>", e);
                 return new RpcMsg(null, RpcError.INVALID_REQUEST).toJson();
