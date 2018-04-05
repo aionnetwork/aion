@@ -38,18 +38,25 @@ import java.io.Writer;
  */
 public final class CfgSync {
 
+    private int blocksBackwardMin;
     private int blocksBackwardMax;
-    private int blocksImportMax;
+
+    private int blocksRequestMax;
+    private int blocksResponseMax;
 
     private int blocksQueueMax;
 
     private boolean showStatus;
 
     public CfgSync() {
-        this.blocksBackwardMax = 16;
-        this.blocksImportMax = 32;
+        this.blocksBackwardMax = 8;
+        this.blocksBackwardMax = 64;
+
+        this.blocksRequestMax = 96;
+        this.blocksResponseMax = 96;
 
         this.blocksQueueMax = 48;
+
         this.showStatus = false;
     }
 
@@ -61,11 +68,17 @@ public final class CfgSync {
             case XMLStreamReader.START_ELEMENT:
                 String elementName = sr.getLocalName().toLowerCase();
                 switch (elementName) {
+                case "blocks-backward-min":
+                    this.blocksBackwardMin = Integer.parseInt(Cfg.readValue(sr));
+                    break;
                 case "blocks-backward-max":
                     this.blocksBackwardMax = Integer.parseInt(Cfg.readValue(sr));
                     break;
-                case "blocks-import-max":
-                    this.blocksImportMax = Integer.parseInt(Cfg.readValue(sr));
+                case "blocks-request-max":
+                    this.blocksRequestMax = Integer.parseInt(Cfg.readValue(sr));
+                    break;
+                case "blocks-response-max":
+                    this.blocksResponseMax = Integer.parseInt(Cfg.readValue(sr));
                     break;
                 case "blocks-queue-max":
                     this.blocksQueueMax = Integer.parseInt(Cfg.readValue(sr));
@@ -96,16 +109,28 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("sync");
 
+            // sub-element blocks-backward-min
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("blocks-backward-min");
+            xmlWriter.writeCharacters(this.getBlocksBackwardMin() + "");
+            xmlWriter.writeEndElement();
+
             // sub-element blocks-backward-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-backward-max");
             xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
             xmlWriter.writeEndElement();
 
-            // sub-element blocks-import-max
+            // sub-element blocks-request-max
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("blocks-import-max");
-            xmlWriter.writeCharacters(this.getBlocksImportMax() + "");
+            xmlWriter.writeStartElement("blocks-request-max");
+            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeEndElement();
+
+            // sub-element blocks-response-max
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("blocks-response-max");
+            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-queue-max
@@ -135,12 +160,20 @@ public final class CfgSync {
         }
     }
 
+    public int getBlocksBackwardMin() {
+        return this.blocksBackwardMin;
+    }
+
     public int getBlocksBackwardMax() {
         return this.blocksBackwardMax;
     }
 
-    public int getBlocksImportMax() {
-        return this.blocksImportMax;
+    public int getBlocksRequestMaxMax() {
+        return this.blocksRequestMax;
+    }
+
+    public int getBlocksResponseMaxMax() {
+        return this.blocksResponseMax;
     }
 
     public int getBlocksQueueMax() {
