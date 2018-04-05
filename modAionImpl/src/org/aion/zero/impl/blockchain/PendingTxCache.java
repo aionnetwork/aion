@@ -187,7 +187,7 @@ public class PendingTxCache {
             }
         }
 
-        Map<BigInteger, AionTransaction> timeMap = Collections.synchronizedMap(new TreeMap<>());
+        Map<BigInteger, AionTransaction> timeMap = new TreeMap<>();
         for (TreeMap<BigInteger,AionTransaction> e : cacheTxMap.values()) {
             if (!e.isEmpty()) {
                 BigInteger ts = e.firstEntry().getValue().getTimeStampBI();
