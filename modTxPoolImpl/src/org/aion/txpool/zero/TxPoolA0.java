@@ -431,7 +431,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 timeTxDep.put(ts, pair);
             }
 
-            for(Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : e.getValue().entrySet()) {
+            for(Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : timeTxDep.values()) {
                 // Check the small nonce tx must been picked before put the high nonce tx
                 ByteArrayWrapper dependTx = pair.getValue().getDependTx();
                 if (dependTx == null || snapshotSet.contains(dependTx)) {
