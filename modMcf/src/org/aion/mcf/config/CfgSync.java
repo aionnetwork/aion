@@ -49,7 +49,7 @@ public final class CfgSync {
     private boolean showStatus;
 
     public CfgSync() {
-        this.blocksBackwardMax = 8;
+        this.blocksBackwardMin = 8;
         this.blocksBackwardMax = 64;
 
         this.blocksRequestMax = 96;

@@ -48,9 +48,7 @@
 		<blocks-backward-max>64</blocks-backward-max>
 		<!-- Max number of blocks to request -->
 		<blocks-request-max>96</blocks-request-max>
-		<!-- Max number of blocks to respond -->
-		<blocks-response-max>96</blocks-response-max>
-		<!-- Downloaded blocks queue limit. This affects memory footage -->
+		<!-- Downloaded blocks queue limit. This affects memory footprint -->
 		<blocks-queue-max>32</blocks-queue-max>
 		<!-- Display syncing status -->
 		<show-status>false</show-status>
