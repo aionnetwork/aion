@@ -184,11 +184,23 @@ public class PendingTxCache {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("cacheTx.flush after addr[{}] size[{}], cache_size[{}]", addr.toString(), cacheTxMap.get(addr).size(), currentSize.get());
                 }
-
-                if (cacheTxMap.get(addr).get(bn) != null) {
-                    processableTx.add(cacheTxMap.get(addr).get(bn));
-                }
             }
+        }
+
+        Map<BigInteger, AionTransaction> timeMap = Collections.synchronizedMap(new TreeMap<>());
+        for (TreeMap<BigInteger,AionTransaction> e : cacheTxMap.values()) {
+            if (!e.isEmpty()) {
+                BigInteger ts = e.firstEntry().getValue().getTimeStampBI();
+                while (timeMap.get(ts) != null) {
+                    ts = ts.add(BigInteger.ONE);
+                }
+
+                timeMap.put(ts, e.firstEntry().getValue());
+            }
+        }
+
+        for(AionTransaction tx : timeMap.values()) {
+            processableTx.add(tx);
         }
 
         return processableTx;
