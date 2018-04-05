@@ -350,7 +350,6 @@ public class AionPendingStateImpl
                 if (cmp > 0) {
                     if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                         newLargeNonceTx.add(tx);
-                    } else {
                         addToTxCache(tx);
 
                         if (LOG.isTraceEnabled()) {
@@ -362,7 +361,6 @@ public class AionPendingStateImpl
 
                         if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                             newLargeNonceTx.add(tx);
-                        } else {
                             addToTxCache(tx);
 
                             if (LOG.isTraceEnabled()) {

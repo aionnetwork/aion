@@ -219,11 +219,11 @@ public final class P2pMgr implements IP2pMgr {
 								int remain = chanBuf.readBuf.remaining();
 								if (remain < 128 * 1024) {
 
-									if (showLog)
-										System.out.println(" NIO new buffer! , size = " + cnt + " originTotal_read:"
-												+ assertTotalCnt + " orig_remain:" + assertBufRemain
-												+ " __________ buf remain:" + chanBuf.readBuf.remaining() + " limit:"
-												+ chanBuf.readBuf.limit());
+//									if (showLog)
+//										System.out.println(" NIO new buffer! , size = " + cnt + " originTotal_read:"
+//												+ assertTotalCnt + " orig_remain:" + assertBufRemain
+//												+ " __________ buf remain:" + chanBuf.readBuf.remaining() + " limit:"
+//												+ chanBuf.readBuf.limit());
 
 									// if still not read buffer , then copy
 									// it
@@ -1047,9 +1047,11 @@ public final class P2pMgr implements IP2pMgr {
 			thrdIn.setPriority(Thread.NORM_PRIORITY);
 			thrdIn.start();
 
-			Thread thrdOut = new Thread(new TaskSend(), "p2p-out");
-			thrdOut.setPriority(Thread.NORM_PRIORITY);
-			thrdOut.start();
+			for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
+                Thread thrdOut = new Thread(new TaskSend(), "p2p-out-" + i);
+                thrdOut.setPriority(Thread.NORM_PRIORITY);
+                thrdOut.start();
+            }
 
 			if (upnpEnable)
 				scheduledWorkers.scheduleWithFixedDelay(new TaskUPnPManager(selfPort), 1, PERIOD_UPNP_PORT_MAPPING,
