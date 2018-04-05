@@ -23,6 +23,7 @@
  ******************************************************************************/
 package org.aion.crypto.ed25519;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
 
 import java.util.Arrays;
@@ -74,5 +75,11 @@ public class Ed25519Signature implements ISignature {
     @Override
     public byte[] getPubkey(byte[] msg) {
         return pk;
+    }
+
+    @Override
+    public String toString() {
+        return "[pk: " + (this.pk == null ? "null" : ByteUtil.toHexString(this.pk)) +
+                 " signature: " +  (this.sig == null ? "null" : ByteUtil.toHexString(this.sig)) + "]";
     }
 }
