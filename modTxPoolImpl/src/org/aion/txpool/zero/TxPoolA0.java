@@ -24,20 +24,6 @@
 
 package org.aion.txpool.zero;
 
-import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -47,6 +33,11 @@ import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
 import org.aion.txpool.common.TxDependList;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+
+import java.math.BigInteger;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
@@ -414,13 +405,13 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     public synchronized List<TX> snapshot() {
-        List<TX> rtn = new ArrayList<>();
 
         sortTxn();
         removeTimeoutTxn();
 
         int cnt_txSz = 0;
         long cnt_nrg = 0;
+        List<TX> rtn = new ArrayList<>();
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> nonPickedTx = new HashMap<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
@@ -430,8 +421,17 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 LOG.trace("snapshot  fee[{}]", e.getKey().toString());
             }
 
-            Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> tpl = e.getValue();
-            for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : tpl.entrySet()) {
+            SortedMap<BigInteger, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> timeTxDep = Collections
+                    .synchronizedSortedMap(new TreeMap<>());
+            for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : e.getValue().entrySet()) {
+                BigInteger ts = pair.getValue().getTimeStamp();
+                while (timeTxDep.get(ts.add(BigInteger.ONE)) != null) {
+                    ts = ts.add(BigInteger.ONE);
+                }
+                timeTxDep.put(ts, pair);
+            }
+
+            for(Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : timeTxDep.values()) {
                 // Check the small nonce tx must been picked before put the high nonce tx
                 ByteArrayWrapper dependTx = pair.getValue().getDependTx();
                 if (dependTx == null || snapshotSet.contains(dependTx)) {

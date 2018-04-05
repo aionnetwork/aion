@@ -43,6 +43,8 @@ public class PendingTxCache {
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
 
+    private final int txRtnLimit = 1000;
+
     PendingTxCache(final int cacheMax) {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
         PendingTxCache.CacheMax = cacheMax *100_000;
@@ -184,11 +186,23 @@ public class PendingTxCache {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("cacheTx.flush after addr[{}] size[{}], cache_size[{}]", addr.toString(), cacheTxMap.get(addr).size(), currentSize.get());
                 }
-
-                if (cacheTxMap.get(addr).get(bn) != null) {
-                    processableTx.add(cacheTxMap.get(addr).get(bn));
-                }
             }
+        }
+
+        Map<BigInteger, AionTransaction> timeMap = new TreeMap<>();
+        for (TreeMap<BigInteger,AionTransaction> e : cacheTxMap.values()) {
+            if (!e.isEmpty()) {
+                BigInteger ts = e.firstEntry().getValue().getTimeStampBI();
+                while (timeMap.get(ts) != null) {
+                    ts = ts.add(BigInteger.ONE);
+                }
+
+                timeMap.put(ts, e.firstEntry().getValue());
+            }
+        }
+
+        for(AionTransaction tx : timeMap.values()) {
+            processableTx.add(tx);
         }
 
         return processableTx;
@@ -215,4 +229,7 @@ public class PendingTxCache {
         return cacheTxMap.get(from);
     }
 
+    public int getTxRtnLimit() {
+        return txRtnLimit;
+    }
 }
