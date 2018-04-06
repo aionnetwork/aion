@@ -80,7 +80,11 @@ public class Ed25519Signature implements ISignature {
 
     @Override
     public String toString() {
+
+        byte[] address = this.getAddress();
+
         return "[pk: " + (this.pk == null ? "null" : ByteUtil.toHexString(this.pk)) +
+                " address: " + (address == null ? "null" : ByteUtil.toHexString(address)) +
                  " signature: " +  (this.sig == null ? "null" : ByteUtil.toHexString(this.sig)) + "]";
     }
 

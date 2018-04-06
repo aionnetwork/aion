@@ -70,7 +70,7 @@ public class BlockConstants implements IBlockConstants {
      * Rewards not set yet, but this is the projected amount based on a 10
      * second block time
      */
-    private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
+    private static final BigInteger BLOCK_REWARD = new BigInteger("1497989283243310185");
 
     private static final int BLOCK_TIME_LOWER_BOUND = 5;
     private static final int BLOCK_TIME_UPPER_BOUND = 15;
@@ -86,7 +86,7 @@ public class BlockConstants implements IBlockConstants {
      * monetary policy paper, assuming:
      */
     private static final BigInteger RAMP_UP_START_VALUE = new BigInteger("748994641621655092");
-    private static final BigInteger RAMP_UP_END_VALUE = new BigInteger("1497989283243310185");
+    private static final BigInteger RAMP_UP_END_VALUE = BLOCK_REWARD;
 
     /**
      * Desired block time

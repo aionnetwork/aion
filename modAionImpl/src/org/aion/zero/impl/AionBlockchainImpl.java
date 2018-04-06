@@ -961,6 +961,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         BigInteger minerReward = this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
         rewards.put(block.getCoinbase(), minerReward);
 
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("rewarding: {}np to {} for mining block {}", minerReward, block.getCoinbase(), block.getNumber());
+        }
+
         /*
          * Remaining fees (the ones paid to miners for running transactions) are
          * already paid for at a earlier point in execution.
