@@ -42,7 +42,8 @@ public class P2PPerformanceTest {
                 true,
                 false,
                 false,
-                "");
+                "",
+                50);
 
         System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
         P2pMgr receiver = new P2pMgr(0,
@@ -58,7 +59,8 @@ public class P2PPerformanceTest {
                 true,
                 false,
                 false,
-                "");
+                "",
+                50);
 
         return Map.entry(connector, receiver);
     }

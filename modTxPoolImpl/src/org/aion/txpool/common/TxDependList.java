@@ -26,6 +26,7 @@ package org.aion.txpool.common;
 
 import org.aion.base.type.Address;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class TxDependList<BW> {
     private final List<BW> txList;
     private BW dependTx;
     private Address address;
+    private BigInteger timeStamp;
 
     public TxDependList() {
         txList = new ArrayList<>();
@@ -68,5 +70,17 @@ public class TxDependList<BW> {
 
     public boolean isEmpty() {
         return txList.isEmpty();
+    }
+
+    public BigInteger getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(BigInteger timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    public int compare(TxDependList<BW> td) {
+        return timeStamp.compareTo(td.timeStamp);
     }
 }

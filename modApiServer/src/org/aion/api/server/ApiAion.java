@@ -207,7 +207,10 @@ public abstract class ApiAion extends Api {
         SyncInfo sync = new SyncInfo();
         sync.done = this.ac.isSyncComplete();
         sync.chainStartingBlkNumber = this.ac.getInitialStartingBlockNumber().orElse(0L);
-        sync.blksImportMax = CfgAion.inst().getSync().getBlocksImportMax();
+        sync.blocksBackwardMin = CfgAion.inst().getSync().getBlocksBackwardMin();
+        sync.blocksBackwardMax = CfgAion.inst().getSync().getBlocksBackwardMax();
+        sync.blocksRequestMax = CfgAion.inst().getSync().getBlocksRequestMax();
+        sync.blocksResponseMax = CfgAion.inst().getSync().getBlocksResponseMax();
         sync.networkBestBlkNumber = this.ac.getNetworkBestBlockNumber().orElse(0L);
         sync.chainBestBlkNumber = this.ac.getLocalBestBlockNumber().orElse(0L);
         return sync;

@@ -274,7 +274,10 @@ public class ApiWeb3Aion extends ApiAion {
             obj.put("startingBlock", new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
             obj.put("currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
             obj.put("highestBlock", new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
-            obj.put("importMax", new NumericalValue(syncInfo.blksImportMax).toHexString());
+            obj.put("blocksBackwardMin", new NumericalValue(syncInfo.blocksBackwardMin).toHexString());
+            obj.put("blocksBackwardMax", new NumericalValue(syncInfo.blocksBackwardMax).toHexString());
+            obj.put("blocksRequestMax", new NumericalValue(syncInfo.blocksRequestMax).toHexString());
+            obj.put("blocksResponseMax", new NumericalValue(syncInfo.blocksResponseMax).toHexString());
             return new RpcMsg(obj);
         } else {
             // create obj for when syncing is ongoing

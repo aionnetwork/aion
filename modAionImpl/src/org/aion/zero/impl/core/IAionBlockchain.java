@@ -54,4 +54,9 @@ public interface IAionBlockchain
      *         otherwise
      */
     boolean recoverWorldState(IRepository repository, long blockNumber);
+
+    /**
+     * Heuristic for skipping the call to tryToConnect with very large or very small block number.
+     */
+    boolean skipTryToConnect(long blockNumber);
 }

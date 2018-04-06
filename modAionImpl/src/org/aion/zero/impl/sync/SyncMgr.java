@@ -63,10 +63,13 @@ public final class SyncMgr {
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    private int syncBackwardMax = 16;
-    private int syncImportMax = 32;
+    private int syncBackwardMin;
+    private int syncBackwardMax;
 
-    private int blocksQueueMax = 64; // block header wrappers
+    private int syncRequestMax;
+    private int syncResponseMax;
+
+    private int blocksQueueMax; // block header wrappers
 
     private AionBlockchainImpl chain;
 
@@ -176,13 +179,19 @@ public final class SyncMgr {
 //        }
     }
 
-    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncBackwardMax, final int _syncImportMax,
-            final int _blocksQueueMax, final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
+    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncBackwardMin, final int _syncBackwardMax,
+                     final int _syncRequestMax, final int _syncResponseMax, final int _blocksQueueMax,
+                     final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
         this.p2pMgr = _p2pMgr;
         this.chain = AionBlockchainImpl.inst();
         this.evtMgr = _evtMgr;
+
+        this.syncBackwardMin = _syncBackwardMin;
         this.syncBackwardMax = _syncBackwardMax;
-        this.syncImportMax = _syncImportMax;
+
+        this.syncRequestMax = _syncRequestMax;
+        this.syncResponseMax = _syncResponseMax;
+
         this.blocksQueueMax = _blocksQueueMax;
 
         this.blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
@@ -211,7 +220,8 @@ public final class SyncMgr {
             return;
         }
 
-        workers.submit(new TaskGetHeaders(p2pMgr, Math.max(1, this.chain.getBestBlock().getNumber() + 1 - syncBackwardMax), this.syncImportMax, _selfTd, log));
+        workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
+                syncBackwardMin, syncBackwardMax, syncRequestMax,  log));
     }
 
     /**

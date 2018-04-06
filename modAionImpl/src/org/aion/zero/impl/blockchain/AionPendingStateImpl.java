@@ -371,7 +371,19 @@ public class AionPendingStateImpl
                         continue;
                     }
 
+                    // TODO: need to implement better cache return Strategy
                     Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
+
+                    int limit = 0;
+                    Set<Address> addr = pendingTxCache.getCacheTxAccount();
+                    if (!addr.isEmpty()) {
+                        limit = pendingTxCache.getTxRtnLimit() / addr.size();
+
+                        if (limit == 0) {
+                            limit = 1;
+                        }
+                    }
+
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("cache: from {}, size {}", tx.getFrom(), cache.size());
                     }
@@ -391,7 +403,7 @@ public class AionPendingStateImpl
                         }
 
                         txNonce = txNonce.add(BigInteger.ONE);
-                    } while (cache != null && (tx = cache.get(txNonce)) != null && txPool.size() < MAX_VALIDATED_PENDING_TXS);
+                    } while (cache != null && (tx = cache.get(txNonce)) != null && (limit-- > 0) && txPool.size() < MAX_VALIDATED_PENDING_TXS);
                 }  else if (bestRepoNonce(tx.getFrom()).compareTo(txNonce) < 1) {
                     // repay Tx
                     if (addNewTxIfNotExist(tx)) {
