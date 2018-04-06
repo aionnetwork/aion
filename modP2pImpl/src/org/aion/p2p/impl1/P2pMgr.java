@@ -571,7 +571,10 @@ public final class P2pMgr implements IP2pMgr {
 					Predicate<MsgOut> removePredicate = p->msgClear.contains(p.nid);
 
 					//Remove all nodes which have timed out (Single sweep)
-					sendMsgQue.removeIf(removePredicate);
+					boolean hasRemoved = sendMsgQue.removeIf(removePredicate);
+
+					if(hasRemoved)
+					    System.out.println("Removed msgs from " + msgClear.size() + " nodes");
 
 				} catch (Exception e) {
 				}
