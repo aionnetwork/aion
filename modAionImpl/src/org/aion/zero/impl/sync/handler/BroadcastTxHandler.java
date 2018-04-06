@@ -106,9 +106,9 @@ public final class BroadcastTxHandler extends Handler {
         List<byte[]> broadCastTx = BroadcastTx.decode(_msgBytes);
 
         if (broadCastTx == null) {
-            log.error("<broadcast-tx decode-error unable to decode tx-list from {}, len: {]>", _displayId, _msgBytes.length);
+            log.error("<BroadcastTxHandler decode-error unable to decode tx-list from {}, len: {]>", _displayId, _msgBytes.length);
             if (log.isTraceEnabled()) {
-                log.trace("broadcast-tx dump: {}", ByteUtil.toHexString(_msgBytes));
+                log.trace("BroadcastTxHandler dump: {}", ByteUtil.toHexString(_msgBytes));
             }
         }
 
@@ -116,7 +116,7 @@ public final class BroadcastTxHandler extends Handler {
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
 
             if (log.isTraceEnabled()) {
-                log.trace("<broadcast-tx from: {} empty {}>", _displayId);
+                log.trace("<BroadcastTxHandler from: {} empty {}>", _displayId);
 
             }
             return;
@@ -125,7 +125,7 @@ public final class BroadcastTxHandler extends Handler {
         try {
             txQueue.addAll(castRawTx(broadCastTx));
         } catch (Throwable e) {
-            log.error("broadcast-tx throw{}", e.toString());
+            log.error("BroadcastTxHandler throw {}", e.toString());
         }
     }
 
