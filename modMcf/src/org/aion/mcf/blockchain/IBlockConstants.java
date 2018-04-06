@@ -102,4 +102,8 @@ public interface IBlockConstants {
      * Maximum accepted clock drift difference (seconds)
      */
     long getClockDriftBufferTime();
+
+    BigInteger getRampUpStartValue();
+
+    BigInteger getRampUpEndValue();
 }

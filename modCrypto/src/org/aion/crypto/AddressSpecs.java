@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
  */
 public class AddressSpecs {
 
-    private static final byte A0_IDENTIFIER = ByteUtil.hexStringToBytes("0xA0")[0];
+    public static final byte A0_IDENTIFIER = ByteUtil.hexStringToBytes("0xA0")[0];
 
     private AddressSpecs() {}
 
