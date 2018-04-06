@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.*;
 import org.slf4j.Logger;
 import org.aion.zero.impl.sync.SyncMgr;
@@ -66,10 +67,22 @@ public final class ResStatusHandler extends Handler {
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
         ResStatus rs = ResStatus.decode(_msgBytes);
+
+        if (rs == null) {
+            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+            this.log.error("<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
+
+            if (this.log.isTraceEnabled()) {
+                this.log.trace("res-status decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
+            }
+        }
+
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
-        this.p2pMgr.getNodeMgr().updateAllNodesInfo(node);
         if (node != null) {
-            this.log.debug("<res-status best-block={} node={}>", rs.getBestBlockNumber(), _displayId);
+            if (log.isDebugEnabled()) {
+                this.log.debug("<res-status best-block={} node={}>", rs.getBestBlockNumber(), _displayId);
+            }
+            this.p2pMgr.getNodeMgr().updateAllNodesInfo(node);
             long remoteBestBlockNumber = rs.getBestBlockNumber();
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();

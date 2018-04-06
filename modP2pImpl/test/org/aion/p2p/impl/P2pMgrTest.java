@@ -27,6 +27,7 @@ package org.aion.p2p.impl;
 
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeObserver;
+import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -82,7 +83,10 @@ public class P2pMgrTest {
                 128,
                 false,
                 true,
-                false);
+                false,
+                false,
+                "",
+                50);
 
         System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
         P2pMgr receiver = new P2pMgr(0,
@@ -96,7 +100,10 @@ public class P2pMgrTest {
                 128,
                 false,
                 true,
-                false);
+                false,
+                false,
+                "",
+                50);
 
         return Map.entry(connector, receiver);
     }
@@ -108,7 +115,21 @@ public class P2pMgrTest {
                 "p2p://" + nodeId1 + "@" + ip2+ ":" + port2
         };
 
-        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, false, false);
+        P2pMgr p2p = new P2pMgr(0,
+                "",
+                nodeId1,
+                ip1,
+                port1,
+                nodes,
+                false,
+                128,
+                128,
+                false,
+                false,
+                false,
+                false,
+                "",
+                50);
         assertEquals(p2p.getTempNodesCount(), 0);
 
     }
@@ -120,7 +141,21 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip1+ ":" + port1
         };
 
-        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, false, false);
+        P2pMgr p2p = new P2pMgr(0,
+                "",
+                nodeId1,
+                ip1,
+                port1,
+                nodes,
+                false,
+                128,
+                128,
+                false,
+                false,
+                false,
+                false,
+                "",
+                50);
         assertEquals(0,p2p.getTempNodesCount());
 
     }
@@ -145,198 +180,10 @@ public class P2pMgrTest {
                 128,
                 false,
                 false,
-                false);
+                false,
+                false,
+                "",
+                50);
         assertEquals(p2p.getTempNodesCount(), 3);
     }
-
-    private class NewActiveNodeResponse {
-        public Integer nodeId;
-        public byte[] ip;
-        public int port;
-    }
-
-    @Test
-    public void testConnect() throws InterruptedException {
-
-        final NewActiveNodeResponse response = new NewActiveNodeResponse();
-        final CountDownLatch endLatch = new CountDownLatch(1);
-
-        INodeObserver connectorMockObs = new INodeObserver() {
-            @Override
-            public void newActiveNode(Integer nodeId, byte[] ip, int port) {
-                response.ip = ip;
-                response.nodeId = nodeId;
-                response.port = port;
-                endLatch.countDown();
-            }
-
-            @Override
-            public void removeActiveNode(Integer nodeId) {
-
-            }
-        };
-
-        Map.Entry<P2pMgr, P2pMgr> pair = newTwoNodeSetup();
-        try {
-            P2pMgr connector = pair.getKey();
-            P2pMgr receiver = pair.getValue();
-            connector.getNodeMgr().registerNodeObserver(connectorMockObs);
-
-            // receiver must be run first so we can accept the connection
-            receiver.run();
-
-            System.out.println("sleeping for 1s for receiver to initialize");
-            Thread.sleep(1000L);
-
-            connector.run();
-
-            endLatch.await();
-            System.out.println("hello world!");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.out.println("shutting down connections");
-            try {
-                pair.getKey().shutdown();
-            } catch (Exception e) {
-                System.out.println("exception on shutdown");
-                e.printStackTrace();
-                pair.getKey().shutdown();
-            }
-
-            try {
-                pair.getValue().shutdown();
-            } catch (Exception e) {
-                System.out.println("exception on shutdown");
-                e.printStackTrace();
-                pair.getValue().shutdown();
-            }
-        }
-    }
-
-    @Ignore
-    @Test
-    public void testClose() throws InterruptedException {
-        final NewActiveNodeResponse response = new NewActiveNodeResponse();
-        final CountDownLatch endLatch = new CountDownLatch(1);
-
-        final CountDownLatch dropLatch = new CountDownLatch(1);
-
-        INodeObserver connectorMockObs = new INodeObserver() {
-            @Override
-            public void newActiveNode(Integer nodeId, byte[] ip, int port) {
-                response.ip = ip;
-                response.nodeId = nodeId;
-                response.port = port;
-                endLatch.countDown();
-            }
-
-            @Override
-            public void removeActiveNode(Integer nodeId) {
-                dropLatch.countDown();
-            }
-        };
-
-        Map.Entry<P2pMgr, P2pMgr> pair = newTwoNodeSetup();
-        try {
-            P2pMgr connector = pair.getKey();
-            P2pMgr receiver = pair.getValue();
-            connector.getNodeMgr().registerNodeObserver(connectorMockObs);
-
-            // receiver must be run first so we can accept the connection
-            receiver.run();
-
-            System.out.println("sleeping for 1s for receiver to initialize");
-            Thread.sleep(1000L);
-
-            connector.run();
-            endLatch.await();
-
-            System.out.println("connected");
-
-            // after connection drop
-            //connector.dropActive(receiver.getNodeIdHash());
-            dropLatch.await();
-
-            System.out.println("dropped");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.out.println("shutting down connections");
-            try {
-                pair.getKey().shutdown();
-            } catch (Exception e) {
-                System.out.println("exception on shutdown");
-                e.printStackTrace();
-                pair.getKey().shutdown();
-            }
-
-            try {
-                pair.getValue().shutdown();
-            } catch (Exception e) {
-                System.out.println("exception on shutdown");
-                e.printStackTrace();
-                pair.getValue().shutdown();
-            }
-        }
-    }
-
-//    @Test
-//    public void testConnect() throws InterruptedException {
-//
-//        String ip = "127.0.0.1";
-//        String id1 = UUID.randomUUID().toString();
-//        String id2 = UUID.randomUUID().toString();
-//        int port1 = 30303;
-//        int port2 = 30304;
-//
-//        P2pMgr receiver = new P2pMgr(
-//                0, "",
-//                id1,
-//                ip,
-//                port1,
-//                new String[]{
-//                        "p2p://" + id2 + "@" + ip + ":" + port2
-//                },
-//                false,
-//                128,
-//                128,
-//                false,
-//                false,
-//                false
-//        );
-//
-//        // clear temp nodes list but keep seed ips list
-//        receiver.clearTempNodes();
-//        receiver.run();
-//
-//        P2pMgr connector = new P2pMgr(
-//                0, "",
-//                id2,
-//                ip,
-//                port2,
-//                new String[]{
-//                        "p2p://" + id1 + "@" + ip + ":" + port1
-//                },
-//                false,
-//                128,
-//                128,
-//                false,
-//                false,
-//                false
-//        );
-//        connector.run();
-//        Thread.sleep(10000);
-//        assertEquals(1, receiver.getActiveNodes().size());
-//        assertEquals(1, connector.getActiveNodes().size());
-//
-//        // check seed ips contains ip as incoming node
-//        Map<Integer, INode> ns = receiver.getActiveNodes();
-//        Map.Entry<Integer, INode> entry = ns.entrySet().iterator().next();
-//        assertNotNull(entry);
-//        assertTrue(((Node)entry.getValue()).getIfFromBootList());
-//        receiver.shutdown();
-//        connector.shutdown();
-//
-//    }
 }

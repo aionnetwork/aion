@@ -27,9 +27,10 @@ package org.aion.evtmgr.impl.abs;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -45,11 +46,12 @@ public abstract class AbstractHandler {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
 
-    protected Set<IEvent> events = new HashSet<>();
-    protected BlockingQueue<IEvent> queue = new LinkedBlockingQueue<IEvent>();
-    protected List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
+    private Set<IEvent> events = new HashSet<>();
+    private BlockingQueue<IEvent> queue = new LinkedBlockingQueue<>();
+    private List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
     private AtomicBoolean interrupt = new AtomicBoolean(false);
     private boolean interruptted = false;
+    private int handlerType;
 
     protected Thread dispatcher = new Thread(() -> {
         try {
@@ -62,8 +64,8 @@ public abstract class AbstractHandler {
 
                     try {
                         dispatch(e);
-                    } catch (Exception ex) {
-                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}", e.getEventType(), e.getCallbackType(), ex);
+                    } catch (Throwable ex) {
+                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}, {}", e.getEventType(), e.getCallbackType(), ex.toString());
                     }
                 }
             }
@@ -75,23 +77,42 @@ public abstract class AbstractHandler {
             queue.clear();
             interruptted = true;
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Handler interrupt exception {}", e.toString());
+        } catch (Error e) {
+            LOG.error("Handler interrupt error {}", e.toString());
         }
     });
 
+    public AbstractHandler(int value) {
+        handlerType = value;
+    }
+
     public synchronized boolean addEvent(IEvent _evt) {
-        return this.events.add(_evt);
+        try {
+            return this.events.add(_evt);
+        } catch (Throwable e) {
+            LOG.error("addEvent exception {}", e.toString());
+            return false;
+        }
     }
 
     public synchronized boolean removeEvent(IEvent _evt) {
-        return this.events.add(_evt);
+        try {
+            return this.events.remove(_evt);
+        } catch (Throwable e) {
+            LOG.error("removeEvent exception {}", e.toString());
+            return false;
+        }
     }
 
     public void stop() throws InterruptedException {
 
         interrupt.set(true);
-        this.queue.add(new EventDummy());
+        try {
+            this.queue.add(new EventDummy());
+        } catch (Throwable e) {
+            LOG.error("stop exception {}", e.toString());
+        }
 
         if (LOG.isInfoEnabled()) {
             LOG.info("Handler {} dispatcher interrupting..", this.getType());
@@ -115,7 +136,7 @@ public abstract class AbstractHandler {
     }
 
 
-    public <E extends IEvent> void dispatch(E event) {
+    private <E extends IEvent> void dispatch(E event) {
         if (this.typeEqual(event.getEventType())) {
 
             if (LOG.isTraceEnabled()) {
@@ -132,9 +153,7 @@ public abstract class AbstractHandler {
         this.eventCallback.add(_evtCallback);
     }
 
-    public abstract int getType();
-
-    public boolean typeEqual(int _type) {
+    private boolean typeEqual(int _type) {
         return (this.getType() == _type);
     }
 
@@ -143,5 +162,18 @@ public abstract class AbstractHandler {
         if (!this.dispatcher.isAlive()) {
             this.dispatcher.start();
         }
+    }
+
+
+    public void onEvent(IEvent _evt) {
+        try {
+            this.queue.add(_evt);
+        } catch (Throwable e) {
+            LOG.error("onEvent exception! {}", e.toString());
+        }
+    }
+
+    public int getType() {
+        return handlerType;
     }
 }

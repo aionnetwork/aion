@@ -31,14 +31,13 @@
 
 package org.aion.zero.impl.cli;
 
-import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
-import org.aion.mcf.config.Cfg;
-import org.aion.zero.impl.AionHub;
-import org.aion.zero.impl.Version;
-import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.mcf.account.Keystore;
+import org.aion.mcf.config.Cfg;
+import org.aion.zero.impl.Version;
+import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
 import java.util.UUID;
@@ -129,6 +128,26 @@ public class Cli {
                             return 1;
                         }
                     }
+                    break;
+                case "--db-compact":
+                    RecoveryUtils.dbCompact();
+                    break;
+                case "--dump-blocks":
+                    long count = 100L;
+
+                    if (args.length < 2) {
+                        System.out.println("Printing top " + count + " blocks from database.");
+                        RecoveryUtils.dumpBlocks(count);
+                    } else {
+                        try {
+                            count = Long.parseLong(args[1]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                        }
+                        System.out.println("Printing top " + count + " blocks from database.");
+                        RecoveryUtils.dumpBlocks(count);
+                    }
+                    System.out.println("Finished printing blocks.");
                     break;
                 case "-v":
                     System.out.println("\nVersion");
@@ -296,4 +315,5 @@ public class Cli {
 
         return RecoveryUtils.revertTo(block);
     }
+
 }

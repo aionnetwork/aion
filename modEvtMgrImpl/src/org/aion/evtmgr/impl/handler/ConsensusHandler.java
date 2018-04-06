@@ -24,7 +24,6 @@
 
 package org.aion.evtmgr.impl.handler;
 
-import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.abs.AbstractHandler;
 
@@ -36,30 +35,7 @@ public class ConsensusHandler extends AbstractHandler implements IHandler {
 
     // Default constructor to set name of the thread, simplifies troubleshooting
     public ConsensusHandler() {
+        super(TYPE.CONSENSUS.getValue());
         dispatcher.setName("ConsHdr");
-    }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.aion.evt.common.IHandler#getType()
-     */
-    @Override
-    public int getType() {
-        return TYPE.CONSENSUS.getValue();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.aion.evt.common.IHandler#onEvent(org.aion.evt.common.IEvent)
-     */
-    @Override
-    public void onEvent(IEvent _evt) {
-        this.queue.add(_evt);
-    }
-
-    @Override
-    public void stop() throws InterruptedException {
-        super.stop();
     }
 }

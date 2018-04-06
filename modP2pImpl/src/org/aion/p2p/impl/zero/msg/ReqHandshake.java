@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Act;
+import org.aion.p2p.impl.comm.Act;
 
 /**
  *

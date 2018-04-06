@@ -35,19 +35,21 @@
 
 package org.aion.zero.impl.sync.handler;
 
-import java.util.List;
 import org.aion.mcf.types.BlockIdentifier;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
-//import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
+
+import java.util.List;
+
+//import org.apache.commons.collections4.map.LRUMap;
 
 /**
  *
@@ -81,14 +83,17 @@ public final class ReqBlocksHeadersHandler extends Handler {
         if (reqHeaders != null) {
             long fromBlock = reqHeaders.getFromBlock();
             int take = reqHeaders.getTake();
-            this.log.debug("<req-headers from-number={} size={} node={}>", fromBlock, take,
-                    _displayId);
+            if (log.isDebugEnabled()) {
+                this.log.debug("<req-headers from-number={} size={} node={}>", fromBlock, take, _displayId);
+            }
             List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
                     new BlockIdentifier(null, fromBlock), 0, Math.min(take, max), false);
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, rbhs);
-        } else
-            this.log.error("<req-headers decode-msg msg-bytes={} node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length, _nodeIdHashcode);
+        } else {
+            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+            this.log.error("<req-headers decode-error msg-bytes={} node={}>", _msgBytes == null ? 0 : _msgBytes.length,
+                    _nodeIdHashcode);
+        }
     }
 }

@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Aion Tx Collector
@@ -33,19 +32,11 @@ public class TxCollector {
     private final int maxTxBufferSize = avgTxSize * avgNumTxBatch;
     private final int offerTimeout = 100;
 
-    // Max time between sending Tx if present in queue (in ms)
-    private final int maxDelay = 1000;
-
     private IP2pMgr p2p;
 
     private AtomicInteger queueSizeBytes = new AtomicInteger();
     private AtomicLong lastBroadcast = new AtomicLong(System.currentTimeMillis());
     private LinkedBlockingQueue<AionTransaction> transactionQueue;
-
-    // Executor service to collect and broadcast txs
-    private final ScheduledExecutorService broadcastTxExec;
-    private final int initDelay = 10; //Seconds till start broadcast
-    private final int broadcastLoop = 1; //Time between broadcasting tx
 
     private ReentrantLock broadcastLock = new ReentrantLock();
 
@@ -54,15 +45,12 @@ public class TxCollector {
         this.p2p = p2p;
 
         // Leave unbounded for now, may need to restrict queue size and drop tx until able to process tx
-        transactionQueue = new LinkedBlockingQueue();
+        transactionQueue = new LinkedBlockingQueue<>();
 
-        broadcastTxExec = Executors.newSingleThreadScheduledExecutor();
-        broadcastTxExec.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                broadcastTransactionsTask();
-            }
-        }, initDelay, broadcastLoop, TimeUnit.SECONDS);
+        ScheduledExecutorService broadcastTxExec = Executors.newSingleThreadScheduledExecutor();
+        int broadcastLoop = 1;
+        int initDelay = 10;
+        broadcastTxExec.scheduleAtFixedRate(this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
 
     }
 
@@ -97,14 +85,14 @@ public class TxCollector {
         }
     }
 
-    public void broadcastTx() {
+    private void broadcastTx() {
 
         List<AionTransaction> transactions;
         broadcastLock.lock();
         try {
 
             // Check tx queue has not already been emptied
-            if(transactionQueue.size() == 0)
+            if(transactionQueue.isEmpty())
                 return;
 
             // Grab everything in the queue
@@ -122,15 +110,16 @@ public class TxCollector {
         // Update last broadcast time
         this.lastBroadcast.set(System.currentTimeMillis());
 
-        A0TxTask txTask = new A0TxTask(transactions, this.p2p);
-//        System.out.println("Broadcasting " + transactions.size() + " transactions; Encoded size: " + transactions.get(0).getEncoded().length);
-        TxBroadcaster.getInstance().submitTransaction(txTask);
+        if (!transactions.isEmpty()) {
+            TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p));
+        }
     }
 
     /*
     Run periodically by scheduled executor to ensure tasks will be sent out in timely fashion
      */
     private void broadcastTransactionsTask() {
+        int maxDelay = 1000;
         if(System.currentTimeMillis() - this.lastBroadcast.get() < maxDelay)
             return;
 

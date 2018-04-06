@@ -1,5 +1,6 @@
 package org.aion.p2p.impl;
 
+import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -35,14 +36,42 @@ public class LastThousands {
         int max = 1000;
         int maxPort = port + max;
         String[] testerP2p = new String[] { "p2p://" + nodeId + "@" + ip + ":" + port };
-        P2pMgr tester = new P2pMgr(0, "", nodeId, ip, port,  new String[]{}, false, max, max, false, false, true);
+        P2pMgr tester = new P2pMgr(0,
+                "",
+                nodeId,
+                ip,
+                port,
+                new String[]{},
+                false,
+                max,
+                max,
+                false,
+                false,
+                true,
+                false,
+                "",
+                50);
 
         List<P2pMgr> examiners = new ArrayList<>();
 
         for(int i = port + 1; i <= maxPort; i++){
             if(checkPort(ip, i)) {
                 System.out.println("examiner " + i);
-                P2pMgr examiner = new P2pMgr(0, "", UUID.randomUUID().toString(), ip, i,  testerP2p, false, max, max, false, true, true);
+                P2pMgr examiner = new P2pMgr(0,
+                        "",
+                        UUID.randomUUID().toString(),
+                        ip,
+                        i,
+                        testerP2p,
+                        false,
+                        max,
+                        max,
+                        false,
+                        true,
+                        true,
+                        false,
+                        "",
+                        50);
                 examiners.add(examiner);
             }
         }

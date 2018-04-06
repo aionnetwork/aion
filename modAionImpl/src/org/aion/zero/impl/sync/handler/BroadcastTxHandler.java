@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -74,10 +75,23 @@ public final class BroadcastTxHandler extends Handler {
             return;
 
         List<byte[]> broadCastTx = BroadcastTx.decode(_msgBytes);
-        if (broadCastTx.isEmpty()) {
-            return;
+
+        if (broadCastTx == null) {
+            log.error("<broadcast-tx decode-error unable to decode tx-list from {}, len: {]>", _displayId, _msgBytes.length);
+            if (log.isTraceEnabled()) {
+                log.trace("broadcast-tx dump: {}", ByteUtil.toHexString(_msgBytes));
+            }
         }
 
+        if (broadCastTx.isEmpty()) {
+            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+
+            if (log.isTraceEnabled()) {
+                log.trace("<broadcast-tx from: {} empty {}>", _displayId);
+
+            }
+            return;
+        }
         pendingState.addPendingTransactions(castRawTx(broadCastTx));
     }
 
