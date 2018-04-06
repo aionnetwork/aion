@@ -1230,7 +1230,9 @@ public final class P2pMgr implements IP2pMgr {
 			ban(nodeIdHashcode);
 			errCnt.put(nodeIdHashcode, 0);
 
-			System.out.println("<drop node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+			if (isShowLog()) {
+				System.out.println("<ban node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+			}
 		} else {
 			errCnt.put(nodeIdHashcode, cnt);
 		}
