@@ -463,8 +463,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                 return rtn;
                             }
                         } else {
-                            if (LOG.isWarnEnabled()) {
-                                LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz,
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz,
                                         cnt_nrg, rtn.size());
                             }
 
@@ -502,8 +502,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                     return rtn;
                                 }
                             } else {
-                                if (LOG.isWarnEnabled()) {
-                                    LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz, cnt_nrg,
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz, cnt_nrg,
                                             rtn.size());
                                 }
 
