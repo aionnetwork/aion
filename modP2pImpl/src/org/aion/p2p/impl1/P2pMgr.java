@@ -1192,6 +1192,10 @@ public final class P2pMgr implements IP2pMgr {
 		start.set(false);
 		scheduledWorkers.shutdownNow();
 		nodeMgr.shutdown(this);
+
+		for (List<Handler> hdrs : handlers.values()) {
+			hdrs.forEach(hdr -> hdr.shutDown());
+		}
 	}
 
 	@Override

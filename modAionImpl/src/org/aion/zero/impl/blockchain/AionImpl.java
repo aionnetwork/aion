@@ -41,8 +41,6 @@ import org.aion.mcf.mine.IMineRunner;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.tx.A0TxTask;
-import org.aion.zero.impl.tx.TxBroadcaster;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -52,7 +50,8 @@ import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 public class AionImpl implements IAionChain {
 

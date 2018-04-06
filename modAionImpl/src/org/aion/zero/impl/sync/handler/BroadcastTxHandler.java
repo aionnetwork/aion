@@ -47,8 +47,8 @@ import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author chris
@@ -62,11 +62,40 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
+    private final Timer timer;
+
+    private LinkedBlockingQueue<AionTransaction> txQueue;
+
     public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
+        this.txQueue = new LinkedBlockingQueue<>(50_000);
+        this.timer = new Timer("TimerBC");
+
+        timer.scheduleAtFixedRate(new BufferTask(), 5000, 500);
+    }
+
+    private class BufferTask extends TimerTask {
+        @Override
+        public void run() {
+            if (!txQueue.isEmpty()) {
+                List<AionTransaction> txs = new ArrayList<>();
+                try {
+                    txQueue.drainTo(txs);
+                } catch (Throwable e) {
+                    log.error("BufferTask throw{}", e.toString());
+                }
+                if (!txs.isEmpty()) {
+                    if (log.isTraceEnabled()) {
+                        log.trace("BufferTask add txs into pendingState:{}", txs.size());
+                    }
+
+                    pendingState.addPendingTransactions(txs);
+                }
+            }
+        }
     }
 
     @Override
@@ -92,7 +121,12 @@ public final class BroadcastTxHandler extends Handler {
             }
             return;
         }
-        pendingState.addPendingTransactions(castRawTx(broadCastTx));
+
+        try {
+            txQueue.addAll(castRawTx(broadCastTx));
+        } catch (Throwable e) {
+            log.error("broadcast-tx throw{}", e.toString());
+        }
     }
 
     private List<AionTransaction> castRawTx(List<byte[]> broadCastTx) {
@@ -110,5 +144,13 @@ public final class BroadcastTxHandler extends Handler {
         }
 
         return rtn;
+    }
+
+    @Override
+    public void shutDown() {
+        log.info("BroadcastTxHandler shutdown!");
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 }
