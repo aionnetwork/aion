@@ -507,8 +507,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             throw new NullPointerException();
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("addr[{}] bn[{}] txnonce[{}]", addr.toString(), bestNonce.get(addr) == null ? "-1" : bestNonce.get(addr).toString(), bn.toString());
+        if(LOG.isTraceEnabled()) {
+            LOG.trace("addr[{}] bn[{}] txnonce[{}]", addr.toString(), bestNonce.get(addr) == null ? "-1" : bestNonce.get(addr).toString(), bn.toString());
         }
 
         if (bestNonce.get(addr) == null || bestNonce.get(addr).compareTo(bn) < 0) {

@@ -146,8 +146,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
             AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(tx.getFrom()).getMap().get(txNonce);
             if (entry != null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("repay tx, remove previous tx!");
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("repay tx, remove previous tx!");
                 }
                 List oldTx = remove(Collections.singletonList(this.getMainMap().get(entry.getKey()).getTx()));
 
@@ -155,8 +155,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     newPendingTx.add((TX) oldTx.get(0));
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("new tx! n[{}]", tx.getNonceBI().toString());
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("new tx! n[{}]", tx.getNonceBI().toString());
                 }
                 newPendingTx.add(tx);
             }
@@ -166,8 +166,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         this.getMainMap().putAll(mainMap);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("new add tx! np[{}] tx[{}]", newPendingTx.size(), txl.size());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("new add tx! np[{}] tx[{}]", newPendingTx.size(), txl.size());
         }
 
         if (newPendingTx.size() != txl.size()) {
@@ -327,8 +327,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         this.updateAccPoolState();
         this.updateFeeMap();
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("TxPoolA0.remove TX remove [{}] removed [{}]", txs.size(), removedTxl.size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("TxPoolA0.remove TX remove [{}] removed [{}]", txs.size(), removedTxl.size());
         }
 
         return removedTxl;
