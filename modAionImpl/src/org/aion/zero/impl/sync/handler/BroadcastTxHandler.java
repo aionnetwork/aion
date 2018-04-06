@@ -66,15 +66,23 @@ public final class BroadcastTxHandler extends Handler {
 
     private LinkedBlockingQueue<AionTransaction> txQueue;
 
-    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr) {
+    private final boolean buffer;
+
+    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean enableBuffer) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
         this.txQueue = new LinkedBlockingQueue<>(50_000);
-        this.timer = new Timer("TimerBC");
+        this.buffer = enableBuffer;
 
-        timer.scheduleAtFixedRate(new BufferTask(), 5000, 500);
+        if (this.buffer) {
+            log.info("BufferTask buffer enable!");
+            this.timer = new Timer("TimerBC");
+            this.timer.scheduleAtFixedRate(new BufferTask(), 5000, 500);
+        } else {
+            timer = null;
+        }
     }
 
     private class BufferTask extends TimerTask {
@@ -122,10 +130,14 @@ public final class BroadcastTxHandler extends Handler {
             return;
         }
 
-        try {
-            txQueue.addAll(castRawTx(broadCastTx));
-        } catch (Throwable e) {
-            log.error("BroadcastTxHandler throw {}", e.toString());
+        if (this.buffer) {
+            try {
+                txQueue.addAll(castRawTx(broadCastTx));
+            } catch (Throwable e) {
+                log.error("BroadcastTxHandler throw {}", e.toString());
+            }
+        } else {
+            pendingState.addPendingTransactions(castRawTx(broadCastTx));
         }
     }
 
