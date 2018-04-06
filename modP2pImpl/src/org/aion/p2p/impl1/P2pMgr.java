@@ -380,7 +380,13 @@ public final class P2pMgr implements IP2pMgr {
 					for (Handler hlr : hs) {
 						if (hlr == null)
 							continue;
-						hlr.receive(mi.nid, mi.nsid, mi.msg);
+
+						try {
+							hlr.receive(mi.nid, mi.nsid, mi.msg);
+						} catch (Exception e) {
+							System.out.println("Exception during kernel message handling:");
+							e.printStackTrace();
+						}
 					}
 				} catch (InterruptedException e) {
 					System.out.println("Task receive interrupted");
@@ -806,6 +812,8 @@ public final class P2pMgr implements IP2pMgr {
 
 		// print route
 		// System.out.println("read " + ver + "-" + ctrl + "-" + act);
+
+
 		switch (ver) {
 		case Ver.V0:
 			switch (ctrl) {
