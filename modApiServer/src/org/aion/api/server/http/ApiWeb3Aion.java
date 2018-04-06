@@ -51,10 +51,12 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.core.RewardsCalculator;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -84,7 +86,7 @@ import static org.aion.base.util.ByteUtil.toHexString;
 @SuppressWarnings("Duplicates")
 public class ApiWeb3Aion extends ApiAion {
 
-    private final int OPS_RECENT_ENTITY_COUNT = 36;
+    private final int OPS_RECENT_ENTITY_COUNT = 32;
     private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 10;
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private HashMap<ByteArrayWrapper, AionBlock> templateMap;
@@ -1144,6 +1146,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
 
         JSONObject response = new JSONObject();
+        response.put("address", address.toString());
         response.put("blockNumber", latestBlkNum);
         response.put("balance", TypeConverter.toJsonHex(accountState.getBalance()));
         response.put("nonce", accountState.getNonce());
@@ -1192,13 +1195,19 @@ public class ApiWeb3Aion extends ApiAion {
 
             // return qSize number of blocks and transactions as json
             ListIterator li = hashQueue.listIterator(0);
-            while(li.hasNext()) {
-                byte[] hash = (byte[]) li.next();
-                blks.put(blkList.get(hash));
+            for (int i = 0; i < hashQueue.size(); i++) {
+                byte[] hash = hashQueue.get(i);
+                JSONObject blk = blkList.get(hash);
+                if (i < hashQueue.size()-1) {
+                    AionBlock blkThis = blkObjList.get(hash);
+                    AionBlock blkNext = blkObjList.get(hashQueue.get(i+1));
+                    blk.put("blockTime", blkThis.getTimestamp() - blkNext.getTimestamp());
+                }
+                blks.put(blk);
                 List<AionTransaction> t = txnList.get(hash);
 
-                for (int i = 0; (i < t.size() && txns.length() <= qSize); i++) {
-                    txns.put(Tx.AionTransactionToJSON(t.get(i), blkObjList.get(hash), i));
+                for (int j = 0; (j < t.size() && txns.length() <= qSize); j++) {
+                    txns.put(Tx.AionTransactionToJSON(t.get(j), blkObjList.get(hash), j));
                 }
             }
 
@@ -1227,14 +1236,14 @@ public class ApiWeb3Aion extends ApiAion {
 
             int count = blkObjList.size();
             Long lastBlkTimestamp = null;
-
-            Iterator it = blkObjList.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pair = (Map.Entry)it.next();
-                AionBlock b = (AionBlock)pair.getValue();
+            AionBlock b = null;
+            ListIterator li = hashQueue.listIterator(0);
+            while(li.hasNext()) {
+                byte[] hash = (byte[]) li.next();
+                b = blkObjList.get(hash);
 
                 if (lastBlkTimestamp != null) {
-                    blkTimeAccumulator += (b.getTimestamp() - lastBlkTimestamp);
+                    blkTimeAccumulator += (lastBlkTimestamp - b.getTimestamp());
                 }
                 lastBlkTimestamp = b.getTimestamp();
 
@@ -1246,20 +1255,58 @@ public class ApiWeb3Aion extends ApiAion {
                 txnCount += b.getTransactionsList().size();
             }
 
-            double blkTime = blkTimeAccumulator / (double)count;
-            double hashRate = lastDifficulty.longValue() / blkTime;
-            double avgDifficulty = difficultyAccumulator.longValue() / (double)count;
-            double avgNrgConsumedPerBlock = nrgConsumedAccumulator.longValue() / (double)count;
-            double avgNrgLimitPerBlock = nrgLimitAccumulator.longValue() / (double)count;
-            double txnPerSec = txnCount / (double)blkTimeAccumulator;
+            BigInteger lastBlkReward = ((AionBlockchainImpl)ac.getBlockchain()).getChainConfiguration().getRewardsCalculator().calculateReward(b.getHeader()) ;
+
+            double blkTime = 0;
+            double hashRate = 0;
+            double avgDifficulty = 0;
+            double avgNrgConsumedPerBlock = 0;
+            double avgNrgLimitPerBlock = 0;
+            double txnPerSec = 0;
+
+            if (count > 0 && blkTimeAccumulator > 0) {
+                blkTime = blkTimeAccumulator / (double)count;
+                hashRate = lastDifficulty.longValue() / blkTime;
+                avgDifficulty = difficultyAccumulator.longValue() / (double)count;
+                avgNrgConsumedPerBlock = nrgConsumedAccumulator.longValue() / (double)count;
+                avgNrgLimitPerBlock = nrgLimitAccumulator.longValue() / (double)count;
+                txnPerSec = txnCount / (double)blkTimeAccumulator;
+            }
+
+            long startBlock = 0;
+            long endBlock = 0;
+            long startTimestamp = 0;
+            long endTimestamp = 0;
+            long currentBlockchainHead = 0;
+
+            if (hashQueue.size() > 0) {
+                AionBlock startBlockObj = blkObjList.get(hashQueue.peekLast());
+                AionBlock endBlockObj = blkObjList.get(hashQueue.peekFirst());
+
+                startBlock = startBlockObj.getNumber();
+                endBlock = endBlockObj.getNumber();
+                startTimestamp = startBlockObj.getTimestamp();
+                endTimestamp = endBlockObj.getTimestamp();
+                currentBlockchainHead = endBlock;
+            }
 
             JSONObject metrics = new JSONObject();
-            metrics.put("blkTime", blkTime);
+            metrics.put("averageDifficulty",avgDifficulty);
+            metrics.put("averageBlockTime", blkTime);
             metrics.put("hashRate",hashRate);
-            metrics.put("avgDifficulty",avgDifficulty);
-            metrics.put("avgNrgConsumedPerBlock",avgNrgConsumedPerBlock);
-            metrics.put("avgNrgLimitPerBlock",avgNrgLimitPerBlock);
-            metrics.put("txnPerSec",txnPerSec);
+            metrics.put("transactionPerSecond",txnPerSec);
+            metrics.put("lastBlockReward",lastBlkReward);
+            metrics.put("targetBlockTime", 10);
+            metrics.put("blockWindow", OPS_RECENT_ENTITY_COUNT);
+
+            metrics.put("startBlock", startBlock);
+            metrics.put("endBlock", endBlock);
+            metrics.put("startTimestamp", startTimestamp);
+            metrics.put("endTimestamp", endTimestamp);
+            metrics.put("currentBlockchainHead", currentBlockchainHead);
+
+            metrics.put("averageNrgConsumedPerBlock",avgNrgConsumedPerBlock);
+            metrics.put("averageNrgLimitPerBlock",avgNrgLimitPerBlock);
 
             return metrics;
         }

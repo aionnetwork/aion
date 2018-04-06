@@ -67,7 +67,7 @@ public class Tx {
         json.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
         json.put("from", TypeConverter.toJsonHex(tx.getFrom().toString()));
         json.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
-        json.put("timestamp", ByteUtil.byteArrayToLong(tx.getTimeStamp()));
+        json.put("timestamp", b.getTimestamp());
         json.put("input", TypeConverter.toJsonHex(tx.getData()));
         json.put("blockNumber", TypeConverter.toJsonHex(b.getNumber()));
         json.put("blockHash", TypeConverter.toJsonHex(b.getHash()));

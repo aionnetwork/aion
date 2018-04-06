@@ -966,6 +966,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return rewards;
     }
 
+    public ChainConfiguration getChainConfiguration() {
+        return chainConfiguration;
+    }
+
     @Override
     public synchronized void storeBlock(AionBlock block, List<AionTxReceipt> receipts) {
 

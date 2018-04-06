@@ -86,7 +86,7 @@ public class Blk {
                 jsonTx.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
                 jsonTx.put("from", TypeConverter.toJsonHex(tx.getFrom().toString()));
                 jsonTx.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
-                jsonTx.put("timestamp", ByteUtil.byteArrayToLong(tx.getTimeStamp()));
+                jsonTx.put("timestamp", block.getTimestamp());
                 jsonTx.put("input", TypeConverter.toJsonHex(tx.getData()));
                 jsonTx.put("blockNumber", block.getNumber());
                 jsonTxs.put(jsonTx);
@@ -125,7 +125,7 @@ public class Blk {
 
         obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
         obj.put("size", block.getEncoded().length);
-        obj.put("txnCount", block.getTransactionsList().size());
+        obj.put("numTransactions", block.getTransactionsList().size());
 
         return obj;
     }

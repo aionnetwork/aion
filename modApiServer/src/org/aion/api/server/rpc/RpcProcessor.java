@@ -168,7 +168,11 @@ public class RpcProcessor {
             }
 
             try {
-                LOG.debug("<request mth=[{}] params={}>", method, params.toString());
+                if (LOG.isDebugEnabled() && params != null)
+                    LOG.debug("<request mth=[{}] params={}>", method, params.toString());
+                else
+                    LOG.debug("<request mth=[{}] params={}>", method);
+
                 RpcMsg response = rpc.call(params);
                 return response.setId(id).toJson();
             } catch (Exception e) {

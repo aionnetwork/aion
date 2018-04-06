@@ -223,7 +223,11 @@ public class HttpServer implements Runnable {
                         switch (change.type) {
                             case ChangeRequest.CHANGEOPS:
                                 SelectionKey key = change.socket.keyFor(selector);
-                                key.interestOps(change.ops);
+                                try {
+                                    key.interestOps(change.ops);
+                                } catch (Exception e) {
+                                    LOG.debug("could not change interest ops. key seems to have been closed.", e);
+                                }
                         }
                     }
                     pendingChanges.clear();
