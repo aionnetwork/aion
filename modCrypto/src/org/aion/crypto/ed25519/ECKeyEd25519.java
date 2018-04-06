@@ -25,6 +25,7 @@ package org.aion.crypto.ed25519;
 
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.NativeLoader;
+import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
@@ -100,11 +101,7 @@ public class ECKeyEd25519 implements ECKey {
      * [1:] denotes all but the first byte</p>
      */
     public byte[] computeAddress(byte[] pubBytes) {
-        ByteBuffer buf = ByteBuffer.allocate(32);
-        buf.put(DEFAULT_ACCOUNT_ID);
-        // [1:]
-        buf.put(HashUtil.h256(pubBytes), 1, 31);
-        return buf.array();
+        return AddressSpecs.computeA0Address(pubBytes);
     }
 
     public byte[] getAddress() {

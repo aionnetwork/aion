@@ -274,4 +274,14 @@ public class ECDSASignature implements ISignature {
         result = 31 * result + s.hashCode();
         return result;
     }
+
+    /**
+     * Throws unsupported operation for now since we don't yet
+     * have a definition/support/procedure for what ECDSA keys
+     * should look like.
+     */
+    @Override
+    public byte[] getAddress() {
+        throw new UnsupportedOperationException("Address definition not specified for ECDSA keys");
+    }
 }

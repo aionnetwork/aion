@@ -24,6 +24,7 @@
 package org.aion.crypto.ed25519;
 
 import org.aion.base.util.ByteUtil;
+import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ISignature;
 
 import java.util.Arrays;
@@ -81,5 +82,12 @@ public class Ed25519Signature implements ISignature {
     public String toString() {
         return "[pk: " + (this.pk == null ? "null" : ByteUtil.toHexString(this.pk)) +
                  " signature: " +  (this.sig == null ? "null" : ByteUtil.toHexString(this.sig)) + "]";
+    }
+
+    @Override
+    public byte[] getAddress() {
+        if (this.pk == null)
+            return null;
+        return AddressSpecs.computeA0Address(this.pk);
     }
 }
