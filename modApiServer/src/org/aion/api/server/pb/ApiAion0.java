@@ -1549,23 +1549,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             List<AionTransaction> txs = b.getTransactionsList();
 
-            List<Message.t_TxDetail> tds = new ArrayList<>();
-            long cumulativeNrg = 0L;
-
-            // Can't use parallel streams here since we need to compute cumulativeNrg, which is done iteratively
-            for (AionTransaction tx : txs) {
+            List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map(tx -> {
                 AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
-                cumulativeNrg += ti.getReceipt().getEnergyUsed();
-                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg, true);
-
-                List<Message.t_LgEle> tles = Arrays.asList(rt.logs).parallelStream()
-                        .map(log -> {
-                            return Message.t_LgEle.newBuilder()
-                                    .setData(ByteString.copyFrom(ByteUtil.hexStringToBytes(log.data)))
-                                    .setAddress(ByteString.copyFrom(Address.wrap(log.address).toBytes()))
-                                    .addAllTopics(Arrays.asList(log.topics))
-                                    .build();
-                        }).filter(Objects::nonNull).collect(Collectors.toList());
 
                 Message.t_TxDetail.Builder tdBuilder = Message.t_TxDetail.newBuilder()
                         .setData(ByteString.copyFrom(tx.getData()))
@@ -1573,18 +1558,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setFrom(ByteString.copyFrom(tx.getFrom().toBytes()))
                         .setNonce(ByteString.copyFrom(tx.getNonce()))
                         .setValue(ByteString.copyFrom(tx.getValue()))
-                        .setNrgConsumed(rt.nrgUsed)
+                        .setNrgConsumed(ti.getReceipt().getEnergyUsed())
                         .setNrgPrice(tx.getNrgPrice())
                         .setTxHash(ByteString.copyFrom(tx.getHash()))
-                        .setTxIndex(rt.transactionIndex)
-                        .addAllLogs(tles);
+                        .setTxIndex(ti.getIndex());
 
-                if (rt.contractAddress != null)
-                    tdBuilder.setContract(ByteString.copyFrom(ByteUtil.hexStringToBytes(rt.contractAddress)));
-
-                Message.t_TxDetail td = tdBuilder.build();
-                tds.add(td);
-            }
+                return tdBuilder.build();
+            }).filter(Objects::nonNull).collect(Collectors.toList());
 
             return builder.addAllTx(tds).build();
         }).filter(Objects::nonNull).collect(Collectors.toList());
