@@ -59,8 +59,6 @@ public class HttpServer implements Runnable {
     private Selector selector;
     private ServerSocketChannel tcpServer;
 
-    private ByteBuffer readBuffer;
-
     private List<ChangeRequest> pendingChanges;
     private Map<SocketChannel, List<ByteBuffer>> pendingData;
 
@@ -92,9 +90,6 @@ public class HttpServer implements Runnable {
 
         ip = _ip;
         port = _port;
-
-        // allocate a 128mb buffer
-        readBuffer = ByteBuffer.allocate(1024 * 128);
     }
 
     public void start() {
@@ -132,112 +127,50 @@ public class HttpServer implements Runnable {
     private void read(SelectionKey sk) throws Exception {
         SocketChannel sc = (SocketChannel) sk.channel();
 
-        this.readBuffer.clear();
-
-        // Attempt to read off the channel
-        int bytesRead;
         try {
-            bytesRead = sc.read(this.readBuffer);
-        } catch (IOException e) {
-            // The remote forcibly closed the connection, cancel
-            // the selection key and close the channel.
+            ByteBuffer readBuffer = ByteBuffer.allocate(1024 * 1024);
+            while (sc.read(readBuffer) > 0) { }
+            // dispatch to worker here
+            // worker closes the socket after writing to it
+            rpcProcessor.process(this, sc, readBuffer.array());
+        } catch (Exception e) {
+            LOG.debug("<rpc-server - failed to read data from socket.>", e);
             sk.cancel();
             sc.close();
-            return;
         }
 
-        if (bytesRead == -1) {
-            // Remote entity shut the socket down cleanly. Do the
-            // same from our end and cancel the channel.
-            sk.channel().close();
-            sk.cancel();
-            return;
-        }
-
-        byte[] request = new byte[bytesRead];
-        System.arraycopy(this.readBuffer.array(), 0, request, 0, bytesRead);
-
-        rpcProcessor.process(this, sc, request);
-    }
-
-    private void write(SelectionKey sk) throws IOException {
-        SocketChannel sc = (SocketChannel) sk.channel();
-
-        synchronized (this.pendingData) {
-            List<ByteBuffer> queue = this.pendingData.get(sc);
-
-            // Write until there's not more data ...
-            while (!queue.isEmpty()) {
-                ByteBuffer buf = queue.get(0);
-                sc.write(buf);
-                if (buf.remaining() > 0) {
-                    // ... or the socket's buffer fills up
-                    break;
-                }
-                queue.remove(0);
-            }
-
-            if (queue.isEmpty()) {
-                // We wrote away all data, so we're no longer interested
-                // in writing on this socket. Close out.
-                this.pendingData.remove(sc);
-                sc.close();
-                sc.keyFor(this.selector).cancel();
-            }
-        }
     }
 
     public void send(SocketChannel socket, ByteBuffer data) {
-        synchronized (this.pendingChanges) {
-            // Indicate we want the interest ops set changed
-            this.pendingChanges.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
-
-            // And queue the data we want written
-            synchronized (this.pendingData) {
-                List<ByteBuffer> queue = this.pendingData.get(socket);
-                if (queue == null) {
-                    queue = new ArrayList<>();
-                    this.pendingData.put(socket, queue);
-                }
-                queue.add(data);
+        try {
+            while (data.hasRemaining()) {
+                socket.write(data);
+            }
+        } catch (Exception e) {
+            LOG.debug("failed to write response", e);
+        } finally {
+            try {
+                socket.close();
+                SelectionKey sk = socket.keyFor(this.selector);
+                if (sk != null)
+                    sk.cancel();
+                else
+                    System.out.println("<rpc-server - selector key is null>");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-
-        // Finally, wake up our selecting thread so it can make the required changes
-        this.selector.wakeup();
     }
 
     public void run() {
-        int failcount = 0;
         while (!Thread.currentThread().isInterrupted()) {
-            if (failcount > THREAD_ACCEPTABLE_FAIL_COUNT) {
-                LOG.info("<rpc-server - SERVER DIED due to unhandlable exception.");
-                break;
-            }
             try {
-                // Process any pending changes
-                synchronized (pendingChanges) {
-                    Iterator changes = pendingChanges.iterator();
-                    while (changes.hasNext()) {
-                        ChangeRequest change = (ChangeRequest) changes.next();
-                        switch (change.type) {
-                            case ChangeRequest.CHANGEOPS:
-                                SelectionKey key = change.socket.keyFor(selector);
-                                try {
-                                    key.interestOps(change.ops);
-                                } catch (Exception e) {
-                                    LOG.debug("could not change interest ops. key seems to have been closed.", e);
-                                }
-                        }
-                    }
-                    pendingChanges.clear();
-                }
-
-                int updatedKeysCount;
+                int updatedKeysCount = 0;
                 try {
                     // wait for an event one of the registered channels
                     updatedKeysCount = selector.select();
                 } catch (IOException e) {
+                    LOG.debug("<rpc-server - selector.select() failed somehow>");
                     continue;
                 }
 
@@ -258,12 +191,9 @@ public class HttpServer implements Runnable {
                         accept(sk);
                     } else if (sk.isReadable()) {
                         read(sk);
-                    } else if (sk.isWritable()) {
-                        write(sk);
                     }
                 }
             } catch (Throwable e) {
-                failcount++;
                 LOG.debug("<rpc-server - main event loop uncaught error [9]>", e);
             }
         }

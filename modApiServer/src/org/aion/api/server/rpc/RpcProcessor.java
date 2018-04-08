@@ -172,7 +172,7 @@ public class RpcProcessor {
                     LOG.debug("<request mth=[{}] params={}>", method, params.toString());
                 else
                     LOG.debug("<request mth=[{}] params={}>", method);
-
+                
                 RpcMsg response = rpc.call(params);
                 return response.setId(id).toJson();
             } catch (Exception e) {
@@ -317,6 +317,7 @@ public class RpcProcessor {
                     }
 
                     if (response == null) {
+                        LOG.debug("<rpc-server - response body is empty.>");
                         response = composeRpcResponse(new RpcMsg(null, RpcError.INTERNAL_ERROR).toString(), null);
                     }
 
