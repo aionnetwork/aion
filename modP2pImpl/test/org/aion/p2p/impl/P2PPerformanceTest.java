@@ -3,6 +3,7 @@ package org.aion.p2p.impl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
+import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,7 +40,10 @@ public class P2PPerformanceTest {
                 128,
                 false,
                 true,
-                false);
+                false,
+                false,
+                "",
+                50);
 
         System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
         P2pMgr receiver = new P2pMgr(0,
@@ -53,7 +57,10 @@ public class P2PPerformanceTest {
                 128,
                 false,
                 true,
-                false);
+                false,
+                false,
+                "",
+                50);
 
         return Map.entry(connector, receiver);
     }

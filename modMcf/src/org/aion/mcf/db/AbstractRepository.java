@@ -175,9 +175,15 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             /**
              * Setup datastores
              */
+            // locking enabled for state
+            sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
+
             sharedProps.setProperty("db_name", STATE_DB);
             this.stateDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(stateDatabase);
+
+            // locking disabled for other databases
+            sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "false");
 
             sharedProps.setProperty("db_name", TRANSACTION_DB);
             this.transactionDatabase = connectAndOpen(sharedProps);

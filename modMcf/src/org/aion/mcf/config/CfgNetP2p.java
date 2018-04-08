@@ -43,6 +43,8 @@ public final class CfgNetP2p {
         this.bootlistSyncOnly = false;
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
+        this.errorTolerance = 50;
+        this.txBroadcastbuffer = false;
     }
 
     private String ip;
@@ -60,6 +62,10 @@ public final class CfgNetP2p {
     private int maxTempNodes;
 
     private int maxActiveNodes;
+
+    private int errorTolerance;
+
+    private boolean txBroadcastbuffer;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -92,6 +98,12 @@ public final class CfgNetP2p {
                     break;
                 case "max-active-nodes":
                     this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
+                    break;
+                case "txbroadcastbuffer":
+                    this.txBroadcastbuffer = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                case "err-tolerance":
+                    this.errorTolerance = Integer.parseInt(Cfg.readValue(sr));
                     break;
                 default:
                     // Cfg.skipElement(sr);
@@ -193,5 +205,13 @@ public final class CfgNetP2p {
 
     public int getMaxActiveNodes() {
         return maxActiveNodes;
+    }
+
+    public int getErrorTolerance() {
+        return errorTolerance;
+    }
+
+    public boolean getTxBroadcastbuffer() {
+        return txBroadcastbuffer;
     }
 }

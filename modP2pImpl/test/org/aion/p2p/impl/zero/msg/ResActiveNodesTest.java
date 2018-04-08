@@ -1,17 +1,18 @@
 package org.aion.p2p.impl.zero.msg;
 
-import static org.junit.Assert.*;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Ver;
+import org.aion.p2p.impl.comm.Act;
+import org.aion.p2p.impl.comm.Node;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Node;
-import org.aion.p2p.impl.Act;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author chris
@@ -42,7 +43,6 @@ public class ResActiveNodesTest {
         assertEquals(Ver.V0, res.getHeader().getVer());
         assertEquals(Ctrl.NET, res.getHeader().getCtrl());
         assertEquals(Act.RES_ACTIVE_NODES, res.getHeader().getAction());
-
     }
 
     @Test

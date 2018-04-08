@@ -10,6 +10,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -114,6 +115,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public void errCheck(int nodeIdHashcode, String _displayId) {
+
+        }
+
+        @Override
         public void register(List<Handler> _hs) {
 
         }
@@ -130,6 +136,16 @@ public class BlockPropagationTest {
 
         @Override
         public void dropActive(Integer hash) {
+        }
+
+        @Override
+        public boolean isShowLog() {
+            return false;
+        }
+
+        @Override
+        public void closeSocket(SocketChannel socket) {
+            // do nothing
         }
     }
 

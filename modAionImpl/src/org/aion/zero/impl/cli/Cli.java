@@ -129,6 +129,26 @@ public class Cli {
                         }
                     }
                     break;
+                case "--db-compact":
+                    RecoveryUtils.dbCompact();
+                    break;
+                case "--dump-blocks":
+                    long count = 100L;
+
+                    if (args.length < 2) {
+                        System.out.println("Printing top " + count + " blocks from database.");
+                        RecoveryUtils.dumpBlocks(count);
+                    } else {
+                        try {
+                            count = Long.parseLong(args[1]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                        }
+                        System.out.println("Printing top " + count + " blocks from database.");
+                        RecoveryUtils.dumpBlocks(count);
+                    }
+                    System.out.println("Finished printing blocks.");
+                    break;
                 case "-v":
                     System.out.println("\nVersion");
                     System.out.println("--------------------------------------------");

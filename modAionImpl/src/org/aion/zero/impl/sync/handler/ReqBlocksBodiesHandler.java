@@ -35,8 +35,6 @@
 
 package org.aion.zero.impl.sync.handler;
 
-import java.util.*;
-
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
@@ -50,6 +48,11 @@ import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author chris
@@ -105,10 +108,13 @@ public final class ReqBlocksBodiesHandler extends Handler {
             }
 
             this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
-            this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
-                    blockBodies.size(), _displayId);
+            if (log.isDebugEnabled()) {
+                this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
+                        blockBodies.size(), _displayId);
+            }
 
         } else {
+            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>",
                     _displayId,
                     _msgBytes.length);

@@ -71,6 +71,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Math.max;
@@ -473,6 +474,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         return summary;
+    }
+
+    private AtomicLong bestBlockNumber = new AtomicLong(0L);
+
+    /**
+     * Heuristic for skipping the call to tryToConnect with very large or very small block number.
+     */
+    public boolean skipTryToConnect(long blockNumber) {
+        long current = bestBlockNumber.get();
+        return blockNumber > current + 32 || blockNumber < current - 32;
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
@@ -1030,6 +1041,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public synchronized void setBestBlock(AionBlock block) {
         bestBlock = block;
         updateBestKnownBlock(block);
+        bestBlockNumber.set(bestBlock.getNumber());
     }
 
     @Override

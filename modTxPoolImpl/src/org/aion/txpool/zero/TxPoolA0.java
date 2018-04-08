@@ -24,20 +24,6 @@
 
 package org.aion.txpool.zero;
 
-import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -47,6 +33,11 @@ import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
 import org.aion.txpool.common.TxDependList;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+
+import java.math.BigInteger;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
@@ -155,8 +146,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
             AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(tx.getFrom()).getMap().get(txNonce);
             if (entry != null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("repay tx, remove previous tx!");
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("repay tx, remove previous tx!");
                 }
                 List oldTx = remove(Collections.singletonList(this.getMainMap().get(entry.getKey()).getTx()));
 
@@ -164,8 +155,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                     newPendingTx.add((TX) oldTx.get(0));
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("new tx! n[{}]", tx.getNonceBI().toString());
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("new tx! n[{}]", tx.getNonceBI().toString());
                 }
                 newPendingTx.add(tx);
             }
@@ -175,8 +166,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
         this.getMainMap().putAll(mainMap);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("new add tx! np[{}] tx[{}]", newPendingTx.size(), txl.size());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("new add tx! np[{}] tx[{}]", newPendingTx.size(), txl.size());
         }
 
         if (newPendingTx.size() != txl.size()) {
@@ -336,8 +327,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         this.updateAccPoolState();
         this.updateFeeMap();
 
-        if (LOG.isInfoEnabled()) {
-            LOG.info("TxPoolA0.remove TX remove [{}] removed [{}]", txs.size(), removedTxl.size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("TxPoolA0.remove TX remove [{}] removed [{}]", txs.size(), removedTxl.size());
         }
 
         return removedTxl;
@@ -414,13 +405,13 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     public synchronized List<TX> snapshot() {
-        List<TX> rtn = new ArrayList<>();
 
         sortTxn();
         removeTimeoutTxn();
 
         int cnt_txSz = 0;
         long cnt_nrg = 0;
+        List<TX> rtn = new ArrayList<>();
         Set<ByteArrayWrapper> snapshotSet = new HashSet<>();
         Map<ByteArrayWrapper, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> nonPickedTx = new HashMap<>();
         for (Entry<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> e : this.getFeeView()
@@ -430,8 +421,17 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 LOG.trace("snapshot  fee[{}]", e.getKey().toString());
             }
 
-            Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> tpl = e.getValue();
-            for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : tpl.entrySet()) {
+            SortedMap<BigInteger, Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> timeTxDep = Collections
+                    .synchronizedSortedMap(new TreeMap<>());
+            for (Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : e.getValue().entrySet()) {
+                BigInteger ts = pair.getValue().getTimeStamp();
+                while (timeTxDep.get(ts.add(BigInteger.ONE)) != null) {
+                    ts = ts.add(BigInteger.ONE);
+                }
+                timeTxDep.put(ts, pair);
+            }
+
+            for(Entry<ByteArrayWrapper, TxDependList<ByteArrayWrapper>> pair : timeTxDep.values()) {
                 // Check the small nonce tx must been picked before put the high nonce tx
                 ByteArrayWrapper dependTx = pair.getValue().getDependTx();
                 if (dependTx == null || snapshotSet.contains(dependTx)) {
@@ -463,8 +463,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                 return rtn;
                             }
                         } else {
-                            if (LOG.isWarnEnabled()) {
-                                LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz,
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz,
                                         cnt_nrg, rtn.size());
                             }
 
@@ -502,8 +502,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                                     return rtn;
                                 }
                             } else {
-                                if (LOG.isWarnEnabled()) {
-                                    LOG.warn("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz, cnt_nrg,
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz, cnt_nrg,
                                             rtn.size());
                                 }
 
