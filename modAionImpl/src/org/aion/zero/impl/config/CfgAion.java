@@ -71,7 +71,13 @@ public final class CfgAion extends Cfg {
 
     @Override
     public void setGenesis() {
-        this.genesis = GenesisBlockLoader.loadJSON(GENESIS_FILE_PATH);
+        try {
+            this.genesis = GenesisBlockLoader.loadJSON(GENESIS_FILE_PATH);
+        } catch (IOException e) {
+            System.out.println(String.format("Genesis load exception %s", e.getMessage()));
+            System.out.println("defaulting to default AionGenesis configuration");
+            this.genesis = (new AionGenesis.Builder()).build();
+        }
     }
 
     public CfgConsensusPow getConsensus() {
