@@ -133,7 +133,7 @@ public final class BroadcastTxHandler extends Handler {
         if (this.buffer) {
             try {
                 for (AionTransaction tx : castRawTx(broadCastTx)) {
-                    if (txQueue.offer(tx)) {
+                    if (!txQueue.offer(tx)) {
                         if (log.isTraceEnabled()) {
                             log.trace("<BroadcastTxHandler txQueue full! {}>", _displayId);
                         }
