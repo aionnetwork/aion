@@ -40,6 +40,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.zero.impl.AionHub;
@@ -1549,8 +1550,22 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             List<AionTransaction> txs = b.getTransactionsList();
 
-            List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map(tx -> {
+            List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map((AionTransaction tx) -> {
                 AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
+
+                List<Message.t_LgEle> tles = ti.getReceipt().getLogInfoList().parallelStream()
+                        .map(log -> {
+                            List<String> topics = new ArrayList<>();
+                            for (int i = 0; i < log.getTopics().size(); i++) {
+                                topics.add(log.getTopics().get(i).toString());
+                            }
+
+                            return Message.t_LgEle.newBuilder()
+                                    .setData(ByteString.copyFrom(log.getData()))
+                                    .setAddress(ByteString.copyFrom(log.getAddress().toBytes()))
+                                    .addAllTopics(topics)
+                                    .build();
+                        }).filter(Objects::nonNull).collect(Collectors.toList());
 
                 Message.t_TxDetail.Builder tdBuilder = Message.t_TxDetail.newBuilder()
                         .setData(ByteString.copyFrom(tx.getData()))
@@ -1561,7 +1576,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setNrgConsumed(ti.getReceipt().getEnergyUsed())
                         .setNrgPrice(tx.getNrgPrice())
                         .setTxHash(ByteString.copyFrom(tx.getHash()))
-                        .setTxIndex(ti.getIndex());
+                        .setTxIndex(ti.getIndex())
+                        .addAllLogs(tles);
 
                 return tdBuilder.build();
             }).filter(Objects::nonNull).collect(Collectors.toList());
