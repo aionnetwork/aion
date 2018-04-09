@@ -7,7 +7,7 @@
 			<!--comma separated list, domains from which to accept cross origin requests (browser enforced)-->
 			<corsdomain>false</corsdomain>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
-			<apis-enabled> web3,eth,personal</apis-enabled>
+			<apis-enabled>web3,eth,personal</apis-enabled>
 			<!--size of thread pool allocated for rpc requests-->
 			<threads>1</threads>
 			<!--enable web3 filters. some web3 clients depend on this and wont work as expected if turned off-->
