@@ -44,8 +44,6 @@ public class PendingTxCache {
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
 
-    private final int txRtnLimit = 1000;
-
     PendingTxCache(final int cacheMax) {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
         PendingTxCache.CacheMax = cacheMax *100_000;
@@ -232,9 +230,5 @@ public class PendingTxCache {
         cacheTxMap.computeIfAbsent(from, k -> new TreeMap<>());
 
         return cacheTxMap.get(from);
-    }
-
-    public int getTxRtnLimit() {
-        return txRtnLimit;
     }
 }

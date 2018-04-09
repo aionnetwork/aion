@@ -85,6 +85,8 @@ public class AionPendingStateImpl
 
     private static final int MAX_VALIDATED_PENDING_TXS = 8192;
 
+    private final int MAX_TXCACHE_FLUSH_SIZE = MAX_VALIDATED_PENDING_TXS >> 2 ;
+
     private IAionBlockchain blockchain;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
@@ -360,7 +362,7 @@ public class AionPendingStateImpl
                     int limit = 0;
                     Set<Address> addr = pendingTxCache.getCacheTxAccount();
                     if (!addr.isEmpty()) {
-                        limit = pendingTxCache.getTxRtnLimit() / addr.size();
+                        limit = MAX_TXCACHE_FLUSH_SIZE / addr.size();
 
                         if (limit == 0) {
                             limit = 1;
