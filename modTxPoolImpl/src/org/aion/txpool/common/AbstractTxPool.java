@@ -137,18 +137,18 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         return this.poolStateView.get(acc);
     }
 
-    protected synchronized List<TX> getOutdatedListImpl() {
+    protected List<TX> getOutdatedListImpl() {
         List<TX> rtn = new ArrayList<>(this.outDated);
         this.outDated.clear();
 
         return rtn;
     }
 
-    protected synchronized void addOutDatedList(List<TX> txl) {
+    protected void addOutDatedList(List<TX> txl) {
         this.outDated.addAll(txl);
     }
 
-    public synchronized void clear() {
+    public void clear() {
         this.mainMap.clear();
         this.timeView.clear();
         this.feeView.clear();

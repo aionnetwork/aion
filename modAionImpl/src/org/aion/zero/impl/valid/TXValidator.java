@@ -55,6 +55,10 @@ public class TXValidator {
         }
     }
 
+    public static boolean isInCache(ByteArrayWrapper hash) {
+        return cache.get(hash) != null;
+    }
+
     public static boolean isValid0(AionTransaction tx) {
         byte[] check = tx.getNonce();
         if (check == null || check.length > DataWord.BYTES) {

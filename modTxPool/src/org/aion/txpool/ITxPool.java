@@ -70,4 +70,5 @@ public interface ITxPool<TX extends ITransaction> {
     List<TX> snapshotAll();
 
     TX getPoolTx(Address from, BigInteger txNonce);
+
 }

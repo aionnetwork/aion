@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class PendingTxCache {
 
@@ -189,7 +190,7 @@ public class PendingTxCache {
             }
         }
 
-        Map<BigInteger, AionTransaction> timeMap = new TreeMap<>();
+        Map<BigInteger, AionTransaction> timeMap = new LinkedHashMap<>();
         for (TreeMap<BigInteger,AionTransaction> e : cacheTxMap.values()) {
             if (!e.isEmpty()) {
                 BigInteger ts = e.firstEntry().getValue().getTimeStampBI();
@@ -201,11 +202,7 @@ public class PendingTxCache {
             }
         }
 
-        for(AionTransaction tx : timeMap.values()) {
-            processableTx.add(tx);
-        }
-
-        return processableTx;
+        return timeMap.values().isEmpty() ? new ArrayList<>() : timeMap.values().stream().collect(Collectors.toList());
     }
     public boolean isInCache(Address addr , BigInteger nonce) {
         if (this.cacheTxMap.get(addr) != null) {
