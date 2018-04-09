@@ -57,6 +57,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -68,8 +69,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private final static int TX_HASH_LEN = 32;
     private final static int ACCOUNT_CREATE_LIMIT = 100;
 
-    private LinkedBlockingQueue<TxPendingStatus> pendingStatus;
-    private LinkedBlockingQueue<TxWaitingMappingUpdate> txWait;
+    private BlockingQueue<TxPendingStatus> pendingStatus;
+    private BlockingQueue<TxWaitingMappingUpdate> txWait;
     private Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> msgIdMapping;
 
     protected void onBlock(AionBlockSummary cbs) {
@@ -77,7 +78,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         for (Long key : keys) {
             Fltr fltr = installedFilters.get(key);
             if (fltr.isExpired()) {
-                LOG.debug("<fltr key={} expired removed>", key);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<fltr key={} expired removed>", key);
+                }
                 installedFilters.remove(key);
             } else {
                 List<AionTxReceipt> txrs = cbs.getReceipts();
@@ -1628,11 +1631,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return this.pendingReceipts;
     }
 
-    @Override public LinkedBlockingQueue<TxPendingStatus> getPendingStatus() {
+    @Override public BlockingQueue<TxPendingStatus> getPendingStatus() {
         return this.pendingStatus;
     }
 
-    @Override public LinkedBlockingQueue<TxWaitingMappingUpdate> getTxWait() {
+    @Override public BlockingQueue<TxWaitingMappingUpdate> getTxWait() {
         return this.txWait;
     }
 
