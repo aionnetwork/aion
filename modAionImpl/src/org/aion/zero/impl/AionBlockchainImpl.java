@@ -487,7 +487,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
-        long currentTimestamp = System.currentTimeMillis() / THOUSAND_MS;
+        return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+    }
+
+    /**
+     * Processes a new block and potentially appends it to the blockchain, thereby
+     * changing the state of the world. Decoupled from wrapper function {@link #tryToConnect(AionBlock)}
+     * so we can feed timestamps manually
+     */
+    protected ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
+        long currentTimestamp = currTimeSeconds;
         if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
             return INVALID_BLOCK;
 
@@ -560,7 +569,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
-        long time = System.currentTimeMillis() / THOUSAND_MS;
+        return createNewBlockInternal(parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
+    }
+
+    protected AionBlock createNewBlockInternal(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime, long currTimeSeconds) {
+        long time = currTimeSeconds;
 
         if (parent.getTimestamp() >= time) {
             time = parent.getTimestamp() + 1;
