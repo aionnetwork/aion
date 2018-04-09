@@ -40,7 +40,7 @@ public class PendingTxCache {
 
     private Map<Address, TreeMap<BigInteger,AionTransaction>> cacheTxMap;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
-    private static int CacheMax = 256*100_000; //256MB
+    private static int CacheMax = 256*100_000; //25.6MB
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
 
