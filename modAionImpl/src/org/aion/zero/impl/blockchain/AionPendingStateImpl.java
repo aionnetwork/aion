@@ -675,68 +675,25 @@ public class AionPendingStateImpl
         }
     }
 
-//    @SuppressWarnings("unchecked")
-//    @Deprecated
-//    private void clearPending(IAionBlock block, List<AionTxReceipt> receipts) {
-//
-//        List<AionTransaction> txList = block.getTransactionsList();
-//
-//        if (LOG.isDebugEnabled()) {
-//            LOG.debug("clearPending block#[{}] tx#[{}]", block.getNumber(), txList.size());
-//        }
-//
-//        if (!txList.isEmpty()) {
-//            List<AionTransaction> txn = this.txPool.remove(txList);
-//
-//            int cnt = 0;
-//            for (AionTransaction tx : txn) {
-//                if (LOG.isTraceEnabled()) {
-//                    LOG.trace("Clear pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-//                }
-//
-//                AionTxReceipt receipt;
-//                if (receipts != null) {
-//                    receipt = receipts.get(cnt);
-//                } else {
-//                    AionTxInfo info = getTransactionInfo(tx.getHash(), block.getHash());
-//                    receipt = info.getReceipt();
-//                }
-//                fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
-//                cnt++;
-//            }
-//        }
-//    }
-
     @SuppressWarnings("unchecked")
     private void clearPending(IAionBlock block, List<AionTxReceipt> receipts) {
 
-        List<AionTransaction> txList = block.getTransactionsList();
-        Map<Address, BigInteger> accountNonce = new HashMap<>();
-        if (txList != null) {
+        if (block.getTransactionsList() != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("clearPending block#[{}] tx#[{}]", block.getNumber(), txList.size());
+                LOG.debug("clearPending block#[{}] tx#[{}]", block.getNumber(), block.getTransactionsList().size());
             }
 
-            for (AionTransaction tx  : txList) {
+            Map<Address, BigInteger> accountNonce = new HashMap<>();
+            int cnt = 0;
+            for (AionTransaction tx  : block.getTransactionsList()) {
                 if (accountNonce.get(tx.getFrom()) != null) {
                     continue;
                 }
 
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("clear address {}", tx.getFrom().toString());
-                }
-
                 accountNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
-            }
-        }
 
-        if (!accountNonce.isEmpty()) {
-            this.txPool.remove(accountNonce);
-
-            int cnt = 0;
-            for (AionTransaction tx : txList) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Clear pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+                    LOG.trace("Clear pending transaction, addr: {} hash: {}", tx.getFrom().toString(), Hex.toHexString(tx.getHash()));
                 }
 
                 AionTxReceipt receipt;
@@ -748,6 +705,10 @@ public class AionPendingStateImpl
                 }
                 fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
                 cnt++;
+            }
+
+            if (!accountNonce.isEmpty()) {
+                this.txPool.remove(accountNonce);
             }
         }
     }
