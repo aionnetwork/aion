@@ -222,8 +222,6 @@ public class BlockchainIntegrationTest {
 
         assertThat(bc.getBlockStore().getBestBlock().getHash()).isEqualTo(heavyBlock.getHash());
         assertThat(bc.getBlockStore().getTotalDifficulty()).isEqualTo(postHeavyBlockTD);
-
-
     }
 
     @Ignore

@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 public class GeneralEnergyLimitTests {
 
     private static final long energyLimitDivisor = 1024L;
-    private static final long energyLowerBound = 5000L;
+    private static final long energyLowerBound = 1_050_000L;
     private static final long clampUpperBound = 15_000_000L;
     private static final long clampLowerBound = 7_000_000L;
     private static final long target = 10_000_000L;
