@@ -52,8 +52,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     private void setPoolArgs(Properties config) {
-        if (Optional.ofNullable(config.get(PROP_TXN_TIMEOUT)).isPresent()) {
-            txn_timeout = Integer.valueOf(config.get(PROP_TXN_TIMEOUT).toString());
+        if (Optional.ofNullable(config.get(PROP_TX_TIMEOUT)).isPresent()) {
+            txn_timeout = Integer.valueOf(config.get(PROP_TX_TIMEOUT).toString());
             if (txn_timeout < TXN_TIMEOUT_MIN) {
                 txn_timeout = TXN_TIMEOUT_MIN;
             } else if (txn_timeout > TXN_TIMEOUT_MAX) {
@@ -73,8 +73,16 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
 
         if (Optional.ofNullable(config.get(PROP_BLOCK_NRG_LIMIT)).isPresent()) {
-            long sz_limit = Long.valueOf((String) config.get(PROP_BLOCK_NRG_LIMIT));
-            updateBlkNrgLimit(sz_limit);
+            updateBlkNrgLimit(Long.valueOf((String) config.get(PROP_BLOCK_NRG_LIMIT)));
+        }
+
+        if (Optional.ofNullable(config.get(PROP_TX_SEQ_MAX)).isPresent()) {
+            seqTxCountMax = Integer.valueOf(config.get(PROP_TX_SEQ_MAX).toString());
+            if (seqTxCountMax < SEQ_TX_MIN) {
+                seqTxCountMax = SEQ_TX_MIN;
+            } else if (seqTxCountMax > SEQ_TX_MAX) {
+                seqTxCountMax = SEQ_TX_MAX;
+            }
         }
     }
 

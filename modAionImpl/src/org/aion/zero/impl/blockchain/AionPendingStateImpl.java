@@ -219,8 +219,8 @@ public class AionPendingStateImpl
             // The BlockEnergyLimit will be updated when the best block found.
             prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, String.valueOf(CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
             prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, "16000000");
-            prop.put(ITxPool.PROP_TXN_TIMEOUT, "86400");
-            TxPoolModule txPoolModule = null;
+            prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
+            TxPoolModule txPoolModule;
             try {
                 txPoolModule = TxPoolModule.getSingleton(prop);
                 this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
