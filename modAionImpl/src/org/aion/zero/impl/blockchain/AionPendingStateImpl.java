@@ -688,12 +688,10 @@ public class AionPendingStateImpl
             Map<Address, BigInteger> accountNonce = new HashMap<>();
             int cnt = 0;
             for (AionTransaction tx  : block.getTransactionsList()) {
-                if (accountNonce.get(tx.getFrom()) != null) {
-                    continue;
+                if (accountNonce.get(tx.getFrom()) == null) {
+                    accountNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
                 }
-
-                accountNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
-
+                
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("Clear pending transaction, addr: {} hash: {}", tx.getFrom().toString(), Hex.toHexString(tx.getHash()));
                 }
