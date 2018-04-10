@@ -39,10 +39,11 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.aion.base.util.Utils.dummy;
+
 public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>>
         implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final Object object = new Object();
     private final ObjectDataSource<List<INFO>> source;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -58,7 +59,7 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
             byte[] txHash = tx.getReceipt().getTransaction().getHash();
 
             List<INFO> existingInfos = null;
-            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
+            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null || !lastSavedTxHash.isFull()) {
                 existingInfos = source.get(txHash);
             }
 

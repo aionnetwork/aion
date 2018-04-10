@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
@@ -47,7 +48,10 @@ import org.aion.zero.impl.valid.TXValidator;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -118,9 +122,8 @@ public final class BroadcastTxHandler extends Handler {
             if (log.isTraceEnabled()) {
                 log.trace("BroadcastTxHandler dump: {}", ByteUtil.toHexString(_msgBytes));
             }
-        }
-
-        if (broadCastTx.isEmpty()) {
+            return;
+        } else if (broadCastTx.isEmpty()) {
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
 
             if (log.isTraceEnabled()) {
@@ -155,8 +158,12 @@ public final class BroadcastTxHandler extends Handler {
         for (byte[] raw : broadCastTx) {
             try {
                 AionTransaction tx = new AionTransaction(raw);
-                if (TXValidator.isValid(tx)) {
-                    rtn.add(tx);
+                if (tx.getHash() != null) {
+                    if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getHash()))) {
+                        if (TXValidator.isValid(tx)) {
+                            rtn.add(tx);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // do nothing, invalid transaction from bad peer
