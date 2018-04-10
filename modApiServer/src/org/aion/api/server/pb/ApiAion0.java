@@ -286,8 +286,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.createContract(params);
 
                 if (result != null) {
-                    getMsgIdMapping().put(new ByteArrayWrapper(result.transId), new AbstractMap.SimpleEntry<>(
-                            new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
+                    getMsgIdMapping().put(ByteArrayWrapper.wrap(result.transId), new AbstractMap.SimpleEntry<>(
+                            ByteArrayWrapper.wrap(ApiUtil.getApiMsgHash(request)), ByteArrayWrapper.wrap(socketId)));
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("ApiAionA0.process.ContractDeploy - msgIdMapping.put: [{}] ", new ByteArrayWrapper(result.transId).toString());
                     }
@@ -466,8 +466,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         ApiUtil.getApiMsgHash(request));
             }
 
-            getMsgIdMapping().put(new ByteArrayWrapper(result), new AbstractMap.SimpleEntry<>(
-                    new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
+            getMsgIdMapping().put(ByteArrayWrapper.wrap(result), new AbstractMap.SimpleEntry<>(
+                    ByteArrayWrapper.wrap(ApiUtil.getApiMsgHash(request)), ByteArrayWrapper.wrap(socketId)));
             if (LOG.isDebugEnabled()) {
                 LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]",
                         new ByteArrayWrapper(result).toString());
@@ -1137,8 +1137,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         ApiUtil.getApiMsgHash(request));
             }
 
-            getMsgIdMapping().put(new ByteArrayWrapper(result), new AbstractMap.SimpleEntry<>(
-                    new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
+            getMsgIdMapping().put(ByteArrayWrapper.wrap(result), new AbstractMap.SimpleEntry<>(
+                    ByteArrayWrapper.wrap(ApiUtil.getApiMsgHash(request)), ByteArrayWrapper.wrap(socketId)));
             if (LOG.isDebugEnabled()) {
                 LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]", new ByteArrayWrapper(result).toString());
             }

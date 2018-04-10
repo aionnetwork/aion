@@ -353,6 +353,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             blkNrgLimit.set(nrg);
         }
 
+        blkNrgLimit.set(BLK_NRG_MAX);
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("TxPoolA0.updateBlkNrgLimit nrg[{}] blkNrgLimit[{}]", nrg, blkNrgLimit.get());
         }
