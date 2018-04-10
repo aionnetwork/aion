@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 public class TXValidator {
 
@@ -87,9 +88,16 @@ public class TXValidator {
         }
 
         long nrg = tx.getNrg();
-        if (!isValidNrgContractCreate(nrg)) {
-            LOG.error("invalid tx nrg!");
-            return false;
+        if (tx.isContractCreation()) {
+            if (!isValidNrgContractCreate(nrg)) {
+                LOG.error("invalid contract create nrg!");
+                return false;
+            }
+        } else {
+            if (!isValidNrgTx(nrg)) {
+                LOG.error("invalid tx nrg!");
+                return false;
+            }
         }
 
         nrg = tx.getNrgPrice();
