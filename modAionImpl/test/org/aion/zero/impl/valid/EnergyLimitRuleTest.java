@@ -54,14 +54,14 @@ public class EnergyLimitRuleTest {
 
     @Test
     public void testEnergyLimitBounds() {
-        final long INITIAL_VAL = 1000000l;
+        final long INITIAL_VAL = 2000000L;
         final long DIVISOR = 1024;
         EnergyLimitRule rule = new EnergyLimitRule(
                 constants.getEnergyDivisorLimitLong(),
                 constants.getEnergyLowerBoundLong());
 
         A0BlockHeader parentHeader = new A0BlockHeader.Builder()
-                .withEnergyLimit(1000000l)
+                .withEnergyLimit(INITIAL_VAL)
                 .build();
 
         long boundShiftLimit = INITIAL_VAL / DIVISOR;

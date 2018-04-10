@@ -34,9 +34,14 @@
  ******************************************************************************/
 package org.aion.crypto;
 
+import org.aion.base.util.ByteUtil;
 import org.junit.AfterClass;
 import org.junit.Test;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 
 public class ECKeyTest {
@@ -67,6 +72,29 @@ public class ECKeyTest {
 
         assertArrayEquals(key.getAddress(), key2.getAddress());
         assertArrayEquals(key.getPrivKeyBytes(), key2.getPrivKeyBytes());
+    }
+
+    @Test
+    public void testED25519Address() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+
+        ECKey key = ECKeyFac.inst().create();
+        assertThat(key.getPubKey()).isNotEqualTo(key.getAddress());
+
+
+        byte[] address = key.getAddress();
+        // check header for address
+        String addressStr = ByteUtil.toHexString(address);
+
+        // check length
+        assertThat(address.length).isEqualTo(32);
+
+        // check that the header matches
+        assertThat(addressStr.substring(0, 2).toLowerCase()).isEqualTo("a0");
+
+        // check that the remainder matches a hashed pubKey
+        String hashedPkString = ByteUtil.toHexString(HashUtil.h256(key.getPubKey()));
+        assertThat(hashedPkString.substring(2)).isEqualTo(addressStr.substring(2));
     }
 
     @AfterClass

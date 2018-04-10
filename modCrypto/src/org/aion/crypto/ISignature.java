@@ -50,4 +50,9 @@ public interface ISignature {
      * @return
      */
     byte[] getPubkey(byte[] msg);
+
+    /**
+     * Recovers the address of the account given the signature
+     */
+    byte[] getAddress();
 }

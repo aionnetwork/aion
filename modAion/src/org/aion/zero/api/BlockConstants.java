@@ -57,8 +57,11 @@ public class BlockConstants implements IBlockConstants {
 
     /**
      * The lowest possible value of energy, cannot be lower than this bound
+     *
+     * This value is derived from (at minimum) the ability to send 50
+     * Pure / Ambient-Cost transactions
      */
-    private static final long ENERGY_LOWER_BOUND_LONG = 5000;
+    private static final long ENERGY_LOWER_BOUND_LONG = 1050000;
     private static final BigInteger ENERGY_LOWER_BOUND = BigInteger.valueOf(ENERGY_LOWER_BOUND_LONG);
 
     public static int DURATION_LIMIT = 8;
@@ -67,22 +70,26 @@ public class BlockConstants implements IBlockConstants {
      * Rewards not set yet, but this is the projected amount based on a 10
      * second block time
      */
-    private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
+    private static final BigInteger BLOCK_REWARD = new BigInteger("1497989283243310185");
 
     private static final int BLOCK_TIME_LOWER_BOUND = 5;
     private static final int BLOCK_TIME_UPPER_BOUND = 15;
 
     /**
      * Constants for ramp-up, the ramp-up function will apply within this range
-     * TODO: This will need to be revamped to actual values
      */
     private static final long RAMP_UP_LOWER_BOUND = 0;
     private static final long RAMP_UP_UPPER_BOUND = 259200; // 1 month
 
     /**
+     * Ramp-up initial parameter, this value is calculates based on the
+     * monetary policy paper, assuming:
+     */
+    private static final BigInteger RAMP_UP_START_VALUE = new BigInteger("748994641621655092");
+    private static final BigInteger RAMP_UP_END_VALUE = BLOCK_REWARD;
+
+    /**
      * Desired block time
-     * 
-     * @return
      */
     private static final long EXPECTED_BLOCK_TIME = 10;
 
@@ -209,5 +216,15 @@ public class BlockConstants implements IBlockConstants {
      */
     public Address getTokenBridgingAddress() {
         return Address.ZERO_ADDRESS();
+    }
+
+    @Override
+    public BigInteger getRampUpStartValue() {
+        return RAMP_UP_START_VALUE;
+    }
+
+    @Override
+    public BigInteger getRampUpEndValue() {
+        return RAMP_UP_END_VALUE;
     }
 }

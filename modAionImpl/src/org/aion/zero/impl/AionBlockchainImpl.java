@@ -46,6 +46,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.BlockIdentifier;
 import org.aion.mcf.valid.BlockHeaderValidator;
+import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
@@ -126,8 +127,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
 
-    private ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
-    private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+    private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
+    private final ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
+    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
     private AtomicReference<BlockIdentifier> bestKnownBlock = new AtomicReference<BlockIdentifier>();
 
 
@@ -214,6 +216,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
          */
         this.chainConfiguration = chainConfig;
 
+        this.grandParentBlockHeaderValidator = this.chainConfiguration.createGrandParentHeaderValidator();
         this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
         this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
 
@@ -571,14 +574,24 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
 
-        A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder();
-        headerBuilder.withParentHash(parent.getHash()).withCoinbase(minerCoinbase).withNumber(parent.getNumber() + 1)
-                .withTimestamp(time).withExtraData(minerExtraData).withTxTrieRoot(calcTxTrie(txs))
+        A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
+                .withVersion((byte)1)
+                .withParentHash(parent.getHash())
+                .withCoinbase(minerCoinbase)
+                .withNumber(parent.getNumber() + 1)
+                .withTimestamp(time).withExtraData(minerExtraData)
+                .withTxTrieRoot(calcTxTrie(txs))
                 .withEnergyLimit(energyLimit);
         AionBlock block = new AionBlock(headerBuilder.build(), txs);
 
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(this.chainConfiguration.getDifficultyCalculator()
-                .calculateDifficulty(block.getHeader(), parent.getHeader()), DIFFICULTY_BYTES));
+
+        IAionBlock grandParent = this.getParent(parent.getHeader());
+        block.getHeader().setDifficulty(
+                ByteUtil.bigIntegerToBytes(this.chainConfiguration.getDifficultyCalculator()
+                .calculateDifficulty(
+                        parent.getHeader(),
+                        grandParent == null ? null : grandParent.getHeader()),
+                DIFFICULTY_BYTES));
 
         /*
          * Begin execution phase
@@ -777,7 +790,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public IAionBlock getParent(A0BlockHeader header) {
-
         return getBlockStore().getBlockByHash(header.getParentHash());
     }
 
@@ -786,9 +798,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
 
-        if (!this.parentHeaderValidator.validate(header, this.getParent(header).getHeader(), LOG)) {
+        IAionBlock parent = this.getParent(header);
+
+        if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG)) {
             return false;
         }
+
+        IAionBlock grandParent = this.getParent(parent.getHeader());
+
+        if (!this.grandParentBlockHeaderValidator.validate(
+                grandParent == null ? null : grandParent.getHeader(), parent.getHeader(), header, LOG)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -967,6 +989,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward = this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
         rewards.put(block.getCoinbase(), minerReward);
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("rewarding: {}np to {} for mining block {}", minerReward, block.getCoinbase(), block.getNumber());
+        }
 
         /*
          * Remaining fees (the ones paid to miners for running transactions) are

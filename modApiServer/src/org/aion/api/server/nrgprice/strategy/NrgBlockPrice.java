@@ -85,7 +85,7 @@ public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
         // there is nothing stopping nrg price to be 0. don't explicitly enforce non-zero nrg.
         Long minNrg = null;
         for(AionTransaction txn : txns) {
-            if (coinbase.compareTo(txn.getSignature().getPubkey(null)) != 0) {
+            if (coinbase.compareTo(txn.getFrom()) != 0) {
                 long nrg = txn.getNrgPrice();
                 if (minNrg == null || nrg < minNrg)
                     minNrg = nrg;

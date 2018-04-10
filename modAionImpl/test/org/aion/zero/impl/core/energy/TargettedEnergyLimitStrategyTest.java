@@ -21,6 +21,8 @@ import static org.mockito.Mockito.when;
 
 public class TargettedEnergyLimitStrategyTest {
 
+    private static final long MINIMUM_ENERGY_LIMIT = 1_050_000L;
+
     private static final ChainConfiguration config = new ChainConfiguration();
     private static final EnergyLimitRule rule =
             new EnergyLimitRule(config.getConstants().getEnergyDivisorLimitLong(),
@@ -59,9 +61,9 @@ public class TargettedEnergyLimitStrategyTest {
                 constants.getEnergyDivisorLimitLong(),
                 10_000_000L);
 
-        when(header.getEnergyLimit()).thenReturn(5000L);
+        when(header.getEnergyLimit()).thenReturn(MINIMUM_ENERGY_LIMIT);
         long energyLimit = strategy.getEnergyLimit(header);
-        validateHeaders(energyLimit, 5000L);
+        validateHeaders(energyLimit, MINIMUM_ENERGY_LIMIT);
     }
 
     @Test
@@ -126,14 +128,14 @@ public class TargettedEnergyLimitStrategyTest {
 
         int cycle_counter = 0;
         for (int i = 0; i < 1000; i++) {
-            long parentEnergyLimit = randLong(5000, 20000000);
+            long parentEnergyLimit = randLong((int) MINIMUM_ENERGY_LIMIT, 20000000);
 
             when(header.getEnergyLimit()).thenReturn(parentEnergyLimit);
             long energyLimit = strategy.getEnergyLimit(header);
             validateHeaders(energyLimit, parentEnergyLimit);
 
-            if (i % 100000 == 0) {
-                System.out.println("completed 100_000 cycles: " + cycle_counter + " timestamp: " + System.currentTimeMillis());
+            if (i % 100 == 0) {
+                System.out.println("completed 100 cycles: " + cycle_counter + " timestamp: " + System.currentTimeMillis());
                 cycle_counter++;
             }
         }

@@ -108,7 +108,7 @@ public class BlockchainForkingTest {
      *
      */
     @Test
-    public void testHigherDifficultyBlockFork() {
+    public void testInvalidFirstBlockDifficulty() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle b = builder
                 .withValidatorConfiguration("simple")
@@ -144,10 +144,19 @@ public class BlockchainForkingTest {
 
         ImportResult higherDifficultyResult = bc.tryToConnect(higherDifficultyBlock);
 
-        assertThat(higherDifficultyResult).isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.getBestBlockHash()).isEqualTo(higherDifficultyBlock.getHash());
+        /**
+         * With our updates to difficulty verification and calculation,
+         * this block is now invalid
+         */
+        assertThat(higherDifficultyResult).isEqualTo(ImportResult.INVALID_BLOCK);
+        assertThat(bc.getBestBlockHash()).isEqualTo(standardBlock.getHash());
 
         // the object reference here is intentional
-        assertThat(bc.getBestBlock() == higherDifficultyBlock).isTrue();
+        assertThat(bc.getBestBlock() == standardBlock).isTrue();
+    }
+
+    @Test
+    public void testSecondBlockHigherDifficultyFork() {
+
     }
 }
