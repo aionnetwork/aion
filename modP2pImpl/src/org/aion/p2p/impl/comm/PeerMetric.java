@@ -29,13 +29,16 @@ public final class PeerMetric {
 
 	private static final int STOP_CONN_AFTER_FAILED_CONN = 2;
 	private static final long FAILED_CONN_RETRY_INTERVAL = 3000;
+	private static final long BAN_CONN_RETRY_INTERVAL = 300_000;
 
 	int metricFailedConn;
 	private long metricFailedConnTs;
+	private long metricBanConnTs;
 
 	public boolean shouldNotConn() {
-		return metricFailedConn > STOP_CONN_AFTER_FAILED_CONN
-				&& ((System.currentTimeMillis() - metricFailedConnTs) > FAILED_CONN_RETRY_INTERVAL);
+		return (metricFailedConn > STOP_CONN_AFTER_FAILED_CONN
+				&& ((System.currentTimeMillis() - metricFailedConnTs) > FAILED_CONN_RETRY_INTERVAL))
+				|| ((System.currentTimeMillis() - metricBanConnTs) < BAN_CONN_RETRY_INTERVAL);
 	}
 
 	public void incFailedCount() {
@@ -48,4 +51,11 @@ public final class PeerMetric {
 			metricFailedConn--;
 	}
 
+	public void ban() {
+		metricBanConnTs = System.currentTimeMillis();
+	}
+
+	public boolean notBan() {
+		return ((System.currentTimeMillis() - metricBanConnTs) > BAN_CONN_RETRY_INTERVAL);
+	}
 }
