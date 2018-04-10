@@ -78,7 +78,7 @@ public class GenesisTestNetJsonTest {
 
         // assert that the loaded fields are correct
         assertThat(genesis.getChainId()).isEqualTo(1);
-        assertThat(genesis.getDifficultyBI()).isEqualTo(BigInteger.valueOf(1024));
+        assertThat(genesis.getDifficultyBI()).isEqualTo(BigInteger.valueOf(15));
         assertThat(genesis.getCoinbase()).isEqualTo(new Address("0x0000000000000000000000000000000000000000000000000000000000000000"));
         assertThat(genesis.getTimestamp()).isEqualTo(1497536993L);
         assertThat(genesis.getParentHash()).isEqualTo(ByteUtil.hexStringToBytes("0x0000000000000000000000000000000000000000000000000000000000000000"));
