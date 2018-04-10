@@ -44,6 +44,7 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.vm.types.DataWord;
@@ -382,8 +383,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                         @Override
                         public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
                             return new BlockHeaderValidator<A0BlockHeader>(
-                                    Arrays.asList(new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
-                                            new EnergyConsumedRule()));
+                                    Arrays.asList(
+                                            new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
+                                            new EnergyConsumedRule(),
+                                            new AionHeaderVersionRule()));
                         }
                     };
                 } else {
