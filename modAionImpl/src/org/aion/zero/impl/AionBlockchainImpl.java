@@ -496,15 +496,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * so we can feed timestamps manually
      */
     protected ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
-        long currentTimestamp = currTimeSeconds;
-        if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
-            return INVALID_BLOCK;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Try connect block hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
-                    block.getNumber());
-        }
-
+        // Check block exists before processing more rules
         if (getBlockStore().getMaxNumber() >= block.getNumber() && getBlockStore().isBlockExist(block.getHash())) {
 
             if (LOG.isDebugEnabled()) {
