@@ -694,14 +694,14 @@ public final class P2pMgr implements IP2pMgr {
 
 			allNid.put(node.getChannel().hashCode(), node);
 
+			if (showLog)
+				System.out.println("<p2p new-connection " + ip + ":" + port + ">");
+
 		} catch (IOException e) {
 			if (showLog)
 				System.out.println("<p2p inbound-accept-io-exception>");
 			return;
 		}
-
-		if (showLog)
-			System.out.println("<p2p new-connection>");
 	}
 
 	/**
@@ -904,6 +904,9 @@ public final class P2pMgr implements IP2pMgr {
 					sendMsgQue.offer(new MsgOut(node.getChannel().hashCode(), cachedResHandshake, Dest.INBOUND));
 				}
 				nodeMgr.moveInboundToActive(_channelHash, this);
+			} else {
+				if (isShowLog())
+					System.out.println("incompatible netId ours=" + this.selfNetId + " theirs=" + _netId);
 			}
 		}
 	}
