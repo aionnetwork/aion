@@ -50,6 +50,8 @@ public class Utils {
 
     private static SecureRandom random = new SecureRandom();
 
+    public static final Object dummy = new Object();
+
     /**
      * @param number
      *            should be in form '0x34fabd34....'
