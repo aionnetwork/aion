@@ -43,18 +43,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class AbstractTxPool<TX extends ITransaction> {
 
-    protected static final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
-    protected static final int multiplyM = 1_000_000;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
-    private static final int SEQUENTAILTXNCOUNT_MAX = 25;
-    protected static long txn_timeout = 86_400; // 1 day by second
-    protected static int blkSizeLimit = 16_000_000; // 16MB
-    protected final long TXN_TIMEOUT_MIN = 10; // 10s
-    protected final long TXN_TIMEOUT_MAX = 86_400; // 1 day
+
+    protected int seqTxCountMax = 16;
+    protected int txn_timeout = 86_400; // 1 day by second
+    protected int blkSizeLimit = 16_000_000; // 16MB
+
+    protected final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
+    protected final int multiplyM = 1_000_000;
+    protected final int TXN_TIMEOUT_MIN = 10; // 10s
+    protected final int TXN_TIMEOUT_MAX = 86_400; // 1 day
     protected final int BLK_SIZE_MAX = 16_000_000; // 16MB
     protected final int BLK_SIZE_MIN = 1_000_000; // 1MB
-    protected final long BLK_NRG_MAX = 100_000_000;
-    protected final long BLK_NRG_MIN = 1_000_000;
+
+    protected final int BLK_NRG_MAX = 100_000_000;
+    protected final int BLK_NRG_MIN = 1_000_000;
+    protected final int SEQ_TX_MAX = 25;
+    protected final int SEQ_TX_MIN = 5;
     /**
      * mainMap : Map<ByteArrayWrapper, TXState>
      *
@@ -137,18 +142,18 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         return this.poolStateView.get(acc);
     }
 
-    protected synchronized List<TX> getOutdatedListImpl() {
+    protected List<TX> getOutdatedListImpl() {
         List<TX> rtn = new ArrayList<>(this.outDated);
         this.outDated.clear();
 
         return rtn;
     }
 
-    protected synchronized void addOutDatedList(List<TX> txl) {
+    protected void addOutDatedList(List<TX> txl) {
         this.outDated.addAll(txl);
     }
 
-    public synchronized void clear() {
+    public void clear() {
         this.mainMap.clear();
         this.timeView.clear();
         this.feeView.clear();
@@ -315,7 +320,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                             // check the previous txn status in the old PoolState
                             if (isClean(ps, as)
                                     && ps.firstNonce.equals(txNonceStart)
-                                    && ps.combo == SEQUENTAILTXNCOUNT_MAX) {
+                                    && ps.combo == seqTxCountMax) {
                                 ps.resetInFeePool();
                                 newPoolState.add(ps);
 
@@ -323,7 +328,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                     LOG.trace("AbstractTxPool.updateAccPoolState add fn [{}]", ps.firstNonce.toString());
                                 }
 
-                                txNonceStart = txNonceStart.add(BigInteger.valueOf(SEQUENTAILTXNCOUNT_MAX));
+                                txNonceStart = txNonceStart.add(BigInteger.valueOf(seqTxCountMax));
                             } else {
                                 // remove old poolState in the feeMap
                                 if (this.feeView.get(ps.getFee()) != null) {
@@ -359,7 +364,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 fee = en.getValue().getValue();
                                 totalFee = totalFee.add(fee);
 
-                                if (++cnt == SEQUENTAILTXNCOUNT_MAX) {
+                                if (++cnt == seqTxCountMax) {
                                     if (LOG.isTraceEnabled()) {
                                         LOG.trace(
                                                 "AbstractTxPool.updateAccPoolState case1 - nonce:[{}] totalFee:[{}] cnt:[{}]",
