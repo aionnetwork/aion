@@ -496,15 +496,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * so we can feed timestamps manually
      */
     protected ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
-        long currentTimestamp = currTimeSeconds;
-        if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
-            return INVALID_BLOCK;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Try connect block hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
-                    block.getNumber());
-        }
-
+        // Check block exists before processing more rules
         if (getBlockStore().getMaxNumber() >= block.getNumber() && getBlockStore().isBlockExist(block.getHash())) {
 
             if (LOG.isDebugEnabled()) {
@@ -514,6 +506,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             // retry of well known block
             return EXIST;
+        }
+
+        long currentTimestamp = System.currentTimeMillis() / THOUSAND_MS;
+        if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
+            return INVALID_BLOCK;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Try connect block hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
+                    block.getNumber());
         }
 
         final ImportResult ret;
@@ -666,12 +667,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return null;
         }
 
-        if (exitOn < block.getNumber()) {
-            LOG.error("Exiting after block.number: ", bestBlock.getNumber());
-            flush();
-            System.exit(-1);
-        }
-
         if (!isValid(block)) {
             LOG.error("Attempting to add INVALID block.");
             return null;
@@ -726,15 +721,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 // block is bad so 'rollback' the state root to the original
                 // state
                 ((AionRepositoryImpl) repository).setRoot(origRoot);
-
-                if (this.config.getExitOnBlockConflict()) {
-                    chainStats.lostConsensus();
-                    System.out.println(
-                            "CONFLICT: BLOCK #" + block.getNumber() + ", dump: " + toHexString(block.getEncoded()));
-                    System.exit(1);
-                } else {
-                    return null;
-                }
             }
         }
 
@@ -807,9 +793,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public boolean isValid(A0BlockHeader header) {
-        if (!this.blockHeaderValidator.validate(header, LOG)) {
-            return false;
-        }
+
+
+        /*
+        * Header should already be validated at this point, no need to check again
+        * 1. Block came in from network; validated by P2P before processing further
+        * 2. Block was submitted locally - adding invalid data to your own chain
+         */
+//        if (!this.blockHeaderValidator.validate(header, LOG)) {
+//            return false;
+//        }
 
         IAionBlock parent = this.getParent(header);
 
