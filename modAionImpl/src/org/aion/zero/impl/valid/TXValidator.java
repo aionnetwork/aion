@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
+
 public class TXValidator {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.TX.name());
@@ -81,7 +83,7 @@ public class TXValidator {
         }
 
         long nrg = tx.getNrg();
-        if (nrg < 0 || nrg > Long.MAX_VALUE) {
+        if (!isValidNrgContractCreate(nrg)) {
             LOG.error("invalid tx nrg!");
             return false;
         }
