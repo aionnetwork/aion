@@ -55,7 +55,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     protected final int TXN_TIMEOUT_MAX = 86_400; // 1 day
     protected final int BLK_SIZE_MAX = 16_000_000; // 16MB
     protected final int BLK_SIZE_MIN = 1_000_000; // 1MB
-    protected final int BLK_NRG_MAX = 50_000_000;
+    protected final int BLK_NRG_MAX = 100_000_000;
     protected final int BLK_NRG_MIN = 1_000_000;
     protected final int SEQ_TX_MAX = 25;
     protected final int SEQ_TX_MIN = 5;
