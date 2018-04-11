@@ -172,9 +172,7 @@ public class PendingTxCache {
         if (nonceMap == null) {
             throw new NullPointerException();
         }
-
-        List<AionTransaction> processableTx = new ArrayList<>();
-
+        
         for (Address addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
             if (LOG.isDebugEnabled()) {
