@@ -1208,7 +1208,6 @@ public class ApiWeb3Aion extends ApiAion {
             JSONArray txns = new JSONArray();
 
             // return qSize number of blocks and transactions as json
-            ListIterator li = hashQueue.listIterator(0);
             for (int i = 0; i < hashQueue.size(); i++) {
                 byte[] hash = hashQueue.get(i);
                 JSONObject blk = blkList.get(hash);
