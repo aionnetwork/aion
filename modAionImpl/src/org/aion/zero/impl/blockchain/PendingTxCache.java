@@ -44,6 +44,10 @@ public class PendingTxCache {
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
 
+    PendingTxCache() {
+        cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
+    }
+
     PendingTxCache(final int cacheMax) {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
         PendingTxCache.CacheMax = cacheMax *100_000;
@@ -144,7 +148,7 @@ public class PendingTxCache {
                     it.remove();
                 }
             }
-
+            
             cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
 
             if (cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()) != null) {
@@ -230,5 +234,9 @@ public class PendingTxCache {
         cacheTxMap.computeIfAbsent(from, k -> new TreeMap<>());
 
         return cacheTxMap.get(from);
+    }
+
+    public int cacheSize() {
+        return currentSize.get();
     }
 }

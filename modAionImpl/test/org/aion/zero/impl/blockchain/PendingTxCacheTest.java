@@ -332,4 +332,55 @@ public class PendingTxCacheTest {
         newCache = cache.addCacheTx(tx);
         assertTrue(newCache.size() == 659);
     }
+
+    @Test
+    public void benchmark1() {
+        PendingTxCache cache = new PendingTxCache();
+
+        int input = 80_000;
+        int remove = 5;
+
+        System.out.println("Gen 80K txs");
+        List<AionTransaction> txn = getMockTransaction(0, input, 0);
+
+        System.out.println("adding 8K txs to cache");
+        List<AionTransaction> newCache = new ArrayList<>();
+
+        long t1 = System.currentTimeMillis();
+        for (AionTransaction tx : txn) {
+            newCache.add(cache.addCacheTx(tx).get(0));
+        }
+        long t2 = System.currentTimeMillis() - t1;
+        System.out.println("add 80K txs took " + t2 + " ms cacheSize: " + cache.cacheSize());
+
+        assertTrue(newCache.size() == input);
+
+        System.out.println("Gen another 80K txs");
+        txn = getMockTransaction(0, input, 1);
+
+        t1 = System.currentTimeMillis();
+        for (AionTransaction tx : txn) {
+            newCache.add(cache.addCacheTx(tx).get(0));
+        }
+        t2 = System.currentTimeMillis() - t1;
+        System.out.println("add another 80K txs took " + t2 + " ms cacheSize: " + cache.cacheSize());
+
+
+        System.out.println("flush starting");
+        Map<Address, BigInteger> flushMap = new HashMap<>();
+        flushMap.put(Address.wrap(key.get(0).getAddress()), BigInteger.valueOf(remove));
+        flushMap.put(Address.wrap(key.get(1).getAddress()), BigInteger.valueOf(remove));
+
+        t1 = System.currentTimeMillis();
+        cache.flush(flushMap);
+        t2 = System.currentTimeMillis() - t1;
+        System.out.println("flush took " + t2 + " ms");
+
+
+        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        assertTrue(cacheMap.size() == input-remove);
+
+        cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
+        assertTrue(cacheMap.size() == input-remove);
+    }
 }
