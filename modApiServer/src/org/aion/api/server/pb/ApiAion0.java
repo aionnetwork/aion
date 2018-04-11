@@ -40,8 +40,10 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -1549,21 +1551,20 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             List<AionTransaction> txs = b.getTransactionsList();
 
-            List<Message.t_TxDetail> tds = new ArrayList<>();
-            long cumulativeNrg = 0L;
+            List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map((AionTransaction tx) -> {
+                AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash());
 
-            // Can't use parallel streams here since we need to compute cumulativeNrg, which is done iteratively
-            for (AionTransaction tx : txs) {
-                AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
-                cumulativeNrg += ti.getReceipt().getEnergyUsed();
-                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg, true);
-
-                List<Message.t_LgEle> tles = Arrays.asList(rt.logs).parallelStream()
+                List<Message.t_LgEle> tles = ti.getReceipt().getLogInfoList().parallelStream()
                         .map(log -> {
+                            List<String> topics = new ArrayList<>();
+                            for (int i = 0; i < log.getTopics().size(); i++) {
+                                topics.add(TypeConverter.toJsonHex(log.getTopics().get(i)));
+                            }
+
                             return Message.t_LgEle.newBuilder()
-                                    .setData(ByteString.copyFrom(ByteUtil.hexStringToBytes(log.data)))
-                                    .setAddress(ByteString.copyFrom(Address.wrap(log.address).toBytes()))
-                                    .addAllTopics(Arrays.asList(log.topics))
+                                    .setData(ByteString.copyFrom(log.getData()))
+                                    .setAddress(ByteString.copyFrom(log.getAddress().toBytes()))
+                                    .addAllTopics(topics)
                                     .build();
                         }).filter(Objects::nonNull).collect(Collectors.toList());
 
@@ -1573,18 +1574,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setFrom(ByteString.copyFrom(tx.getFrom().toBytes()))
                         .setNonce(ByteString.copyFrom(tx.getNonce()))
                         .setValue(ByteString.copyFrom(tx.getValue()))
-                        .setNrgConsumed(rt.nrgUsed)
+                        .setNrgConsumed(ti.getReceipt().getEnergyUsed())
                         .setNrgPrice(tx.getNrgPrice())
                         .setTxHash(ByteString.copyFrom(tx.getHash()))
-                        .setTxIndex(rt.transactionIndex)
+                        .setTxIndex(ti.getIndex())
                         .addAllLogs(tles);
 
-                if (rt.contractAddress != null)
-                    tdBuilder.setContract(ByteString.copyFrom(ByteUtil.hexStringToBytes(rt.contractAddress)));
-
-                Message.t_TxDetail td = tdBuilder.build();
-                tds.add(td);
-            }
+                return tdBuilder.build();
+            }).filter(Objects::nonNull).collect(Collectors.toList());
 
             return builder.addAllTx(tds).build();
         }).filter(Objects::nonNull).collect(Collectors.toList());
