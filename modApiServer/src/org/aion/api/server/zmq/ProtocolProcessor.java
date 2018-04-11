@@ -78,7 +78,7 @@ public class ProtocolProcessor implements Runnable {
     public void run() {
         LOG.info("Starting Aion Api Server <port={}>", cfgApi.getPort());
         String bindAddr = "tcp://" + cfgApi.getIp() + ":" + cfgApi.getPort();
-        int minMsgTh = 3;
+        int msgTh = 4;
 
         try {
             // create context.
@@ -98,19 +98,12 @@ public class ProtocolProcessor implements Runnable {
             Socket evSock = ctx.socket(DEALER);
             evSock.bind(AION_ZMQ_EV_TH);
 
-            int numProcs = (Runtime.getRuntime().availableProcessors() >> 1) + minMsgTh;
-            ExecutorService es = Executors.newFixedThreadPool(numProcs);
-            for (int i = 0; i < numProcs; i++) {
-                if (i == 0) {
-                    es.execute(() -> callbackRun(ctx));
-                } else if (i == 1) {
-                    es.execute(() -> txWaitRun());
-                } else if (i == 2) {
-                    es.execute(() -> eventRun(ctx));
-                } else {
-                    es.execute(() -> workerRun(ctx));
-                }
-            }
+            ExecutorService es = Executors.newFixedThreadPool(msgTh);
+            es.execute(() -> callbackRun(ctx));
+            es.execute(this::txWaitRun);
+            es.execute(() -> eventRun(ctx));
+            es.execute(() -> workerRun(ctx));
+
 
             proxy.proxy(feSock, wkSocks, cbSock, evSock);
 
@@ -204,7 +197,7 @@ public class ProtocolProcessor implements Runnable {
         sock.connect(AION_ZMQ_CB_TH);
 
         while (!shutDown.get()) {
-            TxPendingStatus tps = null;
+            TxPendingStatus tps;
             try {
                 tps = ((HdlrZmq) this.handler).getTxStatusQueue().take();
             } catch (InterruptedException e1) {
