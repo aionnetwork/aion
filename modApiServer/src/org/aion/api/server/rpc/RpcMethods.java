@@ -77,6 +77,7 @@ public class RpcMethods {
      */
     private final Map<String, RpcMethod> ops = Map.ofEntries(
             Map.entry("ops_getAccountState", (params) -> api.ops_getAccountState(params)),
+            Map.entry("ops_getChainHeadViewBestBlock", (params) -> api.ops_getChainHeadViewBestBlock()),
             Map.entry("ops_getChainHeadView", (params) -> api.ops_getChainHeadView()),
             Map.entry("eth_getBalance", (params) -> api.eth_getBalance(params)),
             Map.entry("eth_sendRawTransaction", (params) -> api.eth_sendRawTransaction(params)),

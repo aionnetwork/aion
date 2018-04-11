@@ -56,7 +56,9 @@ public class RpcProcessor {
             try {
                 // not checking for 'jsonrpc' key == 2.0. can pass in anything
                 method = body.getString("method");
-                id = body.get("id");
+                Object _id = body.opt("id");
+                if (_id != null) // loosen the rpc spec to allow client to not send an id.
+                    id = _id;
                 params = body.opt("params");
             } catch (Exception e) {
                 LOG.debug("<rpc-server - invalid rpc request [0]>", e);

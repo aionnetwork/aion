@@ -87,7 +87,7 @@ import static org.aion.base.util.ByteUtil.toHexString;
 public class ApiWeb3Aion extends ApiAion {
 
     private final int OPS_RECENT_ENTITY_COUNT = 32;
-    private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 10;
+    private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 4;
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private ReadWriteLock templateMapLock;
@@ -1140,19 +1140,30 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        Address address;
+
+        try {
+            address = new Address(_address);
+        } catch (Exception e) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
+        }
 
         long latestBlkNum = this.getBestBlock().getNumber();
         AccountState accountState = ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
 
-        if (accountState == null)
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
+        BigInteger nonce = BigInteger.ZERO;
+        BigInteger balance = BigInteger.ZERO;
+
+        if (accountState != null) {
+            nonce = accountState.getNonce();
+            balance = accountState.getBalance();
+        }
 
         JSONObject response = new JSONObject();
         response.put("address", address.toString());
         response.put("blockNumber", latestBlkNum);
-        response.put("balance", TypeConverter.toJsonHex(accountState.getBalance()));
-        response.put("nonce", accountState.getNonce());
+        response.put("balance", TypeConverter.toJsonHex(balance));
+        response.put("nonce", TypeConverter.toJsonHex(nonce));
 
         return new RpcMsg(response);
     }
@@ -1393,6 +1404,10 @@ public class ApiWeb3Aion extends ApiAion {
         public JSONObject getResponse() {
             return response;
         }
+
+        public long getViewBestBlock() {
+            return blkObjList.get(hashQueue.peekFirst()).getNumber();
+        }
     }
 
     public class CacheUpdateThreadFactory implements ThreadFactory {
@@ -1417,6 +1432,16 @@ public class ApiWeb3Aion extends ApiAion {
         try {
             ChainHeadView v = CachedRecentEntities.get(CachedResponseType.CHAIN_HEAD.ordinal());
             return new RpcMsg(v.getResponse());
+        } catch (Exception e) {
+            LOG.error("<rpc-server - cannot get cached response for ops_getChainHeadView: ", e);
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Cached response retrieve failed.");
+        }
+    }
+
+    public RpcMsg ops_getChainHeadViewBestBlock() {
+        try {
+            ChainHeadView v = CachedRecentEntities.get(CachedResponseType.CHAIN_HEAD.ordinal());
+            return new RpcMsg(v.getViewBestBlock());
         } catch (Exception e) {
             LOG.error("<rpc-server - cannot get cached response for ops_getChainHeadView: ", e);
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Cached response retrieve failed.");
