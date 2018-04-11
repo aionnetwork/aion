@@ -139,7 +139,7 @@ public class DatabaseFactoryTest {
         props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName()).isEqualTo(SpecialLockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(RocksDBWrapper.class.getSimpleName());
 
         // H2

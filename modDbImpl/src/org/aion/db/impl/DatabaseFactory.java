@@ -110,7 +110,8 @@ public abstract class DatabaseFactory {
         if (enableHeapCache) {
             return new LockedDatabase(connectWithCache(info));
         } else {
-            if (DBVendor.fromString(info.getProperty(PROP_DB_TYPE)) == DBVendor.LEVELDB) {
+            DBVendor vendor = DBVendor.fromString(info.getProperty(PROP_DB_TYPE));
+            if (vendor == DBVendor.LEVELDB || vendor == DBVendor.ROCKSDB) {
                 return new SpecialLockedDatabase(connectBasic(info));
             } else {
                 return new LockedDatabase(connectBasic(info));
