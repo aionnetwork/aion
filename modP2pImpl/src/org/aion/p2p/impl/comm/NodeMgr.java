@@ -27,9 +27,7 @@ package org.aion.p2p.impl.comm;
 
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
-import org.aion.p2p.INodeObserver;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.impl2.P2pMgr;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -308,7 +306,7 @@ public class NodeMgr implements INodeMgr {
 	 */
 	public void moveOutboundToActive(int _nodeIdHash, String _shortId, final IP2pMgr _p2pMgr) {
 		Node node = outboundNodes.remove(_nodeIdHash);
-		if (node != null) {
+		if (node != null ) {
 			node.setConnection("outbound");
 			INode previous = activeNodes.put(_nodeIdHash, node);
 			if (previous != null)
@@ -466,6 +464,13 @@ public class NodeMgr implements INodeMgr {
 					System.out.println("<error on-close-stream-writer>");
 				}
 			}
+		}
+	}
+
+	public void ban(Integer nodeIdHash) {
+		Node node = activeNodes.get(nodeIdHash);
+		if (node != null) {
+			node.peerMetric.ban();
 		}
 	}
 }

@@ -52,8 +52,8 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     private void setPoolArgs(Properties config) {
-        if (Optional.ofNullable(config.get(PROP_TXN_TIMEOUT)).isPresent()) {
-            txn_timeout = Integer.valueOf(config.get(PROP_TXN_TIMEOUT).toString());
+        if (Optional.ofNullable(config.get(PROP_TX_TIMEOUT)).isPresent()) {
+            txn_timeout = Integer.valueOf(config.get(PROP_TX_TIMEOUT).toString());
             if (txn_timeout < TXN_TIMEOUT_MIN) {
                 txn_timeout = TXN_TIMEOUT_MIN;
             } else if (txn_timeout > TXN_TIMEOUT_MAX) {
@@ -73,8 +73,16 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
 
         if (Optional.ofNullable(config.get(PROP_BLOCK_NRG_LIMIT)).isPresent()) {
-            long sz_limit = Long.valueOf((String) config.get(PROP_BLOCK_NRG_LIMIT));
-            updateBlkNrgLimit(sz_limit);
+            updateBlkNrgLimit(Long.valueOf((String) config.get(PROP_BLOCK_NRG_LIMIT)));
+        }
+
+        if (Optional.ofNullable(config.get(PROP_TX_SEQ_MAX)).isPresent()) {
+            seqTxCountMax = Integer.valueOf(config.get(PROP_TX_SEQ_MAX).toString());
+            if (seqTxCountMax < SEQ_TX_MIN) {
+                seqTxCountMax = SEQ_TX_MIN;
+            } else if (seqTxCountMax > SEQ_TX_MAX) {
+                seqTxCountMax = SEQ_TX_MAX;
+            }
         }
     }
 
@@ -95,7 +103,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public synchronized TX add(TX tx) {
+    public TX add(TX tx) {
         List<TX> rtn = this.add(Collections.singletonList(tx)) ;
         return  rtn.isEmpty() ? null : rtn.get(0);
     }
@@ -105,7 +113,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
      *
      * @return
      */
-    public synchronized List<BigInteger> getFeeList() {
+    public List<BigInteger> getFeeList() {
         List<BigInteger> nl = Collections.synchronizedList(new ArrayList<>());
 
         this.getFeeView().entrySet().parallelStream().forEach(e -> nl.add(e.getKey()));
@@ -114,7 +122,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public synchronized List<TX> add(List<TX> txl) {
+    public List<TX> add(List<TX> txl) {
 
         List<TX> newPendingTx = new ArrayList<>();
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
@@ -177,12 +185,12 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return newPendingTx;
     }
 
-    public synchronized List<TX> getOutdatedList() {
+    public List<TX> getOutdatedList() {
         return this.getOutdatedListImpl();
     }
 
     @Override
-    public synchronized List<TX> remove(Map<Address, BigInteger> accNonce) {
+    public List<TX> remove(Map<Address, BigInteger> accNonce) {
 
         List<ByteArrayWrapper> bwList = new ArrayList<>();
         for (Map.Entry<Address, BigInteger> en1 : accNonce.entrySet()) {
@@ -258,7 +266,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
 
     @Override
     @Deprecated
-    public synchronized List<TX> remove(List<TX> txs) {
+    public List<TX> remove(List<TX> txs) {
 
         List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
         Set<Address> checkedAddress = Collections.synchronizedSet(new HashSet<>());
@@ -365,18 +373,19 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             return null;
         }
 
-        TX tx;
+        sortTxn();
 
         lock.readLock().lock();
-        AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
-        tx = (entry == null ? null : (TX)this.getMainMap().get(entry.getKey()).getTx().clone());
-        lock.readLock().unlock();
-
-        return tx;
+        try {
+            AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry = this.getAccView(from).getMap().get(txNonce);
+            return (entry == null ? null : this.getMainMap().get(entry.getKey()).getTx());
+        } finally {
+            lock.readLock().unlock();
+        }
     }
     
     @Override
-    public synchronized List<TX> snapshotAll() {
+    public List<TX> snapshotAll() {
 
         sortTxn();
         removeTimeoutTxn();
@@ -404,7 +413,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return rtn;
     }
 
-    public synchronized List<TX> snapshot() {
+    public List<TX> snapshot() {
 
         sortTxn();
         removeTimeoutTxn();
@@ -562,4 +571,5 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         }
 
     }
+
 }

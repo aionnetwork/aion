@@ -38,9 +38,10 @@ import java.util.Map;
  */
 public interface ITxPool<TX extends ITransaction> {
 
-    String PROP_TXN_TIMEOUT = "txn-timeout";
+    String PROP_TX_TIMEOUT = "tx-timeout";
     String PROP_BLOCK_SIZE_LIMIT = "blk-size-limit";
     String PROP_BLOCK_NRG_LIMIT = "blk-nrg-limit";
+    String PROP_TX_SEQ_MAX = "tx-seq-max";
 
     List<TX> add(List<TX> tx);
 
@@ -70,4 +71,5 @@ public interface ITxPool<TX extends ITransaction> {
     List<TX> snapshotAll();
 
     TX getPoolTx(Address from, BigInteger txNonce);
+
 }

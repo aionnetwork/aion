@@ -2,12 +2,12 @@ package org.aion.zero.impl.blockchain;
 
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class PendingTxCacheTest {
 
             AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.get(keyIndex).getAddress()),
                     Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
-                    ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, 1L);
+                    ByteUtil.hexStringToBytes("1"), ByteUtil.hexStringToBytes("1"), 10000L, 1L);
 
             tx.sign(key.get(keyIndex));
             txn.add(tx);
@@ -65,8 +65,8 @@ public class PendingTxCacheTest {
 
             AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.get(keyIndex).getAddress()),
                     Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
-                    ByteUtils.fromHexString("1"),
-                    ByteUtils.fromHexString(data),
+                    ByteUtil.hexStringToBytes("1"),
+                    ByteUtil.hexStringToBytes(data),
                     10000L, 1L);
 
             tx.sign(key.get(keyIndex));

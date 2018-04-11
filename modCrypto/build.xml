@@ -29,6 +29,8 @@
 	<path id="classpath.test">
 		<pathelement location="${dir.lib}/junit_4/junit-4.12.jar" />
 		<pathelement location="${dir.lib}/hamcrest/hamcrest-core-1.3.jar" />
+		<pathelement location="${dir.lib}/guava-19.0.jar" />
+		<pathelement location="${dir.lib}/truth-0.36.jar" />
 		<pathelement location="${dir.mod}/modAionBase.jar" />
 		<pathelement location="${dir.mod}/modLogger.jar" />
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />

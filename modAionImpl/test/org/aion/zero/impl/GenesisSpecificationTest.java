@@ -111,7 +111,6 @@ public class GenesisSpecificationTest {
             .withCoinbase(Address.wrap(overrideAddress))
             .withDifficulty(overrideValue.toByteArray())
             .withEnergyLimit(overrideValue.longValue())
-            .withExtraData(overrideHash)
             .withNonce(overrideHash)
             .withNumber(overrideValue.longValue())
             .withTimestamp(overrideValue.longValue())

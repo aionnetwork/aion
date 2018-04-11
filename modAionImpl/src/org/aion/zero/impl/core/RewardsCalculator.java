@@ -45,8 +45,10 @@ public class RewardsCalculator {
         // pre-calculate the desired increment
         long delta = constants.getRampUpUpperBound() - constants.getRampUpLowerBound();
         assert (delta > 0);
-        // this locks us into a particular blockTime, is this acceptable?
-        this.m = this.constants.getBlockReward().divide(BigInteger.valueOf(delta));
+
+        this.m = this.constants.getRampUpEndValue()
+                .subtract(this.constants.getRampUpStartValue())
+                .divide(BigInteger.valueOf(delta));
     }
 
     /**
@@ -55,7 +57,7 @@ public class RewardsCalculator {
     public BigInteger calculateReward(AbstractBlockHeader blockHeader) {
         long number = blockHeader.getNumber();
         if (number <= this.constants.getRampUpUpperBound()) {
-            return BigInteger.valueOf(number).multiply(m);
+            return BigInteger.valueOf(number).multiply(m).add(this.constants.getRampUpStartValue());
         } else {
             return this.constants.getBlockReward();
         }

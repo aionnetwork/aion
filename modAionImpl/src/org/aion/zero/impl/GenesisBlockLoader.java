@@ -29,6 +29,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -46,6 +48,8 @@ import com.google.common.io.ByteStreams;
  */
 public class GenesisBlockLoader {
 
+    private static final Pattern isAlphaNumeric = Pattern.compile("^(0x)?[0-9a-fA-F]+$");
+
     /**
      * Loader function, ported from @chrislol's configuration class, will open a
      * file located at filePath. Load the JSON (not incrementally) and generate
@@ -61,7 +65,7 @@ public class GenesisBlockLoader {
      *            filepath to the genesis JSON file
      * @return genesis file
      */
-    public static AionGenesis loadJSON(String filePath) {
+    public static AionGenesis loadJSON(String filePath) throws IOException {
         File genesisFile = new File(filePath);
         if (genesisFile.exists()) {
             try (InputStream is = new FileInputStream(genesisFile)) {
@@ -79,6 +83,10 @@ public class GenesisBlockLoader {
 
                 if (mapper.has("difficulty")) {
                     String difficulty = mapper.getString("difficulty");
+
+                    if (!isAlphaNumeric.matcher(difficulty).matches())
+                        throw new IOException("difficulty must be hex or numerical");
+
                     if (difficulty.substring(0, 2).equals("0x"))
                         genesisBuilder.withDifficulty(ByteUtil.hexStringToBytes(mapper.getString("difficulty")));
                     else
@@ -87,6 +95,10 @@ public class GenesisBlockLoader {
 
                 if (mapper.has("timestamp")) {
                     String timestamp = mapper.getString("timestamp");
+
+                    if (!isAlphaNumeric.matcher(timestamp).matches())
+                        throw new IOException("timestamp must be hex or numerical");
+
                     if (timestamp.substring(0, 2).equals("0x"))
                         genesisBuilder.withTimestamp(
                                 (new BigInteger(1, ByteUtil.hexStringToBytes(timestamp)).longValueExact()));
@@ -94,17 +106,25 @@ public class GenesisBlockLoader {
                         genesisBuilder.withTimestamp((new BigInteger(timestamp)).longValueExact());
                 }
 
-                if (mapper.has("extraData")) {
-                    String extraData = mapper.getString("extraData");
-                    if (extraData.substring(0, 2).equals("0x")) {
-                        genesisBuilder.withExtraData(ByteUtil.hexStringToBytes(extraData));
+                if (mapper.has("chainId")) {
+                    String chainId = mapper.getString("chainId");
+
+                    if (!isAlphaNumeric.matcher(chainId).matches())
+                        throw new IOException("chainId must be hex or numerical");
+
+                    if (chainId.length() > 2 && chainId.substring(0, 2).equals("0x")) {
+                        genesisBuilder.withChainId(Integer.parseInt(chainId.substring(2), 16));
                     } else {
-                        genesisBuilder.withExtraData(extraData.getBytes());
+                        genesisBuilder.withChainId(Integer.parseInt(chainId));
                     }
                 }
 
                 if (mapper.has("energyLimit")) {
                     String extraData = mapper.getString("energyLimit");
+
+                    if (!isAlphaNumeric.matcher(extraData).matches())
+                        throw new IOException("energyLimit must be hex or numerical");
+
                     if (extraData.substring(0, 2).equals("0x")) {
                         genesisBuilder.withEnergyLimit(
                                 new BigInteger(1, ByteUtil.hexStringToBytes(extraData)).longValueExact());
@@ -137,15 +157,10 @@ public class GenesisBlockLoader {
 
                 return genesisBuilder.build();
             } catch (IOException | JSONException e) {
-                System.out
-                        .println(String.format("AION genesis format exception at %s, loading from defaults", filePath));
-                AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
-                return genesisBuilder.build();
+                throw new IOException(e);
             }
         } else {
-            System.out.println(String.format("AION genesis not found at %s, loading from defaults", filePath));
-            AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
-            return genesisBuilder.build();
+            throw new IOException(String.format("Genesis file not found at %s", filePath));
         }
     }
 }
