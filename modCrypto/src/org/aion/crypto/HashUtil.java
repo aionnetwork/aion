@@ -44,6 +44,7 @@ import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -111,9 +112,6 @@ public class HashUtil {
 
     /**
      * Computes the 256-bit hash of the given two inputs.
-     *
-     * @param in
-     * @return
      */
     public static byte[] h256(byte[] in1, byte[] in2) {
 
@@ -302,19 +300,17 @@ public class HashUtil {
     }
 
     /**
-     * The way to calculate new address inside ethereum
-     *
-     * @param addr  - creating addres
-     * @param nonce - nonce of creating address
-     * @return new address
+     * Calculates the address as per the QA2 definitions
      */
     public static byte[] calcNewAddr(byte[] addr, byte[] nonce) {
+        ByteBuffer buf = ByteBuffer.allocate(32);
+        buf.put(AddressSpecs.A0_IDENTIFIER);
 
         byte[] encSender = RLP.encodeElement(addr);
         byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
 
-        return h256(RLP.encodeList(encSender, encNonce));
-        // return keccak256omit12(RLP.encodeList(encSender, encNonce));
+        buf.put(h256(RLP.encodeList(encSender, encNonce)), 1, 31);
+        return buf.array();
     }
 
     /**

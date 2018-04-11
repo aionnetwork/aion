@@ -36,7 +36,7 @@ import java.io.Writer;
 public class CfgTx {
 
     public CfgTx() {
-        this.cacheMax = 256;   // by MB;
+        this.cacheMax = 256;   // by 0.1M;
         this.buffer = false;
         this.poolDump =false;
     }

@@ -25,21 +25,20 @@ package org.aion.zero.impl.blockchain;
 
 import org.aion.base.type.Address;
 import org.aion.equihash.OptimizedEquiValidator;
+import org.aion.mcf.blockchain.IBlockConstants;
+import org.aion.mcf.blockchain.IChainCfg;
+import org.aion.mcf.core.IDifficultyCalculator;
+import org.aion.mcf.core.IRewardsCalculator;
+import org.aion.mcf.mine.IMiner;
+import org.aion.mcf.valid.*;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
 import org.aion.zero.impl.valid.*;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
-import org.aion.mcf.core.IDifficultyCalculator;
-import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.blockchain.IChainCfg;
-import org.aion.mcf.mine.IMiner;
-import org.aion.mcf.valid.*;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -71,9 +70,16 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
         DiffCalc diffCalcInternal = new DiffCalc(constants);
         RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants);
 
-        this.difficultyCalculatorAdapter = (current, parent) -> diffCalcInternal.calcDifficultyTarget(
-                BigInteger.valueOf(current.getTimestamp()), BigInteger.valueOf(parent.getTimestamp()),
+        this.difficultyCalculatorAdapter = (parent, grandParent) -> {
+            // special case to handle the corner case for first block
+            if (parent.getNumber() == 0L || parent.isGenesis()) {
+                return parent.getDifficultyBI();
+            }
+
+            return diffCalcInternal.calcDifficultyTarget(
+                BigInteger.valueOf(parent.getTimestamp()), BigInteger.valueOf(grandParent.getTimestamp()),
                 parent.getDifficultyBI());
+        };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
     }
 
@@ -117,7 +123,8 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                         new AionExtraDataRule(this.getConstants().getMaximumExtraDataSize()),
                         new EnergyConsumedRule(),
                         new AionPOWRule(),
-                        new EquihashSolutionRule(this.getEquihashValidator())
+                        new EquihashSolutionRule(this.getEquihashValidator()),
+                        new AionHeaderVersionRule()
                 ));
     }
 
@@ -129,6 +136,13 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                         new TimeStampRule<>(),
                         new EnergyLimitRule(this.getConstants().getEnergyDivisorLimitLong(),
                             this.getConstants().getEnergyLowerBoundLong())
+                ));
+    }
+
+    public GrandParentBlockHeaderValidator<A0BlockHeader> createGrandParentHeaderValidator() {
+        return new GrandParentBlockHeaderValidator<>(
+                Arrays.asList(
+                        new AionDifficultyRule(this)
                 ));
     }
 }

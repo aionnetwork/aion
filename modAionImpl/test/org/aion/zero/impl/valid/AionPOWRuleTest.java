@@ -34,6 +34,7 @@
  ******************************************************************************/
 package org.aion.zero.impl.valid;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.impl.valid.AionPOWRule;
 import org.aion.zero.types.A0BlockHeader;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -62,12 +64,19 @@ public class AionPOWRuleTest {
 
     @Test
     public void testBelowPOWMaximumBoundary() {
-        final byte[] predefinedValidByteString = new byte[32];
+        final byte[] predefinedStaticHash = new byte[32];
+        final long predefinedTimestamp = 0;
+        final byte[] predefinedNonce = new byte[32];
+        final byte[] predefinedSoluion = new byte[32];
         final BigInteger difficulty = BigInteger.ONE;
+
+        when(mockHeader.getStaticHash()).thenReturn(predefinedStaticHash);
+        when(mockHeader.getTimestamp()).thenReturn(predefinedTimestamp);
+        when(mockHeader.getNonce()).thenReturn(predefinedNonce);
+        when(mockHeader.getSolution()).thenReturn(predefinedSoluion);
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getHeaderBytes(any(Boolean.class))).thenReturn(predefinedValidByteString);
         when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
@@ -81,12 +90,19 @@ public class AionPOWRuleTest {
     @Test
     public void testBelowPOWHalfBoundary() {
         // yes this will produce a value smaller than the boundary
-        final byte[] predefinedValidByteString = new byte[0];
+        final byte[] predefinedStaticHash = new byte[32];
+        final long predefinedTimestamp = 1;
+        final byte[] predefinedNonce = new byte[32];
+        final byte[] predefinedSoluion = new byte[32];
         final BigInteger difficulty = BigInteger.TWO;
+
+        when(mockHeader.getStaticHash()).thenReturn(predefinedStaticHash);
+        when(mockHeader.getTimestamp()).thenReturn(predefinedTimestamp);
+        when(mockHeader.getNonce()).thenReturn(predefinedNonce);
+        when(mockHeader.getSolution()).thenReturn(predefinedSoluion);
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getHeaderBytes(any(Boolean.class))).thenReturn(predefinedValidByteString);
         when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
@@ -100,12 +116,19 @@ public class AionPOWRuleTest {
     @Test
     public void testAbovePOWHalfBoundary() {
         // this produces a result larger than the boundary
-        final byte[] predefinedValidByteString = new byte[32];
+        final byte[] predefinedStaticHash = new byte[32];
+        final long predefinedTimestamp = 0;
+        final byte[] predefinedNonce = new byte[32];
+        final byte[] predefinedSoluion = new byte[32];
         final BigInteger difficulty = BigInteger.TWO;
+
+        when(mockHeader.getStaticHash()).thenReturn(predefinedStaticHash);
+        when(mockHeader.getTimestamp()).thenReturn(predefinedTimestamp);
+        when(mockHeader.getNonce()).thenReturn(predefinedNonce);
+        when(mockHeader.getSolution()).thenReturn(predefinedSoluion);
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getHeaderBytes(any(Boolean.class))).thenReturn(predefinedValidByteString);
         when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 

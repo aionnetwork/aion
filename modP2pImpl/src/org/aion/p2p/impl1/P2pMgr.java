@@ -694,14 +694,14 @@ public final class P2pMgr implements IP2pMgr {
 
 			allNid.put(node.getChannel().hashCode(), node);
 
+			if (showLog)
+				System.out.println("<p2p new-connection " + ip + ":" + port + ">");
+
 		} catch (IOException e) {
 			if (showLog)
 				System.out.println("<p2p inbound-accept-io-exception>");
 			return;
 		}
-
-		if (showLog)
-			System.out.println("<p2p new-connection>");
 	}
 
 	/**
@@ -875,7 +875,7 @@ public final class P2pMgr implements IP2pMgr {
 	private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId,
 			int _port, final byte[] _revision) {
 		Node node = nodeMgr.getInboundNode(_channelHash);
-		if (node != null) {
+		if (node != null && node.peerMetric.notBan()) {
 			if (handshakeRuleCheck(_netId)) {
 				_buffer.nodeIdHash = Arrays.hashCode(_nodeId);
 				node.setId(_nodeId);
@@ -904,13 +904,16 @@ public final class P2pMgr implements IP2pMgr {
 					sendMsgQue.offer(new MsgOut(node.getChannel().hashCode(), cachedResHandshake, Dest.INBOUND));
 				}
 				nodeMgr.moveInboundToActive(_channelHash, this);
+			} else {
+				if (isShowLog())
+					System.out.println("incompatible netId ours=" + this.selfNetId + " theirs=" + _netId);
 			}
 		}
 	}
 
 	private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
 		Node node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
-		if (node != null) {
+		if (node != null && node.peerMetric.notBan()) {
 			node.refreshTimestamp();
 			node.setBinaryVersion(_binaryVersion);
 			nodeMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort(), this);
@@ -1231,12 +1234,19 @@ public final class P2pMgr implements IP2pMgr {
 		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
 
 		if (cnt > this.errTolerance) {
-			dropActive(nodeIdHashcode);
+			ban(nodeIdHashcode);
 			errCnt.put(nodeIdHashcode, 0);
 
-			System.out.println("<drop node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+			if (isShowLog()) {
+				System.out.println("<ban node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+			}
 		} else {
 			errCnt.put(nodeIdHashcode, cnt);
 		}
+	}
+
+	private void ban(int nodeIdHashcode) {
+		nodeMgr.ban(nodeIdHashcode);
+		nodeMgr.dropActive(nodeIdHashcode, this);
 	}
 }

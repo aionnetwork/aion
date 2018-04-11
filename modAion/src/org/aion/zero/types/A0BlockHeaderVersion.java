@@ -32,47 +32,33 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.zero.impl.core;
+package org.aion.zero.types;
 
-import org.aion.zero.api.BlockConstants;
-import org.aion.zero.impl.core.RewardsCalculator;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
-import java.math.BigInteger;
+public class A0BlockHeaderVersion {
+    public static byte V1 = 1;
 
-import static org.mockito.Mockito.when;
+    private static Set<Byte> active = new HashSet<>(){{
+        this.add(V1);
+    }};
 
-public class RewardsTest {
-
-    final long blocks = 259200;
-
-    final BigInteger blockReward = new BigInteger("1500000000000000000");
-
-    @Mock
-    BlockConstants mockConstants;
-
-    @Before
-    public void before() {
-        MockitoAnnotations.initMocks(this);
+    public static boolean isActive(byte version) {
+        return active.contains(version);
     }
 
-    // not really a test, just seeing if delta matches mining report
-    @Test
-    public void testGetDelta() {
-        when(mockConstants.getRampUpLowerBound()).thenReturn(0L);
-        when(mockConstants.getRampUpUpperBound()).thenReturn(blocks);
-        when(mockConstants.getBlockReward()).thenReturn(blockReward);
+    public static String activeVersions(){
+        String toReturn = "{";
 
-        BigInteger total = BigInteger.ZERO;
-        RewardsCalculator calc = new RewardsCalculator(mockConstants);
-        BigInteger delta = calc.getDelta();
-        for (int i = 0; i < 4; i++) {
-            System.out.println(i + " " + BigInteger.valueOf(i).multiply(delta));
+        Iterator<Byte> it = active.iterator();
+        while(it.hasNext()) {
+            toReturn += it.next();
         }
 
-        System.out.println(259199 + " " + BigInteger.valueOf(259199).multiply(delta));
+        return toReturn + "}";
+
     }
+
 }

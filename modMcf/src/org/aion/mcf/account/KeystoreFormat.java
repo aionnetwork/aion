@@ -23,10 +23,7 @@
  ******************************************************************************/
 package org.aion.mcf.account;
 
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
@@ -100,7 +97,7 @@ public class KeystoreFormat {
 
     private byte[] generateRandomBytes(int size) {
         final byte[] bytes = new byte[size];
-        Random random = new Random();
+        Random random = new SecureRandom();
         random.nextBytes(bytes);
         return bytes;
     }
