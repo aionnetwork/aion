@@ -359,9 +359,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     /**
      * Set the energyConsumed field in header, this is used during block
-     * creation
-     * {@link org.aion.zero.impl.AionBlockchainImpl#createNewBlock(AionBlock, List)}
-     * to append post-execution state parameters (of which energyConsumed is a
+     * creation to append post-execution state parameters (of which energyConsumed is a
      * part of)
      *
      * @param energyConsumed
@@ -373,14 +371,24 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     /**
      * Return unencoded bytes of the header
+     *
+     * @param toMine Return header bytes excluding nonce and solution if true; else the entire block header
      * @return byte array containing raw header bytes
      */
-    public byte[] getHeaderBytes() {
-
-        return merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
-                                 this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
-                                 this.difficulty, this.extraData, longToBytes(this.energyConsumed),
-                                 longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
+    public byte[] getHeaderBytes(boolean toMine) {
+        byte[] hdrBytes;
+        if(toMine) {
+            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+                            this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                            this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                        longToBytes(this.energyLimit), longToBytes(this.timestamp));
+        }else {
+            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+                            this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                            this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                            longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
+        }
+        return hdrBytes;
     }
 
     public static A0BlockHeader fromRLP(byte[] rawData, boolean isUnsafe) throws Exception {
@@ -470,8 +478,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     /**
      * Builder used to introduce blocks into system that come from unsafe
-     * sources, such as {@link org.aion.zero.impl.sync.msg.ResBlocksHeaders},
-     * and from API
+     * sources, such as headers received from the network and from API
      * <p>
      * In the future we may switch to something like this, just so that we have
      * safe fallbacks (non-nulls) in the event of unknown fields.
