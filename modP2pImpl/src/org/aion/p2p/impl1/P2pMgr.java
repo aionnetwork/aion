@@ -297,6 +297,14 @@ public final class P2pMgr implements IP2pMgr {
 							closeSocket((SocketChannel) sk.channel());
 							chanBuf.isClosed.set(true);
 							chanBuf.readBuf.position(0);
+
+						} catch (CancelledKeyException e) {
+							if (showLog) {
+								System.out.println("<p2p key-cancelled-exception>");
+							}
+
+							chanBuf.isClosed.set(true);
+							closeSocket((SocketChannel) sk.channel());
 						}
 					}
 				}
