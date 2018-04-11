@@ -43,6 +43,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -1551,13 +1552,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             List<AionTransaction> txs = b.getTransactionsList();
 
             List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map((AionTransaction tx) -> {
-                AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
+                AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash());
 
                 List<Message.t_LgEle> tles = ti.getReceipt().getLogInfoList().parallelStream()
                         .map(log -> {
                             List<String> topics = new ArrayList<>();
                             for (int i = 0; i < log.getTopics().size(); i++) {
-                                topics.add(log.getTopics().get(i).toString());
+                                topics.add(TypeConverter.toJsonHex(log.getTopics().get(i)));
                             }
 
                             return Message.t_LgEle.newBuilder()
