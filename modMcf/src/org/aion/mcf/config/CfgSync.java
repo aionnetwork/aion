@@ -124,13 +124,13 @@ public final class CfgSync {
             // sub-element blocks-request-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-request-max");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeCharacters(this.getBlocksRequestMax() + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-response-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-response-max");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeCharacters(this.getBlocksResponseMax() + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-queue-max
