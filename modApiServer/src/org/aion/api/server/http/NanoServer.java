@@ -41,6 +41,10 @@ public class NanoServer {
         // do not protect user from over-allocating resources to api.
         // int fixedPoolSize = Math.min(Runtime.getRuntime().availableProcessors()-1, tpoolSize);
 
+        if (tpoolSize < 1) {
+            tpoolSize = 1;
+        }
+
         // create fixed thread pool of size defined by user
         this.workers = new ThreadPoolExecutor(
                 tpoolSize,
