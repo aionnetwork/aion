@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class PendingTxCache {
 
@@ -172,7 +171,7 @@ public class PendingTxCache {
         if (nonceMap == null) {
             throw new NullPointerException();
         }
-        
+
         for (Address addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
             if (LOG.isDebugEnabled()) {
@@ -202,14 +201,10 @@ public class PendingTxCache {
             }
         }
 
-        return timeMap.values().isEmpty() ? new ArrayList<>() : timeMap.values().stream().collect(Collectors.toList());
+        return timeMap.values().isEmpty() ? new ArrayList<>() : new ArrayList<>(timeMap.values());
     }
     public boolean isInCache(Address addr , BigInteger nonce) {
-        if (this.cacheTxMap.get(addr) != null) {
-            return (this.cacheTxMap.get(addr).get(nonce) != null);
-        }
-
-        return false;
+        return this.cacheTxMap.get(addr) != null && (this.cacheTxMap.get(addr).get(nonce) != null);
     }
 
     Set<Address> getCacheTxAccount()
