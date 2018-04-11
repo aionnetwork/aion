@@ -7,7 +7,7 @@
 			<!--boolean, enable/disable cross origin requests (browser enforced)-->
 			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
-			<apis-enabled> web3,eth,personal</apis-enabled>
+			<apis-enabled>web3,eth,personal</apis-enabled>
 			<!--size of thread pool allocated for rpc requests-->
 			<threads>1</threads>
 			<!--enable web3 filters. some web3 clients depend on this and wont work as expected if turned off-->
@@ -24,13 +24,13 @@
 		</nrg-recommendation>
 	</api>
 	<net>
-		<id>0</id>
+		<id>1</id>
 		<nodes>
-			<node>p2p://2da62542-999f-4405-bdb3-50d8c61bed61@52.237.31.69:30303</node>
-			<node>p2p://c1f42646-279a-441e-bba7-bfebfc1eec63@52.179.100.107:30303</node>
-			<node>p2p://d9242b38-cf4e-4654-9995-2727fee3dd9d@13.95.218.95:30303</node>
-			<node>p2p://0466a78b-814b-4a5d-844e-7054e48f0d28@191.232.176.213:30303</node>
-			<node>p2p://f9ea8c08-6f2d-4e64-91a2-d7186d76e096@52.231.206.150:30303</node>
+			<node>p2p://c33d12c6-fdf2-4029-8137-03d0dbe9c14f@13.95.218.95:30303</node>
+			<node>p2p://c33d2b50-b734-44d3-bbff-60c235635e74@191.232.176.213:30303</node>
+			<node>p2p://c33d3a25-25dd-4f05-89e3-82d5bb4ef244@52.231.206.150:30303</node>
+			<node>p2p://c33d49b3-c05c-4b59-8c9c-880e662bf6b3@13.92.155.115:30303</node>
+			<node>p2p://c33d5f18-dba4-41d1-89f0-5c4960f4bb66@51.144.42.220:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>

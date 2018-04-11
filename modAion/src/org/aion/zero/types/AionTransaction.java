@@ -304,7 +304,7 @@ public class AionTransaction extends AbstractTransaction {
         }
 
         try {
-            from = Address.wrap(this.signature.getPubkey(null));
+            from = Address.wrap(this.signature.getAddress());
             return from;
         } catch (Exception e) {
             e.printStackTrace();
