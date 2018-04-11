@@ -58,10 +58,10 @@ public class PendingTxCache {
         if (txMap == null) {
             return 0;
         } else {
-            final int[] accountSize = { 0 };
-            txMap.values().parallelStream().forEach(tx -> accountSize[0] += tx.getEncoded().length);
+            AtomicInteger accountSize = new AtomicInteger(0);
+            txMap.values().parallelStream().forEach(tx -> accountSize.addAndGet(tx.getEncoded().length));
 
-            return accountSize[0];
+            return accountSize.get();
         }
     }
 
@@ -148,7 +148,7 @@ public class PendingTxCache {
                     it.remove();
                 }
             }
-            
+
             cacheTxMap.computeIfAbsent(tx.getFrom(), k -> new TreeMap<>());
 
             if (cacheTxMap.get(tx.getFrom()).get(tx.getNonceBI()) != null) {
