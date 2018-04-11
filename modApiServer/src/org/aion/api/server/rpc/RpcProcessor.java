@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -77,6 +76,9 @@ public class RpcProcessor {
         // protect user from over-allocating resources to api.
         // rationale: a sophisticated user would recompile the api-server with appropriate threading restrictions
         int fixedPoolSize = Math.min(Runtime.getRuntime().availableProcessors()-1, tpoolMaxSize);
+        if (fixedPoolSize < 1) {
+            fixedPoolSize = 1;
+        }
         // create fixed thread pool of size defined by user
         this.workers = new ThreadPoolExecutor(
                 fixedPoolSize,
