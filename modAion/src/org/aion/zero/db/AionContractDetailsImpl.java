@@ -53,14 +53,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
 
     private Address address = Address.EMPTY_ADDRESS();
 
-    private Set<ByteArrayWrapper> keys = new HashSet<>();
     private SecureTrie storageTrie = new SecureTrie(null);
 
     public boolean externalStorage;
     private IByteArrayKeyValueStore externalStorageDataSource;
 
     public AionContractDetailsImpl() {
-        super(-1, 1000000);
     }
 
     public AionContractDetailsImpl(int prune, int memStorageLimit) {
@@ -73,31 +71,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         setCodes(codes);
     }
 
-    public AionContractDetailsImpl(byte[] code) throws Exception {
-        if (code == null) {
-            throw new Exception("Empty input code");
-        }
-
-        decode(code);
-    }
-
-    private void addKey(byte[] key) {
-        keys.add(wrap(key));
-    }
-
-    private void removeKey(byte[] key) {
-        // keys.remove(wrap(key)); // TODO: we can't remove keys , because of
-        // fork branching
-    }
-
     @Override
     public void put(DataWord key, DataWord value) {
         if (value.equals(DataWord.ZERO)) {
             storageTrie.delete(key.getData());
-            removeKey(key.getData());
         } else {
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-            addKey(key.getData());
         }
 
         this.setDirty(true);
@@ -129,10 +108,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
 
         RLPItem address = (RLPItem) rlpList.get(0);
         RLPItem isExternalStorage = (RLPItem) rlpList.get(1);
-        RLPItem storage = (RLPItem) rlpList.get(2);
-        RLPElement code = rlpList.get(3);
-        RLPList keys = (RLPList) rlpList.get(4);
-        RLPItem storageRoot = (RLPItem) rlpList.get(5);
+        RLPItem storageRoot = (RLPItem) rlpList.get(2);
+        RLPItem storage = (RLPItem) rlpList.get(3);
+        RLPElement code = rlpList.get(4);
 
         if (address.getRLPData() == null) {
             this.address = Address.EMPTY_ADDRESS();
@@ -140,8 +118,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
             this.address = Address.wrap(address.getRLPData());
         }
 
-        this.externalStorage = !Arrays.equals(isExternalStorage.getRLPData(), EMPTY_BYTE_ARRAY);
-        this.storageTrie.deserialize(storage.getRLPData());
         if (code instanceof RLPList) {
             for (RLPElement e : ((RLPList) code)) {
                 setCode(e.getRLPData());
@@ -149,9 +125,16 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         } else {
             setCode(code.getRLPData());
         }
-        for (RLPElement key : keys) {
-            addKey(key.getRLPData());
+
+        this.externalStorage = !Arrays.equals(isExternalStorage.getRLPData(), EMPTY_BYTE_ARRAY);
+        if (externalStorage) {
+            storageTrie = new SecureTrie(getExternalStorageDataSource());
+            storageTrie.withPruningEnabled(prune >= 0);
+            storageTrie.setRoot(storageRoot.getRLPData());
+        } else {
+            this.storageTrie.deserialize(storage.getRLPData());
         }
+
 
         if (externalStorage) {
             storageTrie.withPruningEnabled(prune >= 0);
@@ -159,7 +142,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
-        externalStorage = (storage.getRLPData().length > detailsInMemoryStorageLimit) || externalStorage;
+        this.externalStorage = (storage.getRLPData().length > detailsInMemoryStorageLimit) || externalStorage;
 
         this.rlpEncoded = rlpCode;
     }
@@ -171,17 +154,15 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
             byte[] rlpAddress = RLP.encodeElement(address.toBytes());
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
             byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-            byte[] rlpStorage = RLP.encodeElement(storageTrie.serialize());
+            byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
             byte[][] codes = new byte[getCodes().size()][];
             int i = 0;
             for (byte[] bytes : this.getCodes().values()) {
                 codes[i++] = RLP.encodeElement(bytes);
             }
             byte[] rlpCode = RLP.encodeList(codes);
-            byte[] rlpKeys = RLP.encodeSet(keys);
 
-            this.rlpEncoded = RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorage, rlpCode, rlpKeys,
-                    rlpStorageRoot);
+            this.rlpEncoded = RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
         }
 
         return rlpEncoded;
@@ -191,16 +172,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
         Map<DataWord, DataWord> storage = new HashMap<>();
         if (keys == null) {
-            for (ByteArrayWrapper keyBytes : this.keys) {
-                DataWord key = new DataWord(keyBytes);
-                DataWord value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if (value != null) {
-                    storage.put(key, value);
-                }
-            }
+            throw new IllegalArgumentException("Input keys can't be null");
         } else {
             for (DataWord key : keys) {
                 DataWord value = get(key);
@@ -218,21 +190,17 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
-        return getStorage(null);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int getStorageSize() {
-        return keys.size();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Set<DataWord> getStorageKeys() {
-        Set<DataWord> result = new HashSet<>();
-        for (ByteArrayWrapper key : keys) {
-            result.add(new DataWord(key));
-        }
-        return result;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -259,10 +227,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     public void setAddress(Address address) {
         this.address = address;
         this.rlpEncoded = null;
-    }
-
-    public SecureTrie getStorageTrie() {
-        return storageTrie;
     }
 
     @Override
@@ -293,12 +257,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
 
     @Override
     public IContractDetails<DataWord> clone() {
-
-        // FIXME: clone is not working now !!!
-        // FIXME: should be fixed
-        // storageTrie.getRoot();
-
-        return new AionContractDetailsImpl(address, storageTrie, getCodes());
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -316,7 +275,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         AionContractDetailsImpl details = new AionContractDetailsImpl(this.address, snapStorage, getCodes());
         details.externalStorage = this.externalStorage;
         details.externalStorageDataSource = this.externalStorageDataSource;
-        details.keys = this.keys;
         details.dataSource = dataSource;
 
         return details;
