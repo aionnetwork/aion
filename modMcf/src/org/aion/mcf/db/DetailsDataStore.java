@@ -39,6 +39,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DataWord;
 // import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.zero.db.AionContractDetailsImpl;
 
 /**
  * Detail data storage ,
@@ -110,6 +111,12 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransacti
         // Put into cache.
         byte[] rawDetails = contractDetails == null ? null : contractDetails.getEncoded();
         detailsSrc.put(key.toBytes(), rawDetails);
+
+        if (contractDetails instanceof AionContractDetailsImpl) {
+            if (((AionContractDetailsImpl) contractDetails).externalStorage) {
+                contractDetails.syncStorage();
+            }
+        }
 
         // Remove from the remove set.
         removes.remove(wrappedKey);

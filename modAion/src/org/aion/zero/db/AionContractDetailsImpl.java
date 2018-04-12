@@ -36,6 +36,7 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.vm.types.DataWord;
@@ -129,18 +130,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         // load/deserialize storage trie
         this.externalStorage = !Arrays.equals(isExternalStorage.getRLPData(), EMPTY_BYTE_ARRAY);
         if (externalStorage) {
-            storageTrie = new SecureTrie(getExternalStorageDataSource());
+            storageTrie = new SecureTrie(getExternalStorageDataSource(), storageRoot.getRLPData());
         } else {
             storageTrie.deserialize(storage.getRLPData());
         }
         storageTrie.withPruningEnabled(prune > 0);
-        storageTrie.setRoot(storageRoot.getRLPData());
 
         // switch from in-memory to external storage
         if (!externalStorage && storage.getRLPData().length > detailsInMemoryStorageLimit) {
-
-            System.out.println("Switch from in-memory to external storage: " + getAddress());
-
             externalStorage = true;
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
