@@ -43,7 +43,7 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
         BigInteger boundary = header.getPowBoundaryBI();
 
-        byte[] hdrBytes = HashUtil.h256(header.getHeaderBytes(true));
+        byte[] hdrBytes = header.getMineHash();
         byte[] input = new byte[32 + 32 + 1408]; // H(Hdr) + nonce + solution
 
         int pos = 0;
