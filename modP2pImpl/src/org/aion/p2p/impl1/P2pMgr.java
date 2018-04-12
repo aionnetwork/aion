@@ -102,7 +102,6 @@ public final class P2pMgr implements IP2pMgr {
 
 	private int errTolerance;
 
-
 	enum Dest {
 		INBOUND, OUTBOUND, ACTIVE;
 	}
@@ -153,9 +152,13 @@ public final class P2pMgr implements IP2pMgr {
 
 			while (start.get()) {
 
+				try {
+					Thread.sleep(0, 1);
+				} catch (Exception e) {
+				}
+
 				int num;
 				try {
-					// num = selector.select(1);
 					num = selector.selectNow();
 				} catch (IOException e) {
 					if (showLog)
@@ -164,14 +167,9 @@ public final class P2pMgr implements IP2pMgr {
 				}
 
 				if (num == 0) {
-					try {
-						Thread.sleep(0, 10);
-					} catch (Exception e) {
-					}
 					continue;
 				}
 
-				// selectorLock.lock();
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 
 				while (keys.hasNext() && (num-- > 0)) {
@@ -202,9 +200,6 @@ public final class P2pMgr implements IP2pMgr {
 								continue;
 							}
 
-							int assertBufRemain = chanBuf.buffRemain;
-							int assertTotalCnt = cnt;
-
 							int prevCnt = cnt + chanBuf.buffRemain;
 
 							do {
@@ -233,17 +228,6 @@ public final class P2pMgr implements IP2pMgr {
 								int remain = chanBuf.readBuf.remaining();
 								if (remain < 128 * 1024) {
 
-//									if (showLog)
-//										System.out.println(" NIO new buffer! , size = " + cnt + " originTotal_read:"
-//												+ assertTotalCnt + " orig_remain:" + assertBufRemain
-//												+ " __________ buf remain:" + chanBuf.readBuf.remaining() + " limit:"
-//												+ chanBuf.readBuf.limit());
-
-									// if still not read buffer , then copy
-									// it
-									// and move it to front. later , this
-									// can
-									// change to ring buffer.
 									int currPos = chanBuf.readBuf.position();
 									if (cnt != 0) {
 										byte[] tmp = new byte[cnt];
@@ -271,10 +255,6 @@ public final class P2pMgr implements IP2pMgr {
 							if (showLog) {
 								System.out.println("<p2p read-msg-P2p-exception>");
 							}
-
-							// e.printStackTrace();
-
-							// continue;
 
 							closeSocket((SocketChannel) sk.channel());
 							chanBuf.isClosed.set(true);
@@ -308,7 +288,6 @@ public final class P2pMgr implements IP2pMgr {
 						}
 					}
 				}
-				// selectorLock.unlock();
 			}
 			if (showLog)
 				System.out.println("<p2p-pi shutdown>");
@@ -359,18 +338,6 @@ public final class P2pMgr implements IP2pMgr {
 					break;
 				}
 			}
-			// Node node = this.nodeMgr.getActiveNode(_nodeIdHashcode);
-			// if (node != null) {
-			// SelectionKey sk = node.getChannel().keyFor(selector);
-			//
-			// if (sk != null) {
-			// Object attachment = sk.attachment();
-			// if (attachment != null)
-			// workers.submit(new TaskWrite(workers, showLog, node.getIdShort(),
-			// node.getChannel(), _msg,
-			// (ChannelBuffer) attachment, this));
-			// }
-			// }
 		}
 	}
 
@@ -713,7 +680,8 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	/**
-	 *            SocketChannel
+	 * SocketChannel
+	 * 
 	 * @throws IOException
 	 *             IOException
 	 */
@@ -741,7 +709,8 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	/**
-	 *            SocketChannel
+	 * SocketChannel
+	 * 
 	 * @throws IOException
 	 *             IOException
 	 */
@@ -820,7 +789,6 @@ public final class P2pMgr implements IP2pMgr {
 
 		// print route
 		// System.out.println("read " + ver + "-" + ctrl + "-" + act);
-
 
 		switch (ver) {
 		case Ver.V0:
@@ -1236,7 +1204,7 @@ public final class P2pMgr implements IP2pMgr {
 
 	@Override
 	public void errCheck(int nodeIdHashcode, String _displayId) {
-		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
+		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1));
 
 		if (cnt > this.errTolerance) {
 			ban(nodeIdHashcode);
