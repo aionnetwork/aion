@@ -37,8 +37,8 @@ public class CfgTx {
 
     public CfgTx() {
         this.cacheMax = 256;   // by 0.1M;
-        this.buffer = false;
-        this.poolDump =false;
+        this.buffer = true;
+        this.poolDump = false;
     }
 
     private int cacheMax;
