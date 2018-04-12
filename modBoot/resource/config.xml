@@ -68,8 +68,6 @@
 	<db>
 		<path>database</path>
 		<vendor>leveldb</vendor>
-		<enable_heap_cache>false</enable_heap_cache>
-		<max_heap_cache_size>1024</max_heap_cache_size>
 		<enable_db_cache>true</enable_db_cache>
 		<enable_db_compression>true</enable_db_compression>
 		<max_fd_alloc_size>1024</max_fd_alloc_size>
