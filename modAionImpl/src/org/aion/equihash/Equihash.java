@@ -115,14 +115,8 @@ public class Equihash {
 
         A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
 
-        // Static header bytes (portion of header which does not change per equihash iteration)
-        byte [] staticHeaderBytes = updateHeader.getStaticHash();
+        byte[] inputBytes = updateHeader.getMineHash();
 
-        // Dynamic header bytes
-        long timestamp = System.currentTimeMillis() / 1000;
-
-        // Dynamic header bytes (portion of header which changes each iteration0
-        byte[] dynamicHeaderBytes = ByteUtil.longToBytes(timestamp);
 
         BigInteger target = updateHeader.getPowBoundaryBI();
 
@@ -130,11 +124,6 @@ public class Equihash {
 
         // Convert byte to LE order (in place)
         toLEByteArray(nonce);
-
-        //Merge H(static) and dynamic portions into a single byte array
-        byte[] inputBytes = new byte[staticHeaderBytes.length + dynamicHeaderBytes.length];
-        System.arraycopy(staticHeaderBytes, 0, inputBytes, 0 , staticHeaderBytes.length);
-        System.arraycopy(dynamicHeaderBytes, 0, inputBytes, staticHeaderBytes.length, dynamicHeaderBytes.length);
 
         // Get solutions for this nonce
         generatedSolutions = getSolutionsForNonce(inputBytes, nonce);
@@ -153,11 +142,11 @@ public class Equihash {
             // Verify if any of the solutions pass the difficulty filter, return if true.
             byte[] minimal = EquiUtils.getMinimalFromIndices(generatedSolutions[i], cBitLen);
 
-            byte[] validationBytes = merge(staticHeaderBytes, dynamicHeaderBytes, nonce, minimal);
+            byte[] validationBytes = merge(inputBytes, nonce, minimal);
 
             // Found a valid solution
             if (isValidBlock(validationBytes, target)) {
-                return new Solution(block, nonce, minimal, timestamp);
+                return new Solution(block, nonce, minimal);
             }
         }
 

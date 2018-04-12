@@ -43,26 +43,15 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
         BigInteger boundary = header.getPowBoundaryBI();
 
-        // 32 byte static hash, 8 byte dynamic, 32 byte nonce, 1408 solution (1480 input)
-        byte[] validationBytes = new byte[1480];
-        byte[] staticHash = header.getStaticHash();
-        byte[] dynamic = ByteUtil.longToBytes(header.getTimestamp());
-        byte[] nonce = header.getNonce();
-        byte[] solution = header.getSolution();
+        byte[] hdrBytes = HashUtil.h256(header.getHeaderBytes(true));
+        byte[] input = new byte[32 + 32 + 1408]; // H(Hdr) + nonce + solution
+
         int pos = 0;
+        System.arraycopy(hdrBytes, 0, input, pos, hdrBytes.length);
+        System.arraycopy(header.getNonce(), 0, input, pos+=32, 32);
+        System.arraycopy(header.getSolution(), 0, input, pos+=32, 1408);
 
-        System.arraycopy(staticHash, 0, validationBytes, pos, staticHash.length);
-        pos += staticHash.length;
-
-        System.arraycopy(dynamic, 0, validationBytes, pos, dynamic.length);
-        pos += dynamic.length;
-
-        System.arraycopy(nonce, 0, validationBytes, pos, nonce.length);
-        pos += nonce.length;
-
-        System.arraycopy(solution, 0, validationBytes, pos, solution.length);
-
-        BigInteger hash = new BigInteger(1, HashUtil.h256(validationBytes));
+        BigInteger hash = new BigInteger(1, HashUtil.h256(input));
 
         if (hash.compareTo(boundary) >= 0) {
             addError(formatError(hash, boundary), errors);

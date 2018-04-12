@@ -1469,7 +1469,7 @@ public class ApiWeb3Aion extends ApiAion {
         // TODO: Change this to a synchronized map implementation mapping
 
         AionBlock bestBlock = getBlockTemplate();
-        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getStaticHash());
+        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getMineHash());
 
         // Read template map; if block already contained chain has not moved forward, simply return the same block.
         boolean isContained = false;
@@ -1508,10 +1508,9 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject obj = new JSONObject();
         obj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
         obj.put("height", bestBlock.getNumber());
-        obj.put("target", toHexString(BigInteger.valueOf(2).pow(256)
-                .divide(new BigInteger(bestBlock.getHeader().getDifficulty())).toByteArray())); // TODO: Pool eventually calculates itself
+        obj.put("target", toHexString(bestBlock.getHeader().getPowBoundary())); // TODO: Pool eventually calculates itself
         obj.put("transactions", new JSONArray());
-        obj.put("headerHash", toHexString(bestBlock.getHeader().getStaticHash()));
+        obj.put("headerHash", toHexString(bestBlock.getHeader().getMineHash()));
         obj.put("partialHash", toHexString(bestBlock.getHeader().getStaticHash())); // May not be the same as headerHash in future
 
         return new RpcMsg(obj);
@@ -1592,12 +1591,10 @@ public class ApiWeb3Aion extends ApiAion {
         Object nce;
         Object soln;
         Object hdrHash;
-        Object ts;
         if (_params instanceof JSONArray) {
             nce = ((JSONArray)_params).opt(0);
             soln = ((JSONArray)_params).opt(1);
             hdrHash = ((JSONArray)_params).opt(2);
-            ts = ((JSONArray)_params).opt(3);
         }
         else {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
@@ -1605,8 +1602,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (nce != null && soln != null && hdrHash != null && ts != null &&
-                !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null) && !ts.equals(null)) {
+        if (nce != null && soln != null && hdrHash != null &&
+                !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null)) {
 
             try {
                 templateMapLock.writeLock().lock();
@@ -1618,7 +1615,6 @@ public class ApiWeb3Aion extends ApiAion {
                 if (bestBlock != null) {
                     bestBlock.getHeader().setSolution(hexStringToBytes(soln + ""));
                     bestBlock.getHeader().setNonce(hexStringToBytes(nce + ""));
-                    bestBlock.getHeader().setTimestamp(Long.parseLong(ts + "", 16));
 
                     // Directly submit to chain for new due to delays using event, explore event submission again
                     ImportResult importResult = AionImpl.inst().addNewMinedBlock(bestBlock);
@@ -1668,7 +1664,7 @@ public class ApiWeb3Aion extends ApiAion {
                     obj.put("code", 0); // 0 = success
                     obj.put("nonce", toHexString(header.getNonce()));
                     obj.put("solution", toHexString(header.getSolution()));
-                    obj.put("headerHash", toHexString(header.getStaticHash()));
+                    obj.put("headerHash", toHexString(header.getMineHash()));
                     obj.putOpt("blockHeader", header.toJSON());
                 } else {
                     obj.put("message", "Fail - Unable to find block" + bnStr);

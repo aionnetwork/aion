@@ -227,7 +227,6 @@ public class AionPoW {
             // set the nonce and solution
             block.getHeader().setNonce(solution.getNonce());
             block.getHeader().setSolution(solution.getSolution());
-            block.getHeader().setTimestamp(solution.getTimeStamp());
 
             // This can be improved
             ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
