@@ -51,7 +51,7 @@ public class CfgDb {
         this.vendor = DBVendor.LEVELDB.toValue();
         this.path = "database";
 
-        this.enable_auto_commit = false;
+        this.enable_auto_commit = true;
         this.enable_db_cache = true;
         this.enable_db_compression = true;
         this.enable_heap_cache = false;
@@ -220,11 +220,6 @@ public class CfgDb {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.ENABLE_AUTO_COMMIT);
-            xmlWriter.writeCharacters(String.valueOf(this.isAutoCommitEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement(Props.ENABLE_DB_CACHE);
             xmlWriter.writeCharacters(String.valueOf(this.isDbCacheEnabled()));
             xmlWriter.writeEndElement();
@@ -232,21 +227,6 @@ public class CfgDb {
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement(Props.ENABLE_DB_COMPRESSION);
             xmlWriter.writeCharacters(String.valueOf(this.isDbCompressionEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.ENABLE_HEAP_CACHE);
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.MAX_HEAP_CACHE_SIZE);
-            xmlWriter.writeCharacters(String.valueOf(this.getMaxHeapCacheSize()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.ENABLE_HEAP_CACHE_STATS);
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheStatsEnabled()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
