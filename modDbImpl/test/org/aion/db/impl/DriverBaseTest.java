@@ -549,6 +549,31 @@ public class DriverBaseTest {
         assertThat(db.isLocked()).isFalse();
     }
 
+
+    @Test
+    public void testDrop() {
+        // ensure existence
+        Map<byte[], byte[]> map = new HashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+        map.put(k3, null);
+        db.putBatch(map);
+
+        assertThat(db.get(k1).isPresent()).isTrue();
+        assertThat(db.get(k2).isPresent()).isTrue();
+        assertThat(db.get(k3).isPresent()).isFalse();
+
+        // check presence after delete
+        db.drop();
+
+        assertThat(db.get(k1).isPresent()).isFalse();
+        assertThat(db.get(k2).isPresent()).isFalse();
+        assertThat(db.get(k3).isPresent()).isFalse();
+
+        // ensure unlocked
+        assertThat(db.isLocked()).isFalse();
+    }
+
     @Test
     public void testApproximateDBSize() {
         if (db.isPersistent()) {
