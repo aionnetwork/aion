@@ -108,6 +108,28 @@ public class BlockchainAccountStateBenchmark {
                 })
                 .build();
 
+        // RocksSB
+        StandaloneBlockchain.Bundle rocksDbBundle = new StandaloneBlockchain.Builder()
+                .withDefaultAccounts()
+                .withValidatorConfiguration("simple")
+                .withRepoConfig(new MockRepositoryConfig() {
+                    @Override
+                    public String[] getVendorList() {
+                        return new String[] { DBVendor.ROCKSDB.toValue() };
+                    }
+
+                    @Override
+                    public String getActiveVendor() {
+                        return DBVendor.ROCKSDB.toValue();
+                    }
+
+                    @Override
+                    public String getDbPath() {
+                        return baseTestPath + "/" + dbPaths[1];
+                    }
+                })
+                .build();
+
         // h2
         StandaloneBlockchain.Bundle h2DbBundle = new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
@@ -133,6 +155,7 @@ public class BlockchainAccountStateBenchmark {
         return Arrays.asList(new Object[][] {
                 {"mockDb", mockBundle},
                 {"levelDb", levelDbBundle},
+                {"rocksDb", rocksDbBundle},
                 {"h2Db", h2DbBundle}
         });
     }
@@ -223,6 +246,8 @@ public class BlockchainAccountStateBenchmark {
             System.out.println("deployed at: " + contractAddress);
             for (int i = 0; i < 10; i++)
                 createContractBundle(bc, senderKey, bc.getBestBlock(), contractAddress);
+        } catch (Throwable t) {
+            t.printStackTrace();
         } finally {
             bundle.bc.getRepository().close();
             Thread.sleep(1000L);
