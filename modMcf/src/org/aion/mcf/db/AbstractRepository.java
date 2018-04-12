@@ -83,7 +83,8 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     protected IByteArrayKeyValueDatabase indexDatabase;
     protected IByteArrayKeyValueDatabase blockDatabase;
     protected IByteArrayKeyValueDatabase stateDatabase;
-    protected IByteArrayKeyValueDatabase pendingTxDatabase;
+    protected IByteArrayKeyValueDatabase txPoolDatabase;
+    protected IByteArrayKeyValueDatabase pendingTxCacheDatabase;
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
@@ -208,9 +209,13 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             this.blockDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(blockDatabase);
 
-            sharedProps.setProperty("db_name", PENDINGTX_DB);
-            this.pendingTxDatabase = connectAndOpen(sharedProps);
-            databaseGroup.add(pendingTxDatabase);
+            sharedProps.setProperty("db_name", PENDINGTX_DB+"Pool");
+            this.txPoolDatabase = connectAndOpen(sharedProps);
+            databaseGroup.add(txPoolDatabase);
+
+            sharedProps.setProperty("db_name", PENDINGTX_DB+"Cache");
+            this.pendingTxCacheDatabase = connectAndOpen(sharedProps);
+            databaseGroup.add(pendingTxCacheDatabase);
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);

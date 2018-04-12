@@ -43,13 +43,17 @@ public class PendingTxCache {
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
 
+    private Set<byte[]> cacheClearTxHash;
+
     PendingTxCache() {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
+        cacheClearTxHash = new HashSet<>();
     }
 
     PendingTxCache(final int cacheMax) {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
         PendingTxCache.CacheMax = cacheMax *100_000;
+        cacheClearTxHash = new HashSet<>();
     }
 
     private int getAccountSize(Map<BigInteger, AionTransaction> txMap) {
@@ -97,6 +101,7 @@ public class PendingTxCache {
                 if (cacheTxMap.get(tx.getFrom()).get(nonce) != null) {
                     // case 1: found tx has same nonce in the cachemap
                     removeTx.add(nonce);
+                    cacheClearTxHash.add(tx.getHash().clone());
                     int oldTxSize = cacheTxMap.get(tx.getFrom()).get(nonce).getEncoded().length;
                     tempCacheSize -= oldTxSize;
                     if (!isCacheMax( txSize - oldTxSize)) {
@@ -107,6 +112,7 @@ public class PendingTxCache {
                         for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
                             if (e.getKey().compareTo(nonce) > 0) {
                                 removeTx.add(e.getKey());
+                                cacheClearTxHash.add(e.getValue().getHash().clone());
                                 tempCacheSize -= e.getValue().getEncoded().length;
                                 if (tempCacheSize + txSize < CacheMax) {
                                     findPosition = true;
@@ -120,6 +126,7 @@ public class PendingTxCache {
                     for (Map.Entry<BigInteger, AionTransaction> e :  cacheTxMap.get(tx.getFrom()).descendingMap().entrySet()) {
                         if (e.getKey().compareTo(nonce) > 0) {
                             removeTx.add(e.getKey());
+                            cacheClearTxHash.add(e.getValue().getHash().clone());
                             tempCacheSize -= e.getValue().getEncoded().length;
                             if (tempCacheSize + txSize < CacheMax) {
                                 findPosition = true;
@@ -143,7 +150,11 @@ public class PendingTxCache {
                 //remove firstAccount in pendingTxCache
                 Iterator<Map.Entry<Address,TreeMap<BigInteger, AionTransaction>>> it = cacheTxMap.entrySet().iterator();
                 if (it.hasNext()) {
-                    currentSize.addAndGet( -getAccountSize(it.next().getValue()));
+                    Map<BigInteger, AionTransaction> tmp = it.next().getValue();
+                    currentSize.addAndGet( -getAccountSize(tmp));
+                    for (AionTransaction removeTx : tmp.values()) {
+                        cacheClearTxHash.add(removeTx.getHash().clone());
+                    }
                     it.remove();
                 }
             }
@@ -180,6 +191,12 @@ public class PendingTxCache {
 
             if (cacheTxMap.get(addr) != null) {
                 currentSize.addAndGet(- getAccountSize(cacheTxMap.get(addr)));
+
+                Map<BigInteger, AionTransaction> headmap = cacheTxMap.get(addr).headMap(bn);
+                for (AionTransaction tx : headmap.values()) {
+                    cacheClearTxHash.add(tx.getHash().clone());
+                }
+
                 cacheTxMap.get(addr).headMap(bn).clear();
                 currentSize.addAndGet(getAccountSize(cacheTxMap.get(addr)));
 
@@ -249,5 +266,13 @@ public class PendingTxCache {
         }
 
         return rtn;
+    }
+
+    public Set<byte[]> getClearTxHash() {
+        return cacheClearTxHash;
+    }
+
+    public void clearCacheTxHash() {
+        cacheClearTxHash.clear();
     }
 }

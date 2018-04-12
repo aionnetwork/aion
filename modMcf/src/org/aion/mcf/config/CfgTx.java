@@ -39,6 +39,7 @@ public class CfgTx {
         this.cacheMax = 256;   // by 0.1M;
         this.buffer = true;
         this.poolDump = false;
+        this.poolBackup = false;
     }
 
     private int cacheMax;
@@ -46,6 +47,8 @@ public class CfgTx {
     private boolean buffer;
 
     private boolean poolDump;
+
+    private boolean poolBackup;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -69,6 +72,9 @@ public class CfgTx {
                 case "pooldump":
                     this.poolDump = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
+                    case "poolbackup":
+                        this.poolBackup = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
                 default:
                     Cfg.skipElement(sr);
                     break;
@@ -119,6 +125,10 @@ public class CfgTx {
 
     public boolean getPoolDump() {
         return poolDump;
+    }
+
+    public boolean getPoolBackup() {
+        return poolBackup;
     }
 }
 

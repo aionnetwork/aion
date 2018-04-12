@@ -119,6 +119,12 @@ public class AionPendingStateImpl
 
     private boolean loadPendingTx;
 
+    private boolean poolBackUp;
+
+    private Map<byte[], byte[]> backupPendingPoolAdd;
+    private Map<byte[], byte[]> backupPendingCacheAdd;
+    private Set<byte[]> backupPendingPoolRemove;
+
     class TxBuffTask extends TimerTask {
         @Override
         public void run() {
@@ -197,15 +203,27 @@ public class AionPendingStateImpl
     }
 
     private synchronized void backupPendingTx() {
-        List<AionTransaction> newPending = txPool.snapshotAll();
-        newPending.addAll(pendingTxCache.snapshotAll());
-        List<byte[]> newPendingBytes = new ArrayList<>();
-        for (AionTransaction tx : newPending) {
-            newPendingBytes.add(tx.getEncoded());
+
+        if (!backupPendingPoolAdd.isEmpty()) {
+            repository.addTxBatch(backupPendingPoolAdd, true);
         }
-        if (!newPendingBytes.isEmpty()) {
-            repository.addTxBatch(newPendingBytes);
+
+        if (!backupPendingCacheAdd.isEmpty()) {
+            repository.addTxBatch(backupPendingCacheAdd, false);
         }
+
+        if (!backupPendingPoolRemove.isEmpty()) {
+            repository.removeTxBatch(backupPendingPoolRemove, true);
+        }
+
+        repository.removeTxBatch(pendingTxCache.getClearTxHash(), false);
+        repository.flush();
+
+        backupPendingPoolAdd.clear();
+        backupPendingCacheAdd.clear();
+        backupPendingPoolRemove.clear();
+        pendingTxCache.clearCacheTxHash();
+
     }
 
     public synchronized static AionPendingStateImpl inst() {
@@ -245,6 +263,7 @@ public class AionPendingStateImpl
                 e.printStackTrace();
                 System.out.println("TxPoolModule getTxPool fail!" + e.toString());
             }
+
         } else {
             System.out.println("Seed mode is enable");
         }
@@ -260,28 +279,37 @@ public class AionPendingStateImpl
             this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax());
             this.pendingState = repository.startTracking();
 
-            this.txBuffer = Collections.synchronizedList(new ArrayList<>());
-
-            this.bufferEnable = CfgAion.inst().getTx().getBuffer();
             this.dumpPool = CfgAion.inst().getTx().getPoolDump();
+            this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
 
             ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
             regBlockEvents();
-            regTxEvents();
+
             IHandler blkHandler = this.evtMgr.getHandler(IHandler.TYPE.BLOCK0.getValue());
             if (blkHandler != null) {
                 blkHandler.eventCallback(new EventCallback(ees, LOG));
             }
 
-            IHandler txHandler = this.evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
-            if (txHandler != null) {
-                txHandler.eventCallback(new EventCallback(ees, LOG));
+
+
+            if (poolBackUp) {
+                this.backupPendingPoolAdd = new HashMap<>();
+                this.backupPendingCacheAdd = new HashMap<>();
+                this.backupPendingPoolRemove = new HashSet<>();
+
+                regTxEvents();
+                IHandler txHandler = this.evtMgr.getHandler(IHandler.TYPE.TX0.getValue());
+                if (txHandler != null) {
+                    txHandler.eventCallback(new EventCallback(ees, LOG));
+                }
             }
 
+            this.bufferEnable = CfgAion.inst().getTx().getBuffer();
             if (bufferEnable) {
                 LOG.info("TxBuf enable!");
+                this.txBuffer = Collections.synchronizedList(new ArrayList<>());
                 timer = new Timer("TxBuf");
                 timer.schedule(new TxBuffTask(), 10000, 200);
             }
@@ -297,8 +325,10 @@ public class AionPendingStateImpl
         int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
         eventSN.add(sn + EventBlock.CALLBACK.ONBEST0.getValue());
 
-        sn = IHandler.TYPE.TX0.getValue() << 8;
-        eventSN.add(sn + EventTx.CALLBACK.TXBACKUP0.getValue());
+        if (poolBackUp) {
+            sn = IHandler.TYPE.TX0.getValue() << 8;
+            eventSN.add(sn + EventTx.CALLBACK.TXBACKUP0.getValue());
+        }
 
         return eventSN;
     }
@@ -370,6 +400,10 @@ public class AionPendingStateImpl
                         newLargeNonceTx.add(tx);
                         addToTxCache(tx);
 
+                        if (poolBackUp) {
+                            backupPendingCacheAdd.put(tx.getHash(), tx.getEncoded());
+                        }
+
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
                         }
@@ -380,6 +414,10 @@ public class AionPendingStateImpl
                         if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                             newLargeNonceTx.add(tx);
                             addToTxCache(tx);
+
+                            if (poolBackUp) {
+                                backupPendingCacheAdd.put(tx.getHash(), tx.getEncoded());
+                            }
 
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
@@ -409,6 +447,10 @@ public class AionPendingStateImpl
                     do {
                         if (addPendingTransactionImpl(tx, txNonce)) {
                             newPending.add(tx);
+
+                            if (poolBackUp) {
+                                backupPendingPoolAdd.put(tx.getHash(), tx.getEncoded());
+                            }
                         } else {
                             break;
                         }
@@ -423,6 +465,10 @@ public class AionPendingStateImpl
                     // repay Tx
                     if (addPendingTransactionImpl(tx, txNonce)) {
                         newPending.add(tx);
+
+                        if (poolBackUp) {
+                            backupPendingPoolAdd.put(tx.getHash(), tx.getEncoded());
+                        }
                     }
                 }
             }
@@ -552,6 +598,10 @@ public class AionPendingStateImpl
                 if (rtn != null && !rtn.equals(tx)) {
                     AionTxReceipt rp = new AionTxReceipt();
                     rp.setTransaction(rtn);
+
+                    if (poolBackUp) {
+                        backupPendingPoolRemove.add(tx.getHash().clone());
+                    }
                     fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
                 }
 
@@ -634,7 +684,7 @@ public class AionPendingStateImpl
 
         best.set(newBlock);
 
-        List<AionTransaction> pendingTx = updateState(best.get());
+        updateState(best.get());
 
         txPool.updateBlkNrgLimit(best.get().getNrgLimit());
 
@@ -642,7 +692,10 @@ public class AionPendingStateImpl
 
         List<IEvent> events = new ArrayList<>();
         events.add(new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0));
-        events.add(new EventTx(EventTx.CALLBACK.TXBACKUP0));
+
+        if (poolBackUp) {
+            events.add(new EventTx(EventTx.CALLBACK.TXBACKUP0));
+        }
 
         this.evtMgr.newEvents(events);
 
@@ -684,13 +737,15 @@ public class AionPendingStateImpl
 
     private void clearOutdated(final long blockNumber) {
 
-        List<AionPendingTx> outdated = new ArrayList<>();
+        List<AionTransaction> outdated = new ArrayList<>();
 
         final long timeout = this.txPool.getOutDateTime();
-        final long bestNumber = best.get().getNumber();
         for (AionTransaction tx : this.txPool.getOutdatedList()) {
-            outdated.add(new AionPendingTx(tx, bestNumber));
+            outdated.add(tx);
 
+            if (poolBackUp) {
+                backupPendingPoolRemove.add(tx.getHash().clone());
+            }
             // @Jay
             // TODO : considering add new state - TIMEOUT
             fireTxUpdate(createDroppedReceipt(tx, "Tx was not included into last " + timeout + " seconds"),
@@ -705,12 +760,7 @@ public class AionPendingStateImpl
             return;
         }
 
-        if (LOG.isDebugEnabled()) {
-            for (AionPendingTx tx : outdated) {
-                LOG.debug("Clear outdated pending transaction, block.number: [{}] hash: [{}]", tx.getBlockNumber(),
-                        Hex.toHexString(tx.getHash()));
-            }
-        }
+        txPool.remove(outdated);
     }
 
     @SuppressWarnings("unchecked")
@@ -738,6 +788,10 @@ public class AionPendingStateImpl
                 } else {
                     AionTxInfo info = getTransactionInfo(tx.getHash(), block.getHash());
                     receipt = info.getReceipt();
+                }
+
+                if (poolBackUp) {
+                    backupPendingPoolRemove.add(tx.getHash().clone());
                 }
                 fireTxUpdate(receipt, PendingTransactionState.INCLUDED, block);
                 cnt++;
@@ -779,6 +833,9 @@ public class AionPendingStateImpl
                 LOG.warn("Invalid transaction in txpool: {}", tx);
                 txPool.remove(Collections.singletonList(tx));
 
+                if (poolBackUp) {
+                    backupPendingPoolRemove.add(tx.getHash().clone());
+                }
                 fireTxUpdate(receipt, PendingTransactionState.DROPPED, block);
             } else {
                 fireTxUpdate(receipt, PendingTransactionState.PENDING, block);
@@ -898,43 +955,85 @@ public class AionPendingStateImpl
 
     @Override
     public void loadPendingTx() {
-        List<byte[]> pendingTxBytes = repository.getPendingTx();
-        List<AionTransaction> pendingPoolTx = new ArrayList<>();
-        List<AionTransaction> pendingCacheTx = new ArrayList<>();
 
-        int count = MAX_VALIDATED_PENDING_TXS;
-        for (byte[] b : pendingTxBytes) {
+        loadPendingTx = true;
+        recoverPool();
+        recoverCache();
+        loadPendingTx = false;
+
+    }
+
+    private void recoverCache() {
+
+        List<byte[]> pendingCacheTxBytes = repository.getCacheTx();
+
+        List<AionTransaction> pendingTx = new ArrayList<>();
+        for (byte[] b : pendingCacheTxBytes) {
             try {
-                if (count == 0) {
-                    pendingCacheTx.add(new AionTransaction(b));
-                } else {
-                    pendingPoolTx.add(new AionTransaction(b));
-                }
-                count--;
+                pendingTx.add(new AionTransaction(b));
             } catch (Throwable e) {
-                LOG.error("loadingPendingTx error {}", e.toString());
+                LOG.error("loadingPendingCacheTx error {}", e.toString());
             }
         }
 
-        loadPendingTx = true;
+        Map<Address, SortedMap<BigInteger, AionTransaction>> sortedMap = new HashMap<>();
+        for (AionTransaction tx : pendingTx) {
+            if (sortedMap.get(tx.getFrom()) == null) {
+                SortedMap<BigInteger, AionTransaction> accountSortedMap = new TreeMap<>();
+                accountSortedMap.put(tx.getNonceBI(), tx);
 
-        LOG.info("{} pendingTX loaded from DB", (pendingPoolTx.size()+pendingCacheTx.size()));
-        long t1 = System.currentTimeMillis();
-        addPendingTransactions(pendingPoolTx);
-        long t2 = System.currentTimeMillis() - t1;
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+                sortedMap.put(tx.getFrom(), accountSortedMap);
+            } else {
+                sortedMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
+            }
         }
 
-        t1 = System.currentTimeMillis();
+        int cnt = 0;
+        for (Map.Entry<Address, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
+            for (AionTransaction tx : e.getValue().values()) {
+                pendingTxCache.addCacheTx(tx);
+                cnt++;
+            }
+        }
+
+        LOG.info("{} pendingCacheTx loaded from DB", cnt);
+    }
+
+    private void recoverPool() {
+        List<byte[]> pendingPoolTxBytes = repository.getPoolTx();
+
+        List<AionTransaction> pendingTx = new ArrayList<>();
+        for (byte[] b : pendingPoolTxBytes) {
+            try {
+                pendingTx.add(new AionTransaction(b));
+            } catch (Throwable e) {
+                LOG.error("loadingCachePendingTx error {}", e.toString());
+            }
+        }
+
+        Map<Address, SortedMap<BigInteger, AionTransaction>> sortedMap = new HashMap<>();
+        for (AionTransaction tx : pendingTx) {
+            if (sortedMap.get(tx.getFrom()) == null) {
+                SortedMap<BigInteger, AionTransaction> accountSortedMap = new TreeMap<>();
+                accountSortedMap.put(tx.getNonceBI(), tx);
+
+                sortedMap.put(tx.getFrom(), accountSortedMap);
+            } else {
+                sortedMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
+            }
+        }
+
+        List<AionTransaction> pendingPoolTx = new ArrayList<>();
+
+        for (Map.Entry<Address, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
+            for (AionTransaction tx : e.getValue().values()) {
+                pendingPoolTx.add(tx);
+            }
+        }
+
+
+        LOG.info("{} pendingPoolTx loaded from DB", pendingPoolTx.size());
         addPendingTransactions(pendingPoolTx);
-        long t3 = System.currentTimeMillis() - t1;
-
-        loadPendingTx = false;
-
-        LOG.info("pendingTX loaded to the pool {} and cache {}, {} ms to pool, {} ms to cache", this.txPool.size(), this.pendingTxCache.cacheTxSize(), t2, t3);
     }
 
     @Override

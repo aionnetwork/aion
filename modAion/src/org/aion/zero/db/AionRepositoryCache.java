@@ -36,6 +36,7 @@ import org.aion.mcf.vm.types.DataWord;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 
@@ -159,9 +160,15 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public void addTxBatch(List<byte[]> pendingTx) {
+    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
         throw new UnsupportedOperationException(
                 "addTxBatch should be called on the tracked repository.");
+    }
+
+    @Override
+    public void removeTxBatch(Set<byte[]> pendingTx, boolean isPool) {
+        throw new UnsupportedOperationException(
+                "removeTxBatch should be called on the tracked repository.");
     }
 
     @Override
@@ -170,8 +177,14 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public List<byte[]> getPendingTx() {
+    public List<byte[]> getPoolTx() {
         throw new UnsupportedOperationException(
-                "getPendingTx should be called on the tracked repository.");
+                "getPoolTx should be called on the tracked repository.");
+    }
+
+    @Override
+    public List<byte[]> getCacheTx() {
+        throw new UnsupportedOperationException(
+                "getCachelTx should be called on the tracked repository.");
     }
 }

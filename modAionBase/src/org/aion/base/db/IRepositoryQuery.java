@@ -192,9 +192,16 @@ public interface IRepositoryQuery<AS, DW> {
     DW getStorageValue(Address address, DW key);
 
     /**
-     * Retrieves the stored transactions.
+     * Retrieves the stored transactions for recovering pool tx.
      *
-     * @return the list of transactions.
+     * @return the list of transactions encoded bytes.
      */
-    List<byte[]> getPendingTx();
+    List<byte[]> getPoolTx();
+
+    /**
+     * Retrieves the stored transactions for recovering caching tx.
+     *
+     * @return the list of transactions encoded bytes.
+     */
+    List<byte[]> getCacheTx();
 }

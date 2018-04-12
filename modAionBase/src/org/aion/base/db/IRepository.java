@@ -36,8 +36,8 @@ package org.aion.base.db;
 
 import org.aion.base.type.Address;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Database-like functionality.
@@ -127,6 +127,10 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     /**
      * Performs batch transactions add.
      */
-    void addTxBatch(List<byte[]> pendingTx);
+    void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool);
 
+    /**
+     * Performs batch transactions remove.
+     */
+    void removeTxBatch(Set<byte[]> pendingTx, boolean isPool);
 }

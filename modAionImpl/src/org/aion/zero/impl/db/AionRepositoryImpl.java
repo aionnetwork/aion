@@ -26,7 +26,6 @@ package org.aion.zero.impl.db;
 
 import org.aion.base.db.*;
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
@@ -291,15 +290,34 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public List<byte[]> getPendingTx() {
+    public List<byte[]> getPoolTx() {
 
         List<byte[]> rtn = new ArrayList<>();
         rwLock.readLock().lock();
         try {
-            Set<byte[]> keySet = pendingTxDatabase.keys();
-            for (int i=0 ; i<keySet.size() ; i++) {
-                if (pendingTxDatabase.get(ByteUtil.intToBytes(i)).isPresent()) {
-                    rtn.add(pendingTxDatabase.get(ByteUtil.intToBytes(i)).get());
+            Set<byte[]> keySet = txPoolDatabase.keys();
+            for (byte[] b : keySet) {
+                if (txPoolDatabase.get(b).isPresent()) {
+                    rtn.add(txPoolDatabase.get(b).get());
+                }
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        return rtn;
+    }
+
+    @Override
+    public List<byte[]> getCacheTx() {
+
+        List<byte[]> rtn = new ArrayList<>();
+        rwLock.readLock().lock();
+        try {
+            Set<byte[]> keySet = pendingTxCacheDatabase.keys();
+            for (byte[] b : keySet) {
+                if (pendingTxCacheDatabase.get(b).isPresent()) {
+                    rtn.add(pendingTxCacheDatabase.get(b).get());
                 }
             }
         } finally {
@@ -541,20 +559,38 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public void addTxBatch(List<byte[]> pendingTx) {
+    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
 
-        Map<byte[], byte[]> batchMap = new LinkedHashMap<>();
-        if (!pendingTx.isEmpty()) {
-            int count = 0;
-            for (byte[] tx : pendingTx) {
-                batchMap.put(ByteUtil.intToBytes(count++), tx);
-            }
+        if (pendingTx.isEmpty()) {
+            return;
         }
 
         rwLock.writeLock().lock();
         try {
-            pendingTxDatabase.deleteBatch(pendingTxDatabase.keys());
-            pendingTxDatabase.putBatch(batchMap);
+            if (isPool) {
+                txPoolDatabase.putBatch(pendingTx);
+            } else {
+                pendingTxCacheDatabase.putBatch(pendingTx);
+            }
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void removeTxBatch(Set<byte[]> clearTxSet, boolean isPool) {
+
+        if (clearTxSet.isEmpty()) {
+            return;
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            if (isPool) {
+                txPoolDatabase.deleteBatch(clearTxSet);
+            } else {
+                pendingTxCacheDatabase.deleteBatch(clearTxSet);
+            }
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -609,13 +645,23 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             }
 
             try {
-                if (pendingTxDatabase != null) {
-                    pendingTxDatabase.close();
-                    LOGGEN.info("PendingTxDatabase store closed.");
-                    pendingTxDatabase = null;
+                if (txPoolDatabase != null) {
+                    txPoolDatabase.close();
+                    LOGGEN.info("txPoolDatabase store closed.");
+                    txPoolDatabase = null;
                 }
             } catch (Exception e) {
-                LOGGEN.error("Exception occurred while closing the PendingTxDatabase store.", e);
+                LOGGEN.error("Exception occurred while closing the txPoolDatabase store.", e);
+            }
+
+            try {
+                if (pendingTxCacheDatabase != null) {
+                    pendingTxCacheDatabase.close();
+                    LOGGEN.info("pendingTxCacheDatabase store closed.");
+                    pendingTxCacheDatabase = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error("Exception occurred while closing the pendingTxCacheDatabase store.", e);
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -648,10 +694,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
      */
     public IByteArrayKeyValueDatabase getDetailsDatabase() {
         return this.detailsDatabase;
-    }
-
-    public IByteArrayKeyValueDatabase getPendingTxDatabase() {
-        return this.pendingTxDatabase;
     }
 
     @Override
