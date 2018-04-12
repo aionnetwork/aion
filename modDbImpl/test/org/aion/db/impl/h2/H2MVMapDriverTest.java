@@ -42,6 +42,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Properties;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -58,9 +59,9 @@ public class H2MVMapDriverTest {
     public void testDriverReturnDatabase() {
 
         Properties props = new Properties();
-        props.setProperty("db_type", dbVendor);
-        props.setProperty("db_name", dbName);
-        props.setProperty("db_path", dbPath);
+        props.setProperty(Props.DB_TYPE, dbVendor);
+        props.setProperty(Props.DB_NAME, dbName);
+        props.setProperty(Props.DB_PATH, dbPath);
 
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNotNull(db);
@@ -71,9 +72,9 @@ public class H2MVMapDriverTest {
     public void testDriverReturnNull() {
 
         Properties props = new Properties();
-        props.setProperty("db_type", "BAD VENDOR");
-        props.setProperty("db_name", dbName);
-        props.setProperty("db_path", dbPath);
+        props.setProperty(Props.DB_TYPE, "BAD VENDOR");
+        props.setProperty(Props.DB_NAME, dbName);
+        props.setProperty(Props.DB_PATH, dbPath);
 
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNull(db);
