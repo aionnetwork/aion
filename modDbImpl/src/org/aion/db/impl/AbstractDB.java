@@ -45,6 +45,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Common functionality for database implementations.
@@ -99,11 +100,8 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     public void drop() {
         close();
 
-        try {
-            Files.walk(new File(path).toPath())
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+        try (Stream<Path> stream = Files.walk(new File(path).toPath())) {
+            stream.map(Path::toFile).forEach(File::delete);
         } catch (Exception e) {
             LOG.error("Unable to delete path due to: ", e);
         }
