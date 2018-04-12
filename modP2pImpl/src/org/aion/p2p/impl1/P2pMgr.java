@@ -46,6 +46,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 
 // import org.aion.p2p.impl.one.msg.Hello;
 
@@ -542,6 +543,8 @@ public final class P2pMgr implements IP2pMgr {
 					nodeMgr.rmMetricFailedNodes();
 
 					Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
+					// Create a list with capacity up to all nodes to remove msgs in queue
+					Set<Integer> msgClear = new HashSet<>(nodeMgr.getOutboundNodes().keySet().size());
 					while (outboundIt.hasNext()) {
 
 						Object obj = outboundIt.next();
@@ -561,6 +564,9 @@ public final class P2pMgr implements IP2pMgr {
 							// selectorLock.unlock();
 							outboundIt.remove();
 
+							//Add hashcode to remove from msg buffer
+							msgClear.add(node.getChannel().hashCode());
+
 							if (showLog)
 								System.out.println("<p2p-clear outbound-timeout>");
 						}
@@ -569,6 +575,14 @@ public final class P2pMgr implements IP2pMgr {
 					// selectorLock.lock();
 					nodeMgr.rmTimeOutActives(P2pMgr.this);
 					// selectorLock.unlock();
+
+					Predicate<MsgOut> removePredicate = p->msgClear.contains(p.nid);
+
+					//Remove all nodes which have timed out (Single sweep)
+					boolean hasRemoved = sendMsgQue.removeIf(removePredicate);
+
+					if(hasRemoved)
+					    System.out.println("Removed msgs from " + msgClear.size() + " nodes");
 
 				} catch (Exception e) {
 				}

@@ -66,7 +66,6 @@ public class AionImpl implements IAionChain {
 
     private TxCollector collector;
 
-
     public static AionImpl inst() {
         if (inst == null) {
             inst = new AionImpl();
@@ -79,7 +78,6 @@ public class AionImpl implements IAionChain {
         aionHub = new AionHub();
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
-
         collector = new TxCollector(this.aionHub.getP2pMgr());
     }
 
