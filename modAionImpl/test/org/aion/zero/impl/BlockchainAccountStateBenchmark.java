@@ -175,18 +175,20 @@ public class BlockchainAccountStateBenchmark {
     @Ignore
     @Test
     public void testAccountState() {
-        StandaloneBlockchain.Bundle bundle = this.bundle;
-        StandaloneBlockchain bc = bundle.bc;
-
-        ECKey senderKey = bundle.privateKeys.get(0);
-
-        // send a total of 100 bundles,
-        // given the rate we're sending this should give us
-        // a 400,000 accounts (not counting the 10 pre-generated for us)
-        AionBlock previousBlock = bc.genesis;
-        for (int i = 0; i < 10; i++) {
-            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
-        }
+        // skipped until test can be refactored
+        // TODO: we may just replace this with JMH later
+//        StandaloneBlockchain.Bundle bundle = this.bundle;
+//        StandaloneBlockchain bc = bundle.bc;
+//
+//        ECKey senderKey = bundle.privateKeys.get(0);
+//
+//        // send a total of 100 bundles,
+//        // given the rate we're sending this should give us
+//        // a 400,000 accounts (not counting the 10 pre-generated for us)
+//        AionBlock previousBlock = bc.genesis;
+//        for (int i = 0; i < 10; i++) {
+//            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
+//        }
     }
 
     private static final byte[] ZERO_BYTE = new byte[0];
@@ -242,9 +244,9 @@ public class BlockchainAccountStateBenchmark {
             byte[] contractCode = bc.getRepository().getCode(info.getReceipt().getTransaction().getContractAddress());
 
             System.out.println("deployed contract code: " + ByteUtil.toHexString(contractCode));
-
             System.out.println("deployed at: " + contractAddress);
-            for (int i = 0; i < 10; i++)
+
+            for (int i = 0; i < 100; i++)
                 createContractBundle(bc, senderKey, bc.getBestBlock(), contractAddress);
         } catch (Throwable t) {
             t.printStackTrace();
