@@ -168,5 +168,4 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      *             if the collection contains a null key
      */
     void deleteBatch(Collection<K> keys);
-
 }

@@ -22,20 +22,19 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import org.aion.base.util.Utils;
+import org.aion.db.impl.DBVendor;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import org.aion.base.util.Utils;
-import org.aion.db.impl.DBVendor;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static org.aion.db.impl.DatabaseFactory.Props;
 
 /**
  * @author chris
@@ -52,7 +51,7 @@ public class CfgDb {
         this.vendor = DBVendor.LEVELDB.toValue();
         this.path = "database";
 
-        this.enable_auto_commit = false;
+        this.enable_auto_commit = true;
         this.enable_db_cache = true;
         this.enable_db_compression = true;
         this.enable_heap_cache = false;
@@ -132,77 +131,70 @@ public class CfgDb {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                    case "path":
-                        this.path = Cfg.readValue(sr);
-                        break;
-                    case "vendor":
-                        this.vendor = Cfg.readValue(sr);
-                        break;
-                    case "enable_auto_commit":
-                        this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                    case "enable_db_cache":
-                        this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                    case "enable_db_compression":
-                        this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                    case "enable_heap_cache":
-                        this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                    case "max_heap_cache_size":
-                        this.max_heap_cache_size = Cfg.readValue(sr);
-                        break;
-                    case "enable_heap_cache_stats":
-                        this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                    case "block_size": {
-                        this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.block_size);
-                        break;
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "path":
+                            this.path = Cfg.readValue(sr);
+                            break;
+                        case "vendor":
+                            this.vendor = Cfg.readValue(sr);
+                            break;
+                        case Props.ENABLE_AUTO_COMMIT:
+                            this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.ENABLE_DB_CACHE:
+                            this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.ENABLE_DB_COMPRESSION:
+                            this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.ENABLE_HEAP_CACHE:
+                            this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.MAX_HEAP_CACHE_SIZE:
+                            this.max_heap_cache_size = Cfg.readValue(sr);
+                            break;
+                        case Props.ENABLE_HEAP_CACHE_STATS:
+                            this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.BLOCK_SIZE:
+                            this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.block_size);
+                            break;
+                        case Props.MAX_FD_ALLOC:
+                            int i = Integer.parseInt(Cfg.readValue(sr));
+                            this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
+                            break;
+                        case Props.WRITE_BUFFER_SIZE:
+                            this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
+                            break;
+                        case Props.READ_BUFFER_SIZE:
+                            this.read_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.read_buffer_size);
+                            break;
+                        case Props.DB_CACHE_SIZE:
+                            this.cache_size = parseFileSizeSafe(Cfg.readValue(sr), this.cache_size);
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
                     }
-                    case "max_fd_alloc_size": {
-                        int i = Integer.parseInt(Cfg.readValue(sr));
-                        this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
-                        break;
-                    }
-                    case "write_buffer_size": {
-                        this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
-                        break;
-                    }
-                    case "read_buffer_size": {
-                        this.read_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.read_buffer_size);
-                        break;
-                    }
-                    case "cache_size": {
-                        this.cache_size = parseFileSizeSafe(Cfg.readValue(sr), this.cache_size);
-                        break;
-                    }
-                default:
-                    Cfg.skipElement(sr);
                     break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
 
-    private static int parseFileSizeSafe(String input, int fallback) {
-        if (input == null || input.isEmpty())
-            return fallback;
+    private static int parseFileSizeSafe(String input,
+                                         int fallback) {
+        if (input == null || input.isEmpty()) { return fallback; }
 
         Optional<Long> maybeSize = Utils.parseSize(input);
-        if (!maybeSize.isPresent())
-            return fallback;
+        if (!maybeSize.isPresent()) { return fallback; }
 
         // present
         long size = maybeSize.get();
-        if (size > Integer.MAX_VALUE || size <= 0)
-            return fallback;
+        if (size > Integer.MAX_VALUE || size <= 0) { return fallback; }
 
         return (int) size;
     }
@@ -228,57 +220,37 @@ public class CfgDb {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_auto_commit");
-            xmlWriter.writeCharacters(String.valueOf(this.isAutoCommitEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_db_cache");
+            xmlWriter.writeStartElement(Props.ENABLE_DB_CACHE);
             xmlWriter.writeCharacters(String.valueOf(this.isDbCacheEnabled()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_db_compression");
+            xmlWriter.writeStartElement(Props.ENABLE_DB_COMPRESSION);
             xmlWriter.writeCharacters(String.valueOf(this.isDbCompressionEnabled()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_heap_cache");
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("max_heap_cache_size");
-            xmlWriter.writeCharacters(String.valueOf(this.getMaxHeapCacheSize()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_heap_cache_stats");
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheStatsEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("block_size");
+            xmlWriter.writeStartElement(Props.BLOCK_SIZE);
             xmlWriter.writeCharacters(DEFAULT_BLOCK_SIZE);
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("max_fd_alloc_size");
+            xmlWriter.writeStartElement(Props.MAX_FD_ALLOC);
             xmlWriter.writeCharacters(String.valueOf(MIN_FD_OPEN_ALLOC));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("write_buffer_size");
+            xmlWriter.writeStartElement(Props.WRITE_BUFFER_SIZE);
             xmlWriter.writeCharacters(String.valueOf(DEFAULT_WRITE_BUFFER_SIZE));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("read_buffer_size");
+            xmlWriter.writeStartElement(Props.READ_BUFFER_SIZE);
             xmlWriter.writeCharacters(String.valueOf(DEFAULT_READ_BUFFER_SIZE));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("cache_size");
+            xmlWriter.writeStartElement(Props.DB_CACHE_SIZE);
             xmlWriter.writeCharacters(String.valueOf(DEFAULT_CACHE_SIZE));
             xmlWriter.writeEndElement();
 

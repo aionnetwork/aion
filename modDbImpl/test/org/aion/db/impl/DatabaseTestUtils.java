@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertTrue;
 
 public class DatabaseTestUtils {
@@ -64,44 +65,44 @@ public class DatabaseTestUtils {
     public static List<Object> unlockedDatabaseInstanceDefinitionsInternal() {
 
         Properties sharedProps = new Properties();
-        sharedProps.setProperty("db_path", dbPath);
+        sharedProps.setProperty(Props.DB_PATH, dbPath);
 
         List<Object> parameters = new ArrayList<>();
 
-        sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, disabled);
+        sharedProps.setProperty(Props.ENABLE_LOCKING, disabled);
         // adding database variations without heap caching
-        sharedProps.setProperty("enable_heap_cache", disabled);
+        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE, disabled);
         // the following parameters are irrelevant
-        sharedProps.setProperty("enable_auto_commit", enabled);
-        sharedProps.setProperty("max_heap_cache_size", "0");
-        sharedProps.setProperty("max_heap_cache_size", disabled);
-        sharedProps.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
-        sharedProps.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        sharedProps.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
-        sharedProps.setProperty(DatabaseFactory.PROP_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
+        sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, enabled);
+        sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, "0");
+        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, disabled);
+        sharedProps.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        sharedProps.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
+        sharedProps.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        sharedProps.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         // all vendor options
         for (DBVendor vendor : vendors) {
-            sharedProps.setProperty("db_type", vendor.toValue());
+            sharedProps.setProperty(Props.DB_TYPE, vendor.toValue());
 
             addDatabaseWithCacheAndCompression(vendor, sharedProps, parameters);
         }
 
         // adding database variations with heap caching
-        sharedProps.setProperty("enable_heap_cache", enabled);
+        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE, enabled);
 
         // all vendor options
         for (DBVendor vendor : vendors) {
-            sharedProps.setProperty("db_type", vendor.toValue());
+            sharedProps.setProperty(Props.DB_TYPE, vendor.toValue());
             // enable/disable auto_commit
             for (String auto_commit : options) {
-                sharedProps.setProperty("enable_auto_commit", auto_commit);
+                sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, auto_commit);
                 // unbounded/bounded max_heap_cache_size
                 for (String max_heap_cache_size : sizeHeapCache) {
-                    sharedProps.setProperty("max_heap_cache_size", max_heap_cache_size);
+                    sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, max_heap_cache_size);
                     // enable/disable heap_cache_stats
                     for (String heap_cache_stats : options) {
-                        sharedProps.setProperty("enable_heap_cache_stats", heap_cache_stats);
+                        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, heap_cache_stats);
 
                         addDatabaseWithCacheAndCompression(vendor, sharedProps, parameters);
                     }
@@ -119,7 +120,7 @@ public class DatabaseTestUtils {
 
         for (Object prop : parametersUnlocked) {
             Properties p = (Properties) ((Properties) prop).clone();
-            p.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, enabled);
+            p.setProperty(Props.ENABLE_LOCKING, enabled);
 
             parameters.add(p);
         }
@@ -129,15 +130,16 @@ public class DatabaseTestUtils {
         return parameters.toArray();
     }
 
-    private static void addDatabaseWithCacheAndCompression(DBVendor vendor, Properties sharedProps,
+    private static void addDatabaseWithCacheAndCompression(DBVendor vendor,
+                                                           Properties sharedProps,
                                                            List<Object> parameters) {
         if (vendor != DBVendor.MOCKDB) {
             // enable/disable db_cache
             for (String db_cache : options) {
-                sharedProps.setProperty("enable_db_cache", db_cache);
+                sharedProps.setProperty(Props.ENABLE_DB_CACHE, db_cache);
                 // enable/disable db_compression
                 for (String db_compression : options) {
-                    sharedProps.setProperty("enable_db_compression", db_compression);
+                    sharedProps.setProperty(Props.ENABLE_DB_COMPRESSION, db_compression);
 
                     // generating new database configuration
                     parameters.add(sharedProps.clone());
@@ -158,7 +160,8 @@ public class DatabaseTestUtils {
     /**
      * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit Wiki on multithreaded code and concurrency</a>
      */
-    public static void assertConcurrent(final String message, final List<? extends Runnable> runnables,
+    public static void assertConcurrent(final String message,
+                                        final List<? extends Runnable> runnables,
                                         final int maxTimeoutSeconds) throws InterruptedException {
         final int numThreads = runnables.size();
         final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
@@ -187,7 +190,7 @@ public class DatabaseTestUtils {
             // start all test runners
             afterInitBlocker.countDown();
             assertTrue(message + " timeout! More than" + maxTimeoutSeconds + "seconds",
-                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
+                       allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
         } finally {
             threadPool.shutdownNow();
         }
