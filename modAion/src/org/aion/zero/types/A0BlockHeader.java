@@ -58,6 +58,8 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
             RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
 
+    private byte[] mineHashBytes;
+
     //TODO: Update this
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
@@ -373,14 +375,31 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     /**
      * Return unencoded bytes of the header
+     *
+     * @param toMine Return header bytes excluding nonce and solution if true; else the entire block header
      * @return byte array containing raw header bytes
      */
-    public byte[] getHeaderBytes() {
+    public byte[] getHeaderBytes(boolean toMine) {
+        byte[] hdrBytes;
+        if(toMine) {
+            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+                    this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                    this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                    longToBytes(this.energyLimit), longToBytes(this.timestamp));
+        }else {
+            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+                    this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                    this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                    longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
+        }
+        return hdrBytes;
+    }
 
-        return merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
-                                 this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
-                                 this.difficulty, this.extraData, longToBytes(this.energyConsumed),
-                                 longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
+    public byte[] getMineHash() {
+        if(this.mineHashBytes == null) {
+            this.mineHashBytes = HashUtil.h256(getHeaderBytes(true));
+        }
+        return mineHashBytes;
     }
 
     public static A0BlockHeader fromRLP(byte[] rawData, boolean isUnsafe) throws Exception {
