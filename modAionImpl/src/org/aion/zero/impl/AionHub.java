@@ -139,7 +139,9 @@ public class AionHub {
             this.mempool.updateBest();
         }
 
-        this.mempool.loadPendingTx();
+        if (cfg.getTx().getPoolBackup()) {
+            this.mempool.loadPendingTx();
+        }
 
 		String reportsFolder = "";
 		if (cfg.getReports().isEnabled()) {
