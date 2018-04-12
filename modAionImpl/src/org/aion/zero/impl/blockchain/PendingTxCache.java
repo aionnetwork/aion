@@ -232,4 +232,22 @@ public class PendingTxCache {
     public int cacheSize() {
         return currentSize.get();
     }
+
+    public int cacheTxSize() {
+        AtomicInteger size = new AtomicInteger();
+        cacheTxMap.forEach((key, value) -> size.addAndGet(value.size()));
+        return size.get();
+    }
+
+    public List<AionTransaction> snapshotAll() {
+        List<AionTransaction> rtn = Collections.synchronizedList(new ArrayList<>());
+
+        try {
+            cacheTxMap.entrySet().parallelStream().forEach(addr -> rtn.addAll(addr.getValue().values()));
+        } catch (Throwable e) {
+            LOG.error("PendingTxCache.snapshotAll failed: {}", e.toString());
+        }
+
+        return rtn;
+    }
 }

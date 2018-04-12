@@ -36,6 +36,7 @@ package org.aion.base.db;
 
 import org.aion.base.type.Address;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -122,5 +123,10 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
 
     // TODO: perhaps remove
     BSB getBlockStore();
+
+    /**
+     * Performs batch transactions add.
+     */
+    void addTxBatch(List<byte[]> pendingTx);
 
 }

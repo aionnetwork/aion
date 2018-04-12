@@ -38,6 +38,7 @@ import org.aion.base.type.Address;
 
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -190,4 +191,10 @@ public interface IRepositoryQuery<AS, DW> {
      */
     DW getStorageValue(Address address, DW key);
 
+    /**
+     * Retrieves the stored transactions.
+     *
+     * @return the list of transactions.
+     */
+    List<byte[]> getPendingTx();
 }

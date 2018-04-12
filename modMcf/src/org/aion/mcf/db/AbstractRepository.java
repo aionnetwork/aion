@@ -27,13 +27,11 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.db.impl.DBVendor;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.db.impl.DatabaseFactory;
-//import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-// import org.aion.mcf.trie.JournalPruneDataSource;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.mcf.vm.types.DataWord;
@@ -43,6 +41,9 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+//import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
+// import org.aion.mcf.trie.JournalPruneDataSource;
 
 /**
  * Abstract Repository class.
@@ -65,6 +66,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     protected static final String DETAILS_DB = "details";
     protected static final String STORAGE_DB = "storage";
     protected static final String STATE_DB = "state";
+    protected static final String PENDINGTX_DB = "pendingtx";
 
     // State trie.
     protected Trie worldState;
@@ -81,6 +83,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     protected IByteArrayKeyValueDatabase indexDatabase;
     protected IByteArrayKeyValueDatabase blockDatabase;
     protected IByteArrayKeyValueDatabase stateDatabase;
+    protected IByteArrayKeyValueDatabase pendingTxDatabase;
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
@@ -204,6 +207,10 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             sharedProps.setProperty("db_name", BLOCK_DB);
             this.blockDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(blockDatabase);
+
+            sharedProps.setProperty("db_name", PENDINGTX_DB);
+            this.pendingTxDatabase = connectAndOpen(sharedProps);
+            databaseGroup.add(pendingTxDatabase);
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
