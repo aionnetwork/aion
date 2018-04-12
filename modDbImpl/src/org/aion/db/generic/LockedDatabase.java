@@ -327,4 +327,23 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
             lock.writeLock().unlock();
         }
     }
+
+    @Override
+    public void deleteAll() {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        try {
+            database.deleteAll();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not delete batch due to ", e);
+            }
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
+        }
+    }
 }
