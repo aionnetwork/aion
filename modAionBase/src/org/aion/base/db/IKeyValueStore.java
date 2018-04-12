@@ -169,4 +169,11 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      */
     void deleteBatch(Collection<K> keys);
 
+    /**
+     * Deletes all key-value pairs from the database.
+     *
+     * @throws RuntimeException
+     *             if the data store is closed
+     */
+    void deleteAll();
 }

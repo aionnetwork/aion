@@ -86,14 +86,14 @@ public class LevelDB extends AbstractDB {
                    String path,
                    boolean enableCache,
                    boolean enableCompression) {
-        this(   name,
-                path,
-                enableCache,
-                enableCompression,
-                LevelDBConstants.MAX_OPEN_FILES,
-                LevelDBConstants.BLOCK_SIZE,
-                LevelDBConstants.WRITE_BUFFER_SIZE,
-                LevelDBConstants.CACHE_SIZE);
+        this(name,
+             path,
+             enableCache,
+             enableCompression,
+             LevelDBConstants.MAX_OPEN_FILES,
+             LevelDBConstants.BLOCK_SIZE,
+             LevelDBConstants.WRITE_BUFFER_SIZE,
+             LevelDBConstants.CACHE_SIZE);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class LevelDB extends AbstractDB {
             db = JniDBFactory.factory.open(f, options);
         } catch (Exception e1) {
             LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
-            if (e1.getMessage().contains("No space left on device")){
+            if (e1.getMessage().contains("No space left on device")) {
                 LOG.error("Shutdown due to lack of disk space.");
                 System.exit(0);
             }
@@ -331,6 +331,21 @@ public class LevelDB extends AbstractDB {
             LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
         } catch (IOException e) {
             LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        check();
+
+        try (DBIterator itr = db.iterator()) {
+            // extract keys
+            itr.seekToFirst();
+            while (itr.hasNext()) {
+                db.delete(itr.next().getKey());
+            }
+        } catch (Exception e) {
+            LOG.error("Unable to extract keys from database " + this.toString() +".", e);
         }
     }
 
