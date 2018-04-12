@@ -129,17 +129,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         this.externalStorage = !Arrays.equals(isExternalStorage.getRLPData(), EMPTY_BYTE_ARRAY);
         if (externalStorage) {
             storageTrie = new SecureTrie(getExternalStorageDataSource());
-            storageTrie.withPruningEnabled(prune >= 0);
+            storageTrie.withPruningEnabled(prune > 0);
             storageTrie.setRoot(storageRoot.getRLPData());
         } else {
             this.storageTrie.deserialize(storage.getRLPData());
-        }
-
-
-        if (externalStorage) {
-            storageTrie.withPruningEnabled(prune >= 0);
-            storageTrie.setRoot(storageRoot.getRLPData());
-            storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
         this.externalStorage = (storage.getRLPData().length > detailsInMemoryStorageLimit) || externalStorage;
@@ -232,8 +225,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     @Override
     public void syncStorage() {
         if (externalStorage) {
-            storageTrie.withPruningEnabled(prune >= 0);
-            storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
         }
     }

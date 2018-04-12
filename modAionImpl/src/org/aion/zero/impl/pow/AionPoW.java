@@ -256,6 +256,7 @@ public class AionPoW {
      */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
+            long t1 = System.currentTimeMillis();
 
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
@@ -279,6 +280,9 @@ public class AionPoW {
 
             // update last timestamp
             lastUpdate.set(System.currentTimeMillis());
+
+            long t2 = System.currentTimeMillis();
+            System.out.println("CREATE_BLOCK_TEMPLATE: txs = " + txs.size() +", time elapsed = " + (t2 - t1) + " ms");
         }
     }
 

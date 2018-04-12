@@ -43,9 +43,9 @@ public class ContractDetailsAion implements DetailsProvider {
     private final int memStorageLimit;
 
     private ContractDetailsAion() {
-        CfgDb cfgDb = CfgAion.inst().getDb();
-        this.prune = -1; // cfgDb.getPrune();
-        this.memStorageLimit = 1000000; // cfgDb.getDetailsInMemoryStorageLimit();
+        // CfgDb cfgDb = CfgAion.inst().getDb();
+        this.prune = 0; // cfgDb.getPrune();
+        this.memStorageLimit = 64 * 1024; // cfgDb.getDetailsInMemoryStorageLimit();
     }
 
     /**

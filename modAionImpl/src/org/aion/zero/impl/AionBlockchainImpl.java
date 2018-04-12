@@ -527,7 +527,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
-        return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+        long t1 = System.currentTimeMillis();
+        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
+        long t2 = System.currentTimeMillis();
+        System.out.println("TRY_TO_CONNECT: txs = " + block.getTransactionsList().size() +", time elapsed = " + (t2 - t1) + " ms");
+
+        return result;
     }
 
     /**

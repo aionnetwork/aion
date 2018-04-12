@@ -58,7 +58,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
     @Override
     public void put(DataWord key, DataWord value) {
         storage.put(key, value);
-        this.setDirty(true);
+        setDirty(true);
     }
 
     @Override
@@ -83,18 +83,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
     }
 
     @Override
-    public byte[] getStorageHash() { // todo: unsupported
-
-        SecureTrie storageTrie = new SecureTrie(null);
-
-        for (DataWord key : storage.keySet()) {
-
-            DataWord value = storage.get(key);
-
-            storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-        }
-
-        return storageTrie.getRootHash();
+    public byte[] getStorageHash() {
+        return origContract.getStorageHash();
     }
 
     @Override
@@ -109,30 +99,22 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
-        return unmodifiableMap(storage);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-        if (keys == null) {
-            return getStorage();
-        }
-
-        Map<DataWord, DataWord> result = new HashMap<>();
-        for (DataWord key : keys) {
-            result.put(key, storage.get(key));
-        }
-        return unmodifiableMap(result);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int getStorageSize() {
-        return (origContract == null) ? storage.size() : origContract.getStorageSize();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Set<DataWord> getStorageKeys() {
-        return (origContract == null) ? storage.keySet() : origContract.getStorageKeys();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -143,16 +125,16 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
             DataWord key = storageKeys.get(i);
             DataWord value = storageValues.get(i);
 
-            if (value.isZero()) {
-                storage.put(key, null);
-            }
+            put(key, value);
         }
 
     }
 
     @Override
     public void setStorage(Map<DataWord, DataWord> storage) {
-        this.storage = storage;
+        for (Map.Entry<DataWord, DataWord> entry : storage.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
@@ -169,14 +151,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
 
     @Override
     public IContractDetails<DataWord> clone() {
-
-        ContractDetailsCacheImpl contractDetails = new ContractDetailsCacheImpl(origContract);
-
-        Object storageClone = ((HashMap<DataWord, DataWord>) storage).clone();
-
-        contractDetails.setCode(this.getCode());
-        contractDetails.setStorage((HashMap<DataWord, DataWord>) storageClone);
-        return contractDetails;
+        throw new UnsupportedOperationException();
     }
 
     @Override
