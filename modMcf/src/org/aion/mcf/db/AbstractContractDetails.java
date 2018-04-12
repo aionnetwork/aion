@@ -117,8 +117,6 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
         return deleted;
     }
 
-    public abstract IContractDetails<DW> clone();
-
     @Override
     public String toString() {
         String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";

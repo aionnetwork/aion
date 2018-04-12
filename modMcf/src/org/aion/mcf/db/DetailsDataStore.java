@@ -20,15 +20,6 @@
  *******************************************************************************/
 package org.aion.mcf.db;
 
-import static org.aion.base.util.ByteArrayWrapper.wrap;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryConfig;
@@ -36,10 +27,14 @@ import org.aion.base.type.Address;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.mcf.vm.types.DataWord;
-// import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.mcf.vm.types.DataWord;
+
+import java.util.*;
+
+import static org.aion.base.util.ByteArrayWrapper.wrap;
+
+// import org.aion.mcf.trie.JournalPruneDataSource;
 
 /**
  * Detail data storage ,
@@ -112,11 +107,7 @@ public class DetailsDataStore<BLK extends AbstractBlock<BH, ? extends ITransacti
         byte[] rawDetails = contractDetails == null ? null : contractDetails.getEncoded();
         detailsSrc.put(key.toBytes(), rawDetails);
 
-        if (contractDetails instanceof AionContractDetailsImpl) {
-            if (((AionContractDetailsImpl) contractDetails).externalStorage) {
-                contractDetails.syncStorage();
-            }
-        }
+        contractDetails.syncStorage();
 
         // Remove from the remove set.
         removes.remove(wrappedKey);

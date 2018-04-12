@@ -20,20 +20,12 @@
  *******************************************************************************/
 package org.aion.mcf.db;
 
-import static java.util.Collections.unmodifiableMap;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.rlp.RLP;
-import org.aion.mcf.trie.SecureTrie;
+
+import java.util.*;
 
 /**
  * Contract details cache implementation.
@@ -147,11 +139,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         if (origContract != null) {
             origContract.setAddress(address);
         }
-    }
-
-    @Override
-    public IContractDetails<DataWord> clone() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -25,26 +25,25 @@
 
 package org.aion.zero.db;
 
-import static org.aion.base.util.ByteArrayWrapper.wrap;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.crypto.HashUtil.h256;
-
-import java.util.*;
-
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
+import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.mcf.trie.SecureTrie;
+
+import java.util.*;
+
+import static org.aion.base.util.ByteArrayWrapper.wrap;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.crypto.HashUtil.h256;
 
 public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
 
@@ -70,6 +69,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         this.address = address;
         this.storageTrie = storageTrie;
         setCodes(codes);
+    }
+
+    public AionContractDetailsImpl(byte[] code) throws Exception {
+        if (code == null) {
+            throw new Exception("Empty input code");
+        }
+
+        decode(code);
     }
 
     @Override
@@ -249,11 +256,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     public void setExternalStorageDataSource(IByteArrayKeyValueStore dataSource) {
         this.externalStorageDataSource = dataSource;
         this.externalStorage = true;
-    }
-
-    @Override
-    public IContractDetails<DataWord> clone() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -83,8 +83,6 @@ public interface IContractDetails<DW> {
 
     void setAddress(Address address);
 
-    IContractDetails<DW> clone();
-
     String toString();
 
     void syncStorage();
