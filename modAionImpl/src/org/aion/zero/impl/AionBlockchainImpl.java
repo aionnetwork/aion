@@ -548,7 +548,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return EXIST;
         }
 
-        long currentTimestamp = System.currentTimeMillis() / THOUSAND_MS;
+        long currentTimestamp = currTimeSeconds;
         if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
             return INVALID_BLOCK;
 
