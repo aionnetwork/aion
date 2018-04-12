@@ -92,7 +92,7 @@ public final class P2pMgr implements IP2pMgr {
 	private NodeMgr nodeMgr = new NodeMgr();
 	private ServerSocketChannel tcpServer;
 	private Selector selector;
-	private Lock selectorLock = new ReentrantLock();
+	//private Lock selectorLock = new ReentrantLock();
 
 	private ScheduledThreadPoolExecutor scheduledWorkers;
 
@@ -101,7 +101,6 @@ public final class P2pMgr implements IP2pMgr {
 	private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
 
 	private int errTolerance;
-
 
 	enum Dest {
 		INBOUND, OUTBOUND, ACTIVE;
@@ -139,11 +138,8 @@ public final class P2pMgr implements IP2pMgr {
 
 	private AtomicBoolean start = new AtomicBoolean(true);
 
-	// initialed after handlers registration completed
 	private static ReqHandshake1 cachedReqHandshake1;
-	private static ReqHandshake cachedReqHandshake;
 	private static ResHandshake1 cachedResHandshake1;
-	private static ResHandshake cachedResHandshake;
 
 	private final class TaskInbound implements Runnable {
 		@Override
@@ -153,9 +149,13 @@ public final class P2pMgr implements IP2pMgr {
 
 			while (start.get()) {
 
+				try {
+					Thread.sleep(0, 1);
+				} catch (Exception e) {
+				}
+
 				int num;
 				try {
-					// num = selector.select(1);
 					num = selector.selectNow();
 				} catch (IOException e) {
 					if (showLog)
@@ -164,14 +164,9 @@ public final class P2pMgr implements IP2pMgr {
 				}
 
 				if (num == 0) {
-					try {
-						Thread.sleep(0, 10);
-					} catch (Exception e) {
-					}
 					continue;
 				}
 
-				// selectorLock.lock();
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 
 				while (keys.hasNext() && (num-- > 0)) {
@@ -202,9 +197,6 @@ public final class P2pMgr implements IP2pMgr {
 								continue;
 							}
 
-							int assertBufRemain = chanBuf.buffRemain;
-							int assertTotalCnt = cnt;
-
 							int prevCnt = cnt + chanBuf.buffRemain;
 
 							do {
@@ -229,31 +221,17 @@ public final class P2pMgr implements IP2pMgr {
 							if (cnt == 0) {
 								chanBuf.readBuf.rewind();
 							} else {
-								// cycline buffer
+								// there are no perfect cycling buffer in jdk yet.
+								// simply just buff move for now.
+								// @TODO: looking for more efficient way.
 								int remain = chanBuf.readBuf.remaining();
-								if (remain < 128 * 1024) {
 
-//									if (showLog)
-//										System.out.println(" NIO new buffer! , size = " + cnt + " originTotal_read:"
-//												+ assertTotalCnt + " orig_remain:" + assertBufRemain
-//												+ " __________ buf remain:" + chanBuf.readBuf.remaining() + " limit:"
-//												+ chanBuf.readBuf.limit());
-
-									// if still not read buffer , then copy
-									// it
-									// and move it to front. later , this
-									// can
-									// change to ring buffer.
-									int currPos = chanBuf.readBuf.position();
-									if (cnt != 0) {
-										byte[] tmp = new byte[cnt];
-										chanBuf.readBuf.position(currPos - cnt);
-										chanBuf.readBuf.get(tmp);
-										chanBuf.readBuf.rewind();
-										chanBuf.readBuf.put(tmp);
-									}
-
-								}
+								int currPos = chanBuf.readBuf.position();
+								byte[] tmp = new byte[cnt];
+								chanBuf.readBuf.position(currPos - cnt);
+								chanBuf.readBuf.get(tmp);
+								chanBuf.readBuf.rewind();
+								chanBuf.readBuf.put(tmp);
 							}
 
 						} catch (NullPointerException e) {
@@ -271,10 +249,6 @@ public final class P2pMgr implements IP2pMgr {
 							if (showLog) {
 								System.out.println("<p2p read-msg-P2p-exception>");
 							}
-
-							// e.printStackTrace();
-
-							// continue;
 
 							closeSocket((SocketChannel) sk.channel());
 							chanBuf.isClosed.set(true);
@@ -308,7 +282,6 @@ public final class P2pMgr implements IP2pMgr {
 						}
 					}
 				}
-				// selectorLock.unlock();
 			}
 			if (showLog)
 				System.out.println("<p2p-pi shutdown>");
@@ -352,25 +325,13 @@ public final class P2pMgr implements IP2pMgr {
 							}
 						}
 					} else {
-						System.out.println("send msg, failed to find node! M:" + mo.msg + " D:" + mo.dest);
+						//System.out.println("send msg, failed to find node! M:" + mo.msg + " D:" + mo.dest);
 					}
 				} catch (InterruptedException e) {
 					System.out.println("Task send interrupted");
 					break;
 				}
 			}
-			// Node node = this.nodeMgr.getActiveNode(_nodeIdHashcode);
-			// if (node != null) {
-			// SelectionKey sk = node.getChannel().keyFor(selector);
-			//
-			// if (sk != null) {
-			// Object attachment = sk.attachment();
-			// if (attachment != null)
-			// workers.submit(new TaskWrite(workers, showLog, node.getIdShort(),
-			// node.getChannel(), _msg,
-			// (ChannelBuffer) attachment, this));
-			// }
-			// }
 		}
 	}
 
@@ -484,26 +445,12 @@ public final class P2pMgr implements IP2pMgr {
 
 							nodeMgr.addOutboundNode(node);
 							allNid.put(nodeIdHash, node);
-							// selectorLock.unlock();
-
-							// fire extended handshake request first
-							// workers.submit(new TaskWrite(workers, showLog,
-							// node.getIdShort(), channel, cachedReqHandshake1,
-							// rb, P2pMgr.this));
-
-							// if don't sleep a while and direct send handshake, sometime it just failed by
-							// without response.
+							
 							try {
 								Thread.sleep(1000);
 							} catch (Exception e) {
 							}
 							sendMsgQue.offer(new MsgOut(node.getIdHash(), cachedReqHandshake1, Dest.OUTBOUND));
-
-							sendMsgQue.offer(new MsgOut(node.getIdHash(), cachedReqHandshake, Dest.OUTBOUND));
-
-							// workers.submit(new TaskWrite(workers, showLog,
-							// node.getIdShort(), channel,
-							// cachedReqHandshake, rb, P2pMgr.this));
 
 							if (showLog)
 								System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
@@ -534,11 +481,8 @@ public final class P2pMgr implements IP2pMgr {
 				try {
 					Thread.sleep(PERIOD_CLEAR);
 
-					// selectorLock.lock();
 					nodeMgr.rmTimeOutInbound(P2pMgr.this);
-					// selectorLock.unlock();
 
-					// clean up temp nodes list if metric failed.
 					nodeMgr.rmMetricFailedNodes();
 
 					Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
@@ -556,9 +500,7 @@ public final class P2pMgr implements IP2pMgr {
 							continue;
 
 						if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
-							// selectorLock.lock();
 							closeSocket(node.getChannel());
-							// selectorLock.unlock();
 							outboundIt.remove();
 
 							if (showLog)
@@ -566,9 +508,7 @@ public final class P2pMgr implements IP2pMgr {
 						}
 					}
 
-					// selectorLock.lock();
 					nodeMgr.rmTimeOutActives(P2pMgr.this);
-					// selectorLock.unlock();
 
 				} catch (Exception e) {
 				}
@@ -626,8 +566,6 @@ public final class P2pMgr implements IP2pMgr {
 
 		// rem out for bug:
 		// nodeMgr.loadPersistedNodes();
-		cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp, this.selfPort);
-		cachedResHandshake = new ResHandshake(true);
 		cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
 	}
 
@@ -713,15 +651,12 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	/**
-	 *            SocketChannel
+	 * SocketChannel
+	 * 
 	 * @throws IOException
 	 *             IOException
 	 */
 	private int readHeader(final ChannelBuffer _cb, ByteBuffer readBuffer, int cnt) throws IOException {
-
-		// int ret;
-		// while ((ret = _sc.read(_cb.headerBuf)) > 0) {
-		// }
 
 		if (cnt < Header.LEN)
 			return cnt;
@@ -741,7 +676,8 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	/**
-	 *            SocketChannel
+	 * SocketChannel
+	 * 
 	 * @throws IOException
 	 *             IOException
 	 */
@@ -792,12 +728,6 @@ public final class P2pMgr implements IP2pMgr {
 			currCnt = cnt;
 		}
 
-		// if(rb.isHeaderCompleted() &&
-		// !handlers.containsKey(rb.header.getRoute())){
-		// // TODO: Test
-		// return;
-		// }
-
 		// read body
 		if (rb.isHeaderCompleted() && !rb.isBodyCompleted()) {
 			currCnt = readBody(rb, readBuffer, currCnt);
@@ -807,8 +737,6 @@ public final class P2pMgr implements IP2pMgr {
 			return currCnt;
 
 		Header h = rb.header;
-
-		// byte[] bodyBytes = Arrays.copyOf(rb.body, rb.body.length);
 
 		byte[] bodyBytes = rb.body;
 		rb.refreshHeader();
@@ -820,7 +748,6 @@ public final class P2pMgr implements IP2pMgr {
 
 		// print route
 		// System.out.println("read " + ver + "-" + ctrl + "-" + act);
-
 
 		switch (ver) {
 		case Ver.V0:
@@ -836,15 +763,6 @@ public final class P2pMgr implements IP2pMgr {
 			}
 			break;
 
-		// testing versioning
-		// case Ver.V1:
-		// if(ctrl == 0 && act == 0){
-		// Hello hello = Hello.decode(bodyBytes);
-		// if(hello != null)
-		// System.out.println("v1 hello msg " + hello.getMsg());
-		// }
-		//
-		// break;
 		}
 
 		return currCnt;
@@ -898,18 +816,7 @@ public final class P2pMgr implements IP2pMgr {
 						binaryVersion = "decode-fail";
 					}
 					node.setBinaryVersion(binaryVersion);
-					// workers.submit(new TaskWrite(workers, showLog,
-					// node.getIdShort(), node.getChannel(),
-					// cachedResHandshake1, _buffer, this));
 					sendMsgQue.offer(new MsgOut(node.getChannel().hashCode(), cachedResHandshake1, Dest.INBOUND));
-				}
-				// handshake 0
-				else {
-					// workers.submit(new TaskWrite(workers, showLog,
-					// node.getIdShort(), node.getChannel(),
-					// cachedResHandshake, _buffer, this));
-
-					sendMsgQue.offer(new MsgOut(node.getChannel().hashCode(), cachedResHandshake, Dest.INBOUND));
 				}
 				nodeMgr.moveInboundToActive(_channelHash, this);
 			} else {
@@ -949,13 +856,7 @@ public final class P2pMgr implements IP2pMgr {
 					handleReqHandshake(rb, _sk.channel().hashCode(), reqHandshake1.getNodeId(),
 							reqHandshake1.getNetId(), reqHandshake1.getPort(), reqHandshake1.getRevision());
 				}
-			} else {
-				ReqHandshake reqHandshake = ReqHandshake.decode(_msgBytes);
-				if (reqHandshake != null)
-					handleReqHandshake(rb, _sk.channel().hashCode(), reqHandshake.getNodeId(), reqHandshake.getNetId(),
-							reqHandshake.getPort(), null);
-			}
-
+			} 
 			break;
 
 		case Act.RES_HANDSHAKE:
@@ -967,21 +868,13 @@ public final class P2pMgr implements IP2pMgr {
 				if (resHandshake1 != null && resHandshake1.getSuccess())
 					handleResHandshake(rb.nodeIdHash, resHandshake1.getBinaryVersion());
 
-			} else {
-				ResHandshake resHandshake = ResHandshake.decode(_msgBytes);
-				if (resHandshake != null && resHandshake.getSuccess())
-					handleResHandshake(rb.nodeIdHash, "unknown");
-			}
+			} 
 			break;
 
 		case Act.REQ_ACTIVE_NODES:
 			if (rb.nodeIdHash != 0) {
 				Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
 				if (node != null)
-					// workers.submit(new TaskWrite(workers, showLog,
-					// node.getIdShort(), node.getChannel(),
-					// new ResActiveNodes(nodeMgr.getActiveNodesList()), rb,
-					// this));
 					sendMsgQue.offer(new MsgOut(node.getIdHash(), new ResActiveNodes(nodeMgr.getActiveNodesList()),
 							Dest.ACTIVE));
 			}
@@ -1094,26 +987,6 @@ public final class P2pMgr implements IP2pMgr {
 				scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000,
 						PERIOD_REQUEST_ACTIVE_NODES, TimeUnit.MILLISECONDS);
 
-			// test versioning
-			// List<Hello> hello = new ArrayList<>();
-			// hello.add(new Hello("HELLO"));
-			// hello.add(new Hello("BONJOUR"));
-			// hello.add(new Hello("HOLA"));
-			// hello.add(new Hello("CIAO"));
-			// hello.add(new Hello("OLÀ"));
-			// hello.add(new Hello("ZDRAS-TVUY-TE"));
-			// scheduledWorkers.scheduleWithFixedDelay(()->{
-			// int ran = ThreadLocalRandom.current().nextInt(0,6 );
-			// INode node = getRandom(NodeRandPolicy.RND, 0);
-			// if (node != null)
-			// send(node.getIdHash(), hello.get(ran));
-			// }, 3000, 3000, TimeUnit.MILLISECONDS);
-
-			// rem out for bug: https://github.com/aionnetwork/aion/issues/136
-			// scheduledWorkers.scheduleWithFixedDelay(new
-			// TaskPersistNodes(nodeMgr), 30000, PERIOD_PERSIST_NODES,
-			// TimeUnit.MILLISECONDS);
-
 			Thread thrdClear = new Thread(new TaskClear(), "p2p-clear");
 			thrdClear.setPriority(Thread.NORM_PRIORITY);
 			thrdClear.start();
@@ -1137,13 +1010,6 @@ public final class P2pMgr implements IP2pMgr {
 	public Map<Integer, INode> getActiveNodes() {
 		return new HashMap<>(this.nodeMgr.getActiveNodesMap());
 	}
-
-	/**
-	 * for test
-	 */
-	// void clearTempNodes() {
-	// this.nodeMgr.clearTempNodes();
-	// }
 
 	public int getTempNodesCount() {
 		return nodeMgr.tempNodesSize();
@@ -1179,19 +1045,6 @@ public final class P2pMgr implements IP2pMgr {
 
 	@Override
 	public void send(int _nodeIdHashcode, final Msg _msg) {
-		// Node node = this.nodeMgr.getActiveNode(_nodeIdHashcode);
-		// if (node != null) {
-		// SelectionKey sk = node.getChannel().keyFor(selector);
-		//
-		// if (sk != null) {
-		// Object attachment = sk.attachment();
-		// if (attachment != null)
-		// workers.submit(new TaskWrite(workers, showLog, node.getIdShort(),
-		// node.getChannel(), _msg,
-		// (ChannelBuffer) attachment, this));
-		// }
-		// }
-
 		sendMsgQue.offer(new MsgOut(_nodeIdHashcode, _msg, Dest.ACTIVE));
 	}
 
@@ -1236,7 +1089,7 @@ public final class P2pMgr implements IP2pMgr {
 
 	@Override
 	public void errCheck(int nodeIdHashcode, String _displayId) {
-		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
+		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1));
 
 		if (cnt > this.errTolerance) {
 			ban(nodeIdHashcode);

@@ -36,8 +36,11 @@ import java.util.concurrent.locks.Lock;
  */
 class ChannelBuffer {
 
-	private static final int READ_BUFFER_SIZE = 16 * 1024 * 1024; // 512K read
-																	// buffer.
+	// Attention! p2p max block size is 40M, txpool is 16M, current block ENG limit
+	// never go up that level yet.
+	// but incase NRG limit increase , please increase this buffer accordingly.
+	// 2M read buffer
+	private static final int READ_BUFFER_SIZE = 2 * 1024 * 1024;
 
 	ByteBuffer readBuf = ByteBuffer.allocate(READ_BUFFER_SIZE);
 	int buffRemain = 0;
