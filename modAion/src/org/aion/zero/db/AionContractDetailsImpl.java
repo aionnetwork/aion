@@ -126,16 +126,24 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
             setCode(code.getRLPData());
         }
 
+        // load/deserialize storage trie
         this.externalStorage = !Arrays.equals(isExternalStorage.getRLPData(), EMPTY_BYTE_ARRAY);
         if (externalStorage) {
             storageTrie = new SecureTrie(getExternalStorageDataSource());
-            storageTrie.withPruningEnabled(prune > 0);
-            storageTrie.setRoot(storageRoot.getRLPData());
         } else {
-            this.storageTrie.deserialize(storage.getRLPData());
+            storageTrie.deserialize(storage.getRLPData());
         }
+        storageTrie.withPruningEnabled(prune > 0);
+        storageTrie.setRoot(storageRoot.getRLPData());
 
-        this.externalStorage = (storage.getRLPData().length > detailsInMemoryStorageLimit) || externalStorage;
+        // switch from in-memory to external storage
+        if (!externalStorage && storage.getRLPData().length > detailsInMemoryStorageLimit) {
+
+            System.out.println("Switch from in-memory to external storage: " + getAddress());
+
+            externalStorage = true;
+            storageTrie.getCache().setDB(getExternalStorageDataSource());
+        }
 
         this.rlpEncoded = rlpCode;
     }
