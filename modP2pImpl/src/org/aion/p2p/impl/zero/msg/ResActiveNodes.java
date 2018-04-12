@@ -43,70 +43,77 @@ import org.aion.p2p.impl.comm.Node;
  */
 public final class ResActiveNodes extends Msg {
 
-    private final List<Node> nodes;
+	private final List<Node> nodes;
 
-    private int count;
+	private int count;
 
-    /**
-     * id 36 bytes, ipv4 8 bytes, port 4 bytes
-     */
-    private final static int NODE_BYTES_LENGTH = 36 + 8 + 4;
+	/**
+	 * id 36 bytes, ipv4 8 bytes, port 4 bytes
+	 */
+	private final static int NODE_BYTES_LENGTH = 36 + 8 + 4;
 
-    private final static int MAX_NODES = 40;
+	private final static int MAX_NODES = 40;
 
-    /**
-     * @param _nodes List
-     */
-    public ResActiveNodes(final List<Node> _nodes) {
-        super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
-        this.count = Math.min(MAX_NODES, _nodes.size());
-        if (this.count > 0)
-            this.nodes = _nodes.subList(0, this.count);
-        else
-            this.nodes = new ArrayList<>();
-    }
+	/**
+	 * @param _nodes
+	 *            List
+	 */
+	public ResActiveNodes(final List<Node> _nodes) {
+		super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
+		this.count = Math.min(MAX_NODES, _nodes.size());
+		if (this.count > 0)
+			this.nodes = _nodes.subList(0, this.count);
+		else
+			this.nodes = new ArrayList<>();
+	}
 
-    /**
-     * @return List
-     */
-    public List<Node> getNodes() {
-        return this.nodes;
-    }
+	/**
+	 * @return List
+	 */
+	public List<Node> getNodes() {
+		return this.nodes;
+	}
 
-    /**
-     * @param _bytes byte[]
-     * @return ResActiveNodes
-     */
-    public static ResActiveNodes decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0)
-            return null;
-        else {
-            ByteBuffer buf = ByteBuffer.wrap(_bytes);
-            int count = buf.get();
-            ArrayList<Node> activeNodes = new ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                byte[] nodeIdBytes = new byte[36];
-                buf.get(nodeIdBytes);
-                byte[] ipBytes = new byte[8];
-                buf.get(ipBytes);
-                int port = buf.getInt();
-                Node n = new Node(false, nodeIdBytes, ipBytes, port);
-                activeNodes.add(n);
-            }
-            return new ResActiveNodes(activeNodes);
-        }
-    }
+	/**
+	 * @param _bytes
+	 *            byte[]
+	 * @return ResActiveNodes
+	 */
+	public static ResActiveNodes decode(final byte[] _bytes) {
+		if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0)
+			return null;
+		else {
+			ByteBuffer buf = ByteBuffer.wrap(_bytes);
+			int count = buf.get();
 
-    @Override
-    public byte[] encode() {
-        ByteBuffer buf = ByteBuffer.allocate(NODE_BYTES_LENGTH * this.count + 1);
-        buf.put((byte) this.count);
-        for (INode n : this.nodes) {
-            buf.put(n.getId());
-            buf.put(n.getIp());
-            buf.putInt(n.getPort());
-        }
-        return buf.array();
-    }
+			// fix bug: https://github.com/aionnetwork/aion/issues/390
+			if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
+				return null;
+
+			ArrayList<Node> activeNodes = new ArrayList<>();
+			for (int i = 0; i < count; i++) {
+				byte[] nodeIdBytes = new byte[36];
+				buf.get(nodeIdBytes);
+				byte[] ipBytes = new byte[8];
+				buf.get(ipBytes);
+				int port = buf.getInt();
+				Node n = new Node(false, nodeIdBytes, ipBytes, port);
+				activeNodes.add(n);
+			}
+			return new ResActiveNodes(activeNodes);
+		}
+	}
+
+	@Override
+	public byte[] encode() {
+		ByteBuffer buf = ByteBuffer.allocate(NODE_BYTES_LENGTH * this.count + 1);
+		buf.put((byte) this.count);
+		for (INode n : this.nodes) {
+			buf.put(n.getId());
+			buf.put(n.getIp());
+			buf.putInt(n.getPort());
+		}
+		return buf.array();
+	}
 
 }
