@@ -42,8 +42,11 @@ import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
+
 //import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 // import org.aion.mcf.trie.JournalPruneDataSource;
+
 
 /**
  * Abstract Repository class.
@@ -160,18 +163,18 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
         // TODO: these parameters should be converted to enum
         // should correspond with those listed in {@code DatabaseFactory}
         Properties sharedProps = new Properties();
-        sharedProps.setProperty("db_type", this.cfg.getActiveVendor());
-        sharedProps.setProperty("db_path", this.cfg.getDbPath());
-        sharedProps.setProperty("enable_auto_commit", String.valueOf(this.cfg.isAutoCommitEnabled()));
-        sharedProps.setProperty("enable_db_cache", String.valueOf(this.cfg.isDbCacheEnabled()));
-        sharedProps.setProperty("enable_db_compression", String.valueOf(this.cfg.isDbCompressionEnabled()));
-        sharedProps.setProperty("enable_heap_cache", String.valueOf(this.cfg.isHeapCacheEnabled()));
-        sharedProps.setProperty("max_heap_cache_size", this.cfg.getMaxHeapCacheSize());
-        sharedProps.setProperty("enable_heap_cache_stats", String.valueOf(this.cfg.isHeapCacheStatsEnabled()));
-        sharedProps.setProperty("max_fd_alloc_size", String.valueOf(this.cfg.getMaxFdAllocSize()));
-        sharedProps.setProperty("block_size", String.valueOf(this.cfg.getBlockSize()));
-        sharedProps.setProperty("write_buffer_size", String.valueOf(this.cfg.getWriteBufferSize()));
-        sharedProps.setProperty("cache_size", String.valueOf(this.cfg.getCacheSize()));
+        sharedProps.setProperty(Props.DB_TYPE, this.cfg.getActiveVendor());
+        sharedProps.setProperty(Props.DB_PATH, this.cfg.getDbPath());
+        sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, String.valueOf(this.cfg.isAutoCommitEnabled()));
+        sharedProps.setProperty(Props.ENABLE_DB_CACHE, String.valueOf(this.cfg.isDbCacheEnabled()));
+        sharedProps.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.cfg.isDbCompressionEnabled()));
+        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE, String.valueOf(this.cfg.isHeapCacheEnabled()));
+        sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, this.cfg.getMaxHeapCacheSize());
+        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, String.valueOf(this.cfg.isHeapCacheStatsEnabled()));
+        sharedProps.setProperty(Props.MAX_FD_ALLOC, String.valueOf(this.cfg.getMaxFdAllocSize()));
+        sharedProps.setProperty(Props.BLOCK_SIZE, String.valueOf(this.cfg.getBlockSize()));
+        sharedProps.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(this.cfg.getWriteBufferSize()));
+        sharedProps.setProperty(Props.DB_CACHE_SIZE, String.valueOf(this.cfg.getCacheSize()));
 
         try {
             databaseGroup = new ArrayList<>();
@@ -180,32 +183,32 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
              * Setup datastores
              */
             // locking enabled for state
-            sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "true");
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "true");
 
-            sharedProps.setProperty("db_name", STATE_DB);
+            sharedProps.setProperty(Props.DB_NAME, STATE_DB);
             this.stateDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(stateDatabase);
 
             // locking disabled for other databases
-            sharedProps.setProperty(DatabaseFactory.PROP_ENABLE_LOCKING, "false");
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
 
-            sharedProps.setProperty("db_name", TRANSACTION_DB);
+            sharedProps.setProperty(Props.DB_NAME, TRANSACTION_DB);
             this.transactionDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(transactionDatabase);
 
-            sharedProps.setProperty("db_name", DETAILS_DB);
+            sharedProps.setProperty(Props.DB_NAME, DETAILS_DB);
             this.detailsDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(detailsDatabase);
 
-            sharedProps.setProperty("db_name", STORAGE_DB);
+            sharedProps.setProperty(Props.DB_NAME, STORAGE_DB);
             this.storageDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(storageDatabase);
 
-            sharedProps.setProperty("db_name", INDEX_DB);
+            sharedProps.setProperty(Props.DB_NAME, INDEX_DB);
             this.indexDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(indexDatabase);
 
-            sharedProps.setProperty("db_name", BLOCK_DB);
+            sharedProps.setProperty(Props.DB_NAME, BLOCK_DB);
             this.blockDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(blockDatabase);
 
@@ -247,14 +250,14 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
         // check object status
         if (db == null) {
-            LOG.error("Database <{}> connection could not be established for <{}>.", info.getProperty("db_type"),
-                    info.getProperty("db_name"));
+            LOG.error("Database <{}> connection could not be established for <{}>.", info.getProperty(Props.DB_TYPE),
+                    info.getProperty(Props.DB_NAME));
         }
 
         // check persistence status
         if (!db.isCreatedOnDisk()) {
-            LOG.error("Database <{}> cannot be saved to disk for <{}>.", info.getProperty("db_type"),
-                    info.getProperty("db_name"));
+            LOG.error("Database <{}> cannot be saved to disk for <{}>.", info.getProperty(Props.DB_TYPE),
+                    info.getProperty(Props.DB_NAME));
         }
 
         return db;

@@ -38,13 +38,14 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.h2.store.fs.FileUtils;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Common functionality for database implementations.
@@ -93,6 +94,19 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     @Override
     public void compact() {
         LOG.warn("Compact not supported by " + this.toString() + ".");
+    }
+
+    @Override
+    public void drop() {
+        close();
+
+        try (Stream<Path> stream = Files.walk(new File(path).toPath())) {
+            stream.map(Path::toFile).forEach(File::delete);
+        } catch (Exception e) {
+            LOG.error("Unable to delete path due to: ", e);
+        }
+
+        open();
     }
 
     @Override

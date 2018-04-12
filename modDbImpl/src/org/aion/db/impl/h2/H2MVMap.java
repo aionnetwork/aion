@@ -324,13 +324,6 @@ public class H2MVMap extends AbstractDB {
         }
     }
 
-    @Override
-    public void deleteAll() {
-        check();
-
-        map.clear();
-    }
-
     // AbstractDB functionality ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {

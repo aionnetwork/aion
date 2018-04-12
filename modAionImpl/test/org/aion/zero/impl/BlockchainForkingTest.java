@@ -229,18 +229,18 @@ public class BlockchainForkingTest {
         // generate three blocks, on the third block we get flexiblity
         // for what difficulties can occur
 
-        AionBlock firstBlock = bc.createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time);
+        AionBlock firstBlock = bc.createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
         assertThat(bc.tryToConnectInternal(firstBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now connect the second block
-        AionBlock secondBlock = bc.createNewBlockInternal(firstBlock, Collections.emptyList(), true, time);
+        AionBlock secondBlock = bc.createNewBlockInternal(firstBlock, Collections.emptyList(), true, time / 1000L);
         assertThat(bc.tryToConnectInternal(secondBlock, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now on the third block, we diverge with one block having higher TD than the other
-        AionBlock fasterSecondBlock = bc.createNewBlockInternal(secondBlock, Collections.emptyList(), true, time);
+        AionBlock fasterSecondBlock = bc.createNewBlockInternal(secondBlock, Collections.emptyList(), true, time / 1000L);
         AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
 
-        slowerSecondBlock.getHeader().setTimestamp(time + 100);
+        slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
 
         assertThat(bc.tryToConnectInternal(fasterSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
@@ -255,8 +255,8 @@ public class BlockchainForkingTest {
 
         time += 100;
 
-        AionBlock fastBlockDescendant  = bc.createNewBlockInternal(fasterSecondBlock, Collections.emptyList(), true, time);
-        AionBlock slowerBlockDescendant = bc.createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time + 100);
+        AionBlock fastBlockDescendant  = bc.createNewBlockInternal(fasterSecondBlock, Collections.emptyList(), true, time / 1000L);
+        AionBlock slowerBlockDescendant = bc.createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
 
         // increment by another hundred (this is supposed to be when the slower block descendant is completed)
         time += 100;

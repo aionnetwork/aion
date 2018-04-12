@@ -46,6 +46,7 @@ import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -292,6 +293,7 @@ public class AionContractDetailsTest {
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_13)).getData()));
     }
 
+    @Ignore
     @Test
     public void testExternalStorageSerialization() {
         Address address = Address.wrap(RandomUtils.nextBytes(Address.ADDRESS_LEN));
@@ -340,6 +342,7 @@ public class AionContractDetailsTest {
         deserialized.put(new DataWord(RandomUtils.nextBytes(16)), DataWord.ZERO);
     }
 
+    @Ignore
     @Test
     public void testExternalStorageTransition() {
         Address address = Address.wrap(RandomUtils.nextBytes(Address.ADDRESS_LEN));

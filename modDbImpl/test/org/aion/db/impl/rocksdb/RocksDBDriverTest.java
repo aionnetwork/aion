@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Properties;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -24,12 +25,12 @@ public class RocksDBDriverTest {
     public void testDriverReturnDatabase() {
 
         Properties props = new Properties();
-        props.setProperty("db_type", dbVendor);
-        props.setProperty("db_name", dbName);
-        props.setProperty("db_path", dbPath);
-        props.setProperty(DatabaseFactory.PROP_BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(DatabaseFactory.PROP_MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
-        props.setProperty(DatabaseFactory.PROP_WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(Props.DB_TYPE, dbVendor);
+        props.setProperty(Props.DB_NAME, dbName);
+        props.setProperty(Props.DB_PATH, dbPath);
+        props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
+        props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
+        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
 
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNotNull(db);
@@ -40,9 +41,9 @@ public class RocksDBDriverTest {
     public void testDriverReturnNull() {
 
         Properties props = new Properties();
-        props.setProperty("db_type", "BAD VENDOR");
-        props.setProperty("db_name", dbName);
-        props.setProperty("db_path", dbPath);
+        props.setProperty(Props.DB_TYPE, "BAD VENDOR");
+        props.setProperty(Props.DB_NAME, dbName);
+        props.setProperty(Props.DB_PATH, dbPath);
 
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNull(db);
@@ -51,17 +52,41 @@ public class RocksDBDriverTest {
     // TODO: parametrize tests with null inputs
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullName() {
-        new RocksDBWrapper(null, dbPath, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE);
+        new RocksDBWrapper(null,
+                           dbPath,
+                           false,
+                           false,
+                           RocksDBConstants.MAX_OPEN_FILES,
+                           RocksDBConstants.BLOCK_SIZE,
+                           RocksDBConstants.WRITE_BUFFER_SIZE,
+                           RocksDBConstants.READ_BUFFER_SIZE,
+                           RocksDBConstants.CACHE_SIZE);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullPath() {
-        new RocksDBWrapper(dbName, null, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE);
+        new RocksDBWrapper(dbName,
+                           null,
+                           false,
+                           false,
+                           RocksDBConstants.MAX_OPEN_FILES,
+                           RocksDBConstants.BLOCK_SIZE,
+                           RocksDBConstants.WRITE_BUFFER_SIZE,
+                           RocksDBConstants.READ_BUFFER_SIZE,
+                           RocksDBConstants.CACHE_SIZE);
     }
 
     @Test(expected = NullPointerException.class)
     public void testCreateWithNullNameAndPath() {
-        new RocksDBWrapper(null, null, false, false, RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE);
+        new RocksDBWrapper(null,
+                           null,
+                           false,
+                           false,
+                           RocksDBConstants.MAX_OPEN_FILES,
+                           RocksDBConstants.BLOCK_SIZE,
+                           RocksDBConstants.WRITE_BUFFER_SIZE,
+                           RocksDBConstants.READ_BUFFER_SIZE,
+                           RocksDBConstants.CACHE_SIZE);
     }
 
 }

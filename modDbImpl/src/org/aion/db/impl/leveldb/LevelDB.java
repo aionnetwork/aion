@@ -334,21 +334,6 @@ public class LevelDB extends AbstractDB {
         }
     }
 
-    @Override
-    public void deleteAll() {
-        check();
-
-        try (DBIterator itr = db.iterator()) {
-            // extract keys
-            itr.seekToFirst();
-            while (itr.hasNext()) {
-                db.delete(itr.next().getKey());
-            }
-        } catch (Exception e) {
-            LOG.error("Unable to extract keys from database " + this.toString() +".", e);
-        }
-    }
-
     // AbstractDB functionality ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {

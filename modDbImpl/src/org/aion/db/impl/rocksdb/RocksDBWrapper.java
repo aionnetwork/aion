@@ -287,22 +287,6 @@ public class RocksDBWrapper extends AbstractDB {
     }
 
     @Override
-    public void deleteAll() {
-        check();
-
-        try (RocksIterator itr = db.newIterator()) {
-            // extract keys
-            itr.seekToFirst();
-            while (itr.isValid()) {
-                db.delete(itr.key());
-                itr.next();
-            }
-        } catch (Exception e) {
-            LOG.error("Unable to extract keys from database " + this.toString() +".", e);
-        }
-    }
-
-    @Override
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
         boolean success = false;
 

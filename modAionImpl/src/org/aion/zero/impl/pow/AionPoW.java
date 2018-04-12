@@ -256,7 +256,6 @@ public class AionPoW {
      */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
-
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
             if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber() > syncLimit) {
