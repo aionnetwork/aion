@@ -4,8 +4,8 @@
 	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
 		<rpc active="true" ip="127.0.0.1" port="8545">
-			<!--comma separated list, domains from which to accept cross origin requests (browser enforced)-->
-			<corsdomain>false</corsdomain>
+			<!--boolean, enable/disable cross origin requests (browser enforced)-->
+			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
 			<apis-enabled>web3,eth,personal</apis-enabled>
 			<!--size of thread pool allocated for rpc requests-->

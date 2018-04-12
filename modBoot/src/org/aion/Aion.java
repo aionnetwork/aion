@@ -25,30 +25,29 @@
 
 package org.aion;
 
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
-import static org.aion.zero.impl.Version.KERNEL_VERSION;
-
-import java.util.ServiceLoader;
-
-import org.aion.api.server.http.HttpServer;
+import org.aion.api.server.http.NanoServer;
 import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.log.AionLoggerFactory;
 import org.aion.evtmgr.EventMgrModule;
+import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
-import org.aion.zero.impl.blockchain.PoolDumpUtils;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+
+import java.util.ServiceLoader;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 public class Aion {
 
@@ -121,13 +120,13 @@ public class Aion {
             zmqThread.start();
         }
 
-        HttpServer rpcServer = null;
+        NanoServer rpcServer = null;
         if(cfg.getApi().getRpc().getActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
-            rpcServer = new HttpServer(
+            rpcServer = new NanoServer(
                     rpcCfg.getIp(),
                     rpcCfg.getPort(),
-                    rpcCfg.getAllowedOrigins(),
+                    rpcCfg.getCorsEnabled(),
                     rpcCfg.getEnabled(),
                     rpcCfg.getMaxthread());
             rpcServer.start();
@@ -141,9 +140,9 @@ public class Aion {
             final Thread zmqThread;
             final IMineRunner miner;
             final ProtocolProcessor pp;
-            final HttpServer rpc;
+            final NanoServer rpc;
             
-            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, HttpServer rpc) {
+            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, NanoServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;

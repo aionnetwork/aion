@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class PendingTxCache {
 
@@ -43,6 +42,10 @@ public class PendingTxCache {
     private static int CacheMax = 256*100_000; //25.6MB
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
+
+    PendingTxCache() {
+        cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
+    }
 
     PendingTxCache(final int cacheMax) {
         cacheTxMap = Collections.synchronizedMap(new LRUMap<>(cacheAccountLimit));
@@ -54,10 +57,10 @@ public class PendingTxCache {
         if (txMap == null) {
             return 0;
         } else {
-            final int[] accountSize = { 0 };
-            txMap.values().parallelStream().forEach(tx -> accountSize[0] += tx.getEncoded().length);
+            AtomicInteger accountSize = new AtomicInteger(0);
+            txMap.values().parallelStream().forEach(tx -> accountSize.addAndGet(tx.getEncoded().length));
 
-            return accountSize[0];
+            return accountSize.get();
         }
     }
 
@@ -169,8 +172,6 @@ public class PendingTxCache {
             throw new NullPointerException();
         }
 
-        List<AionTransaction> processableTx = new ArrayList<>();
-
         for (Address addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
             if (LOG.isDebugEnabled()) {
@@ -200,14 +201,10 @@ public class PendingTxCache {
             }
         }
 
-        return timeMap.values().isEmpty() ? new ArrayList<>() : timeMap.values().stream().collect(Collectors.toList());
+        return timeMap.values().isEmpty() ? new ArrayList<>() : new ArrayList<>(timeMap.values());
     }
     public boolean isInCache(Address addr , BigInteger nonce) {
-        if (this.cacheTxMap.get(addr) != null) {
-            return (this.cacheTxMap.get(addr).get(nonce) != null);
-        }
-
-        return false;
+        return this.cacheTxMap.get(addr) != null && (this.cacheTxMap.get(addr).get(nonce) != null);
     }
 
     Set<Address> getCacheTxAccount()
@@ -230,5 +227,9 @@ public class PendingTxCache {
         cacheTxMap.computeIfAbsent(from, k -> new TreeMap<>());
 
         return cacheTxMap.get(from);
+    }
+
+    public int cacheSize() {
+        return currentSize.get();
     }
 }

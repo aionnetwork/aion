@@ -297,6 +297,14 @@ public final class P2pMgr implements IP2pMgr {
 							closeSocket((SocketChannel) sk.channel());
 							chanBuf.isClosed.set(true);
 							chanBuf.readBuf.position(0);
+
+						} catch (CancelledKeyException e) {
+							if (showLog) {
+								System.out.println("<p2p key-cancelled-exception>");
+							}
+
+							chanBuf.isClosed.set(true);
+							closeSocket((SocketChannel) sk.channel());
 						}
 					}
 				}
@@ -951,18 +959,15 @@ public final class P2pMgr implements IP2pMgr {
 			break;
 
 		case Act.RES_HANDSHAKE:
-			System.out.println("receive handshake. nid:" + rb.nodeIdHash);
 			if (rb.nodeIdHash == 0)
 				return;
 
 			if (_msgBytes.length > ResHandshake.LEN) {
-				System.out.println("receive handshake. nid:" + rb.nodeIdHash + " v1");
 				ResHandshake1 resHandshake1 = ResHandshake1.decode(_msgBytes);
 				if (resHandshake1 != null && resHandshake1.getSuccess())
 					handleResHandshake(rb.nodeIdHash, resHandshake1.getBinaryVersion());
 
 			} else {
-				System.out.println("receive handshake. nid:" + rb.nodeIdHash + " v0");
 				ResHandshake resHandshake = ResHandshake.decode(_msgBytes);
 				if (resHandshake != null && resHandshake.getSuccess())
 					handleResHandshake(rb.nodeIdHash, "unknown");
