@@ -238,11 +238,6 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
     }
 
     @Override
-    public void deleteAll() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean isEmpty() {
         throw new UnsupportedOperationException();
     }

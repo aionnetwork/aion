@@ -149,9 +149,7 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public void deleteAll() {
-        check();
-
+    public void drop() {
         kv.clear();
     }
 

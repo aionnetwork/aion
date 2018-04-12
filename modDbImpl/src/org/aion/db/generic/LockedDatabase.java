@@ -329,17 +329,17 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void deleteAll() {
+    public void drop() {
         // acquire write lock
         lock.writeLock().lock();
 
         try {
-            database.deleteAll();
+            database.drop();
         } catch (Exception e) {
             if (e instanceof RuntimeException) {
                 throw e;
             } else {
-                LOG.error("Could not delete batch due to ", e);
+                LOG.error("Could not drop database due to ", e);
             }
         } finally {
             // releasing write lock

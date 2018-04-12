@@ -469,12 +469,12 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void deleteAll() {
+    public void drop() {
         check();
 
         this.loadingCache.invalidateAll();
         this.dirtyEntries.clear();
-        this.database.deleteAll();
+        this.database.drop();
     }
 
     /**
