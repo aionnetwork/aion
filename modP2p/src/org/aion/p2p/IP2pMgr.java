@@ -78,7 +78,7 @@ public interface IP2pMgr {
 
 	int chainId();
 
-	void closeSocket(final SocketChannel _sc);
+	void closeSocket(final SocketChannel _sc, String _reason);
 
 	void errCheck(int nodeIdHashcode, String _displayId);
 }

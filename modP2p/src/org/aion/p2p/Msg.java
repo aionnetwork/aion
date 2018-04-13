@@ -36,7 +36,7 @@ public abstract class Msg {
      * @param _ver short
      * @param _ctrl byte
      * @param _act byte
-     * @warning: at the msg construction phase, len of msg is unknown
+     * On msg construction phase, len of msg is unknown
      * therefore right before socket.write, we need to figure
      * out len before preparing the byte[]
      */

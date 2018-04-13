@@ -293,9 +293,7 @@ public final class Node implements INode {
 		return portConnected;
 	}
 
-	/**
-	 * @return long
-	 */
+	@Override
 	public long getTimestamp() {
 		return this.timestamp;
 	}
@@ -304,9 +302,7 @@ public final class Node implements INode {
 		return this.binaryVersion;
 	}
 
-	/**
-	 * @return SocketChannel
-	 */
+	@Override
 	public SocketChannel getChannel() {
 		return this.channel;
 	}

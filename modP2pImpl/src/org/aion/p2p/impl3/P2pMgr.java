@@ -291,10 +291,10 @@
 //						P2pMgr.this.sendMsgQue.add(new MsgOut(n.getChannelId(), cachedReqHandshake, Dest.OUTBOUND));
 //					}
 //
-//					// nodeMgr.rmTimeOutInbound(P2pMgr.this);
+//					// nodeMgr.removeTimeoutInbound(P2pMgr.this);
 //					//
 //					// // clean up temp nodes list if metric failed.
-//					// nodeMgr.rmMetricFailedNodes();
+//					// nodeMgr.removeMetricFailedNodes();
 //					//
 //					// Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
 //					// while (outboundIt.hasNext()) {

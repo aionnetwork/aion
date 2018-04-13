@@ -194,7 +194,7 @@ public final class P2pMgr implements IP2pMgr {
 	 * @param _sc
 	 *            SocketChannel
 	 */
-	public void closeSocket(final SocketChannel _sc) {
+	public void closeSocket(final SocketChannel _sc, String _reason) {
 		this.ioLoop.cancelChannel(_sc);
 	}
 
@@ -219,7 +219,7 @@ public final class P2pMgr implements IP2pMgr {
 	private void addOutboundNode(final Node _node) {
 		Node previous = nodeMgr.getOutboundNodes().putIfAbsent(_node.getIdHash(), _node);
 		if (previous != null)
-			closeSocket(_node.getChannel());
+			closeSocket(_node.getChannel(), "");
 	}
 
 	/**
@@ -971,11 +971,11 @@ public final class P2pMgr implements IP2pMgr {
 					Thread.sleep(PERIOD_CLEAR);
 
 					// selectorLock.lock();
-					nodeMgr.rmTimeOutInbound(P2pMgr.this);
+					nodeMgr.removeTimeoutInbound(P2pMgr.this);
 					// selectorLock.unlock();
 
 					// clean up temp nodes list if metric failed.
-					nodeMgr.rmMetricFailedNodes();
+					nodeMgr.removeMetricFailedNodes();
 
 					Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
 					while (outboundIt.hasNext()) {
@@ -993,7 +993,7 @@ public final class P2pMgr implements IP2pMgr {
 
 						if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
 							// selectorLock.lock();
-							closeSocket(node.getChannel());
+							closeSocket(node.getChannel(), "");
 							// selectorLock.unlock();
 							outboundIt.remove();
 
@@ -1004,7 +1004,7 @@ public final class P2pMgr implements IP2pMgr {
 					}
 
 					// selectorLock.lock();
-					nodeMgr.rmTimeOutActives(P2pMgr.this);
+					nodeMgr.removeTimeoutActives(P2pMgr.this);
 					// selectorLock.unlock();
 
 				} catch (InterruptedException interrupted) {

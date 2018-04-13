@@ -59,7 +59,6 @@ public final class P2pMgr implements IP2pMgr {
     private final static int PERIOD_UPNP_PORT_MAPPING = 3600000;
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
-    private final static int TIMEOUT_OUTBOUND_NODES = 10000;
     private final static int TIMEOUT_MSG_READ = 10000;
 
     private final int maxTempNodes;
@@ -255,13 +254,11 @@ public final class P2pMgr implements IP2pMgr {
                             if (showLog) {
                                 System.out.println("<p2p read-msg-null-exception>");
                             }
-
                             chanBuf.isClosed.set(true);
-
                             if(chanBuf.nodeIdHash != 0)
                                 nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
                             else {
-                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this, "task-inbound-null-pointer-exception");
                             }
 
                         } catch (P2pException e) {
@@ -269,25 +266,22 @@ public final class P2pMgr implements IP2pMgr {
                             if (showLog) {
                                 System.out.println("<p2p read-msg-P2p-exception>");
                             }
-
-
                             chanBuf.isClosed.set(true);
-
                             if(chanBuf.nodeIdHash != 0)
                                 nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
                             else {
-                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this,"task-inbound-io-exception-0");
                             }
 
                         } catch (ClosedChannelException e) {
+
                             if (showLog) {
                                 System.out.println("<p2p readfail-closechannel>");
                             }
-
                             if(chanBuf.nodeIdHash != 0)
                                 nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
                             else {
-                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this, "task-inbound-closed-channel-exception");
                             }
 
                         } catch (IOException e) {
@@ -295,26 +289,23 @@ public final class P2pMgr implements IP2pMgr {
                             if (showLog) {
                                 System.out.println("<p2p read-msg-io-exception: " + e.getMessage() + ">");
                             }
-
                             chanBuf.isClosed.set(true);
-
                             if(chanBuf.nodeIdHash != 0)
                                 nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
                             else {
-                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this, "task-inbound-io-exception-1");
                             }
 
                         } catch (CancelledKeyException e) {
+
                             if (showLog) {
                                 System.out.println("<p2p key-cancelled-exception>");
                             }
-
                             chanBuf.isClosed.set(true);
-
                             if(chanBuf.nodeIdHash != 0)
                                 nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
                             else {
-                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this,"task-inbound-cancelled-key-exception");
                             }
                         }
                     }
@@ -519,35 +510,10 @@ public final class P2pMgr implements IP2pMgr {
             while (start.get()) {
                 try {
                     Thread.sleep(PERIOD_CLEAR);
-
-                    nodeMgr.rmTimeOutInbound(P2pMgr.this);
-
-                    nodeMgr.rmMetricFailedNodes();
-
-                    Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
-                    while (outboundIt.hasNext()) {
-
-                        Object obj = outboundIt.next();
-
-                        if (obj == null)
-                            continue;
-
-                        int nodeIdHash = (int) obj;
-                        Node node = nodeMgr.getOutboundNodes().get(nodeIdHash);
-
-                        if (node == null)
-                            continue;
-
-                        if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
-                            closeSocket(node.getChannel());
-                            outboundIt.remove();
-
-                            if (showLog)
-                                System.out.println("<p2p-clear outbound-timeout>");
-                        }
-                    }
-
-                    nodeMgr.rmTimeOutActives(P2pMgr.this);
+                    nodeMgr.removeTimeoutInbound(P2pMgr.this);
+                    nodeMgr.removeTimeoutOutbound(P2pMgr.this);
+                    nodeMgr.removeTimeoutActives(P2pMgr.this);
+                    nodeMgr.removeMetricFailedNodes();
 
                 } catch (Exception e) {
                 }
@@ -624,9 +590,9 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * @param _sc SocketChannel
      */
-    public void closeSocket(final SocketChannel _sc) {
+    public void closeSocket(final SocketChannel _sc, String _reason) {
         if (showLog)
-            System.out.println("<p2p close-socket->");
+            System.out.println("<p2p close-socket reason=" + _reason + ">");
 
         try {
             SelectionKey sk = _sc.keyFor(selector);
@@ -1070,7 +1036,7 @@ public final class P2pMgr implements IP2pMgr {
 
     @Override
     public List<Short> versions() {
-        return new ArrayList<Short>(versions);
+        return new ArrayList<>(versions);
     }
 
     @Override

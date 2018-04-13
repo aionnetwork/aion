@@ -26,6 +26,7 @@
 package org.aion.p2p;
 
 import java.math.BigInteger;
+import java.nio.channels.SocketChannel;
 
 /**
  *
@@ -73,6 +74,10 @@ public interface INode {
      * @return BigInteger
      */
     BigInteger getTotalDifficulty();
+
+    SocketChannel getChannel();
+
+    long getTimestamp();
 
     /**
      * @param _bestBlockNumber long

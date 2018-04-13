@@ -27,7 +27,6 @@ package org.aion.p2p.impl;
 
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.NodeRandPolicy;
 import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
 
 /**
