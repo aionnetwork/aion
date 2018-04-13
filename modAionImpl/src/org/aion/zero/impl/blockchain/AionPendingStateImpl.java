@@ -227,7 +227,7 @@ public class AionPendingStateImpl
                 this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
             } catch (Throwable e) {
                 e.printStackTrace();
-                System.out.println("TxPoolModule getTxPool f    ail!" + e.toString());
+                System.out.println("TxPoolModule getTxPool fail!" + e.toString());
             }
         } else {
             System.out.println("Seed mode is enable");

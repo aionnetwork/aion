@@ -145,18 +145,17 @@ public class BlockPropagationHandler {
             this.cacheMap.put(hashWrapped, true);
         }
 
-        /*
-        AionBlock bestBlock = this.blockchain.getBestBlock();
 
-        // assumption is that we are on the correct chain
-        if (bestBlock.getNumber() > block.getNumber())
-            return PropStatus.DROPPED;
-
-        // do a very simple check to verify parent child relationship
-        // this implies we only propagate blocks from our own chain
-        if (!bestBlock.isParentOf(block))
-            return PropStatus.DROPPED;
-        */
+//        AionBlock bestBlock = this.blockchain.getBestBlock();
+//
+//        // assumption is that we are on the correct chain
+//        if (bestBlock.getNumber() > block.getNumber())
+//            return PropStatus.DROPPED;
+//
+//        // do a very simple check to verify parent child relationship
+//        // this implies we only propagate blocks from our own chain
+//        if (!bestBlock.isParentOf(block))
+//            return PropStatus.DROPPED;
 
         // send
         boolean sent = send(block, nodeId);
@@ -167,13 +166,22 @@ public class BlockPropagationHandler {
 
         if (this.blockchain.skipTryToConnect(block.getNumber())) {
             result = ImportResult.NO_PARENT;
-            log.info("<import-status: node = {}, number = {}, txs = {}, result = NOT_CHECKED>", _displayId,
-                    block.getNumber(), block.getTransactionsList().size(), result);
+            log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = NOT_IN_RANGE>",
+                     _displayId,
+                     block.getShortHash(),
+                     block.getNumber(),
+                     block.getTransactionsList().size(),
+                     result);
         } else {
             result = this.blockchain.tryToConnect(block);
             long t2 = System.currentTimeMillis();
-            log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>", _displayId,
-                    block.getNumber(), block.getTransactionsList().size(), result, t2 - t1);
+            log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                     _displayId,
+                     block.getShortHash(),
+                     block.getNumber(),
+                     block.getTransactionsList().size(),
+                     result,
+                     t2 - t1);
         }
 
         // process resulting state
@@ -196,7 +204,11 @@ public class BlockPropagationHandler {
         this.p2pManager.getActiveNodes().values()
                 .stream()
                 .filter(n -> n.getIdHash() != nodeId)
-                .filter(n -> n.getBestBlockNumber() <= block.getNumber())
+                // peer is within 5 blocks of the block we're about to send
+                .filter(n -> {
+                    long delta = block.getNumber() - n.getBestBlockNumber();
+                    return delta >= 0 && delta <= 5;
+                })
                 .forEach(n -> {
                     if (log.isDebugEnabled())
                         log.debug("<sending-new-block hash=" + block.getShortHash() + " to-node=" + n.getIdShort() + ">");
