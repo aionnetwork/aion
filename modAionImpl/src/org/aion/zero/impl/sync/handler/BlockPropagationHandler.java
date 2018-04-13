@@ -196,7 +196,10 @@ public class BlockPropagationHandler {
                 .stream()
                 .filter(n -> n.getIdHash() != nodeId)
                 // peer is within 5 blocks of the block we're about to send
-                .filter(n -> block.getNumber() - n.getBestBlockNumber() <= 5)
+                .filter(n -> {
+                    long delta = block.getNumber() - n.getBestBlockNumber();
+                    return delta >= 0 && delta <= 5;
+                })
                 .forEach(n -> {
                     if (log.isDebugEnabled())
                         log.debug("<sending-new-block hash=" + block.getShortHash() + " to-node=" + n.getIdShort() + ">");
