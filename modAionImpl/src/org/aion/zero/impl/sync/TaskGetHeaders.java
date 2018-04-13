@@ -61,8 +61,8 @@ final class TaskGetHeaders implements Runnable {
 
     private final Random random = new Random(System.currentTimeMillis());
 
-    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd,
-                   int backwardMin, int backwardMax, int requestMax, Logger log) {
+    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, int backwardMin, int backwardMax, int requestMax,
+            Logger log) {
         this.p2p = p2p;
         this.selfNumber = selfNumber;
         this.selfTd = selfTd;
@@ -78,16 +78,26 @@ final class TaskGetHeaders implements Runnable {
         Collection<INode> nodes = this.p2p.getActiveNodes().values();
 
         // filter nodes by total difficulty
-        List<INode> nodesFiltered = nodes.stream().filter(
-                (n) -> n.getTotalDifficulty() != null &&
-                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
-        ).collect(Collectors.toList());
+        List<INode> nodesFiltered = nodes.stream()
+                .filter((n) -> n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0)
+                .collect(Collectors.toList());
         if (nodesFiltered.isEmpty()) {
             return;
         }
 
-        // pick a random node
-        INode node = nodesFiltered.get(random.nextInt(nodesFiltered.size()));
+        // sort by TD and pick top 8 in next step.
+        nodesFiltered.sort((n1, n2) -> {
+            return n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
+        });
+
+        // @TODO: when nodes TD highly distributed in wide range, simple way is only pick top 8 node for sync.
+        // looking for better strategy here.
+        INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
+
+        if (log.isDebugEnabled()) {
+            log.debug("<sync with={} BB={}>", node.getIdShort(), node.getBestBlockNumber());
+        }
+
         long nodeNumber = node.getBestBlockNumber();
         long from = 0;
         if (nodeNumber >= selfNumber + 128) {

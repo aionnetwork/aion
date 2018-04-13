@@ -29,7 +29,7 @@ public final class PeerMetric {
 
 	private static final int STOP_CONN_AFTER_FAILED_CONN = 2;
 	private static final long FAILED_CONN_RETRY_INTERVAL = 3000;
-	private static final long BAN_CONN_RETRY_INTERVAL = 300_000;
+	private static final long BAN_CONN_RETRY_INTERVAL = 30_000;
 
 	int metricFailedConn;
 	private long metricFailedConnTs;

@@ -594,6 +594,10 @@ public final class P2pMgr implements IP2pMgr {
     private void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
+
+        // set buffer to 256k.
+        _channel.socket().setReceiveBufferSize(64000);
+        _channel.socket().setSendBufferSize(64000);
         // _channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         // _channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
         // _channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
