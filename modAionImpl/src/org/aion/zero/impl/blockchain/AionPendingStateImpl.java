@@ -24,6 +24,7 @@
 
 package org.aion.zero.impl.blockchain;
 
+import org.aion.base.Constant;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -253,7 +254,7 @@ public class AionPendingStateImpl
             prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
             // The BlockEnergyLimit will be updated when the best block found.
             prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, String.valueOf(CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
-            prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, "16000000");
+            prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
             prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
             TxPoolModule txPoolModule;
             try {

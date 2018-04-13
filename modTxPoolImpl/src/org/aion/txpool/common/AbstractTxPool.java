@@ -47,17 +47,16 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
 
     protected int seqTxCountMax = 16;
-    protected int txn_timeout = 86_400; // 1 day by second
-    protected int blkSizeLimit = 16_000_000; // 16MB
+    protected int txn_timeout = 86_400; // 1 day by seconds
+    protected int blkSizeLimit = Constant.MAX_BLK_SIZE; // 2MB
 
     protected final AtomicLong blkNrgLimit = new AtomicLong(10_000_000L);
     protected final int multiplyM = 1_000_000;
     protected final int TXN_TIMEOUT_MIN = 10; // 10s
     protected final int TXN_TIMEOUT_MAX = 86_400; // 1 day
 
-    protected final int BLK_SIZE_MAX = Constant.MAX_BLK_SIZE; // 16MB
-
-    protected final int BLK_SIZE_MIN = 1_000_000; // 1MB
+    protected final int BLK_SIZE_MAX = 16 * 1024 * 1024; // 16MB
+    protected final int BLK_SIZE_MIN = 1024 * 1024; // 1MB
 
     protected final int BLK_NRG_MAX = 100_000_000;
     protected final int BLK_NRG_MIN = 1_000_000;
