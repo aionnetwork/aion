@@ -52,7 +52,6 @@ public class PendingTxCache {
         cachedAccountSize = new LRUMap<>(cacheAccountLimit);
         cacheClearTxHash = new HashSet<>();
         this.isPoolBackup = true;
-        cacheClearTxHash = new HashSet<>();
     }
 
     PendingTxCache(final int cacheMax) {
@@ -61,7 +60,6 @@ public class PendingTxCache {
         PendingTxCache.CacheMax = cacheMax * 100_000;
         cacheClearTxHash = new HashSet<>();
         this.isPoolBackup = true;
-        cacheClearTxHash = new HashSet<>();
     }
 
     PendingTxCache(final int cacheMax, boolean poolBackup) {
@@ -219,6 +217,10 @@ public class PendingTxCache {
     public List<AionTransaction> flush(Map<Address, BigInteger> nonceMap) {
         if (nonceMap == null) {
             throw new NullPointerException();
+        }
+
+        if (currentSize.get() == 0) {
+            return new ArrayList<>();
         }
 
         int cacheTxNumber = 0;

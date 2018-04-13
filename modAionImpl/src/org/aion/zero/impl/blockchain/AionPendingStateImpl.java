@@ -709,6 +709,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private void flushCachePendingTx() {
         Set<Address> cacheTxAccount = this.pendingTxCache.getCacheTxAccount();
 
+        if (cacheTxAccount.isEmpty()) {
+            return;
+        }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("PendingStateImpl.flushCachePendingTx: acc#[{}]", cacheTxAccount.size());
         }
