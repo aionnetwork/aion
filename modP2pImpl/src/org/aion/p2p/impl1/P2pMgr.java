@@ -267,8 +267,6 @@ public final class P2pMgr implements IP2pMgr {
                                 System.out.println("<p2p read-msg-io-exception: " + e.getMessage() + ">");
                             }
 
-                            e.printStackTrace();
-
                             closeSocket((SocketChannel) sk.channel());
                             chanBuf.isClosed.set(true);
                             chanBuf.readBuf.position(0);
@@ -358,7 +356,6 @@ public final class P2pMgr implements IP2pMgr {
                             hlr.receive(mi.nid, mi.nsid, mi.msg);
                         } catch (Exception e) {
                             System.out.println("Exception during kernel message handling:");
-                            e.printStackTrace();
                         }
                     }
                 } catch (InterruptedException e) {
@@ -380,7 +377,6 @@ public final class P2pMgr implements IP2pMgr {
                     Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-p2p-report.out"),
                             status.getBytes());
                 } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
             // nodeMgr.dumpAllNodeInfo();
