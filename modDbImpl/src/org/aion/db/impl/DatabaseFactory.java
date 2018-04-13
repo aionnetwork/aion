@@ -32,6 +32,7 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.generic.SpecialLockedDatabase;
+import org.aion.db.generic.TimedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
@@ -80,24 +81,33 @@ public abstract class DatabaseFactory {
     public static IByteArrayKeyValueDatabase connect(Properties info) {
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
+        IByteArrayKeyValueDatabase db;
 
         if (dbType == DBVendor.UNKNOWN) {
             // the driver, if correct should check path and name
-            return connect(info.getProperty(Props.DB_TYPE), info);
-        }
-
-        boolean enableLocking = getBoolean(info, Props.ENABLE_LOCKING);
-
-        // first check for locking
-        if (enableLocking) {
-            return connectWithLocks(info);
-        }
-
-        // next check for heap cache
-        if (getBoolean(info, Props.ENABLE_HEAP_CACHE)) {
-            return connectWithCache(info);
+            db = connect(info.getProperty(Props.DB_TYPE), info);
         } else {
-            return connectBasic(info);
+
+            boolean enableLocking = getBoolean(info, Props.ENABLE_LOCKING);
+
+            // first check for locking
+            if (enableLocking) {
+                db = connectWithLocks(info);
+            } else {
+                // next check for heap cache
+                if (getBoolean(info, Props.ENABLE_HEAP_CACHE)) {
+                    db = connectWithCache(info);
+                } else {
+                    db = connectBasic(info);
+                }
+            }
+        }
+
+        // time operations during debug
+        if (LOG.isDebugEnabled()) {
+            return new TimedDatabase(db);
+        } else {
+            return db;
         }
     }
 

@@ -239,14 +239,16 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
         // check object status
         if (db == null) {
-            LOG.error("Database <{}> connection could not be established for <{}>.", info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
+            LOG.error("Database <{}> connection could not be established for <{}>.",
+                      info.getProperty(Props.DB_TYPE),
+                      info.getProperty(Props.DB_NAME));
         }
 
         // check persistence status
         if (!db.isCreatedOnDisk()) {
-            LOG.error("Database <{}> cannot be saved to disk for <{}>.", info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
+            LOG.error("Database <{}> cannot be saved to disk for <{}>.",
+                      info.getProperty(Props.DB_TYPE),
+                      info.getProperty(Props.DB_NAME));
         }
 
         return db;
