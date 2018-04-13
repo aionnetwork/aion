@@ -322,9 +322,9 @@ public final class SyncMgr {
             return;
 
         if (log.isDebugEnabled()) {
-            log.debug("<incoming-bodies from-num={} to-num={} node={}>",
+            log.debug("<incoming-bodies from={} size={} node={}>",
                     blocks.get(0).getNumber(),
-                    blocks.get(blocks.size() - 1).getNumber(),
+                    blocks.size(),
                     _displayId);
         }
 
