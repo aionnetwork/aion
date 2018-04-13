@@ -78,7 +78,7 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
 
             return diffCalcInternal.calcDifficultyTarget(
                 BigInteger.valueOf(parent.getTimestamp()), BigInteger.valueOf(grandParent.getTimestamp()),
-                grandParent.getDifficultyBI());
+                parent.getDifficultyBI());
         };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
     }

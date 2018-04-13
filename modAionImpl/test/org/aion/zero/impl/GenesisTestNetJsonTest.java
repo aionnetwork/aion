@@ -1,3 +1,5 @@
+package org.aion.zero.impl;
+
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
@@ -77,8 +79,8 @@ public class GenesisTestNetJsonTest {
         assertThat(tokenAcc.getBalance()).isEqualTo(new BigInteger("465934586660000000000000000"));
 
         // assert that the loaded fields are correct
-        assertThat(genesis.getChainId()).isEqualTo(1);
-        assertThat(genesis.getDifficultyBI()).isEqualTo(BigInteger.valueOf(1024));
+        assertThat(genesis.getChainId()).isEqualTo(2);
+        assertThat(genesis.getDifficultyBI()).isEqualTo(BigInteger.valueOf(16));
         assertThat(genesis.getCoinbase()).isEqualTo(new Address("0x0000000000000000000000000000000000000000000000000000000000000000"));
         assertThat(genesis.getTimestamp()).isEqualTo(1497536993L);
         assertThat(genesis.getParentHash()).isEqualTo(ByteUtil.hexStringToBytes("0x0000000000000000000000000000000000000000000000000000000000000000"));

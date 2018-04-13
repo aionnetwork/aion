@@ -38,6 +38,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
+
 public class TXValidator {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.TX.name());
@@ -53,6 +56,10 @@ public class TXValidator {
             cache.put(ByteArrayWrapper.wrap(tx.getHash()), valid);
             return valid;
         }
+    }
+
+    public static boolean isInCache(ByteArrayWrapper hash) {
+        return cache.get(hash) != null;
     }
 
     public static boolean isValid0(AionTransaction tx) {
@@ -81,9 +88,16 @@ public class TXValidator {
         }
 
         long nrg = tx.getNrg();
-        if (nrg < 0 || nrg > Long.MAX_VALUE) {
-            LOG.error("invalid tx nrg!");
-            return false;
+        if (tx.isContractCreation()) {
+            if (!isValidNrgContractCreate(nrg)) {
+                LOG.error("invalid contract create nrg!");
+                return false;
+            }
+        } else {
+            if (!isValidNrgTx(nrg)) {
+                LOG.error("invalid tx nrg!");
+                return false;
+            }
         }
 
         nrg = tx.getNrgPrice();

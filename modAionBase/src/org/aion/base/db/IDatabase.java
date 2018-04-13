@@ -102,6 +102,11 @@ public interface IDatabase {
      */
     void compact();
 
+    /**
+     * Drop database. Removes all data from source.
+     */
+    void drop();
+
     // Get information about the database state
     // ------------------------------------------------------------------------
 

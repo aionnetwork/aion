@@ -327,4 +327,23 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
             lock.writeLock().unlock();
         }
     }
+
+    @Override
+    public void drop() {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        try {
+            database.drop();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not drop database due to ", e);
+            }
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
+        }
+    }
 }

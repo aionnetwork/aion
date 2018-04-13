@@ -44,6 +44,7 @@ import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.vm.types.DataWord;
@@ -183,6 +184,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
         private boolean blockPruningEnabled = false;
 
+        private IRepositoryConfig repoConfig;
+
         public static final int INITIAL_ACC_LEN = 10;
         public static final BigInteger DEFAULT_BALANCE = new BigInteger("1000000000000000000000000");
 
@@ -215,6 +218,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             this.defaultKeys.addAll(defaultAccounts);
             this.defaultKeys.forEach(k -> initialState.put(new ByteArrayWrapper(k.getAddress()),
                     new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
+            return this;
+        }
+
+        public Builder withRepoConfig(IRepositoryConfig config) {
+            this.repoConfig = config;
             return this;
         }
 
@@ -382,8 +390,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                         @Override
                         public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
                             return new BlockHeaderValidator<A0BlockHeader>(
-                                    Arrays.asList(new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
-                                            new EnergyConsumedRule()));
+                                    Arrays.asList(
+                                            new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
+                                            new EnergyConsumedRule(),
+                                            new AionHeaderVersionRule()));
                         }
                     };
                 } else {
@@ -391,8 +401,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             }
 
-            IRepositoryConfig repoConfig = generateRepositoryConfig();
-            StandaloneBlockchain bc = new StandaloneBlockchain(this.a0Config, this.configuration, repoConfig);
+            if (this.repoConfig == null)
+                this.repoConfig = generateRepositoryConfig();
+
+            StandaloneBlockchain bc = new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {

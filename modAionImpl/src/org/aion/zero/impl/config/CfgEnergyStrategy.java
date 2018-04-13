@@ -28,8 +28,8 @@ public class CfgEnergyStrategy {
     /**
      * Coefficients for {@link EnergyStrategies#CLAMPED_DECAYING}
      */
-    private long lowerBound = 7_000_000L;
-    private long upperBound = 15_000_000L;
+    private long lowerBound = 15_000_000L;
+    private long upperBound = 25_000_000L;
     private static final String UPPER_BOUND = "upper-bound";
     private static final String LOWER_BOUND = "lower-bound";
 

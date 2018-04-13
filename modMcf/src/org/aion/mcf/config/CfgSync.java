@@ -48,14 +48,20 @@ public final class CfgSync {
 
     private boolean showStatus;
 
+    private static int BLOCKS_BACKWARD_MIN = 8;
+    private static int BLOCKS_BACKWARD_MAX = 64;
+    private static int BLOCKS_REQUEST_MAX = 96;
+    private static int BLOCKS_RESPONSE_MAX = 96;
+    private static int BLOCKS_QUEUE_MAX = 48;
+
     public CfgSync() {
-        this.blocksBackwardMin = 8;
-        this.blocksBackwardMax = 64;
+        this.blocksBackwardMin = BLOCKS_BACKWARD_MIN;
+        this.blocksBackwardMax = BLOCKS_BACKWARD_MAX;
 
-        this.blocksRequestMax = 96;
-        this.blocksResponseMax = 96;
+        this.blocksRequestMax = BLOCKS_REQUEST_MAX;
+        this.blocksResponseMax = BLOCKS_RESPONSE_MAX;
 
-        this.blocksQueueMax = 48;
+        this.blocksQueueMax = BLOCKS_QUEUE_MAX;
 
         this.showStatus = false;
     }
@@ -112,31 +118,31 @@ public final class CfgSync {
             // sub-element blocks-backward-min
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-backward-min");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMin() + "");
+            xmlWriter.writeCharacters(BLOCKS_BACKWARD_MIN + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-backward-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-backward-max");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeCharacters(BLOCKS_BACKWARD_MAX + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-request-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-request-max");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeCharacters(BLOCKS_REQUEST_MAX + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-response-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-response-max");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
+            xmlWriter.writeCharacters(BLOCKS_RESPONSE_MAX + "");
             xmlWriter.writeEndElement();
 
             // sub-element blocks-queue-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-queue-max");
-            xmlWriter.writeCharacters(this.getBlocksQueueMax() + "");
+            xmlWriter.writeCharacters(BLOCKS_QUEUE_MAX + "");
             xmlWriter.writeEndElement();
 
             // sub-element show-status

@@ -24,8 +24,6 @@
 
 package org.aion.api.server.zmq;
 
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.IHdlr;
@@ -38,6 +36,9 @@ import org.aion.base.util.NativeLoader;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
+
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
 public class HdlrZmq implements IHdlr {
 
@@ -83,7 +84,10 @@ public class HdlrZmq implements IHdlr {
             // TODO Auto-generated catch block
             LOGGER.error("zmq takeTxWait failed! " + e.getMessage());
         }
-        Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
+        Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry = null;
+        if (txWait != null) {
+            entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
+        }
 
         if (entry != null) {
             this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
@@ -103,7 +107,7 @@ public class HdlrZmq implements IHdlr {
         return this.api.getFilter();
     }
 
-    public LinkedBlockingQueue<TxPendingStatus> getTxStatusQueue() {
+    public BlockingQueue<TxPendingStatus> getTxStatusQueue() {
         return this.api.getPendingStatus();
     }
 
