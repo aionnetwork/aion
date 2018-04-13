@@ -89,20 +89,31 @@ final class TaskGetHeaders implements Runnable {
 
         // find the max difficulty amongst all nodes
         BigInteger maxTd = BigInteger.ZERO;
+        long blockNumber = 0;
         for (INode node : nodesFiltered) {
             if (node.getTotalDifficulty().compareTo(maxTd) > 0) {
                 maxTd = node.getTotalDifficulty();
+                blockNumber = node.getBestBlockNumber();
             }
         }
 
         // filter from top difficulty, we can accept anyone that is within
-        // 10 blocks of top difficulty as a valid peer selection
+        // a bound of difficulty, and block number of highest total difficulty
         List<INode> furtherFiltered = new ArrayList<>();
         for (INode node : nodesFiltered) {
-            if (maxTd.subtract(node.getTotalDifficulty()).compareTo(BigInteger.TEN ) <= 0) {
-                furtherFiltered.add(node);
+            if (maxTd.subtract(node.getTotalDifficulty())
+                    .compareTo(maxTd.divide(BigInteger.valueOf(1024))) > 0) {
+                continue;
             }
+
+            if (blockNumber - node.getBestBlockNumber() > 10)
+                continue;
+
+            furtherFiltered.add(node);
         }
+
+        log.debug("found " + furtherFiltered.size() + " nodes [" + maxTd +
+                "|" + maxTd.divide(BigInteger.valueOf(1024)) + "|" + blockNumber + "]");
 
         // pick a random node
         INode node = furtherFiltered.get(random.nextInt(furtherFiltered.size()));
