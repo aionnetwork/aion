@@ -886,8 +886,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         return this.repository.getNonce(addr);
     }
 
-    private List<AionTransaction> addToTxCache(AionTransaction tx) {
-        return this.pendingTxCache.addCacheTx(tx);
+    private void addToTxCache(AionTransaction tx) {
+        this.pendingTxCache.addCacheTx(tx);
     }
 
     private boolean isInTxCache(Address addr, BigInteger nonce) {

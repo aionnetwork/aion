@@ -84,7 +84,7 @@ public class PendingTxCache {
         return (currentSize.get() + txSize) > CacheMax;
     }
 
-    List<AionTransaction> addCacheTx(AionTransaction tx) {
+    void addCacheTx(AionTransaction tx) {
         if (tx == null) {
             throw new NullPointerException();
         }
@@ -97,7 +97,7 @@ public class PendingTxCache {
 
             if (cacheTxMap.get(tx.getFrom()) == null) {
                 // no tx belong to the account, return directly
-                return Collections.singletonList(tx);
+                return;
             } else {
                 // calculate replaced nonce tx size
                 BigInteger nonce = tx.getNonceBI();
@@ -197,8 +197,6 @@ public class PendingTxCache {
         if (LOG.isTraceEnabled()) {
             LOG.trace("PendingTx add {}, size{}", tx.toString(), cacheTxMap.get(tx.getFrom()).values().size());
         }
-
-        return new ArrayList<>(cacheTxMap.get(tx.getFrom()).values());
     }
 
     private void addAccountSize(Address from, int txSize) {
