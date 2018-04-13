@@ -62,8 +62,8 @@ final class TaskGetHeaders implements Runnable {
 
     private final Random random = new Random(System.currentTimeMillis());
 
-    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd,
-                   int backwardMin, int backwardMax, int requestMax, Logger log) {
+    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, int backwardMin, int backwardMax, int requestMax,
+            Logger log) {
         this.p2p = p2p;
         this.selfNumber = selfNumber;
         this.selfTd = selfTd;
@@ -79,14 +79,12 @@ final class TaskGetHeaders implements Runnable {
         Collection<INode> nodes = this.p2p.getActiveNodes().values();
 
         // filter nodes by total difficulty
-        List<INode> nodesFiltered = nodes.stream().filter(
-                (n) -> n.getTotalDifficulty() != null &&
-                        n.getTotalDifficulty().compareTo(this.selfTd) >= 0
-        ).collect(Collectors.toList());
+        List<INode> nodesFiltered = nodes.stream()
+                .filter((n) -> n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0)
+                .collect(Collectors.toList());
         if (nodesFiltered.isEmpty()) {
             return;
         }
-
         // find the max difficulty amongst all nodes
         BigInteger maxTd = BigInteger.ZERO;
         long blockNumber = 0;
@@ -119,7 +117,7 @@ final class TaskGetHeaders implements Runnable {
         // pick a random node
         INode node = furtherFiltered.get(random.nextInt(furtherFiltered.size()));
         long nodeNumber = node.getBestBlockNumber();
-        long from = 0;
+        long from;
         if (nodeNumber >= selfNumber + 128) {
             from = Math.max(1, selfNumber - backwardMin);
         } else if (nodeNumber >= selfNumber - 128) {
