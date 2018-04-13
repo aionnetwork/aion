@@ -47,6 +47,14 @@ public class PendingTxCache {
     private Set<byte[]> cacheClearTxHash;
     private boolean isPoolBackup;
 
+    PendingTxCache() {
+        cacheTxMap = new LRUMap<>(cacheAccountLimit);
+        cachedAccountSize = new LRUMap<>(cacheAccountLimit);
+        cacheClearTxHash = new HashSet<>();
+        this.isPoolBackup = true;
+        cacheClearTxHash = new HashSet<>();
+    }
+
     PendingTxCache(final int cacheMax) {
         cacheTxMap = new LRUMap<>(cacheAccountLimit);
         cachedAccountSize = new LRUMap<>(cacheAccountLimit);
