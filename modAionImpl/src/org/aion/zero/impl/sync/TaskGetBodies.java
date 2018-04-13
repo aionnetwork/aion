@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,6 +59,8 @@ final class TaskGetBodies implements Runnable {
 
     private final ConcurrentHashMap<Integer, HeadersWrapper> headersSent;
 
+    private final Map<Integer, PeerState> peerStates;
+
     private final Logger log;
 
     /**
@@ -72,11 +75,13 @@ final class TaskGetBodies implements Runnable {
             final AtomicBoolean _run,
             final BlockingQueue<HeadersWrapper> _headersImported,
             final ConcurrentHashMap<Integer, HeadersWrapper> _headersSent,
+            final Map<Integer, PeerState> peerStates,
             final Logger log){
         this.p2p = _p2p;
         this.run = _run;
         this.headersImported = _headersImported;
         this.headersSent = _headersSent;
+        this.peerStates = peerStates;
         this.log = log;
     }
 

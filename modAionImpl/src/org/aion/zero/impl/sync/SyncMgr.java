@@ -86,6 +86,9 @@ public final class SyncMgr {
 
     private final NetworkStatus networkStatus = new NetworkStatus();
 
+    // peer syncing states
+    private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
+
     // store headers that has been sent to fetch block bodies
     private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
 
@@ -199,8 +202,8 @@ public final class SyncMgr {
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, log), "sync-gb").start();
-        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, log, importedBlockHashes), "sync-ib").start();
+        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, this.peerStates, log), "sync-gb").start();
+        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, this.importedBlockHashes, this.peerStates, log), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss").start();
@@ -221,7 +224,7 @@ public final class SyncMgr {
         }
 
         workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
-                syncBackwardMin, syncBackwardMax, syncRequestMax,  log));
+                syncBackwardMin, syncBackwardMax, syncRequestMax, peerStates, log));
     }
 
     /**

@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -57,18 +58,21 @@ final class TaskGetHeaders implements Runnable {
 
     private final int requestMax;
 
+    private final Map<Integer, PeerState> peerStates;
+
     private final Logger log;
 
     private final Random random = new Random(System.currentTimeMillis());
 
     TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, int backwardMin, int backwardMax, int requestMax,
-            Logger log) {
+                   Map<Integer, PeerState> peerStates, Logger log) {
         this.p2p = p2p;
         this.selfNumber = selfNumber;
         this.selfTd = selfTd;
         this.backwardMin = backwardMin;
         this.backwardMax = backwardMax;
         this.requestMax = requestMax;
+        this.peerStates = peerStates;
         this.log = log;
     }
 

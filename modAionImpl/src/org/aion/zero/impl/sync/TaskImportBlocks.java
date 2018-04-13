@@ -58,9 +58,11 @@ final class TaskImportBlocks implements Runnable {
 
     private final SyncStatics statis;
 
-    private final Logger log;
-
     private final Map<ByteArrayWrapper, Object> importedBlockHashes;
+
+    private final Map<Integer, PeerState> peerStates;
+
+    private final Logger log;
 
     TaskImportBlocks(
             final IP2pMgr p2p,
@@ -68,16 +70,18 @@ final class TaskImportBlocks implements Runnable {
             final AtomicBoolean _start,
             final BlockingQueue<BlocksWrapper> _importedBlocks,
             final SyncStatics _statis,
-            final Logger _log,
-            final Map<ByteArrayWrapper, Object> importedBlockHashes
+            final Map<ByteArrayWrapper, Object> importedBlockHashes,
+            final Map<Integer, PeerState> peerStates,
+            final Logger log
     ){
         this.p2p = p2p;
         this.chain = _chain;
         this.start = _start;
         this.importedBlocks = _importedBlocks;
         this.statis = _statis;
-        this.log = _log;
         this.importedBlockHashes = importedBlockHashes;
+        this.peerStates = peerStates;
+        this.log = log;
     }
 
     @Override
