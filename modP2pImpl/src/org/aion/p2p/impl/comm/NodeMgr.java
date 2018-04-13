@@ -417,6 +417,18 @@ public class NodeMgr implements INodeMgr {
         pmgr.closeSocket(node.getChannel());
     }
 
+    public void tryDropActiveByChannelId(int channelId, IP2pMgr pmgr) {
+        Iterator it = activeNodes.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Integer, Node> entry = (Map.Entry) it.next();
+            if (entry.getValue().getChannel().hashCode() == channelId) {
+                it.remove();
+                pmgr.closeSocket(entry.getValue().getChannel());
+                return;
+            }
+        }
+    }
+
     public void removeActive(Integer nodeIdHash, IP2pMgr pmgr) {
         dropActive(nodeIdHash, pmgr);
     }

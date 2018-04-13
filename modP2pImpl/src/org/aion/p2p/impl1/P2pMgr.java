@@ -180,6 +180,8 @@ public final class P2pMgr implements IP2pMgr {
                         readBuf.rewind();
 
                         ChannelBuffer chanBuf = (ChannelBuffer) (sk.attachment());
+                        int channelId = sk.channel().hashCode();
+
                         try {
 
                             int ret;
@@ -254,9 +256,13 @@ public final class P2pMgr implements IP2pMgr {
                                 System.out.println("<p2p read-msg-null-exception>");
                             }
 
-                            closeSocket((SocketChannel) sk.channel());
-
                             chanBuf.isClosed.set(true);
+
+                            if(chanBuf.nodeIdHash != 0)
+                                nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
+                            else {
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                            }
 
                         } catch (P2pException e) {
 
@@ -264,14 +270,25 @@ public final class P2pMgr implements IP2pMgr {
                                 System.out.println("<p2p read-msg-P2p-exception>");
                             }
 
-                            closeSocket((SocketChannel) sk.channel());
+
                             chanBuf.isClosed.set(true);
+
+                            if(chanBuf.nodeIdHash != 0)
+                                nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
+                            else {
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                            }
 
                         } catch (ClosedChannelException e) {
                             if (showLog) {
                                 System.out.println("<p2p readfail-closechannel>");
                             }
-                            closeSocket((SocketChannel) sk.channel());
+
+                            if(chanBuf.nodeIdHash != 0)
+                                nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
+                            else {
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                            }
 
                         } catch (IOException e) {
 
@@ -279,8 +296,13 @@ public final class P2pMgr implements IP2pMgr {
                                 System.out.println("<p2p read-msg-io-exception: " + e.getMessage() + ">");
                             }
 
-                            closeSocket((SocketChannel) sk.channel());
                             chanBuf.isClosed.set(true);
+
+                            if(chanBuf.nodeIdHash != 0)
+                                nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
+                            else {
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                            }
 
                         } catch (CancelledKeyException e) {
                             if (showLog) {
@@ -288,7 +310,12 @@ public final class P2pMgr implements IP2pMgr {
                             }
 
                             chanBuf.isClosed.set(true);
-                            closeSocket((SocketChannel) sk.channel());
+
+                            if(chanBuf.nodeIdHash != 0)
+                                nodeMgr.dropActive(chanBuf.nodeIdHash, P2pMgr.this);
+                            else {
+                                nodeMgr.tryDropActiveByChannelId(channelId,P2pMgr.this);
+                            }
                         }
                     }
                 }
