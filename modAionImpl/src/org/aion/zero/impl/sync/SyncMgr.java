@@ -79,11 +79,6 @@ public final class SyncMgr {
 
     private AtomicBoolean start = new AtomicBoolean(true);
 
-    // set as last block number within one batch import when first block for
-    // imported success as best
-    // reset to 0 as any block import result as no parent (side chain)
-    // private AtomicLong jump;
-
     private final NetworkStatus networkStatus = new NetworkStatus();
 
     // peer syncing states
@@ -167,19 +162,6 @@ public final class SyncMgr {
                 }
             }
         }
-//        else {
-//
-//            //TODO: can be faked to stop miner
-//            this.evtMgr.newEvent(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
-//            if (log.isDebugEnabled()) {
-//                log.debug(
-//                        "<network-status off-sync td={}/{} bn={}/{} bh={}/{}>",
-//                        selfTd.toString(10), this.networkStatus.getTargetTotalDiff().toString(10),
-//                        _remoteBestBlockNumber, this.networkStatus.getTargetBestBlockNumber(),
-//                        Hex.toHexString(selfBest.getHash()), this.networkStatus.getTargetBestBlockHash()
-//                );
-//            }
-//        }
     }
 
     public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncBackwardMin, final int _syncBackwardMax,
@@ -280,8 +262,9 @@ public final class SyncMgr {
             prev = current;
         }
 
-        // _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
-        if(filtered.size() > 0)
+        // NOTE: the filtered headers is still continuous
+
+        if(!filtered.isEmpty())
             importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
     }
 

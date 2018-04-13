@@ -143,16 +143,18 @@ final class TaskImportBlocks implements Runnable {
                             case IMPORTED_BEST:
                             case IMPORTED_NOT_BEST:
                             case EXIST:
+                                // assuming the remaining blocks will be imported. if not, the state
+                                // and base will be corrected by the next cycle
+                                long lastBlock = batch.get(batch.size() - 1).getNumber();
+
                                 if (mode == PeerState.Mode.BACKWARD) {
                                     // we found the fork point
                                     state.setMode(PeerState.Mode.FORWARD);
-                                    state.setBase(b.getNumber());
-                                } else if (mode == PeerState.Mode.FORWARD) {
-                                    // assuming the remaining blocks will be imported. if not, the state
-                                    // and based will be corrected by the next cycle
-                                    long lastBlock = batch.get(batch.size() - 1).getNumber();
                                     state.setBase(lastBlock);
 
+                                } else if (mode == PeerState.Mode.FORWARD) {
+                                    // continue
+                                    state.setBase(lastBlock);
                                     // if the imported best block, switch back to normal mode
                                     if (importResult == ImportResult.IMPORTED_BEST) {
                                         state.setMode(PeerState.Mode.NORMAL);
