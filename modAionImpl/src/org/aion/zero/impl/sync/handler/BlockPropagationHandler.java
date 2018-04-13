@@ -139,7 +139,7 @@ public class BlockPropagationHandler {
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized(this.cacheMap) {
-            if (this.cacheMap.containsKey(hashWrapped))
+            if (this.cacheMap.get(hashWrapped) != null)
                 return PropStatus.DROPPED;
             // regardless if block processing is successful, place into cache
             this.cacheMap.put(hashWrapped, true);
