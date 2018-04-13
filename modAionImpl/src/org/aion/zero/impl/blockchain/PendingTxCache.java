@@ -223,6 +223,10 @@ public class PendingTxCache {
             return new ArrayList<>();
         }
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("cacheTx.flush cacheTx# {}", cacheTxSize());
+        }
+
         int cacheTxNumber = 0;
         for (Address addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
@@ -254,7 +258,7 @@ public class PendingTxCache {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("cacheTx.flush cacheTx# {}", cacheTxNumber);
+            LOG.debug("cacheTx.flush after cacheTx# {}", cacheTxNumber);
         }
 
         Map<BigInteger, AionTransaction> timeMap = new LinkedHashMap<>();
