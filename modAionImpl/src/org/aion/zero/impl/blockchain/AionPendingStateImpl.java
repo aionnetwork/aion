@@ -188,14 +188,19 @@ public class AionPendingStateImpl
                 if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     long t1 = System.currentTimeMillis();
                     processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
-                    long t2 = System.currentTimeMillis();
-                    LOG.info("Pending state update took {} ms", t2 - t1);
+
+                    if (LOG.isDebugEnabled()) {
+                        long t2 = System.currentTimeMillis();
+                        LOG.debug("Pending state update took {} ms", t2 - t1);
+                    }
                 } else if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.TXBACKUP0.getValue()) {
                     long t1 = System.currentTimeMillis();
                     backupPendingTx();
-                    long t2 = System.currentTimeMillis();
 
-                    LOG.info("Pending state backupPending took {} ms", t2 - t1);
+                    if (LOG.isDebugEnabled()) {
+                        long t2 = System.currentTimeMillis();
+                        LOG.debug("Pending state backupPending took {} ms", t2 - t1);
+                    }
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
