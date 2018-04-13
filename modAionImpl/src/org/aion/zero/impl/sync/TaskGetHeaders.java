@@ -35,6 +35,7 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -84,22 +85,39 @@ final class TaskGetHeaders implements Runnable {
         if (nodesFiltered.isEmpty()) {
             return;
         }
-
-        // sort by TD and pick top 8 in next step.
-        nodesFiltered.sort((n1, n2) -> {
-            return n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
-        });
-
-        // @TODO: when nodes TD highly distributed in wide range, simple way is only pick top 8 node for sync.
-        // looking for better strategy here.
-        INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
-
-        if (log.isDebugEnabled()) {
-            log.debug("<sync with={} BB={}>", node.getIdShort(), node.getBestBlockNumber());
+        // find the max difficulty amongst all nodes
+        BigInteger maxTd = BigInteger.ZERO;
+        long blockNumber = 0;
+        for (INode node : nodesFiltered) {
+            if (node.getTotalDifficulty().compareTo(maxTd) > 0) {
+                maxTd = node.getTotalDifficulty();
+                blockNumber = node.getBestBlockNumber();
+            }
         }
 
+        // filter from top difficulty, we can accept anyone that is within
+        // a bound of difficulty, and block number of highest total difficulty
+        List<INode> furtherFiltered = new ArrayList<>();
+        for (INode node : nodesFiltered) {
+            if (maxTd.subtract(node.getTotalDifficulty())
+                    .compareTo(maxTd.divide(BigInteger.valueOf(1024))) > 0) {
+                continue;
+            }
+
+            // centres around the node with best block number
+            if (Math.abs(blockNumber - node.getBestBlockNumber()) > 10)
+                continue;
+
+            furtherFiltered.add(node);
+        }
+
+        log.debug("found " + furtherFiltered.size() + " nodes [" + maxTd +
+                "|" + maxTd.divide(BigInteger.valueOf(1024)) + "|" + blockNumber + "]");
+
+        // pick a random node
+        INode node = furtherFiltered.get(random.nextInt(furtherFiltered.size()));
         long nodeNumber = node.getBestBlockNumber();
-        long from = 0;
+        long from;
         if (nodeNumber >= selfNumber + 128) {
             from = Math.max(1, selfNumber - backwardMin);
         } else if (nodeNumber >= selfNumber - 128) {
