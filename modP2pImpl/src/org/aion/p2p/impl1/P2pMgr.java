@@ -440,9 +440,9 @@ public final class P2pMgr implements IP2pMgr {
                         SocketChannel channel = SocketChannel.open();
                         if (showLog)
                             System.out.println("<p2p try-connect-" + node.getIpStr() + ">");
+                        configChannel(channel);
                         channel.socket().connect(new InetSocketAddress(node.getIpStr(), _port),
                                 TIMEOUT_OUTBOUND_CONNECT);
-                        configChannel(channel);
 
                         if (channel.finishConnect() && channel.isConnected()) {
 
@@ -602,13 +602,8 @@ public final class P2pMgr implements IP2pMgr {
     private void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
-
-        // set buffer to 256k.
         _channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
         _channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
-        // _channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
-        // _channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-        // _channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
     }
 
     /**
