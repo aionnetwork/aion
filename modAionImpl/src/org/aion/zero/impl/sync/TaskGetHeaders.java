@@ -106,7 +106,8 @@ final class TaskGetHeaders implements Runnable {
                 continue;
             }
 
-            if (blockNumber - node.getBestBlockNumber() > 10)
+            // centres around the node with best block number
+            if (Math.abs(blockNumber - node.getBestBlockNumber()) > 10)
                 continue;
 
             furtherFiltered.add(node);
