@@ -554,6 +554,12 @@ public class AionPendingStateImpl
 
     @Override
     public synchronized void processBest(AionBlock newBlock, List receipts) {
+
+        if (isSeed) {
+            // seed mode doesn't need to update the pendingState
+            return;
+        }
+
         if (best.get() != null && !best.get().isParentOf(newBlock)) {
 
             // need to switch the state to another fork
