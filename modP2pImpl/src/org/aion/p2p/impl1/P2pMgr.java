@@ -25,6 +25,7 @@
 
 package org.aion.p2p.impl1;
 
+import org.aion.p2p.P2pConstant;
 import org.aion.p2p.*;
 import org.aion.p2p.impl.TaskRequestActiveNodes;
 import org.aion.p2p.impl.TaskUPnPManager;
@@ -44,10 +45,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-// import org.aion.p2p.impl.one.msg.Hello;
 
 /**
  * @author Chris p2p://{uuid}@{ip}:{port} TODO: 1) simplify id bytest to int, ip
@@ -145,7 +142,8 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void run() {
 
-            // read buffer pre-alloc. 1M max.
+            // read buffer pre-alloc. @ max_body_size
+            ByteBuffer readBuf = ByteBuffer.allocate(P2pConstant.MAX_BODY_SIZE);
 
             while (start.get()) {
 
@@ -182,13 +180,15 @@ public final class P2pMgr implements IP2pMgr {
 
                     if (sk.isReadable()) {
 
+                        readBuf.rewind();
+
                         ChannelBuffer chanBuf = (ChannelBuffer) (sk.attachment());
                         try {
 
                             int ret;
                             int cnt = 0;
 
-                            while ((ret = ((SocketChannel) sk.channel()).read(chanBuf.readBuf)) > 0) {
+                            while ((ret = ((SocketChannel) sk.channel()).read(readBuf)) > 0) {
                                 cnt += ret;
                             }
 
@@ -197,10 +197,28 @@ public final class P2pMgr implements IP2pMgr {
                                 continue;
                             }
 
+                            // int origCnt = cnt;
+
                             int prevCnt = cnt + chanBuf.buffRemain;
 
+                            ByteBuffer forRead;
+
+                            if (chanBuf.buffRemain != 0) {
+                                byte[] alreadyRead = new byte[cnt];
+
+                                readBuf.position(0);
+                                readBuf.get(alreadyRead);
+                                forRead = ByteBuffer.allocate(prevCnt);
+                                forRead.put(chanBuf.remainBuffer);
+                                forRead.put(alreadyRead);
+                            } else {
+                                forRead = readBuf;
+                            }
+
+                            // forRead.rewind();
+
                             do {
-                                cnt = read(sk, chanBuf.readBuf, prevCnt);
+                                cnt = read(sk, forRead, prevCnt);
 
                                 if (prevCnt == cnt) {
                                     break;
@@ -219,20 +237,18 @@ public final class P2pMgr implements IP2pMgr {
                             chanBuf.buffRemain = cnt;
 
                             if (cnt == 0) {
-                                chanBuf.readBuf.rewind();
+                                readBuf.rewind();
                             } else {
                                 // there are no perfect cycling buffer in jdk
                                 // yet.
                                 // simply just buff move for now.
                                 // @TODO: looking for more efficient way.
-                                int remain = chanBuf.readBuf.remaining();
 
-                                int currPos = chanBuf.readBuf.position();
-                                byte[] tmp = new byte[cnt];
-                                chanBuf.readBuf.position(currPos - cnt);
-                                chanBuf.readBuf.get(tmp);
-                                chanBuf.readBuf.rewind();
-                                chanBuf.readBuf.put(tmp);
+                                int currPos = forRead.position();
+                                chanBuf.remainBuffer = new byte[cnt];
+                                forRead.position(currPos - cnt);
+                                forRead.get(chanBuf.remainBuffer);
+                                readBuf.rewind();
                             }
 
                         } catch (NullPointerException e) {
@@ -244,7 +260,7 @@ public final class P2pMgr implements IP2pMgr {
                             closeSocket((SocketChannel) sk.channel());
 
                             chanBuf.isClosed.set(true);
-                            chanBuf.readBuf.position(0);
+
                         } catch (P2pException e) {
 
                             if (showLog) {
@@ -253,7 +269,6 @@ public final class P2pMgr implements IP2pMgr {
 
                             closeSocket((SocketChannel) sk.channel());
                             chanBuf.isClosed.set(true);
-                            chanBuf.readBuf.rewind();
 
                         } catch (ClosedChannelException e) {
                             if (showLog) {
@@ -269,7 +284,6 @@ public final class P2pMgr implements IP2pMgr {
 
                             closeSocket((SocketChannel) sk.channel());
                             chanBuf.isClosed.set(true);
-                            chanBuf.readBuf.position(0);
 
                         } catch (CancelledKeyException e) {
                             if (showLog) {
@@ -596,8 +610,8 @@ public final class P2pMgr implements IP2pMgr {
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
 
         // set buffer to 256k.
-        _channel.socket().setReceiveBufferSize(64000);
-        _channel.socket().setSendBufferSize(64000);
+        _channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
+        _channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
         // _channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         // _channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
         // _channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
