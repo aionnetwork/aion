@@ -102,7 +102,7 @@ public class AionContractDetailsTest {
 
         @Override
         public boolean isHeapCacheEnabled() {
-            return true;
+            return false;
         }
 
         @Override

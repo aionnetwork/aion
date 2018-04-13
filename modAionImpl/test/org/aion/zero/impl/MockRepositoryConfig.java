@@ -49,7 +49,7 @@ public class MockRepositoryConfig implements IRepositoryConfig {
 
     @Override
     public boolean isHeapCacheEnabled() {
-        return true;
+        return false;
     }
 
     @Override

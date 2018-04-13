@@ -104,7 +104,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         @Override
         public boolean isHeapCacheEnabled() {
-            return true;
+            return false;
         }
 
         @Override
@@ -298,7 +298,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                 @Override
                 public boolean isHeapCacheEnabled() {
-                    return true;
+                    return false;
                 }
 
                 @Override
