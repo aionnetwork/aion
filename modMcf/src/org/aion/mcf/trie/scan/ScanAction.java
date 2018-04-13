@@ -32,22 +32,12 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.mcf.trie;
+package org.aion.mcf.trie.scan;
 
-import org.aion.base.util.Hex;
 import org.aion.rlp.Value;
 
-public class TraceAllNodes implements TrieImpl.ScanAction {
+public interface ScanAction {
 
-    StringBuilder output = new StringBuilder();
-
-    @Override
-    public void doOnNode(byte[] hash, Value node) {
-
-        output.append(Hex.toHexString(hash)).append(" ==> ").append(node.toString()).append("\n");
-    }
-
-    public String getOutput() {
-        return output.toString();
-    }
+    void doOnNode(byte[] hash, Value node);
 }
+
