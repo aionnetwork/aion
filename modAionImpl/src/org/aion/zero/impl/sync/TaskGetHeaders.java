@@ -104,9 +104,9 @@ final class TaskGetHeaders implements Runnable {
 
                 long nodeNumber = node.getBestBlockNumber();
                 if (nodeNumber >= selfNumber + 128) {
-                    from = Math.max(1, selfNumber - backwardMin);
+                    from = Math.max(1, selfNumber + 1 - backwardMin);
                 } else if (nodeNumber >= selfNumber - 128) {
-                    from = Math.max(1, selfNumber - backwardMax);
+                    from = Math.max(1, selfNumber + 1 - backwardMax);
                 } else {
                     // no need to request from this node. His TD is probably corrupted.
                     return;
@@ -120,7 +120,7 @@ final class TaskGetHeaders implements Runnable {
             }
             case FORWARD: {
                 // start from base block
-                from = state.getBase();
+                from = state.getBase() + 1;
                 break;
             }
         }

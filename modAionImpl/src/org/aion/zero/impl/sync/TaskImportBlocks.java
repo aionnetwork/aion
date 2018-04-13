@@ -122,6 +122,15 @@ final class TaskImportBlocks implements Runnable {
                          b.getTransactionsList().size(),
                          importResult,
                          t2 - t1);
+                switch (importResult) {
+                    case IMPORTED_BEST:
+                    case IMPORTED_NOT_BEST:
+                    case EXIST:
+                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                        break;
+                    default:
+                        break;
+                }
 
                 // decide whether to change mode based on the first
                 if (b == batch.get(0)) {
@@ -162,16 +171,6 @@ final class TaskImportBlocks implements Runnable {
                                 break;
                         }
                     }
-                }
-
-                switch (importResult) {
-                    case IMPORTED_BEST:
-                    case IMPORTED_NOT_BEST:
-                    case EXIST:
-                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                        break;
-                    default:
-                        break;
                 }
             }
             this.statis.update(this.chain.getBestBlock().getNumber());
