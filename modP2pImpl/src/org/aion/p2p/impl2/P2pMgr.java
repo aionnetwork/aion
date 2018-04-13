@@ -144,6 +144,7 @@ public final class P2pMgr implements IP2pMgr {
 		this.showStatus = _showStatus;
 		this.showLog = _showLog;
 		this.syncSeedsOnly = _bootlistSyncOnly;
+        this.nodeMgr = new NodeMgr(showLog);
 
 		for (String _bootNode : _bootNodes) {
 			Node node = Node.parseP2p(_bootNode);
@@ -153,14 +154,11 @@ public final class P2pMgr implements IP2pMgr {
 			}
 		}
 
-		// rem out for bug:
-		// nodeMgr.loadPersistedNodes();
 		cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp, this.selfPort);
 		cachedResHandshake = new ResHandshake(true);
 		cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
 		this.ioLoop = new MainIOLoop(SelectorProvider.provider());
 
-		this.nodeMgr = new NodeMgr(showLog);
 	}
 
 	public int getSelfNodeIdHash() {

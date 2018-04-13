@@ -139,11 +139,6 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public boolean isShowLog() {
-            return false;
-        }
-
-        @Override
         public void closeSocket(SocketChannel socket) {
             // do nothing
         }

@@ -44,14 +44,10 @@ public final class Header {
     private int len;
 
     /**
-     * @param _ver
-     *            short
-     * @param _ctrl
-     *            byte
-     * @param _action
-     *            byte
-     * @param _len
-     *            byte
+     * @param _ver    short
+     * @param _ctrl   byte
+     * @param _action byte
+     * @param _len    byte
      */
     Header(short _ver, byte _ctrl, byte _action, int _len) {
         this.ver = _ver;
@@ -107,11 +103,9 @@ public final class Header {
     }
 
     /**
-     * @param _headerBytes
-     *            byte[]
+     * @param _headerBytes byte[]
      * @return Header
-     * @throws IOException
-     *             when exeeds MAX_BODY_LEN_BYTES
+     * @throws IOException when exeeds MAX_BODY_LEN_BYTES
      */
     public static Header decode(final byte[] _headerBytes) throws IOException {
         if (_headerBytes == null || _headerBytes.length != LEN)
@@ -123,7 +117,7 @@ public final class Header {
             byte action = bb1.get();
             int len = bb1.getInt();
             if (len > MAX_BODY_LEN_BYTES)
-                throw new IOException("exceed-max-body-size");
+                throw new IOException("exceed-max-body-size " + len + "/" + MAX_BODY_LEN_BYTES);
             return new Header(ver, ctrl, action, len);
         }
     }

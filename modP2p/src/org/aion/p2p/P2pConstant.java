@@ -33,7 +33,7 @@ public class P2pConstant {
 
     public static final long BAN_CONN_RETRY_INTERVAL = 30_000;
 
-    public static final int MAX_BODY_SIZE = 2 * 1024 * 1014;
+    public static final int MAX_BODY_SIZE = 32 * 1024 * 1014;
 
     public static final int RECV_BUFFER_SIZE = 64 * 1024;
 
