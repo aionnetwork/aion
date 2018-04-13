@@ -1028,9 +1028,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         List<AionTransaction> pendingPoolTx = new ArrayList<>();
 
         for (Map.Entry<Address, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
-            for (AionTransaction tx : e.getValue().values()) {
-                pendingPoolTx.add(tx);
-            }
+            pendingPoolTx.addAll(e.getValue().values());
         }
 
         addPendingTransactions(pendingPoolTx);
