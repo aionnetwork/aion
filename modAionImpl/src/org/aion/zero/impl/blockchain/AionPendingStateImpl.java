@@ -295,6 +295,7 @@ public class AionPendingStateImpl
 
 
             if (poolBackUp) {
+                pendingTxCache.setPoolBackup();
                 this.backupPendingPoolAdd = new HashMap<>();
                 this.backupPendingCacheAdd = new HashMap<>();
                 this.backupPendingPoolRemove = new HashSet<>();
@@ -965,6 +966,8 @@ public class AionPendingStateImpl
 
     private void recoverCache() {
 
+        LOG.info("pendingCacheTx loading from DB");
+        long t1 = System.currentTimeMillis();
         List<byte[]> pendingCacheTxBytes = repository.getCacheTx();
 
         List<AionTransaction> pendingTx = new ArrayList<>();
@@ -988,6 +991,7 @@ public class AionPendingStateImpl
             }
         }
 
+
         int cnt = 0;
         for (Map.Entry<Address, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
             for (AionTransaction tx : e.getValue().values()) {
@@ -996,10 +1000,14 @@ public class AionPendingStateImpl
             }
         }
 
-        LOG.info("{} pendingCacheTx loaded from DB", cnt);
+        long t2 = System.currentTimeMillis() - t1;
+        LOG.info("{} pendingCacheTx loaded from DB into the pendingCache, {} ms", cnt, t2);
     }
 
     private void recoverPool() {
+
+        LOG.info("pendingPoolTx loading from DB");
+        long t1 = System.currentTimeMillis();
         List<byte[]> pendingPoolTxBytes = repository.getPoolTx();
 
         List<AionTransaction> pendingTx = new ArrayList<>();
@@ -1031,9 +1039,9 @@ public class AionPendingStateImpl
             }
         }
 
-
-        LOG.info("{} pendingPoolTx loaded from DB", pendingPoolTx.size());
         addPendingTransactions(pendingPoolTx);
+        long t2 = System.currentTimeMillis() - t1;
+        LOG.info("{} pendingPoolTx loaded from DB loaded into the txpool, {} ms", pendingPoolTx.size(), t2);
     }
 
     @Override
