@@ -40,7 +40,7 @@ public class PendingTxCache {
     private Map<Address, TreeMap<BigInteger, AionTransaction>> cacheTxMap;
     private Map<Address, Integer> cachedAccountSize;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
-    private static int CacheMax = 256 * 100_000; //25.6MB
+    private static int CacheMax;
     private AtomicInteger currentSize = new AtomicInteger(0);
     private int cacheAccountLimit = 100_000;
 
@@ -48,6 +48,7 @@ public class PendingTxCache {
     private boolean isPoolBackup;
 
     PendingTxCache() {
+        CacheMax = 256 * 100_000; //25.6MB
         cacheTxMap = new LRUMap<>(cacheAccountLimit);
         cachedAccountSize = new LRUMap<>(cacheAccountLimit);
         cacheClearTxHash = new HashSet<>();
