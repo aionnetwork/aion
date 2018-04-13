@@ -120,7 +120,7 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
     @Override
     public String toString() {
         String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";
-        ret += "  Storage: " + getStorage().toString();
+        ret += "  Storage: " + getStorageHash();
         return ret;
     }
 }

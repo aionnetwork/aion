@@ -293,7 +293,6 @@ public class AionContractDetailsTest {
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_13)).getData()));
     }
 
-    @Ignore
     @Test
     public void testExternalStorageSerialization() {
         Address address = Address.wrap(RandomUtils.nextBytes(Address.ADDRESS_LEN));
@@ -330,10 +329,8 @@ public class AionContractDetailsTest {
         assertTrue(address.equals(deserialized.getAddress()));
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
-        Map<DataWord, DataWord> storage = deserialized.getStorage();
-        assertEquals(elements.size(), storage.size());
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key), storage.get(key));
+            assertEquals(elements.get(key), deserialized.get(key));
         }
 
         DataWord deletedKey = elements.keySet().iterator().next();
@@ -342,7 +339,6 @@ public class AionContractDetailsTest {
         deserialized.put(new DataWord(RandomUtils.nextBytes(16)), DataWord.ZERO);
     }
 
-    @Ignore
     @Test
     public void testExternalStorageTransition() {
         Address address = Address.wrap(RandomUtils.nextBytes(Address.ADDRESS_LEN));
@@ -386,10 +382,8 @@ public class AionContractDetailsTest {
 
         deserialized = deserialize(deserialized.getEncoded(), externalStorage);
 
-        Map<DataWord, DataWord> storage = deserialized.getStorage();
-        assertEquals(elements.size(), storage.size());
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key), storage.get(key));
+            assertEquals(elements.get(key), deserialized.get(key));
         }
     }
 }
