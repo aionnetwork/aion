@@ -28,16 +28,13 @@ package org.aion.p2p;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.aion.p2p.P2pConstant;
-
 /**
  * @author chris
  */
 public final class Header {
 
     public final static int LEN = 8;
-
-    private final static int MAX_BODY_LEN_BYTES = P2pConstant.MAX_BODY_SIZE;
+    public final static int MAX_BODY_LEN = 32 * 1024 * 1014;
     private final short ver;
     private final byte ctrl;
     private final byte action;
@@ -116,8 +113,8 @@ public final class Header {
             byte ctrl = bb1.get();
             byte action = bb1.get();
             int len = bb1.getInt();
-            if (len > MAX_BODY_LEN_BYTES)
-                throw new IOException("exceed-max-body-size " + len + "/" + MAX_BODY_LEN_BYTES);
+            if (len > MAX_BODY_LEN)
+                throw new IOException("exceed-max-body-size " + len + "/" + MAX_BODY_LEN);
             return new Header(ver, ctrl, action, len);
         }
     }

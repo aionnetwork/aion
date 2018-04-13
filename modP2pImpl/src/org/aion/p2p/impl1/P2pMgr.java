@@ -138,7 +138,7 @@ public final class P2pMgr implements IP2pMgr {
         public void run() {
 
             // read buffer pre-alloc. @ max_body_size
-            ByteBuffer readBuf = ByteBuffer.allocate(Header.LEN + P2pConstant.MAX_BODY_SIZE);
+            ByteBuffer readBuf = ByteBuffer.allocate(Header.LEN + Header.MAX_BODY_LEN);
 
             while (start.get()) {
 

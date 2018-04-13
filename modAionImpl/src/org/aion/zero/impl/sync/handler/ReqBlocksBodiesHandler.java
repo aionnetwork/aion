@@ -92,8 +92,8 @@ public final class ReqBlocksBodiesHandler extends Handler {
             for (byte[] hash : hashes) {
                 byte[] blockBytes = cache.get(ByteArrayWrapper.wrap(hash));
                 if (blockBytes != null) {
-                    if(out + blockBytes.length > P2pConstant.MAX_BODY_SIZE){
-                        log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, P2pConstant.MAX_BODY_SIZE);
+                    if(out + blockBytes.length > Header.MAX_BODY_LEN){
+                        log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, Header.MAX_BODY_LEN);
                         break;
                     }
                     blockBodies.add(blockBytes);
@@ -102,8 +102,8 @@ public final class ReqBlocksBodiesHandler extends Handler {
                     AionBlock block = blockchain.getBlockByHash(hash);
                     if (block != null) {
                         blockBytes = block.getEncodedBody();
-                        if(out + blockBytes.length > P2pConstant.MAX_BODY_SIZE){
-                            log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, P2pConstant.MAX_BODY_SIZE);
+                        if(out + blockBytes.length > Header.MAX_BODY_LEN){
+                            log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, Header.MAX_BODY_LEN);
                             break;
                         }
                         blockBodies.add(blockBytes);
