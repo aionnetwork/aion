@@ -166,13 +166,22 @@ public class BlockPropagationHandler {
 
         if (this.blockchain.skipTryToConnect(block.getNumber())) {
             result = ImportResult.NO_PARENT;
-            log.info("<import-status: node = {}, number = {}, txs = {}, result = NOT_CHECKED>", _displayId,
-                    block.getNumber(), block.getTransactionsList().size(), result);
+            log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = NOT_IN_RANGE>",
+                     _displayId,
+                     block.getShortHash(),
+                     block.getNumber(),
+                     block.getTransactionsList().size(),
+                     result);
         } else {
             result = this.blockchain.tryToConnect(block);
             long t2 = System.currentTimeMillis();
-            log.info("<import-status: node = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>", _displayId,
-                    block.getNumber(), block.getTransactionsList().size(), result, t2 - t1);
+            log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                     _displayId,
+                     block.getShortHash(),
+                     block.getNumber(),
+                     block.getTransactionsList().size(),
+                     result,
+                     t2 - t1);
         }
 
         // process resulting state
