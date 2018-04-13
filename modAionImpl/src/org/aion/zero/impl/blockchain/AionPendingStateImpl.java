@@ -63,8 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class AionPendingStateImpl
-        implements IPendingStateInternal<AionBlock, AionTransaction> {
+public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, AionTransaction> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
 
@@ -74,8 +73,7 @@ public class AionPendingStateImpl
 
         public TransactionSortedSet() {
             super((tx1, tx2) -> {
-                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce())
-                        - ByteUtil.byteArrayToLong(tx2.getNonce());
+                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) - ByteUtil.byteArrayToLong(tx2.getNonce());
                 if (nonceDiff != 0) {
                     return nonceDiff > 0 ? 1 : -1;
                 }
@@ -86,7 +84,7 @@ public class AionPendingStateImpl
 
     private static final int MAX_VALIDATED_PENDING_TXS = 8192;
 
-    private final int MAX_TXCACHE_FLUSH_SIZE = MAX_VALIDATED_PENDING_TXS >> 2 ;
+    private final int MAX_TXCACHE_FLUSH_SIZE = MAX_VALIDATED_PENDING_TXS >> 2;
 
     private IAionBlockchain blockchain;
 
@@ -127,8 +125,7 @@ public class AionPendingStateImpl
     private Set<byte[]> backupPendingPoolRemove;
 
     class TxBuffTask extends TimerTask {
-        @Override
-        public void run() {
+        @Override public void run() {
             processTxBuffer();
         }
     }
@@ -169,6 +166,7 @@ public class AionPendingStateImpl
 
     private final class EpPS implements Runnable {
         boolean go = true;
+
         /**
          * When an object implementing interface <code>Runnable</code> is used
          * to create a thread, starting the thread causes the object's
@@ -180,12 +178,12 @@ public class AionPendingStateImpl
          *
          * @see Thread#run()
          */
-        @Override
-        public void run() {
+        @Override public void run() {
             while (go) {
                 IEvent e = ees.take();
 
-                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
+                        && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     long t1 = System.currentTimeMillis();
                     processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
 
@@ -193,7 +191,8 @@ public class AionPendingStateImpl
                         long t2 = System.currentTimeMillis();
                         LOG.debug("Pending state update took {} ms", t2 - t1);
                     }
-                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.TXBACKUP0.getValue()) {
+                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()
+                        && e.getCallbackType() == EventTx.CALLBACK.TXBACKUP0.getValue()) {
                     long t1 = System.currentTimeMillis();
                     backupPendingTx();
 
@@ -258,7 +257,8 @@ public class AionPendingStateImpl
 
             prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
             // The BlockEnergyLimit will be updated when the best block found.
-            prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT, String.valueOf(CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
+            prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT,
+                    String.valueOf(CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
             prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
             prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
             TxPoolModule txPoolModule;
@@ -282,11 +282,11 @@ public class AionPendingStateImpl
             this.transactionStore = blockchain.getTransactionStore();
 
             this.evtMgr = blockchain.getEventMgr();
-            this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax());
+            this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
+            this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax(), poolBackUp);
             this.pendingState = repository.startTracking();
 
             this.dumpPool = CfgAion.inst().getTx().getPoolDump();
-            this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
 
             ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
@@ -298,10 +298,7 @@ public class AionPendingStateImpl
                 blkHandler.eventCallback(new EventCallback(ees, LOG));
             }
 
-
-
             if (poolBackUp) {
-                pendingTxCache.setPoolBackup();
                 this.backupPendingPoolAdd = new HashMap<>();
                 this.backupPendingCacheAdd = new HashMap<>();
                 this.backupPendingPoolRemove = new HashSet<>();
@@ -318,7 +315,7 @@ public class AionPendingStateImpl
                 LOG.info("TxBuf enable!");
                 this.txBuffer = Collections.synchronizedList(new ArrayList<>());
                 timer = new Timer("TxBuf");
-                timer.schedule(new TxBuffTask(), 10000, 200);
+                timer.schedule(new TxBuffTask(), 10000, 500);
             }
 
             ees.start(new EpPS());
@@ -355,9 +352,7 @@ public class AionPendingStateImpl
         this.evtMgr.registerEvent(evts);
     }
 
-
-    @Override
-    public synchronized IRepositoryCache<?, ?, ?> getRepository() {
+    @Override public synchronized IRepositoryCache<?, ?, ?> getRepository() {
         // Todo : no class use this method.
         return pendingState;
     }
@@ -366,9 +361,8 @@ public class AionPendingStateImpl
         return isSeed ? 0 : this.txPool.size();
     }
 
-    @Override
-    public synchronized List<AionTransaction> getPendingTransactions() {
-        return isSeed ? new ArrayList<>(): this.txPool.snapshot();
+    @Override public synchronized List<AionTransaction> getPendingTransactions() {
+        return isSeed ? new ArrayList<>() : this.txPool.snapshot();
 
     }
 
@@ -381,14 +375,12 @@ public class AionPendingStateImpl
      * TODO: when we removed libNc, timers were not introduced yet, we must
      * rework the model that libAion uses to work with timers
      */
-    @Override
-    public synchronized List<AionTransaction> addPendingTransaction(AionTransaction tx) {
+    @Override public synchronized List<AionTransaction> addPendingTransaction(AionTransaction tx) {
 
         return addPendingTransactions(Collections.singletonList(tx));
     }
 
-    @Override
-    public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
+    @Override public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
 
         if (isSeed) {
             return seedProcess(transactions);
@@ -416,7 +408,7 @@ public class AionPendingStateImpl
                         }
                     }
                 } else if (cmp == 0) {
-                    if (txPool.size() >= MAX_VALIDATED_PENDING_TXS) {
+                    if (txPool.size() > MAX_VALIDATED_PENDING_TXS) {
 
                         if (!isInTxCache(tx.getFrom(), tx.getNonceBI())) {
                             newLargeNonceTx.add(tx);
@@ -435,7 +427,7 @@ public class AionPendingStateImpl
                     }
 
                     // TODO: need to implement better cache return Strategy
-                    Map<BigInteger,AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
+                    Map<BigInteger, AionTransaction> cache = pendingTxCache.geCacheTx(tx.getFrom());
 
                     int limit = 0;
                     Set<Address> addr = pendingTxCache.getCacheTxAccount();
@@ -467,8 +459,9 @@ public class AionPendingStateImpl
                         }
 
                         txNonce = txNonce.add(BigInteger.ONE);
-                    } while (cache != null && (tx = cache.get(txNonce)) != null && (limit-- > 0) && txPool.size() < MAX_VALIDATED_PENDING_TXS);
-                }  else if (bestRepoNonce(tx.getFrom()).compareTo(txNonce) < 1) {
+                    } while (cache != null && (tx = cache.get(txNonce)) != null && (limit-- > 0)
+                            && txPool.size() < MAX_VALIDATED_PENDING_TXS);
+                } else if (bestRepoNonce(tx.getFrom()).compareTo(txNonce) < 1) {
                     // repay Tx
                     if (addPendingTransactionImpl(tx, txNonce)) {
                         newPending.add(tx);
@@ -502,8 +495,9 @@ public class AionPendingStateImpl
                     }
                 } else {
                     if (!newPending.isEmpty() || !newLargeNonceTx.isEmpty()) {
-                        AionImpl.inst().broadcastTransactions(Stream.concat(newPending.stream(), newLargeNonceTx.stream()).collect(
-                                Collectors.toList()));
+                        AionImpl.inst().broadcastTransactions(
+                                Stream.concat(newPending.stream(), newLargeNonceTx.stream())
+                                        .collect(Collectors.toList()));
                     }
                 }
             }
@@ -533,7 +527,6 @@ public class AionPendingStateImpl
         return (this.txPool.bestPoolNonce(from).compareTo(txNonce) > -1);
     }
 
-
     private void fireTxUpdate(AionTxReceipt txReceipt, PendingTransactionState state, IAionBlock block) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]", getPendingTxSize(),
@@ -554,7 +547,7 @@ public class AionPendingStateImpl
     /**
      * Executes pending tx on the latest best block Fires pending state update
      *
-     * @param tx transaction come from API or P2P
+     * @param tx      transaction come from API or P2P
      * @param txNonce
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
@@ -571,7 +564,8 @@ public class AionPendingStateImpl
             // check energy usage
             AionTransaction poolTx = txPool.getPoolTx(tx.getFrom(), txNonce);
             if (poolTx == null) {
-                LOG.error("addPendingTransactionImpl no same tx nonce in the pool addr[{}] nonce[{}], hash[{}]", tx.getFrom().toString(), txNonce.toString(), Hash256.wrap(tx.getHash()).toString());
+                LOG.error("addPendingTransactionImpl no same tx nonce in the pool addr[{}] nonce[{}], hash[{}]",
+                        tx.getFrom().toString(), txNonce.toString(), Hash256.wrap(tx.getHash()).toString());
                 return false;
             } else {
                 long price = (poolTx.getNrgPrice() << 1);
@@ -643,8 +637,7 @@ public class AionPendingStateImpl
         return b1;
     }
 
-    @Override
-    public synchronized void processBest(AionBlock newBlock, List receipts) {
+    @Override public synchronized void processBest(AionBlock newBlock, List receipts) {
         if (best.get() != null && !best.get().isParentOf(newBlock)) {
 
             // need to switch the state to another fork
@@ -652,7 +645,8 @@ public class AionPendingStateImpl
             IAionBlock commonAncestor = findCommonAncestor(best.get(), newBlock);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("New best block from another fork: " + newBlock.getShortDescr() + ", old best: " + best.get().getShortDescr() + ", ancestor: " + commonAncestor.getShortDescr());
+                LOG.debug("New best block from another fork: " + newBlock.getShortDescr() + ", old best: " + best.get()
+                        .getShortDescr() + ", ancestor: " + commonAncestor.getShortDescr());
             }
 
             // first return back the transactions from forked blocks
@@ -770,8 +764,7 @@ public class AionPendingStateImpl
         txPool.remove(outdated);
     }
 
-    @SuppressWarnings("unchecked")
-    private void clearPending(IAionBlock block, List<AionTxReceipt> receipts) {
+    @SuppressWarnings("unchecked") private void clearPending(IAionBlock block, List<AionTxReceipt> receipts) {
 
         if (block.getTransactionsList() != null) {
             if (LOG.isDebugEnabled()) {
@@ -780,13 +773,14 @@ public class AionPendingStateImpl
 
             Map<Address, BigInteger> accountNonce = new HashMap<>();
             int cnt = 0;
-            for (AionTransaction tx  : block.getTransactionsList()) {
+            for (AionTransaction tx : block.getTransactionsList()) {
                 if (accountNonce.get(tx.getFrom()) == null) {
                     accountNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
                 }
-                
+
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("Clear pending transaction, addr: {} hash: {}", tx.getFrom().toString(), Hex.toHexString(tx.getHash()));
+                    LOG.trace("Clear pending transaction, addr: {} hash: {}", tx.getFrom().toString(),
+                            Hex.toHexString(tx.getHash()));
                 }
 
                 AionTxReceipt receipt;
@@ -862,7 +856,7 @@ public class AionPendingStateImpl
         }
         return rtn;
     }
-    
+
     private AionTxExecSummary executeTx(AionTransaction tx, boolean inPool) {
 
         IAionBlock bestBlk = best.get();
@@ -880,11 +874,9 @@ public class AionPendingStateImpl
         return executor.execute();
     }
 
-    @Override
-    public synchronized BigInteger bestPendingStateNonce(Address addr) {
+    @Override public synchronized BigInteger bestPendingStateNonce(Address addr) {
         return isSeed ? BigInteger.ZERO : this.pendingState.getNonce(addr);
     }
-
 
     private BigInteger bestRepoNonce(Address addr) {
         return this.repository.getNonce(addr);
@@ -898,8 +890,7 @@ public class AionPendingStateImpl
         return this.pendingTxCache.isInCache(addr, nonce);
     }
 
-    @Override
-    public void shutDown() {
+    @Override public void shutDown() {
         if (this.bufferEnable) {
             timer.cancel();
         }
@@ -909,8 +900,7 @@ public class AionPendingStateImpl
         }
     }
 
-    @Override
-    public synchronized void DumpPool() {
+    @Override public synchronized void DumpPool() {
         List<AionTransaction> txn = txPool.snapshotAll();
         Set<Address> addrs = new HashSet<>();
         LOG.info("");
@@ -936,7 +926,7 @@ public class AionPendingStateImpl
         LOG.info("");
         LOG.info("=========== Cache pending tx");
         Set<Address> cacheAddr = pendingTxCache.getCacheTxAccount();
-        for(Address addr : cacheAddr) {
+        for (Address addr : cacheAddr) {
             Map<BigInteger, AionTransaction> cacheMap = pendingTxCache.geCacheTx(addr);
             if (cacheMap != null) {
                 for (AionTransaction tx : cacheMap.values()) {
@@ -960,8 +950,7 @@ public class AionPendingStateImpl
         }
     }
 
-    @Override
-    public void loadPendingTx() {
+    @Override public void loadPendingTx() {
 
         loadPendingTx = true;
         recoverPool();
@@ -996,7 +985,6 @@ public class AionPendingStateImpl
                 sortedMap.get(tx.getFrom()).put(tx.getNonceBI(), tx);
             }
         }
-
 
         int cnt = 0;
         for (Map.Entry<Address, SortedMap<BigInteger, AionTransaction>> e : sortedMap.entrySet()) {
@@ -1050,13 +1038,11 @@ public class AionPendingStateImpl
         LOG.info("{} pendingPoolTx loaded from DB loaded into the txpool, {} ms", pendingPoolTx.size(), t2);
     }
 
-    @Override
-    public String getVersion() {
+    @Override public String getVersion() {
         return isSeed ? "0" : this.txPool.getVersion();
     }
 
-    @Override
-    public void updateBest() {
+    @Override public void updateBest() {
         getBestBlock();
     }
 }

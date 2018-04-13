@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.txpool.common;
@@ -84,7 +84,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
      *
      * @BigInteger energy cost = energy consumption * energy price
      * @LinkedHashSet<TxPoolList<ByteArrayWrapper>> the TxPoolList of the first
-     *                                              transaction hash
+     * transaction hash
      */
     private final SortedMap<BigInteger, Map<ByteArrayWrapper, TxDependList<ByteArrayWrapper>>> feeView = Collections
             .synchronizedSortedMap(new TreeMap<>(Collections.reverseOrder()));
@@ -378,8 +378,9 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                                 "AbstractTxPool.updateAccPoolState case1 - nonce:[{}] totalFee:[{}] cnt:[{}]",
                                                 txNonceStart, totalFee.toString(), cnt);
                                     }
-                                    newPoolState.add(
-                                            new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)), cnt));
+                                    newPoolState
+                                            .add(new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)),
+                                                    cnt));
 
                                     txNonceStart = en.getKey().add(BigInteger.ONE);
                                     totalFee = BigInteger.ZERO;
@@ -392,8 +393,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                             "AbstractTxPool.updateAccPoolState case2 - nonce:[{}] totalFee:[{}] cnt:[{}]",
                                             txNonceStart, totalFee.toString(), cnt);
                                 }
-                                newPoolState.add(
-                                        new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)), cnt));
+                                newPoolState.add(new PoolState(txNonceStart, totalFee.divide(BigInteger.valueOf(cnt)),
+                                        cnt));
 
                                 // next PoolState
                                 txNonceStart = en.getKey();
@@ -443,8 +444,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
             throw new NullPointerException();
         }
 
-        for (BigInteger bi = ps.getFirstNonce(); bi
-                .compareTo(ps.firstNonce.add(BigInteger.valueOf(ps.getCombo()))) < 0; bi = bi.add(BigInteger.ONE)) {
+        for (BigInteger bi = ps.getFirstNonce();
+             bi.compareTo(ps.firstNonce.add(BigInteger.valueOf(ps.getCombo()))) < 0; bi = bi.add(BigInteger.ONE)) {
             if (!as.getMap().containsKey(bi)) {
                 return false;
             }
@@ -472,8 +473,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
                     TxDependList<ByteArrayWrapper> txl = new TxDependList<>();
                     BigInteger timestamp = BigInteger.ZERO;
-                    for (BigInteger i = ps.firstNonce; i.compareTo(
-                            ps.firstNonce.add(BigInteger.valueOf(ps.combo))) < 0; i = i.add(BigInteger.ONE)) {
+                    for (BigInteger i = ps.firstNonce;
+                         i.compareTo(ps.firstNonce.add(BigInteger.valueOf(ps.combo))) < 0; i = i.add(BigInteger.ONE)) {
 
                         ByteArrayWrapper bw = this.accountView.get(e.getKey()).getMap().get(i).getKey();
                         if (i.equals(ps.firstNonce)) {

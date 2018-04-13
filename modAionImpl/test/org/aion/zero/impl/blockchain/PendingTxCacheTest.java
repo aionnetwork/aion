@@ -438,27 +438,28 @@ public class PendingTxCacheTest {
         System.out.println("Gen 80K txs");
         List<AionTransaction> txn = getMockTransaction(0, input, 0);
 
-        System.out.println("adding 8K txs to cache");
-        List<AionTransaction> newCache = new ArrayList<>();
+        System.out.println("adding 80K txs to cache");
 
         long t1 = System.currentTimeMillis();
         for (AionTransaction tx : txn) {
-            newCache.add(cache.addCacheTx(tx).get(0));
+            cache.addCacheTx(tx);
         }
         long t2 = System.currentTimeMillis() - t1;
         System.out.println("add 80K txs took " + t2 + " ms cacheSize: " + cache.cacheSize());
 
-        assertTrue(newCache.size() == input);
+        assertTrue(cache.cacheTxSize() == input);
 
         System.out.println("Gen another 80K txs");
         txn = getMockTransaction(0, input, 1);
 
         t1 = System.currentTimeMillis();
         for (AionTransaction tx : txn) {
-            newCache.add(cache.addCacheTx(tx).get(0));
+            cache.addCacheTx(tx);
         }
         t2 = System.currentTimeMillis() - t1;
         System.out.println("add another 80K txs took " + t2 + " ms cacheSize: " + cache.cacheSize());
+        assertTrue(cache.cacheTxSize() == (input<<1));
+
 
 
         System.out.println("flush starting");
