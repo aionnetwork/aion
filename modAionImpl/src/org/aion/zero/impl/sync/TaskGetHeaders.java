@@ -35,6 +35,7 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -86,8 +87,25 @@ final class TaskGetHeaders implements Runnable {
             return;
         }
 
+        // find the max difficulty amongst all nodes
+        BigInteger maxTd = BigInteger.ZERO;
+        for (INode node : nodesFiltered) {
+            if (node.getTotalDifficulty().compareTo(maxTd) > 0) {
+                maxTd = node.getTotalDifficulty();
+            }
+        }
+
+        // filter from top difficulty, we can accept anyone that is within
+        // 10 blocks of top difficulty as a valid peer selection
+        List<INode> furtherFiltered = new ArrayList<>();
+        for (INode node : nodesFiltered) {
+            if (maxTd.subtract(node.getTotalDifficulty()).compareTo(BigInteger.TEN ) <= 0) {
+                furtherFiltered.add(node);
+            }
+        }
+
         // pick a random node
-        INode node = nodesFiltered.get(random.nextInt(nodesFiltered.size()));
+        INode node = furtherFiltered.get(random.nextInt(furtherFiltered.size()));
         long nodeNumber = node.getBestBlockNumber();
         long from = 0;
         if (nodeNumber >= selfNumber + 128) {
