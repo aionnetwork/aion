@@ -651,14 +651,16 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             // first return back the transactions from forked blocks
             IAionBlock rollback = best.get();
+            SortedMap<Long, List<AionTransaction>> rollbackTx = new TreeMap<>();
             while (!rollback.isEqual(commonAncestor)) {
-
-                List<AionTransaction> atl = rollback.getTransactionsList();
-                if (!atl.isEmpty()) {
-                    this.txPool.add(atl);
-                }
-
+                rollbackTx.put(rollback.getNumber(), rollback.getTransactionsList());
                 rollback = blockchain.getBlockByHash(rollback.getParentHash());
+            }
+
+            for (List<AionTransaction> txs : rollbackTx.values()) {
+                for (AionTransaction tx : txs) {
+                    pendingTxCache.addCacheTx(tx);
+                }
             }
 
             // rollback the state snapshot to the ancestor
