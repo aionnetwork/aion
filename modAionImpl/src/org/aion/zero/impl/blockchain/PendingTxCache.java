@@ -202,11 +202,7 @@ public class PendingTxCache {
     }
 
     private void addAccountSize(Address from, int txSize) {
-        if (cachedAccountSize.get(from) == null) {
-            cachedAccountSize.put(from, 0);
-        } else {
-            cachedAccountSize.put(from, (cachedAccountSize.get(from) + txSize));
-        }
+        cachedAccountSize.merge(from, txSize, (a, b) -> (a + b));
     }
 
     private void subAccountSize(Address from, int txSize) {
