@@ -34,7 +34,6 @@ import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -64,11 +63,10 @@ final class TaskGetBodies implements Runnable {
     private final Logger log;
 
     /**
-     *
-     * @param _p2p IP2pMgr
-     * @param _run AtomicBoolean
+     * @param _p2p             IP2pMgr
+     * @param _run             AtomicBoolean
      * @param _headersImported BlockingQueue
-     * @param _headersSent ConcurrentHashMap
+     * @param _headersSent     ConcurrentHashMap
      */
     TaskGetBodies(
             final IP2pMgr _p2p,
@@ -76,7 +74,7 @@ final class TaskGetBodies implements Runnable {
             final BlockingQueue<HeadersWrapper> _headersImported,
             final ConcurrentHashMap<Integer, HeadersWrapper> _headersSent,
             final Map<Integer, PeerState> peerStates,
-            final Logger log){
+            final Logger log) {
         this.p2p = _p2p;
         this.run = _run;
         this.headersImported = _headersImported;

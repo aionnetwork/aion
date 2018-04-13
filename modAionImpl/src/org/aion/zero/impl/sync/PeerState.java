@@ -19,6 +19,7 @@ public class PeerState {
         FORWARD
     }
 
+    // TODO: enforce rules on this
     public enum State {
         /**
          * The initial state.
