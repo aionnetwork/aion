@@ -91,7 +91,7 @@ public final class P2pMgr implements IP2pMgr {
 	private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
 	private final Set<Short> versions = new HashSet<>();
 
-	private NodeMgr nodeMgr = new NodeMgr();
+	private NodeMgr nodeMgr;
 	private ServerSocketChannel tcpServer;
 	private Selector selector;
 
@@ -159,6 +159,8 @@ public final class P2pMgr implements IP2pMgr {
 		cachedResHandshake = new ResHandshake(true);
 		cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
 		this.ioLoop = new MainIOLoop(SelectorProvider.provider());
+
+		this.nodeMgr = new NodeMgr(showLog);
 	}
 
 	public int getSelfNodeIdHash() {

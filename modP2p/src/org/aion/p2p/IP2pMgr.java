@@ -80,7 +80,5 @@ public interface IP2pMgr {
 
 	void closeSocket(final SocketChannel _sc);
 
-	boolean isShowLog();
-
 	void errCheck(int nodeIdHashcode, String _displayId);
 }

@@ -43,6 +43,7 @@ public class NodeMgr implements INodeMgr {
     private final static int TIMEOUT_INBOUND_NODES = 10000;
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
+    private final boolean showLog;
 
     private final Set<String> seedIps = new HashSet<>();
     private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
@@ -51,14 +52,9 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> activeNodes = new ConcurrentHashMap<>();
 
-    // private volatile INodeObserver observer;
-
-    // public synchronized void registerNodeObserver(INodeObserver observer) {
-    // if (this.observer != null) {
-    // throw new IllegalStateException("cannot register multiple observers");
-    // }
-    // this.observer = observer;
-    // }
+    public NodeMgr(boolean _showLog){
+        showLog = _showLog;
+    }
 
     public Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
@@ -315,7 +311,7 @@ public class NodeMgr implements INodeMgr {
             if (previous != null)
                 _p2pMgr.closeSocket(((Node) previous).getChannel());
             else {
-                if (_p2pMgr.isShowLog())
+                if (showLog)
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
 
@@ -342,7 +338,7 @@ public class NodeMgr implements INodeMgr {
             if (previous != null)
                 _p2pMgr.closeSocket(((Node) previous).getChannel());
             else {
-                if (_p2pMgr.isShowLog())
+                if (showLog)
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }
 
@@ -375,7 +371,7 @@ public class NodeMgr implements INodeMgr {
 
                     inboundIt.remove();
 
-                    if (pmgr.isShowLog())
+                    if (this.showLog)
                         System.out.println("<p2p-clear inbound-timeout>");
                 }
             }
@@ -388,9 +384,9 @@ public class NodeMgr implements INodeMgr {
         OptionalDouble average = activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
-        if (pmgr.isShowLog()) {
+        if (showLog)
             System.out.printf("<p2p average-delay=%.0fms>\n", average.orElse(0));
-        }
+
 
         Iterator activeIt = activeNodes.keySet().iterator();
         while (activeIt.hasNext()) {
@@ -401,7 +397,7 @@ public class NodeMgr implements INodeMgr {
 
                 pmgr.closeSocket(node.getChannel());
                 activeIt.remove();
-                if (pmgr.isShowLog())
+                if (showLog)
                     System.out.println("<p2p-clear-active ip=" + node.getIpStr() + " node=" + node.getIdShort() + ">");
 
                 // if (this.observer != null)
