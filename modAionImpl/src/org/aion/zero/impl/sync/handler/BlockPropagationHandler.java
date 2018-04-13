@@ -145,18 +145,17 @@ public class BlockPropagationHandler {
             this.cacheMap.put(hashWrapped, true);
         }
 
-        /*
-        AionBlock bestBlock = this.blockchain.getBestBlock();
 
-        // assumption is that we are on the correct chain
-        if (bestBlock.getNumber() > block.getNumber())
-            return PropStatus.DROPPED;
-
-        // do a very simple check to verify parent child relationship
-        // this implies we only propagate blocks from our own chain
-        if (!bestBlock.isParentOf(block))
-            return PropStatus.DROPPED;
-        */
+//        AionBlock bestBlock = this.blockchain.getBestBlock();
+//
+//        // assumption is that we are on the correct chain
+//        if (bestBlock.getNumber() > block.getNumber())
+//            return PropStatus.DROPPED;
+//
+//        // do a very simple check to verify parent child relationship
+//        // this implies we only propagate blocks from our own chain
+//        if (!bestBlock.isParentOf(block))
+//            return PropStatus.DROPPED;
 
         // send
         boolean sent = send(block, nodeId);
@@ -196,7 +195,8 @@ public class BlockPropagationHandler {
         this.p2pManager.getActiveNodes().values()
                 .stream()
                 .filter(n -> n.getIdHash() != nodeId)
-                .filter(n -> n.getBestBlockNumber() <= block.getNumber())
+                // peer is within 5 blocks of the block we're about to send
+                .filter(n -> block.getNumber() - n.getBestBlockNumber() <= 5)
                 .forEach(n -> {
                     if (log.isDebugEnabled())
                         log.debug("<sending-new-block hash=" + block.getShortHash() + " to-node=" + n.getIdShort() + ">");
