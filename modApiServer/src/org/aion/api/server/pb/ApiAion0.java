@@ -137,8 +137,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         ByteArrayWrapper txHashW = new ByteArrayWrapper(
                 ((AionTxReceipt) _txRcpt).getTransaction().getHash());
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("ApiAionA0.onPendingTransactionUpdate - txHash: [{}], state: [{}]", txHashW.toString(), _state.getValue());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("ApiAionA0.onPendingTransactionUpdate - txHash: [{}], state: [{}]", txHashW.toString(), _state.getValue());
         }
 
         if (getMsgIdMapping().get(txHashW) != null) {
@@ -148,8 +148,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         "ApiAionA0.onPendingTransactionUpdate - txPend ingStatus queue full, drop the first message.");
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("ApiAionA0.onPendingTransactionUpdate - the pending Tx state : [{}]", _state.getValue());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("ApiAionA0.onPendingTransactionUpdate - the pending Tx state : [{}]", _state.getValue());
             }
 
             pendingStatus.add(new TxPendingStatus(txHashW, getMsgIdMapping().get(txHashW).getValue(),
@@ -165,18 +165,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         } else {
             if (txWait.remainingCapacity() == 0) {
                 txWait.poll();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ApiAionA0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("ApiAionA0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
                 }
             }
 
             // waiting origin Api call status been callback
             try {
-                txWait.put(new TxWaitingMappingUpdate(txHashW, _state.getValue(),
-                        ((AionTxReceipt) _txRcpt)));
+                txWait.put(new TxWaitingMappingUpdate(txHashW, _state.getValue(), ((AionTxReceipt) _txRcpt)));
             } catch (InterruptedException e) {
-                LOG.error("ApiAionA0.onPendingTransactionUpdate txWait.put exception",
-                        e.getMessage());
+                LOG.error("ApiAionA0.onPendingTransactionUpdate txWait.put exception", e.getMessage());
             }
         }
     }
