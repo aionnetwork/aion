@@ -32,56 +32,22 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.base.db;
+package org.aion.mcf.trie.scan;
 
-import org.aion.base.type.Address;
+import org.aion.base.util.Hex;
+import org.aion.rlp.Value;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+public class TraceAllNodes implements ScanAction {
 
-public interface IContractDetails<DW> {
+    StringBuilder output = new StringBuilder();
 
-    void put(DW key, DW value);
+    @Override
+    public void doOnNode(byte[] hash, Value node) {
 
-    DW get(DW key);
+        output.append(Hex.toHexString(hash)).append(" ==> ").append(node.toString()).append("\n");
+    }
 
-    byte[] getCode();
-
-    byte[] getCode(byte[] codeHash);
-
-    void setCode(byte[] code);
-
-    byte[] getStorageHash();
-
-    void decode(byte[] rlpCode);
-
-    void setDirty(boolean dirty);
-
-    void setDeleted(boolean deleted);
-
-    boolean isDirty();
-
-    boolean isDeleted();
-
-    byte[] getEncoded();
-
-    Map<DW, DW> getStorage(Collection<DW> keys);
-
-    void setStorage(List<DW> storageKeys, List<DW> storageValues);
-
-    void setStorage(Map<DW, DW> storage);
-
-    Address getAddress();
-
-    void setAddress(Address address);
-
-    String toString();
-
-    void syncStorage();
-
-    IContractDetails<DW> getSnapshotTo(byte[] hash);
-
-    void setDataSource(IByteArrayKeyValueStore dataSource);
+    public String getOutput() {
+        return output.toString();
+    }
 }

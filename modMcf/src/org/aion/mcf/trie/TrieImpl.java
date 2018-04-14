@@ -20,38 +20,31 @@
  *******************************************************************************/
 package org.aion.mcf.trie;
 
-import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteArrayWrapper.wrap;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.base.util.ByteUtil.matchingNibbleLength;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.rlp.CompactEncoder.binToNibbles;
-import static org.aion.rlp.CompactEncoder.hasTerminator;
-import static org.aion.rlp.CompactEncoder.packNibbles;
-import static org.aion.rlp.CompactEncoder.unpackToNibbles;
-import static org.aion.rlp.RLP.calcElementPrefixSize;
-import static org.spongycastle.util.Arrays.concatenate;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
+import org.aion.mcf.trie.scan.CountNodes;
+import org.aion.mcf.trie.scan.ScanAction;
+import org.aion.mcf.trie.scan.TraceAllNodes;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
+
+import java.io.*;
+import java.util.*;
+
+import static java.util.Arrays.copyOfRange;
+import static org.aion.base.util.ByteArrayWrapper.wrap;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.base.util.ByteUtil.matchingNibbleLength;
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.rlp.CompactEncoder.*;
+import static org.aion.rlp.RLP.calcElementPrefixSize;
+import static org.spongycastle.util.Arrays.concatenate;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure
@@ -609,6 +602,42 @@ public class TrieImpl implements Trie {
         }
     }
 
+    public void scanTreeLoop(byte[] hash, ScanAction scanAction) {
+
+        ArrayList<byte[]> hashes = new ArrayList<>();
+        hashes.add(hash);
+
+        while (!hashes.isEmpty()) {
+            synchronized (cache) {
+                byte[] myHash = hashes.remove(0);
+                Value node = this.getCache().get(myHash);
+                if (node == null) {
+                    throw new RuntimeException("Not found: " + Hex.toHexString(myHash));
+                }
+
+                if (node.isList()) {
+                    List<Object> siblings = node.asList();
+                    if (siblings.size() == PAIR_SIZE) {
+                        Value val = new Value(siblings.get(1));
+                        if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
+                            // scanTree(val.asBytes(), scanAction);
+                            hashes.add(val.asBytes());
+                        }
+                    } else {
+                        for (int j = 0; j < LIST_SIZE; ++j) {
+                            Value val = new Value(siblings.get(j));
+                            if (val.isHashCode()) {
+                                // scanTree(val.asBytes(), scanAction);
+                                hashes.add(val.asBytes());
+                            }
+                        }
+                    }
+                    scanAction.doOnNode(myHash, node);
+                }
+            }
+        }
+    }
+
     public void deserialize(byte[] data) {
         synchronized (cache) {
             RLPList rlpList = (RLPList) RLP.decode2(data).get(0);
@@ -729,16 +758,35 @@ public class TrieImpl implements Trie {
         }
     }
 
-    public interface ScanAction {
+    public Set<ByteArrayWrapper> getTrieKeys(byte[] stateRoot) {
+        CollectFullSetOfNodes traceAction = new CollectFullSetOfNodes();
+        traceTrie(stateRoot, traceAction);
+        return traceAction.getCollectedHashes();
+    }
 
-        void doOnNode(byte[] hash, Value node);
+    public int getTrieSize(byte[] stateRoot) {
+        CountNodes traceAction = new CountNodes();
+        traceTrie(stateRoot, traceAction);
+        return traceAction.getCount();
+    }
+
+    private void traceTrie(byte[] stateRoot, ScanAction action) {
+        synchronized (cache) {
+            Value value = new Value(stateRoot);
+
+            if (value.isHashCode()) {
+                scanTreeLoop(stateRoot, action);
+            } else {
+                action.doOnNode(stateRoot, value);
+            }
+        }
     }
 
     public boolean validate() {
         synchronized (cache) {
             final int[] cnt = new int[1];
             try {
-                scanTree(getRootHash(), new TrieImpl.ScanAction() {
+                scanTree(getRootHash(), new ScanAction() {
                     @Override
                     public void doOnNode(byte[] hash, Value node) {
                         cnt[0]++;

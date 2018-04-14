@@ -69,6 +69,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     protected static final String DETAILS_DB = "details";
     protected static final String STORAGE_DB = "storage";
     protected static final String STATE_DB = "state";
+    protected static final String PENDINGTX_DB = "pendingtx";
 
     // State trie.
     protected Trie worldState;
@@ -85,6 +86,8 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     protected IByteArrayKeyValueDatabase indexDatabase;
     protected IByteArrayKeyValueDatabase blockDatabase;
     protected IByteArrayKeyValueDatabase stateDatabase;
+    protected IByteArrayKeyValueDatabase txPoolDatabase;
+    protected IByteArrayKeyValueDatabase pendingTxCacheDatabase;
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
@@ -208,6 +211,14 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             sharedProps.setProperty(Props.DB_NAME, BLOCK_DB);
             this.blockDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(blockDatabase);
+
+            sharedProps.setProperty("db_name", PENDINGTX_DB+"Pool");
+            this.txPoolDatabase = connectAndOpen(sharedProps);
+            databaseGroup.add(txPoolDatabase);
+
+            sharedProps.setProperty("db_name", PENDINGTX_DB+"Cache");
+            this.pendingTxCacheDatabase = connectAndOpen(sharedProps);
+            databaseGroup.add(pendingTxCacheDatabase);
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);

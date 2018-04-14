@@ -207,7 +207,7 @@ public class BlockPropagationHandler {
                 // peer is within 5 blocks of the block we're about to send
                 .filter(n -> {
                     long delta = block.getNumber() - n.getBestBlockNumber();
-                    return delta >= 0 && delta <= 5;
+                    return (delta >= 0 && delta <= 100) || (n.getBestBlockNumber() == 0);
                 })
                 .forEach(n -> {
                     if (log.isDebugEnabled())

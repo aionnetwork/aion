@@ -194,23 +194,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getStorageSize() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<DataWord> getStorageKeys() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
-
         for (int i = 0; i < storageKeys.size(); ++i) {
             put(storageKeys.get(i), storageValues.get(i));
         }
@@ -256,6 +240,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     public void setExternalStorageDataSource(IByteArrayKeyValueStore dataSource) {
         this.externalStorageDataSource = dataSource;
         this.externalStorage = true;
+        this.storageTrie = new SecureTrie(getExternalStorageDataSource());
     }
 
     @Override

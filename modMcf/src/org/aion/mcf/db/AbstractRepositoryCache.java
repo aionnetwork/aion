@@ -333,18 +333,6 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public int getStorageSize(Address address) {
-        IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? 0 : details.getStorageSize();
-    }
-
-    @Override
-    public Set<DataWord> getStorageKeys(Address address) {
-        IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? Collections.emptySet() : details.getStorageKeys();
-    }
-
-    @Override
     public Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
         IContractDetails<DataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
