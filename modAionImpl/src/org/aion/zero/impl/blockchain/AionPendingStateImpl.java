@@ -447,8 +447,8 @@ public class AionPendingStateImpl
 
 
     private void fireTxUpdate(AionTxReceipt txReceipt, PendingTransactionState state, IAionBlock block) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]", getPendingTxSize(),
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]", getPendingTxSize(),
                     state, txReceipt.getTransaction().getFrom().toString().substring(0, 8),
                     ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()), block.getShortDescr(),
                     txReceipt.getError()));

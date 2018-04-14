@@ -405,6 +405,10 @@ public final class Message {
      * <code>f_NA = 53;</code>
      */
     f_NA(53),
+    /**
+     * <code>f_getBlockSqlByRange = 54;</code>
+     */
+    f_getBlockSqlByRange(54),
     UNRECOGNIZED(-1),
     ;
 
@@ -624,6 +628,10 @@ public final class Message {
      * <code>f_NA = 53;</code>
      */
     public static final int f_NA_VALUE = 53;
+    /**
+     * <code>f_getBlockSqlByRange = 54;</code>
+     */
+    public static final int f_getBlockSqlByRange_VALUE = 54;
 
 
     public final int getNumber() {
@@ -698,6 +706,7 @@ public final class Message {
         case 51: return f_getAccountDetailsByAddressList;
         case 52: return f_backupAccounts;
         case 53: return f_NA;
+        case 54: return f_getBlockSqlByRange;
         default: return null;
       }
     }
@@ -12287,6 +12296,767 @@ public final class Message {
     }
 
     public org.aion.api.server.pb.Message.t_Block getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface t_BlockSqlOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_BlockSql)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional uint64 blockNumber = 1;</code>
+     */
+    long getBlockNumber();
+
+    /**
+     * <code>optional string block = 2;</code>
+     */
+    java.lang.String getBlock();
+    /**
+     * <code>optional string block = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getBlockBytes();
+
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    java.util.List<java.lang.String>
+        getTxList();
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    int getTxCount();
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    java.lang.String getTx(int index);
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getTxBytes(int index);
+  }
+  /**
+   * Protobuf type {@code org.aion.api.server.pb.t_BlockSql}
+   */
+  public  static final class t_BlockSql extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.aion.api.server.pb.t_BlockSql)
+      t_BlockSqlOrBuilder {
+    // Use t_BlockSql.newBuilder() to construct.
+    private t_BlockSql(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private t_BlockSql() {
+      blockNumber_ = 0L;
+      block_ = "";
+      tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private t_BlockSql(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+
+              blockNumber_ = input.readUInt64();
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              block_ = s;
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                tx_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              tx_.add(s);
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          tx_ = tx_.getUnmodifiableView();
+        }
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_t_BlockSql_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_t_BlockSql_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.aion.api.server.pb.Message.t_BlockSql.class, org.aion.api.server.pb.Message.t_BlockSql.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int BLOCKNUMBER_FIELD_NUMBER = 1;
+    private long blockNumber_;
+    /**
+     * <code>optional uint64 blockNumber = 1;</code>
+     */
+    public long getBlockNumber() {
+      return blockNumber_;
+    }
+
+    public static final int BLOCK_FIELD_NUMBER = 2;
+    private volatile java.lang.Object block_;
+    /**
+     * <code>optional string block = 2;</code>
+     */
+    public java.lang.String getBlock() {
+      java.lang.Object ref = block_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        block_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string block = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getBlockBytes() {
+      java.lang.Object ref = block_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        block_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TX_FIELD_NUMBER = 3;
+    private com.google.protobuf.LazyStringList tx_;
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getTxList() {
+      return tx_;
+    }
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    public int getTxCount() {
+      return tx_.size();
+    }
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    public java.lang.String getTx(int index) {
+      return tx_.get(index);
+    }
+    /**
+     * <code>repeated string tx = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTxBytes(int index) {
+      return tx_.getByteString(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (blockNumber_ != 0L) {
+        output.writeUInt64(1, blockNumber_);
+      }
+      if (!getBlockBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, block_);
+      }
+      for (int i = 0; i < tx_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, tx_.getRaw(i));
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (blockNumber_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, blockNumber_);
+      }
+      if (!getBlockBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, block_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < tx_.size(); i++) {
+          dataSize += computeStringSizeNoTag(tx_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getTxList().size();
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.aion.api.server.pb.Message.t_BlockSql)) {
+        return super.equals(obj);
+      }
+      org.aion.api.server.pb.Message.t_BlockSql other = (org.aion.api.server.pb.Message.t_BlockSql) obj;
+
+      boolean result = true;
+      result = result && (getBlockNumber()
+          == other.getBlockNumber());
+      result = result && getBlock()
+          .equals(other.getBlock());
+      result = result && getTxList()
+          .equals(other.getTxList());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + BLOCKNUMBER_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getBlockNumber());
+      hash = (37 * hash) + BLOCK_FIELD_NUMBER;
+      hash = (53 * hash) + getBlock().hashCode();
+      if (getTxCount() > 0) {
+        hash = (37 * hash) + TX_FIELD_NUMBER;
+        hash = (53 * hash) + getTxList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.t_BlockSql parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.aion.api.server.pb.Message.t_BlockSql prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.aion.api.server.pb.t_BlockSql}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.aion.api.server.pb.t_BlockSql)
+        org.aion.api.server.pb.Message.t_BlockSqlOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_t_BlockSql_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_t_BlockSql_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.aion.api.server.pb.Message.t_BlockSql.class, org.aion.api.server.pb.Message.t_BlockSql.Builder.class);
+      }
+
+      // Construct using org.aion.api.server.pb.Message.t_BlockSql.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        blockNumber_ = 0L;
+
+        block_ = "";
+
+        tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_t_BlockSql_descriptor;
+      }
+
+      public org.aion.api.server.pb.Message.t_BlockSql getDefaultInstanceForType() {
+        return org.aion.api.server.pb.Message.t_BlockSql.getDefaultInstance();
+      }
+
+      public org.aion.api.server.pb.Message.t_BlockSql build() {
+        org.aion.api.server.pb.Message.t_BlockSql result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.aion.api.server.pb.Message.t_BlockSql buildPartial() {
+        org.aion.api.server.pb.Message.t_BlockSql result = new org.aion.api.server.pb.Message.t_BlockSql(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        result.blockNumber_ = blockNumber_;
+        result.block_ = block_;
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          tx_ = tx_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        }
+        result.tx_ = tx_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.aion.api.server.pb.Message.t_BlockSql) {
+          return mergeFrom((org.aion.api.server.pb.Message.t_BlockSql)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.aion.api.server.pb.Message.t_BlockSql other) {
+        if (other == org.aion.api.server.pb.Message.t_BlockSql.getDefaultInstance()) return this;
+        if (other.getBlockNumber() != 0L) {
+          setBlockNumber(other.getBlockNumber());
+        }
+        if (!other.getBlock().isEmpty()) {
+          block_ = other.block_;
+          onChanged();
+        }
+        if (!other.tx_.isEmpty()) {
+          if (tx_.isEmpty()) {
+            tx_ = other.tx_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            ensureTxIsMutable();
+            tx_.addAll(other.tx_);
+          }
+          onChanged();
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.aion.api.server.pb.Message.t_BlockSql parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.aion.api.server.pb.Message.t_BlockSql) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long blockNumber_ ;
+      /**
+       * <code>optional uint64 blockNumber = 1;</code>
+       */
+      public long getBlockNumber() {
+        return blockNumber_;
+      }
+      /**
+       * <code>optional uint64 blockNumber = 1;</code>
+       */
+      public Builder setBlockNumber(long value) {
+        
+        blockNumber_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 blockNumber = 1;</code>
+       */
+      public Builder clearBlockNumber() {
+        
+        blockNumber_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object block_ = "";
+      /**
+       * <code>optional string block = 2;</code>
+       */
+      public java.lang.String getBlock() {
+        java.lang.Object ref = block_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          block_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string block = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getBlockBytes() {
+        java.lang.Object ref = block_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          block_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string block = 2;</code>
+       */
+      public Builder setBlock(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        block_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string block = 2;</code>
+       */
+      public Builder clearBlock() {
+        
+        block_ = getDefaultInstance().getBlock();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string block = 2;</code>
+       */
+      public Builder setBlockBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        block_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringList tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureTxIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          tx_ = new com.google.protobuf.LazyStringArrayList(tx_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getTxList() {
+        return tx_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public int getTxCount() {
+        return tx_.size();
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public java.lang.String getTx(int index) {
+        return tx_.get(index);
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTxBytes(int index) {
+        return tx_.getByteString(index);
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public Builder setTx(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTxIsMutable();
+        tx_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public Builder addTx(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTxIsMutable();
+        tx_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public Builder addAllTx(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureTxIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, tx_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public Builder clearTx() {
+        tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string tx = 3;</code>
+       */
+      public Builder addTxBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        ensureTxIsMutable();
+        tx_.add(value);
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.aion.api.server.pb.t_BlockSql)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.aion.api.server.pb.t_BlockSql)
+    private static final org.aion.api.server.pb.Message.t_BlockSql DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.aion.api.server.pb.Message.t_BlockSql();
+    }
+
+    public static org.aion.api.server.pb.Message.t_BlockSql getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<t_BlockSql>
+        PARSER = new com.google.protobuf.AbstractParser<t_BlockSql>() {
+      public t_BlockSql parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new t_BlockSql(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<t_BlockSql> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<t_BlockSql> getParserForType() {
+      return PARSER;
+    }
+
+    public org.aion.api.server.pb.Message.t_BlockSql getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -63813,6 +64583,1235 @@ public final class Message {
 
   }
 
+  public interface req_getBlockSqlByRangeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockSqlByRange)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional uint64 blkNumberStart = 1;</code>
+     */
+    long getBlkNumberStart();
+
+    /**
+     * <code>optional uint64 blkNumberEnd = 2;</code>
+     */
+    long getBlkNumberEnd();
+  }
+  /**
+   * Protobuf type {@code org.aion.api.server.pb.req_getBlockSqlByRange}
+   */
+  public  static final class req_getBlockSqlByRange extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.aion.api.server.pb.req_getBlockSqlByRange)
+      req_getBlockSqlByRangeOrBuilder {
+    // Use req_getBlockSqlByRange.newBuilder() to construct.
+    private req_getBlockSqlByRange(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private req_getBlockSqlByRange() {
+      blkNumberStart_ = 0L;
+      blkNumberEnd_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private req_getBlockSqlByRange(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+
+              blkNumberStart_ = input.readUInt64();
+              break;
+            }
+            case 16: {
+
+              blkNumberEnd_ = input.readUInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.aion.api.server.pb.Message.req_getBlockSqlByRange.class, org.aion.api.server.pb.Message.req_getBlockSqlByRange.Builder.class);
+    }
+
+    public static final int BLKNUMBERSTART_FIELD_NUMBER = 1;
+    private long blkNumberStart_;
+    /**
+     * <code>optional uint64 blkNumberStart = 1;</code>
+     */
+    public long getBlkNumberStart() {
+      return blkNumberStart_;
+    }
+
+    public static final int BLKNUMBEREND_FIELD_NUMBER = 2;
+    private long blkNumberEnd_;
+    /**
+     * <code>optional uint64 blkNumberEnd = 2;</code>
+     */
+    public long getBlkNumberEnd() {
+      return blkNumberEnd_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (blkNumberStart_ != 0L) {
+        output.writeUInt64(1, blkNumberStart_);
+      }
+      if (blkNumberEnd_ != 0L) {
+        output.writeUInt64(2, blkNumberEnd_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (blkNumberStart_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, blkNumberStart_);
+      }
+      if (blkNumberEnd_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, blkNumberEnd_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.aion.api.server.pb.Message.req_getBlockSqlByRange)) {
+        return super.equals(obj);
+      }
+      org.aion.api.server.pb.Message.req_getBlockSqlByRange other = (org.aion.api.server.pb.Message.req_getBlockSqlByRange) obj;
+
+      boolean result = true;
+      result = result && (getBlkNumberStart()
+          == other.getBlkNumberStart());
+      result = result && (getBlkNumberEnd()
+          == other.getBlkNumberEnd());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + BLKNUMBERSTART_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getBlkNumberStart());
+      hash = (37 * hash) + BLKNUMBEREND_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getBlkNumberEnd());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.aion.api.server.pb.Message.req_getBlockSqlByRange prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.aion.api.server.pb.req_getBlockSqlByRange}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.aion.api.server.pb.req_getBlockSqlByRange)
+        org.aion.api.server.pb.Message.req_getBlockSqlByRangeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.aion.api.server.pb.Message.req_getBlockSqlByRange.class, org.aion.api.server.pb.Message.req_getBlockSqlByRange.Builder.class);
+      }
+
+      // Construct using org.aion.api.server.pb.Message.req_getBlockSqlByRange.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        blkNumberStart_ = 0L;
+
+        blkNumberEnd_ = 0L;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_descriptor;
+      }
+
+      public org.aion.api.server.pb.Message.req_getBlockSqlByRange getDefaultInstanceForType() {
+        return org.aion.api.server.pb.Message.req_getBlockSqlByRange.getDefaultInstance();
+      }
+
+      public org.aion.api.server.pb.Message.req_getBlockSqlByRange build() {
+        org.aion.api.server.pb.Message.req_getBlockSqlByRange result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.aion.api.server.pb.Message.req_getBlockSqlByRange buildPartial() {
+        org.aion.api.server.pb.Message.req_getBlockSqlByRange result = new org.aion.api.server.pb.Message.req_getBlockSqlByRange(this);
+        result.blkNumberStart_ = blkNumberStart_;
+        result.blkNumberEnd_ = blkNumberEnd_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.aion.api.server.pb.Message.req_getBlockSqlByRange) {
+          return mergeFrom((org.aion.api.server.pb.Message.req_getBlockSqlByRange)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.aion.api.server.pb.Message.req_getBlockSqlByRange other) {
+        if (other == org.aion.api.server.pb.Message.req_getBlockSqlByRange.getDefaultInstance()) return this;
+        if (other.getBlkNumberStart() != 0L) {
+          setBlkNumberStart(other.getBlkNumberStart());
+        }
+        if (other.getBlkNumberEnd() != 0L) {
+          setBlkNumberEnd(other.getBlkNumberEnd());
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.aion.api.server.pb.Message.req_getBlockSqlByRange parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.aion.api.server.pb.Message.req_getBlockSqlByRange) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private long blkNumberStart_ ;
+      /**
+       * <code>optional uint64 blkNumberStart = 1;</code>
+       */
+      public long getBlkNumberStart() {
+        return blkNumberStart_;
+      }
+      /**
+       * <code>optional uint64 blkNumberStart = 1;</code>
+       */
+      public Builder setBlkNumberStart(long value) {
+        
+        blkNumberStart_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 blkNumberStart = 1;</code>
+       */
+      public Builder clearBlkNumberStart() {
+        
+        blkNumberStart_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long blkNumberEnd_ ;
+      /**
+       * <code>optional uint64 blkNumberEnd = 2;</code>
+       */
+      public long getBlkNumberEnd() {
+        return blkNumberEnd_;
+      }
+      /**
+       * <code>optional uint64 blkNumberEnd = 2;</code>
+       */
+      public Builder setBlkNumberEnd(long value) {
+        
+        blkNumberEnd_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 blkNumberEnd = 2;</code>
+       */
+      public Builder clearBlkNumberEnd() {
+        
+        blkNumberEnd_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.aion.api.server.pb.req_getBlockSqlByRange)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.aion.api.server.pb.req_getBlockSqlByRange)
+    private static final org.aion.api.server.pb.Message.req_getBlockSqlByRange DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.aion.api.server.pb.Message.req_getBlockSqlByRange();
+    }
+
+    public static org.aion.api.server.pb.Message.req_getBlockSqlByRange getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<req_getBlockSqlByRange>
+        PARSER = new com.google.protobuf.AbstractParser<req_getBlockSqlByRange>() {
+      public req_getBlockSqlByRange parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new req_getBlockSqlByRange(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<req_getBlockSqlByRange> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<req_getBlockSqlByRange> getParserForType() {
+      return PARSER;
+    }
+
+    public org.aion.api.server.pb.Message.req_getBlockSqlByRange getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface rsp_getBlockSqlByRangeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockSqlByRange)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    java.util.List<org.aion.api.server.pb.Message.t_BlockSql> 
+        getBlkSqlList();
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    org.aion.api.server.pb.Message.t_BlockSql getBlkSql(int index);
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    int getBlkSqlCount();
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    java.util.List<? extends org.aion.api.server.pb.Message.t_BlockSqlOrBuilder> 
+        getBlkSqlOrBuilderList();
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    org.aion.api.server.pb.Message.t_BlockSqlOrBuilder getBlkSqlOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code org.aion.api.server.pb.rsp_getBlockSqlByRange}
+   */
+  public  static final class rsp_getBlockSqlByRange extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.aion.api.server.pb.rsp_getBlockSqlByRange)
+      rsp_getBlockSqlByRangeOrBuilder {
+    // Use rsp_getBlockSqlByRange.newBuilder() to construct.
+    private rsp_getBlockSqlByRange(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private rsp_getBlockSqlByRange() {
+      blkSql_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private rsp_getBlockSqlByRange(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                blkSql_ = new java.util.ArrayList<org.aion.api.server.pb.Message.t_BlockSql>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              blkSql_.add(
+                  input.readMessage(org.aion.api.server.pb.Message.t_BlockSql.parser(), extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          blkSql_ = java.util.Collections.unmodifiableList(blkSql_);
+        }
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.class, org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.Builder.class);
+    }
+
+    public static final int BLKSQL_FIELD_NUMBER = 1;
+    private java.util.List<org.aion.api.server.pb.Message.t_BlockSql> blkSql_;
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    public java.util.List<org.aion.api.server.pb.Message.t_BlockSql> getBlkSqlList() {
+      return blkSql_;
+    }
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    public java.util.List<? extends org.aion.api.server.pb.Message.t_BlockSqlOrBuilder> 
+        getBlkSqlOrBuilderList() {
+      return blkSql_;
+    }
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    public int getBlkSqlCount() {
+      return blkSql_.size();
+    }
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    public org.aion.api.server.pb.Message.t_BlockSql getBlkSql(int index) {
+      return blkSql_.get(index);
+    }
+    /**
+     * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+     */
+    public org.aion.api.server.pb.Message.t_BlockSqlOrBuilder getBlkSqlOrBuilder(
+        int index) {
+      return blkSql_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < blkSql_.size(); i++) {
+        output.writeMessage(1, blkSql_.get(i));
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < blkSql_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, blkSql_.get(i));
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.aion.api.server.pb.Message.rsp_getBlockSqlByRange)) {
+        return super.equals(obj);
+      }
+      org.aion.api.server.pb.Message.rsp_getBlockSqlByRange other = (org.aion.api.server.pb.Message.rsp_getBlockSqlByRange) obj;
+
+      boolean result = true;
+      result = result && getBlkSqlList()
+          .equals(other.getBlkSqlList());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      if (getBlkSqlCount() > 0) {
+        hash = (37 * hash) + BLKSQL_FIELD_NUMBER;
+        hash = (53 * hash) + getBlkSqlList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.aion.api.server.pb.Message.rsp_getBlockSqlByRange prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.aion.api.server.pb.rsp_getBlockSqlByRange}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.aion.api.server.pb.rsp_getBlockSqlByRange)
+        org.aion.api.server.pb.Message.rsp_getBlockSqlByRangeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.class, org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.Builder.class);
+      }
+
+      // Construct using org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getBlkSqlFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (blkSqlBuilder_ == null) {
+          blkSql_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          blkSqlBuilder_.clear();
+        }
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_descriptor;
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getBlockSqlByRange getDefaultInstanceForType() {
+        return org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.getDefaultInstance();
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getBlockSqlByRange build() {
+        org.aion.api.server.pb.Message.rsp_getBlockSqlByRange result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getBlockSqlByRange buildPartial() {
+        org.aion.api.server.pb.Message.rsp_getBlockSqlByRange result = new org.aion.api.server.pb.Message.rsp_getBlockSqlByRange(this);
+        int from_bitField0_ = bitField0_;
+        if (blkSqlBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            blkSql_ = java.util.Collections.unmodifiableList(blkSql_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.blkSql_ = blkSql_;
+        } else {
+          result.blkSql_ = blkSqlBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.aion.api.server.pb.Message.rsp_getBlockSqlByRange) {
+          return mergeFrom((org.aion.api.server.pb.Message.rsp_getBlockSqlByRange)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.aion.api.server.pb.Message.rsp_getBlockSqlByRange other) {
+        if (other == org.aion.api.server.pb.Message.rsp_getBlockSqlByRange.getDefaultInstance()) return this;
+        if (blkSqlBuilder_ == null) {
+          if (!other.blkSql_.isEmpty()) {
+            if (blkSql_.isEmpty()) {
+              blkSql_ = other.blkSql_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureBlkSqlIsMutable();
+              blkSql_.addAll(other.blkSql_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.blkSql_.isEmpty()) {
+            if (blkSqlBuilder_.isEmpty()) {
+              blkSqlBuilder_.dispose();
+              blkSqlBuilder_ = null;
+              blkSql_ = other.blkSql_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              blkSqlBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getBlkSqlFieldBuilder() : null;
+            } else {
+              blkSqlBuilder_.addAllMessages(other.blkSql_);
+            }
+          }
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.aion.api.server.pb.Message.rsp_getBlockSqlByRange parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.aion.api.server.pb.Message.rsp_getBlockSqlByRange) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<org.aion.api.server.pb.Message.t_BlockSql> blkSql_ =
+        java.util.Collections.emptyList();
+      private void ensureBlkSqlIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          blkSql_ = new java.util.ArrayList<org.aion.api.server.pb.Message.t_BlockSql>(blkSql_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.aion.api.server.pb.Message.t_BlockSql, org.aion.api.server.pb.Message.t_BlockSql.Builder, org.aion.api.server.pb.Message.t_BlockSqlOrBuilder> blkSqlBuilder_;
+
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public java.util.List<org.aion.api.server.pb.Message.t_BlockSql> getBlkSqlList() {
+        if (blkSqlBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(blkSql_);
+        } else {
+          return blkSqlBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public int getBlkSqlCount() {
+        if (blkSqlBuilder_ == null) {
+          return blkSql_.size();
+        } else {
+          return blkSqlBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public org.aion.api.server.pb.Message.t_BlockSql getBlkSql(int index) {
+        if (blkSqlBuilder_ == null) {
+          return blkSql_.get(index);
+        } else {
+          return blkSqlBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder setBlkSql(
+          int index, org.aion.api.server.pb.Message.t_BlockSql value) {
+        if (blkSqlBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlkSqlIsMutable();
+          blkSql_.set(index, value);
+          onChanged();
+        } else {
+          blkSqlBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder setBlkSql(
+          int index, org.aion.api.server.pb.Message.t_BlockSql.Builder builderForValue) {
+        if (blkSqlBuilder_ == null) {
+          ensureBlkSqlIsMutable();
+          blkSql_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          blkSqlBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder addBlkSql(org.aion.api.server.pb.Message.t_BlockSql value) {
+        if (blkSqlBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlkSqlIsMutable();
+          blkSql_.add(value);
+          onChanged();
+        } else {
+          blkSqlBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder addBlkSql(
+          int index, org.aion.api.server.pb.Message.t_BlockSql value) {
+        if (blkSqlBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureBlkSqlIsMutable();
+          blkSql_.add(index, value);
+          onChanged();
+        } else {
+          blkSqlBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder addBlkSql(
+          org.aion.api.server.pb.Message.t_BlockSql.Builder builderForValue) {
+        if (blkSqlBuilder_ == null) {
+          ensureBlkSqlIsMutable();
+          blkSql_.add(builderForValue.build());
+          onChanged();
+        } else {
+          blkSqlBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder addBlkSql(
+          int index, org.aion.api.server.pb.Message.t_BlockSql.Builder builderForValue) {
+        if (blkSqlBuilder_ == null) {
+          ensureBlkSqlIsMutable();
+          blkSql_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          blkSqlBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder addAllBlkSql(
+          java.lang.Iterable<? extends org.aion.api.server.pb.Message.t_BlockSql> values) {
+        if (blkSqlBuilder_ == null) {
+          ensureBlkSqlIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, blkSql_);
+          onChanged();
+        } else {
+          blkSqlBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder clearBlkSql() {
+        if (blkSqlBuilder_ == null) {
+          blkSql_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          blkSqlBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public Builder removeBlkSql(int index) {
+        if (blkSqlBuilder_ == null) {
+          ensureBlkSqlIsMutable();
+          blkSql_.remove(index);
+          onChanged();
+        } else {
+          blkSqlBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public org.aion.api.server.pb.Message.t_BlockSql.Builder getBlkSqlBuilder(
+          int index) {
+        return getBlkSqlFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public org.aion.api.server.pb.Message.t_BlockSqlOrBuilder getBlkSqlOrBuilder(
+          int index) {
+        if (blkSqlBuilder_ == null) {
+          return blkSql_.get(index);  } else {
+          return blkSqlBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public java.util.List<? extends org.aion.api.server.pb.Message.t_BlockSqlOrBuilder> 
+           getBlkSqlOrBuilderList() {
+        if (blkSqlBuilder_ != null) {
+          return blkSqlBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(blkSql_);
+        }
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public org.aion.api.server.pb.Message.t_BlockSql.Builder addBlkSqlBuilder() {
+        return getBlkSqlFieldBuilder().addBuilder(
+            org.aion.api.server.pb.Message.t_BlockSql.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public org.aion.api.server.pb.Message.t_BlockSql.Builder addBlkSqlBuilder(
+          int index) {
+        return getBlkSqlFieldBuilder().addBuilder(
+            index, org.aion.api.server.pb.Message.t_BlockSql.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.aion.api.server.pb.t_BlockSql blkSql = 1;</code>
+       */
+      public java.util.List<org.aion.api.server.pb.Message.t_BlockSql.Builder> 
+           getBlkSqlBuilderList() {
+        return getBlkSqlFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.aion.api.server.pb.Message.t_BlockSql, org.aion.api.server.pb.Message.t_BlockSql.Builder, org.aion.api.server.pb.Message.t_BlockSqlOrBuilder> 
+          getBlkSqlFieldBuilder() {
+        if (blkSqlBuilder_ == null) {
+          blkSqlBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.aion.api.server.pb.Message.t_BlockSql, org.aion.api.server.pb.Message.t_BlockSql.Builder, org.aion.api.server.pb.Message.t_BlockSqlOrBuilder>(
+                  blkSql_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          blkSql_ = null;
+        }
+        return blkSqlBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.aion.api.server.pb.rsp_getBlockSqlByRange)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.aion.api.server.pb.rsp_getBlockSqlByRange)
+    private static final org.aion.api.server.pb.Message.rsp_getBlockSqlByRange DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.aion.api.server.pb.Message.rsp_getBlockSqlByRange();
+    }
+
+    public static org.aion.api.server.pb.Message.rsp_getBlockSqlByRange getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<rsp_getBlockSqlByRange>
+        PARSER = new com.google.protobuf.AbstractParser<rsp_getBlockSqlByRange>() {
+      public rsp_getBlockSqlByRange parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new rsp_getBlockSqlByRange(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<rsp_getBlockSqlByRange> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<rsp_getBlockSqlByRange> getParserForType() {
+      return PARSER;
+    }
+
+    public org.aion.api.server.pb.Message.rsp_getBlockSqlByRange getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_aion_api_server_pb_t_Contract_descriptor;
   private static final 
@@ -63863,6 +65862,11 @@ public final class Message {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_aion_api_server_pb_t_Block_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_aion_api_server_pb_t_BlockSql_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_aion_api_server_pb_t_BlockSql_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_aion_api_server_pb_rsp_errormsg_descriptor;
   private static final 
@@ -64298,6 +66302,16 @@ public final class Message {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_aion_api_server_pb_rsp_getAccountDetailsByAddressList_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -64352,216 +66366,222 @@ public final class Message {
       "\014\022\022\n\ndifficulty\030\013 \001(\014\022\027\n\017totalDifficulty" +
       "\030\014 \001(\014\022\021\n\textraData\030\r \001(\014\022\r\n\005nonce\030\016 \001(\014" +
       "\022\020\n\010solution\030\017 \001(\014\022\014\n\004hash\030\020 \001(\014\022\014\n\004size" +
-      "\030\021 \001(\r\022\016\n\006txHash\030\022 \003(\014\" \n\014rsp_errormsg\022\020" +
-      "\n\010errormsg\030\001 \001(\t\"v\n\023rsp_protocolVersion\022" +
-      "\016\n\006kernel\030\001 \001(\t\022\013\n\003net\030\002 \001(\t\022\013\n\003api\030\003 \001(" +
-      "\t\022\n\n\002vm\030\004 \001(\t\022\n\n\002db\030\005 \001(\t\022\r\n\005miner\030\006 \001(\t" +
-      "\022\016\n\006txpool\030\007 \001(\t\"%\n\020rsp_minerAddress\022\021\n\t",
-      "minerAddr\030\001 \001(\014\"+\n\024req_getBlockByNumber\022" +
-      "\023\n\013blockNumber\030\001 \001(\004\"\347\002\n\014rsp_getBlock\022\023\n" +
-      "\013blockNumber\030\001 \001(\004\022\021\n\ttimestamp\030\002 \001(\004\022\023\n" +
-      "\013nrgConsumed\030\003 \001(\004\022\020\n\010nrgLimit\030\004 \001(\004\022\022\n\n" +
-      "parentHash\030\005 \001(\014\022\024\n\014minerAddress\030\006 \001(\014\022\021" +
-      "\n\tstateRoot\030\007 \001(\014\022\022\n\ntxTrieRoot\030\010 \001(\014\022\027\n" +
-      "\017receiptTrieRoot\030\t \001(\014\022\021\n\tlogsBloom\030\n \001(" +
-      "\014\022\022\n\ndifficulty\030\013 \001(\014\022\027\n\017totalDifficulty" +
-      "\030\014 \001(\014\022\021\n\textraData\030\r \001(\014\022\r\n\005nonce\030\016 \001(\014" +
-      "\022\020\n\010solution\030\017 \001(\014\022\014\n\004hash\030\020 \001(\014\022\014\n\004size",
-      "\030\021 \001(\r\022\016\n\006txHash\030\022 \003(\014\"1\n\032req_getBlockHe" +
-      "aderByNumber\022\023\n\013blockNumber\030\001 \001(\004\"\304\002\n\022rs" +
-      "p_getBlockHeader\022\023\n\013blockNumber\030\001 \001(\004\022\021\n" +
-      "\ttimestamp\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004\022\020\n" +
-      "\010nrgLimit\030\004 \001(\004\022\022\n\nparentHash\030\005 \001(\014\022\024\n\014m" +
-      "inerAddress\030\006 \001(\014\022\021\n\tstateRoot\030\007 \001(\014\022\022\n\n" +
-      "txTrieRoot\030\010 \001(\014\022\027\n\017receiptTrieRoot\030\t \001(" +
-      "\014\022\021\n\tlogsBloom\030\n \001(\014\022\022\n\ndifficulty\030\013 \001(\014" +
-      "\022\021\n\textraData\030\014 \001(\014\022\r\n\005nonce\030\r \001(\014\022\020\n\010so" +
-      "lution\030\016 \001(\014\022\014\n\004hash\030\017 \001(\014\022\014\n\004size\030\020 \001(\r",
-      "\"z\n\023req_sendTransaction\022\014\n\004from\030\001 \001(\014\022\n\n" +
-      "\002to\030\002 \001(\014\022\r\n\005value\030\003 \001(\014\022\014\n\004data\030\004 \001(\014\022\r" +
-      "\n\005nonce\030\005 \001(\014\022\013\n\003nrg\030\006 \001(\004\022\020\n\010nrgPrice\030\007" +
-      " \001(\004\"%\n\023rsp_sendTransaction\022\016\n\006txHash\030\001 " +
-      "\001(\014\"*\n\030req_getTransactionByHash\022\016\n\006txHas" +
-      "h\030\001 \001(\014\"\334\001\n\022rsp_getTransaction\022\017\n\007txInde" +
-      "x\030\001 \001(\r\022\023\n\013blocknumber\030\002 \001(\004\022\021\n\ttimeStam" +
-      "p\030\003 \001(\004\022\022\n\nnrgConsume\030\004 \001(\004\022\020\n\010nrgPrice\030" +
-      "\005 \001(\004\022\021\n\tblockhash\030\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\016" +
-      "\n\006txHash\030\010 \001(\014\022\014\n\004data\030\t \001(\014\022\r\n\005nonce\030\n ",
-      "\001(\014\022\n\n\002to\030\013 \001(\014\022\r\n\005value\030\014 \001(\014\"H\n\021req_un" +
-      "lockAccount\022\017\n\007account\030\001 \001(\014\022\020\n\010password" +
-      "\030\002 \001(\t\022\020\n\010duration\030\003 \001(\r\"\036\n\014rsp_accounts" +
-      "\022\016\n\006accout\030\001 \003(\014\"\033\n\013req_compile\022\014\n\004code\030" +
-      "\001 \001(\t\"\255\001\n\013rsp_compile\022G\n\nconstracts\030\001 \003(" +
-      "\01323.org.aion.api.server.pb.rsp_compile.C" +
-      "onstractsEntry\032U\n\017ConstractsEntry\022\013\n\003key" +
-      "\030\001 \001(\t\0221\n\005value\030\002 \001(\0132\".org.aion.api.ser" +
-      "ver.pb.t_Contract:\0028\001\"3\n\013req_getCode\022\017\n\007" +
-      "address\030\001 \001(\014\022\023\n\013blocknumber\030\002 \001(\004\"\033\n\013rs",
-      "p_getCode\022\014\n\004code\030\001 \001(\014\"c\n\022req_contractD" +
-      "eploy\022\020\n\010nrgLimit\030\001 \001(\004\022\020\n\010nrgPrice\030\002 \001(" +
-      "\004\022\014\n\004from\030\003 \001(\014\022\014\n\004data\030\004 \001(\014\022\r\n\005value\030\005" +
-      " \001(\014\"=\n\022rsp_contractDeploy\022\016\n\006txHash\030\001 \001" +
-      "(\014\022\027\n\017contractAddress\030\002 \001(\014\"`\n\010req_call\022" +
-      "\014\n\004from\030\001 \001(\014\022\n\n\002to\030\002 \001(\014\022\014\n\004data\030\003 \001(\014\022" +
-      "\r\n\005value\030\004 \001(\014\022\013\n\003nrg\030\005 \001(\004\022\020\n\010nrgPrice\030" +
-      "\006 \001(\004\"\032\n\010rsp_call\022\016\n\006result\030\001 \001(\014\"\'\n\022req" +
-      "_getBlockByHash\022\021\n\tblockHash\030\001 \001(\014\"-\n\030re" +
-      "q_getBlockHeaderByHash\022\021\n\tblockHash\030\001 \001(",
-      "\014\"?\n\027req_getTransactionCount\022\017\n\007address\030" +
-      "\001 \001(\014\022\023\n\013blocknumber\030\002 \001(\004\"*\n\027rsp_getTra" +
-      "nsactionCount\022\017\n\007txCount\030\001 \001(\004\"/\n\035req_ge" +
-      "tTransactionCountByHash\022\016\n\006txHash\030\001 \001(\014\"" +
-      "&\n\017rsp_blockNumber\022\023\n\013blocknumber\030\001 \001(\004\"" +
-      "6\n\016req_getBalance\022\017\n\007address\030\001 \001(\014\022\023\n\013bl" +
-      "ockNumber\030\002 \001(\004\"!\n\016rsp_getBalance\022\017\n\007bal" +
-      "ance\030\001 \001(\014\"E\n\020req_getStorageAt\022\017\n\007addres" +
-      "s\030\001 \001(\014\022\013\n\003key\030\002 \001(\t\022\023\n\013blocknumber\030\003 \001(" +
-      "\004\"#\n\020rsp_getStorageAt\022\017\n\007storage\030\001 \001(\t\"7",
-      "\n\"req_getBlockTransactionCountByHash\022\021\n\t" +
-      "blockHash\030\001 \001(\014\"/\n\034rsp_getBlockTransacti" +
-      "onCount\022\017\n\007txCount\030\001 \001(\r\";\n$req_getBlock" +
-      "TransactionCountByNumber\022\023\n\013blockNumber\030" +
-      "\001 \001(\004\"K\n%req_getTransactionByBlockHashAn" +
-      "dIndex\022\021\n\tblockHash\030\001 \001(\014\022\017\n\007txIndex\030\002 \001" +
-      "(\r\"O\n\'req_getTransactionByBlockNumberAnd" +
-      "Index\022\023\n\013blockNumber\030\001 \001(\004\022\017\n\007txIndex\030\002 " +
-      "\001(\r\"+\n\031req_getTransactionReceipt\022\016\n\006txHa" +
-      "sh\030\001 \001(\014\"\366\001\n\031rsp_getTransactionReceipt\022\017",
-      "\n\007txIndex\030\001 \001(\r\022\023\n\013blockNumber\030\002 \001(\004\022\023\n\013" +
-      "nrgConsumed\030\003 \001(\004\022\031\n\021cumulativeNrgUsed\030\004" +
-      " \001(\004\022\021\n\tblockHash\030\005 \001(\014\022\016\n\006txHash\030\006 \001(\014\022" +
-      "\014\n\004from\030\007 \001(\014\022\n\n\002to\030\010 \001(\014\022\027\n\017contractAdd" +
-      "ress\030\t \001(\014\022-\n\004logs\030\n \003(\0132\037.org.aion.api." +
-      "server.pb.t_LgEle\"C\n\037req_getUncleByBlock" +
-      "HashAndIndex\022\021\n\tblockHash\030\001 \001(\014\022\r\n\005index" +
-      "\030\002 \001(\r\"$\n\020rsp_getCompilers\022\020\n\010compiler\030\001" +
-      " \003(\t\"%\n\023req_compileSolidity\022\016\n\006source\030\001 " +
-      "\001(\t\"U\n\023rsp_compileSolidity\022\014\n\004code\030\001 \001(\t",
-      "\0220\n\004info\030\002 \001(\0132\".org.aion.api.server.pb." +
-      "t_Contract\"\033\n\013rsp_getWork\022\014\n\004work\030\001 \003(\t\"" +
-      "A\n\016req_submitWork\022\r\n\005nonce\030\001 \001(\014\022\020\n\010solu" +
-      "tion\030\002 \001(\014\022\016\n\006digest\030\003 \001(\014\"&\n\016rsp_submit" +
-      "Work\022\024\n\014workAccepted\030\001 \001(\010\"K\n\033rsp_fetchQ" +
-      "ueuedTransactions\022,\n\002tx\030\001 \003(\0132 .org.aion" +
-      ".api.server.pb.t_AionTx\"\'\n\022req_rawTransa" +
-      "ction\022\021\n\tencodedTx\030\001 \001(\014\"g\n\017req_estimate" +
-      "Nrg\022\014\n\004from\030\001 \001(\014\022\n\n\002to\030\002 \001(\014\022\r\n\005value\030\003" +
-      " \001(\014\022\014\n\004data\030\004 \001(\014\022\013\n\003nrg\030\005 \001(\004\022\020\n\010nrgPr",
-      "ice\030\006 \001(\004\"\036\n\017rsp_estimateNrg\022\013\n\003nrg\030\001 \001(" +
-      "\004\"\034\n\nrsp_mining\022\016\n\006mining\030\001 \001(\010\"J\n\013rsp_s" +
-      "yncing\022\017\n\007syncing\030\001 \001(\010\022\024\n\014currentBlock\030" +
-      "\002 \001(\004\022\024\n\014highestBlock\030\003 \001(\004\" \n\014rsp_hashr" +
-      "ate\022\020\n\010hashrate\030\001 \001(\004\"B\n\022rsp_getActiveNo" +
-      "des\022,\n\004node\030\001 \003(\0132\036.org.aion.api.server." +
-      "pb.t_Node\"B\n\022rsp_getStaticNodes\022,\n\004node\030" +
-      "\001 \003(\0132\036.org.aion.api.server.pb.t_Node\"!\n" +
-      "\022rsp_getSolcVersion\022\013\n\003ver\030\001 \001(\t\" \n\rrsp_" +
-      "isSyncing\022\017\n\007syncing\030\001 \001(\010\"j\n\014rsp_syncIn",
-      "fo\022\017\n\007syncing\030\001 \001(\010\022\030\n\020networkBestBlock\030" +
-      "\002 \001(\004\022\026\n\016chainBestBlock\030\003 \001(\004\022\027\n\017maxImpo" +
-      "rtBlocks\030\004 \001(\r\"G\n\016rsp_systemInfo\022\020\n\010cpuU" +
-      "sage\030\001 \001(\002\022\023\n\013memoryUsage\030\002 \001(\004\022\016\n\006DBSiz" +
-      "e\030\003 \001(\004\"W\n\021req_eventRegister\022\016\n\006events\030\001" +
-      " \003(\t\0222\n\006filter\030\002 \001(\0132\".org.aion.api.serv" +
-      "er.pb.t_FilterCt\"#\n\021rsp_eventRegister\022\016\n" +
-      "\006result\030\001 \001(\010\";\n\023req_eventDeregister\022\016\n\006" +
-      "events\030\001 \003(\t\022\024\n\014contractAddr\030\002 \001(\014\"%\n\023rs" +
-      "p_eventDeregister\022\016\n\006result\030\001 \001(\010\"D\n\023rsp",
-      "_EventCtCallback\022-\n\002ec\030\001 \003(\0132!.org.aion." +
-      "api.server.pb.t_EventCt\"9\n\021req_accountCr" +
-      "eate\022\020\n\010password\030\001 \003(\t\022\022\n\nprivateKey\030\002 \001" +
-      "(\010\"8\n\021rsp_accountCreate\022\017\n\007address\030\001 \003(\014" +
-      "\022\022\n\nprivateKey\030\002 \003(\014\"4\n\017req_accountlock\022" +
-      "\017\n\007account\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\"!\n\017rs" +
-      "p_accountlock\022\016\n\006locked\030\001 \001(\010\"7\n\021req_use" +
-      "rPrivilege\022\020\n\010username\030\001 \001(\t\022\020\n\010password" +
-      "\030\002 \001(\t\"&\n\021rsp_userPrivilege\022\021\n\tprivilege" +
-      "\030\001 \003(\t\"G\n\021req_queryCtEvents\0222\n\006filter\030\001 ",
-      "\001(\0132\".org.aion.api.server.pb.t_FilterCt\"" +
-      "B\n\021rsp_queryCtEvents\022-\n\002ec\030\001 \003(\0132!.org.a" +
-      "ion.api.server.pb.t_EventCt\"4\n\014t_Private" +
-      "Key\022\022\n\nprivateKey\030\001 \001(\t\022\020\n\010password\030\002 \001(" +
-      "\t\"N\n\022req_importAccounts\0228\n\nprivateKey\030\001 " +
-      "\003(\0132$.org.aion.api.server.pb.t_PrivateKe" +
-      "y\"(\n\022rsp_importAccounts\022\022\n\ninvalidKey\030\001 " +
-      "\003(\t\"*\n\005t_Key\022\017\n\007address\030\001 \001(\014\022\020\n\010passwor" +
-      "d\030\002 \001(\t\"D\n\022req_exportAccounts\022.\n\007keyFile" +
-      "\030\001 \003(\0132\035.org.aion.api.server.pb.t_Key\"8\n",
-      "\022rsp_exportAccounts\022\017\n\007keyFile\030\001 \003(\014\022\021\n\t" +
-      "failedKey\030\002 \003(\014\"2\n\035rsp_getCurrentTotalDi" +
-      "fficulty\022\021\n\ttotalDiff\030\001 \001(\014\"1\n\033req_getBl" +
-      "ockDetailsByNumber\022\022\n\nblkNumbers\030\001 \003(\004\"X" +
-      "\n\033rsp_getBlockDetailsByNumber\0229\n\nblkDeta" +
-      "ils\030\001 \003(\0132%.org.aion.api.server.pb.t_Blo" +
-      "ckDetail\",\n\033req_getBlockDetailsByLatest\022" +
-      "\r\n\005count\030\001 \001(\004\"X\n\033rsp_getBlockDetailsByL" +
-      "atest\0229\n\nblkDetails\030\001 \003(\0132%.org.aion.api" +
-      ".server.pb.t_BlockDetail\"&\n\025req_getBlock",
-      "sByLatest\022\r\n\005count\030\001 \001(\004\"F\n\025rsp_getBlock" +
-      "sByLatest\022-\n\004blks\030\001 \003(\0132\037.org.aion.api.s" +
-      "erver.pb.t_Block\"7\n\"req_getAccountDetail" +
-      "sByAddressList\022\021\n\taddresses\030\001 \003(\014\"_\n\"rsp" +
-      "_getAccountDetailsByAddressList\0229\n\010accou" +
-      "nts\030\001 \003(\0132\'.org.aion.api.server.pb.t_Acc" +
-      "ountDetail*\204\001\n\005Servs\022\010\n\004s_hb\020\000\022\013\n\007s_admi" +
-      "n\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_account\020\003\022\010\n\004s_tx\020" +
-      "\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n\013s_privilege\020" +
-      "\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\355\t\n\005Funcs\022\025\n\021f",
-      "_protocolVersion\020\000\022\022\n\016f_minerAddress\020\001\022\016" +
-      "\n\nf_accounts\020\002\022\021\n\rf_blockNumber\020\003\022\020\n\014f_g" +
-      "etBalance\020\004\022\022\n\016f_getStorageAt\020\005\022\023\n\017f_unl" +
-      "ockAccount\020\006\022\025\n\021f_sendTransaction\020\007\022\032\n\026f" +
-      "_getTransactionByHash\020\010\022\r\n\tf_compile\020\t\022\024" +
-      "\n\020f_contractDeploy\020\n\022\031\n\025f_getTransaction" +
-      "Count\020\013\022$\n f_getBlockTransactionCountByH" +
-      "ash\020\014\022&\n\"f_getBlockTransactionCountByNum" +
-      "ber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_call\020\017\022\024\n\020f_ge" +
-      "tBlockByHash\020\020\022\026\n\022f_getBlockByNumber\020\021\022\'",
-      "\n#f_getTransactionByBlockHashAndIndex\020\022\022" +
-      ")\n%f_getTransactionByBlockNumberAndIndex" +
-      "\020\023\022\033\n\027f_getTransactionReceipt\020\024\022\022\n\016f_get" +
-      "Compilers\020\025\022\025\n\021f_compileSolidity\020\026\022\r\n\tf_" +
-      "getWork\020\027\022\020\n\014f_submitWork\020\030\022\035\n\031f_fetchQu" +
-      "euedTransactions\020\031\022\027\n\023f_signedTransactio" +
-      "n\020\032\022\024\n\020f_rawTransaction\020\033\022\021\n\rf_estimateN" +
-      "rg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_hashrate\020\036\022\024\n\020f_" +
-      "getActiveNodes\020\037\022\024\n\020f_getSolcVersion\020 \022\017" +
-      "\n\013f_isSyncing\020!\022\016\n\nf_syncInfo\020\"\022\023\n\017f_get",
-      "SystemInfo\020#\022\023\n\017f_eventRegister\020$\022\025\n\021f_e" +
-      "ventDeregister\020%\022\023\n\017f_accountCreate\020&\022\021\n" +
-      "\rf_accountLock\020\'\022\023\n\017f_userPrivilege\020(\022\020\n" +
-      "\014f_eventQuery\020)\022\024\n\020f_importAccounts\020*\022\024\n" +
-      "\020f_exportAccounts\020+\022\034\n\030f_getBlockHeaderB" +
-      "yNumber\020,\022\032\n\026f_getBlockHeaderByHash\020-\022\037\n" +
-      "\033f_getCurrentTotalDifficulty\020.\022\024\n\020f_getS" +
-      "taticNodes\020/\022\035\n\031f_getBlockDetailsByNumbe" +
-      "r\0200\022\035\n\031f_getBlockDetailsByLatest\0201\022\027\n\023f_" +
-      "getBlocksByLatest\0202\022$\n f_getAccountDetai",
-      "lsByAddressList\0203\022\024\n\020f_backupAccounts\0204\022" +
-      "\010\n\004f_NA\0205*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022\r\n\tr_s" +
-      "uccess\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r_heart" +
-      "beatReturn\020\003\022\025\n\021r_privilegeReturn\020\004\022\r\n\tr" +
-      "_tx_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_tx_Drop" +
-      "ped\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx_Pendi" +
-      "ng\020h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_eventCb\020" +
-      "j\022\010\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377\377\377\377\377\377\377" +
-      "\377\377\001\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377\377\377\001\022!\n" +
-      "\024r_fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fa",
-      "il_function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fa" +
-      "il_api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_ct_b" +
-      "ytecode\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_rsp\020\371\377" +
-      "\377\377\377\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377\377\377\377\377\377\377" +
-      "\377\001\022\'\n\032r_fail_null_compile_source\020\367\377\377\377\377\377\377" +
-      "\377\377\001\022$\n\027r_fail_compile_contract\020\366\377\377\377\377\377\377\377\377" +
-      "\001\022#\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036" +
-      "\n\021r_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail" +
-      "_getTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_" +
-      "fail_zmqHandler_exception\020\362\377\377\377\377\377\377\377\377\001\022(\n\033",
-      "r_fail_hit_pending_tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%" +
-      "\n\030r_fail_txqueue_exception\020\360\377\377\377\377\377\377\377\377\001\022&\n" +
-      "\031r_fail_function_arguments\020\357\377\377\377\377\377\377\377\377\001\022!\n" +
-      "\024r_fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fa" +
-      "il_unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
+      "\030\021 \001(\r\022\016\n\006txHash\030\022 \003(\014\"<\n\nt_BlockSql\022\023\n\013" +
+      "blockNumber\030\001 \001(\004\022\r\n\005block\030\002 \001(\t\022\n\n\002tx\030\003" +
+      " \003(\t\" \n\014rsp_errormsg\022\020\n\010errormsg\030\001 \001(\t\"v" +
+      "\n\023rsp_protocolVersion\022\016\n\006kernel\030\001 \001(\t\022\013\n" +
+      "\003net\030\002 \001(\t\022\013\n\003api\030\003 \001(\t\022\n\n\002vm\030\004 \001(\t\022\n\n\002d",
+      "b\030\005 \001(\t\022\r\n\005miner\030\006 \001(\t\022\016\n\006txpool\030\007 \001(\t\"%" +
+      "\n\020rsp_minerAddress\022\021\n\tminerAddr\030\001 \001(\014\"+\n" +
+      "\024req_getBlockByNumber\022\023\n\013blockNumber\030\001 \001" +
+      "(\004\"\347\002\n\014rsp_getBlock\022\023\n\013blockNumber\030\001 \001(\004" +
+      "\022\021\n\ttimestamp\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004" +
+      "\022\020\n\010nrgLimit\030\004 \001(\004\022\022\n\nparentHash\030\005 \001(\014\022\024" +
+      "\n\014minerAddress\030\006 \001(\014\022\021\n\tstateRoot\030\007 \001(\014\022" +
+      "\022\n\ntxTrieRoot\030\010 \001(\014\022\027\n\017receiptTrieRoot\030\t" +
+      " \001(\014\022\021\n\tlogsBloom\030\n \001(\014\022\022\n\ndifficulty\030\013 " +
+      "\001(\014\022\027\n\017totalDifficulty\030\014 \001(\014\022\021\n\textraDat",
+      "a\030\r \001(\014\022\r\n\005nonce\030\016 \001(\014\022\020\n\010solution\030\017 \001(\014" +
+      "\022\014\n\004hash\030\020 \001(\014\022\014\n\004size\030\021 \001(\r\022\016\n\006txHash\030\022" +
+      " \003(\014\"1\n\032req_getBlockHeaderByNumber\022\023\n\013bl" +
+      "ockNumber\030\001 \001(\004\"\304\002\n\022rsp_getBlockHeader\022\023" +
+      "\n\013blockNumber\030\001 \001(\004\022\021\n\ttimestamp\030\002 \001(\004\022\023" +
+      "\n\013nrgConsumed\030\003 \001(\004\022\020\n\010nrgLimit\030\004 \001(\004\022\022\n" +
+      "\nparentHash\030\005 \001(\014\022\024\n\014minerAddress\030\006 \001(\014\022" +
+      "\021\n\tstateRoot\030\007 \001(\014\022\022\n\ntxTrieRoot\030\010 \001(\014\022\027" +
+      "\n\017receiptTrieRoot\030\t \001(\014\022\021\n\tlogsBloom\030\n \001" +
+      "(\014\022\022\n\ndifficulty\030\013 \001(\014\022\021\n\textraData\030\014 \001(",
+      "\014\022\r\n\005nonce\030\r \001(\014\022\020\n\010solution\030\016 \001(\014\022\014\n\004ha" +
+      "sh\030\017 \001(\014\022\014\n\004size\030\020 \001(\r\"z\n\023req_sendTransa" +
+      "ction\022\014\n\004from\030\001 \001(\014\022\n\n\002to\030\002 \001(\014\022\r\n\005value" +
+      "\030\003 \001(\014\022\014\n\004data\030\004 \001(\014\022\r\n\005nonce\030\005 \001(\014\022\013\n\003n" +
+      "rg\030\006 \001(\004\022\020\n\010nrgPrice\030\007 \001(\004\"%\n\023rsp_sendTr" +
+      "ansaction\022\016\n\006txHash\030\001 \001(\014\"*\n\030req_getTran" +
+      "sactionByHash\022\016\n\006txHash\030\001 \001(\014\"\334\001\n\022rsp_ge" +
+      "tTransaction\022\017\n\007txIndex\030\001 \001(\r\022\023\n\013blocknu" +
+      "mber\030\002 \001(\004\022\021\n\ttimeStamp\030\003 \001(\004\022\022\n\nnrgCons" +
+      "ume\030\004 \001(\004\022\020\n\010nrgPrice\030\005 \001(\004\022\021\n\tblockhash",
+      "\030\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\016\n\006txHash\030\010 \001(\014\022\014\n\004" +
+      "data\030\t \001(\014\022\r\n\005nonce\030\n \001(\014\022\n\n\002to\030\013 \001(\014\022\r\n" +
+      "\005value\030\014 \001(\014\"H\n\021req_unlockAccount\022\017\n\007acc" +
+      "ount\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\022\020\n\010duration" +
+      "\030\003 \001(\r\"\036\n\014rsp_accounts\022\016\n\006accout\030\001 \003(\014\"\033" +
+      "\n\013req_compile\022\014\n\004code\030\001 \001(\t\"\255\001\n\013rsp_comp" +
+      "ile\022G\n\nconstracts\030\001 \003(\01323.org.aion.api.s" +
+      "erver.pb.rsp_compile.ConstractsEntry\032U\n\017" +
+      "ConstractsEntry\022\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 " +
+      "\001(\0132\".org.aion.api.server.pb.t_Contract:",
+      "\0028\001\"3\n\013req_getCode\022\017\n\007address\030\001 \001(\014\022\023\n\013b" +
+      "locknumber\030\002 \001(\004\"\033\n\013rsp_getCode\022\014\n\004code\030" +
+      "\001 \001(\014\"c\n\022req_contractDeploy\022\020\n\010nrgLimit\030" +
+      "\001 \001(\004\022\020\n\010nrgPrice\030\002 \001(\004\022\014\n\004from\030\003 \001(\014\022\014\n" +
+      "\004data\030\004 \001(\014\022\r\n\005value\030\005 \001(\014\"=\n\022rsp_contra" +
+      "ctDeploy\022\016\n\006txHash\030\001 \001(\014\022\027\n\017contractAddr" +
+      "ess\030\002 \001(\014\"`\n\010req_call\022\014\n\004from\030\001 \001(\014\022\n\n\002t" +
+      "o\030\002 \001(\014\022\014\n\004data\030\003 \001(\014\022\r\n\005value\030\004 \001(\014\022\013\n\003" +
+      "nrg\030\005 \001(\004\022\020\n\010nrgPrice\030\006 \001(\004\"\032\n\010rsp_call\022" +
+      "\016\n\006result\030\001 \001(\014\"\'\n\022req_getBlockByHash\022\021\n",
+      "\tblockHash\030\001 \001(\014\"-\n\030req_getBlockHeaderBy" +
+      "Hash\022\021\n\tblockHash\030\001 \001(\014\"?\n\027req_getTransa" +
+      "ctionCount\022\017\n\007address\030\001 \001(\014\022\023\n\013blocknumb" +
+      "er\030\002 \001(\004\"*\n\027rsp_getTransactionCount\022\017\n\007t" +
+      "xCount\030\001 \001(\004\"/\n\035req_getTransactionCountB" +
+      "yHash\022\016\n\006txHash\030\001 \001(\014\"&\n\017rsp_blockNumber" +
+      "\022\023\n\013blocknumber\030\001 \001(\004\"6\n\016req_getBalance\022" +
+      "\017\n\007address\030\001 \001(\014\022\023\n\013blockNumber\030\002 \001(\004\"!\n" +
+      "\016rsp_getBalance\022\017\n\007balance\030\001 \001(\014\"E\n\020req_" +
+      "getStorageAt\022\017\n\007address\030\001 \001(\014\022\013\n\003key\030\002 \001",
+      "(\t\022\023\n\013blocknumber\030\003 \001(\004\"#\n\020rsp_getStorag" +
+      "eAt\022\017\n\007storage\030\001 \001(\t\"7\n\"req_getBlockTran" +
+      "sactionCountByHash\022\021\n\tblockHash\030\001 \001(\014\"/\n" +
+      "\034rsp_getBlockTransactionCount\022\017\n\007txCount" +
+      "\030\001 \001(\r\";\n$req_getBlockTransactionCountBy" +
+      "Number\022\023\n\013blockNumber\030\001 \001(\004\"K\n%req_getTr" +
+      "ansactionByBlockHashAndIndex\022\021\n\tblockHas" +
+      "h\030\001 \001(\014\022\017\n\007txIndex\030\002 \001(\r\"O\n\'req_getTrans" +
+      "actionByBlockNumberAndIndex\022\023\n\013blockNumb" +
+      "er\030\001 \001(\004\022\017\n\007txIndex\030\002 \001(\r\"+\n\031req_getTran",
+      "sactionReceipt\022\016\n\006txHash\030\001 \001(\014\"\366\001\n\031rsp_g" +
+      "etTransactionReceipt\022\017\n\007txIndex\030\001 \001(\r\022\023\n" +
+      "\013blockNumber\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004\022" +
+      "\031\n\021cumulativeNrgUsed\030\004 \001(\004\022\021\n\tblockHash\030" +
+      "\005 \001(\014\022\016\n\006txHash\030\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\n\n\002t" +
+      "o\030\010 \001(\014\022\027\n\017contractAddress\030\t \001(\014\022-\n\004logs" +
+      "\030\n \003(\0132\037.org.aion.api.server.pb.t_LgEle\"" +
+      "C\n\037req_getUncleByBlockHashAndIndex\022\021\n\tbl" +
+      "ockHash\030\001 \001(\014\022\r\n\005index\030\002 \001(\r\"$\n\020rsp_getC" +
+      "ompilers\022\020\n\010compiler\030\001 \003(\t\"%\n\023req_compil",
+      "eSolidity\022\016\n\006source\030\001 \001(\t\"U\n\023rsp_compile" +
+      "Solidity\022\014\n\004code\030\001 \001(\t\0220\n\004info\030\002 \001(\0132\".o" +
+      "rg.aion.api.server.pb.t_Contract\"\033\n\013rsp_" +
+      "getWork\022\014\n\004work\030\001 \003(\t\"A\n\016req_submitWork\022" +
+      "\r\n\005nonce\030\001 \001(\014\022\020\n\010solution\030\002 \001(\014\022\016\n\006dige" +
+      "st\030\003 \001(\014\"&\n\016rsp_submitWork\022\024\n\014workAccept" +
+      "ed\030\001 \001(\010\"K\n\033rsp_fetchQueuedTransactions\022" +
+      ",\n\002tx\030\001 \003(\0132 .org.aion.api.server.pb.t_A" +
+      "ionTx\"\'\n\022req_rawTransaction\022\021\n\tencodedTx" +
+      "\030\001 \001(\014\"g\n\017req_estimateNrg\022\014\n\004from\030\001 \001(\014\022",
+      "\n\n\002to\030\002 \001(\014\022\r\n\005value\030\003 \001(\014\022\014\n\004data\030\004 \001(\014" +
+      "\022\013\n\003nrg\030\005 \001(\004\022\020\n\010nrgPrice\030\006 \001(\004\"\036\n\017rsp_e" +
+      "stimateNrg\022\013\n\003nrg\030\001 \001(\004\"\034\n\nrsp_mining\022\016\n" +
+      "\006mining\030\001 \001(\010\"J\n\013rsp_syncing\022\017\n\007syncing\030" +
+      "\001 \001(\010\022\024\n\014currentBlock\030\002 \001(\004\022\024\n\014highestBl" +
+      "ock\030\003 \001(\004\" \n\014rsp_hashrate\022\020\n\010hashrate\030\001 " +
+      "\001(\004\"B\n\022rsp_getActiveNodes\022,\n\004node\030\001 \003(\0132" +
+      "\036.org.aion.api.server.pb.t_Node\"B\n\022rsp_g" +
+      "etStaticNodes\022,\n\004node\030\001 \003(\0132\036.org.aion.a" +
+      "pi.server.pb.t_Node\"!\n\022rsp_getSolcVersio",
+      "n\022\013\n\003ver\030\001 \001(\t\" \n\rrsp_isSyncing\022\017\n\007synci" +
+      "ng\030\001 \001(\010\"j\n\014rsp_syncInfo\022\017\n\007syncing\030\001 \001(" +
+      "\010\022\030\n\020networkBestBlock\030\002 \001(\004\022\026\n\016chainBest" +
+      "Block\030\003 \001(\004\022\027\n\017maxImportBlocks\030\004 \001(\r\"G\n\016" +
+      "rsp_systemInfo\022\020\n\010cpuUsage\030\001 \001(\002\022\023\n\013memo" +
+      "ryUsage\030\002 \001(\004\022\016\n\006DBSize\030\003 \001(\004\"W\n\021req_eve" +
+      "ntRegister\022\016\n\006events\030\001 \003(\t\0222\n\006filter\030\002 \001" +
+      "(\0132\".org.aion.api.server.pb.t_FilterCt\"#" +
+      "\n\021rsp_eventRegister\022\016\n\006result\030\001 \001(\010\";\n\023r" +
+      "eq_eventDeregister\022\016\n\006events\030\001 \003(\t\022\024\n\014co",
+      "ntractAddr\030\002 \001(\014\"%\n\023rsp_eventDeregister\022" +
+      "\016\n\006result\030\001 \001(\010\"D\n\023rsp_EventCtCallback\022-" +
+      "\n\002ec\030\001 \003(\0132!.org.aion.api.server.pb.t_Ev" +
+      "entCt\"9\n\021req_accountCreate\022\020\n\010password\030\001" +
+      " \003(\t\022\022\n\nprivateKey\030\002 \001(\010\"8\n\021rsp_accountC" +
+      "reate\022\017\n\007address\030\001 \003(\014\022\022\n\nprivateKey\030\002 \003" +
+      "(\014\"4\n\017req_accountlock\022\017\n\007account\030\001 \001(\014\022\020" +
+      "\n\010password\030\002 \001(\t\"!\n\017rsp_accountlock\022\016\n\006l" +
+      "ocked\030\001 \001(\010\"7\n\021req_userPrivilege\022\020\n\010user" +
+      "name\030\001 \001(\t\022\020\n\010password\030\002 \001(\t\"&\n\021rsp_user",
+      "Privilege\022\021\n\tprivilege\030\001 \003(\t\"G\n\021req_quer" +
+      "yCtEvents\0222\n\006filter\030\001 \001(\0132\".org.aion.api" +
+      ".server.pb.t_FilterCt\"B\n\021rsp_queryCtEven" +
+      "ts\022-\n\002ec\030\001 \003(\0132!.org.aion.api.server.pb." +
+      "t_EventCt\"4\n\014t_PrivateKey\022\022\n\nprivateKey\030" +
+      "\001 \001(\t\022\020\n\010password\030\002 \001(\t\"N\n\022req_importAcc" +
+      "ounts\0228\n\nprivateKey\030\001 \003(\0132$.org.aion.api" +
+      ".server.pb.t_PrivateKey\"(\n\022rsp_importAcc" +
+      "ounts\022\022\n\ninvalidKey\030\001 \003(\t\"*\n\005t_Key\022\017\n\007ad" +
+      "dress\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\"D\n\022req_exp",
+      "ortAccounts\022.\n\007keyFile\030\001 \003(\0132\035.org.aion." +
+      "api.server.pb.t_Key\"8\n\022rsp_exportAccount" +
+      "s\022\017\n\007keyFile\030\001 \003(\014\022\021\n\tfailedKey\030\002 \003(\014\"2\n" +
+      "\035rsp_getCurrentTotalDifficulty\022\021\n\ttotalD" +
+      "iff\030\001 \001(\014\"1\n\033req_getBlockDetailsByNumber" +
+      "\022\022\n\nblkNumbers\030\001 \003(\004\"X\n\033rsp_getBlockDeta" +
+      "ilsByNumber\0229\n\nblkDetails\030\001 \003(\0132%.org.ai" +
+      "on.api.server.pb.t_BlockDetail\",\n\033req_ge" +
+      "tBlockDetailsByLatest\022\r\n\005count\030\001 \001(\004\"X\n\033" +
+      "rsp_getBlockDetailsByLatest\0229\n\nblkDetail",
+      "s\030\001 \003(\0132%.org.aion.api.server.pb.t_Block" +
+      "Detail\"&\n\025req_getBlocksByLatest\022\r\n\005count" +
+      "\030\001 \001(\004\"F\n\025rsp_getBlocksByLatest\022-\n\004blks\030" +
+      "\001 \003(\0132\037.org.aion.api.server.pb.t_Block\"7" +
+      "\n\"req_getAccountDetailsByAddressList\022\021\n\t" +
+      "addresses\030\001 \003(\014\"_\n\"rsp_getAccountDetails" +
+      "ByAddressList\0229\n\010accounts\030\001 \003(\0132\'.org.ai" +
+      "on.api.server.pb.t_AccountDetail\"F\n\026req_" +
+      "getBlockSqlByRange\022\026\n\016blkNumberStart\030\001 \001" +
+      "(\004\022\024\n\014blkNumberEnd\030\002 \001(\004\"L\n\026rsp_getBlock",
+      "SqlByRange\0222\n\006blkSql\030\001 \003(\0132\".org.aion.ap" +
+      "i.server.pb.t_BlockSql*\204\001\n\005Servs\022\010\n\004s_hb" +
+      "\020\000\022\013\n\007s_admin\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_accoun" +
+      "t\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n\013" +
+      "s_privilege\020\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\207\n" +
+      "\n\005Funcs\022\025\n\021f_protocolVersion\020\000\022\022\n\016f_mine" +
+      "rAddress\020\001\022\016\n\nf_accounts\020\002\022\021\n\rf_blockNum" +
+      "ber\020\003\022\020\n\014f_getBalance\020\004\022\022\n\016f_getStorageA" +
+      "t\020\005\022\023\n\017f_unlockAccount\020\006\022\025\n\021f_sendTransa" +
+      "ction\020\007\022\032\n\026f_getTransactionByHash\020\010\022\r\n\tf",
+      "_compile\020\t\022\024\n\020f_contractDeploy\020\n\022\031\n\025f_ge" +
+      "tTransactionCount\020\013\022$\n f_getBlockTransac" +
+      "tionCountByHash\020\014\022&\n\"f_getBlockTransacti" +
+      "onCountByNumber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_ca" +
+      "ll\020\017\022\024\n\020f_getBlockByHash\020\020\022\026\n\022f_getBlock" +
+      "ByNumber\020\021\022\'\n#f_getTransactionByBlockHas" +
+      "hAndIndex\020\022\022)\n%f_getTransactionByBlockNu" +
+      "mberAndIndex\020\023\022\033\n\027f_getTransactionReceip" +
+      "t\020\024\022\022\n\016f_getCompilers\020\025\022\025\n\021f_compileSoli" +
+      "dity\020\026\022\r\n\tf_getWork\020\027\022\020\n\014f_submitWork\020\030\022",
+      "\035\n\031f_fetchQueuedTransactions\020\031\022\027\n\023f_sign" +
+      "edTransaction\020\032\022\024\n\020f_rawTransaction\020\033\022\021\n" +
+      "\rf_estimateNrg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_hash" +
+      "rate\020\036\022\024\n\020f_getActiveNodes\020\037\022\024\n\020f_getSol" +
+      "cVersion\020 \022\017\n\013f_isSyncing\020!\022\016\n\nf_syncInf" +
+      "o\020\"\022\023\n\017f_getSystemInfo\020#\022\023\n\017f_eventRegis" +
+      "ter\020$\022\025\n\021f_eventDeregister\020%\022\023\n\017f_accoun" +
+      "tCreate\020&\022\021\n\rf_accountLock\020\'\022\023\n\017f_userPr" +
+      "ivilege\020(\022\020\n\014f_eventQuery\020)\022\024\n\020f_importA" +
+      "ccounts\020*\022\024\n\020f_exportAccounts\020+\022\034\n\030f_get",
+      "BlockHeaderByNumber\020,\022\032\n\026f_getBlockHeade" +
+      "rByHash\020-\022\037\n\033f_getCurrentTotalDifficulty" +
+      "\020.\022\024\n\020f_getStaticNodes\020/\022\035\n\031f_getBlockDe" +
+      "tailsByNumber\0200\022\035\n\031f_getBlockDetailsByLa" +
+      "test\0201\022\027\n\023f_getBlocksByLatest\0202\022$\n f_get" +
+      "AccountDetailsByAddressList\0203\022\024\n\020f_backu" +
+      "pAccounts\0204\022\010\n\004f_NA\0205\022\030\n\024f_getBlockSqlBy" +
+      "Range\0206*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022\r\n\tr_suc" +
+      "cess\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r_heartbe" +
+      "atReturn\020\003\022\025\n\021r_privilegeReturn\020\004\022\r\n\tr_t",
+      "x_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_tx_Droppe" +
+      "d\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx_Pending" +
+      "\020h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_eventCb\020j\022" +
+      "\010\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377\377\377\377\377\377\377\377\377" +
+      "\001\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377\377\377\001\022!\n\024r" +
+      "_fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fail" +
+      "_function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail" +
+      "_api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_ct_byt" +
+      "ecode\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_rsp\020\371\377\377\377" +
+      "\377\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377\377\377\377\377\377\377\377\001",
+      "\022\'\n\032r_fail_null_compile_source\020\367\377\377\377\377\377\377\377\377" +
+      "\001\022$\n\027r_fail_compile_contract\020\366\377\377\377\377\377\377\377\377\001\022" +
+      "#\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036\n\021" +
+      "r_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail_g" +
+      "etTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_fa" +
+      "il_zmqHandler_exception\020\362\377\377\377\377\377\377\377\377\001\022(\n\033r_" +
+      "fail_hit_pending_tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%\n\030" +
+      "r_fail_txqueue_exception\020\360\377\377\377\377\377\377\377\377\001\022&\n\031r" +
+      "_fail_function_arguments\020\357\377\377\377\377\377\377\377\377\001\022!\n\024r" +
+      "_fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fail",
+      "_unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -64635,92 +66655,98 @@ public final class Message {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_t_Block_descriptor,
         new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", "TxHash", });
-    internal_static_org_aion_api_server_pb_rsp_errormsg_descriptor =
+    internal_static_org_aion_api_server_pb_t_BlockSql_descriptor =
       getDescriptor().getMessageTypes().get(10);
+    internal_static_org_aion_api_server_pb_t_BlockSql_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_aion_api_server_pb_t_BlockSql_descriptor,
+        new java.lang.String[] { "BlockNumber", "Block", "Tx", });
+    internal_static_org_aion_api_server_pb_rsp_errormsg_descriptor =
+      getDescriptor().getMessageTypes().get(11);
     internal_static_org_aion_api_server_pb_rsp_errormsg_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_errormsg_descriptor,
         new java.lang.String[] { "Errormsg", });
     internal_static_org_aion_api_server_pb_rsp_protocolVersion_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_org_aion_api_server_pb_rsp_protocolVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_protocolVersion_descriptor,
         new java.lang.String[] { "Kernel", "Net", "Api", "Vm", "Db", "Miner", "Txpool", });
     internal_static_org_aion_api_server_pb_rsp_minerAddress_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_org_aion_api_server_pb_rsp_minerAddress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_minerAddress_descriptor,
         new java.lang.String[] { "MinerAddr", });
     internal_static_org_aion_api_server_pb_req_getBlockByNumber_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_org_aion_api_server_pb_req_getBlockByNumber_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockByNumber_descriptor,
         new java.lang.String[] { "BlockNumber", });
     internal_static_org_aion_api_server_pb_rsp_getBlock_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_org_aion_api_server_pb_rsp_getBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlock_descriptor,
         new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", "TxHash", });
     internal_static_org_aion_api_server_pb_req_getBlockHeaderByNumber_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_org_aion_api_server_pb_req_getBlockHeaderByNumber_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockHeaderByNumber_descriptor,
         new java.lang.String[] { "BlockNumber", });
     internal_static_org_aion_api_server_pb_rsp_getBlockHeader_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_org_aion_api_server_pb_rsp_getBlockHeader_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlockHeader_descriptor,
         new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", });
     internal_static_org_aion_api_server_pb_req_sendTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_org_aion_api_server_pb_req_sendTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_sendTransaction_descriptor,
         new java.lang.String[] { "From", "To", "Value", "Data", "Nonce", "Nrg", "NrgPrice", });
     internal_static_org_aion_api_server_pb_rsp_sendTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(19);
     internal_static_org_aion_api_server_pb_rsp_sendTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_sendTransaction_descriptor,
         new java.lang.String[] { "TxHash", });
     internal_static_org_aion_api_server_pb_req_getTransactionByHash_descriptor =
-      getDescriptor().getMessageTypes().get(19);
+      getDescriptor().getMessageTypes().get(20);
     internal_static_org_aion_api_server_pb_req_getTransactionByHash_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getTransactionByHash_descriptor,
         new java.lang.String[] { "TxHash", });
     internal_static_org_aion_api_server_pb_rsp_getTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(20);
+      getDescriptor().getMessageTypes().get(21);
     internal_static_org_aion_api_server_pb_rsp_getTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getTransaction_descriptor,
         new java.lang.String[] { "TxIndex", "Blocknumber", "TimeStamp", "NrgConsume", "NrgPrice", "Blockhash", "From", "TxHash", "Data", "Nonce", "To", "Value", });
     internal_static_org_aion_api_server_pb_req_unlockAccount_descriptor =
-      getDescriptor().getMessageTypes().get(21);
+      getDescriptor().getMessageTypes().get(22);
     internal_static_org_aion_api_server_pb_req_unlockAccount_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_unlockAccount_descriptor,
         new java.lang.String[] { "Account", "Password", "Duration", });
     internal_static_org_aion_api_server_pb_rsp_accounts_descriptor =
-      getDescriptor().getMessageTypes().get(22);
+      getDescriptor().getMessageTypes().get(23);
     internal_static_org_aion_api_server_pb_rsp_accounts_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_accounts_descriptor,
         new java.lang.String[] { "Accout", });
     internal_static_org_aion_api_server_pb_req_compile_descriptor =
-      getDescriptor().getMessageTypes().get(23);
+      getDescriptor().getMessageTypes().get(24);
     internal_static_org_aion_api_server_pb_req_compile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_compile_descriptor,
         new java.lang.String[] { "Code", });
     internal_static_org_aion_api_server_pb_rsp_compile_descriptor =
-      getDescriptor().getMessageTypes().get(24);
+      getDescriptor().getMessageTypes().get(25);
     internal_static_org_aion_api_server_pb_rsp_compile_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_compile_descriptor,
@@ -64732,431 +66758,443 @@ public final class Message {
         internal_static_org_aion_api_server_pb_rsp_compile_ConstractsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_org_aion_api_server_pb_req_getCode_descriptor =
-      getDescriptor().getMessageTypes().get(25);
+      getDescriptor().getMessageTypes().get(26);
     internal_static_org_aion_api_server_pb_req_getCode_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getCode_descriptor,
         new java.lang.String[] { "Address", "Blocknumber", });
     internal_static_org_aion_api_server_pb_rsp_getCode_descriptor =
-      getDescriptor().getMessageTypes().get(26);
+      getDescriptor().getMessageTypes().get(27);
     internal_static_org_aion_api_server_pb_rsp_getCode_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getCode_descriptor,
         new java.lang.String[] { "Code", });
     internal_static_org_aion_api_server_pb_req_contractDeploy_descriptor =
-      getDescriptor().getMessageTypes().get(27);
+      getDescriptor().getMessageTypes().get(28);
     internal_static_org_aion_api_server_pb_req_contractDeploy_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_contractDeploy_descriptor,
         new java.lang.String[] { "NrgLimit", "NrgPrice", "From", "Data", "Value", });
     internal_static_org_aion_api_server_pb_rsp_contractDeploy_descriptor =
-      getDescriptor().getMessageTypes().get(28);
+      getDescriptor().getMessageTypes().get(29);
     internal_static_org_aion_api_server_pb_rsp_contractDeploy_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_contractDeploy_descriptor,
         new java.lang.String[] { "TxHash", "ContractAddress", });
     internal_static_org_aion_api_server_pb_req_call_descriptor =
-      getDescriptor().getMessageTypes().get(29);
+      getDescriptor().getMessageTypes().get(30);
     internal_static_org_aion_api_server_pb_req_call_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_call_descriptor,
         new java.lang.String[] { "From", "To", "Data", "Value", "Nrg", "NrgPrice", });
     internal_static_org_aion_api_server_pb_rsp_call_descriptor =
-      getDescriptor().getMessageTypes().get(30);
+      getDescriptor().getMessageTypes().get(31);
     internal_static_org_aion_api_server_pb_rsp_call_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_call_descriptor,
         new java.lang.String[] { "Result", });
     internal_static_org_aion_api_server_pb_req_getBlockByHash_descriptor =
-      getDescriptor().getMessageTypes().get(31);
+      getDescriptor().getMessageTypes().get(32);
     internal_static_org_aion_api_server_pb_req_getBlockByHash_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockByHash_descriptor,
         new java.lang.String[] { "BlockHash", });
     internal_static_org_aion_api_server_pb_req_getBlockHeaderByHash_descriptor =
-      getDescriptor().getMessageTypes().get(32);
+      getDescriptor().getMessageTypes().get(33);
     internal_static_org_aion_api_server_pb_req_getBlockHeaderByHash_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockHeaderByHash_descriptor,
         new java.lang.String[] { "BlockHash", });
     internal_static_org_aion_api_server_pb_req_getTransactionCount_descriptor =
-      getDescriptor().getMessageTypes().get(33);
+      getDescriptor().getMessageTypes().get(34);
     internal_static_org_aion_api_server_pb_req_getTransactionCount_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getTransactionCount_descriptor,
         new java.lang.String[] { "Address", "Blocknumber", });
     internal_static_org_aion_api_server_pb_rsp_getTransactionCount_descriptor =
-      getDescriptor().getMessageTypes().get(34);
+      getDescriptor().getMessageTypes().get(35);
     internal_static_org_aion_api_server_pb_rsp_getTransactionCount_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getTransactionCount_descriptor,
         new java.lang.String[] { "TxCount", });
     internal_static_org_aion_api_server_pb_req_getTransactionCountByHash_descriptor =
-      getDescriptor().getMessageTypes().get(35);
+      getDescriptor().getMessageTypes().get(36);
     internal_static_org_aion_api_server_pb_req_getTransactionCountByHash_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getTransactionCountByHash_descriptor,
         new java.lang.String[] { "TxHash", });
     internal_static_org_aion_api_server_pb_rsp_blockNumber_descriptor =
-      getDescriptor().getMessageTypes().get(36);
+      getDescriptor().getMessageTypes().get(37);
     internal_static_org_aion_api_server_pb_rsp_blockNumber_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_blockNumber_descriptor,
         new java.lang.String[] { "Blocknumber", });
     internal_static_org_aion_api_server_pb_req_getBalance_descriptor =
-      getDescriptor().getMessageTypes().get(37);
+      getDescriptor().getMessageTypes().get(38);
     internal_static_org_aion_api_server_pb_req_getBalance_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBalance_descriptor,
         new java.lang.String[] { "Address", "BlockNumber", });
     internal_static_org_aion_api_server_pb_rsp_getBalance_descriptor =
-      getDescriptor().getMessageTypes().get(38);
+      getDescriptor().getMessageTypes().get(39);
     internal_static_org_aion_api_server_pb_rsp_getBalance_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBalance_descriptor,
         new java.lang.String[] { "Balance", });
     internal_static_org_aion_api_server_pb_req_getStorageAt_descriptor =
-      getDescriptor().getMessageTypes().get(39);
+      getDescriptor().getMessageTypes().get(40);
     internal_static_org_aion_api_server_pb_req_getStorageAt_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getStorageAt_descriptor,
         new java.lang.String[] { "Address", "Key", "Blocknumber", });
     internal_static_org_aion_api_server_pb_rsp_getStorageAt_descriptor =
-      getDescriptor().getMessageTypes().get(40);
+      getDescriptor().getMessageTypes().get(41);
     internal_static_org_aion_api_server_pb_rsp_getStorageAt_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getStorageAt_descriptor,
         new java.lang.String[] { "Storage", });
     internal_static_org_aion_api_server_pb_req_getBlockTransactionCountByHash_descriptor =
-      getDescriptor().getMessageTypes().get(41);
+      getDescriptor().getMessageTypes().get(42);
     internal_static_org_aion_api_server_pb_req_getBlockTransactionCountByHash_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockTransactionCountByHash_descriptor,
         new java.lang.String[] { "BlockHash", });
     internal_static_org_aion_api_server_pb_rsp_getBlockTransactionCount_descriptor =
-      getDescriptor().getMessageTypes().get(42);
+      getDescriptor().getMessageTypes().get(43);
     internal_static_org_aion_api_server_pb_rsp_getBlockTransactionCount_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlockTransactionCount_descriptor,
         new java.lang.String[] { "TxCount", });
     internal_static_org_aion_api_server_pb_req_getBlockTransactionCountByNumber_descriptor =
-      getDescriptor().getMessageTypes().get(43);
+      getDescriptor().getMessageTypes().get(44);
     internal_static_org_aion_api_server_pb_req_getBlockTransactionCountByNumber_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockTransactionCountByNumber_descriptor,
         new java.lang.String[] { "BlockNumber", });
     internal_static_org_aion_api_server_pb_req_getTransactionByBlockHashAndIndex_descriptor =
-      getDescriptor().getMessageTypes().get(44);
+      getDescriptor().getMessageTypes().get(45);
     internal_static_org_aion_api_server_pb_req_getTransactionByBlockHashAndIndex_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getTransactionByBlockHashAndIndex_descriptor,
         new java.lang.String[] { "BlockHash", "TxIndex", });
     internal_static_org_aion_api_server_pb_req_getTransactionByBlockNumberAndIndex_descriptor =
-      getDescriptor().getMessageTypes().get(45);
+      getDescriptor().getMessageTypes().get(46);
     internal_static_org_aion_api_server_pb_req_getTransactionByBlockNumberAndIndex_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getTransactionByBlockNumberAndIndex_descriptor,
         new java.lang.String[] { "BlockNumber", "TxIndex", });
     internal_static_org_aion_api_server_pb_req_getTransactionReceipt_descriptor =
-      getDescriptor().getMessageTypes().get(46);
+      getDescriptor().getMessageTypes().get(47);
     internal_static_org_aion_api_server_pb_req_getTransactionReceipt_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getTransactionReceipt_descriptor,
         new java.lang.String[] { "TxHash", });
     internal_static_org_aion_api_server_pb_rsp_getTransactionReceipt_descriptor =
-      getDescriptor().getMessageTypes().get(47);
+      getDescriptor().getMessageTypes().get(48);
     internal_static_org_aion_api_server_pb_rsp_getTransactionReceipt_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getTransactionReceipt_descriptor,
         new java.lang.String[] { "TxIndex", "BlockNumber", "NrgConsumed", "CumulativeNrgUsed", "BlockHash", "TxHash", "From", "To", "ContractAddress", "Logs", });
     internal_static_org_aion_api_server_pb_req_getUncleByBlockHashAndIndex_descriptor =
-      getDescriptor().getMessageTypes().get(48);
+      getDescriptor().getMessageTypes().get(49);
     internal_static_org_aion_api_server_pb_req_getUncleByBlockHashAndIndex_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getUncleByBlockHashAndIndex_descriptor,
         new java.lang.String[] { "BlockHash", "Index", });
     internal_static_org_aion_api_server_pb_rsp_getCompilers_descriptor =
-      getDescriptor().getMessageTypes().get(49);
+      getDescriptor().getMessageTypes().get(50);
     internal_static_org_aion_api_server_pb_rsp_getCompilers_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getCompilers_descriptor,
         new java.lang.String[] { "Compiler", });
     internal_static_org_aion_api_server_pb_req_compileSolidity_descriptor =
-      getDescriptor().getMessageTypes().get(50);
+      getDescriptor().getMessageTypes().get(51);
     internal_static_org_aion_api_server_pb_req_compileSolidity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_compileSolidity_descriptor,
         new java.lang.String[] { "Source", });
     internal_static_org_aion_api_server_pb_rsp_compileSolidity_descriptor =
-      getDescriptor().getMessageTypes().get(51);
+      getDescriptor().getMessageTypes().get(52);
     internal_static_org_aion_api_server_pb_rsp_compileSolidity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_compileSolidity_descriptor,
         new java.lang.String[] { "Code", "Info", });
     internal_static_org_aion_api_server_pb_rsp_getWork_descriptor =
-      getDescriptor().getMessageTypes().get(52);
+      getDescriptor().getMessageTypes().get(53);
     internal_static_org_aion_api_server_pb_rsp_getWork_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getWork_descriptor,
         new java.lang.String[] { "Work", });
     internal_static_org_aion_api_server_pb_req_submitWork_descriptor =
-      getDescriptor().getMessageTypes().get(53);
+      getDescriptor().getMessageTypes().get(54);
     internal_static_org_aion_api_server_pb_req_submitWork_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_submitWork_descriptor,
         new java.lang.String[] { "Nonce", "Solution", "Digest", });
     internal_static_org_aion_api_server_pb_rsp_submitWork_descriptor =
-      getDescriptor().getMessageTypes().get(54);
+      getDescriptor().getMessageTypes().get(55);
     internal_static_org_aion_api_server_pb_rsp_submitWork_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_submitWork_descriptor,
         new java.lang.String[] { "WorkAccepted", });
     internal_static_org_aion_api_server_pb_rsp_fetchQueuedTransactions_descriptor =
-      getDescriptor().getMessageTypes().get(55);
+      getDescriptor().getMessageTypes().get(56);
     internal_static_org_aion_api_server_pb_rsp_fetchQueuedTransactions_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_fetchQueuedTransactions_descriptor,
         new java.lang.String[] { "Tx", });
     internal_static_org_aion_api_server_pb_req_rawTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(56);
+      getDescriptor().getMessageTypes().get(57);
     internal_static_org_aion_api_server_pb_req_rawTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_rawTransaction_descriptor,
         new java.lang.String[] { "EncodedTx", });
     internal_static_org_aion_api_server_pb_req_estimateNrg_descriptor =
-      getDescriptor().getMessageTypes().get(57);
+      getDescriptor().getMessageTypes().get(58);
     internal_static_org_aion_api_server_pb_req_estimateNrg_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_estimateNrg_descriptor,
         new java.lang.String[] { "From", "To", "Value", "Data", "Nrg", "NrgPrice", });
     internal_static_org_aion_api_server_pb_rsp_estimateNrg_descriptor =
-      getDescriptor().getMessageTypes().get(58);
+      getDescriptor().getMessageTypes().get(59);
     internal_static_org_aion_api_server_pb_rsp_estimateNrg_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_estimateNrg_descriptor,
         new java.lang.String[] { "Nrg", });
     internal_static_org_aion_api_server_pb_rsp_mining_descriptor =
-      getDescriptor().getMessageTypes().get(59);
+      getDescriptor().getMessageTypes().get(60);
     internal_static_org_aion_api_server_pb_rsp_mining_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_mining_descriptor,
         new java.lang.String[] { "Mining", });
     internal_static_org_aion_api_server_pb_rsp_syncing_descriptor =
-      getDescriptor().getMessageTypes().get(60);
+      getDescriptor().getMessageTypes().get(61);
     internal_static_org_aion_api_server_pb_rsp_syncing_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_syncing_descriptor,
         new java.lang.String[] { "Syncing", "CurrentBlock", "HighestBlock", });
     internal_static_org_aion_api_server_pb_rsp_hashrate_descriptor =
-      getDescriptor().getMessageTypes().get(61);
+      getDescriptor().getMessageTypes().get(62);
     internal_static_org_aion_api_server_pb_rsp_hashrate_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_hashrate_descriptor,
         new java.lang.String[] { "Hashrate", });
     internal_static_org_aion_api_server_pb_rsp_getActiveNodes_descriptor =
-      getDescriptor().getMessageTypes().get(62);
+      getDescriptor().getMessageTypes().get(63);
     internal_static_org_aion_api_server_pb_rsp_getActiveNodes_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getActiveNodes_descriptor,
         new java.lang.String[] { "Node", });
     internal_static_org_aion_api_server_pb_rsp_getStaticNodes_descriptor =
-      getDescriptor().getMessageTypes().get(63);
+      getDescriptor().getMessageTypes().get(64);
     internal_static_org_aion_api_server_pb_rsp_getStaticNodes_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getStaticNodes_descriptor,
         new java.lang.String[] { "Node", });
     internal_static_org_aion_api_server_pb_rsp_getSolcVersion_descriptor =
-      getDescriptor().getMessageTypes().get(64);
+      getDescriptor().getMessageTypes().get(65);
     internal_static_org_aion_api_server_pb_rsp_getSolcVersion_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getSolcVersion_descriptor,
         new java.lang.String[] { "Ver", });
     internal_static_org_aion_api_server_pb_rsp_isSyncing_descriptor =
-      getDescriptor().getMessageTypes().get(65);
+      getDescriptor().getMessageTypes().get(66);
     internal_static_org_aion_api_server_pb_rsp_isSyncing_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_isSyncing_descriptor,
         new java.lang.String[] { "Syncing", });
     internal_static_org_aion_api_server_pb_rsp_syncInfo_descriptor =
-      getDescriptor().getMessageTypes().get(66);
+      getDescriptor().getMessageTypes().get(67);
     internal_static_org_aion_api_server_pb_rsp_syncInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_syncInfo_descriptor,
         new java.lang.String[] { "Syncing", "NetworkBestBlock", "ChainBestBlock", "MaxImportBlocks", });
     internal_static_org_aion_api_server_pb_rsp_systemInfo_descriptor =
-      getDescriptor().getMessageTypes().get(67);
+      getDescriptor().getMessageTypes().get(68);
     internal_static_org_aion_api_server_pb_rsp_systemInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_systemInfo_descriptor,
         new java.lang.String[] { "CpuUsage", "MemoryUsage", "DBSize", });
     internal_static_org_aion_api_server_pb_req_eventRegister_descriptor =
-      getDescriptor().getMessageTypes().get(68);
+      getDescriptor().getMessageTypes().get(69);
     internal_static_org_aion_api_server_pb_req_eventRegister_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_eventRegister_descriptor,
         new java.lang.String[] { "Events", "Filter", });
     internal_static_org_aion_api_server_pb_rsp_eventRegister_descriptor =
-      getDescriptor().getMessageTypes().get(69);
+      getDescriptor().getMessageTypes().get(70);
     internal_static_org_aion_api_server_pb_rsp_eventRegister_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_eventRegister_descriptor,
         new java.lang.String[] { "Result", });
     internal_static_org_aion_api_server_pb_req_eventDeregister_descriptor =
-      getDescriptor().getMessageTypes().get(70);
+      getDescriptor().getMessageTypes().get(71);
     internal_static_org_aion_api_server_pb_req_eventDeregister_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_eventDeregister_descriptor,
         new java.lang.String[] { "Events", "ContractAddr", });
     internal_static_org_aion_api_server_pb_rsp_eventDeregister_descriptor =
-      getDescriptor().getMessageTypes().get(71);
+      getDescriptor().getMessageTypes().get(72);
     internal_static_org_aion_api_server_pb_rsp_eventDeregister_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_eventDeregister_descriptor,
         new java.lang.String[] { "Result", });
     internal_static_org_aion_api_server_pb_rsp_EventCtCallback_descriptor =
-      getDescriptor().getMessageTypes().get(72);
+      getDescriptor().getMessageTypes().get(73);
     internal_static_org_aion_api_server_pb_rsp_EventCtCallback_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_EventCtCallback_descriptor,
         new java.lang.String[] { "Ec", });
     internal_static_org_aion_api_server_pb_req_accountCreate_descriptor =
-      getDescriptor().getMessageTypes().get(73);
+      getDescriptor().getMessageTypes().get(74);
     internal_static_org_aion_api_server_pb_req_accountCreate_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_accountCreate_descriptor,
         new java.lang.String[] { "Password", "PrivateKey", });
     internal_static_org_aion_api_server_pb_rsp_accountCreate_descriptor =
-      getDescriptor().getMessageTypes().get(74);
+      getDescriptor().getMessageTypes().get(75);
     internal_static_org_aion_api_server_pb_rsp_accountCreate_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_accountCreate_descriptor,
         new java.lang.String[] { "Address", "PrivateKey", });
     internal_static_org_aion_api_server_pb_req_accountlock_descriptor =
-      getDescriptor().getMessageTypes().get(75);
+      getDescriptor().getMessageTypes().get(76);
     internal_static_org_aion_api_server_pb_req_accountlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_accountlock_descriptor,
         new java.lang.String[] { "Account", "Password", });
     internal_static_org_aion_api_server_pb_rsp_accountlock_descriptor =
-      getDescriptor().getMessageTypes().get(76);
+      getDescriptor().getMessageTypes().get(77);
     internal_static_org_aion_api_server_pb_rsp_accountlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_accountlock_descriptor,
         new java.lang.String[] { "Locked", });
     internal_static_org_aion_api_server_pb_req_userPrivilege_descriptor =
-      getDescriptor().getMessageTypes().get(77);
+      getDescriptor().getMessageTypes().get(78);
     internal_static_org_aion_api_server_pb_req_userPrivilege_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_userPrivilege_descriptor,
         new java.lang.String[] { "Username", "Password", });
     internal_static_org_aion_api_server_pb_rsp_userPrivilege_descriptor =
-      getDescriptor().getMessageTypes().get(78);
+      getDescriptor().getMessageTypes().get(79);
     internal_static_org_aion_api_server_pb_rsp_userPrivilege_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_userPrivilege_descriptor,
         new java.lang.String[] { "Privilege", });
     internal_static_org_aion_api_server_pb_req_queryCtEvents_descriptor =
-      getDescriptor().getMessageTypes().get(79);
+      getDescriptor().getMessageTypes().get(80);
     internal_static_org_aion_api_server_pb_req_queryCtEvents_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_queryCtEvents_descriptor,
         new java.lang.String[] { "Filter", });
     internal_static_org_aion_api_server_pb_rsp_queryCtEvents_descriptor =
-      getDescriptor().getMessageTypes().get(80);
+      getDescriptor().getMessageTypes().get(81);
     internal_static_org_aion_api_server_pb_rsp_queryCtEvents_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_queryCtEvents_descriptor,
         new java.lang.String[] { "Ec", });
     internal_static_org_aion_api_server_pb_t_PrivateKey_descriptor =
-      getDescriptor().getMessageTypes().get(81);
+      getDescriptor().getMessageTypes().get(82);
     internal_static_org_aion_api_server_pb_t_PrivateKey_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_t_PrivateKey_descriptor,
         new java.lang.String[] { "PrivateKey", "Password", });
     internal_static_org_aion_api_server_pb_req_importAccounts_descriptor =
-      getDescriptor().getMessageTypes().get(82);
+      getDescriptor().getMessageTypes().get(83);
     internal_static_org_aion_api_server_pb_req_importAccounts_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_importAccounts_descriptor,
         new java.lang.String[] { "PrivateKey", });
     internal_static_org_aion_api_server_pb_rsp_importAccounts_descriptor =
-      getDescriptor().getMessageTypes().get(83);
+      getDescriptor().getMessageTypes().get(84);
     internal_static_org_aion_api_server_pb_rsp_importAccounts_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_importAccounts_descriptor,
         new java.lang.String[] { "InvalidKey", });
     internal_static_org_aion_api_server_pb_t_Key_descriptor =
-      getDescriptor().getMessageTypes().get(84);
+      getDescriptor().getMessageTypes().get(85);
     internal_static_org_aion_api_server_pb_t_Key_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_t_Key_descriptor,
         new java.lang.String[] { "Address", "Password", });
     internal_static_org_aion_api_server_pb_req_exportAccounts_descriptor =
-      getDescriptor().getMessageTypes().get(85);
+      getDescriptor().getMessageTypes().get(86);
     internal_static_org_aion_api_server_pb_req_exportAccounts_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_exportAccounts_descriptor,
         new java.lang.String[] { "KeyFile", });
     internal_static_org_aion_api_server_pb_rsp_exportAccounts_descriptor =
-      getDescriptor().getMessageTypes().get(86);
+      getDescriptor().getMessageTypes().get(87);
     internal_static_org_aion_api_server_pb_rsp_exportAccounts_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_exportAccounts_descriptor,
         new java.lang.String[] { "KeyFile", "FailedKey", });
     internal_static_org_aion_api_server_pb_rsp_getCurrentTotalDifficulty_descriptor =
-      getDescriptor().getMessageTypes().get(87);
+      getDescriptor().getMessageTypes().get(88);
     internal_static_org_aion_api_server_pb_rsp_getCurrentTotalDifficulty_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getCurrentTotalDifficulty_descriptor,
         new java.lang.String[] { "TotalDiff", });
     internal_static_org_aion_api_server_pb_req_getBlockDetailsByNumber_descriptor =
-      getDescriptor().getMessageTypes().get(88);
+      getDescriptor().getMessageTypes().get(89);
     internal_static_org_aion_api_server_pb_req_getBlockDetailsByNumber_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockDetailsByNumber_descriptor,
         new java.lang.String[] { "BlkNumbers", });
     internal_static_org_aion_api_server_pb_rsp_getBlockDetailsByNumber_descriptor =
-      getDescriptor().getMessageTypes().get(89);
+      getDescriptor().getMessageTypes().get(90);
     internal_static_org_aion_api_server_pb_rsp_getBlockDetailsByNumber_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlockDetailsByNumber_descriptor,
         new java.lang.String[] { "BlkDetails", });
     internal_static_org_aion_api_server_pb_req_getBlockDetailsByLatest_descriptor =
-      getDescriptor().getMessageTypes().get(90);
+      getDescriptor().getMessageTypes().get(91);
     internal_static_org_aion_api_server_pb_req_getBlockDetailsByLatest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlockDetailsByLatest_descriptor,
         new java.lang.String[] { "Count", });
     internal_static_org_aion_api_server_pb_rsp_getBlockDetailsByLatest_descriptor =
-      getDescriptor().getMessageTypes().get(91);
+      getDescriptor().getMessageTypes().get(92);
     internal_static_org_aion_api_server_pb_rsp_getBlockDetailsByLatest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlockDetailsByLatest_descriptor,
         new java.lang.String[] { "BlkDetails", });
     internal_static_org_aion_api_server_pb_req_getBlocksByLatest_descriptor =
-      getDescriptor().getMessageTypes().get(92);
+      getDescriptor().getMessageTypes().get(93);
     internal_static_org_aion_api_server_pb_req_getBlocksByLatest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getBlocksByLatest_descriptor,
         new java.lang.String[] { "Count", });
     internal_static_org_aion_api_server_pb_rsp_getBlocksByLatest_descriptor =
-      getDescriptor().getMessageTypes().get(93);
+      getDescriptor().getMessageTypes().get(94);
     internal_static_org_aion_api_server_pb_rsp_getBlocksByLatest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlocksByLatest_descriptor,
         new java.lang.String[] { "Blks", });
     internal_static_org_aion_api_server_pb_req_getAccountDetailsByAddressList_descriptor =
-      getDescriptor().getMessageTypes().get(94);
+      getDescriptor().getMessageTypes().get(95);
     internal_static_org_aion_api_server_pb_req_getAccountDetailsByAddressList_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getAccountDetailsByAddressList_descriptor,
         new java.lang.String[] { "Addresses", });
     internal_static_org_aion_api_server_pb_rsp_getAccountDetailsByAddressList_descriptor =
-      getDescriptor().getMessageTypes().get(95);
+      getDescriptor().getMessageTypes().get(96);
     internal_static_org_aion_api_server_pb_rsp_getAccountDetailsByAddressList_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getAccountDetailsByAddressList_descriptor,
         new java.lang.String[] { "Accounts", });
+    internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_descriptor =
+      getDescriptor().getMessageTypes().get(97);
+    internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_aion_api_server_pb_req_getBlockSqlByRange_descriptor,
+        new java.lang.String[] { "BlkNumberStart", "BlkNumberEnd", });
+    internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_descriptor =
+      getDescriptor().getMessageTypes().get(98);
+    internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_aion_api_server_pb_rsp_getBlockSqlByRange_descriptor,
+        new java.lang.String[] { "BlkSql", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

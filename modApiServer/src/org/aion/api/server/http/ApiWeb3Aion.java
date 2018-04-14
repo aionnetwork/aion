@@ -1614,7 +1614,6 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(result);
     }
 
-
     /* -------------------------------------------------------------------------
      * stratum pool
      */

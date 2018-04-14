@@ -245,6 +245,31 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    @SuppressWarnings("Duplicates")
+    public Map.Entry<AionBlock, BigInteger> getChainBlockByNumberWithTotalDifficulty(long number) {
+        lock.readLock().lock();
+
+        try {
+            long size = index.size();
+            if (number < 0L || number >= size) {
+                return null;
+            }
+
+            List<BlockInfo> blockInfos = index.get(number);
+
+            for (BlockInfo blockInfo : blockInfos) {
+                if (blockInfo.isMainChain()) {
+                    byte[] hash = blockInfo.getHash();
+                    return Map.entry(blocks.get(hash), blockInfo.getCummDifficulty());
+                }
+            }
+
+            return null;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
     @Override
     public AionBlock getBlockByHash(byte[] hash) {
         lock.readLock().lock();
