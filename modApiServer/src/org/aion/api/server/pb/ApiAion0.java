@@ -227,7 +227,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         isBlkCacheEnabled = CfgAion.inst().getApi().getZmq().isBlockSummaryCacheEnabled();
 
         if (isBlkCacheEnabled) {
-            explorerBlockCache = Collections.synchronizedMap(new LRUMap<>(10)); // use the default loadfactor
+            explorerBlockCache = Collections.synchronizedMap(new LRUMap<>(50)); // use the default loadfactor
             eesBlkCache = new EventExecuteService(100_000, "explorer-blk-cache", Thread.MIN_PRIORITY, LOG);
             Set<Integer> eventSN = new HashSet<>();
             int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
@@ -1355,6 +1355,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             Message.req_getBlockSqlByRange req;
 
             try {
+                if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: start");
+
                 req = Message.req_getBlockSqlByRange.parseFrom(data);
                 long latestBlkNum = this.getBestBlock().getNumber();
 
@@ -1386,7 +1388,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     if (blkStart < 0) blkStart = 0;
                 }
 
-                System.out.println("range: " + blkStart + "-" + blkEnd);
+                if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: range " + blkStart + "-" + blkEnd);
 
                 Long lastBlockTimestamp = null;
                 long listLength = blkEnd - blkStart + 1;
@@ -1414,13 +1416,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     AionBlockSummary bs = null;
                     if (explorerBlockCache != null) {
-                        //bs = explorerBlockCache.remove(new ByteArrayWrapper(b.getHash()));
-                        bs = explorerBlockCache.get(new ByteArrayWrapper(b.getHash()));
+                        // remove from cache since after consumed, we're probably not gonna revisit it
+                        bs = explorerBlockCache.remove(new ByteArrayWrapper(b.getHash()));
                     }
 
                     if (bs != null) {
 
-                        System.out.println("Cache HIT for #: " + b.getNumber());
+                        if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: cache HIT for #: " + b.getNumber());
+
                         Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
                         for (AionTxReceipt r : bs.getReceipts()) {
                             receipts.put(new ByteArrayWrapper(r.getTransaction().getHash()), r);
@@ -1428,18 +1431,23 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         List<AionTransaction> txns = b.getTransactionsList();
                         for (int j = 0; j < txns.size(); j++) {
-                            AionTransaction t = txns.get(j);
-                            AionTxReceipt r = receipts.get(new ByteArrayWrapper(t.getHash()));
+                            AionTransaction tx = txns.get(j);
+                            AionTxReceipt r = receipts.get(new ByteArrayWrapper(tx.getHash()));
                             if (r == null) {
-                                System.out.println("could not find transaction in BlockSummary :( - going to DB");
+                                if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: transaction not in Block Summary: " + b.getNumber() + "." + j);
                                 AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain())
-                                        .getTransactionInfoLite(t.getHash());
+                                        .getTransactionInfoLite(tx.getHash());
                                 r = ti.getReceipt();
                             }
-                            transactionSql.add(generateTransactionSqlStatement(b, t, r.getLogInfoList(), j, r.getEnergyUsed()));
+                            if (r == null) {
+                                LOG.error("BlockSqlByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
+                            }
+                            else {
+                                transactionSql.add(generateTransactionSqlStatement(b, tx, r.getLogInfoList(), j, r.getEnergyUsed()));
+                            }
                         }
                     } else {
-                        System.out.println("Cache MISS for #: " + b.getNumber());
+                        if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: cache MISS for #: " + b.getNumber());
                         List<AionTransaction> txs = b.getTransactionsList();
 
                         transactionSql = txs.parallelStream()
@@ -1447,16 +1455,22 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 .map((AionTransaction tx) -> {
                                     AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain())
                                             .getTransactionInfoLite(tx.getHash());
-                                    //System.out.println("tx retrieve!");
-                                    return generateTransactionSqlStatement(b, tx, ti.getReceipt().getLogInfoList(), ti.getIndex(), ti.getReceipt().getEnergyUsed());
+                                    if (ti == null) {
+                                        LOG.error("BlockSqlByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
+                                        return null;
+                                    } else {
+                                        return generateTransactionSqlStatement(b, tx, ti.getReceipt().getLogInfoList(), ti.getIndex(), ti.getReceipt().getEnergyUsed());
+                                    }
                                 }).filter(Objects::nonNull)
                                 .collect(Collectors.toList());
                     }
 
                     Message.t_BlockSql sqlObj =
                             Message.t_BlockSql.newBuilder()
-                                    .setBlock(blockSql)
                                     .setBlockNumber(b.getNumber())
+                                    .setBlockHash(ByteUtil.toHexString(b.getHash()))
+                                    .setParentHash(ByteUtil.toHexString(b.getParentHash()))
+                                    .setBlock(blockSql)
                                     .addAllTx(transactionSql)
                                     .build();
 
@@ -1722,74 +1736,64 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         /*
         create table block_cache(
             block_number bigint(64) primary key,
+
             block_hash varchar(64),
-            difficulty text,
-            extra_data varchar(64),
             miner_address varchar(64),
-            nonce varchar(64),
-            nrg_consumed bigint(64),
-            nrg_limit bigint(64),
             parent_hash varchar(64),
+
             receipt_tx_root varchar(64),
-            size int,
             state_root varchar(64),
-            timestamp_val bigint(64),
             tx_trie_root varchar(64),
+
+            extra_data varchar(64),
+            nonce varchar(64),
+
             bloom text,
             solution text,
+
+            difficulty text,
             total_difficulty text,
+
+            nrg_consumed bigint(64),
+            nrg_limit bigint(64),
+            size bigint(64),
+
+            block_timestamp bigint(64),
             num_transactions bigint(64),
             block_time bigint(64));
          */
-        String stmt = "insert into block_cache(" +
-                "difficulty, extra_data, miner_address," +
-                "nonce, nrg_consumed, nrg_limit, block_number," +
-                "parent_hash, receipt_tx_root, size," +
-                "state_root, timestamp_val, tx_trie_root," +
-                "bloom, solution, total_difficulty," +
-                "num_transactions, block_hash, block_time) values(" +
-                b.getDifficultyBI().toString(10)+",'"+
-                ByteUtil.toHexString(b.getExtraData())+"','"+
-                ByteUtil.toHexString(b.getCoinbase().toBytes())+"','"+
-                ByteUtil.toHexString(b.getNonce())+"',"+
+        String stmt =
+                b.getNumber()+","+
+
+                "'"+ByteUtil.toHexString(b.getHash())+"',"+
+                "'"+ByteUtil.toHexString(b.getCoinbase().toBytes())+"',"+
+                "'"+ByteUtil.toHexString(b.getParentHash())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getReceiptsRoot())+"',"+
+                "'"+ByteUtil.toHexString(b.getStateRoot())+"',"+
+                "'"+ByteUtil.toHexString(b.getTxTrieRoot())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getExtraData())+"',"+
+                "'"+ByteUtil.toHexString(b.getNonce())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getLogBloom())+"',"+
+                "'"+ByteUtil.toHexString(b.getHeader().getSolution())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getDifficulty())+"',"+
+                "'"+ByteUtil.toHexString(td.toByteArray())+"',"+
+
                 b.getNrgConsumed()+","+
                 b.getNrgLimit()+","+
-                b.getNumber()+",'"+
-                ByteUtil.toHexString(b.getParentHash())+"','"+
-                ByteUtil.toHexString(b.getReceiptsRoot())+"',"+
-                b.getEncoded().length+",'"+
-                ByteUtil.toHexString(b.getStateRoot())+"',"+
-                b.getTimestamp()+",'"+
-                ByteUtil.toHexString(b.getTxTrieRoot())+"','"+
-                b.getLogBloom()+"','"+
-                b.getHeader().getSolution()+"',"+
-                td.toString(16)+","+
-                b.getTransactionsList().size()+",'"+
-                b.getHash()+"',"+
-                blocktime+");";
+                b.getEncoded().length+","+
+
+                b.getTimestamp()+","+
+                b.getTransactionsList().size()+","+
+                blocktime;
 
         return stmt;
     }
 
     private String generateTransactionSqlStatement(AionBlock b, AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed) {
-        /*
-        create table transaction_cache(
-            transaction_hash varchar(64),
-            block_number bigint(64),
-            data text,
-            from_addr varchar(64),
-            nonce text,
-            nrg_consumed bigint(64),
-            nrg_price bigint(64),
-            to_addr varchar(64),
-            value text,
-            transaction_log text,
-            timestamp_val bigint(64),
-            block_hash varchar(64),
-            transaction_index bigint(64),
-            primary key(block_number,transaction_index));
-         */
-
         JSONArray logs = new JSONArray();
         for (Log l : _logs) {
             JSONArray log = new JSONArray();
@@ -1803,24 +1807,53 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             logs.put(log);
         }
 
-        String stmt = "insert into transaction_cache(" +
-                "block_number, data, from_addr," +
-                "nonce, nrg_consumed, nrg_price, to_addr, " +
-                "value,transaction_log, timestamp_val," +
-                "transaction_hash, block_hash, transaction_index) values("+
-                b.getNumber()+",'"+
-                ByteUtil.toHexString(t.getData())+"','"+
-                ByteUtil.toHexString(t.getFrom().toBytes())+"','"+
-                ByteUtil.toHexString(t.getNonce())+"',"+
+        /*
+        create table transaction_cache(
+            transaction_hash varchar(64),
+            block_hash varchar(64),
+
+            block_number bigint(64),
+            transaction_index bigint(64),
+
+            from_addr varchar(64),
+            to_addr varchar(64),
+
+            nrg_consumed bigint(64),
+            nrg_price bigint(64),
+
+            transaction_timestamp bigint(64),
+            block_timestamp bigint(64),
+
+            value text,
+            transaction_log text,
+
+            data text,
+            nonce text,
+
+            primary key(block_number,transaction_index));
+         */
+
+        String stmt =
+                "'"+ByteUtil.toHexString(t.getHash())+"',"+
+                "'"+ByteUtil.toHexString(b.getHash())+"',"+
+
+                b.getNumber()+","+
+                txIndex+","+
+
+                "'"+ByteUtil.toHexString(t.getFrom().toBytes())+"',"+
+                "'"+ByteUtil.toHexString(t.getTo().toBytes())+"',"+
+
                 nrgConsumed+","+
-                t.getNrgPrice()+",'"+
-                ByteUtil.toHexString(t.getTo().toBytes())+"','"+
-                ByteUtil.toHexString(t.getValue())+"','"+
-                logs.toString()+"','"+
-                b.getTimestamp()+"','"+
-                ByteUtil.toHexString(t.getHash())+"','"+
-                ByteUtil.toHexString(b.getHash())+"',"+
-                txIndex+");";
+                t.getNrgPrice()+","+
+
+                ByteUtil.byteArrayToLong(t.getTimeStamp())+","+
+                b.getTimestamp()+","+
+
+                "'"+ByteUtil.toHexString(t.getValue())+"',"+
+                "'"+logs.toString()+"',"+
+
+                "'"+ByteUtil.toHexString(t.getData())+"',"+
+                "'"+ByteUtil.toHexString(t.getNonce())+"'";
 
         return stmt;
     }

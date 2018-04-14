@@ -12311,30 +12311,50 @@ public final class Message {
     long getBlockNumber();
 
     /**
-     * <code>optional string block = 2;</code>
+     * <code>optional string blockHash = 2;</code>
+     */
+    java.lang.String getBlockHash();
+    /**
+     * <code>optional string blockHash = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getBlockHashBytes();
+
+    /**
+     * <code>optional string parentHash = 3;</code>
+     */
+    java.lang.String getParentHash();
+    /**
+     * <code>optional string parentHash = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getParentHashBytes();
+
+    /**
+     * <code>optional string block = 4;</code>
      */
     java.lang.String getBlock();
     /**
-     * <code>optional string block = 2;</code>
+     * <code>optional string block = 4;</code>
      */
     com.google.protobuf.ByteString
         getBlockBytes();
 
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     java.util.List<java.lang.String>
         getTxList();
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     int getTxCount();
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     java.lang.String getTx(int index);
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     com.google.protobuf.ByteString
         getTxBytes(int index);
@@ -12352,6 +12372,8 @@ public final class Message {
     }
     private t_BlockSql() {
       blockNumber_ = 0L;
+      blockHash_ = "";
+      parentHash_ = "";
       block_ = "";
       tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     }
@@ -12389,14 +12411,26 @@ public final class Message {
             case 18: {
               java.lang.String s = input.readStringRequireUtf8();
 
-              block_ = s;
+              blockHash_ = s;
               break;
             }
             case 26: {
               java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+
+              parentHash_ = s;
+              break;
+            }
+            case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              block_ = s;
+              break;
+            }
+            case 42: {
+              java.lang.String s = input.readStringRequireUtf8();
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                 tx_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000010;
               }
               tx_.add(s);
               break;
@@ -12409,7 +12443,7 @@ public final class Message {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           tx_ = tx_.getUnmodifiableView();
         }
         makeExtensionsImmutable();
@@ -12437,10 +12471,78 @@ public final class Message {
       return blockNumber_;
     }
 
-    public static final int BLOCK_FIELD_NUMBER = 2;
+    public static final int BLOCKHASH_FIELD_NUMBER = 2;
+    private volatile java.lang.Object blockHash_;
+    /**
+     * <code>optional string blockHash = 2;</code>
+     */
+    public java.lang.String getBlockHash() {
+      java.lang.Object ref = blockHash_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        blockHash_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string blockHash = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getBlockHashBytes() {
+      java.lang.Object ref = blockHash_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        blockHash_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PARENTHASH_FIELD_NUMBER = 3;
+    private volatile java.lang.Object parentHash_;
+    /**
+     * <code>optional string parentHash = 3;</code>
+     */
+    public java.lang.String getParentHash() {
+      java.lang.Object ref = parentHash_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        parentHash_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string parentHash = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getParentHashBytes() {
+      java.lang.Object ref = parentHash_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        parentHash_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int BLOCK_FIELD_NUMBER = 4;
     private volatile java.lang.Object block_;
     /**
-     * <code>optional string block = 2;</code>
+     * <code>optional string block = 4;</code>
      */
     public java.lang.String getBlock() {
       java.lang.Object ref = block_;
@@ -12455,7 +12557,7 @@ public final class Message {
       }
     }
     /**
-     * <code>optional string block = 2;</code>
+     * <code>optional string block = 4;</code>
      */
     public com.google.protobuf.ByteString
         getBlockBytes() {
@@ -12471,29 +12573,29 @@ public final class Message {
       }
     }
 
-    public static final int TX_FIELD_NUMBER = 3;
+    public static final int TX_FIELD_NUMBER = 5;
     private com.google.protobuf.LazyStringList tx_;
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     public com.google.protobuf.ProtocolStringList
         getTxList() {
       return tx_;
     }
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     public int getTxCount() {
       return tx_.size();
     }
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     public java.lang.String getTx(int index) {
       return tx_.get(index);
     }
     /**
-     * <code>repeated string tx = 3;</code>
+     * <code>repeated string tx = 5;</code>
      */
     public com.google.protobuf.ByteString
         getTxBytes(int index) {
@@ -12515,11 +12617,17 @@ public final class Message {
       if (blockNumber_ != 0L) {
         output.writeUInt64(1, blockNumber_);
       }
+      if (!getBlockHashBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, blockHash_);
+      }
+      if (!getParentHashBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, parentHash_);
+      }
       if (!getBlockBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, block_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, block_);
       }
       for (int i = 0; i < tx_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, tx_.getRaw(i));
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, tx_.getRaw(i));
       }
     }
 
@@ -12532,8 +12640,14 @@ public final class Message {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(1, blockNumber_);
       }
+      if (!getBlockHashBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, blockHash_);
+      }
+      if (!getParentHashBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, parentHash_);
+      }
       if (!getBlockBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, block_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, block_);
       }
       {
         int dataSize = 0;
@@ -12561,6 +12675,10 @@ public final class Message {
       boolean result = true;
       result = result && (getBlockNumber()
           == other.getBlockNumber());
+      result = result && getBlockHash()
+          .equals(other.getBlockHash());
+      result = result && getParentHash()
+          .equals(other.getParentHash());
       result = result && getBlock()
           .equals(other.getBlock());
       result = result && getTxList()
@@ -12578,6 +12696,10 @@ public final class Message {
       hash = (37 * hash) + BLOCKNUMBER_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getBlockNumber());
+      hash = (37 * hash) + BLOCKHASH_FIELD_NUMBER;
+      hash = (53 * hash) + getBlockHash().hashCode();
+      hash = (37 * hash) + PARENTHASH_FIELD_NUMBER;
+      hash = (53 * hash) + getParentHash().hashCode();
       hash = (37 * hash) + BLOCK_FIELD_NUMBER;
       hash = (53 * hash) + getBlock().hashCode();
       if (getTxCount() > 0) {
@@ -12704,10 +12826,14 @@ public final class Message {
         super.clear();
         blockNumber_ = 0L;
 
+        blockHash_ = "";
+
+        parentHash_ = "";
+
         block_ = "";
 
         tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -12733,10 +12859,12 @@ public final class Message {
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         result.blockNumber_ = blockNumber_;
+        result.blockHash_ = blockHash_;
+        result.parentHash_ = parentHash_;
         result.block_ = block_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
           tx_ = tx_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.tx_ = tx_;
         result.bitField0_ = to_bitField0_;
@@ -12784,6 +12912,14 @@ public final class Message {
         if (other.getBlockNumber() != 0L) {
           setBlockNumber(other.getBlockNumber());
         }
+        if (!other.getBlockHash().isEmpty()) {
+          blockHash_ = other.blockHash_;
+          onChanged();
+        }
+        if (!other.getParentHash().isEmpty()) {
+          parentHash_ = other.parentHash_;
+          onChanged();
+        }
         if (!other.getBlock().isEmpty()) {
           block_ = other.block_;
           onChanged();
@@ -12791,7 +12927,7 @@ public final class Message {
         if (!other.tx_.isEmpty()) {
           if (tx_.isEmpty()) {
             tx_ = other.tx_;
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000010);
           } else {
             ensureTxIsMutable();
             tx_.addAll(other.tx_);
@@ -12851,9 +12987,147 @@ public final class Message {
         return this;
       }
 
+      private java.lang.Object blockHash_ = "";
+      /**
+       * <code>optional string blockHash = 2;</code>
+       */
+      public java.lang.String getBlockHash() {
+        java.lang.Object ref = blockHash_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          blockHash_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string blockHash = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getBlockHashBytes() {
+        java.lang.Object ref = blockHash_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          blockHash_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string blockHash = 2;</code>
+       */
+      public Builder setBlockHash(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        blockHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string blockHash = 2;</code>
+       */
+      public Builder clearBlockHash() {
+        
+        blockHash_ = getDefaultInstance().getBlockHash();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string blockHash = 2;</code>
+       */
+      public Builder setBlockHashBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        blockHash_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object parentHash_ = "";
+      /**
+       * <code>optional string parentHash = 3;</code>
+       */
+      public java.lang.String getParentHash() {
+        java.lang.Object ref = parentHash_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          parentHash_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string parentHash = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getParentHashBytes() {
+        java.lang.Object ref = parentHash_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          parentHash_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string parentHash = 3;</code>
+       */
+      public Builder setParentHash(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        parentHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string parentHash = 3;</code>
+       */
+      public Builder clearParentHash() {
+        
+        parentHash_ = getDefaultInstance().getParentHash();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string parentHash = 3;</code>
+       */
+      public Builder setParentHashBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        parentHash_ = value;
+        onChanged();
+        return this;
+      }
+
       private java.lang.Object block_ = "";
       /**
-       * <code>optional string block = 2;</code>
+       * <code>optional string block = 4;</code>
        */
       public java.lang.String getBlock() {
         java.lang.Object ref = block_;
@@ -12868,7 +13142,7 @@ public final class Message {
         }
       }
       /**
-       * <code>optional string block = 2;</code>
+       * <code>optional string block = 4;</code>
        */
       public com.google.protobuf.ByteString
           getBlockBytes() {
@@ -12884,7 +13158,7 @@ public final class Message {
         }
       }
       /**
-       * <code>optional string block = 2;</code>
+       * <code>optional string block = 4;</code>
        */
       public Builder setBlock(
           java.lang.String value) {
@@ -12897,7 +13171,7 @@ public final class Message {
         return this;
       }
       /**
-       * <code>optional string block = 2;</code>
+       * <code>optional string block = 4;</code>
        */
       public Builder clearBlock() {
         
@@ -12906,7 +13180,7 @@ public final class Message {
         return this;
       }
       /**
-       * <code>optional string block = 2;</code>
+       * <code>optional string block = 4;</code>
        */
       public Builder setBlockBytes(
           com.google.protobuf.ByteString value) {
@@ -12922,39 +13196,39 @@ public final class Message {
 
       private com.google.protobuf.LazyStringList tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureTxIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
           tx_ = new com.google.protobuf.LazyStringArrayList(tx_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000010;
          }
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public com.google.protobuf.ProtocolStringList
           getTxList() {
         return tx_.getUnmodifiableView();
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public int getTxCount() {
         return tx_.size();
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public java.lang.String getTx(int index) {
         return tx_.get(index);
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public com.google.protobuf.ByteString
           getTxBytes(int index) {
         return tx_.getByteString(index);
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public Builder setTx(
           int index, java.lang.String value) {
@@ -12967,7 +13241,7 @@ public final class Message {
         return this;
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public Builder addTx(
           java.lang.String value) {
@@ -12980,7 +13254,7 @@ public final class Message {
         return this;
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public Builder addAllTx(
           java.lang.Iterable<java.lang.String> values) {
@@ -12991,16 +13265,16 @@ public final class Message {
         return this;
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public Builder clearTx() {
         tx_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string tx = 3;</code>
+       * <code>repeated string tx = 5;</code>
        */
       public Builder addTxBytes(
           com.google.protobuf.ByteString value) {
@@ -66366,222 +66640,223 @@ public final class Message {
       "\014\022\022\n\ndifficulty\030\013 \001(\014\022\027\n\017totalDifficulty" +
       "\030\014 \001(\014\022\021\n\textraData\030\r \001(\014\022\r\n\005nonce\030\016 \001(\014" +
       "\022\020\n\010solution\030\017 \001(\014\022\014\n\004hash\030\020 \001(\014\022\014\n\004size" +
-      "\030\021 \001(\r\022\016\n\006txHash\030\022 \003(\014\"<\n\nt_BlockSql\022\023\n\013" +
-      "blockNumber\030\001 \001(\004\022\r\n\005block\030\002 \001(\t\022\n\n\002tx\030\003" +
-      " \003(\t\" \n\014rsp_errormsg\022\020\n\010errormsg\030\001 \001(\t\"v" +
-      "\n\023rsp_protocolVersion\022\016\n\006kernel\030\001 \001(\t\022\013\n" +
-      "\003net\030\002 \001(\t\022\013\n\003api\030\003 \001(\t\022\n\n\002vm\030\004 \001(\t\022\n\n\002d",
-      "b\030\005 \001(\t\022\r\n\005miner\030\006 \001(\t\022\016\n\006txpool\030\007 \001(\t\"%" +
-      "\n\020rsp_minerAddress\022\021\n\tminerAddr\030\001 \001(\014\"+\n" +
-      "\024req_getBlockByNumber\022\023\n\013blockNumber\030\001 \001" +
-      "(\004\"\347\002\n\014rsp_getBlock\022\023\n\013blockNumber\030\001 \001(\004" +
-      "\022\021\n\ttimestamp\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004" +
-      "\022\020\n\010nrgLimit\030\004 \001(\004\022\022\n\nparentHash\030\005 \001(\014\022\024" +
-      "\n\014minerAddress\030\006 \001(\014\022\021\n\tstateRoot\030\007 \001(\014\022" +
-      "\022\n\ntxTrieRoot\030\010 \001(\014\022\027\n\017receiptTrieRoot\030\t" +
-      " \001(\014\022\021\n\tlogsBloom\030\n \001(\014\022\022\n\ndifficulty\030\013 " +
-      "\001(\014\022\027\n\017totalDifficulty\030\014 \001(\014\022\021\n\textraDat",
-      "a\030\r \001(\014\022\r\n\005nonce\030\016 \001(\014\022\020\n\010solution\030\017 \001(\014" +
-      "\022\014\n\004hash\030\020 \001(\014\022\014\n\004size\030\021 \001(\r\022\016\n\006txHash\030\022" +
-      " \003(\014\"1\n\032req_getBlockHeaderByNumber\022\023\n\013bl" +
-      "ockNumber\030\001 \001(\004\"\304\002\n\022rsp_getBlockHeader\022\023" +
-      "\n\013blockNumber\030\001 \001(\004\022\021\n\ttimestamp\030\002 \001(\004\022\023" +
-      "\n\013nrgConsumed\030\003 \001(\004\022\020\n\010nrgLimit\030\004 \001(\004\022\022\n" +
-      "\nparentHash\030\005 \001(\014\022\024\n\014minerAddress\030\006 \001(\014\022" +
-      "\021\n\tstateRoot\030\007 \001(\014\022\022\n\ntxTrieRoot\030\010 \001(\014\022\027" +
-      "\n\017receiptTrieRoot\030\t \001(\014\022\021\n\tlogsBloom\030\n \001" +
-      "(\014\022\022\n\ndifficulty\030\013 \001(\014\022\021\n\textraData\030\014 \001(",
-      "\014\022\r\n\005nonce\030\r \001(\014\022\020\n\010solution\030\016 \001(\014\022\014\n\004ha" +
-      "sh\030\017 \001(\014\022\014\n\004size\030\020 \001(\r\"z\n\023req_sendTransa" +
-      "ction\022\014\n\004from\030\001 \001(\014\022\n\n\002to\030\002 \001(\014\022\r\n\005value" +
-      "\030\003 \001(\014\022\014\n\004data\030\004 \001(\014\022\r\n\005nonce\030\005 \001(\014\022\013\n\003n" +
-      "rg\030\006 \001(\004\022\020\n\010nrgPrice\030\007 \001(\004\"%\n\023rsp_sendTr" +
-      "ansaction\022\016\n\006txHash\030\001 \001(\014\"*\n\030req_getTran" +
-      "sactionByHash\022\016\n\006txHash\030\001 \001(\014\"\334\001\n\022rsp_ge" +
-      "tTransaction\022\017\n\007txIndex\030\001 \001(\r\022\023\n\013blocknu" +
-      "mber\030\002 \001(\004\022\021\n\ttimeStamp\030\003 \001(\004\022\022\n\nnrgCons" +
-      "ume\030\004 \001(\004\022\020\n\010nrgPrice\030\005 \001(\004\022\021\n\tblockhash",
-      "\030\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\016\n\006txHash\030\010 \001(\014\022\014\n\004" +
-      "data\030\t \001(\014\022\r\n\005nonce\030\n \001(\014\022\n\n\002to\030\013 \001(\014\022\r\n" +
-      "\005value\030\014 \001(\014\"H\n\021req_unlockAccount\022\017\n\007acc" +
-      "ount\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\022\020\n\010duration" +
-      "\030\003 \001(\r\"\036\n\014rsp_accounts\022\016\n\006accout\030\001 \003(\014\"\033" +
-      "\n\013req_compile\022\014\n\004code\030\001 \001(\t\"\255\001\n\013rsp_comp" +
-      "ile\022G\n\nconstracts\030\001 \003(\01323.org.aion.api.s" +
-      "erver.pb.rsp_compile.ConstractsEntry\032U\n\017" +
-      "ConstractsEntry\022\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 " +
-      "\001(\0132\".org.aion.api.server.pb.t_Contract:",
-      "\0028\001\"3\n\013req_getCode\022\017\n\007address\030\001 \001(\014\022\023\n\013b" +
-      "locknumber\030\002 \001(\004\"\033\n\013rsp_getCode\022\014\n\004code\030" +
-      "\001 \001(\014\"c\n\022req_contractDeploy\022\020\n\010nrgLimit\030" +
-      "\001 \001(\004\022\020\n\010nrgPrice\030\002 \001(\004\022\014\n\004from\030\003 \001(\014\022\014\n" +
-      "\004data\030\004 \001(\014\022\r\n\005value\030\005 \001(\014\"=\n\022rsp_contra" +
-      "ctDeploy\022\016\n\006txHash\030\001 \001(\014\022\027\n\017contractAddr" +
-      "ess\030\002 \001(\014\"`\n\010req_call\022\014\n\004from\030\001 \001(\014\022\n\n\002t" +
-      "o\030\002 \001(\014\022\014\n\004data\030\003 \001(\014\022\r\n\005value\030\004 \001(\014\022\013\n\003" +
-      "nrg\030\005 \001(\004\022\020\n\010nrgPrice\030\006 \001(\004\"\032\n\010rsp_call\022" +
-      "\016\n\006result\030\001 \001(\014\"\'\n\022req_getBlockByHash\022\021\n",
-      "\tblockHash\030\001 \001(\014\"-\n\030req_getBlockHeaderBy" +
-      "Hash\022\021\n\tblockHash\030\001 \001(\014\"?\n\027req_getTransa" +
-      "ctionCount\022\017\n\007address\030\001 \001(\014\022\023\n\013blocknumb" +
-      "er\030\002 \001(\004\"*\n\027rsp_getTransactionCount\022\017\n\007t" +
-      "xCount\030\001 \001(\004\"/\n\035req_getTransactionCountB" +
-      "yHash\022\016\n\006txHash\030\001 \001(\014\"&\n\017rsp_blockNumber" +
-      "\022\023\n\013blocknumber\030\001 \001(\004\"6\n\016req_getBalance\022" +
-      "\017\n\007address\030\001 \001(\014\022\023\n\013blockNumber\030\002 \001(\004\"!\n" +
-      "\016rsp_getBalance\022\017\n\007balance\030\001 \001(\014\"E\n\020req_" +
-      "getStorageAt\022\017\n\007address\030\001 \001(\014\022\013\n\003key\030\002 \001",
-      "(\t\022\023\n\013blocknumber\030\003 \001(\004\"#\n\020rsp_getStorag" +
-      "eAt\022\017\n\007storage\030\001 \001(\t\"7\n\"req_getBlockTran" +
-      "sactionCountByHash\022\021\n\tblockHash\030\001 \001(\014\"/\n" +
-      "\034rsp_getBlockTransactionCount\022\017\n\007txCount" +
-      "\030\001 \001(\r\";\n$req_getBlockTransactionCountBy" +
-      "Number\022\023\n\013blockNumber\030\001 \001(\004\"K\n%req_getTr" +
-      "ansactionByBlockHashAndIndex\022\021\n\tblockHas" +
-      "h\030\001 \001(\014\022\017\n\007txIndex\030\002 \001(\r\"O\n\'req_getTrans" +
-      "actionByBlockNumberAndIndex\022\023\n\013blockNumb" +
-      "er\030\001 \001(\004\022\017\n\007txIndex\030\002 \001(\r\"+\n\031req_getTran",
-      "sactionReceipt\022\016\n\006txHash\030\001 \001(\014\"\366\001\n\031rsp_g" +
-      "etTransactionReceipt\022\017\n\007txIndex\030\001 \001(\r\022\023\n" +
-      "\013blockNumber\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004\022" +
-      "\031\n\021cumulativeNrgUsed\030\004 \001(\004\022\021\n\tblockHash\030" +
-      "\005 \001(\014\022\016\n\006txHash\030\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\n\n\002t" +
-      "o\030\010 \001(\014\022\027\n\017contractAddress\030\t \001(\014\022-\n\004logs" +
-      "\030\n \003(\0132\037.org.aion.api.server.pb.t_LgEle\"" +
-      "C\n\037req_getUncleByBlockHashAndIndex\022\021\n\tbl" +
-      "ockHash\030\001 \001(\014\022\r\n\005index\030\002 \001(\r\"$\n\020rsp_getC" +
-      "ompilers\022\020\n\010compiler\030\001 \003(\t\"%\n\023req_compil",
-      "eSolidity\022\016\n\006source\030\001 \001(\t\"U\n\023rsp_compile" +
-      "Solidity\022\014\n\004code\030\001 \001(\t\0220\n\004info\030\002 \001(\0132\".o" +
-      "rg.aion.api.server.pb.t_Contract\"\033\n\013rsp_" +
-      "getWork\022\014\n\004work\030\001 \003(\t\"A\n\016req_submitWork\022" +
-      "\r\n\005nonce\030\001 \001(\014\022\020\n\010solution\030\002 \001(\014\022\016\n\006dige" +
-      "st\030\003 \001(\014\"&\n\016rsp_submitWork\022\024\n\014workAccept" +
-      "ed\030\001 \001(\010\"K\n\033rsp_fetchQueuedTransactions\022" +
-      ",\n\002tx\030\001 \003(\0132 .org.aion.api.server.pb.t_A" +
-      "ionTx\"\'\n\022req_rawTransaction\022\021\n\tencodedTx" +
-      "\030\001 \001(\014\"g\n\017req_estimateNrg\022\014\n\004from\030\001 \001(\014\022",
-      "\n\n\002to\030\002 \001(\014\022\r\n\005value\030\003 \001(\014\022\014\n\004data\030\004 \001(\014" +
-      "\022\013\n\003nrg\030\005 \001(\004\022\020\n\010nrgPrice\030\006 \001(\004\"\036\n\017rsp_e" +
-      "stimateNrg\022\013\n\003nrg\030\001 \001(\004\"\034\n\nrsp_mining\022\016\n" +
-      "\006mining\030\001 \001(\010\"J\n\013rsp_syncing\022\017\n\007syncing\030" +
-      "\001 \001(\010\022\024\n\014currentBlock\030\002 \001(\004\022\024\n\014highestBl" +
-      "ock\030\003 \001(\004\" \n\014rsp_hashrate\022\020\n\010hashrate\030\001 " +
-      "\001(\004\"B\n\022rsp_getActiveNodes\022,\n\004node\030\001 \003(\0132" +
-      "\036.org.aion.api.server.pb.t_Node\"B\n\022rsp_g" +
-      "etStaticNodes\022,\n\004node\030\001 \003(\0132\036.org.aion.a" +
-      "pi.server.pb.t_Node\"!\n\022rsp_getSolcVersio",
-      "n\022\013\n\003ver\030\001 \001(\t\" \n\rrsp_isSyncing\022\017\n\007synci" +
-      "ng\030\001 \001(\010\"j\n\014rsp_syncInfo\022\017\n\007syncing\030\001 \001(" +
-      "\010\022\030\n\020networkBestBlock\030\002 \001(\004\022\026\n\016chainBest" +
-      "Block\030\003 \001(\004\022\027\n\017maxImportBlocks\030\004 \001(\r\"G\n\016" +
-      "rsp_systemInfo\022\020\n\010cpuUsage\030\001 \001(\002\022\023\n\013memo" +
-      "ryUsage\030\002 \001(\004\022\016\n\006DBSize\030\003 \001(\004\"W\n\021req_eve" +
-      "ntRegister\022\016\n\006events\030\001 \003(\t\0222\n\006filter\030\002 \001" +
-      "(\0132\".org.aion.api.server.pb.t_FilterCt\"#" +
-      "\n\021rsp_eventRegister\022\016\n\006result\030\001 \001(\010\";\n\023r" +
-      "eq_eventDeregister\022\016\n\006events\030\001 \003(\t\022\024\n\014co",
-      "ntractAddr\030\002 \001(\014\"%\n\023rsp_eventDeregister\022" +
-      "\016\n\006result\030\001 \001(\010\"D\n\023rsp_EventCtCallback\022-" +
-      "\n\002ec\030\001 \003(\0132!.org.aion.api.server.pb.t_Ev" +
-      "entCt\"9\n\021req_accountCreate\022\020\n\010password\030\001" +
-      " \003(\t\022\022\n\nprivateKey\030\002 \001(\010\"8\n\021rsp_accountC" +
-      "reate\022\017\n\007address\030\001 \003(\014\022\022\n\nprivateKey\030\002 \003" +
-      "(\014\"4\n\017req_accountlock\022\017\n\007account\030\001 \001(\014\022\020" +
-      "\n\010password\030\002 \001(\t\"!\n\017rsp_accountlock\022\016\n\006l" +
-      "ocked\030\001 \001(\010\"7\n\021req_userPrivilege\022\020\n\010user" +
-      "name\030\001 \001(\t\022\020\n\010password\030\002 \001(\t\"&\n\021rsp_user",
-      "Privilege\022\021\n\tprivilege\030\001 \003(\t\"G\n\021req_quer" +
-      "yCtEvents\0222\n\006filter\030\001 \001(\0132\".org.aion.api" +
-      ".server.pb.t_FilterCt\"B\n\021rsp_queryCtEven" +
-      "ts\022-\n\002ec\030\001 \003(\0132!.org.aion.api.server.pb." +
-      "t_EventCt\"4\n\014t_PrivateKey\022\022\n\nprivateKey\030" +
-      "\001 \001(\t\022\020\n\010password\030\002 \001(\t\"N\n\022req_importAcc" +
-      "ounts\0228\n\nprivateKey\030\001 \003(\0132$.org.aion.api" +
-      ".server.pb.t_PrivateKey\"(\n\022rsp_importAcc" +
-      "ounts\022\022\n\ninvalidKey\030\001 \003(\t\"*\n\005t_Key\022\017\n\007ad" +
-      "dress\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\"D\n\022req_exp",
-      "ortAccounts\022.\n\007keyFile\030\001 \003(\0132\035.org.aion." +
-      "api.server.pb.t_Key\"8\n\022rsp_exportAccount" +
-      "s\022\017\n\007keyFile\030\001 \003(\014\022\021\n\tfailedKey\030\002 \003(\014\"2\n" +
-      "\035rsp_getCurrentTotalDifficulty\022\021\n\ttotalD" +
-      "iff\030\001 \001(\014\"1\n\033req_getBlockDetailsByNumber" +
-      "\022\022\n\nblkNumbers\030\001 \003(\004\"X\n\033rsp_getBlockDeta" +
-      "ilsByNumber\0229\n\nblkDetails\030\001 \003(\0132%.org.ai" +
-      "on.api.server.pb.t_BlockDetail\",\n\033req_ge" +
-      "tBlockDetailsByLatest\022\r\n\005count\030\001 \001(\004\"X\n\033" +
-      "rsp_getBlockDetailsByLatest\0229\n\nblkDetail",
-      "s\030\001 \003(\0132%.org.aion.api.server.pb.t_Block" +
-      "Detail\"&\n\025req_getBlocksByLatest\022\r\n\005count" +
-      "\030\001 \001(\004\"F\n\025rsp_getBlocksByLatest\022-\n\004blks\030" +
-      "\001 \003(\0132\037.org.aion.api.server.pb.t_Block\"7" +
-      "\n\"req_getAccountDetailsByAddressList\022\021\n\t" +
-      "addresses\030\001 \003(\014\"_\n\"rsp_getAccountDetails" +
-      "ByAddressList\0229\n\010accounts\030\001 \003(\0132\'.org.ai" +
-      "on.api.server.pb.t_AccountDetail\"F\n\026req_" +
-      "getBlockSqlByRange\022\026\n\016blkNumberStart\030\001 \001" +
-      "(\004\022\024\n\014blkNumberEnd\030\002 \001(\004\"L\n\026rsp_getBlock",
-      "SqlByRange\0222\n\006blkSql\030\001 \003(\0132\".org.aion.ap" +
-      "i.server.pb.t_BlockSql*\204\001\n\005Servs\022\010\n\004s_hb" +
-      "\020\000\022\013\n\007s_admin\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_accoun" +
-      "t\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n\013" +
-      "s_privilege\020\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\207\n" +
-      "\n\005Funcs\022\025\n\021f_protocolVersion\020\000\022\022\n\016f_mine" +
-      "rAddress\020\001\022\016\n\nf_accounts\020\002\022\021\n\rf_blockNum" +
-      "ber\020\003\022\020\n\014f_getBalance\020\004\022\022\n\016f_getStorageA" +
-      "t\020\005\022\023\n\017f_unlockAccount\020\006\022\025\n\021f_sendTransa" +
-      "ction\020\007\022\032\n\026f_getTransactionByHash\020\010\022\r\n\tf",
-      "_compile\020\t\022\024\n\020f_contractDeploy\020\n\022\031\n\025f_ge" +
-      "tTransactionCount\020\013\022$\n f_getBlockTransac" +
-      "tionCountByHash\020\014\022&\n\"f_getBlockTransacti" +
-      "onCountByNumber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_ca" +
-      "ll\020\017\022\024\n\020f_getBlockByHash\020\020\022\026\n\022f_getBlock" +
-      "ByNumber\020\021\022\'\n#f_getTransactionByBlockHas" +
-      "hAndIndex\020\022\022)\n%f_getTransactionByBlockNu" +
-      "mberAndIndex\020\023\022\033\n\027f_getTransactionReceip" +
-      "t\020\024\022\022\n\016f_getCompilers\020\025\022\025\n\021f_compileSoli" +
-      "dity\020\026\022\r\n\tf_getWork\020\027\022\020\n\014f_submitWork\020\030\022",
-      "\035\n\031f_fetchQueuedTransactions\020\031\022\027\n\023f_sign" +
-      "edTransaction\020\032\022\024\n\020f_rawTransaction\020\033\022\021\n" +
-      "\rf_estimateNrg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_hash" +
-      "rate\020\036\022\024\n\020f_getActiveNodes\020\037\022\024\n\020f_getSol" +
-      "cVersion\020 \022\017\n\013f_isSyncing\020!\022\016\n\nf_syncInf" +
-      "o\020\"\022\023\n\017f_getSystemInfo\020#\022\023\n\017f_eventRegis" +
-      "ter\020$\022\025\n\021f_eventDeregister\020%\022\023\n\017f_accoun" +
-      "tCreate\020&\022\021\n\rf_accountLock\020\'\022\023\n\017f_userPr" +
-      "ivilege\020(\022\020\n\014f_eventQuery\020)\022\024\n\020f_importA" +
-      "ccounts\020*\022\024\n\020f_exportAccounts\020+\022\034\n\030f_get",
-      "BlockHeaderByNumber\020,\022\032\n\026f_getBlockHeade" +
-      "rByHash\020-\022\037\n\033f_getCurrentTotalDifficulty" +
-      "\020.\022\024\n\020f_getStaticNodes\020/\022\035\n\031f_getBlockDe" +
-      "tailsByNumber\0200\022\035\n\031f_getBlockDetailsByLa" +
-      "test\0201\022\027\n\023f_getBlocksByLatest\0202\022$\n f_get" +
-      "AccountDetailsByAddressList\0203\022\024\n\020f_backu" +
-      "pAccounts\0204\022\010\n\004f_NA\0205\022\030\n\024f_getBlockSqlBy" +
-      "Range\0206*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022\r\n\tr_suc" +
-      "cess\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r_heartbe" +
-      "atReturn\020\003\022\025\n\021r_privilegeReturn\020\004\022\r\n\tr_t",
-      "x_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_tx_Droppe" +
-      "d\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx_Pending" +
-      "\020h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_eventCb\020j\022" +
-      "\010\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377\377\377\377\377\377\377\377\377" +
-      "\001\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377\377\377\001\022!\n\024r" +
-      "_fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fail" +
-      "_function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail" +
-      "_api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_ct_byt" +
-      "ecode\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_rsp\020\371\377\377\377" +
-      "\377\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377\377\377\377\377\377\377\377\001",
-      "\022\'\n\032r_fail_null_compile_source\020\367\377\377\377\377\377\377\377\377" +
-      "\001\022$\n\027r_fail_compile_contract\020\366\377\377\377\377\377\377\377\377\001\022" +
-      "#\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036\n\021" +
-      "r_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail_g" +
-      "etTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_fa" +
-      "il_zmqHandler_exception\020\362\377\377\377\377\377\377\377\377\001\022(\n\033r_" +
-      "fail_hit_pending_tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%\n\030" +
-      "r_fail_txqueue_exception\020\360\377\377\377\377\377\377\377\377\001\022&\n\031r" +
-      "_fail_function_arguments\020\357\377\377\377\377\377\377\377\377\001\022!\n\024r" +
-      "_fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fail",
-      "_unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
+      "\030\021 \001(\r\022\016\n\006txHash\030\022 \003(\014\"c\n\nt_BlockSql\022\023\n\013" +
+      "blockNumber\030\001 \001(\004\022\021\n\tblockHash\030\002 \001(\t\022\022\n\n" +
+      "parentHash\030\003 \001(\t\022\r\n\005block\030\004 \001(\t\022\n\n\002tx\030\005 " +
+      "\003(\t\" \n\014rsp_errormsg\022\020\n\010errormsg\030\001 \001(\t\"v\n" +
+      "\023rsp_protocolVersion\022\016\n\006kernel\030\001 \001(\t\022\013\n\003",
+      "net\030\002 \001(\t\022\013\n\003api\030\003 \001(\t\022\n\n\002vm\030\004 \001(\t\022\n\n\002db" +
+      "\030\005 \001(\t\022\r\n\005miner\030\006 \001(\t\022\016\n\006txpool\030\007 \001(\t\"%\n" +
+      "\020rsp_minerAddress\022\021\n\tminerAddr\030\001 \001(\014\"+\n\024" +
+      "req_getBlockByNumber\022\023\n\013blockNumber\030\001 \001(" +
+      "\004\"\347\002\n\014rsp_getBlock\022\023\n\013blockNumber\030\001 \001(\004\022" +
+      "\021\n\ttimestamp\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004\022" +
+      "\020\n\010nrgLimit\030\004 \001(\004\022\022\n\nparentHash\030\005 \001(\014\022\024\n" +
+      "\014minerAddress\030\006 \001(\014\022\021\n\tstateRoot\030\007 \001(\014\022\022" +
+      "\n\ntxTrieRoot\030\010 \001(\014\022\027\n\017receiptTrieRoot\030\t " +
+      "\001(\014\022\021\n\tlogsBloom\030\n \001(\014\022\022\n\ndifficulty\030\013 \001",
+      "(\014\022\027\n\017totalDifficulty\030\014 \001(\014\022\021\n\textraData" +
+      "\030\r \001(\014\022\r\n\005nonce\030\016 \001(\014\022\020\n\010solution\030\017 \001(\014\022" +
+      "\014\n\004hash\030\020 \001(\014\022\014\n\004size\030\021 \001(\r\022\016\n\006txHash\030\022 " +
+      "\003(\014\"1\n\032req_getBlockHeaderByNumber\022\023\n\013blo" +
+      "ckNumber\030\001 \001(\004\"\304\002\n\022rsp_getBlockHeader\022\023\n" +
+      "\013blockNumber\030\001 \001(\004\022\021\n\ttimestamp\030\002 \001(\004\022\023\n" +
+      "\013nrgConsumed\030\003 \001(\004\022\020\n\010nrgLimit\030\004 \001(\004\022\022\n\n" +
+      "parentHash\030\005 \001(\014\022\024\n\014minerAddress\030\006 \001(\014\022\021" +
+      "\n\tstateRoot\030\007 \001(\014\022\022\n\ntxTrieRoot\030\010 \001(\014\022\027\n" +
+      "\017receiptTrieRoot\030\t \001(\014\022\021\n\tlogsBloom\030\n \001(",
+      "\014\022\022\n\ndifficulty\030\013 \001(\014\022\021\n\textraData\030\014 \001(\014" +
+      "\022\r\n\005nonce\030\r \001(\014\022\020\n\010solution\030\016 \001(\014\022\014\n\004has" +
+      "h\030\017 \001(\014\022\014\n\004size\030\020 \001(\r\"z\n\023req_sendTransac" +
+      "tion\022\014\n\004from\030\001 \001(\014\022\n\n\002to\030\002 \001(\014\022\r\n\005value\030" +
+      "\003 \001(\014\022\014\n\004data\030\004 \001(\014\022\r\n\005nonce\030\005 \001(\014\022\013\n\003nr" +
+      "g\030\006 \001(\004\022\020\n\010nrgPrice\030\007 \001(\004\"%\n\023rsp_sendTra" +
+      "nsaction\022\016\n\006txHash\030\001 \001(\014\"*\n\030req_getTrans" +
+      "actionByHash\022\016\n\006txHash\030\001 \001(\014\"\334\001\n\022rsp_get" +
+      "Transaction\022\017\n\007txIndex\030\001 \001(\r\022\023\n\013blocknum" +
+      "ber\030\002 \001(\004\022\021\n\ttimeStamp\030\003 \001(\004\022\022\n\nnrgConsu",
+      "me\030\004 \001(\004\022\020\n\010nrgPrice\030\005 \001(\004\022\021\n\tblockhash\030" +
+      "\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\016\n\006txHash\030\010 \001(\014\022\014\n\004d" +
+      "ata\030\t \001(\014\022\r\n\005nonce\030\n \001(\014\022\n\n\002to\030\013 \001(\014\022\r\n\005" +
+      "value\030\014 \001(\014\"H\n\021req_unlockAccount\022\017\n\007acco" +
+      "unt\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\022\020\n\010duration\030" +
+      "\003 \001(\r\"\036\n\014rsp_accounts\022\016\n\006accout\030\001 \003(\014\"\033\n" +
+      "\013req_compile\022\014\n\004code\030\001 \001(\t\"\255\001\n\013rsp_compi" +
+      "le\022G\n\nconstracts\030\001 \003(\01323.org.aion.api.se" +
+      "rver.pb.rsp_compile.ConstractsEntry\032U\n\017C" +
+      "onstractsEntry\022\013\n\003key\030\001 \001(\t\0221\n\005value\030\002 \001",
+      "(\0132\".org.aion.api.server.pb.t_Contract:\002" +
+      "8\001\"3\n\013req_getCode\022\017\n\007address\030\001 \001(\014\022\023\n\013bl" +
+      "ocknumber\030\002 \001(\004\"\033\n\013rsp_getCode\022\014\n\004code\030\001" +
+      " \001(\014\"c\n\022req_contractDeploy\022\020\n\010nrgLimit\030\001" +
+      " \001(\004\022\020\n\010nrgPrice\030\002 \001(\004\022\014\n\004from\030\003 \001(\014\022\014\n\004" +
+      "data\030\004 \001(\014\022\r\n\005value\030\005 \001(\014\"=\n\022rsp_contrac" +
+      "tDeploy\022\016\n\006txHash\030\001 \001(\014\022\027\n\017contractAddre" +
+      "ss\030\002 \001(\014\"`\n\010req_call\022\014\n\004from\030\001 \001(\014\022\n\n\002to" +
+      "\030\002 \001(\014\022\014\n\004data\030\003 \001(\014\022\r\n\005value\030\004 \001(\014\022\013\n\003n" +
+      "rg\030\005 \001(\004\022\020\n\010nrgPrice\030\006 \001(\004\"\032\n\010rsp_call\022\016",
+      "\n\006result\030\001 \001(\014\"\'\n\022req_getBlockByHash\022\021\n\t" +
+      "blockHash\030\001 \001(\014\"-\n\030req_getBlockHeaderByH" +
+      "ash\022\021\n\tblockHash\030\001 \001(\014\"?\n\027req_getTransac" +
+      "tionCount\022\017\n\007address\030\001 \001(\014\022\023\n\013blocknumbe" +
+      "r\030\002 \001(\004\"*\n\027rsp_getTransactionCount\022\017\n\007tx" +
+      "Count\030\001 \001(\004\"/\n\035req_getTransactionCountBy" +
+      "Hash\022\016\n\006txHash\030\001 \001(\014\"&\n\017rsp_blockNumber\022" +
+      "\023\n\013blocknumber\030\001 \001(\004\"6\n\016req_getBalance\022\017" +
+      "\n\007address\030\001 \001(\014\022\023\n\013blockNumber\030\002 \001(\004\"!\n\016" +
+      "rsp_getBalance\022\017\n\007balance\030\001 \001(\014\"E\n\020req_g",
+      "etStorageAt\022\017\n\007address\030\001 \001(\014\022\013\n\003key\030\002 \001(" +
+      "\t\022\023\n\013blocknumber\030\003 \001(\004\"#\n\020rsp_getStorage" +
+      "At\022\017\n\007storage\030\001 \001(\t\"7\n\"req_getBlockTrans" +
+      "actionCountByHash\022\021\n\tblockHash\030\001 \001(\014\"/\n\034" +
+      "rsp_getBlockTransactionCount\022\017\n\007txCount\030" +
+      "\001 \001(\r\";\n$req_getBlockTransactionCountByN" +
+      "umber\022\023\n\013blockNumber\030\001 \001(\004\"K\n%req_getTra" +
+      "nsactionByBlockHashAndIndex\022\021\n\tblockHash" +
+      "\030\001 \001(\014\022\017\n\007txIndex\030\002 \001(\r\"O\n\'req_getTransa" +
+      "ctionByBlockNumberAndIndex\022\023\n\013blockNumbe",
+      "r\030\001 \001(\004\022\017\n\007txIndex\030\002 \001(\r\"+\n\031req_getTrans" +
+      "actionReceipt\022\016\n\006txHash\030\001 \001(\014\"\366\001\n\031rsp_ge" +
+      "tTransactionReceipt\022\017\n\007txIndex\030\001 \001(\r\022\023\n\013" +
+      "blockNumber\030\002 \001(\004\022\023\n\013nrgConsumed\030\003 \001(\004\022\031" +
+      "\n\021cumulativeNrgUsed\030\004 \001(\004\022\021\n\tblockHash\030\005" +
+      " \001(\014\022\016\n\006txHash\030\006 \001(\014\022\014\n\004from\030\007 \001(\014\022\n\n\002to" +
+      "\030\010 \001(\014\022\027\n\017contractAddress\030\t \001(\014\022-\n\004logs\030" +
+      "\n \003(\0132\037.org.aion.api.server.pb.t_LgEle\"C" +
+      "\n\037req_getUncleByBlockHashAndIndex\022\021\n\tblo" +
+      "ckHash\030\001 \001(\014\022\r\n\005index\030\002 \001(\r\"$\n\020rsp_getCo",
+      "mpilers\022\020\n\010compiler\030\001 \003(\t\"%\n\023req_compile" +
+      "Solidity\022\016\n\006source\030\001 \001(\t\"U\n\023rsp_compileS" +
+      "olidity\022\014\n\004code\030\001 \001(\t\0220\n\004info\030\002 \001(\0132\".or" +
+      "g.aion.api.server.pb.t_Contract\"\033\n\013rsp_g" +
+      "etWork\022\014\n\004work\030\001 \003(\t\"A\n\016req_submitWork\022\r" +
+      "\n\005nonce\030\001 \001(\014\022\020\n\010solution\030\002 \001(\014\022\016\n\006diges" +
+      "t\030\003 \001(\014\"&\n\016rsp_submitWork\022\024\n\014workAccepte" +
+      "d\030\001 \001(\010\"K\n\033rsp_fetchQueuedTransactions\022," +
+      "\n\002tx\030\001 \003(\0132 .org.aion.api.server.pb.t_Ai" +
+      "onTx\"\'\n\022req_rawTransaction\022\021\n\tencodedTx\030",
+      "\001 \001(\014\"g\n\017req_estimateNrg\022\014\n\004from\030\001 \001(\014\022\n" +
+      "\n\002to\030\002 \001(\014\022\r\n\005value\030\003 \001(\014\022\014\n\004data\030\004 \001(\014\022" +
+      "\013\n\003nrg\030\005 \001(\004\022\020\n\010nrgPrice\030\006 \001(\004\"\036\n\017rsp_es" +
+      "timateNrg\022\013\n\003nrg\030\001 \001(\004\"\034\n\nrsp_mining\022\016\n\006" +
+      "mining\030\001 \001(\010\"J\n\013rsp_syncing\022\017\n\007syncing\030\001" +
+      " \001(\010\022\024\n\014currentBlock\030\002 \001(\004\022\024\n\014highestBlo" +
+      "ck\030\003 \001(\004\" \n\014rsp_hashrate\022\020\n\010hashrate\030\001 \001" +
+      "(\004\"B\n\022rsp_getActiveNodes\022,\n\004node\030\001 \003(\0132\036" +
+      ".org.aion.api.server.pb.t_Node\"B\n\022rsp_ge" +
+      "tStaticNodes\022,\n\004node\030\001 \003(\0132\036.org.aion.ap",
+      "i.server.pb.t_Node\"!\n\022rsp_getSolcVersion" +
+      "\022\013\n\003ver\030\001 \001(\t\" \n\rrsp_isSyncing\022\017\n\007syncin" +
+      "g\030\001 \001(\010\"j\n\014rsp_syncInfo\022\017\n\007syncing\030\001 \001(\010" +
+      "\022\030\n\020networkBestBlock\030\002 \001(\004\022\026\n\016chainBestB" +
+      "lock\030\003 \001(\004\022\027\n\017maxImportBlocks\030\004 \001(\r\"G\n\016r" +
+      "sp_systemInfo\022\020\n\010cpuUsage\030\001 \001(\002\022\023\n\013memor" +
+      "yUsage\030\002 \001(\004\022\016\n\006DBSize\030\003 \001(\004\"W\n\021req_even" +
+      "tRegister\022\016\n\006events\030\001 \003(\t\0222\n\006filter\030\002 \001(" +
+      "\0132\".org.aion.api.server.pb.t_FilterCt\"#\n" +
+      "\021rsp_eventRegister\022\016\n\006result\030\001 \001(\010\";\n\023re",
+      "q_eventDeregister\022\016\n\006events\030\001 \003(\t\022\024\n\014con" +
+      "tractAddr\030\002 \001(\014\"%\n\023rsp_eventDeregister\022\016" +
+      "\n\006result\030\001 \001(\010\"D\n\023rsp_EventCtCallback\022-\n" +
+      "\002ec\030\001 \003(\0132!.org.aion.api.server.pb.t_Eve" +
+      "ntCt\"9\n\021req_accountCreate\022\020\n\010password\030\001 " +
+      "\003(\t\022\022\n\nprivateKey\030\002 \001(\010\"8\n\021rsp_accountCr" +
+      "eate\022\017\n\007address\030\001 \003(\014\022\022\n\nprivateKey\030\002 \003(" +
+      "\014\"4\n\017req_accountlock\022\017\n\007account\030\001 \001(\014\022\020\n" +
+      "\010password\030\002 \001(\t\"!\n\017rsp_accountlock\022\016\n\006lo" +
+      "cked\030\001 \001(\010\"7\n\021req_userPrivilege\022\020\n\010usern",
+      "ame\030\001 \001(\t\022\020\n\010password\030\002 \001(\t\"&\n\021rsp_userP" +
+      "rivilege\022\021\n\tprivilege\030\001 \003(\t\"G\n\021req_query" +
+      "CtEvents\0222\n\006filter\030\001 \001(\0132\".org.aion.api." +
+      "server.pb.t_FilterCt\"B\n\021rsp_queryCtEvent" +
+      "s\022-\n\002ec\030\001 \003(\0132!.org.aion.api.server.pb.t" +
+      "_EventCt\"4\n\014t_PrivateKey\022\022\n\nprivateKey\030\001" +
+      " \001(\t\022\020\n\010password\030\002 \001(\t\"N\n\022req_importAcco" +
+      "unts\0228\n\nprivateKey\030\001 \003(\0132$.org.aion.api." +
+      "server.pb.t_PrivateKey\"(\n\022rsp_importAcco" +
+      "unts\022\022\n\ninvalidKey\030\001 \003(\t\"*\n\005t_Key\022\017\n\007add",
+      "ress\030\001 \001(\014\022\020\n\010password\030\002 \001(\t\"D\n\022req_expo" +
+      "rtAccounts\022.\n\007keyFile\030\001 \003(\0132\035.org.aion.a" +
+      "pi.server.pb.t_Key\"8\n\022rsp_exportAccounts" +
+      "\022\017\n\007keyFile\030\001 \003(\014\022\021\n\tfailedKey\030\002 \003(\014\"2\n\035" +
+      "rsp_getCurrentTotalDifficulty\022\021\n\ttotalDi" +
+      "ff\030\001 \001(\014\"1\n\033req_getBlockDetailsByNumber\022" +
+      "\022\n\nblkNumbers\030\001 \003(\004\"X\n\033rsp_getBlockDetai" +
+      "lsByNumber\0229\n\nblkDetails\030\001 \003(\0132%.org.aio" +
+      "n.api.server.pb.t_BlockDetail\",\n\033req_get" +
+      "BlockDetailsByLatest\022\r\n\005count\030\001 \001(\004\"X\n\033r",
+      "sp_getBlockDetailsByLatest\0229\n\nblkDetails" +
+      "\030\001 \003(\0132%.org.aion.api.server.pb.t_BlockD" +
+      "etail\"&\n\025req_getBlocksByLatest\022\r\n\005count\030" +
+      "\001 \001(\004\"F\n\025rsp_getBlocksByLatest\022-\n\004blks\030\001" +
+      " \003(\0132\037.org.aion.api.server.pb.t_Block\"7\n" +
+      "\"req_getAccountDetailsByAddressList\022\021\n\ta" +
+      "ddresses\030\001 \003(\014\"_\n\"rsp_getAccountDetailsB" +
+      "yAddressList\0229\n\010accounts\030\001 \003(\0132\'.org.aio" +
+      "n.api.server.pb.t_AccountDetail\"F\n\026req_g" +
+      "etBlockSqlByRange\022\026\n\016blkNumberStart\030\001 \001(",
+      "\004\022\024\n\014blkNumberEnd\030\002 \001(\004\"L\n\026rsp_getBlockS" +
+      "qlByRange\0222\n\006blkSql\030\001 \003(\0132\".org.aion.api" +
+      ".server.pb.t_BlockSql*\204\001\n\005Servs\022\010\n\004s_hb\020" +
+      "\000\022\013\n\007s_admin\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_account" +
+      "\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n\013s" +
+      "_privilege\020\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\207\n\n" +
+      "\005Funcs\022\025\n\021f_protocolVersion\020\000\022\022\n\016f_miner" +
+      "Address\020\001\022\016\n\nf_accounts\020\002\022\021\n\rf_blockNumb" +
+      "er\020\003\022\020\n\014f_getBalance\020\004\022\022\n\016f_getStorageAt" +
+      "\020\005\022\023\n\017f_unlockAccount\020\006\022\025\n\021f_sendTransac",
+      "tion\020\007\022\032\n\026f_getTransactionByHash\020\010\022\r\n\tf_" +
+      "compile\020\t\022\024\n\020f_contractDeploy\020\n\022\031\n\025f_get" +
+      "TransactionCount\020\013\022$\n f_getBlockTransact" +
+      "ionCountByHash\020\014\022&\n\"f_getBlockTransactio" +
+      "nCountByNumber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_cal" +
+      "l\020\017\022\024\n\020f_getBlockByHash\020\020\022\026\n\022f_getBlockB" +
+      "yNumber\020\021\022\'\n#f_getTransactionByBlockHash" +
+      "AndIndex\020\022\022)\n%f_getTransactionByBlockNum" +
+      "berAndIndex\020\023\022\033\n\027f_getTransactionReceipt" +
+      "\020\024\022\022\n\016f_getCompilers\020\025\022\025\n\021f_compileSolid",
+      "ity\020\026\022\r\n\tf_getWork\020\027\022\020\n\014f_submitWork\020\030\022\035" +
+      "\n\031f_fetchQueuedTransactions\020\031\022\027\n\023f_signe" +
+      "dTransaction\020\032\022\024\n\020f_rawTransaction\020\033\022\021\n\r" +
+      "f_estimateNrg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_hashr" +
+      "ate\020\036\022\024\n\020f_getActiveNodes\020\037\022\024\n\020f_getSolc" +
+      "Version\020 \022\017\n\013f_isSyncing\020!\022\016\n\nf_syncInfo" +
+      "\020\"\022\023\n\017f_getSystemInfo\020#\022\023\n\017f_eventRegist" +
+      "er\020$\022\025\n\021f_eventDeregister\020%\022\023\n\017f_account" +
+      "Create\020&\022\021\n\rf_accountLock\020\'\022\023\n\017f_userPri" +
+      "vilege\020(\022\020\n\014f_eventQuery\020)\022\024\n\020f_importAc",
+      "counts\020*\022\024\n\020f_exportAccounts\020+\022\034\n\030f_getB" +
+      "lockHeaderByNumber\020,\022\032\n\026f_getBlockHeader" +
+      "ByHash\020-\022\037\n\033f_getCurrentTotalDifficulty\020" +
+      ".\022\024\n\020f_getStaticNodes\020/\022\035\n\031f_getBlockDet" +
+      "ailsByNumber\0200\022\035\n\031f_getBlockDetailsByLat" +
+      "est\0201\022\027\n\023f_getBlocksByLatest\0202\022$\n f_getA" +
+      "ccountDetailsByAddressList\0203\022\024\n\020f_backup" +
+      "Accounts\0204\022\010\n\004f_NA\0205\022\030\n\024f_getBlockSqlByR" +
+      "ange\0206*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022\r\n\tr_succ" +
+      "ess\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r_heartbea",
+      "tReturn\020\003\022\025\n\021r_privilegeReturn\020\004\022\r\n\tr_tx" +
+      "_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_tx_Dropped" +
+      "\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx_Pending\020" +
+      "h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_eventCb\020j\022\010" +
+      "\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377\377\377\377\377\377\377\377\377\001" +
+      "\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377\377\377\001\022!\n\024r_" +
+      "fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_" +
+      "function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_" +
+      "api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_ct_byte" +
+      "code\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_rsp\020\371\377\377\377\377",
+      "\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377\377\377\377\377\377\377\377\001\022" +
+      "\'\n\032r_fail_null_compile_source\020\367\377\377\377\377\377\377\377\377\001" +
+      "\022$\n\027r_fail_compile_contract\020\366\377\377\377\377\377\377\377\377\001\022#" +
+      "\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036\n\021r" +
+      "_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail_ge" +
+      "tTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_fai" +
+      "l_zmqHandler_exception\020\362\377\377\377\377\377\377\377\377\001\022(\n\033r_f" +
+      "ail_hit_pending_tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%\n\030r" +
+      "_fail_txqueue_exception\020\360\377\377\377\377\377\377\377\377\001\022&\n\031r_" +
+      "fail_function_arguments\020\357\377\377\377\377\377\377\377\377\001\022!\n\024r_",
+      "fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fail_" +
+      "unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -66660,7 +66935,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_t_BlockSql_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_t_BlockSql_descriptor,
-        new java.lang.String[] { "BlockNumber", "Block", "Tx", });
+        new java.lang.String[] { "BlockNumber", "BlockHash", "ParentHash", "Block", "Tx", });
     internal_static_org_aion_api_server_pb_rsp_errormsg_descriptor =
       getDescriptor().getMessageTypes().get(11);
     internal_static_org_aion_api_server_pb_rsp_errormsg_fieldAccessorTable = new
