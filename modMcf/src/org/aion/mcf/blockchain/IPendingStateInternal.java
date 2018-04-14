@@ -45,4 +45,6 @@ public interface IPendingStateInternal<BLK extends IBlock<?, ?>, Tx extends ITra
     void updateBest();
 
     void DumpPool();
+
+    void loadPendingTx();
 }
