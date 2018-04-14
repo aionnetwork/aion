@@ -153,8 +153,10 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
-                                        Hex.toHexString(address.toBytes()), accountState.getNonce(),
-                                        accountState.getBalance(), contractDetails.getStorage());
+                                          Hex.toHexString(address.toBytes()),
+                                          accountState.getNonce(),
+                                          accountState.getBalance(),
+                                          Hex.toHexString(contractDetails.getStorageHash()));
                             }
                         }
                         continue;
@@ -185,8 +187,11 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                     updateAccountState(address, accountState);
 
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]", Hex.toHexString(address.toBytes()),
-                                accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
+                        LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
+                                  Hex.toHexString(address.toBytes()),
+                                  accountState.getNonce(),
+                                  accountState.getBalance(),
+                                  Hex.toHexString(contractDetails.getStorageHash()));
                     }
                 }
             }
@@ -325,18 +330,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         }
 
         return rtn;
-    }
-
-    @Override
-    public int getStorageSize(Address address) {
-        IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? 0 : details.getStorageSize();
-    }
-
-    @Override
-    public Set<DataWord> getStorageKeys(Address address) {
-        IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? Collections.emptySet() : details.getStorageKeys();
     }
 
     @Override

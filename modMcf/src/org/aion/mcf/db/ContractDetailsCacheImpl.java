@@ -23,6 +23,7 @@ package org.aion.mcf.db;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DataWord;
 
 import java.util.*;
@@ -90,23 +91,23 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-        throw new UnsupportedOperationException();
-    }
+        Map<DataWord, DataWord> storage = new HashMap<>();
+        if (keys == null) {
+            throw new IllegalArgumentException("Input keys can't be null");
+        } else {
+            for (DataWord key : keys) {
+                DataWord value = get(key);
 
-    @Override
-    public int getStorageSize() {
-        throw new UnsupportedOperationException();
-    }
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null) {
+                    storage.put(key, value);
+                }
+            }
+        }
 
-    @Override
-    public Set<DataWord> getStorageKeys() {
-        throw new UnsupportedOperationException();
+        return storage;
     }
 
     @Override
