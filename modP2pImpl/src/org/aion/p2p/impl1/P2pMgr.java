@@ -452,9 +452,9 @@ public final class P2pMgr implements IP2pMgr {
                     node = nodeMgr.tempNodesTake();
                     if (node.getIfFromBootList())
                         nodeMgr.tempNodesAdd(node);
-                    if (node.peerMetric.shouldNotConn()) {
-                        continue;
-                    }
+//                    if (node.peerMetric.shouldNotConn()) {
+//                        continue;
+//                    }
                 } catch (InterruptedException e) {
                     if (showLog)
                         System.out.println("<p2p-tcp-interrupted>");

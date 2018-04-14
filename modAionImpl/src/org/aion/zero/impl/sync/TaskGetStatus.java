@@ -76,7 +76,7 @@ final class TaskGetStatus implements Runnable {
             try {
                 for (int id : ids) {
                     p2p.send(id, reqStatus);
-                    Thread.sleep(1000L);
+                    Thread.sleep(200L);
                 }
 
                 if (ids.isEmpty()) {
