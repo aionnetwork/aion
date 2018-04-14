@@ -96,8 +96,11 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
                     accountState.setCodeHash(h256(contractDetails.getCode()));
                     worldState.put(hash, accountState);
                     if (logger.isDebugEnabled()) {
-                        logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]", Hex.toHexString(hash.getData()),
-                                accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
+                        logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
+                                     Hex.toHexString(hash.getData()),
+                                     accountState.getNonce(),
+                                     accountState.getBalance(),
+                                     Hex.toHexString(contractDetails.getStorageHash()));
                     }
 
                 }

@@ -158,25 +158,25 @@ public interface IRepositoryQuery<AS, DW> {
      */
     Map<DW, DW> getStorage(Address address, Collection<DW> keys);
 
-    /**
-     * Retrieves the storage size the account associated with the given address.
-     *
-     * @param address
-     *            the address of the account of interest
-     * @return the number of storage entries for the given account
-     */
-    int getStorageSize(Address address);
-
-    /**
-     * Retrieves all the storage keys for the account associated with the given
-     * address.
-     *
-     * @param address
-     *            the address of the account of interest
-     * @return the set of storage keys, or an empty set if the given account
-     *         address does not exist
-     */
-    Set<DW> getStorageKeys(Address address);
+//    /**
+//     * Retrieves the storage size the account associated with the given address.
+//     *
+//     * @param address
+//     *            the address of the account of interest
+//     * @return the number of storage entries for the given account
+//     */
+//    int getStorageSize(Address address);
+//
+//    /**
+//     * Retrieves all the storage keys for the account associated with the given
+//     * address.
+//     *
+//     * @param address
+//     *            the address of the account of interest
+//     * @return the set of storage keys, or an empty set if the given account
+//     *         address does not exist
+//     */
+//    Set<DW> getStorageKeys(Address address);
 
     /**
      * Retrieves the stored value for the specified key stored at the account

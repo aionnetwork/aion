@@ -32,56 +32,22 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.base.db;
+package org.aion.mcf.trie.scan;
 
-import org.aion.base.type.Address;
+import org.aion.rlp.Value;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+/**
+ * @author Alexandra Roatis
+ */
+public class CountNodes implements ScanAction {
+    private int count = 0;
 
-public interface IContractDetails<DW> {
+    @Override
+    public void doOnNode(byte[] hash, Value node) {
+        count++;
+    }
 
-    void put(DW key, DW value);
-
-    DW get(DW key);
-
-    byte[] getCode();
-
-    byte[] getCode(byte[] codeHash);
-
-    void setCode(byte[] code);
-
-    byte[] getStorageHash();
-
-    void decode(byte[] rlpCode);
-
-    void setDirty(boolean dirty);
-
-    void setDeleted(boolean deleted);
-
-    boolean isDirty();
-
-    boolean isDeleted();
-
-    byte[] getEncoded();
-
-    Map<DW, DW> getStorage(Collection<DW> keys);
-
-    void setStorage(List<DW> storageKeys, List<DW> storageValues);
-
-    void setStorage(Map<DW, DW> storage);
-
-    Address getAddress();
-
-    void setAddress(Address address);
-
-    String toString();
-
-    void syncStorage();
-
-    IContractDetails<DW> getSnapshotTo(byte[] hash);
-
-    void setDataSource(IByteArrayKeyValueStore dataSource);
+    public int getCount() {
+        return count;
+    }
 }
