@@ -659,7 +659,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             IAionBlock rollback = best.get();
             while (!rollback.isEqual(commonAncestor)) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Rollback blk#{} tx#{}", rollback.getNumber(), rollback.getTransactionsList().size());
+                    LOG.debug("Rollback: {}", rollback.getShortDescr());
                 }
                 List<AionTransaction> atl = rollback.getTransactionsList();
                 if (!atl.isEmpty()) {
@@ -676,7 +676,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             List<IAionBlock> mainFork = new ArrayList<>();
             while (!main.isEqual(commonAncestor)) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Mainfork blk#{} tx#{}", main.getNumber(), main.getTransactionsList().size());
+                    LOG.debug("Mainfork: {}", main.getShortDescr());
                 }
 
                 mainFork.add(main);
