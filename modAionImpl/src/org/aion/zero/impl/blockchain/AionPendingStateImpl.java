@@ -675,6 +675,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             IAionBlock main = newBlock;
             List<IAionBlock> mainFork = new ArrayList<>();
             while (!main.isEqual(commonAncestor)) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Mainfork blk#{} tx#{}", main.getNumber(), main.getTransactionsList().size());
+                }
+
                 mainFork.add(main);
                 main = blockchain.getBlockByHash(main.getParentHash());
             }
