@@ -287,7 +287,6 @@ public final class SyncMgr {
         // _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
         if(filtered.size() > 0) {
             importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
-            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!! " + importedHeaders.size());
         }
         else
             log.debug("<empty-filtered-incoming-headers>");
