@@ -127,14 +127,14 @@ public class BlockPropagationHandler {
         });
     }
 
-    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
+    public PropStatus processIncomingBlock(int _nodeId, final String _displayId, final AionBlock _block) {
 
-        if (block == null)
+        if (_block == null)
             return PropStatus.DROPPED;
 
-        ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
+        ByteArrayWrapper hashWrapped = new ByteArrayWrapper(_block.getHash());
 
-        if (!this.blockHeaderValidator.validate(block.getHeader(), log))
+        if (!this.blockHeaderValidator.validate(_block.getHeader(), log))
             return PropStatus.DROPPED;
 
         // guarantees if multiple requests of same block appears, only one goes through
@@ -158,28 +158,28 @@ public class BlockPropagationHandler {
 //            return PropStatus.DROPPED;
 
         // send
-        boolean sent = send(block, nodeId);
+        boolean sent = send(_block, _nodeId);
 
         // process
         long t1 = System.currentTimeMillis();
         ImportResult result ;
 
-        if (this.blockchain.skipTryToConnect(block.getNumber())) {
+        if (this.blockchain.skipTryToConnect(_block.getNumber())) {
             result = ImportResult.NO_PARENT;
             log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = NOT_IN_RANGE>",
                      _displayId,
-                     block.getShortHash(),
-                     block.getNumber(),
-                     block.getTransactionsList().size(),
+                     _block.getShortHash(),
+                     _block.getNumber(),
+                     _block.getTransactionsList().size(),
                      result);
         } else {
-            result = this.blockchain.tryToConnect(block);
+            result = this.blockchain.tryToConnect(_block);
             long t2 = System.currentTimeMillis();
             log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                      _displayId,
-                     block.getShortHash(),
-                     block.getNumber(),
-                     block.getTransactionsList().size(),
+                     _block.getShortHash(),
+                     _block.getNumber(),
+                     _block.getTransactionsList().size(),
                      result,
                      t2 - t1);
         }

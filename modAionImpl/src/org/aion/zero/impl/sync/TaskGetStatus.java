@@ -46,7 +46,7 @@ final class TaskGetStatus implements Runnable {
 
     private final static int intervalTotal = 1000;
 
-    private final static int intervalMin = 100;
+    private final static int intervalMin = 200;
 
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -76,7 +76,7 @@ final class TaskGetStatus implements Runnable {
             try {
                 for (int id : ids) {
                     p2p.send(id, reqStatus);
-                    Thread.sleep(500L);
+                    Thread.sleep(intervalMin);
                 }
 
                 if (ids.isEmpty()) {

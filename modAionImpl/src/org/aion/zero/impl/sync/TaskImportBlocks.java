@@ -123,21 +123,21 @@ final class TaskImportBlocks implements Runnable {
 
                 try {
                     switch (importResult) {
-                    case IMPORTED_BEST:
-                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                        break;
-                    case IMPORTED_NOT_BEST:
-                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                        break;
-                    case EXIST:
-                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
-                        break;
-                    case NO_PARENT:
-                        break;
-                    case INVALID_BLOCK:
-                        break;
-                    default:
-                        break;
+                        case IMPORTED_BEST:
+                            importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                            break;
+                        case IMPORTED_NOT_BEST:
+                            importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                            break;
+                        case EXIST:
+                            importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), null);
+                            break;
+                        case NO_PARENT:
+                            break;
+                        case INVALID_BLOCK:
+                            break;
+                        default:
+                            break;
                     }
                 } catch (Throwable e) {
                     log.error("import exception, {}", e.toString());

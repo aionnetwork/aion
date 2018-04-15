@@ -495,17 +495,18 @@ public final class P2pMgr implements IP2pMgr {
                                 System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
                                         + " result=success>");
 
-                            node.peerMetric.decFailedCount();
+                            //node.peerMetric.decFailedCount();
 
-                        } else {
-                            channel.close();
-                            node.peerMetric.incFailedCount();
                         }
+//                        else {
+//                            channel.close();
+//                            node.peerMetric.incFailedCount();
+//                        }
                     } catch (IOException e) {
                         if (showLog)
                             System.out.println("<p2p action=connect-outbound addr=" + node.getIpStr() + ":" + _port
                                     + " result=failed>");
-                        node.peerMetric.incFailedCount();
+                        //node.peerMetric.incFailedCount();
                     }
                 }
             }
@@ -945,7 +946,7 @@ public final class P2pMgr implements IP2pMgr {
             node.refreshTimestamp();
             receiveMsgQue.offer(new MsgIn(nid, nsid, _route, _msgBytes));
         } else {
-            System.out.println(" handle kernel msg failed. can't find node:" + _nodeIdHash);
+            // System.out.println(" handle kernel msg failed. can't find node:" + _nodeIdHash);
         }
     }
 

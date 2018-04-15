@@ -216,7 +216,7 @@ public final class SyncMgr {
 
     private void getHeaders(BigInteger _selfTd){
         if (importedBlocks.size() > blocksQueueMax) {
-            log.debug("Imported blocks queue is full. Stop requesting headers");
+            log.debug("<imported-blocks-queue-full stop-requesting-headers>");
             return;
         }
 
@@ -231,6 +231,9 @@ public final class SyncMgr {
      * @param _headers List validate headers batch and add batch to imported headers
      */
     public void validateAndAddHeaders(int _nodeIdHashcode, String _displayId, List<A0BlockHeader> _headers) {
+
+        log.debug("<validate-and-add-headers-triggered>");
+
         if (_headers == null || _headers.isEmpty()) {
             return;
         }
@@ -291,8 +294,11 @@ public final class SyncMgr {
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
+        log.debug("<validate-and-add-bodies-triggered>");
+
+
         if (importedBlocks.size() > blocksQueueMax) {
-            log.debug("Imported blocks queue is full. Stop validating incoming bodies");
+            log.debug("<imported-blocks-full>");
             return;
         }
 
@@ -314,16 +320,16 @@ public final class SyncMgr {
                 blocks.add(block);
         }
 
+
         int m = blocks.size();
         if (m == 0)
             return;
 
-        if (log.isDebugEnabled()) {
-            log.debug("<incoming-bodies from-num={} to-num={} node={}>",
-                    blocks.get(0).getNumber(),
-                    blocks.get(blocks.size() - 1).getNumber(),
-                    _displayId);
-        }
+        log.debug("<incoming-bodies from-num={} to-num={} node={}>",
+                blocks.get(0).getNumber(),
+                blocks.get(blocks.size() - 1).getNumber(),
+                _displayId);
+
 
         // add batch
         importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));

@@ -68,7 +68,7 @@ class ChannelBuffer {
         try {
             header = Header.decode(bsHead);
         } catch (Exception e) {
-            e.printStackTrace();
+
         }
     }
 

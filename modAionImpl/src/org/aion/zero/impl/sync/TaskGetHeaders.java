@@ -86,20 +86,14 @@ final class TaskGetHeaders implements Runnable {
         }
 
         // sort by TD and pick top 8 in next step.
-        nodesFiltered.sort((n1, n2) -> {
-            return n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
-        });
+        nodesFiltered.sort((n1, n2) -> n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty()));
 
         // @TODO: when nodes TD highly distributed in wide range, simple way is only pick top 8 node for sync.
         // looking for better strategy here.
         INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
-
-        if (log.isDebugEnabled()) {
-            log.debug("<sync with={} BB={}>", node.getIdShort(), node.getBestBlockNumber());
-        }
-
         long nodeNumber = node.getBestBlockNumber();
-        long from = 0;
+        long from;
+        log.debug("<sync-headers-from remote-id={} remote-best-number={}>", node.getIdShort(), nodeNumber);
         if (nodeNumber >= selfNumber + 128) {
             from = Math.max(1, selfNumber - backwardMin);
         } else if (nodeNumber >= selfNumber - 128) {
@@ -110,9 +104,7 @@ final class TaskGetHeaders implements Runnable {
         }
 
         // send request
-        if (log.isDebugEnabled()) {
-            log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
-        }
+        log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
         ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
         this.p2p.send(node.getIdHash(), rbh);
     }

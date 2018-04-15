@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TaskWrite implements Runnable {
 
+	private final static int MAX_WRITE = 3;
 	private boolean showLog;
 	private String nodeShortId;
 	private SocketChannel sc;
@@ -93,9 +94,14 @@ public class TaskWrite implements Runnable {
 				buf.put(bodyBytes);
 			buf.flip();
 
+			int writeCount = 0;
+
 			try {
 				while (buf.hasRemaining()) {
 					sc.write(buf);
+					if (++writeCount > MAX_WRITE)
+					    break;
+
 				}
 			} catch (ClosedChannelException ex1) {
 				if (showLog) {
@@ -110,10 +116,11 @@ public class TaskWrite implements Runnable {
 				if (reason.equals("Broken pipe".intern())) {
 					channelBuffer.isClosed.set(true);
 				}
-			} finally {
-				// channelBuffer.refreshHeader();
-				// channelBuffer.refreshBody();
 			}
+//			finally {
+//				// channelBuffer.refreshHeader();
+//				// channelBuffer.refreshBody();
+//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			// channelBuffer.refreshHeader();
