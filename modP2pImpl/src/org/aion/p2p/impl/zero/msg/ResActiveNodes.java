@@ -37,13 +37,11 @@ import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
 
 /**
- *
  * @author chris
- *
  */
 public final class ResActiveNodes extends Msg {
 
-    private final List<Node> nodes;
+    private final List<INode> nodes;
 
     private int count;
 
@@ -55,10 +53,9 @@ public final class ResActiveNodes extends Msg {
     private final static int MAX_NODES = 40;
 
     /**
-     * @param _nodes
-     *            List
+     * @param _nodes List
      */
-    public ResActiveNodes(final List<Node> _nodes) {
+    public ResActiveNodes(final List<INode> _nodes) {
         super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
         this.count = Math.min(MAX_NODES, _nodes.size());
         if (this.count > 0)
@@ -70,13 +67,12 @@ public final class ResActiveNodes extends Msg {
     /**
      * @return List
      */
-    public List<Node> getNodes() {
+    public List<INode> getNodes() {
         return this.nodes;
     }
 
     /**
-     * @param _bytes
-     *            byte[]
+     * @param _bytes byte[]
      * @return ResActiveNodes
      */
     public static ResActiveNodes decode(final byte[] _bytes) {
@@ -90,7 +86,7 @@ public final class ResActiveNodes extends Msg {
             if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
                 return null;
 
-            ArrayList<Node> activeNodes = new ArrayList<>();
+            ArrayList<INode> activeNodes = new ArrayList<>();
             for (int i = 0; i < count; i++) {
                 byte[] nodeIdBytes = new byte[36];
                 buf.get(nodeIdBytes);

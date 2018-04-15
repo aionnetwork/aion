@@ -33,8 +33,6 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +46,7 @@ import java.util.stream.Collectors;
 final class TaskGetBodies implements Runnable {
 
     // timeout sent headers
-    private final static int SENT_HEADERS_TIMEOUT = 10000;
+    private final static int SENT_HEADERS_TIMEOUT = 20000;
 
     private final IP2pMgr p2p;
 
@@ -83,31 +81,45 @@ final class TaskGetBodies implements Runnable {
     @Override
     public void run() {
         while (run.get()) {
-            HeadersWrapper hw;
+            HeadersWrapper newHw;
             try {
-                hw = headersImported.take();
-            } catch (InterruptedException e) {
-                continue;
-            }
-
-            int idHash = hw.getNodeIdHash();
-            List<A0BlockHeader> headers = hw.getHeaders();
-            if (headers.isEmpty()) {
-                continue;
-            }
-
-            HeadersWrapper hwPrevious = headersSent.get(idHash);
-            if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
-                this.headersSent.put(idHash, hw);
-
-                if (log.isDebugEnabled()) {
-                    log.debug("<get-bodies from-num={} to-num={} node={}>",
-                            headers.get(0).getNumber(),
-                            headers.get(headers.size() - 1).getNumber(),
-                            hw.getDisplayId());
+                try {
+                    newHw = headersImported.take();
+                } catch (InterruptedException e) {
+                    return;
                 }
 
-                this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+                int idHash = newHw.getNodeIdHash();
+                List<A0BlockHeader> headers = newHw.getHeaders();
+                if (headers.isEmpty()) {
+                    continue;
+                }
+
+                HeadersWrapper hwPrevious = headersSent.putIfAbsent(idHash, newHw);
+
+                // headers sent already
+                if (hwPrevious != null) {
+
+                    // dun send request bodies and drop sent headers record
+                    if ((System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
+                        log.debug("<task-get-bodies sent-headers-expired node={}>", hwPrevious.getDisplayId());
+                        headersSent.put(idHash, newHw);
+                        this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(A0BlockHeader::getHash).collect(Collectors.toList())));
+                    }
+                    // refresh send request bodies
+                    else {
+                        log.debug("<task-get-bodies wait node={}>", hwPrevious.getDisplayId());
+                        continue;
+                    }
+                }
+
+                log.debug("<get-bodies from-num={} to-num={} node={}>",
+                        headers.get(0).getNumber(),
+                        headers.get(headers.size() - 1).getNumber(),
+                        newHw.getDisplayId());
+                this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(A0BlockHeader::getHash).collect(Collectors.toList())));
+            } catch(Exception ex){
+                ex.printStackTrace();
             }
         }
     }

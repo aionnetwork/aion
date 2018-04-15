@@ -35,7 +35,6 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -75,7 +74,7 @@ final class TaskGetHeaders implements Runnable {
     @Override
     public void run() {
         // get all active nodes
-        Collection<INode> nodes = this.p2p.getActiveNodes().values();
+        List<INode> nodes = this.p2p.getActiveNodes();
 
         // filter nodes by total difficulty
         List<INode> nodesFiltered = nodes.stream()
@@ -94,7 +93,6 @@ final class TaskGetHeaders implements Runnable {
         INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
         long nodeNumber = node.getBestBlockNumber();
         long from;
-        log.debug("<sync-headers-from remote-id={} remote-best-number={}>", node.getIdShort(), nodeNumber);
         if (nodeNumber >= selfNumber + 128) {
             from = Math.max(1, selfNumber - backwardMin);
         } else if (nodeNumber >= selfNumber - 128) {
@@ -105,7 +103,13 @@ final class TaskGetHeaders implements Runnable {
         }
 
         // send request
-        log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
+        log.debug(
+            "<get-headers from-num={} size={} remote-id={} remote-best={}>",
+            from,
+            requestMax,
+            node.getIdShort(),
+            nodeNumber
+        );
         ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
         this.p2p.send(node.getIdHash(), rbh);
     }

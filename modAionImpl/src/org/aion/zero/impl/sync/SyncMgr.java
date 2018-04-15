@@ -95,16 +95,18 @@ public final class SyncMgr {
     // store blocks that ready to save to db
     private final BlockingQueue<BlocksWrapper> importedBlocks = new LinkedBlockingQueue<>();
 
-    //private ExecutorService workers = Executors.newFixedThreadPool(5);
-    private ExecutorService workers = Executors.newCachedThreadPool(new ThreadFactory() {
-
-        private AtomicInteger cnt = new AtomicInteger(0);
-
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r, "sync-gh-" + cnt.incrementAndGet());
+    private ThreadPoolExecutor workers = new ThreadPoolExecutor(2, 2, 3000, TimeUnit.MILLISECONDS,
+        new LinkedBlockingQueue<>(10),
+        new ThreadFactory() {
+            private AtomicInteger cnt = new AtomicInteger(0);
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread gh = new Thread(r, "sync-gh-" + cnt.incrementAndGet());
+                gh.setPriority(Thread.MIN_PRIORITY);
+                return gh;
+            }
         }
-    });
+    );
 
     private Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
 
@@ -220,8 +222,10 @@ public final class SyncMgr {
             return;
         }
 
-        workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
-                syncBackwardMin, syncBackwardMax, syncRequestMax,  log));
+        if(workers.getQueue().size() < 5)
+            workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
+                    syncBackwardMin, syncBackwardMax, syncRequestMax,  log));
+
     }
 
     /**
@@ -281,8 +285,12 @@ public final class SyncMgr {
         }
 
         // _headers.sort((h1, h2) -> (int) (h1.getNumber() - h2.getNumber()));
-        if(filtered.size() > 0)
+        if(filtered.size() > 0) {
             importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!! " + importedHeaders.size());
+        }
+        else
+            log.debug("<empty-filtered-incoming-headers>");
     }
 
     /**

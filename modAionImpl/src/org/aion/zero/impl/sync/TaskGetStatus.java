@@ -69,11 +69,10 @@ final class TaskGetStatus implements Runnable {
     @Override
     public void run() {
         while (this.run.get()) {
-            Set<INode> nodes = new HashSet<>(p2p.getActiveNodes().values());
+            Set<INode> nodes = new HashSet<>(p2p.getActiveNodes());
             try {
                 for (INode node : nodes) {
                     p2p.send(node.getIdHash(), reqStatus);
-                    log.debug("<requesting-status from-node={}>", node.getIdShort());
                 }
                 Thread.sleep(intervalTotal);
             } catch (InterruptedException e) {

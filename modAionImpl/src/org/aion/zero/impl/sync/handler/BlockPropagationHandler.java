@@ -120,7 +120,7 @@ public class BlockPropagationHandler {
             this.cacheMap.put(hashWrapped, true);
         }
 
-        this.p2pManager.getActiveNodes().values().forEach(n -> {
+        this.p2pManager.getActiveNodes().forEach(n -> {
             if (log.isDebugEnabled())
                 log.debug("<sending-new-block=" + block.getShortHash() + " to=" + n.getIdShort() + ">");
             this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
@@ -201,7 +201,7 @@ public class BlockPropagationHandler {
     private boolean send(AionBlock block, int nodeId) {
         // current proposal is to send to all peers with lower blockNumbers
         AtomicBoolean sent = new AtomicBoolean();
-        this.p2pManager.getActiveNodes().values()
+        this.p2pManager.getActiveNodes()
                 .stream()
                 .filter(n -> n.getIdHash() != nodeId)
                 // peer is within 5 blocks of the block we're about to send

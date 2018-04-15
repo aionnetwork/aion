@@ -47,6 +47,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public byte[] getBestBlockHash() {
+            return new byte[0];
+        }
+
+        @Override
         public BigInteger getTotalDifficulty() {
             return BigInteger.ZERO;
         }
@@ -74,6 +79,11 @@ public class BlockPropagationTest {
         public int getPort() {
             return 0;
         }
+
+        @Override
+        public long getTimestamp() {
+            return 0;
+        }
     }
 
     private static class P2pMock implements IP2pMgr {
@@ -84,15 +94,6 @@ public class BlockPropagationTest {
             this.map = map;
         }
 
-        @Override
-        public Map<Integer, INode> getActiveNodes() {
-            return map;
-        }
-
-        @Override
-        public INodeMgr getNodeMgr() {
-            return null;
-        }
 
         @Override
         public void shutdown() {
@@ -101,6 +102,11 @@ public class BlockPropagationTest {
 
         @Override
         public void run() {
+
+        }
+
+        @Override
+        public void dropActive(int _nodeIdHash) {
 
         }
 
@@ -120,6 +126,16 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public List<INode> getActiveNodes() {
+            return null;
+        }
+
+        @Override
+        public INode getActiveNode(int _nodeIdHash) {
+            return null;
+        }
+
+        @Override
         public void register(List<Handler> _hs) {
 
         }
@@ -132,10 +148,6 @@ public class BlockPropagationTest {
         @Override
         public void send(int _id, Msg _msg) {
 
-        }
-
-        @Override
-        public void dropActive(Integer hash) {
         }
 
         @Override

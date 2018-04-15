@@ -28,6 +28,7 @@ import org.aion.p2p.Header;
 import org.aion.p2p.P2pConstant;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
@@ -62,6 +63,20 @@ class ChannelBuffer {
      * Indicates whether this channel is closed.
      */
     public AtomicBoolean isClosed = new AtomicBoolean(false);
+
+
+    /**
+     * constructor right after inbound connection established
+     */
+    ChannelBuffer(){}
+
+    /**
+     * @param _nodeIdHash int
+     * constructor right after outbound connection established
+     */
+    ChannelBuffer(int _nodeIdHash){
+        this.nodeIdHash = _nodeIdHash;
+    }
 
     void readHead(ByteBuffer buf) {
         buf.get(bsHead);

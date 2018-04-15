@@ -25,21 +25,12 @@
 
 package org.aion.p2p.impl.comm;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-
 import org.aion.p2p.INode;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 
 /*
  *
@@ -50,436 +41,254 @@ import javax.xml.stream.XMLStreamWriter;
  */
 public final class Node implements INode {
 
-	private static final String REGEX_PROTOCOL = "^p2p://"; // Protocol eg. p2p://
-	private static final String REGEX_NODE_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"; // Node-Id
-																												// eg.
-																												// 3e2cab6a-09dd-4771-b28d-6aa674009796
-	private static final String REGEX_IPV4 = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])"; // Ip
-																															// eg.
-																															// 127.0.0.1
-	private static final String REGEX_PORT = "[0-9]+$"; // Port eg. 30303
-	private static final Pattern PATTERN_P2P = Pattern
-			.compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
-	private static final int SIZE_BYTES_IPV4 = 8;
-
-	private boolean fromBootList;
-
-	private byte[] id; // 36 bytes
-
-	private int idHash;
-
-	private int fullHash = -1;
-
-	/**
-	 * for display only
-	 */
-	private String idShort;
-
-	private byte[] ip;
-
-	private String ipStr;
-
-	private int port;
-
-	private int portConnected;
-
-	private long timestamp;
-
-	private long bestBlockNumber;
-
-	private byte[] bestBlockHash;
-
-	private BigInteger totalDifficulty = BigInteger.ZERO;
-
-	private String binaryVersion = "";
-
-	private SocketChannel channel;
-
-	/**
-	 * for log display indicates current node connection is constructed by inbound
-	 * connection or outbound connection
-	 */
-	private String connection = "";
-
-	public PeerMetric peerMetric = new PeerMetric();
-
-	/**
-	 * constructor for initial stage of persisted peer info from file system
-	 */
-	private Node(boolean fromBootList, String _ipStr) {
-		this.fromBootList = fromBootList;
-		this.idHash = 0;
-		this.ip = ipStrToBytes(_ipStr);
-		this.ipStr = _ipStr;
-		this.port = -1;
-		this.portConnected = -1;
-		this.timestamp = System.currentTimeMillis();
-		this.bestBlockNumber = 0L;
-	}
-
-	/**
-	 * constructor for initial stage of connections from network
-	 */
-	Node(String _ipStr, int port, int portConnected) {
-		this.fromBootList = false;
-		this.idHash = 0;
-		this.ip = ipStrToBytes(_ipStr);
-		this.ipStr = _ipStr;
-		this.port = port;
-		this.portConnected = portConnected;
-		this.timestamp = System.currentTimeMillis();
-		this.bestBlockNumber = 0L;
-	}
-
-	/**
-	 * constructor for initial stage of boot nodes from config
-	 */
-	public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, final int _port) {
-		this.fromBootList = fromBootList;
-		this.id = _id;
-		if (_id != null && _id.length == 36) {
-			this.idHash = Arrays.hashCode(_id);
-			this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
-		}
-		this.ip = _ip;
-		this.ipStr = ipBytesToStr(_ip);
-		this.port = _port;
-		this.portConnected = -1;
-		this.timestamp = System.currentTimeMillis();
-		this.bestBlockNumber = 0L;
-	}
-
-	/**
-	 * @param _ip
-	 *            String
-	 * @return byte[]
-	 */
-	public static byte[] ipStrToBytes(final String _ip) {
-		ByteBuffer bb8 = ByteBuffer.allocate(8);
-		String[] frags = _ip.split("\\.");
-		for (String frag : frags) {
-			short ipFrag;
-			try {
-				ipFrag = Short.parseShort(frag);
-			} catch (NumberFormatException e) {
-				return new byte[0];
-			}
-			bb8.putShort(ipFrag);
-		}
-		return bb8.array();
-	}
-
-	/**
-	 * @param _ip
-	 *            byte[]
-	 * @return String
-	 */
-	public static String ipBytesToStr(final byte[] _ip) {
-		if (_ip == null || _ip.length != SIZE_BYTES_IPV4)
-			return "";
-		else {
-			short[] shorts = new short[_ip.length / 2];
-			ByteBuffer.wrap(_ip).asShortBuffer().get(shorts);
-
-			StringBuilder ip = new StringBuilder();
-			for (int i = 0; i < shorts.length; i++) {
-				ip.append(shorts[i]).append(i < shorts.length - 1 ? "." : "");
-			}
-
-			return ip.toString();
-		}
-	}
-
-	/**
-	 * @param _p2p
-	 *            String
-	 * @return Node TODO: ugly
-	 */
-	public static Node parseP2p(String _p2p) {
-		if (!PATTERN_P2P.matcher(_p2p).matches())
-			return null;
-
-		String[] arrs = _p2p.split("@");
-		byte[] _tempBytes = arrs[0].getBytes();
-
-		byte[] _id = Arrays.copyOfRange(_tempBytes, 6, 42);
-		String[] subArrs = arrs[1].split(":");
-
-		byte[] _ip = ipStrToBytes(subArrs[0]);
-		int _port = Integer.parseInt(subArrs[1]);
-
-		return new Node(true, _id, _ip, _port);
-	}
-
-	void setFromBootList(boolean _ifBoot) {
-		this.fromBootList = _ifBoot;
-	}
-
-	/**
-	 * @param _id
-	 *            byte[]
-	 */
-	public void setId(final byte[] _id) {
-		this.id = _id;
-		if (_id != null && _id.length == 36) {
-			this.idHash = Arrays.hashCode(_id);
-			this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
-		}
-	}
-
-	/**
-	 * @param _port
-	 *            int
-	 */
-	public void setPort(final int _port) {
-		this.port = _port;
-	}
-
-	public void setPortConnected(final int _port) {
-		this.portConnected = _port;
-	}
-
-	public void setBinaryVersion(String _revision) {
-		this.binaryVersion = _revision;
-	}
-
-	/**
-	 * this method used to keep current node stage on either pending list or active
-	 * list
-	 */
-	public void refreshTimestamp() {
-		this.timestamp = System.currentTimeMillis();
-	}
-
-	/**
-	 * @param _channel
-	 *            SocketChannel
-	 */
-	public void setChannel(final SocketChannel _channel) {
-		this.channel = _channel;
-	}
-
-	/**
-	 * @param _connection
-	 *            String
-	 */
-	void setConnection(String _connection) {
-		this.connection = _connection;
-	}
-
-	/**
-	 * @return boolean
-	 */
-	public boolean getIfFromBootList() {
-		return this.fromBootList;
-	}
-
-	@Override
-	public byte[] getIp() {
-		return this.ip;
-	}
-
-	@Override
-	public String getIpStr() {
-		return this.ipStr;
-	}
-
-	@Override
-	public int getPort() {
-		return this.port;
-	}
-
-	public int getConnectedPort() {
-		return portConnected;
-	}
-
-	/**
-	 * @return long
-	 */
-	public long getTimestamp() {
-		return this.timestamp;
-	}
-
-	String getBinaryVersion() {
-		return this.binaryVersion;
-	}
-
-	/**
-	 * @return SocketChannel
-	 */
-	public SocketChannel getChannel() {
-		return this.channel;
-	}
-
-	@Override
-	public byte[] getId() {
-		return this.id;
-	}
-
-	@Override
-	public int getIdHash() {
-		return this.idHash;
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getConnection() {
-		return this.connection;
-	}
-
-	boolean hasFullInfo() {
-		return (id != null) && (ip != null) && (port > 0);
-	}
-
-	int getFullHash() {
-		if (fullHash > 0)
-			return fullHash;
-		else {
-			if (hasFullInfo()) {
-				ByteBuffer bb = ByteBuffer.allocate(id.length + ip.length + 4);
-				bb.putInt(port);
-				bb.put(id);
-				bb.put(ip);
-				return Arrays.hashCode(bb.array());
-			}
-		}
-		return -1;
-	}
-
-	@Override
-	public String getIdShort() {
-		return this.idShort == null ? "" : this.idShort;
-	}
-
-	@Override
-	public long getBestBlockNumber() {
-		return this.bestBlockNumber;
-	}
-
-	byte[] getBestBlockHash() {
-		return this.bestBlockHash;
-	}
-
-	@Override
-	public BigInteger getTotalDifficulty() {
-		return this.totalDifficulty;
-	}
-
-	@Override
-	public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
-		this.bestBlockNumber = _bestBlockNumber;
-		this.bestBlockHash = _bestBlockHash;
-		this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
-	}
-
-	void copyNodeStatus(Node _n) {
-		if (_n.bestBlockNumber > this.bestBlockNumber) {
-			this.bestBlockNumber = _n.getBestBlockNumber();
-			this.bestBlockHash = _n.bestBlockHash;
-			this.totalDifficulty = _n.getTotalDifficulty();
-		}
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Node) {
-			Node other = (Node) o;
-			return this.getFullHash() == other.getFullHash();
-		}
-		return false;
-	}
-
-	String toXML() {
-		final XMLOutputFactory output = XMLOutputFactory.newInstance();
-		XMLStreamWriter sw;
-		String xml;
-		try {
-			Writer strWriter = new StringWriter();
-			sw = output.createXMLStreamWriter(strWriter);
-
-			sw.writeCharacters("\r\n\t");
-			sw.writeStartElement("node");
-			sw.writeStartElement("ip");
-			sw.writeCharacters(getIpStr());
-			sw.writeEndElement();
-
-			sw.writeStartElement("port");
-			sw.writeCharacters(String.valueOf(getPort()));
-			sw.writeEndElement();
-
-			sw.writeStartElement("id");
-			sw.writeCharacters(new String(getId()));
-			sw.writeEndElement();
-
-			sw.writeStartElement("failedConn");
-			sw.writeCharacters(String.valueOf(peerMetric.metricFailedConn));
-			sw.writeEndElement();
-			sw.writeEndElement();
-
-			xml = strWriter.toString();
-			strWriter.flush();
-			strWriter.close();
-			sw.flush();
-			sw.close();
-			return xml;
-		} catch (IOException | XMLStreamException e) {
-			return "";
-		}
-	}
-
-	public static Node fromXML(final XMLStreamReader sr) throws XMLStreamException {
-		String id = null;
-		String ip = null;
-		int port = 0;
-		int failedConn = 0;
-
-		while (sr.hasNext()) {
-			int eventType = sr.next();
-			switch (eventType) {
-			case XMLStreamReader.START_ELEMENT:
-				String elementName = sr.getLocalName().toLowerCase();
-				switch (elementName) {
-				case "ip":
-					ip = readValue(sr);
-					break;
-				case "port":
-					port = Integer.parseInt(readValue(sr));
-					break;
-				case "id":
-					id = readValue(sr);
-					break;
-				case "failedconn":
-					failedConn = Integer.parseInt(readValue(sr));
-					break;
-				default:
-					break;
-				}
-				break;
-			case XMLStreamReader.END_ELEMENT:
-				Node node = new Node(false, ip);
-				if (id == null)
-					return null;
-				node.setId(id.getBytes());
-				node.setPort(port);
-				node.peerMetric.metricFailedConn = failedConn;
-				return node;
-			}
-		}
-		return null;
-	}
-
-	private static String readValue(final XMLStreamReader sr) throws XMLStreamException {
-		StringBuilder str = new StringBuilder();
-		readLoop: while (sr.hasNext()) {
-			switch (sr.next()) {
-			case XMLStreamReader.CHARACTERS:
-				str.append(sr.getText());
-				break;
-			case XMLStreamReader.END_ELEMENT:
-				break readLoop;
-			}
-		}
-		return str.toString();
-	}
+    private static final Pattern PATTERN_P2P = Pattern.compile("^p2p://[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5]):[0-9]+$");
+
+    private static final int SIZE_BYTES_IPV4 = 8;
+
+    private SocketChannel channel;
+
+    private boolean fromBootList;
+
+    private byte[] id; // 36 bytes
+
+    private int idHash;
+
+    private String idShort;
+
+    private byte[] ip;
+
+    private String ipStr;
+
+    private int port;
+
+    private long timestamp;
+
+    private long bestBlockNumber;
+
+    private byte[] bestBlockHash;
+
+    private BigInteger totalDifficulty = BigInteger.ZERO;
+
+    private String binaryVersion = "";
+
+    /**
+     * for log display indicates current node inboundOrOutbound is constructed by inbound
+     * inboundOrOutbound or outbound inboundOrOutbound
+     */
+    private String inboundOrOutbound = "";
+
+
+
+    public NodeStats nodeStats = new NodeStats();
+
+    /**
+     *
+     * @param _channel SocketChannel
+     * @param _ipStr String
+     * @param _port int
+     * constructor for initial stage of incoming connections from network
+     */
+    public Node(SocketChannel _channel, String _ipStr, int _port) {
+        this.channel = _channel;
+        this.fromBootList = false;
+        this.idHash = 0;
+        this.ip = ipStrToBytes(_ipStr);
+        this.ipStr = _ipStr;
+        this.port = _port;
+        this.timestamp = System.currentTimeMillis();
+        this.bestBlockNumber = 0L;
+        this.inboundOrOutbound = "inbound";
+    }
+
+    /**
+     * constructor for initial stage of boot nodes from config or from list of active nodes response
+     */
+    public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, int _port) {
+        this.fromBootList = fromBootList;
+        this.id = _id;
+        this.idHash = Arrays.hashCode(_id);
+        this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        this.ip = _ip;
+        this.ipStr = ipBytesToStr(_ip);
+        this.port = _port;
+        this.timestamp = System.currentTimeMillis();
+        this.bestBlockNumber = 0L;
+        this.inboundOrOutbound = "outbound";
+    }
+
+    /**
+     * @param _ip String
+     * @return byte[]
+     */
+    public static byte[] ipStrToBytes(String _ip) {
+        ByteBuffer bb8 = ByteBuffer.allocate(8);
+        String[] frags = _ip.split("\\.");
+        for (String frag : frags) {
+            short ipFrag;
+            try {
+                ipFrag = Short.parseShort(frag);
+            } catch (NumberFormatException e) {
+                return new byte[0];
+            }
+            bb8.putShort(ipFrag);
+        }
+        return bb8.array();
+    }
+
+    /**
+     * @param _ip byte[]
+     * @return String
+     */
+    public static String ipBytesToStr(final byte[] _ip) {
+        if (_ip == null || _ip.length != SIZE_BYTES_IPV4)
+            return "";
+        else {
+            short[] shorts = new short[_ip.length / 2];
+            ByteBuffer.wrap(_ip).asShortBuffer().get(shorts);
+
+            StringBuilder ip = new StringBuilder();
+            for (int i = 0; i < shorts.length; i++) {
+                ip.append(shorts[i]).append(i < shorts.length - 1 ? "." : "");
+            }
+
+            return ip.toString();
+        }
+    }
+
+    /**
+     * @param _p2p String
+     * @return Node TODO: ugly
+     */
+    public static Node parseP2p(String _p2p) {
+        if (!PATTERN_P2P.matcher(_p2p).matches())
+            return null;
+
+        String[] arrs = _p2p.split("@");
+        byte[] _tempBytes = arrs[0].getBytes();
+
+        byte[] _id = Arrays.copyOfRange(_tempBytes, 6, 42);
+        String[] subArrs = arrs[1].split(":");
+
+        byte[] _ip = ipStrToBytes(subArrs[0]);
+        int _port = Integer.parseInt(subArrs[1]);
+
+        return new Node(true, _id, _ip, _port);
+    }
+
+    /**
+     * @param _id byte[]
+     */
+    public void setId(final byte[] _id) {
+        this.id = _id;
+        if (_id != null && _id.length == 36) {
+            this.idHash = Arrays.hashCode(_id);
+            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        }
+    }
+
+    /**
+     * @param _port int
+     */
+    public void setPort(final int _port) {
+        this.port = _port;
+    }
+
+    public void setBinaryVersion(String _revision) {
+        this.binaryVersion = _revision;
+    }
+
+    /**
+     * this method used to keep current node stage on either pending list or active
+     * list
+     */
+    public void refreshTimestamp() {
+        this.timestamp = System.currentTimeMillis();
+    }
+
+    /**
+     * @return boolean
+     */
+    public boolean getIfFromBootList() {
+        return this.fromBootList;
+    }
+
+    @Override
+    public byte[] getIp() {
+        return this.ip;
+    }
+
+    @Override
+    public String getIpStr() {
+        return this.ipStr;
+    }
+
+    @Override
+    public int getPort() {
+        return this.port;
+    }
+
+    @Override
+    public long getTimestamp() {
+        return this.timestamp;
+    }
+
+    String getBinaryVersion() {
+        return this.binaryVersion;
+    }
+
+    public void setChannel(final SocketChannel _channel){
+        this.channel = _channel;
+    }
+
+    /**
+     * @return SocketChannel
+     */
+    public SocketChannel getChannel() {
+        return this.channel;
+    }
+
+    @Override
+    public byte[] getId() {
+        return this.id;
+    }
+
+    @Override
+    public int getIdHash() {
+        return this.idHash;
+    }
+
+    @Override
+    public String getIdShort() {
+        return this.idShort == null ? "" : this.idShort;
+    }
+
+    /**
+     * @return String
+     */
+    String getInboundOrOutbound() {
+        return this.inboundOrOutbound;
+    }
+
+    @Override
+    public long getBestBlockNumber() {
+        return this.bestBlockNumber;
+    }
+
+    @Override
+    public byte[] getBestBlockHash() {
+        return this.bestBlockHash;
+    }
+
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return this.totalDifficulty;
+    }
+
+    @Override
+    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
+        this.bestBlockNumber = _bestBlockNumber;
+        this.bestBlockHash = _bestBlockHash;
+        this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
+    }
+
 }

@@ -112,7 +112,7 @@ public final class Node implements INode {
      * @param _ip String
      * @return byte[]
      */
-    public static byte[] ipStrToBytes(final String _ip) {
+    static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
         for (String frag : frags) {
@@ -287,9 +287,14 @@ public final class Node implements INode {
         return this.bestBlockNumber;
     }
 
-    byte[] getBestBlockHash() {
-        return this.bestBlockHash;
+    @Override
+    public byte[] getBestBlockHash() {
+        return new byte[0];
     }
+
+    //byte[] getBestBlockHash() {
+    //    return this.bestBlockHash;
+    //}
 
     @Override
     public BigInteger getTotalDifficulty() {

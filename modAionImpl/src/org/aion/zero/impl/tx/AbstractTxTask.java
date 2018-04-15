@@ -26,7 +26,6 @@ package org.aion.zero.impl.tx;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.aion.base.type.ITransaction;
@@ -64,10 +63,10 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
     public List<TX> call() throws Exception {
 
         try {
-            Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
+            List<INode> activeNodes = this.p2pMgr.getActiveNodes();
             if (activeNodes != null && !activeNodes.isEmpty()) {
-                for (Map.Entry<Integer, INode> e : activeNodes.entrySet()) {
-                    this.p2pMgr.send(e.getKey(), new BroadcastTx((List<ITransaction>) this.tx));
+                for (INode n : activeNodes) {
+                    this.p2pMgr.send(n.getIdHash(), new BroadcastTx((List<ITransaction>) this.tx));
                 }
             }
 

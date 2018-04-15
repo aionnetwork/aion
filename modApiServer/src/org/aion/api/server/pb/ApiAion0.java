@@ -820,7 +820,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             }
 
             List<INode> nodes = new ArrayList<>();
-            nodes.addAll(this.ac.getAionHub().getP2pMgr().getActiveNodes().values());
+            nodes.addAll(this.ac.getAionHub().getP2pMgr().getActiveNodes());
             List<Message.t_Node> pl = new ArrayList<>();
             try {
                 for (INode n : nodes) {
