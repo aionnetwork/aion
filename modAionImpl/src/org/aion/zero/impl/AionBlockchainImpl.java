@@ -594,7 +594,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
         }
-
         long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
 
         A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
@@ -609,12 +608,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
 
         IAionBlock grandParent = this.getParent(parent.getHeader());
-
         block.getHeader().setDifficulty(
-                ByteUtil.bigIntegerToBytes(
-                        this.chainConfiguration.getDifficultyCalculator().calculateDifficulty
-                                (parent.getHeader(), grandParent == null ? null : grandParent.getHeader()), DIFFICULTY_BYTES));
-
+                ByteUtil.bigIntegerToBytes(this.chainConfiguration.getDifficultyCalculator()
+                .calculateDifficulty(
+                        parent.getHeader(),
+                        grandParent == null ? null : grandParent.getHeader()),
+                DIFFICULTY_BYTES));
         /*
          * Begin execution phase
          */
