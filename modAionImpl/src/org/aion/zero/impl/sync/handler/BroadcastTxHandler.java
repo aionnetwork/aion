@@ -42,6 +42,7 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.impl.valid.TXValidator;
@@ -66,7 +67,7 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final Timer timer;
+    private Timer timer;
 
     private LinkedBlockingQueue<AionTransaction> txQueue;
 
@@ -79,6 +80,9 @@ public final class BroadcastTxHandler extends Handler {
         this.p2pMgr = _p2pMgr;
         this.txQueue = new LinkedBlockingQueue<>(50_000);
         this.buffer = enableBuffer;
+
+        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+            return;
 
         if (this.buffer) {
             log.info("BufferTask buffer enable!");
@@ -112,6 +116,9 @@ public final class BroadcastTxHandler extends Handler {
 
     @Override
     public final void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+            return;
+
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
 

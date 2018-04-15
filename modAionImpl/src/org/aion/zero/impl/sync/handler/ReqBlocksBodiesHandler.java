@@ -41,6 +41,7 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
@@ -80,6 +81,9 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+            return;
+
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
 

@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -74,6 +75,9 @@ public final class ReqStatusHandler extends Handler {
 
 	@Override
 	public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
+		if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+			return;
+
 		if (log.isDebugEnabled()) {
 			this.log.debug("<req-status node={}>", _displayId);
 		}

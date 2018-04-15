@@ -38,9 +38,11 @@ package org.aion.zero.impl.sync.handler;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
@@ -112,6 +114,9 @@ public class BlockPropagationHandler {
 
     // assumption here is that blocks propagated have unique hashes
     public void propagateNewBlock(final AionBlock block) {
+        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+            return;
+
         if (block == null)
             return;
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
@@ -199,6 +204,9 @@ public class BlockPropagationHandler {
     }
 
     private boolean send(AionBlock block, int nodeId) {
+        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+            return true;
+
         // current proposal is to send to all peers with lower blockNumbers
         AtomicBoolean sent = new AtomicBoolean();
         this.p2pManager.getActiveNodes().values()
