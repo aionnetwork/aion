@@ -452,9 +452,6 @@ public final class P2pMgr implements IP2pMgr {
                     node = nodeMgr.tempNodesTake();
                     if (node.getIfFromBootList())
                         nodeMgr.tempNodesAdd(node);
-//                    if (node.peerMetric.shouldNotConn()) {
-//                        continue;
-//                    }
                 } catch (InterruptedException e) {
                     if (showLog)
                         System.out.println("<p2p-tcp-interrupted>");
@@ -620,6 +617,7 @@ public final class P2pMgr implements IP2pMgr {
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
         _channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
         _channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
+        _channel.socket().setKeepAlive(true);
     }
 
     /**

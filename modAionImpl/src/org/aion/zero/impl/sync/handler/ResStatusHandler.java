@@ -69,7 +69,7 @@ public final class ResStatusHandler extends Handler {
         ResStatus rs = ResStatus.decode(_msgBytes);
 
         if (rs == null) {
-            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+
             this.log.error("<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
 
             if (this.log.isTraceEnabled()) {
@@ -91,6 +91,8 @@ public final class ResStatusHandler extends Handler {
                 node.updateStatus(remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
                 syncMgr.updateNetworkStatus(_displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
             }
+        } else {
+            log.debug("<update-status-failed could-not-find-node={}>", _displayId);
         }
     }
 }

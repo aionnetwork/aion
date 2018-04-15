@@ -101,7 +101,6 @@ public class TaskWrite implements Runnable {
 					sc.write(buf);
 					if (++writeCount > MAX_WRITE)
 					    break;
-
 				}
 			} catch (ClosedChannelException ex1) {
 				if (showLog) {

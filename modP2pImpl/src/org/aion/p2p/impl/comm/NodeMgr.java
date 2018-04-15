@@ -239,7 +239,9 @@ public class NodeMgr implements INodeMgr {
     }
 
     public Node allocNode(String ip, int p0, int p1) {
-        return new Node(ip, p0, p1);
+        Node node = new Node(ip, p0, p1);
+        node.setFromBootList(seedIps.contains(ip));
+        return node;
     }
 
     public List<Node> getActiveNodesList() {
