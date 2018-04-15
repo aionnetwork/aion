@@ -77,8 +77,6 @@ public final class Node implements INode {
      */
     private String inboundOrOutbound = "";
 
-
-
     public NodeStats nodeStats = new NodeStats();
 
     /**

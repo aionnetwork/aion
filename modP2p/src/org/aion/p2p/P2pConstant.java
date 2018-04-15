@@ -33,8 +33,8 @@ public class P2pConstant {
 
     public static final long BAN_CONN_RETRY_INTERVAL = 30_000;
 
-    public static final int RECV_BUFFER_SIZE = 64 * 1024;
+    public static final int RECV_BUFFER_SIZE = 64 * 1024 * 1024;
 
-    public static final int SEND_BUFFER_SIZE = 64 * 1024;
+    public static final int SEND_BUFFER_SIZE = 64 * 1024 * 1024;
 
 }

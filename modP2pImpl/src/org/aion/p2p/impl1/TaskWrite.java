@@ -32,87 +32,96 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author chris
  */
 public class TaskWrite implements Runnable {
 
-	private final static int MAX_WRITE = 3;
-	private boolean showLog;
-	private String nodeShortId;
-	private SocketChannel sc;
-	private Msg msg;
-	private ChannelBuffer channelBuffer;
+    private ThreadPoolExecutor workers;
+    private boolean showLog;
+    private String nodeShortId;
+    private SocketChannel sc;
+    private Msg msg;
+    private ChannelBuffer channelBuffer;
+    private static final int MAX_TRY_WRITE = 5;
 
-	TaskWrite(boolean _showLog, String _nodeShortId, final SocketChannel _sc, final Msg _msg, final ChannelBuffer _cb) {
-		this.showLog = _showLog;
-		this.nodeShortId = _nodeShortId;
-		this.sc = _sc;
-		this.msg = _msg;
-		this.channelBuffer = _cb;
-	}
+    TaskWrite(
+            final ThreadPoolExecutor _workers,
+            boolean _showLog,
+            String _nodeShortId,
+            final SocketChannel _sc,
+            final Msg _msg,
+            final ChannelBuffer _cb
+    ) {
+        this.workers = _workers;
+        this.showLog = _showLog;
+        this.nodeShortId = _nodeShortId;
+        this.sc = _sc;
+        this.msg = _msg;
+        this.channelBuffer = _cb;
+    }
 
-	private void clearChannelBuffer() {
-		channelBuffer.refreshHeader();
-		channelBuffer.refreshBody();
-	}
+    @Override
+    public void run() {
+        boolean closed = false;
 
-	@Override
-	public void run() {
+        if (this.channelBuffer.onWrite.compareAndSet(false, true)) {
+            /*
+             * @warning header set len (body len) before header encode
+             */
+            byte[] bodyBytes = msg.encode();
+            int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
+            Header h = msg.getHeader();
+            h.setLen(bodyLen);
+            byte[] headerBytes = h.encode();
 
-		if (channelBuffer.isClosed.get()) {
-			clearChannelBuffer();
-			return;
-		}
+            // print route
+            // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+            ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
+            buf.put(headerBytes);
+            if (bodyBytes != null)
+                buf.put(bodyBytes);
+            buf.flip();
 
-		try {
-
-			channelBuffer.lock.lock();
-
-			/*
-			 * @warning header set len (body len) before header encode
-			 */
-			byte[] bodyBytes = msg.encode();
-			int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-			Header h = msg.getHeader();
-			h.setLen(bodyLen);
-			byte[] headerBytes = h.encode();
-
-			// print route
-			// System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
-			ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
-			buf.put(headerBytes);
-			if (bodyBytes != null)
-				buf.put(bodyBytes);
-			buf.flip();
-
-			int writeCount = 0;
-
-			try {
-				while (buf.hasRemaining()) {
-					sc.write(buf);
-					if (++writeCount > MAX_WRITE)
-					    break;
-				}
-			} catch (ClosedChannelException ex1) {
-				if (showLog) {
-					System.out.println("<p2p closed-channel-exception node=" + this.nodeShortId + ">");
-				}
-				channelBuffer.isClosed.set(true);
-			} catch (IOException ex2) {
-				String reason = ex2.getMessage();
-				if (showLog) {
-					System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + " msg=" + reason + ">");
+            try {
+                int writeCount = 0;
+                while (buf.hasRemaining()) {
+                    sc.write(buf);
+                    if(++writeCount > MAX_TRY_WRITE) {
+                        this.channelBuffer.onWrite.set(false);
+                        return;
+                    }
                 }
-				if (reason.equals("Broken pipe")) {
-					channelBuffer.isClosed.set(true);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			channelBuffer.lock.unlock();
-		}
-	}
+            } catch (ClosedChannelException ex1) {
+                if (showLog) {
+                    System.out.println("<p2p closed-channel-exception node=" + this.nodeShortId + ">");
+                }
+                closed = true;
+            } catch (IOException ex2) {
+                if (showLog) {
+                    System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + ">");
+                }
+            } finally {
+                this.channelBuffer.onWrite.set(false);
+                if (!closed) {
+                    Msg msg = this.channelBuffer.messages.poll();
+                    if (msg != null && workers.getQueue().size() < 200) {
+                        //System.out.println("write " + h.getCtrl() + "-" + h.getAction());
+                        workers.execute(new TaskWrite(workers, showLog, nodeShortId, sc, msg, channelBuffer));
+                    }
+                } else {
+                    this.channelBuffer.messages.clear();
+                }
+            }
+        } else {
+            // message may get dropped here when the message queue is full.
+            boolean success = this.channelBuffer.messages.offer(msg);
+            if(success)
+                System.out.println("<task-write msg-queued>");
+            else
+                System.out.println("<task-write msg-dropped>");
+        }
+    }
 }

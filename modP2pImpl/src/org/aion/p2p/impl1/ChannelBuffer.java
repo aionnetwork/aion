@@ -25,12 +25,12 @@
 package org.aion.p2p.impl1;
 
 import org.aion.p2p.Header;
-import org.aion.p2p.P2pConstant;
+import org.aion.p2p.Msg;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
 
 /**
  *
@@ -39,66 +39,37 @@ import java.util.concurrent.locks.Lock;
  */
 class ChannelBuffer {
 
-    // buffer for buffer remaining after NIO select read.
-    byte[] remainBuffer;
-    
-    int buffRemain = 0;
-
     int nodeIdHash = 0;
+
+    ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
+
+    ByteBuffer bodyBuf = null;
 
     Header header = null;
 
-    byte[] bsHead = new byte[Header.LEN];
-
     byte[] body = null;
 
-    Lock lock = new java.util.concurrent.locks.ReentrantLock();
-
     /**
-     * Indicates whether this channel is closed.
+     * write flag
      */
-    AtomicBoolean isClosed = new AtomicBoolean(false);
+    AtomicBoolean onWrite = new AtomicBoolean(false);
 
+    BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
 
-    /**
-     * constructor right after inbound connection established
-     */
-    ChannelBuffer(){}
-
-    /**
-     * @param _nodeIdHash int
-     * constructor right after outbound connection established
-     */
-    ChannelBuffer(int _nodeIdHash){
-        this.nodeIdHash = _nodeIdHash;
-    }
-
-    void readHead(ByteBuffer buf) {
-        buf.get(bsHead);
-        try {
-            header = Header.decode(bsHead);
-        } catch (Exception e) {
-
-        }
-    }
-
-    void readBody(ByteBuffer buf) {
-        body = new byte[header.getLen()];
-        buf.get(body);
-    }
-
-    void refreshHeader() {
+    void refreshHeader(){
+        headerBuf.clear();
         header = null;
     }
 
-    void refreshBody() {
+    void refreshBody(){
+        bodyBuf = null;
         body = null;
     }
 
     /**
      * @return boolean
      */
-    boolean isHeaderCompleted() {
+    boolean isHeaderCompleted(){
         return header != null;
     }
 

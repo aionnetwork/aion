@@ -70,15 +70,9 @@ public final class ReqStatusHandler extends Handler {
 
 	@Override
 	public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-
-	    long start = System.currentTimeMillis();
-
 	    ResStatus rs = new ResStatus(this.chain.getBestBlock().getNumber(),
                 this.chain.getTotalDifficulty().toByteArray(), this.chain.getBestBlockHash(),
                 this.genesisHash);
-
-        this.log.debug("<req-status node={} time-elapsed={}ms>", _displayId, System.currentTimeMillis() - start);
-
 	    this.mgr.send(
             _nodeIdHashcode,
             rs
