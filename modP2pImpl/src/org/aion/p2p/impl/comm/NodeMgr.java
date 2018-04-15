@@ -242,17 +242,15 @@ public class NodeMgr {
     }
 
     public void timeoutInbound(final P2pMgr _p2pMgr) {
-        {
-            Iterator inboundIt = inboundNodes.keySet().iterator();
-            while (inboundIt.hasNext()) {
-                int key = (int) inboundIt.next();
-                Node node = inboundNodes.get(key);
-                if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
-                    inboundIt.remove();
-                    _p2pMgr.closeSocket(node.getChannel(), "timeout-inbound");
-                    if (this.showLog)
-                        System.out.println("<p2p timeout-inbound node=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
-                }
+        Iterator inboundIt = inboundNodes.keySet().iterator();
+        while (inboundIt.hasNext()) {
+            int key = (int) inboundIt.next();
+            Node node = inboundNodes.get(key);
+            if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
+                inboundIt.remove();
+                _p2pMgr.closeSocket(node.getChannel(), "timeout-inbound");
+                if (this.showLog)
+                    System.out.println("<p2p timeout-inbound node=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
             }
         }
     }

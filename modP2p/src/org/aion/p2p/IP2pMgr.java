@@ -61,6 +61,13 @@ public interface IP2pMgr {
     void send(int _id, final Msg _msg);
 
     /**
+     * @param _id int
+     * @param _msgBytes byte[]
+     * used by some cached single msg instance
+     */
+    void send(int _id, final byte[] _msgBytes);
+
+    /**
      * Used to hook up with kernel to shutdown threads in network module
      */
     void shutdown();

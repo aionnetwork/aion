@@ -55,14 +55,9 @@ class ChannelBuffer {
     Lock lock = new java.util.concurrent.locks.ReentrantLock();
 
     /**
-     * write flag
-     */
-    public AtomicBoolean onWrite = new AtomicBoolean(false);
-
-    /**
      * Indicates whether this channel is closed.
      */
-    public AtomicBoolean isClosed = new AtomicBoolean(false);
+    AtomicBoolean isClosed = new AtomicBoolean(false);
 
 
     /**

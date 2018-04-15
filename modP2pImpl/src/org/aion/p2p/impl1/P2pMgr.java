@@ -225,8 +225,7 @@ public final class P2pMgr implements IP2pMgr {
                             // check if really read data.
                             if (cnt > prevCnt) {
                                 chanBuf.buffRemain = 0;
-                                throw new P2pException(
-                                        "IO read overflow!  suppose read:" + prevCnt + " real left:" + cnt);
+                                throw new IOException("io-read-overflow  suppose-read=" + prevCnt + " real-left=" + cnt);
                             }
 
                             chanBuf.buffRemain = cnt;
@@ -359,9 +358,7 @@ public final class P2pMgr implements IP2pMgr {
                     } else if (showLog)
                          System.out.println("<p2p task-send failed-find-node>");
 
-                } catch (InterruptedException e) {
-                    continue;
-                }
+                } catch (InterruptedException e) {}
             }
         }
     }
@@ -384,6 +381,7 @@ public final class P2pMgr implements IP2pMgr {
                             hlr.receive(mi.nid, mi.nsid, mi.msg);
                         } catch (Exception e) {
                             System.out.println("Exception during kernel message handling:");
+                            e.printStackTrace();
                         }
                     }
                 } catch (InterruptedException e) {
@@ -405,6 +403,7 @@ public final class P2pMgr implements IP2pMgr {
                     Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-p2p-report.out"),
                             status.getBytes());
                 } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -478,8 +477,6 @@ public final class P2pMgr implements IP2pMgr {
                     } catch (Exception e) {
                         if (showLog) {
                             System.out.println("<p2p task-connect-io-exception=" + e.getMessage() + ">");
-                            if(e.getMessage() == null || e.getMessage() == "")
-                                e.getMessage();
                         }
                     }
                 }
@@ -1008,13 +1005,18 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
+    public void send(int _id, byte[] _msgBytes) {
+
+    }
+
+    @Override
     public void shutdown() {
         start.set(false);
         scheduledWorkers.shutdownNow();
         nodeMgr.shutdown(this);
 
         for (List<Handler> hdrs : handlers.values()) {
-            hdrs.forEach(hdr -> hdr.shutDown());
+            hdrs.forEach(Handler::shutDown);
         }
     }
 

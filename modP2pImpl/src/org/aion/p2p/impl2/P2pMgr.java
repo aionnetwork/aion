@@ -700,6 +700,11 @@ public final class P2pMgr implements IP2pMgr {
 	}
 
 	@Override
+	public void send(int _id, byte[] _msgBytes) {
+
+	}
+
+	@Override
 	public void shutdown() {
 		start.set(false);
 		scheduledWorkers.shutdownNow();

@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TaskGetStatus implements Runnable {
 
-    private final static int intervalTotal = 3000;
+    private final static int intervalTotal = 1000;
 
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -69,15 +69,13 @@ final class TaskGetStatus implements Runnable {
     @Override
     public void run() {
         while (this.run.get()) {
-            Set<INode> nodes = new HashSet<>(p2p.getActiveNodes());
-            try {
-                for (INode node : nodes) {
+            for (INode node : p2p.getActiveNodes()) {
+                if(node != null)
                     p2p.send(node.getIdHash(), reqStatus);
-                }
-                Thread.sleep(intervalTotal);
-            } catch (InterruptedException e) {
-                break;
             }
+            try {
+                Thread.sleep(intervalTotal);
+            } catch (InterruptedException e) {}
         }
         log.info("<sync-gs shutdown>");
     }
