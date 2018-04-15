@@ -107,6 +107,8 @@ final class TaskGetHeaders implements Runnable {
                     this.p2p.send(node.getIdHash(), rbh);
                 }
             }
+        } else {
+            log.debug("<get-headers find-no-valid-target>");
         }
     }
 }

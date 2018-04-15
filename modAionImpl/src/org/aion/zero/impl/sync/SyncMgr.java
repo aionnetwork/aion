@@ -224,7 +224,7 @@ public final class SyncMgr {
 
         if(workers.getQueue().size() < 5)
             workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
-                    syncBackwardMin, syncBackwardMax, syncRequestMax,  log));
+                    syncBackwardMin, syncBackwardMax, syncRequestMax, log));
 
     }
 
@@ -301,8 +301,9 @@ public final class SyncMgr {
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
-        log.debug("<validate-and-add-bodies-triggered>");
-
+        if(_bodies == null || _bodies.isEmpty()){
+            log.debug("<empty-bodies from-node={}>", _displayId);
+        }
 
         if (importedBlocks.size() > blocksQueueMax) {
             log.debug("<imported-blocks-full>");
@@ -310,8 +311,12 @@ public final class SyncMgr {
         }
 
         HeadersWrapper hw = this.sentHeaders.remove(_nodeIdHashcode);
-        if (hw == null || _bodies == null)
+        if (hw == null) {
+            log.debug("<missing-sent-headers from-node={}>", _displayId);
             return;
+        }
+
+        log.debug("<validate-and-add-bodies-triggered time-cost={}ms from-node={}>", System.currentTimeMillis() - hw.getTimestamp(), _displayId);
 
         // assemble batch
         List<A0BlockHeader> headers = hw.getHeaders();
