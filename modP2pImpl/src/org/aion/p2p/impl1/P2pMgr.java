@@ -360,7 +360,7 @@ public final class P2pMgr implements IP2pMgr {
                          System.out.println("<p2p task-send failed-find-node>");
 
                 } catch (InterruptedException e) {
-                    return;
+                    continue;
                 }
             }
         }
