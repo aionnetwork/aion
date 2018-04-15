@@ -653,7 +653,9 @@ public final class P2pMgr implements IP2pMgr {
             String ip = channel.socket().getInetAddress().getHostAddress();
             int port = channel.socket().getPort();
 
-            if (syncSeedsOnly && nodeMgr.isSeedIp(ip)) {
+            //if (syncSeedsOnly && nodeMgr.isSeedIp(ip)) {
+            // deny all inbound connections when this factor enabled
+            if (syncSeedsOnly) {
                 // close the channel and return.
                 channel.close();
                 return;

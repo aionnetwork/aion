@@ -43,10 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TaskGetStatus implements Runnable {
 
-
-    private final static int intervalTotal = 1000;
-
-    private final static int intervalMin = 200;
+    private final static int intervalTotal = 3000;
 
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -72,16 +69,14 @@ final class TaskGetStatus implements Runnable {
     public void run() {
         while (this.run.get()) {
             Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
+            // long slot = intervalTotal / ids.size();
 
             try {
                 for (int id : ids) {
                     p2p.send(id, reqStatus);
-                    Thread.sleep(intervalMin);
-                }
 
-                if (ids.isEmpty()) {
-                    Thread.sleep(intervalTotal);
                 }
+                Thread.sleep(intervalTotal);
             } catch (InterruptedException e) {
                 break;
             }

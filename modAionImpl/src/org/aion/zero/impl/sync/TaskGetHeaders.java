@@ -90,6 +90,7 @@ final class TaskGetHeaders implements Runnable {
 
         // @TODO: when nodes TD highly distributed in wide range, simple way is only pick top 8 node for sync.
         // looking for better strategy here.
+
         INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
         long nodeNumber = node.getBestBlockNumber();
         long from;
