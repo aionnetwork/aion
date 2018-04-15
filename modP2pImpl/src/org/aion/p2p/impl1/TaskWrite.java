@@ -90,6 +90,11 @@ public class TaskWrite implements Runnable {
                 while (buf.hasRemaining()) {
                     sc.write(buf);
                     if(++writeCount > MAX_TRY_WRITE) {
+                        try {
+                            sc.socket().getOutputStream().flush();
+                        } catch (IOException e) {
+
+                        }
                         this.channelBuffer.onWrite.set(false);
                         return;
                     }
@@ -104,6 +109,12 @@ public class TaskWrite implements Runnable {
                     System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + ">");
                 }
             } finally {
+                try {
+                    sc.socket().getOutputStream().flush();
+                } catch (IOException e) {
+
+                }
+
                 this.channelBuffer.onWrite.set(false);
                 if (!closed) {
                     Msg msg = this.channelBuffer.messages.poll();

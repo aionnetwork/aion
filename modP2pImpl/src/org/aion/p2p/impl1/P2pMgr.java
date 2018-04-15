@@ -242,10 +242,10 @@ public final class P2pMgr implements IP2pMgr {
                         }
 
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        if (showLog) {
+                        // SocketTimeoutException, ConnectionException Connection refused
+                        if (showLog)
                             System.out.println("<p2p task-connect-io-exception=" + e.getMessage() + ">");
-                        }
+
                     }
                 }
             }
