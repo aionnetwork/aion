@@ -32,19 +32,15 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.mcf.trie;
-
-import java.util.HashSet;
-import java.util.Set;
+package org.aion.mcf.trie.scan;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.rlp.Value;
 
-/**
- *
- *
- */
-public class CollectFullSetOfNodes implements TrieImpl.ScanAction {
+import java.util.HashSet;
+import java.util.Set;
+
+public class CollectFullSetOfNodes implements ScanAction {
     Set<ByteArrayWrapper> nodes = new HashSet<>();
 
     @Override

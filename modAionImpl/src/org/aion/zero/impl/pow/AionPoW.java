@@ -227,7 +227,6 @@ public class AionPoW {
             // set the nonce and solution
             block.getHeader().setNonce(solution.getNonce());
             block.getHeader().setSolution(solution.getSolution());
-            block.getHeader().setTimestamp(solution.getTimeStamp());
 
             // This can be improved
             ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
@@ -257,7 +256,6 @@ public class AionPoW {
      */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
-
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
             if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber() > syncLimit) {

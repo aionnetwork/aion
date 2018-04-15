@@ -46,6 +46,7 @@ import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -101,7 +102,7 @@ public class AionContractDetailsTest {
 
         @Override
         public boolean isHeapCacheEnabled() {
-            return true;
+            return false;
         }
 
         @Override
@@ -328,10 +329,8 @@ public class AionContractDetailsTest {
         assertTrue(address.equals(deserialized.getAddress()));
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
-        Map<DataWord, DataWord> storage = deserialized.getStorage();
-        assertEquals(elements.size(), storage.size());
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key), storage.get(key));
+            assertEquals(elements.get(key), deserialized.get(key));
         }
 
         DataWord deletedKey = elements.keySet().iterator().next();
@@ -383,10 +382,8 @@ public class AionContractDetailsTest {
 
         deserialized = deserialize(deserialized.getEncoded(), externalStorage);
 
-        Map<DataWord, DataWord> storage = deserialized.getStorage();
-        assertEquals(elements.size(), storage.size());
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key), storage.get(key));
+            assertEquals(elements.get(key), deserialized.get(key));
         }
     }
 }

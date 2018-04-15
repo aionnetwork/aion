@@ -44,7 +44,7 @@ public final class CfgNetP2p {
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
         this.errorTolerance = 50;
-        this.txBroadcastbuffer = false;
+        this.txBroadcastbuffer = true;
     }
 
     private String ip;

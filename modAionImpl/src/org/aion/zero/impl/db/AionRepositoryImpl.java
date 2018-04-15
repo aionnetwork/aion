@@ -153,8 +153,10 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
-                                        Hex.toHexString(address.toBytes()), accountState.getNonce(),
-                                        accountState.getBalance(), contractDetails.getStorage());
+                                          Hex.toHexString(address.toBytes()),
+                                          accountState.getNonce(),
+                                          accountState.getBalance(),
+                                          Hex.toHexString(contractDetails.getStorageHash()));
                             }
                         }
                         continue;
@@ -185,8 +187,11 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                     updateAccountState(address, accountState);
 
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]", Hex.toHexString(address.toBytes()),
-                                accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
+                        LOG.trace("update: [{}],nonce: [{}] balance: [{}] [{}]",
+                                  Hex.toHexString(address.toBytes()),
+                                  accountState.getNonce(),
+                                  accountState.getBalance(),
+                                  Hex.toHexString(contractDetails.getStorageHash()));
                     }
                 }
             }
@@ -290,15 +295,41 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
-    public int getStorageSize(Address address) {
-        IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? 0 : details.getStorageSize();
+    public List<byte[]> getPoolTx() {
+
+        List<byte[]> rtn = new ArrayList<>();
+        rwLock.readLock().lock();
+        try {
+            Set<byte[]> keySet = txPoolDatabase.keys();
+            for (byte[] b : keySet) {
+                if (txPoolDatabase.get(b).isPresent()) {
+                    rtn.add(txPoolDatabase.get(b).get());
+                }
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        return rtn;
     }
 
     @Override
-    public Set<DataWord> getStorageKeys(Address address) {
-        IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? Collections.emptySet() : details.getStorageKeys();
+    public List<byte[]> getCacheTx() {
+
+        List<byte[]> rtn = new ArrayList<>();
+        rwLock.readLock().lock();
+        try {
+            Set<byte[]> keySet = pendingTxCacheDatabase.keys();
+            for (byte[] b : keySet) {
+                if (pendingTxCacheDatabase.get(b).isPresent()) {
+                    rtn.add(pendingTxCacheDatabase.get(b).get());
+                }
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        return rtn;
     }
 
     @Override
@@ -520,6 +551,44 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         }
     }
 
+    @Override
+    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
+
+        if (pendingTx.isEmpty()) {
+            return;
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            if (isPool) {
+                txPoolDatabase.putBatch(pendingTx);
+            } else {
+                pendingTxCacheDatabase.putBatch(pendingTx);
+            }
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void removeTxBatch(Set<byte[]> clearTxSet, boolean isPool) {
+
+        if (clearTxSet.isEmpty()) {
+            return;
+        }
+
+        rwLock.writeLock().lock();
+        try {
+            if (isPool) {
+                txPoolDatabase.deleteBatch(clearTxSet);
+            } else {
+                pendingTxCacheDatabase.deleteBatch(clearTxSet);
+            }
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
     /**
      * This function cannot for any reason fail, otherwise we may have dangling
      * file IO locks
@@ -566,6 +635,26 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                 }
             } catch (Exception e) {
                 LOGGEN.error("Exception occurred while closing the block store.", e);
+            }
+
+            try {
+                if (txPoolDatabase != null) {
+                    txPoolDatabase.close();
+                    LOGGEN.info("txPoolDatabase store closed.");
+                    txPoolDatabase = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error("Exception occurred while closing the txPoolDatabase store.", e);
+            }
+
+            try {
+                if (pendingTxCacheDatabase != null) {
+                    pendingTxCacheDatabase.close();
+                    LOGGEN.info("pendingTxCacheDatabase store closed.");
+                    pendingTxCacheDatabase = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error("Exception occurred while closing the pendingTxCacheDatabase store.", e);
             }
         } finally {
             rwLock.writeLock().unlock();

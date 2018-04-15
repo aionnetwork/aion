@@ -2,6 +2,7 @@ package org.aion.db.impl.rocksdb;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
+import org.iq80.leveldb.DBIterator;
 import org.rocksdb.*;
 
 import java.io.File;

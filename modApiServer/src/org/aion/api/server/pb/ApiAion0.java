@@ -63,11 +63,12 @@ import java.util.*;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
@@ -77,8 +78,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private final static int TX_HASH_LEN = 32;
     private final static int ACCOUNT_CREATE_LIMIT = 100;
 
-    private LinkedBlockingQueue<TxPendingStatus> pendingStatus;
-    private LinkedBlockingQueue<TxWaitingMappingUpdate> txWait;
+    private BlockingQueue<TxPendingStatus> pendingStatus;
+    private BlockingQueue<TxWaitingMappingUpdate> txWait;
     private Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> msgIdMapping;
 
     protected void onBlock(AionBlockSummary cbs) {
@@ -86,7 +87,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         for (Long key : keys) {
             Fltr fltr = installedFilters.get(key);
             if (fltr.isExpired()) {
-                LOG.debug("<fltr key={} expired removed>", key);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<fltr key={} expired removed>", key);
+                }
                 installedFilters.remove(key);
             } else {
                 List<AionTxReceipt> txrs = cbs.getReceipts();
@@ -134,7 +137,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
-        ByteArrayWrapper txHashW = new ByteArrayWrapper(
+        ByteArrayWrapper txHashW = ByteArrayWrapper.wrap(
                 ((AionTxReceipt) _txRcpt).getTransaction().getHash());
 
         if (LOG.isTraceEnabled()) {
@@ -154,7 +157,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             pendingStatus.add(new TxPendingStatus(txHashW, getMsgIdMapping().get(txHashW).getValue(),
                     getMsgIdMapping().get(txHashW).getKey(), _state.getValue(), ByteArrayWrapper
-                    .wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? ByteUtil.EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult())));
+                    .wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult())));
 
             if (_state.isPending()) {
                 pendingReceipts.put(txHashW, ((AionTxReceipt) _txRcpt));
@@ -316,8 +319,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         case Message.Funcs.f_contractDeploy_VALUE: {
 
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             Message.req_contractDeploy req;
@@ -329,8 +331,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 // instead of str format like "0xhex".!
                 byte[] bytes = req.getData().toByteArray();
                 if (bytes == null || bytes.length <= 4) {
-                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_ct_bytecode_VALUE,
-                            ApiUtil.getApiMsgHash(request));
+                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_ct_bytecode_VALUE, msgHash);
                 }
 
                 ArgTxCall params = new ArgTxCall(Address.wrap(req.getFrom().toByteArray()), null,
@@ -342,24 +343,22 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.createContract(params);
 
                 if (result != null) {
-                    getMsgIdMapping().put(new ByteArrayWrapper(result.transId), new AbstractMap.SimpleEntry<>(
-                            new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
+                    getMsgIdMapping().put(ByteArrayWrapper.wrap(result.transId), new AbstractMap.SimpleEntry<>(
+                            ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("ApiAionA0.process.ContractDeploy - msgIdMapping.put: [{}] ", new ByteArrayWrapper(result.transId).toString());
+                        LOG.debug("ApiAionA0.process.ContractDeploy - msgIdMapping.put: [{}] ", ByteArrayWrapper.wrap(result.transId).toString());
                     }
                 }
             } catch (Exception e) {
                 LOG.error("ApiAionA0.process.ContractDeploy exception [{}] ", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             Message.rsp_contractDeploy rsp = Message.rsp_contractDeploy.newBuilder()
-                    .setContractAddress(ByteString.copyFrom(result != null ? result.address.toBytes() : new byte[0]))
-                    .setTxHash(ByteString.copyFrom(result != null ? result.transId : new byte[0])).build();
+                    .setContractAddress(ByteString.copyFrom(result != null ? result.address.toBytes() : EMPTY_BYTE_ARRAY))
+                    .setTxHash(ByteString.copyFrom(result != null ? result.transId : EMPTY_BYTE_ARRAY)).build();
 
-            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE,
-                    ApiUtil.getApiMsgHash(request));
+            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE, msgHash);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
 
@@ -495,8 +494,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         case Message.Funcs.f_sendTransaction_VALUE: {
 
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             byte[] data = parseMsgReq(request, msgHash);
@@ -513,27 +511,24 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.sendTransaction(params);
             } catch (InvalidProtocolBufferException e) {
                 LOG.error("ApiAionA0.process.sendTransaction exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             if (result == null) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
             }
 
-            getMsgIdMapping().put(new ByteArrayWrapper(result), new AbstractMap.SimpleEntry<>(
-                    new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
+            getMsgIdMapping().put(ByteArrayWrapper.wrap(result), new AbstractMap.SimpleEntry<>(
+                    ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
             if (LOG.isDebugEnabled()) {
                 LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]",
-                        new ByteArrayWrapper(result).toString());
+                        ByteArrayWrapper.wrap(result).toString());
             }
 
             Message.rsp_sendTransaction rsp = Message.rsp_sendTransaction.newBuilder()
                     .setTxHash(ByteString.copyFrom(result)).build();
 
-            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE,
-                    ApiUtil.getApiMsgHash(request));
+            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE, msgHash);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
         case Message.Funcs.f_getCode_VALUE: {
@@ -592,16 +587,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setFrom(ByteString.copyFrom(result.fromAddr.toBytes())).setBlockNumber(result.blockNumber)
                         .setBlockHash(ByteString
                                 .copyFrom(result.blockHash != null ? ByteUtil.hexStringToBytes(result.blockHash)
-                                        : ByteUtil.EMPTY_BYTE_ARRAY))
+                                        : EMPTY_BYTE_ARRAY))
                         .setContractAddress(ByteString.copyFrom(
                                 result.contractAddress != null ? ByteUtil.hexStringToBytes(result.contractAddress)
-                                        : ByteUtil.EMPTY_BYTE_ARRAY))
+                                        : EMPTY_BYTE_ARRAY))
                         .setTxIndex(result.transactionIndex)
                         .setTxHash(ByteString.copyFrom(
                                 result.transactionHash != null ? ByteUtil.hexStringToBytes(result.transactionHash)
-                                        : ByteUtil.EMPTY_BYTE_ARRAY))
+                                        : EMPTY_BYTE_ARRAY))
                         .setTo(ByteString
-                                .copyFrom(result.toAddr == null ? ByteUtil.EMPTY_BYTE_ARRAY : result.toAddr.toBytes()))
+                                .copyFrom(result.toAddr == null ? EMPTY_BYTE_ARRAY : result.toAddr.toBytes()))
                         .setNrgConsumed(result.nrgUsed).setCumulativeNrgUsed(result.cumulativeNrgUsed).addAllLogs(logs)
                         .build();
 
@@ -1063,8 +1058,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
         case Message.Funcs.f_estimateNrg_VALUE: {
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             byte[] data = parseMsgReq(request, msgHash);
@@ -1080,8 +1074,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.estimateNrg(params);
             } catch (InvalidProtocolBufferException e) {
                 LOG.error("ApiAionA0.process.estimateNrg exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             Message.rsp_estimateNrg rsp = Message.rsp_estimateNrg.newBuilder().setNrg(result).build();
@@ -1166,8 +1159,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         case Message.Funcs.f_signedTransaction_VALUE:
         case Message.Funcs.f_rawTransaction_VALUE: {
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             byte[] data = parseMsgReq(request, msgHash);
@@ -1184,26 +1176,23 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.sendTransaction(encodedTx);
             } catch (InvalidProtocolBufferException e) {
                 LOG.error("ApiAionA0.process.sendTransaction exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             if (result == null) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
             }
 
-            getMsgIdMapping().put(new ByteArrayWrapper(result), new AbstractMap.SimpleEntry<>(
-                    new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
+            getMsgIdMapping().put(ByteArrayWrapper.wrap(result), new AbstractMap.SimpleEntry<>(
+                    ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
             if (LOG.isDebugEnabled()) {
-                LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]", new ByteArrayWrapper(result).toString());
+                LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]", ByteArrayWrapper.wrap(result).toString());
             }
 
             Message.rsp_sendTransaction rsp = Message.rsp_sendTransaction.newBuilder()
                     .setTxHash(ByteString.copyFrom(result)).build();
 
-            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE,
-                    ApiUtil.getApiMsgHash(request));
+            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE, msgHash);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
         case Message.Funcs.f_eventRegister_VALUE: {
@@ -1671,9 +1660,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setNrgConsume(tx.getNrgConsume())
                 .setNrgPrice(tx.getNrgPrice())
                 .setTxHash(ByteString.copyFrom(tx.getHash()))
-                .setData(ByteString.copyFrom(tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData()))
+                .setData(ByteString.copyFrom(tx.getData() == null ? EMPTY_BYTE_ARRAY : tx.getData()))
                 .setNonce(ByteString.copyFrom(tx.getNonce()))
-                .setTo(ByteString.copyFrom(tx.getTo() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getTo().toBytes()))
+                .setTo(ByteString.copyFrom(tx.getTo() == null ? EMPTY_BYTE_ARRAY : tx.getTo().toBytes()))
                 .setValue(ByteString.copyFrom(tx.getValue()))
                 .setTxIndex((int)tx.getTxIndexInBlock())
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimeStamp()))
@@ -1951,11 +1940,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return this.pendingReceipts;
     }
 
-    @Override public LinkedBlockingQueue<TxPendingStatus> getPendingStatus() {
+    @Override public BlockingQueue<TxPendingStatus> getPendingStatus() {
         return this.pendingStatus;
     }
 
-    @Override public LinkedBlockingQueue<TxWaitingMappingUpdate> getTxWait() {
+    @Override public BlockingQueue<TxWaitingMappingUpdate> getTxWait() {
         return this.txWait;
     }
 

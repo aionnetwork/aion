@@ -17,43 +17,37 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
  ******************************************************************************/
+package org.aion.mcf.trie.scan;
 
-package org.aion.zero.impl.valid;
-
-import org.aion.base.util.ByteUtil;
-import org.aion.crypto.HashUtil;
-import org.aion.equihash.OptimizedEquiValidator;
-import org.aion.mcf.blockchain.valid.BlockHeaderRule;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.equihash.EquiValidator;
-
-import java.math.BigInteger;
-import java.util.List;
-
-import static org.aion.base.util.Hex.toHexString;
+import org.aion.rlp.Value;
 
 /**
- * Checks if {@link A0BlockHeader#solution} is a valid Equihash solution.
- *
+ * @author Alexandra Roatis
  */
-public class EquihashSolutionRule extends BlockHeaderRule<A0BlockHeader> {
-
-    private OptimizedEquiValidator validator;
-
-    public EquihashSolutionRule(OptimizedEquiValidator validator) {
-        this.validator = validator;
-    }
+public class CountNodes implements ScanAction {
+    private int count = 0;
 
     @Override
-    public boolean validate(A0BlockHeader header, List<RuleError> errors) {
-        if (!validator.isValidSolutionNative(header.getSolution(), header.getMineHash(), header.getNonce())) {
-            addError("Invalid solution", errors);
-            return false;
-        }
-        return true;
+    public void doOnNode(byte[] hash, Value node) {
+        count++;
+    }
+
+    public int getCount() {
+        return count;
     }
 }

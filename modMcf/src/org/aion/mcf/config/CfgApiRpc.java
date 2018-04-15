@@ -46,7 +46,7 @@ public final class CfgApiRpc {
         this.active = true;
         this.ip = "127.0.0.1";
         this.port = 8545;
-        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal"));
+        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
         this.corsEnabled = false;
         this.maxthread = 1;
         this.filtersEnabled = true;

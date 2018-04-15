@@ -24,9 +24,9 @@
 
 package org.aion.txpool;
 
-import java.util.Properties;
-
 import org.aion.base.type.ITransaction;
+
+import java.util.Properties;
 
 public final class TxPoolModule {
     private static TxPoolModule singleton = null;
@@ -40,9 +40,6 @@ public final class TxPoolModule {
         if (moduleName != null) {
             TXPOOL = (ITxPool<ITransaction>) getClass().getClassLoader().loadClass(moduleName)
                     .getDeclaredConstructor(Properties.class).newInstance(config);
-            if (TXPOOL == null) {
-                throw new Exception("Can not load the txpool module!");
-            }
         } else {
             throw new Exception("No module name input!");
         }

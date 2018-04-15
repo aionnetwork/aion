@@ -105,7 +105,7 @@ public class AionRepositoryImplTest {
 
         @Override
         public boolean isHeapCacheEnabled() {
-            return true;
+            return false;
         }
 
         @Override

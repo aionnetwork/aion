@@ -139,6 +139,10 @@ public class AionHub {
             this.mempool.updateBest();
         }
 
+        if (cfg.getTx().getPoolBackup()) {
+            this.mempool.loadPendingTx();
+        }
+
 		String reportsFolder = "";
 		if (cfg.getReports().isEnabled()) {
 			File rpf = new File(cfg.getBasePath(), cfg.getReports().getPath());

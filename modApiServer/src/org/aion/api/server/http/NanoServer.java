@@ -30,7 +30,7 @@ public class NanoServer {
                       int port,
                       boolean corsEnabled,
                       List<String> enabledEndpoints,
-                      int _tpoolSize) {
+                      int tpoolSize) {
 
         this.corsEnabled = corsEnabled;
         this.enabledEndpoints = enabledEndpoints;
@@ -41,9 +41,9 @@ public class NanoServer {
         // do not protect user from over-allocating resources to api.
         // int fixedPoolSize = Math.min(Runtime.getRuntime().availableProcessors()-1, tpoolSize);
 
-        int tpoolSize = 1;
-        if (_tpoolSize > 0)
-            tpoolSize = _tpoolSize;
+        if (tpoolSize < 1) {
+            tpoolSize = 1;
+        }
 
         // create fixed thread pool of size defined by user
         this.workers = new ThreadPoolExecutor(

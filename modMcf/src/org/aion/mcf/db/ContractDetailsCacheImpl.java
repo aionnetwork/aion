@@ -20,20 +20,13 @@
  *******************************************************************************/
 package org.aion.mcf.db;
 
-import static java.util.Collections.unmodifiableMap;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.rlp.RLP;
-import org.aion.mcf.trie.SecureTrie;
+
+import java.util.*;
 
 /**
  * Contract details cache implementation.
@@ -58,7 +51,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
     @Override
     public void put(DataWord key, DataWord value) {
         storage.put(key, value);
-        this.setDirty(true);
+        setDirty(true);
     }
 
     @Override
@@ -83,18 +76,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
     }
 
     @Override
-    public byte[] getStorageHash() { // todo: unsupported
-
-        SecureTrie storageTrie = new SecureTrie(null);
-
-        for (DataWord key : storage.keySet()) {
-
-            DataWord value = storage.get(key);
-
-            storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-        }
-
-        return storageTrie.getRootHash();
+    public byte[] getStorageHash() {
+        return origContract.getStorageHash();
     }
 
     @Override
@@ -108,31 +91,23 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage() {
-        return unmodifiableMap(storage);
-    }
-
-    @Override
     public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
+        Map<DataWord, DataWord> storage = new HashMap<>();
         if (keys == null) {
-            return getStorage();
+            throw new IllegalArgumentException("Input keys can't be null");
+        } else {
+            for (DataWord key : keys) {
+                DataWord value = get(key);
+
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null) {
+                    storage.put(key, value);
+                }
+            }
         }
 
-        Map<DataWord, DataWord> result = new HashMap<>();
-        for (DataWord key : keys) {
-            result.put(key, storage.get(key));
-        }
-        return unmodifiableMap(result);
-    }
-
-    @Override
-    public int getStorageSize() {
-        return (origContract == null) ? storage.size() : origContract.getStorageSize();
-    }
-
-    @Override
-    public Set<DataWord> getStorageKeys() {
-        return (origContract == null) ? storage.keySet() : origContract.getStorageKeys();
+        return storage;
     }
 
     @Override
@@ -143,16 +118,16 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
             DataWord key = storageKeys.get(i);
             DataWord value = storageValues.get(i);
 
-            if (value.isZero()) {
-                storage.put(key, null);
-            }
+            put(key, value);
         }
 
     }
 
     @Override
     public void setStorage(Map<DataWord, DataWord> storage) {
-        this.storage = storage;
+        for (Map.Entry<DataWord, DataWord> entry : storage.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
@@ -165,18 +140,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         if (origContract != null) {
             origContract.setAddress(address);
         }
-    }
-
-    @Override
-    public IContractDetails<DataWord> clone() {
-
-        ContractDetailsCacheImpl contractDetails = new ContractDetailsCacheImpl(origContract);
-
-        Object storageClone = ((HashMap<DataWord, DataWord>) storage).clone();
-
-        contractDetails.setCode(this.getCode());
-        contractDetails.setStorage((HashMap<DataWord, DataWord>) storageClone);
-        return contractDetails;
     }
 
     @Override
