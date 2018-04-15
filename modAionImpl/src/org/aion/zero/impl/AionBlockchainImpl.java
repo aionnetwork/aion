@@ -353,40 +353,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @SuppressWarnings("Duplicates")
     // returns transaction info (tx receipt) without the transaction embedded in it.
     // saves on db reads for api when processing large transactions
-    public AionTxInfo getTransactionInfoLite(byte[] hash) {
-
-        List<AionTxInfo> infos = transactionStore.get(hash);
-
-        if (infos == null || infos.isEmpty()) {
-            return null;
-        }
-
-        AionTxInfo txInfo = null;
-        if (infos.size() == 1) {
-            txInfo = infos.get(0);
-        } else {
-            // pick up the receipt from the block on the main chain
-            for (AionTxInfo info : infos) {
-                AionBlock block = getBlockStore().getBlockByHash(info.getBlockHash());
-                if (block == null) continue;
-
-                AionBlock mainBlock = getBlockStore().getChainBlockByNumber(block.getNumber());
-                if (mainBlock == null) continue;
-
-                if (FastByteComparisons.equal(info.getBlockHash(), mainBlock.getHash())) {
-                    txInfo = info;
-                    break;
-                }
-            }
-        }
-        if (txInfo == null) {
-            LOG.warn("Can't find block from main chain for transaction " + toHexString(hash));
-            return null;
-        }
-
-        //AionTransaction tx = this.getBlockByHash(txInfo.getBlockHash()).getTransactionsList().get(txInfo.getIndex());
-        //txInfo.setTransaction(tx);
-        return txInfo;
+    public AionTxInfo getTransactionInfoLite(byte[] txHash, byte[] blockHash) {
+        return transactionStore.get(txHash, blockHash);
     }
 
     @Override
@@ -627,7 +595,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
         //long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
-        long energyLimit = 20_000_000L;
+        long energyLimit = 17_000_000L;
 
         A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
                 .withVersion((byte)1)

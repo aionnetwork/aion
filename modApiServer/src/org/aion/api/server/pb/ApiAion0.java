@@ -227,7 +227,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         isBlkCacheEnabled = CfgAion.inst().getApi().getZmq().isBlockSummaryCacheEnabled();
 
         if (isBlkCacheEnabled) {
-            explorerBlockCache = Collections.synchronizedMap(new LRUMap<>(50)); // use the default loadfactor
+            explorerBlockCache = Collections.synchronizedMap(new LRUMap<>(20)); // use the default loadfactor
             eesBlkCache = new EventExecuteService(100_000, "explorer-blk-cache", Thread.MIN_PRIORITY, LOG);
             Set<Integer> eventSN = new HashSet<>();
             int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
@@ -1436,7 +1436,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             if (r == null) {
                                 if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: transaction not in Block Summary: " + b.getNumber() + "." + j);
                                 AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain())
-                                        .getTransactionInfoLite(tx.getHash());
+                                        .getTransactionInfoLite(tx.getHash(), b.getHash());
                                 r = ti.getReceipt();
                             }
                             if (r == null) {
@@ -1454,7 +1454,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 .filter(Objects::nonNull)
                                 .map((AionTransaction tx) -> {
                                     AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain())
-                                            .getTransactionInfoLite(tx.getHash());
+                                            .getTransactionInfoLite(tx.getHash(), b.getHash());
                                     if (ti == null) {
                                         LOG.error("BlockSqlByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
                                         return null;
@@ -1746,8 +1746,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             tx_trie_root varchar(64),
 
             extra_data varchar(64),
-            nonce varchar(64),
-
+            nonce text,
             bloom text,
             solution text,
 
@@ -1775,7 +1774,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                 "'"+ByteUtil.toHexString(b.getExtraData())+"',"+
                 "'"+ByteUtil.toHexString(b.getNonce())+"',"+
-
                 "'"+ByteUtil.toHexString(b.getLogBloom())+"',"+
                 "'"+ByteUtil.toHexString(b.getHeader().getSolution())+"',"+
 
@@ -1883,7 +1881,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             List<AionTransaction> txs = b.getTransactionsList();
 
             List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map((AionTransaction tx) -> {
-                AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash());
+                AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash(), b.getHash());
 
                 List<Message.t_LgEle> tles = ti.getReceipt().getLogInfoList().parallelStream()
                         .map(log -> {
