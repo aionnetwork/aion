@@ -657,16 +657,15 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             // first return back the transactions from forked blocks
             IAionBlock rollback = best.get();
-            SortedMap<Long, List<AionTransaction>> rollbackTx = new TreeMap<>();
             while (!rollback.isEqual(commonAncestor)) {
-                rollbackTx.put(rollback.getNumber(), rollback.getTransactionsList());
-                rollback = blockchain.getBlockByHash(rollback.getParentHash());
-            }
-
-            for (List<AionTransaction> txs : rollbackTx.values()) {
-                for (AionTransaction tx : txs) {
-                    pendingTxCache.addCacheTx(tx);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Rollback: {}", rollback.getShortDescr());
                 }
+                List<AionTransaction> atl = rollback.getTransactionsList();
+                if (!atl.isEmpty()) {
+                    this.txPool.add(atl);
+                }
+                rollback = blockchain.getBlockByHash(rollback.getParentHash());
             }
 
             // rollback the state snapshot to the ancestor
@@ -676,6 +675,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             IAionBlock main = newBlock;
             List<IAionBlock> mainFork = new ArrayList<>();
             while (!main.isEqual(commonAncestor)) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Mainfork: {}", main.getShortDescr());
+                }
+
                 mainFork.add(main);
                 main = blockchain.getBlockByHash(main.getParentHash());
             }
@@ -786,9 +789,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             Map<Address, BigInteger> accountNonce = new HashMap<>();
             int cnt = 0;
             for (AionTransaction tx : block.getTransactionsList()) {
-                if (accountNonce.get(tx.getFrom()) == null) {
-                    accountNonce.put(tx.getFrom(), this.repository.getNonce(tx.getFrom()));
-                }
+                accountNonce.computeIfAbsent(tx.getFrom(), k -> this.repository.getNonce(tx.getFrom()));
 
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("Clear pending transaction, addr: {} hash: {}", tx.getFrom().toString(),
