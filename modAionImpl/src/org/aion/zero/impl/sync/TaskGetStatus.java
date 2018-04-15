@@ -29,6 +29,7 @@
 
 package org.aion.zero.impl.sync;
 
+import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.slf4j.Logger;
@@ -68,13 +69,11 @@ final class TaskGetStatus implements Runnable {
     @Override
     public void run() {
         while (this.run.get()) {
-            Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-            // long slot = intervalTotal / ids.size();
-
+            Set<INode> nodes = new HashSet<>(p2p.getActiveNodes().values());
             try {
-                for (int id : ids) {
-                    p2p.send(id, reqStatus);
-
+                for (INode node : nodes) {
+                    p2p.send(node.getIdHash(), reqStatus);
+                    log.debug("<requesting-status from-node={}>", node.getIdShort());
                 }
                 Thread.sleep(intervalTotal);
             } catch (InterruptedException e) {
