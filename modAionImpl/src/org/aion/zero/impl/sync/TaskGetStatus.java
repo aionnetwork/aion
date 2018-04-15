@@ -71,9 +71,9 @@ final class TaskGetStatus implements Runnable {
     @Override
     public void run() {
         while (this.run.get()) {
-            Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-
             try {
+                Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
+
                 for (int id : ids) {
                     p2p.send(id, reqStatus);
                     Thread.sleep(Math.max(intervalMin, intervalTotal / ids.size()));
@@ -82,8 +82,12 @@ final class TaskGetStatus implements Runnable {
                 if (ids.isEmpty()) {
                     Thread.sleep(intervalTotal);
                 }
-            } catch (InterruptedException e) {
-                break;
+            } catch (Exception e) {
+                if (e instanceof InterruptedException) {
+                    break;
+                } else {
+                    log.error("<sync-gs exception=" + e.toString() + ">");
+                }
             }
         }
         log.info("<sync-gs shutdown>");
