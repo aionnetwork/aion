@@ -369,14 +369,13 @@ public final class P2pMgr implements IP2pMgr {
     private final class TaskReceive implements Runnable {
         @Override
         public void run() {
-
-            while (true) {
+            while (P2pMgr.this.start.get()) {
                 try {
                     MsgIn mi = receiveMsgQue.take();
 
                     List<Handler> hs = handlers.get(mi.route);
                     if (hs == null)
-                        return;
+                        continue;
                     for (Handler hlr : hs) {
                         if (hlr == null)
                             continue;
@@ -432,7 +431,6 @@ public final class P2pMgr implements IP2pMgr {
                     } catch (InterruptedException e) {
                         if (showLog)
                             System.out.println("<p2p-tcp-interrupted>");
-                        return;
                     }
                     continue;
                 }
@@ -445,7 +443,7 @@ public final class P2pMgr implements IP2pMgr {
                 } catch (InterruptedException e) {
                     if (showLog)
                         System.out.println("<p2p-tcp-interrupted>");
-                    return;
+                    continue;
                 }
                 int nodeIdHash = node.getIdHash();
                 if (!nodeMgr.getOutboundNodes().containsKey(nodeIdHash) && !nodeMgr.hasActiveNode(nodeIdHash)) {
