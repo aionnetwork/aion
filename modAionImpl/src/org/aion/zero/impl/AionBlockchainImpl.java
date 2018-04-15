@@ -594,8 +594,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             }
         }
-        //long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
-        long energyLimit = 17_000_000L;
+
+        long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
 
         A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
                 .withVersion((byte)1)
@@ -610,14 +610,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         IAionBlock grandParent = this.getParent(parent.getHeader());
 
-        block.getHeader().setDifficulty(ByteUtil.bigIntegerToBytes(BigInteger.ONE, DIFFICULTY_BYTES));
-
-        /*
         block.getHeader().setDifficulty(
                 ByteUtil.bigIntegerToBytes(
                         this.chainConfiguration.getDifficultyCalculator().calculateDifficulty
                                 (parent.getHeader(), grandParent == null ? null : grandParent.getHeader()), DIFFICULTY_BYTES));
-        */
+
         /*
          * Begin execution phase
          */
@@ -815,12 +812,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 //            return false;
 //        }
 
-        /*
-
-        asharif - DEBUG
-
         IAionBlock parent = this.getParent(header);
-
 
         if (!this.parentHeaderValidator.validate(header, parent.getHeader(), LOG)) {
             return false;
@@ -832,7 +824,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 grandParent == null ? null : grandParent.getHeader(), parent.getHeader(), header, LOG)) {
             return false;
         }
-        */
 
         return true;
     }
