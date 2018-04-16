@@ -183,7 +183,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         private ChainConfiguration configuration;
         private List<ECKey> defaultKeys = new ArrayList<>();
         private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
-        private boolean blockPruningEnabled = false;
 
         private IRepositoryConfig repoConfig;
 
@@ -246,16 +245,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        public Builder withBlockPruningEnabled() {
-            blockPruningEnabled = true;
-            return this;
-        }
-
         private IRepositoryConfig generateRepositoryConfig() {
-            if (!blockPruningEnabled) {
-                return repoConfig;
-            }
-
             return new IRepositoryConfig() {
                 @Override
                 public String[] getVendorList() {
@@ -274,7 +264,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                 @Override
                 public int getPrune() {
-                    return 0;
+                    return -1;
                 }
 
                 @Override
