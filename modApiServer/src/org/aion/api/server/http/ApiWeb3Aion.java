@@ -1133,11 +1133,11 @@ public class ApiWeb3Aion extends ApiAion {
      * we can freely change the responses without breaking compatibility
      */
     public RpcMsg priv_peers() {
-        Map<Integer, INode> activeNodes = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+        List<INode> activeNodes = this.ac.getAionHub().getP2pMgr().getActiveNodes();
 
         JSONArray peerList = new JSONArray();
 
-        for (INode node : activeNodes.values()) {
+        for (INode node : activeNodes) {
             JSONObject n = new JSONObject();
             n.put("idShort", node.getIdShort());
             n.put("id", new String(node.getId()));
