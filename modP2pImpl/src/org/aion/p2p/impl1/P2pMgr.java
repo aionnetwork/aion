@@ -768,8 +768,15 @@ public final class P2pMgr implements IP2pMgr {
         byte ctrl = h.getCtrl();
         byte act = h.getAction();
 
-        // print route
-        // System.out.println("read " + ver + "-" + ctrl + "-" + act);
+        int route = h.getRoute();
+
+        boolean underRC = rb.shouldRoute(route, P2pConstant.READ_MAX_RATE);
+
+        if (!underRC) {
+            System.out.println("DEBUG p2p shouldnot route " + route + " nid_" + rb.nodeIdHash + " cid_"
+                    + _sk.channel().hashCode());
+            return currCnt;
+        }
 
         switch (ver) {
         case Ver.V0:
@@ -778,7 +785,6 @@ public final class P2pMgr implements IP2pMgr {
                 handleP2pMsg(_sk, act, bodyBytes);
                 break;
             default:
-                int route = h.getRoute();
                 if (rb.nodeIdHash != 0 || handlers.containsKey(route))
                     handleKernelMsg(rb.nodeIdHash, route, bodyBytes);
                 break;
