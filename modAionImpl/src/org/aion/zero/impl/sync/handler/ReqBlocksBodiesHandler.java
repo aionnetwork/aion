@@ -60,9 +60,9 @@ import java.util.Map;
  */
 public final class ReqBlocksBodiesHandler extends Handler {
 
-    private final Logger log;
+    private final static int MAX_NUM_OF_BLOCKS = 96;
 
-    private final int max;
+    private final Logger log;
 
     private final IAionBlockchain blockchain;
 
@@ -70,12 +70,11 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(1024));
 
-    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
-        this.max = _max;
     }
 
     @Override
@@ -85,7 +84,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
             // limit number of blocks
             List<byte[]> hashes = reqBlocks.getBlocksHashes();
-            hashes = hashes.size() > max ? hashes.subList(0, max) : hashes;
+            hashes = hashes.size() > MAX_NUM_OF_BLOCKS ? hashes.subList(0, MAX_NUM_OF_BLOCKS) : hashes;
 
             // results
             List<byte[]> blockBodies = new ArrayList<>();

@@ -59,9 +59,9 @@ import java.util.List;
  */
 public final class ReqBlocksHeadersHandler extends Handler {
 
-    private final Logger log;
+    private final static int MAX_NUM_OF_BLOCKS = 96;
 
-    private final int max;
+    private final Logger log;
 
     private final IAionBlockchain blockchain;
 
@@ -69,12 +69,11 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     //private final Map<Long, A0BlockHeader> cache = Collections.synchronizedMap(new LRUMap<>(1024));
 
-    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
+    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
-        this.max = _max;
     }
 
     @Override
@@ -87,7 +86,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
                 this.log.debug("<req-headers from-number={} size={} node={}>", fromBlock, take, _displayId);
             }
             List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
-                    new BlockIdentifier(null, fromBlock), 0, Math.min(take, max), false);
+                    new BlockIdentifier(null, fromBlock), 0, Math.min(take, MAX_NUM_OF_BLOCKS), false);
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, rbhs);
         } else {

@@ -63,12 +63,6 @@ public final class SyncMgr {
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    private int syncBackwardMin;
-    private int syncBackwardMax;
-
-    private int syncRequestMax;
-    private int syncResponseMax;
-
     private int blocksQueueMax; // block header wrappers
 
     private AionBlockchainImpl chain;
@@ -164,18 +158,11 @@ public final class SyncMgr {
         }
     }
 
-    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _syncBackwardMin, final int _syncBackwardMax,
-                     final int _syncRequestMax, final int _syncResponseMax, final int _blocksQueueMax,
+    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _blocksQueueMax,
                      final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
         this.p2pMgr = _p2pMgr;
         this.chain = AionBlockchainImpl.inst();
         this.evtMgr = _evtMgr;
-
-        this.syncBackwardMin = _syncBackwardMin;
-        this.syncBackwardMax = _syncBackwardMax;
-
-        this.syncRequestMax = _syncRequestMax;
-        this.syncResponseMax = _syncResponseMax;
 
         this.blocksQueueMax = _blocksQueueMax;
 
@@ -205,8 +192,7 @@ public final class SyncMgr {
             return;
         }
 
-        workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
-                syncBackwardMin, syncBackwardMax, syncRequestMax, peerStates, log));
+        workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd, peerStates, log));
     }
 
     /**
@@ -222,9 +208,9 @@ public final class SyncMgr {
 
         if (log.isDebugEnabled()) {
             log.debug(
-                    "<incoming-headers from-num={} to-num={} node={}>",
+                    "<incoming-headers from={} size={} node={}>",
                     _headers.get(0).getNumber(),
-                    _headers.get(_headers.size() - 1).getNumber(),
+                    _headers.size(),
                     _displayId
             );
         }

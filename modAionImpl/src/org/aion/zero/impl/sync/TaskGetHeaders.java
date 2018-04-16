@@ -52,26 +52,16 @@ final class TaskGetHeaders implements Runnable {
 
     private final BigInteger selfTd;
 
-    private final int backwardMin;
-
-    private final int backwardMax;
-
-    private final int requestMax;
-
     private final Map<Integer, PeerState> peerStates;
 
     private final Logger log;
 
     private final Random random = new Random(System.currentTimeMillis());
 
-    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, int backwardMin, int backwardMax, int requestMax,
-                   Map<Integer, PeerState> peerStates, Logger log) {
+    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, Map<Integer, PeerState> peerStates, Logger log) {
         this.p2p = p2p;
         this.selfNumber = selfNumber;
         this.selfTd = selfTd;
-        this.backwardMin = backwardMin;
-        this.backwardMax = backwardMax;
-        this.requestMax = requestMax;
         this.peerStates = peerStates;
         this.log = log;
     }
@@ -97,20 +87,14 @@ final class TaskGetHeaders implements Runnable {
 
         // decide the start block number
         long from = 0;
+        int size = 32;
         switch (state.getMode()) {
             case NORMAL: {
                 // update base block
                 state.setBase(selfNumber);
 
-                long nodeNumber = node.getBestBlockNumber();
-                if (nodeNumber >= selfNumber + 128) {
-                    from = Math.max(1, selfNumber + 1 - backwardMin);
-                } else if (nodeNumber >= selfNumber - 128) {
-                    from = Math.max(1, selfNumber + 1 - backwardMax);
-                } else {
-                    // no need to request from this node. His TD is probably corrupted.
-                    return;
-                }
+                // normal
+                from = Math.max(1, state.getBase() + 1 - 8);
                 break;
             }
             case BACKWARD: {
@@ -127,9 +111,9 @@ final class TaskGetHeaders implements Runnable {
 
         // send request
         if (log.isDebugEnabled()) {
-            log.debug("<get-headers mode={} from-num={} size={} node={}>", state.getMode(), from, requestMax, node.getIdShort());
+            log.debug("<get-headers mode={} from-num={} size={} node={}>", state.getMode(), from, size, node.getIdShort());
         }
-        ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
+        ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, size);
         this.p2p.send(node.getIdHash(), rbh);
     }
 }
