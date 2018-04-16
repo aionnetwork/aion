@@ -773,9 +773,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot = this.receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.receiptTrieRoot;
             this.logsBloom = this.logsBloom == null ? EMPTY_BLOOM : this.logsBloom;
-            this.difficulty = this.difficulty == null ? ByteUtil.EMPTY_BYTE_ARRAY : this.difficulty;
-            this.extraData = this.extraData == null ? ByteUtil.EMPTY_BYTE_ARRAY : this.extraData;
-            this.nonce = this.nonce == null ? ByteUtil.EMPTY_BYTE_ARRAY : this.nonce;
+            this.difficulty = this.difficulty == null ? ByteUtil.EMPTY_HALFWORD : this.difficulty;
+            this.extraData = this.extraData == null ? ByteUtil.EMPTY_WORD : this.extraData;
+            this.nonce = this.nonce == null ? ByteUtil.EMPTY_WORD : this.nonce;
             this.solution = this.solution == null ? EMPTY_SOLUTION : this.solution;
 
             A0BlockHeader header = new A0BlockHeader(this.version, this.number, this.parentHash, this.coinbase, this.logsBloom,
