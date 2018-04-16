@@ -25,35 +25,16 @@
 
 package org.aion.p2p;
 
-/**
- * @author chris
- */
-public abstract class Msg {
+public interface INodeMgr {
 
-    private final Header header;
+	void removeTimeoutActives(final IP2pMgr _p2pMgr);
 
-    /**
-     * @param _ver short
-     * @param _ctrl byte
-     * @param _act byte
-     * On msg construction phase, len of msg is unknown
-     * therefore right before socket.write, we need to figure
-     * out len before preparing the byte[]
-     */
-    public Msg(short _ver, byte _ctrl, byte _act){
-        this.header = new Header(_ver, _ctrl, _act, 0);
-    }
+	void moveInboundToActive(int _channelHashCode, final IP2pMgr _p2pMgr);
 
-    /**
-     * @return Header
-     */
-    public Header getHeader(){
-        return this.header;
-    }
+	void moveOutboundToActive(int _nodeIdHash, String _shortId, final IP2pMgr _p2pMgr);
 
-    /**
-     * @return byte[]
-     */
-    public abstract byte[] encode();
+	void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr);
+
+	void removeActive(int nodeIdHash, final IP2pMgr _p2pMgr);
 
 }

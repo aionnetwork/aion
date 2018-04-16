@@ -210,7 +210,6 @@ public class NodeMgr {
         Node node = outboundNodes.remove(_nodeIdHash);
         if (node != null) {
             INode previous = activeNodes.put(_nodeIdHash, node);
-
             // close new connected if exists on active list already
             if (previous != null)
                 _p2pMgr.closeSocket(node.getChannel(), "outbound-node-exits-on-active");
@@ -266,7 +265,6 @@ public class NodeMgr {
 
     public void timeoutActive(final P2pMgr _p2pMgr) {
         long now = System.currentTimeMillis();
-
         OptionalDouble average = activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(60000, timeout);
@@ -317,7 +315,6 @@ public class NodeMgr {
      */
     public void shutdown(final P2pMgr _p2pMgr) {
         try {
-
             activeNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(), "node-mgr-shutdown"));
             activeNodes.clear();
             outboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(), "node-mgr-shutdown"));

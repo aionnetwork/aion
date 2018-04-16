@@ -86,8 +86,10 @@ public class TaskWrite implements Runnable {
             buf.flip();
 
             try {
-                while (buf.hasRemaining()) {
-                    sc.write(buf);
+                int write;
+                while (() buf.hasRemaining()) {
+                    ;
+
                 }
             } catch (ClosedChannelException ex1) {
                 if (showLog) {

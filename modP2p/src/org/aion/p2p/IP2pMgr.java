@@ -81,7 +81,11 @@ public interface IP2pMgr {
 
     List<Short> versions();
 
+<<<<<<< HEAD
     int chainId();
+=======
+	void closeSocket(final SocketChannel _sc, String _reason);
+>>>>>>> 9128b947e4b215bc19ddce65551752302a54e0f3
 
     void errCheck(int nodeIdHashcode, String _displayId);
 }

@@ -77,6 +77,13 @@ public final class ResStatusHandler extends Handler {
 
         INode node = this.p2pMgr.getActiveNode(_nodeIdHashcode);
         if (node != null) {
+<<<<<<< HEAD
+=======
+            if (log.isDebugEnabled()) {
+                this.log.debug("<res-status best-block={} node={}>", rs.getBestBlockNumber(), _displayId);
+            }
+            // this.p2pMgr.getNodeMgr().updateAllNodesInfo(node);
+>>>>>>> 9128b947e4b215bc19ddce65551752302a54e0f3
             long remoteBestBlockNumber = rs.getBestBlockNumber();
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();
