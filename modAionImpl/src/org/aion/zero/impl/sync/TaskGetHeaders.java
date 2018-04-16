@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -51,24 +52,17 @@ final class TaskGetHeaders implements Runnable {
 
     private final BigInteger selfTd;
 
-    private final int backwardMin;
-
-    private final int backwardMax;
-
-    private final int requestMax;
+    private final Map<Integer, PeerState> peerStates;
 
     private final Logger log;
 
     private final Random random = new Random(System.currentTimeMillis());
 
-    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, int backwardMin, int backwardMax, int requestMax,
-            Logger log) {
+    TaskGetHeaders(IP2pMgr p2p, long selfNumber, BigInteger selfTd, Map<Integer, PeerState> peerStates, Logger log) {
         this.p2p = p2p;
         this.selfNumber = selfNumber;
         this.selfTd = selfTd;
-        this.backwardMin = backwardMin;
-        this.backwardMax = backwardMax;
-        this.requestMax = requestMax;
+        this.peerStates = peerStates;
         this.log = log;
     }
 
@@ -78,42 +72,66 @@ final class TaskGetHeaders implements Runnable {
         Collection<INode> nodes = this.p2p.getActiveNodes().values();
 
         // filter nodes by total difficulty
+        long now = System.currentTimeMillis();
         List<INode> nodesFiltered = nodes.stream()
-                .filter((n) -> n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0)
+                .filter(n ->
+                        // higher td
+                        n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0
+                                // not recently requested
+                                && (now - 5000) > peerStates.computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber)).getLastHeaderRequest()
+                )
                 .collect(Collectors.toList());
         if (nodesFiltered.isEmpty()) {
             return;
         }
 
-        // sort by TD and pick top 8 in next step.
-        nodesFiltered.sort((n1, n2) -> {
-            return n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
-        });
+        // pick one random node
+        INode node = nodesFiltered.get(random.nextInt(nodesFiltered.size()));
 
-        // @TODO: when nodes TD highly distributed in wide range, simple way is only pick top 8 node for sync.
-        // looking for better strategy here.
-        INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
+        // fetch the peer state
+        PeerState state = peerStates.get(node.getIdHash());
 
-        if (log.isDebugEnabled()) {
-            log.debug("<sync with={} BB={}>", node.getIdShort(), node.getBestBlockNumber());
-        }
-
-        long nodeNumber = node.getBestBlockNumber();
+        // decide the start block number
         long from = 0;
-        if (nodeNumber >= selfNumber + 128) {
-            from = Math.max(1, selfNumber - backwardMin);
-        } else if (nodeNumber >= selfNumber - 128) {
-            from = Math.max(1, selfNumber - backwardMax);
-        } else {
-            // no need to request from this node. His TD is probably corrupted.
-            return;
+        int size = 24;
+        switch (state.getMode()) {
+            case NORMAL: {
+                // update base block
+                state.setBase(selfNumber);
+
+                // normal mode
+                long nodeNumber = node.getBestBlockNumber();
+                if (nodeNumber >= selfNumber + 128) {
+                    from = Math.max(1, selfNumber + 1 - 4);
+                } else if (nodeNumber >= selfNumber - 128) {
+                    from = Math.max(1, selfNumber + 1 - 16);
+                } else {
+                    // no need to request from this node. His TD is probably corrupted.
+                    return;
+                }
+
+                break;
+            }
+            case BACKWARD: {
+                // step back by 128 blocks
+                from = Math.max(1, state.getBase() - 128);
+                break;
+            }
+            case FORWARD: {
+                // start from base block
+                from = state.getBase() + 1;
+                break;
+            }
         }
 
         // send request
         if (log.isDebugEnabled()) {
-            log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
+            log.debug("<get-headers mode={} from-num={} size={} node={}>", state.getMode(), from, size, node.getIdShort());
         }
-        ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
+        ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, size);
         this.p2p.send(node.getIdHash(), rbh);
+
+        // update timestamp
+        state.setLastHeaderRequest(now);
     }
 }
