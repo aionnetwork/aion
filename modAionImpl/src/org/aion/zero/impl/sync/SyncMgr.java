@@ -188,13 +188,17 @@ public final class SyncMgr {
         this.evtMgr.registerEvent(events);
     }
 
+    private AtomicBoolean queueFull = new AtomicBoolean(false);
+
     private void getHeaders(BigInteger _selfTd){
         if (downloadedBlocks.size() > blocksQueueMax) {
-            log.debug("Downloaded blocks queue is full. Stop requesting headers");
-            return;
+            if (queueFull.compareAndSet(false, true)) {
+                log.debug("Downloaded blocks queue is full. Stop requesting headers");
+            }
+        } else {
+            workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd, peerStates, log));
+            queueFull.set(false);
         }
-
-        workers.submit(new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd, peerStates, log));
     }
 
     /**
@@ -264,11 +268,6 @@ public final class SyncMgr {
      * to import queue from network response blocks bodies
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
-
-        if (downloadedBlocks.size() > blocksQueueMax) {
-            log.debug("Downloaded blocks queue is full. Stop validating incoming bodies");
-            return;
-        }
 
         HeadersWrapper hw = this.headersWithBodiesRequested.remove(_nodeIdHashcode);
         if (hw == null || _bodies == null)
