@@ -47,9 +47,6 @@ import java.util.stream.Collectors;
  */
 final class TaskGetBodies implements Runnable {
 
-    // timeout sent headers
-    private final static int SENT_HEADERS_TIMEOUT = 10000;
-
     private final IP2pMgr p2p;
 
     private final AtomicBoolean run;
@@ -99,19 +96,15 @@ final class TaskGetBodies implements Runnable {
                 continue;
             }
 
-            HeadersWrapper hwPrevious = headersWithBodiesRequested.get(idHash);
-            if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
-                this.headersWithBodiesRequested.put(idHash, hw);
-
-                if (log.isDebugEnabled()) {
-                    log.debug("<get-bodies from-num={} to-num={} node={}>",
-                            headers.get(0).getNumber(),
-                            headers.get(headers.size() - 1).getNumber(),
-                            hw.getDisplayId());
-                }
-
-                this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+            if (log.isDebugEnabled()) {
+                log.debug("<get-bodies from-num={} to-num={} node={}>",
+                        headers.get(0).getNumber(),
+                        headers.get(headers.size() - 1).getNumber(),
+                        hw.getDisplayId());
             }
+
+            p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+            headersWithBodiesRequested.put(idHash, hw);
         }
     }
 }
