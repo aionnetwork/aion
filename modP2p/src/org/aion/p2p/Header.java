@@ -28,30 +28,23 @@ package org.aion.p2p;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.aion.p2p.P2pConstant;
-
 /**
  * @author chris
  */
 public final class Header {
 
     public final static int LEN = 8;
-
-    private final static int MAX_BODY_LEN_BYTES = P2pConstant.MAX_BODY_SIZE;
+    public final static int MAX_BODY_LEN = 32 * 1024 * 1014;
     private final short ver;
     private final byte ctrl;
     private final byte action;
     private int len;
 
     /**
-     * @param _ver
-     *            short
-     * @param _ctrl
-     *            byte
-     * @param _action
-     *            byte
-     * @param _len
-     *            byte
+     * @param _ver    short
+     * @param _ctrl   byte
+     * @param _action byte
+     * @param _len    byte
      */
     Header(short _ver, byte _ctrl, byte _action, int _len) {
         this.ver = _ver;
@@ -107,11 +100,9 @@ public final class Header {
     }
 
     /**
-     * @param _headerBytes
-     *            byte[]
+     * @param _headerBytes byte[]
      * @return Header
-     * @throws IOException
-     *             when exeeds MAX_BODY_LEN_BYTES
+     * @throws IOException when exeeds MAX_BODY_LEN_BYTES
      */
     public static Header decode(final byte[] _headerBytes) throws IOException {
         if (_headerBytes == null || _headerBytes.length != LEN)
@@ -122,8 +113,8 @@ public final class Header {
             byte ctrl = bb1.get();
             byte action = bb1.get();
             int len = bb1.getInt();
-            if (len > MAX_BODY_LEN_BYTES)
-                throw new IOException("exceed-max-body-size");
+            if (len > MAX_BODY_LEN)
+                throw new IOException("exceed-max-body-size " + len + "/" + MAX_BODY_LEN);
             return new Header(ver, ctrl, action, len);
         }
     }

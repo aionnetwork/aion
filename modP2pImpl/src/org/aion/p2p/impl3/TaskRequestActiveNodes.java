@@ -23,20 +23,29 @@
  *
  */
 
-package org.aion.p2p.impl;
+package org.aion.p2p.impl3;
 
-import org.aion.p2p.impl.comm.NodeMgr;
+import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
 
-public class TaskPersistNodes implements Runnable{
-    private NodeMgr nodeMgr;
+/**
+ *
+ * @author chris
+ *
+ */
+public final class TaskRequestActiveNodes implements Runnable {
 
-    TaskPersistNodes(NodeMgr nodeMgr){
-        this.nodeMgr = nodeMgr;
-    }
+	private IP2pMgr mgr;
 
-    @Override
-    public void run() {
-        System.out.println("<p2p persisting-nodes-to-disk>");
-        nodeMgr.persistNodes();
-    }
+	TaskRequestActiveNodes(final IP2pMgr _mgr) {
+		this.mgr = _mgr;
+	}
+
+	@Override
+	public void run() {
+		INode node = mgr.getRandom();
+		if (node != null)
+			this.mgr.send(node.getIdHash(), new ReqActiveNodes());
+	}
 }

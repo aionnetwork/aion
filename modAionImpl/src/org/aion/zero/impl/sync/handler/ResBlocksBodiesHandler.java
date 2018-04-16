@@ -73,7 +73,7 @@ public final class ResBlocksBodiesHandler extends Handler {
         ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
         if(bodies == null) {
-            log.error("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
+            log.debug("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             if (log.isTraceEnabled()) {
                 log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
@@ -82,7 +82,7 @@ public final class ResBlocksBodiesHandler extends Handler {
         } else {
             if (bodies.isEmpty()) {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-                log.error("<res-bodies-empty node={}>", _displayId);
+                log.debug("<res-bodies-empty node={}>", _displayId);
             } else {
                 syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
             }

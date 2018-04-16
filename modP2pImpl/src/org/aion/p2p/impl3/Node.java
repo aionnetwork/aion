@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl.comm;
+package org.aion.p2p.impl3;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -45,15 +45,15 @@ public final class Node implements INode {
 
     private static final int SIZE_BYTES_IPV4 = 8;
 
-    private SocketChannel channel;
-
     private boolean fromBootList;
+
+    private int channelId;
 
     private byte[] id; // 36 bytes
 
-    private int idHash;
-
     private String idShort;
+
+    private int idHash;
 
     private byte[] ip;
 
@@ -71,54 +71,48 @@ public final class Node implements INode {
 
     private String binaryVersion = "";
 
-    /**
-     * for log display indicates current node inboundOrOutbound is constructed by inbound
-     * inboundOrOutbound or outbound inboundOrOutbound
-     */
-    private String inboundOrOutbound = "";
-
-    public NodeStats nodeStats = new NodeStats();
+    private SocketChannel channel;
 
     /**
-     *
-     * @param _channel SocketChannel
-     * @param _ipStr String
-     * @param _port int
-     * constructor for initial stage of incoming connections from network
+     * for log display indicates current node connection is constructed by inbound
+     * connection or outbound connection
      */
-    public Node(SocketChannel _channel, String _ipStr, int _port) {
-        this.channel = _channel;
+    private String connection = "";
+
+    /**
+     * constructor for initial stage of connections from network
+     */
+    Node(int _channelId, String _ipStr, int port) {
         this.fromBootList = false;
-        this.idHash = 0;
+        this.channelId = _channelId;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
-        this.port = _port;
+        this.port = port;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
-        this.inboundOrOutbound = "inbound";
     }
 
     /**
-     * constructor for initial stage of boot nodes from config or from list of active nodes response
+     * constructor for initial stage of seed nodes from config
      */
-    public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, int _port) {
+    public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, final int _port) {
         this.fromBootList = fromBootList;
         this.id = _id;
-        this.idHash = Arrays.hashCode(_id);
-        this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        if (_id != null && _id.length == 36) {
+            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        }
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
         this.port = _port;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
-        this.inboundOrOutbound = "outbound";
     }
 
     /**
      * @param _ip String
      * @return byte[]
      */
-    public static byte[] ipStrToBytes(String _ip) {
+    static byte[] ipStrToBytes(final String _ip) {
         ByteBuffer bb8 = ByteBuffer.allocate(8);
         String[] frags = _ip.split("\\.");
         for (String frag : frags) {
@@ -137,7 +131,7 @@ public final class Node implements INode {
      * @param _ip byte[]
      * @return String
      */
-    public static String ipBytesToStr(final byte[] _ip) {
+    static String ipBytesToStr(final byte[] _ip) {
         if (_ip == null || _ip.length != SIZE_BYTES_IPV4)
             return "";
         else {
@@ -155,9 +149,9 @@ public final class Node implements INode {
 
     /**
      * @param _p2p String
-     * @return Node TODO: ugly
+     * @return Node
      */
-    public static Node parseP2p(String _p2p) {
+    static Node parseP2p(String _p2p) {
         if (!PATTERN_P2P.matcher(_p2p).matches())
             return null;
 
@@ -171,6 +165,10 @@ public final class Node implements INode {
         int _port = Integer.parseInt(subArrs[1]);
 
         return new Node(true, _id, _ip, _port);
+    }
+
+    void setFromBootList(boolean _ifBoot) {
+        this.fromBootList = _ifBoot;
     }
 
     /**
@@ -191,7 +189,7 @@ public final class Node implements INode {
         this.port = _port;
     }
 
-    public void setBinaryVersion(String _revision) {
+    void setBinaryVersion(String _revision) {
         this.binaryVersion = _revision;
     }
 
@@ -199,14 +197,28 @@ public final class Node implements INode {
      * this method used to keep current node stage on either pending list or active
      * list
      */
-    public void refreshTimestamp() {
+    void refreshTimestamp() {
         this.timestamp = System.currentTimeMillis();
+    }
+
+    /**
+     * @param _channel SocketChannel
+     */
+    void setChannel(final SocketChannel _channel) {
+        this.channel = _channel;
+    }
+
+    /**
+     * @param _connection String
+     */
+    void setConnection(String _connection) {
+        this.connection = _connection;
     }
 
     /**
      * @return boolean
      */
-    public boolean getIfFromBootList() {
+    boolean getIfFromBootList() {
         return this.fromBootList;
     }
 
@@ -225,17 +237,15 @@ public final class Node implements INode {
         return this.port;
     }
 
-    @Override
+    /**
+     * @return long
+     */
     public long getTimestamp() {
         return this.timestamp;
     }
 
     String getBinaryVersion() {
         return this.binaryVersion;
-    }
-
-    public void setChannel(final SocketChannel _channel){
-        this.channel = _channel;
     }
 
     /**
@@ -251,20 +261,25 @@ public final class Node implements INode {
     }
 
     @Override
-    public int getIdHash() {
-        return this.idHash;
+    public String getIdShort() {
+        return this.idShort == null ? "" : this.idShort;
     }
 
     @Override
-    public String getIdShort() {
-        return this.idShort == null ? "" : this.idShort;
+    public int getIdHash() { return this.idHash; }
+
+    public int getChannelId() {
+        if (this.channel == null)
+            return -1;
+        else
+            return this.channel.hashCode();
     }
 
     /**
      * @return String
      */
-    String getInboundOrOutbound() {
-        return this.inboundOrOutbound;
+    String getConnection() {
+        return this.connection;
     }
 
     @Override
@@ -274,8 +289,12 @@ public final class Node implements INode {
 
     @Override
     public byte[] getBestBlockHash() {
-        return this.bestBlockHash;
+        return new byte[0];
     }
+
+    //byte[] getBestBlockHash() {
+    //    return this.bestBlockHash;
+    //}
 
     @Override
     public BigInteger getTotalDifficulty() {

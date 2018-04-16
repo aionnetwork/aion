@@ -29,6 +29,7 @@
 
 package org.aion.zero.impl.sync;
 
+import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.slf4j.Logger;
@@ -43,10 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TaskGetStatus implements Runnable {
 
-
     private final static int intervalTotal = 1000;
-
-    private final static int intervalMin = 100;
 
     // single instance req status
     private final static ReqStatus reqStatus = new ReqStatus();
@@ -71,20 +69,13 @@ final class TaskGetStatus implements Runnable {
     @Override
     public void run() {
         while (this.run.get()) {
-            Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-
-            try {
-                for (int id : ids) {
-                    p2p.send(id, reqStatus);
-                    Thread.sleep(1000L);
-                }
-
-                if (ids.isEmpty()) {
-                    Thread.sleep(intervalTotal);
-                }
-            } catch (InterruptedException e) {
-                break;
+            for (INode node : p2p.getActiveNodes()) {
+                if(node != null)
+                    p2p.send(node.getIdHash(), reqStatus);
             }
+            try {
+                Thread.sleep(intervalTotal);
+            } catch (InterruptedException e) {}
         }
         log.info("<sync-gs shutdown>");
     }

@@ -69,28 +69,28 @@ public final class ResStatusHandler extends Handler {
         ResStatus rs = ResStatus.decode(_msgBytes);
 
         if (rs == null) {
-            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             this.log.error("<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
-
             if (this.log.isTraceEnabled()) {
                 this.log.trace("res-status decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
             }
         }
 
-        INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
+        INode node = this.p2pMgr.getActiveNode(_nodeIdHashcode);
         if (node != null) {
-            if (log.isDebugEnabled()) {
-                this.log.debug("<res-status best-block={} node={}>", rs.getBestBlockNumber(), _displayId);
-            }
-            this.p2pMgr.getNodeMgr().updateAllNodesInfo(node);
             long remoteBestBlockNumber = rs.getBestBlockNumber();
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();
+
             if(remoteTdBytes != null && remoteBestBlockHash != null){
                 BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
+                // no need to check if node id corrected which is passed from channel attachment separated
+                // no need to check if higher since node might revert db or restart
                 node.updateStatus(remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
                 syncMgr.updateNetworkStatus(_displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
             }
+
+        } else {
+            log.debug("<update-status-failed could-not-find-node={}>", _displayId);
         }
     }
 }

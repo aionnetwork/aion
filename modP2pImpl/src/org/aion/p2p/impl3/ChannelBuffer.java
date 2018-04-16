@@ -22,49 +22,62 @@
  * Aion foundation.
  *
  */
+package org.aion.p2p.impl3;
 
-package org.aion.p2p.impl.comm;
+import org.aion.p2p.Header;
+import org.aion.p2p.Msg;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  * @author chris
  *
  */
-public final class Act {
+class ChannelBuffer {
 
-    public static final byte DISCONNECT = 0;
+	ByteBuffer headerBuf = ByteBuffer.allocate(Header.LEN);
 
-    public static final byte REQ_HANDSHAKE = 1;
+	ByteBuffer bodyBuf = null;
 
-    public static final byte RES_HANDSHAKE = 2;
+	Header header = null;
 
-    public static final byte PING = 3;
+	byte[] body = null;
 
-    public static final byte PONG = 4;
+	/**
+	 * write flag
+	 */
+	AtomicBoolean onWrite = new AtomicBoolean(false);
 
-    public static final byte REQ_ACTIVE_NODES = 5;
+	static int messagesSize = 128;
 
-    public static final byte RES_ACTIVE_NODES = 6;
+	BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(messagesSize);
 
-    public static final byte UNKNOWN = Byte.MAX_VALUE;
+	void refreshHeader(){
+		headerBuf.clear();
+		header = null;
+	}
 
-    private static Set<Byte> active = new HashSet<>() {{
-        add(REQ_HANDSHAKE);
-        add(RES_HANDSHAKE);
-        add(REQ_ACTIVE_NODES);
-        add(RES_ACTIVE_NODES);
-    }};
+	void refreshBody(){
+		bodyBuf = null;
+		body = null;
+	}
 
-    /**
-     * @param _act byte
-     * @return byte
-     * method provided to filter any decoded p2p action (byte)
-     */
-    public static byte filter(byte _act){
-        return active.contains(_act) ? _act : UNKNOWN;
-    }
+	/**
+	 * @return boolean
+	 */
+	boolean isHeaderCompleted(){
+		return header != null;
+	}
+
+	/**
+	 * @return boolean
+	 */
+	boolean isBodyCompleted() {
+		return this.header != null && this.body != null && body.length == header.getLen();
+	}
 
 }

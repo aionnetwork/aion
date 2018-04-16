@@ -67,7 +67,17 @@ public interface INode {
     /**
      * @return long
      */
+    long getTimestamp();
+
+    /**
+     * @return long
+     */
     long getBestBlockNumber();
+
+    /**
+     * @return byte[]
+     */
+    byte[] getBestBlockHash();
 
     /**
      * @return BigInteger

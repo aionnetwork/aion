@@ -37,10 +37,7 @@ package org.aion.zero.impl.sync.handler;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Handler;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.Ver;
+import org.aion.p2p.*;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
@@ -91,14 +88,26 @@ public final class ReqBlocksBodiesHandler extends Handler {
             List<byte[]> blockBodies = new ArrayList<>();
 
             // read from cache, then block store
+            int out = 0;
             for (byte[] hash : hashes) {
                 byte[] blockBytes = cache.get(ByteArrayWrapper.wrap(hash));
                 if (blockBytes != null) {
+                    if(out + blockBytes.length > Header.MAX_BODY_LEN){
+                        log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, Header.MAX_BODY_LEN);
+                        break;
+                    }
                     blockBodies.add(blockBytes);
+                    out += blockBytes.length;
                 } else {
                     AionBlock block = blockchain.getBlockByHash(hash);
                     if (block != null) {
-                        blockBodies.add(block.getEncodedBody());
+                        blockBytes = block.getEncodedBody();
+                        if(out + blockBytes.length > Header.MAX_BODY_LEN){
+                            log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, Header.MAX_BODY_LEN);
+                            break;
+                        }
+                        blockBodies.add(blockBytes);
+                        out += blockBytes.length;
                         cache.put(ByteArrayWrapper.wrap(hash), block.getEncodedBody());
                     } else {
                         // not found
@@ -114,7 +123,6 @@ public final class ReqBlocksBodiesHandler extends Handler {
             }
 
         } else {
-            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>",
                     _displayId,
                     _msgBytes.length);

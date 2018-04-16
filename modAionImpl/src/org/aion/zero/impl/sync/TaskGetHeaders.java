@@ -35,9 +35,7 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -74,46 +72,43 @@ final class TaskGetHeaders implements Runnable {
 
     @Override
     public void run() {
-        // get all active nodes
-        Collection<INode> nodes = this.p2p.getActiveNodes().values();
 
-        // filter nodes by total difficulty
-        List<INode> nodesFiltered = nodes.stream()
-                .filter((n) -> n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0)
-                .collect(Collectors.toList());
-        if (nodesFiltered.isEmpty()) {
-            return;
-        }
+        Set<Integer> ids = new HashSet<>();
+        List<INode> preFilter = this.p2p.getActiveNodes();
 
-        // sort by TD and pick top 8 in next step.
-        nodesFiltered.sort((n1, n2) -> {
-            return n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
-        });
+        List<INode> filtered = preFilter.stream().filter(
+                (n) -> n.getTotalDifficulty() != null &&
+                        n.getTotalDifficulty().compareTo(this.selfTd) > 0
+        ).collect(Collectors.toList());
 
-        // @TODO: when nodes TD highly distributed in wide range, simple way is only pick top 8 node for sync.
-        // looking for better strategy here.
-        INode node = nodesFiltered.get(random.nextInt(Math.min(nodesFiltered.size(), 8)));
+        if (filtered.size() > 0) {
+            Random r = new Random(System.currentTimeMillis());
+            for (int i = 0; i < 2; i++) {
+                INode node = filtered.get(r.nextInt(filtered.size()));
 
-        if (log.isDebugEnabled()) {
-            log.debug("<sync with={} BB={}>", node.getIdShort(), node.getBestBlockNumber());
-        }
+                long from;
+                if (node.getBestBlockNumber() >= selfNumber + 128) {
+                    from = Math.max(1, selfNumber - backwardMin);
+                } else if (node.getBestBlockNumber() >= selfNumber - 128) {
+                    from = Math.max(1, selfNumber - backwardMax);
+                } else {
+                    // no need to request from this node. His TD is probably corrupted.
+                    continue;
+                }
 
-        long nodeNumber = node.getBestBlockNumber();
-        long from = 0;
-        if (nodeNumber >= selfNumber + 128) {
-            from = Math.max(1, selfNumber - backwardMin);
-        } else if (nodeNumber >= selfNumber - 128) {
-            from = Math.max(1, selfNumber - backwardMax);
+                if (!ids.contains(node.getIdHash())) {
+                    ids.add(node.getIdHash());
+                    ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
+                    }
+
+                    this.p2p.send(node.getIdHash(), rbh);
+                }
+            }
         } else {
-            // no need to request from this node. His TD is probably corrupted.
-            return;
+            log.debug("<get-headers find-no-valid-target>");
         }
-
-        // send request
-        if (log.isDebugEnabled()) {
-            log.debug("<get-headers from-num={} size={} node={}>", from, requestMax, node.getIdShort());
-        }
-        ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, requestMax);
-        this.p2p.send(node.getIdHash(), rbh);
     }
 }
