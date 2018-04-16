@@ -34,8 +34,8 @@ import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,36 +47,36 @@ import java.util.stream.Collectors;
  */
 final class TaskGetBodies implements Runnable {
 
-    // timeout sent headers
-    private final static int SENT_HEADERS_TIMEOUT = 10000;
-
     private final IP2pMgr p2p;
 
     private final AtomicBoolean run;
 
-    private final BlockingQueue<HeadersWrapper> headersImported;
+    private final BlockingQueue<HeadersWrapper> downloadedHeaders;
 
-    private final ConcurrentHashMap<Integer, HeadersWrapper> headersSent;
+    private final ConcurrentHashMap<Integer, HeadersWrapper> headersWithBodiesRequested;
+
+    private final Map<Integer, PeerState> peerStates;
 
     private final Logger log;
 
     /**
-     *
-     * @param _p2p IP2pMgr
-     * @param _run AtomicBoolean
-     * @param _headersImported BlockingQueue
-     * @param _headersSent ConcurrentHashMap
+     * @param _p2p             IP2pMgr
+     * @param _run             AtomicBoolean
+     * @param _downloadedHeaders BlockingQueue
+     * @param _headersWithBodiesRequested     ConcurrentHashMap
      */
     TaskGetBodies(
             final IP2pMgr _p2p,
             final AtomicBoolean _run,
-            final BlockingQueue<HeadersWrapper> _headersImported,
-            final ConcurrentHashMap<Integer, HeadersWrapper> _headersSent,
-            final Logger log){
+            final BlockingQueue<HeadersWrapper> _downloadedHeaders,
+            final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
+            final Map<Integer, PeerState> peerStates,
+            final Logger log) {
         this.p2p = _p2p;
         this.run = _run;
-        this.headersImported = _headersImported;
-        this.headersSent = _headersSent;
+        this.downloadedHeaders = _downloadedHeaders;
+        this.headersWithBodiesRequested = _headersWithBodiesRequested;
+        this.peerStates = peerStates;
         this.log = log;
     }
 
@@ -85,7 +85,7 @@ final class TaskGetBodies implements Runnable {
         while (run.get()) {
             HeadersWrapper hw;
             try {
-                hw = headersImported.take();
+                hw = downloadedHeaders.take();
             } catch (InterruptedException e) {
                 continue;
             }
@@ -96,19 +96,15 @@ final class TaskGetBodies implements Runnable {
                 continue;
             }
 
-            HeadersWrapper hwPrevious = headersSent.get(idHash);
-            if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
-                this.headersSent.put(idHash, hw);
-
-                if (log.isDebugEnabled()) {
-                    log.debug("<get-bodies from-num={} to-num={} node={}>",
-                            headers.get(0).getNumber(),
-                            headers.get(headers.size() - 1).getNumber(),
-                            hw.getDisplayId());
-                }
-
-                this.p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+            if (log.isDebugEnabled()) {
+                log.debug("<get-bodies from-num={} to-num={} node={}>",
+                        headers.get(0).getNumber(),
+                        headers.get(headers.size() - 1).getNumber(),
+                        hw.getDisplayId());
             }
+
+            p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+            headersWithBodiesRequested.put(idHash, hw);
         }
     }
 }

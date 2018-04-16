@@ -41,14 +41,35 @@ public class ApiUtil {
                 .put(hash, 0, hash.length).array();
     }
 
-    public static byte[] toReturnHeader(int vers, int retCode, byte[] hash, byte[] result) {
+
+    public static byte[] toReturnHeader(int vers, int retCode, byte[] hash, byte[] error) {
+
+        if (hash == null || hash.length != HASH_LEN) {
+            return null;
+        }
+
+        if (error.length == 0) {
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1).put((byte) vers).put((byte) retCode).put((byte) 1)
+                    .put(hash, 0, hash.length).put((byte)0).array();
+        } else {
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + error.length ).put((byte) vers).put((byte) retCode).put((byte) 1)
+                    .put(hash, 0, hash.length).put((byte) error.length).put(error, 0 , error.length).array();
+        }
+    }
+
+    public static byte[] toReturnHeader(int vers, int retCode, byte[] hash, byte[] error, byte[] result) {
 
         if (hash == null || result == null || hash.length != HASH_LEN) {
             return null;
         }
 
-        return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + result.length).put((byte) vers).put((byte) retCode)
-                .put((byte) 1).put(hash, 0, hash.length).put(result, 0, result.length).array();
+        if (error.length == 0) {
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + result.length).put((byte) vers).put((byte) retCode)
+                    .put((byte) 1).put(hash, 0, hash.length).put((byte) 0).put(result, 0, result.length).array();
+        } else {
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + error.length + result.length).put((byte) vers).put((byte) retCode)
+                    .put((byte) 1).put(hash, 0, hash.length).put((byte) error.length).put(error, 0, error.length).put(result, 0, result.length).array();
+        }
     }
 
     public static byte[] toReturnHeader(int vers, int retCode) {
