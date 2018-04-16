@@ -74,10 +74,10 @@ public final class ResBlocksBodiesHandler extends Handler {
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
         if(bodies == null) {
             log.debug("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
-            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-            if (log.isTraceEnabled()) {
-                log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
-            }
+//            p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+//            if (log.isTraceEnabled()) {
+//                log.trace("res-bodies dump: {}", ByteUtil.toHexString(_msgBytes));
+//            }
 
         } else {
             if (bodies.isEmpty()) {

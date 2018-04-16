@@ -27,7 +27,10 @@ package org.aion.p2p.impl.comm;
 
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
+import org.aion.p2p.impl1.TaskWrite;
 
+import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -231,13 +234,15 @@ public class NodeMgr {
 
     public void timeoutOutbound(final P2pMgr _p2pMgr){
         Iterator outboundIt = outboundNodes.entrySet().iterator();
+        long now = System.currentTimeMillis();
         while (outboundIt.hasNext()) {
             Map.Entry<Integer, Node> entry = (Map.Entry<Integer, Node>)outboundIt.next();
             Node node = entry.getValue();
-            if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
+            if ((now - node.getTimestamp()) > TIMEOUT_OUTBOUND_NODES) {
                 outboundIt.remove();
                 _p2pMgr.closeSocket(node.getChannel(), "timeout-outbound-" + node.getIdShort() + "-" + node.getIpStr());
             }
+
         }
     }
 
@@ -283,14 +288,21 @@ public class NodeMgr {
             _p2pMgr.closeSocket(node.getChannel(), "drop-active");
     }
 
-    public void tryDropActiveByChannelId(int channelId, P2pMgr _p2pMgr) {
+    public void tryDropActiveByChannelId(final SocketChannel _sc, final P2pMgr _p2pMgr) {
+
+        int channelId = _sc.hashCode();
+        try {
+            _sc.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         Iterator it = activeNodes.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Integer, Node> entry = (Map.Entry) it.next();
             Node node = entry.getValue();
             if (node.getChannel().hashCode() == channelId) {
                 it.remove();
-                _p2pMgr.closeSocket(node.getChannel(), "task-inbound-exception");
                 return;
             }
         }

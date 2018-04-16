@@ -78,7 +78,7 @@ public class TaskWrite implements Runnable {
             byte[] headerBytes = h.encode();
 
             // print route
-            // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+            //System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
             if (bodyBytes != null)
@@ -86,14 +86,8 @@ public class TaskWrite implements Runnable {
             buf.flip();
 
             try {
-                int writeCount = 0;
                 while (buf.hasRemaining()) {
                     sc.write(buf);
-                    if(++writeCount > MAX_TRY_WRITE) {
-                        sc.socket().getOutputStream().flush();
-                        this.channelBuffer.onWrite.set(false);
-                        return;
-                    }
                 }
             } catch (ClosedChannelException ex1) {
                 if (showLog) {

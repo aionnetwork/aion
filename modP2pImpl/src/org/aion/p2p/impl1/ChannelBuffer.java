@@ -56,14 +56,11 @@ class ChannelBuffer {
 
     BlockingQueue<Msg> messages = new ArrayBlockingQueue<>(128);
 
-    void refreshHeader(){
-        headerBuf.clear();
-        header = null;
-    }
-
-    void refreshBody(){
-        bodyBuf = null;
-        body = null;
+    void reset(){
+        this.headerBuf.clear();
+        this.bodyBuf = null;
+        this.header = null;
+        this.bodyBuf = null;
     }
 
     /**
@@ -77,7 +74,12 @@ class ChannelBuffer {
      * @return boolean
      */
     boolean isBodyCompleted() {
-        return this.header != null && this.body != null && body.length == header.getLen();
+        return
+            this.header != null &&
+                (
+                    this.header.getLen() == 0 ||
+                    (this.header.getLen() > 0 && this.body != null && this.header.getLen() == this.body.length)
+                );
     }
 
 }

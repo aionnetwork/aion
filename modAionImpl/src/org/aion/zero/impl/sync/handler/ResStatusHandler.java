@@ -81,7 +81,9 @@ public final class ResStatusHandler extends Handler {
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();
 
+            log.debug("{} res status 1", _displayId);
             if(remoteTdBytes != null && remoteBestBlockHash != null){
+                log.debug("{} res status 2", _displayId);
                 BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
                 // no need to check if node id corrected which is passed from channel attachment separated
                 // no need to check if higher since node might revert db or restart
