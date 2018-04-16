@@ -37,6 +37,7 @@ package org.aion.zero.impl.types;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
 
@@ -63,11 +64,8 @@ public class A0BlockHeaderTest {
     // randomly selected
     private byte[] NONCE_BYTES = ByteUtil.longToBytes(42);
 
-    // 33 byte nonce
-    private byte[] INVALID_NONCE = ByteUtil.hexStringToBytes("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-
     @Test
-    public void testBlockHeaderFromSafeBuilder() {
+    public void testBlockHeaderFromSafeBuilder() throws Exception {
         long time = System.currentTimeMillis() / 1000;
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
@@ -100,7 +98,7 @@ public class A0BlockHeaderTest {
     }
 
     @Test
-    public void testBlockHeaderFromUnsafeSource() {
+    public void testBlockHeaderFromUnsafeSource() throws Exception {
         long time = System.currentTimeMillis() / 1000;
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
@@ -129,7 +127,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
-        assertThat(header.getNonce()).isEqualTo(new byte[32]);
+        assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
     // Test is a self referencing
@@ -167,10 +165,20 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
     }
 
-    @Test
-    public void testInvalidNonce() {
+    // verification tests, test that no properties are being violated
+
+    @Test(expected = HeaderStructureException.class)
+    public void testInvalidNonceLong() throws Exception {
+        byte[] invalidNonceLength = new byte[33];
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
         builder.fromUnsafeSource();
-        builder.withNonce(INVALID_NONCE);
+        builder.withNonce(invalidNonceLength);
+    }
+
+    @Test(expected = HeaderStructureException.class)
+    public void testInvalidNonceNull() throws Exception {
+        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        builder.fromUnsafeSource();
+        builder.withNonce(null);
     }
 }

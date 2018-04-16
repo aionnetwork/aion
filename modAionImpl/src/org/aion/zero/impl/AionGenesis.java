@@ -30,6 +30,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.crypto.HashUtil;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.vm.types.DataWord;
@@ -164,7 +165,7 @@ public class AionGenesis extends AionBlock {
     // TODO: set energyLimit to a correct value (after genesis loader is
     // completed)
     public AionGenesis(byte[] parentHash, Address coinbase, byte[] logsBloom, byte[] difficulty, long number,
-            long timestamp, byte[] extraData, byte[] nonce, long energyLimit) {
+            long timestamp, byte[] extraData, byte[] nonce, long energyLimit) throws HeaderStructureException {
         super(parentHash, coinbase, logsBloom, difficulty, number, timestamp, extraData, nonce, energyLimit);
     }
 
@@ -319,7 +320,7 @@ public class AionGenesis extends AionBlock {
          * Build the genesis block, after parameters have been set. Defaults
          * back to default genesis values if parameters are not specified.
          */
-        public AionGenesis build() {
+        public AionGenesis build() throws HeaderStructureException {
             if (this.parentHash == null)
                 this.parentHash = GENESIS_PARENT_HASH;
 

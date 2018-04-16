@@ -193,7 +193,6 @@ public class BlockchainIntegrationTest {
 
         // generate bc bundle with pruning enabled
         StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
-                .withBlockPruningEnabled()
                 .withValidatorConfiguration("simple")
                 .withDefaultAccounts()
                 .build();
@@ -230,7 +229,6 @@ public class BlockchainIntegrationTest {
 
         // generate bc bundle with pruning enabled
         StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
-                .withBlockPruningEnabled()
                 .withValidatorConfiguration("simple")
                 .withDefaultAccounts()
                 .build();

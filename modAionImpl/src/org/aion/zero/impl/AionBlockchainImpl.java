@@ -51,6 +51,7 @@ import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.vm.TransactionExecutor;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -628,15 +629,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         long energyLimit = this.energyLimitStrategy.getEnergyLimit(parent.getHeader());
 
-        A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
-                .withVersion((byte)1)
-                .withParentHash(parent.getHash())
-                .withCoinbase(minerCoinbase)
-                .withNumber(parent.getNumber() + 1)
-                .withTimestamp(time).withExtraData(minerExtraData)
-                .withTxTrieRoot(calcTxTrie(txs))
-                .withEnergyLimit(energyLimit);
-        AionBlock block = new AionBlock(headerBuilder.build(), txs);
+        AionBlock block;
+        try {
+            A0BlockHeader.Builder headerBuilder = new A0BlockHeader.Builder()
+                    .withVersion((byte) 1)
+                    .withParentHash(parent.getHash())
+                    .withCoinbase(minerCoinbase)
+                    .withNumber(parent.getNumber() + 1)
+                    .withTimestamp(time).withExtraData(minerExtraData)
+                    .withTxTrieRoot(calcTxTrie(txs))
+                    .withEnergyLimit(energyLimit);
+            block = new AionBlock(headerBuilder.build(), txs);
+        } catch (HeaderStructureException e) {
+            throw new RuntimeException(e);
+        }
 
 
         IAionBlock grandParent = this.getParent(parent.getHeader());
