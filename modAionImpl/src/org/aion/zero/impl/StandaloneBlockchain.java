@@ -36,6 +36,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.vm.PrecompiledContracts;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
@@ -411,7 +412,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 genesisBuilder.addPreminedAccount(Address.wrap(acc.getKey()), acc.getValue());
             }
 
-            AionGenesis genesis = genesisBuilder.build();
+            AionGenesis genesis;
+            try {
+                genesis = genesisBuilder.build();
+            } catch (HeaderStructureException e) {
+                throw new RuntimeException(e);
+            }
             bc.genesis = genesis;
 
             IRepositoryCache track = bc.getRepository().startTracking();
