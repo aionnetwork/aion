@@ -43,6 +43,7 @@ import org.aion.txpool.ITxPool;
 import org.aion.txpool.zero.TxPoolA0;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 
@@ -93,7 +94,7 @@ public class TxnPoolTest {
     @Test
     public void add1() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txnl = getMockTransaction();
@@ -114,7 +115,7 @@ public class TxnPoolTest {
     @Test
     public void remove() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txnl = getMockTransaction();
@@ -133,7 +134,7 @@ public class TxnPoolTest {
     @Test
     public void remove2() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100"); // 100 sec
+        config.put("tx-timeout", "100"); // 100 sec
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txl = new ArrayList<>();
@@ -163,7 +164,7 @@ public class TxnPoolTest {
     @Test
     public void remove3() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100"); // 100 sec
+        config.put("tx-timeout", "100"); // 100 sec
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txl = new ArrayList<>();
@@ -213,7 +214,7 @@ public class TxnPoolTest {
     @Test
     public void timeout1() throws Throwable {
         Properties config = new Properties();
-        config.put("txn-timeout", "10"); // 10 sec
+        config.put("tx-timeout", "10"); // 10 sec
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txnl = getMockTransaction();
@@ -230,7 +231,7 @@ public class TxnPoolTest {
     @Test
     public void timeout2() throws Throwable {
         Properties config = new Properties();
-        config.put("txn-timeout", "1"); // 10 sec
+        config.put("tx-timeout", "1"); // 10 sec
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txnl = getMockTransaction();
@@ -247,7 +248,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot() throws Throwable {
         Properties config = new Properties();
-        config.put("txn-timeout", "10"); // 10 sec
+        config.put("tx-timeout", "10"); // 10 sec
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txnl = getMockTransaction();
@@ -262,7 +263,7 @@ public class TxnPoolTest {
 
     public void snapshot2() throws Throwable {
         Properties config = new Properties();
-        config.put("txn-timeout", "100"); // 100 sec
+        config.put("tx-timeout", "100"); // 100 sec
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         List<ITransaction> txl = new ArrayList<>();
@@ -285,7 +286,7 @@ public class TxnPoolTest {
     //@Ignore
     public void snapshot3() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -315,7 +316,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot4() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -345,7 +346,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot5() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -378,7 +379,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot6() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -411,7 +412,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot7() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -445,7 +446,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot8() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -479,7 +480,7 @@ public class TxnPoolTest {
     @Test
     public void snapshot9() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -531,12 +532,12 @@ public class TxnPoolTest {
     @Test
     public void snapshot10() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
         List<ITransaction> txnl = new ArrayList<>();
-        int cnt = 25;
+        int cnt = 16;
         //Random r = new Random();
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
@@ -558,7 +559,7 @@ public class TxnPoolTest {
             txnl.add(txn);
         }
 
-        for (int i = 25; i < 25 + cnt; i++) {
+        for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
             ITransaction txn = genTransaction(nonce, 0);
@@ -568,7 +569,7 @@ public class TxnPoolTest {
             txnl.add(txn);
         }
 
-        for (int i = 25; i < 25 + cnt; i++) {
+        for (int i = 16; i < 16 + cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) i;
             ITransaction txn = genTransaction(nonce, 1);
@@ -598,7 +599,7 @@ public class TxnPoolTest {
     @Test
     public void addRepeatedTxn() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
         ITransaction txn = new AionTransaction(ByteUtils.fromHexString("0000000000000001"),
@@ -618,7 +619,7 @@ public class TxnPoolTest {
     @Test
     public void addRepeatedTxn2() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -653,7 +654,7 @@ public class TxnPoolTest {
     @Test
     public void addRepeatedTxn3() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -689,7 +690,7 @@ public class TxnPoolTest {
     @Test
     public void addTxWithSameNonce() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         ITxPool<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -718,7 +719,7 @@ public class TxnPoolTest {
     @Test
     public void noncebyAccountTest() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -753,7 +754,7 @@ public class TxnPoolTest {
     @Test
     public void noncebyAccountTest2() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -791,7 +792,7 @@ public class TxnPoolTest {
     @Test
     public void feemapTest() {
         Properties config = new Properties();
-        config.put("txn-timeout", "10");
+        config.put("tx-timeout", "10");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -828,7 +829,7 @@ public class TxnPoolTest {
     @Test
     public void TxnfeeCombineTest() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -859,12 +860,12 @@ public class TxnPoolTest {
     @Test
     public void TxnfeeCombineTest2() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
         List<ITransaction> txnl = new ArrayList<>();
-        int cnt = 26;
+        int cnt = 17;
         for (int i = 0; i < cnt; i++) {
             byte[] nonce = new byte[Long.BYTES];
             nonce[Long.BYTES - 1] = (byte) (i + 1);
@@ -883,8 +884,8 @@ public class TxnPoolTest {
         List<BigInteger> nl = tp.getFeeList();
 
         assertTrue(nl.size() == 2);
-        assertTrue(nl.get(0).compareTo(BigInteger.valueOf(26)) == 0);
-        assertTrue(nl.get(1).compareTo(BigInteger.valueOf(325 / 25)) == 0);
+        assertTrue(nl.get(0).compareTo(BigInteger.valueOf(17)) == 0);
+        assertTrue(nl.get(1).compareTo(BigInteger.valueOf(136 / 16)) == 0);
     }
 
     @Test
@@ -892,7 +893,7 @@ public class TxnPoolTest {
     /* 100K new transactions in pool around 1200ms (cold-call)
      */ public void benchmarkSnapshot() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -932,7 +933,7 @@ public class TxnPoolTest {
        1K new transactions insert to the pool later around 150ms to snap (including sort)
      */ public void benchmarkSnapshot2() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -988,13 +989,14 @@ public class TxnPoolTest {
     }
 
     @Test
+    @Ignore
     /* 1M new transactions with 10000 accounts (100 txs per account)in pool snapshot around 10s (cold-call)
        gen new txns 55s (spent a lot of time to sign tx)
        put txns into pool 2.5s
        snapshot txn 5s
      */ public void benchmarkSnapshot3() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -1040,7 +1042,7 @@ public class TxnPoolTest {
     /* 100K new transactions in pool around 350ms (cold-call)
      */ public void benchmarkSnapshot4() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -1101,7 +1103,7 @@ public class TxnPoolTest {
        the second time snapshot is around 35ms
      */ public void benchmarkSnapshot5() {
         Properties config = new Properties();
-        config.put("txn-timeout", "100");
+        config.put("tx-timeout", "100");
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
@@ -1152,6 +1154,7 @@ public class TxnPoolTest {
                     Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
                     ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, 1L);
             tx.sign(key);
+            tx.setNrgConsume(1);
             txs.add(tx);
         }
 
@@ -1165,6 +1168,30 @@ public class TxnPoolTest {
         tp.remove(txs.subList(0, 100));
         assertEquals(400, tp.snapshot().size());
         assertEquals(400, tp.snapshotAll().size());
+    }
+
+    @Test
+    public void testSnapshotAll2() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+        ECKey key = ECKeyFac.inst().create();
+
+        List<AionTransaction> txs = new ArrayList<>();
+        for (int i = 0; i < 17; i++) {
+            AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.getAddress()),
+                    Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                    ByteUtils.fromHexString("1"), ByteUtils.fromHexString("1"), 10000L, 1L);
+            tx.sign(key);
+            tx.setNrgConsume(1);
+            txs.add(tx);
+        }
+
+        Properties config = new Properties();
+        ITxPool<AionTransaction> tp = new TxPoolA0<>(config);
+
+        tp.add(txs.subList(0, 17));
+        assertEquals(17, tp.snapshot().size());
+        assertEquals(17, tp.snapshotAll().size());
+
     }
 
     @Test
