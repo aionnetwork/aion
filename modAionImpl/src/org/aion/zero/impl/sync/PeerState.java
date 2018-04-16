@@ -48,6 +48,7 @@ public class PeerState {
 
     // The syncing status
     private State state;
+    private long lastStatusRequest;
 
     /**
      * Creates a new peer state.
@@ -84,5 +85,13 @@ public class PeerState {
 
     public void setState(State state) {
         this.state = state;
+    }
+
+    public long getLastStatusRequest() {
+        return lastStatusRequest;
+    }
+
+    public void setLastStatusRequest(long lastStatusRequest) {
+        this.lastStatusRequest = lastStatusRequest;
     }
 }
