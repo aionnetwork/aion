@@ -78,7 +78,7 @@ final class TaskGetHeaders implements Runnable {
                         // higher td
                         n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0
                                 // not recently requested
-                                && (now - 3000) > peerStates.computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber)).getLastHeaderRequest()
+                                && (now - 5000) > peerStates.computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber)).getLastHeaderRequest()
                 )
                 .collect(Collectors.toList());
         if (nodesFiltered.isEmpty()) {
@@ -93,7 +93,7 @@ final class TaskGetHeaders implements Runnable {
 
         // decide the start block number
         long from = 0;
-        int size = 32;
+        int size = 24;
         switch (state.getMode()) {
             case NORMAL: {
                 // update base block
@@ -102,7 +102,7 @@ final class TaskGetHeaders implements Runnable {
                 // normal mode
                 long nodeNumber = node.getBestBlockNumber();
                 if (nodeNumber >= selfNumber + 128) {
-                    from = Math.max(1, selfNumber + 1 - 8);
+                    from = Math.max(1, selfNumber + 1 - 4);
                 } else if (nodeNumber >= selfNumber - 128) {
                     from = Math.max(1, selfNumber + 1 - 16);
                 } else {
