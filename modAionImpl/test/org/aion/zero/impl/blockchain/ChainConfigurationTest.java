@@ -38,6 +38,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.equihash.EquiUtils;
 import org.aion.equihash.Equihash;
 import org.aion.mcf.valid.BlockHeaderValidator;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class ChainConfigurationTest {
     }
 
     @Test
-    public void testValidation() {
+    public void testValidation() throws HeaderStructureException {
         int n = 210;
         int k = 9;
         byte[] nonce = {1,0,0,0,0,0,0,
