@@ -60,6 +60,12 @@ public class A0BlockHeaderTest {
     private byte[] ENERGY_CONSUMED_BYTES = ByteUtil.longToBytes(100);
     private byte[] ENERGY_LIMIT_BYTES = ByteUtil.longToBytes(6700000);
 
+    // randomly selected
+    private byte[] NONCE_BYTES = ByteUtil.longToBytes(42);
+
+    // 33 byte nonce
+    private byte[] INVALID_NONCE = ByteUtil.hexStringToBytes("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+
     @Test
     public void testBlockHeaderFromSafeBuilder() {
         long time = System.currentTimeMillis() / 1000;
@@ -75,7 +81,8 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withNonce(NONCE_BYTES);
 
         A0BlockHeader header = builder.build();
 
@@ -89,6 +96,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
+        assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
     }
 
     @Test
@@ -121,6 +129,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
+        assertThat(header.getNonce()).isEqualTo(new byte[32]);
     }
 
     // Test is a self referencing
@@ -139,7 +148,8 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withNonce(NONCE_BYTES);
 
         A0BlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();
@@ -154,5 +164,13 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getEnergyConsumed()).isEqualTo(header.getEnergyConsumed());
         assertThat(reconstructed.getEnergyLimit()).isEqualTo(header.getEnergyLimit());
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
+        assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
+    }
+
+    @Test
+    public void testInvalidNonce() {
+        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        builder.fromUnsafeSource();
+        builder.withNonce(INVALID_NONCE);
     }
 }
