@@ -748,6 +748,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withNonce(byte[] nonce) {
             if (isFromUnsafeSource) {
                 Objects.requireNonNull(nonce);
+                if (nonce.length > 32) {
+                    throw new IllegalArgumentException("nonce limited to 32 bytes maximum");
+                }
             }
 
             this.nonce = nonce;
