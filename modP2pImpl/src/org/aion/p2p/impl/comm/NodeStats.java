@@ -63,7 +63,7 @@ public final class NodeStats {
 
     /**
      * @param _route int
-     * @param _minTimeDiff long
+     * @param _minTimeDiff long, ms
      * @return long prev
      * a route control container
      * add entry if not exist with current timestamp and return true
@@ -78,8 +78,10 @@ public final class NodeStats {
             routes.put(_route, now);
             return shouldRoute;
         }
-        else
+        else {
+            routes.put(_route, now);
             return true;
+        }
     }
 
 }

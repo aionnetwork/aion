@@ -185,6 +185,10 @@ public class NodeMgr {
             tempNodes.add(_n);
     }
 
+    public boolean isSeedIp(String _ip){
+        return seedIps.contains(_ip);
+    }
+
     public void addInboundNode(final Node _node) {
         inboundNodes.put(_node.getChannel().hashCode(), _node);
     }
@@ -226,7 +230,7 @@ public class NodeMgr {
 
             // close new connected if exists on active list already
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel(), "inbound-node-exits-on-active");
+                _p2pMgr.closeSocket(node.getChannel(), "inbound-node-exits-on-active id=" + node.getIdShort() + " ip=" + node.getIpStr());
             else if (showLog)
                     System.out.println("<p2p move-inbound-to-active node-id=" + _shortId + ">");
         }

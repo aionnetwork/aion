@@ -210,6 +210,10 @@ public final class Node implements INode {
         return this.fromBootList;
     }
 
+    public void setIfFromBootList(boolean _fromBootList){
+        this.fromBootList = _fromBootList;
+    }
+
     @Override
     public byte[] getIp() {
         return this.ip;

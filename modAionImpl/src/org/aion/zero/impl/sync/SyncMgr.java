@@ -59,7 +59,7 @@ import org.aion.zero.types.A0BlockHeader;
 public final class SyncMgr {
 
     // interval - show status
-    private static final int INTERVAL_SHOW_STATUS = 10000;
+    private static final int INTERVAL_SHOW_STATUS = 5000;
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
