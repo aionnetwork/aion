@@ -159,7 +159,7 @@ final class TaskImportBlocks implements Runnable {
                                 // continue
                                 state.setBase(lastBlock);
                                 // if the imported best block, switch back to normal mode
-                                if (importResult == ImportResult.IMPORTED_BEST) {
+                                if (importResult != ImportResult.IMPORTED_NOT_BEST) {
                                     state.setMode(PeerState.Mode.NORMAL);
                                 }
                             }
