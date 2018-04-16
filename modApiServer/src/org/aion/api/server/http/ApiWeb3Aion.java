@@ -1207,7 +1207,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
 
         JSONObject tx = Tx.InfoToJSON(transaction,
-                this.ac.getBlockchain().getBlockByHash(transaction.getParentBlockHash()));
+                this.ac.getBlockchain().getBlockByHash(transaction.getBlockHash()));
         String raw = ByteUtil.toHexString(transaction.getReceipt().getTransaction().getEncoded());
 
         JSONObject obj = new JSONObject();
