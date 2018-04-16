@@ -985,15 +985,15 @@ public final class P2pMgr implements IP2pMgr {
     private void handleKernelMsg(int _nodeIdHash, int _route, final byte[] _msgBytes) {
         Node node = nodeMgr.getActiveNode(_nodeIdHash);
 
-        // fail back to inbound
-        if (node == null) {
-            node = nodeMgr.getInboundNode(_nodeIdHash);
-        }
-
-        // fail back to outbound
-        if (node == null) {
-            node = nodeMgr.getOutboundNode(_nodeIdHash);
-        }
+//        // fail back to inbound
+//        if (node == null) {
+//            node = nodeMgr.getInboundNode(_nodeIdHash);
+//        }
+//
+//        // fail back to outbound
+//        if (node == null) {
+//            node = nodeMgr.getOutboundNode(_nodeIdHash);
+//        }
 
         if (node != null) {
             int nid = node.getIdHash();
