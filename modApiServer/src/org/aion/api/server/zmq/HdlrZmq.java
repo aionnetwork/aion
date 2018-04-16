@@ -91,7 +91,7 @@ public class HdlrZmq implements IHdlr {
 
         if (entry != null) {
             this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
-                    txWait.getState(), txWait.getTxResult()));
+                    txWait.getState(), txWait.getTxResult(), txWait.getTxReceipt().getError()));
 
             // INCLUDED(3);
             if (txWait.getState() == 1 || txWait.getState() == 2) {
@@ -111,12 +111,12 @@ public class HdlrZmq implements IHdlr {
         return this.api.getPendingStatus();
     }
 
-    public byte[] toRspMsg(byte[] msgHash, int txCode) {
-        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash);
+    public byte[] toRspMsg(byte[] msgHash, int txCode, String error) {
+        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes());
     }
 
-    public byte[] toRspMsg(byte[] msgHash, int txCode, byte[] result) {
-        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, result);
+    public byte[] toRspMsg(byte[] msgHash, int txCode, String error, byte[] result) {
+        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes(), result);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class HdlrZmq implements IHdlr {
     }
 
     public void shutdown() {
-        this.getTxStatusQueue().add(new TxPendingStatus(null, null, null, 0, null));
+        this.getTxStatusQueue().add(new TxPendingStatus(null, null, null, 0, null, ""));
         this.api.getTxWait().add(new TxWaitingMappingUpdate(null, 0, null));
     }
 }
