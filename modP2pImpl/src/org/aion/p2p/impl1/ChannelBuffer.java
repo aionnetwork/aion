@@ -28,6 +28,8 @@ import org.aion.p2p.Header;
 import org.aion.p2p.P2pConstant;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
@@ -38,9 +40,46 @@ import java.util.concurrent.locks.Lock;
  */
 class ChannelBuffer {
 
+    class RouteStatus {
+        long ts;
+        int cnt;
+    }
+
+    Map<Integer, RouteStatus> routes = new HashMap<>();
+
+    /**
+     * @param _route
+     *            int
+     * @param _minTimeDiff
+     *            long, ms
+     * @return long prev a route control container add entry if not exist with
+     *         current timestamp and return true otherwise return compare of
+     *         (prev - now) with _minTimeDiff
+     *
+     */
+    public boolean shouldRoute(int _route, long _minTimeDiff) {
+        long now = System.currentTimeMillis();
+        RouteStatus prev = routes.get(_route);
+
+        if (prev != null) {
+            if ((now - prev.ts) > 1000) {
+                prev.cnt = 0;
+                prev.ts = now;
+            }
+            boolean shouldRoute = prev.cnt < P2pConstant.READ_MAX_RATE;
+            prev.cnt++;
+
+            return shouldRoute;
+        } else {
+
+            routes.put(_route, new RouteStatus());
+            return true;
+        }
+    }
+
     // buffer for buffer remaining after NIO select read.
     byte[] remainBuffer;
-    
+
     int buffRemain = 0;
 
     int nodeIdHash = 0;
