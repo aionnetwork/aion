@@ -127,7 +127,8 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
-        assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
+        assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
+        assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
     }
 
     // Test is a self referencing
@@ -163,6 +164,9 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getEnergyLimit()).isEqualTo(header.getEnergyLimit());
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
         assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
+        assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
+
+        byte[] difficulty = reconstructed.getDifficulty();
     }
 
     // verification tests, test that no properties are being violated
