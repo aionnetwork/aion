@@ -72,8 +72,14 @@ final class TaskGetHeaders implements Runnable {
         Collection<INode> nodes = this.p2p.getActiveNodes().values();
 
         // filter nodes by total difficulty
+        long now = System.currentTimeMillis();
         List<INode> nodesFiltered = nodes.stream()
-                .filter((n) -> n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0)
+                .filter(n ->
+                        // higher td
+                        n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0
+                                // not recently requested
+                                && (now - 5000) > peerStates.computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber)).getLastHeaderRequest()
+                )
                 .collect(Collectors.toList());
         if (nodesFiltered.isEmpty()) {
             return;
@@ -83,7 +89,7 @@ final class TaskGetHeaders implements Runnable {
         INode node = nodesFiltered.get(random.nextInt(nodesFiltered.size()));
 
         // fetch the peer state
-        PeerState state = peerStates.computeIfAbsent(node.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber));
+        PeerState state = peerStates.get(node.getIdHash());
 
         // decide the start block number
         long from = 0;
@@ -115,5 +121,8 @@ final class TaskGetHeaders implements Runnable {
         }
         ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, size);
         this.p2p.send(node.getIdHash(), rbh);
+
+        // update timestamp
+        state.setLastHeaderRequest(now);
     }
 }

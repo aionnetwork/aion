@@ -175,6 +175,7 @@ public final class SyncMgr {
         new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.downloadedHeaders, this.headersWithBodiesRequested, this.peerStates, log), "sync-gb").start();
         new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.downloadedBlocks, statics, this.importedBlockHashes, this.peerStates, log), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
+
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss").start();
 

@@ -48,7 +48,7 @@ public class PeerState {
 
     // The syncing status
     private State state;
-    private long lastStatusRequest;
+    private long lastHeaderRequest;
 
     /**
      * Creates a new peer state.
@@ -87,11 +87,11 @@ public class PeerState {
         this.state = state;
     }
 
-    public long getLastStatusRequest() {
-        return lastStatusRequest;
+    public long getLastHeaderRequest() {
+        return lastHeaderRequest;
     }
 
-    public void setLastStatusRequest(long lastStatusRequest) {
-        this.lastStatusRequest = lastStatusRequest;
+    public void setLastHeaderRequest(long lastStatusRequest) {
+        this.lastHeaderRequest = lastStatusRequest;
     }
 }
