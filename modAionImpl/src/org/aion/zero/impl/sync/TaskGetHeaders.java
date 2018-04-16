@@ -78,7 +78,7 @@ final class TaskGetHeaders implements Runnable {
                         // higher td
                         n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0
                                 // not recently requested
-                                && (now - 5000) > peerStates.computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber)).getLastHeaderRequest()
+                                && (now - 3000) > peerStates.computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber)).getLastHeaderRequest()
                 )
                 .collect(Collectors.toList());
         if (nodesFiltered.isEmpty()) {
@@ -99,8 +99,17 @@ final class TaskGetHeaders implements Runnable {
                 // update base block
                 state.setBase(selfNumber);
 
-                // normal
-                from = Math.max(1, state.getBase() + 1 - 8);
+                // normal mode
+                long nodeNumber = node.getBestBlockNumber();
+                if (nodeNumber >= selfNumber + 128) {
+                    from = Math.max(1, selfNumber + 1 - 8);
+                } else if (nodeNumber >= selfNumber - 128) {
+                    from = Math.max(1, selfNumber + 1 - 16);
+                } else {
+                    // no need to request from this node. His TD is probably corrupted.
+                    return;
+                }
+
                 break;
             }
             case BACKWARD: {

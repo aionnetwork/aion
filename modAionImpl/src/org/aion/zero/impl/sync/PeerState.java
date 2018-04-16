@@ -94,4 +94,8 @@ public class PeerState {
     public void setLastHeaderRequest(long lastStatusRequest) {
         this.lastHeaderRequest = lastStatusRequest;
     }
+
+    public void resetLastHeaderRequest() {
+        this.lastHeaderRequest = 0;
+    }
 }

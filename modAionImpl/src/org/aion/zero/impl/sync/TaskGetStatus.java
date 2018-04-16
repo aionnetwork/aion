@@ -73,9 +73,12 @@ final class TaskGetStatus implements Runnable {
 
                 for (int id : ids) {
                     p2p.send(id, reqStatus);
+                    Thread.sleep(interval / ids.size());
                 }
 
-                Thread.sleep(interval);
+                if (ids.isEmpty()) {
+                    Thread.sleep(interval);
+                }
             } catch (Exception e) {
                 if (e instanceof InterruptedException) {
                     // we were asked to quit
