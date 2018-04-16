@@ -78,14 +78,17 @@ public final class SyncMgr {
     // peer syncing states
     private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
 
-    // store headers that has been sent to fetch block bodies
-    private final ConcurrentHashMap<Integer, HeadersWrapper> sentHeaders = new ConcurrentHashMap<>();
+    // store the downloaded headers from network
+    private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>();
 
-    // store validated headers from network
-    private final BlockingQueue<HeadersWrapper> importedHeaders = new LinkedBlockingQueue<>();
+    // store the headers whose bodies have been requested from corresponding peer
+    private final ConcurrentHashMap<Integer, HeadersWrapper> headersWithBodiesRequested = new ConcurrentHashMap<>();
 
-    // store blocks that ready to save to db
-    private final BlockingQueue<BlocksWrapper> importedBlocks = new LinkedBlockingQueue<>();
+    // store the downloaded blocks that are ready to import
+    private final BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>();
+
+    // store the hashes of blocks which have been successfully imported
+    private final Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
 
     //private ExecutorService workers = Executors.newFixedThreadPool(5);
     private ExecutorService workers = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -97,8 +100,6 @@ public final class SyncMgr {
             return new Thread(r, "sync-gh-" + cnt.incrementAndGet());
         }
     });
-
-    private Map<ByteArrayWrapper, Object> importedBlockHashes = Collections.synchronizedMap(new LRUMap<>(4096));
 
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
 
@@ -171,8 +172,8 @@ public final class SyncMgr {
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.importedHeaders, this.sentHeaders, this.peerStates, log), "sync-gb").start();
-        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.importedBlocks, statics, this.importedBlockHashes, this.peerStates, log), "sync-ib").start();
+        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.downloadedHeaders, this.headersWithBodiesRequested, this.peerStates, log), "sync-gb").start();
+        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, this.downloadedBlocks, statics, this.importedBlockHashes, this.peerStates, log), "sync-ib").start();
         new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
         if(_showStatus)
             new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss").start();
@@ -187,8 +188,8 @@ public final class SyncMgr {
     }
 
     private void getHeaders(BigInteger _selfTd){
-        if (importedBlocks.size() > blocksQueueMax) {
-            log.debug("Imported blocks queue is full. Stop requesting headers");
+        if (downloadedBlocks.size() > blocksQueueMax) {
+            log.debug("Downloaded blocks queue is full. Stop requesting headers");
             return;
         }
 
@@ -251,7 +252,7 @@ public final class SyncMgr {
         // NOTE: the filtered headers is still continuous
 
         if(!filtered.isEmpty())
-            importedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
+            downloadedHeaders.add(new HeadersWrapper(_nodeIdHashcode, _displayId, filtered));
     }
 
     /**
@@ -263,12 +264,12 @@ public final class SyncMgr {
      */
     public void validateAndAddBlocks(int _nodeIdHashcode, String _displayId, final List<byte[]> _bodies) {
 
-        if (importedBlocks.size() > blocksQueueMax) {
-            log.debug("Imported blocks queue is full. Stop validating incoming bodies");
+        if (downloadedBlocks.size() > blocksQueueMax) {
+            log.debug("Downloaded blocks queue is full. Stop validating incoming bodies");
             return;
         }
 
-        HeadersWrapper hw = this.sentHeaders.remove(_nodeIdHashcode);
+        HeadersWrapper hw = this.headersWithBodiesRequested.remove(_nodeIdHashcode);
         if (hw == null || _bodies == null)
             return;
 
@@ -298,7 +299,7 @@ public final class SyncMgr {
         }
 
         // add batch
-        importedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
+        downloadedBlocks.add(new BlocksWrapper(_nodeIdHashcode, _displayId, blocks));
     }
     
     public long getNetworkBestBlockNumber() {

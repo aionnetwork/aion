@@ -69,7 +69,7 @@ final class TaskImportBlocks implements Runnable {
             final IP2pMgr p2p,
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
-            final BlockingQueue<BlocksWrapper> _importedBlocks,
+            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
             final SyncStatics _statis,
             final Map<ByteArrayWrapper, Object> importedBlockHashes,
             final Map<Integer, PeerState> peerStates,
@@ -78,7 +78,7 @@ final class TaskImportBlocks implements Runnable {
         this.p2p = p2p;
         this.chain = _chain;
         this.start = _start;
-        this.importedBlocks = _importedBlocks;
+        this.importedBlocks = _downloadedBlocks;
         this.statis = _statis;
         this.importedBlockHashes = importedBlockHashes;
         this.peerStates = peerStates;

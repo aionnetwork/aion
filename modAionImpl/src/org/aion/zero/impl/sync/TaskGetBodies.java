@@ -54,9 +54,9 @@ final class TaskGetBodies implements Runnable {
 
     private final AtomicBoolean run;
 
-    private final BlockingQueue<HeadersWrapper> headersImported;
+    private final BlockingQueue<HeadersWrapper> downloadedHeaders;
 
-    private final ConcurrentHashMap<Integer, HeadersWrapper> headersSent;
+    private final ConcurrentHashMap<Integer, HeadersWrapper> headersWithBodiesRequested;
 
     private final Map<Integer, PeerState> peerStates;
 
@@ -65,20 +65,20 @@ final class TaskGetBodies implements Runnable {
     /**
      * @param _p2p             IP2pMgr
      * @param _run             AtomicBoolean
-     * @param _headersImported BlockingQueue
-     * @param _headersSent     ConcurrentHashMap
+     * @param _downloadedHeaders BlockingQueue
+     * @param _headersWithBodiesRequested     ConcurrentHashMap
      */
     TaskGetBodies(
             final IP2pMgr _p2p,
             final AtomicBoolean _run,
-            final BlockingQueue<HeadersWrapper> _headersImported,
-            final ConcurrentHashMap<Integer, HeadersWrapper> _headersSent,
+            final BlockingQueue<HeadersWrapper> _downloadedHeaders,
+            final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
             final Map<Integer, PeerState> peerStates,
             final Logger log) {
         this.p2p = _p2p;
         this.run = _run;
-        this.headersImported = _headersImported;
-        this.headersSent = _headersSent;
+        this.downloadedHeaders = _downloadedHeaders;
+        this.headersWithBodiesRequested = _headersWithBodiesRequested;
         this.peerStates = peerStates;
         this.log = log;
     }
@@ -88,7 +88,7 @@ final class TaskGetBodies implements Runnable {
         while (run.get()) {
             HeadersWrapper hw;
             try {
-                hw = headersImported.take();
+                hw = downloadedHeaders.take();
             } catch (InterruptedException e) {
                 continue;
             }
@@ -99,9 +99,9 @@ final class TaskGetBodies implements Runnable {
                 continue;
             }
 
-            HeadersWrapper hwPrevious = headersSent.get(idHash);
+            HeadersWrapper hwPrevious = headersWithBodiesRequested.get(idHash);
             if (hwPrevious == null || (System.currentTimeMillis() - hwPrevious.getTimestamp()) > SENT_HEADERS_TIMEOUT) {
-                this.headersSent.put(idHash, hw);
+                this.headersWithBodiesRequested.put(idHash, hw);
 
                 if (log.isDebugEnabled()) {
                     log.debug("<get-bodies from-num={} to-num={} node={}>",
