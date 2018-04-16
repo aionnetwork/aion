@@ -108,11 +108,13 @@ public final class P2pMgr implements IP2pMgr {
             nid = _nid;
             msg = _msg;
             dest = _dst;
+            ts = System.currentTimeMillis();
         }
 
         int nid;
         Msg msg;
         Dest dest;
+        long ts;
     }
 
     private static class MsgIn {
@@ -301,13 +303,50 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
+    // hash mapping channel id to write thread.
+    int hash2Lane(int in) {
+        in ^= in >> (32 - 5);
+        in ^= in >> (32 - 10);
+        in ^= in >> (32 - 15);
+        in ^= in >> (32 - 20);
+        in ^= in >> (32 - 25);
+        return in & 0b11111;
+    }
+
     private final class TaskSend implements Runnable {
+
+        static final int TOTAL_LANE = (1 << 5) - 1;
+        int lane;
+
+        // static final long MSG_TIMEOUT = 2000;
+
+        TaskSend(int _lane) {
+            this.lane = _lane;
+        }
+
         @Override
         public void run() {
 
-            while (true) {
+            while (P2pMgr.this.start.get()) {
                 try {
+
+                    if (lane == 0) {
+                        if (showLog)
+                            System.out.println("<p2p-write-queue-size:" + sendMsgQue.size() + ">");
+                    }
+
                     MsgOut mo = sendMsgQue.take();
+
+                    // if timeout , throw away this msg.
+                    if (System.currentTimeMillis() - mo.ts > P2pConstant.WRITE_MSG_TIMEOUT) {
+                        continue;
+                    }
+
+                    // if not belong to current lane, put it back.
+                    if (hash2Lane(mo.nid) != lane) {
+                        sendMsgQue.offer(mo);
+                        continue;
+                    }
 
                     Node node = null;
                     switch (mo.dest) {
@@ -345,7 +384,6 @@ public final class P2pMgr implements IP2pMgr {
                     }
                 } catch (InterruptedException e) {
                     System.out.println("Task send interrupted");
-                    break;
                 }
             }
         }
@@ -992,8 +1030,15 @@ public final class P2pMgr implements IP2pMgr {
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
-            for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
-                Thread thrdOut = new Thread(new TaskSend(), "p2p-out-" + i);
+            // for (int i = 0; i < Runtime.getRuntime().availableProcessors();
+            // i++) {
+            // Thread thrdOut = new Thread(new TaskSend(), "p2p-out-" + i);
+            // thrdOut.setPriority(Thread.NORM_PRIORITY);
+            // thrdOut.start();
+            // }
+
+            for (int i = 0; i < TaskSend.TOTAL_LANE; i++) {
+                Thread thrdOut = new Thread(new TaskSend(i), "p2p-out-" + i);
                 thrdOut.setPriority(Thread.NORM_PRIORITY);
                 thrdOut.start();
             }

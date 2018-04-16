@@ -21,6 +21,9 @@ public class P2pConstant {
             WRITE_TIME_OUT = 10000,
 
             // max p2p in package capped at 10.
-            READ_MAX_RATE = 10;
+            READ_MAX_RATE = 10,
+
+            // write queue timeout
+            WRITE_MSG_TIMEOUT = 1000;
 
 }
