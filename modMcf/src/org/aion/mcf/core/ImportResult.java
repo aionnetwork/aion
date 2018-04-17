@@ -33,4 +33,13 @@ public enum ImportResult {
     public boolean isSuccessful() {
         return equals(IMPORTED_BEST) || equals(IMPORTED_NOT_BEST);
     }
+
+    public boolean isBest(){
+        return equals(IMPORTED_BEST);
+    }
+
+    public boolean isNotBest(){
+        return equals(IMPORTED_NOT_BEST);
+    }
+
 }
