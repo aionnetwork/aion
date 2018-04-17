@@ -111,6 +111,9 @@ public class TxCollector {
         this.lastBroadcast.set(System.currentTimeMillis());
 
         if (!transactions.isEmpty()) {
+            for (AionTransaction tx : transactions) {
+                System.out.println("TxCollector: " + tx.getNonceBI().toString());
+            }
             TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p));
         }
     }

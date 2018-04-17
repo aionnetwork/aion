@@ -157,7 +157,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             if (!txs.isEmpty() && !loadPendingTx) {
                 AionImpl.inst().broadcastTransactions(txs);
-
             }
 
             txBuffer.clear();

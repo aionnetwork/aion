@@ -136,6 +136,7 @@ public class AionImpl implements IAionChain {
 
     public void broadcastTransactions(List<AionTransaction> transaction) {
         for(AionTransaction tx : transaction) {
+            LOG_TX.trace("TxBC {}", tx.getNonceBI().toString());
             tx.getEncoded();
         }
         collector.submitTx(transaction);

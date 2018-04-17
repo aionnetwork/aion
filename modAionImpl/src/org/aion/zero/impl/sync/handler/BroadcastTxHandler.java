@@ -158,15 +158,18 @@ public final class BroadcastTxHandler extends Handler {
         for (byte[] raw : broadCastTx) {
             try {
                 AionTransaction tx = new AionTransaction(raw);
+                System.out.println("castRawTx nonce: " + tx.getNonceBI().toString());
                 if (tx.getHash() != null) {
                     if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getHash()))) {
                         if (TXValidator.isValid(tx)) {
+                            System.out.println("castRawTx validTx nonce: " + tx.getNonceBI().toString());
                             rtn.add(tx);
                         }
                     }
                 }
             } catch (Exception e) {
                 // do nothing, invalid transaction from bad peer
+                System.out.println("castRawTx exception: " + e.toString());
             }
         }
 
