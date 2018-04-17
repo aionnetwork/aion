@@ -409,7 +409,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         }
 
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                            LOG.trace("addPendingTransactions addToCache due to largeNonce: from = {}, nonce = {}", tx.getFrom(), txNonce);
                         }
                     }
                 } else if (cmp == 0) {
@@ -424,7 +424,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                             }
 
                             if (LOG.isTraceEnabled()) {
-                                LOG.trace("Adding transaction to cache: from = {}, nonce = {}", tx.getFrom(), txNonce);
+                                LOG.trace("addPendingTransactions addToCache due to poolMax: from = {}, nonce = {}", tx.getFrom(), txNonce);
                             }
                         }
 
@@ -445,7 +445,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                     }
 
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace("cache: from {}, size {}", tx.getFrom(), cache.size());
+                        LOG.trace("addPendingTransactions from cache: from {}, size {}", tx.getFrom(), cache.size());
                     }
 
                     do {
@@ -533,8 +533,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private void fireTxUpdate(AionTxReceipt txReceipt, PendingTransactionState state, IAionBlock block) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]", getPendingTxSize(),
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(String.format("PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]", getPendingTxSize(),
                     state, txReceipt.getTransaction().getFrom().toString().substring(0, 8),
                     ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()), block.getShortDescr(),
                     txReceipt.getError()));
@@ -594,7 +594,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             tx.setNrgConsume(txSum.getReceipt().getEnergyUsed());
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("addPendingTransactionImpl: [{}]", tx.toString());
+                LOG.trace("addPendingTransactionImpl validTx {}", tx.toString());
             }
 
             if (bufferEnable) {
