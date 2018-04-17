@@ -54,7 +54,10 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.types.*;
+import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
+import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
@@ -140,7 +143,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             List<AionTransaction> newPending = txPool.add(txs);
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("txBufferSize {} return size {}", txs.size(), newPending.size());
+                LOG.trace("processTxBuffer buffer#{} poolNewTx#{}", txs.size(), newPending.size());
             }
 
             int cnt = 0;
@@ -156,6 +159,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             }
 
             if (!txs.isEmpty() && !loadPendingTx) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("processTxBuffer tx#{}",  txs.size());
+                }
                 AionImpl.inst().broadcastTransactions(txs);
             }
 
@@ -459,7 +465,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
                         txNonce = txNonce.add(BigInteger.ONE);
                     } while (cache != null && (tx = cache.get(txNonce)) != null && (limit-- > 0)
-                            && txPool.size() < MAX_VALIDATED_PENDING_TXS);
+                            && (txPool.size() + txBuffer.size() < MAX_VALIDATED_PENDING_TXS));
                 } else if (bestRepoNonce(tx.getFrom()).compareTo(txNonce) < 1) {
                     // repay Tx
                     if (addPendingTransactionImpl(tx, txNonce)) {
@@ -734,8 +740,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         List<AionTransaction> newPendingTx = this.pendingTxCache.flush(nonceMap);
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("PendingStateImpl.flushCachePendingTx: newPendingTx_size[{}]", newPendingTx.size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("PendingStateImpl.flushCachePendingTx: newPendingTx_size[{}]", newPendingTx.size());
         }
 
         if (!newPendingTx.isEmpty()) {

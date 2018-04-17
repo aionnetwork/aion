@@ -25,7 +25,6 @@
 package org.aion.p2p.impl1;
 
 import org.aion.p2p.Header;
-import org.aion.p2p.P2pConstant;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -66,7 +65,7 @@ class ChannelBuffer {
                 prev.cnt = 0;
                 prev.ts = now;
             }
-            boolean shouldRoute = prev.cnt < P2pConstant.READ_MAX_RATE;
+            boolean shouldRoute = prev.cnt < _minTimeDiff;
             prev.cnt++;
 
             return shouldRoute;
