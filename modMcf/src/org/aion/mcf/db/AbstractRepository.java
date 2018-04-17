@@ -243,7 +243,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
     private IByteArrayKeyValueDatabase connectAndOpen(Properties info) {
         // get the database object
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(info);
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
 
         // open the database connection
         db.open();
