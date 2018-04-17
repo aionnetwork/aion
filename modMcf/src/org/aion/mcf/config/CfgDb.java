@@ -166,7 +166,7 @@ public class CfgDb {
                             this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
                             break;
                         case Props.WRITE_BUFFER_SIZE:
-                            this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
+                            this.write_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
                             break;
                         case Props.READ_BUFFER_SIZE:
                             this.read_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.read_buffer_size);

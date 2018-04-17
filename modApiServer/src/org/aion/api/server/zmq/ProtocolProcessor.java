@@ -219,8 +219,8 @@ public class ProtocolProcessor implements Runnable {
             }
 
             byte[] rsp = tps.toTxReturnCode() != 105
-                    ? ((HdlrZmq) this.handler).toRspMsg(tps.getMsgHash(), tps.toTxReturnCode())
-                    : ((HdlrZmq) this.handler).toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getTxResult());
+                    ? ((HdlrZmq) this.handler).toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError())
+                    : ((HdlrZmq) this.handler).toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError(), tps.getTxResult());
             if (LOG.isTraceEnabled()) {
                 LOG.trace("callbackRun send. socketID: [{}], msgHash: [{}], txReturnCode: [{}]/n rspMsg: [{}]",
                         Hex.toHexString(tps.getSocketId()), Hex.toHexString(tps.getMsgHash()), tps.toTxReturnCode(),

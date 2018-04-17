@@ -43,6 +43,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 
 /**
@@ -362,9 +363,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     /**
      * Set the energyConsumed field in header, this is used during block
      * creation
-     * {@link org.aion.zero.impl.AionBlockchainImpl#createNewBlock(AionBlock, List)}
-     * to append post-execution state parameters (of which energyConsumed is a
-     * part of)
      *
      * @param energyConsumed
      *            total energyConsumed during execution of transactions
@@ -488,12 +486,8 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     }
 
     /**
-     * Builder used to introduce blocks into system that come from unsafe
-     * sources, such as {@link org.aion.zero.impl.sync.msg.ResBlocksHeaders},
-     * and from API
-     * <p>
-     * In the future we may switch to something like this, just so that we have
-     * safe fallbacks (non-nulls) in the event of unknown fields.
+     * <p>Builder used to introduce blocks into system that come from unsafe
+     * sources</p>
      */
     public static class Builder {
 
@@ -502,7 +496,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
          * TODO: define these with explanations in the future
          */
         protected Address EMPTY_ADDRESS = Address.EMPTY_ADDRESS();
-        protected byte[] EMPTY_BYTE_ARRAY = new byte[32];
 
         protected byte version;
         protected byte[] parentHash;
@@ -537,11 +530,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withVersion(byte version) {
+        public Builder withVersion(byte version) throws HeaderStructureException {
             if(isFromUnsafeSource) {
-                Objects.requireNonNull(version);
-                if(version < 1) {
-                    throw new IllegalArgumentException("Version must be greater than 0");
+                if (version < 1) {
+                    throw new HeaderStructureException("version", RPL_BH_VERSION, "must be greater than 0");
                 }
             }
 
@@ -549,124 +541,121 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withParentHash(byte[] parentHash) {
+        public Builder withParentHash(byte[] parentHash) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(parentHash);
-                if (parentHash.length != 32) {
-                    throw new IllegalArgumentException("parentHash must be of length 32");
-                }
+                if (parentHash == null)
+                    throw new HeaderStructureException("parentHash", RPL_BH_PARENTHASH, "cannot be null");
+
+                if (parentHash.length != 32)
+                    throw new HeaderStructureException("parentHash", RPL_BH_PARENTHASH, "must be of length 32");
             }
 
             this.parentHash = parentHash;
             return this;
         }
 
-        public Builder withCoinbase(Address coinbase) {
+        public Builder withCoinbase(Address coinbase) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(coinbase);
+                if (coinbase == null)
+                    throw new HeaderStructureException("coinbase", RPL_BH_COINBASE, "cannot be null");
             }
 
             this.coinbase = coinbase;
             return this;
         }
 
-        public Builder withStateRoot(byte[] stateRoot) {
+        public Builder withStateRoot(byte[] stateRoot) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(stateRoot);
-                if (stateRoot.length != 32) {
-                    throw new IllegalArgumentException("stateRoot must be of length 32");
-                }
+                if (stateRoot == null)
+                    throw new HeaderStructureException("stateRoot", RPL_BH_STATEROOT, "cannot be null");
+
+                if (stateRoot.length != 32)
+                    throw new HeaderStructureException("stateRoot", RPL_BH_STATEROOT, "must be of length 32");
             }
 
             this.stateRoot = stateRoot;
             return this;
         }
 
-        public Builder withTxTrieRoot(byte[] txTrieRoot) {
+        public Builder withTxTrieRoot(byte[] txTrieRoot) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(txTrieRoot);
-                if (txTrieRoot.length != 32) {
-                    throw new IllegalArgumentException("txTrieRoot must be of length 32");
-                }
+
+                if (txTrieRoot == null)
+                    throw new HeaderStructureException("txTrieRoot", RPL_BH_TXTRIE, "cannot be null");
+
+                if (txTrieRoot.length != 32)
+                    throw new HeaderStructureException("txTrieRoot", RPL_BH_TXTRIE, "must be of length 32");
             }
 
             this.txTrieRoot = txTrieRoot;
             return this;
         }
 
-        public Builder withReceiptTrieRoot(byte[] receiptTrieRoot) {
+        public Builder withReceiptTrieRoot(byte[] receiptTrieRoot) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(receiptTrieRoot);
-                if (receiptTrieRoot.length != 32) {
-                    throw new IllegalArgumentException("receiptTrieRoot must be of length 32");
-                }
+
+                if (receiptTrieRoot == null)
+                    throw new HeaderStructureException("receiptTrieRoot", RPL_BH_RECEIPTTRIE, "cannot be null");
+
+                if (receiptTrieRoot.length != 32)
+                    throw new HeaderStructureException("receiptTrieRoot", RPL_BH_RECEIPTTRIE, "must be of length 32");
             }
 
             this.receiptTrieRoot = receiptTrieRoot;
             return this;
         }
 
-        public Builder withLogsBloom(byte[] logsBloom) {
+        public Builder withLogsBloom(byte[] logsBloom) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(logsBloom);
-                if (logsBloom.length != 256) {
-                    throw new IllegalArgumentException("logsBloom must be of length 256");
-                }
+
+                if (logsBloom == null)
+                    throw new HeaderStructureException("logsBloom", RPL_BH_LOGSBLOOM, "cannot be null");
+
+                if (logsBloom.length != 256)
+                    throw new HeaderStructureException("logsBloom", RPL_BH_LOGSBLOOM, "logsBloom must be of length 256");
             }
 
             this.logsBloom = logsBloom;
             return this;
         }
 
-        public Builder withDifficulty(byte[] difficulty) {
+        public Builder withDifficulty(byte[] difficulty) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 Objects.requireNonNull(difficulty);
-                if (difficulty.length > 32) {
-                    throw new IllegalArgumentException("difficulty cannot be greater than 2 ** 256");
-                }
-
-                if (difficulty.length == 32 && difficulty[0] < 0x0) {
-                    throw new IllegalArgumentException("difficulty cannot be greater than 2 ** 256");
-                }
-
-                if (difficulty.length == 32 && difficulty[0] == 1) {
-                    for (int i = 1; i < difficulty.length; i++) {
-                        if (difficulty[i] != 0x0) {
-                            throw new IllegalArgumentException("difficulty cannot be greater than 2 ** 256");
-                        }
-                    }
-                }
+                if (difficulty.length > 16)
+                    throw new HeaderStructureException("difficulty", RPL_BH_DIFFICULTY, "cannot be greater than 16 bytes");
             }
             this.difficulty = difficulty;
             return this;
         }
 
-        public Builder withDifficulty(BigInteger difficulty) {
+        public Builder withDifficulty(BigInteger difficulty) throws HeaderStructureException {
             return withDifficulty(ByteUtil.bigIntegerToBytes(difficulty));
         }
 
-        public Builder withTimestamp(long timestamp) {
+        public Builder withTimestamp(long timestamp) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (timestamp < 0) {
-                    throw new IllegalArgumentException("timestamp must be positive value");
-                }
+                if (timestamp < 0)
+                    throw new HeaderStructureException("timestamp", RPL_BH_TIMESTAMP, "must be positive value");
             }
 
             this.timestamp = timestamp;
             return this;
         }
 
-        public Builder withTimestamp(byte[] timestamp) {
+        public Builder withTimestamp(byte[] timestamp) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 Objects.requireNonNull(timestamp);
+                if (timestamp.length > 8)
+                    throw new HeaderStructureException("timestamp", RPL_BH_TIMESTAMP, "cannot be greater than 8 bytes");
             }
             return withTimestamp(ByteUtil.byteArrayToLong(timestamp));
         }
 
-        public Builder withNumber(long number) {
+        public Builder withNumber(long number) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (number < 0) {
-                    throw new IllegalArgumentException("number must be positive value");
+                    throw new HeaderStructureException("number", RPL_BH_NUMBER, "must be positive");
                 }
             }
 
@@ -674,18 +663,22 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withNumber(byte[] number) {
+        public Builder withNumber(byte[] number) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(number);
+                if (number == null)
+                    throw new HeaderStructureException("number", RPL_BH_NUMBER, "cannot be null");
             }
             return withNumber(ByteUtil.byteArrayToLong(number));
         }
 
-        public Builder withExtraData(byte[] extraData) {
+        public Builder withExtraData(byte[] extraData) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(extraData);
+
+                if (extraData == null)
+                    throw new HeaderStructureException("extraData", RPL_BH_EXTRADATA, "cannot be null");
+
                 if (extraData.length > 32) {
-                    throw new IllegalArgumentException("extraData is limited to 32 byte maximum");
+                    throw new HeaderStructureException("extraData", RPL_BH_EXTRADATA, "cannot be greater than 32 bytes");
                 }
             }
 
@@ -693,10 +686,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withEnergyConsumed(long energyConsumed) {
+        public Builder withEnergyConsumed(long energyConsumed) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (energyConsumed < 0) {
-                    throw new IllegalArgumentException("energyConsumed must be positive value");
+                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED, "must be positive value");
                 }
             }
 
@@ -704,18 +697,22 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withEnergyConsumed(byte[] energyConsumed) {
+        public Builder withEnergyConsumed(byte[] energyConsumed) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(energyConsumed);
+                if (energyConsumed == null)
+                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED, "cannot be null");
+
+                if (energyConsumed.length > 8)
+                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED, "cannot be greater than 8 bytes");
             }
 
             return withEnergyConsumed(ByteUtil.byteArrayToLong(energyConsumed));
         }
 
-        public Builder withEnergyLimit(long energyLimit) {
+        public Builder withEnergyLimit(long energyLimit) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (energyLimit < 0) {
-                    throw new IllegalArgumentException("energyLimit must be positive value");
+                    throw new HeaderStructureException("energyLimitException", RPL_BH_NRG_LIMIT, "energyLimit must be positive value");
                 }
             }
 
@@ -723,9 +720,14 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withEnergyLimit(byte[] energyLimit) {
+        public Builder withEnergyLimit(byte[] energyLimit) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(energyLimit);
+
+                if (energyLimit == null)
+                    throw new HeaderStructureException("energyLimit", RPL_BH_NRG_LIMIT, "cannot be null");
+
+                if (energyLimit.length > 8)
+                    throw new HeaderStructureException("energyLimit", RPL_BH_NRG_LIMIT, "energyLimit cannot be greater than 8 bytes");
             }
             return withEnergyLimit(ByteUtil.byteArrayToLong(energyLimit));
         }
@@ -733,21 +735,29 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         /*
          * TODO: solution size may change with updates
          */
-        public Builder withSolution(byte[] solution) {
+        public Builder withSolution(byte[] solution) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(solution);
+
+                if (solution == null)
+                    throw new HeaderStructureException("solution", RPL_BH_SOLUTION, "cannot be null");
+
                 if (solution.length != 1408) {
-                    throw new IllegalArgumentException("invalid solution size");
+                    throw new HeaderStructureException("solution", RPL_BH_SOLUTION, "invalid solution length");
                 }
             }
-
             this.solution = solution;
             return this;
         }
 
-        public Builder withNonce(byte[] nonce) {
+        public Builder withNonce(byte[] nonce) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                Objects.requireNonNull(nonce);
+
+                if (nonce == null)
+                    throw new HeaderStructureException("nonce", RPL_BH_NONCE, "cannot be null");
+
+                if (nonce.length > 32) {
+                    throw new HeaderStructureException("nonce", RPL_BH_NONCE, "cannot be greater than 32 bytes");
+                }
             }
 
             this.nonce = nonce;
@@ -763,9 +773,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot = this.receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.receiptTrieRoot;
             this.logsBloom = this.logsBloom == null ? EMPTY_BLOOM : this.logsBloom;
-            this.difficulty = this.difficulty == null ? EMPTY_BYTE_ARRAY : this.difficulty;
-            this.extraData = this.extraData == null ? EMPTY_BYTE_ARRAY : this.extraData;
-            this.nonce = this.nonce == null ? EMPTY_BYTE_ARRAY : this.nonce;
+            this.difficulty = this.difficulty == null ? ByteUtil.EMPTY_HALFWORD : this.difficulty;
+            this.extraData = this.extraData == null ? ByteUtil.EMPTY_WORD : this.extraData;
+            this.nonce = this.nonce == null ? ByteUtil.EMPTY_WORD : this.nonce;
             this.solution = this.solution == null ? EMPTY_SOLUTION : this.solution;
 
             A0BlockHeader header = new A0BlockHeader(this.version, this.number, this.parentHash, this.coinbase, this.logsBloom,

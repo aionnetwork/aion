@@ -219,7 +219,7 @@ public class AionPoW {
             }
 
             AionBlock block = (AionBlock) solution.getBlock();
-            if (!Arrays.equals(block.getHeader().getNonce(), new byte[32])) {
+            if (!Arrays.equals(block.getHeader().getNonce(), new byte[32]) && !(block.getHeader().getNonce().length == 0)) {
                 // block has been processed
                 return;
             }

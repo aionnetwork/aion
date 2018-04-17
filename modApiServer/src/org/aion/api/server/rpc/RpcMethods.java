@@ -31,7 +31,8 @@ public class RpcMethods {
                 Map.entry("personal", personal),
                 Map.entry("eth", eth),
                 Map.entry("stratum", stratum),
-                Map.entry("ops", ops)
+                Map.entry("ops", ops),
+                Map.entry("priv", priv)
         );
 
         enabledEndpoints = composite(enabledGroups);
@@ -182,5 +183,18 @@ public class RpcMethods {
             Map.entry("submitblock", (params) -> api.stratum_submitblock(params)),
             Map.entry("getblocktemplate", (params) -> api.stratum_getwork()),
             Map.entry("getHeaderByBlockNumber", (params) -> api.stratum_getHeaderByBlockNumber(params))
+    );
+
+    /**
+     * priv
+     */
+    private final Map<String, RpcMethod> priv = Map.ofEntries(
+            Map.entry("priv_peers", (params) -> api.priv_peers()),
+            Map.entry("priv_p2pConfig", (params) -> api.priv_p2pConfig()),
+            Map.entry("priv_getPendingTransactions", (params) -> api.priv_getPendingTransactions(params)),
+            Map.entry("priv_getPendingSize", (params) -> api.priv_getPendingSize()),
+            Map.entry("priv_dumpTransaction", (params) -> api.priv_dumpTransaction(params)),
+            Map.entry("priv_dumpBlockByHash", (params) -> api.priv_dumpBlockByHash(params)),
+            Map.entry("priv_dumpBlockByNumber", (params) -> api.priv_dumpBlockByNumber(params))
     );
 }

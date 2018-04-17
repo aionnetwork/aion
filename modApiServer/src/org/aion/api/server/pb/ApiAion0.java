@@ -155,9 +155,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 LOG.trace("ApiAionA0.onPendingTransactionUpdate - the pending Tx state : [{}]", _state.getValue());
             }
 
-            pendingStatus.add(new TxPendingStatus(txHashW, getMsgIdMapping().get(txHashW).getValue(),
-                    getMsgIdMapping().get(txHashW).getKey(), _state.getValue(), ByteArrayWrapper
-                    .wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult())));
+            pendingStatus.add(new TxPendingStatus(txHashW,
+                    getMsgIdMapping().get(txHashW).getValue(),
+                    getMsgIdMapping().get(txHashW).getKey(),
+                    _state.getValue(),
+                    ByteArrayWrapper.wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult()),
+                    ((AionTxReceipt) _txRcpt).getError()));
+
+
 
             if (_state.isPending()) {
                 pendingReceipts.put(txHashW, ((AionTxReceipt) _txRcpt));
@@ -963,7 +968,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             try {
                 Message.rsp_syncInfo rsp = Message.rsp_syncInfo.newBuilder().setChainBestBlock(sync.chainBestBlkNumber)
                         .setNetworkBestBlock(sync.networkBestBlkNumber).setSyncing(!sync.done)
-                        .setMaxImportBlocks(sync.blocksRequestMax).build();
+                        .setMaxImportBlocks(24).build();
 
                 byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
                 return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());

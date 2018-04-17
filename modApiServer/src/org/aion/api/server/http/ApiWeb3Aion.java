@@ -36,6 +36,7 @@ import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
+import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
@@ -48,11 +49,14 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
+import org.aion.p2p.INode;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
@@ -275,10 +279,6 @@ public class ApiWeb3Aion extends ApiAion {
             obj.put("startingBlock", new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
             obj.put("currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
             obj.put("highestBlock", new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
-            obj.put("blocksBackwardMin", new NumericalValue(syncInfo.blocksBackwardMin).toHexString());
-            obj.put("blocksBackwardMax", new NumericalValue(syncInfo.blocksBackwardMax).toHexString());
-            obj.put("blocksRequestMax", new NumericalValue(syncInfo.blocksRequestMax).toHexString());
-            obj.put("blocksResponseMax", new NumericalValue(syncInfo.blocksResponseMax).toHexString());
             return new RpcMsg(obj);
         } else {
             // create obj for when syncing is ongoing
@@ -1128,6 +1128,151 @@ public class ApiWeb3Aion extends ApiAion {
             response.put(b);
         }
         return new RpcMsg(response);
+    }
+
+    /* -------------------------------------------------------------------------
+     * private debugging APIs
+     * Reasoning for not adding this to conventional web3 calls is so
+     * we can freely change the responses without breaking compatibility
+     */
+    public RpcMsg priv_peers() {
+        Map<Integer, INode> activeNodes = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+
+        JSONArray peerList = new JSONArray();
+
+        for (INode node : activeNodes.values()) {
+            JSONObject n = new JSONObject();
+            n.put("idShort", node.getIdShort());
+            n.put("id", new String(node.getId()));
+            n.put("idHash", node.getIdHash());
+            n.put("blockNumber", node.getBestBlockNumber());
+            n.put("totalDifficulty", node.getTotalDifficulty());
+
+            JSONObject network = new JSONObject();
+            network.put("remoteAddress", node.getIpStr() + ":" + node.getPort());
+            n.put("network", network);
+
+            peerList.put(n);
+        }
+        return new RpcMsg(peerList);
+    }
+
+    public RpcMsg priv_p2pConfig() {
+        CfgNetP2p p2p = CfgAion.inst().getNet().getP2p();
+
+        JSONObject obj = new JSONObject();
+        obj.put("localBinding", p2p.getIp() + ":" + p2p.getPort());
+        return new RpcMsg(obj);
+    }
+
+    // default block for pending transactions
+    private static final AionBlock defaultBlock = new AionBlock(new A0BlockHeader.Builder().build(), Collections.emptyList());
+
+    public RpcMsg priv_getPendingTransactions(Object _params) {
+        boolean fullTx = ((JSONArray)_params).optBoolean(0, false);
+        List<AionTransaction> transactions = this.ac.getPendingStateTransactions();
+
+        JSONArray arr = new JSONArray();
+        for (int i = 0; i < transactions.size(); i++) {
+            if (fullTx) {
+                arr.put(Tx.AionTransactionToJSON(transactions.get(i), defaultBlock, i));
+            } else {
+                arr.put(ByteUtil.toHexString(transactions.get(i).getHash()));
+            }
+        }
+        return new RpcMsg(arr);
+    }
+
+    public RpcMsg priv_getPendingSize() {
+        return new RpcMsg(this.ac.getPendingStateTransactions().size());
+    }
+
+    public RpcMsg priv_dumpTransaction(Object _params) {
+        String transactionHash;
+        if (_params instanceof JSONArray) {
+            transactionHash = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            transactionHash = ((JSONObject) _params).get("hash") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] hash = ByteUtil.hexStringToBytes(transactionHash);
+        if (hash == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid transaction hash");
+
+        // begin output processing
+        AionTxInfo transaction = this.ac.getAionHub()
+                .getBlockchain()
+                .getTransactionInfo(hash);
+
+        if (transaction == null)
+            return new RpcMsg(JSONObject.NULL);
+
+        JSONObject tx = Tx.InfoToJSON(transaction,
+                this.ac.getBlockchain().getBlockByHash(transaction.getBlockHash()));
+        String raw = ByteUtil.toHexString(transaction.getReceipt().getTransaction().getEncoded());
+
+        JSONObject obj = new JSONObject();
+        obj.put("transaction", tx);
+        obj.put("raw", raw);
+        return new RpcMsg(obj);
+    }
+
+    public RpcMsg priv_dumpBlockByHash(Object _params) {
+        String hashString;
+        if (_params instanceof JSONArray) {
+            hashString = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            hashString = ((JSONObject) _params).get("hash") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] hash = ByteUtil.hexStringToBytes(hashString);
+        if (hash == null)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block hash");
+
+        AionBlock block = this.ac.getBlockchain().getBlockByHash(hash);
+
+        if (block == null)
+            return new RpcMsg(JSONObject.NULL);
+
+        BigInteger totalDiff = this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(hash));
+        return new RpcMsg(dumpBlock(block, totalDiff, false));
+    }
+
+    public RpcMsg priv_dumpBlockByNumber(Object _params) {
+        String numberString;
+        if (_params instanceof JSONArray) {
+            numberString = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            numberString = ((JSONObject) _params).get("number") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        // TODO: parse hex
+        long number;
+        try {
+            number = Long.parseLong(numberString);
+        } catch (NumberFormatException e) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Unable to decode input number");
+        }
+        AionBlock block = this.ac.getBlockchain().getBlockByNumber(number);
+
+        if (block == null)
+            return new RpcMsg(JSONObject.NULL);
+
+        BigInteger totalDiff = this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash()));
+        return new RpcMsg(dumpBlock(block, totalDiff, false));
+    }
+
+    private static JSONObject dumpBlock(AionBlock block, BigInteger totalDiff, boolean full) {
+        JSONObject obj = new JSONObject();
+        obj.put("block", Blk.AionBlockToJson(block, totalDiff, full));
+        obj.put("raw", ByteUtil.toHexString(block.getEncoded()));
+        return obj;
     }
 
     /* -------------------------------------------------------------------------

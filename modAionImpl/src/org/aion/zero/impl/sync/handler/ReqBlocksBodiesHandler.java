@@ -40,6 +40,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -56,14 +57,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author chris
- * handler for request block bodies broadcasted from network
+ * @author chris handler for request block bodies broadcasted from network
  */
 public final class ReqBlocksBodiesHandler extends Handler {
 
-    private final Logger log;
+    private final static int MAX_NUM_OF_BLOCKS = 96;
 
-    private final int max;
+    private final Logger log;
 
     private final IAionBlockchain blockchain;
 
@@ -71,12 +71,11 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(1024));
 
-    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, int _max) {
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
-        this.max = _max;
     }
 
     @Override
@@ -89,38 +88,53 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
             // limit number of blocks
             List<byte[]> hashes = reqBlocks.getBlocksHashes();
-            hashes = hashes.size() > max ? hashes.subList(0, max) : hashes;
+            hashes = hashes.size() > MAX_NUM_OF_BLOCKS ? hashes.subList(0, MAX_NUM_OF_BLOCKS) : hashes;
 
             // results
             List<byte[]> blockBodies = new ArrayList<>();
 
             // read from cache, then block store
+            int out = 0;
             for (byte[] hash : hashes) {
+
+                // ref for add.
+                byte[] blockBytesForadd;
+
                 byte[] blockBytes = cache.get(ByteArrayWrapper.wrap(hash));
+
+                // if cached , add.
                 if (blockBytes != null) {
-                    blockBodies.add(blockBytes);
+                    blockBytesForadd = blockBytes;
                 } else {
                     AionBlock block = blockchain.getBlockByHash(hash);
+
                     if (block != null) {
-                        blockBodies.add(block.getEncodedBody());
+                        blockBytesForadd = block.getEncodedBody();
                         cache.put(ByteArrayWrapper.wrap(hash), block.getEncodedBody());
                     } else {
                         // not found
                         break;
                     }
                 }
+
+                if ((out += blockBytesForadd.length) > P2pConstant.MAX_BODY_SIZE) {
+                    log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, P2pConstant.MAX_BODY_SIZE);
+                    break;
+                }
+
+                blockBodies.add(blockBytesForadd);
+
             }
 
             this.p2pMgr.send(_nodeIdHashcode, new ResBlocksBodies(blockBodies));
+
             if (log.isDebugEnabled()) {
                 this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
                         blockBodies.size(), _displayId);
             }
-
         } else {
-            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-            this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>",
-                    _displayId,
+
+            this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>", _displayId,
                     _msgBytes.length);
 
             if (this.log.isTraceEnabled()) {

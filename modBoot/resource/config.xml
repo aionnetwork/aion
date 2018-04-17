@@ -43,12 +43,6 @@
 		</p2p>
 	</net>
 	<sync>
-		<!-- Min number of blocks to go backward -->
-		<blocks-backward-min>8</blocks-backward-min>
-		<!-- Max number of blocks to go backward -->
-		<blocks-backward-max>64</blocks-backward-max>
-		<!-- Max number of blocks to request -->
-		<blocks-request-max>96</blocks-request-max>
 		<!-- Downloaded blocks queue limit. This affects memory footprint -->
 		<blocks-queue-max>32</blocks-queue-max>
 		<!-- Display syncing status -->

@@ -64,16 +64,16 @@ public class AionPOWRuleTest {
 
     @Test
     public void testBelowPOWMaximumBoundary() {
-        final byte[] predefinedStaticHash = new byte[32];
+        final byte[] predefinedHash = new byte[32];
         final long predefinedTimestamp = 0;
         final byte[] predefinedNonce = new byte[32];
-        final byte[] predefinedSoluion = new byte[32];
+        final byte[] predefinedSolution = new byte[1408];
         final BigInteger difficulty = BigInteger.ONE;
 
-        when(mockHeader.getStaticHash()).thenReturn(predefinedStaticHash);
         when(mockHeader.getTimestamp()).thenReturn(predefinedTimestamp);
         when(mockHeader.getNonce()).thenReturn(predefinedNonce);
-        when(mockHeader.getSolution()).thenReturn(predefinedSoluion);
+        when(mockHeader.getSolution()).thenReturn(predefinedSolution);
+        when(mockHeader.getMineHash()).thenReturn(predefinedHash);
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
@@ -90,16 +90,16 @@ public class AionPOWRuleTest {
     @Test
     public void testBelowPOWHalfBoundary() {
         // yes this will produce a value smaller than the boundary
-        final byte[] predefinedStaticHash = new byte[32];
+        final byte[] predefinedHash = ByteUtil.hexStringToBytes("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         final long predefinedTimestamp = 1;
-        final byte[] predefinedNonce = new byte[32];
-        final byte[] predefinedSoluion = new byte[32];
+        final byte[] predefinedNonce = ByteUtil.hexStringToBytes("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        final byte[] predefinedSolution = new byte[1408];
         final BigInteger difficulty = BigInteger.TWO;
 
-        when(mockHeader.getStaticHash()).thenReturn(predefinedStaticHash);
         when(mockHeader.getTimestamp()).thenReturn(predefinedTimestamp);
         when(mockHeader.getNonce()).thenReturn(predefinedNonce);
-        when(mockHeader.getSolution()).thenReturn(predefinedSoluion);
+        when(mockHeader.getSolution()).thenReturn(predefinedSolution);
+        when(mockHeader.getMineHash()).thenReturn(predefinedHash);
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
@@ -116,20 +116,20 @@ public class AionPOWRuleTest {
     @Test
     public void testAbovePOWHalfBoundary() {
         // this produces a result larger than the boundary
-        final byte[] predefinedStaticHash = new byte[32];
+        final byte[] predefinedHash = new byte[32];
         final long predefinedTimestamp = 0;
         final byte[] predefinedNonce = new byte[32];
-        final byte[] predefinedSoluion = new byte[32];
+        final byte[] predefinedSolution = new byte[1408];
         final BigInteger difficulty = BigInteger.TWO;
 
-        when(mockHeader.getStaticHash()).thenReturn(predefinedStaticHash);
         when(mockHeader.getTimestamp()).thenReturn(predefinedTimestamp);
         when(mockHeader.getNonce()).thenReturn(predefinedNonce);
-        when(mockHeader.getSolution()).thenReturn(predefinedSoluion);
+        when(mockHeader.getSolution()).thenReturn(predefinedSolution);
+        when(mockHeader.getMineHash()).thenReturn(predefinedHash);
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
+        when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(128).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
