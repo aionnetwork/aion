@@ -1394,14 +1394,24 @@ public class ApiWeb3Aion extends ApiAion {
 
     public RpcMsg priv_config() {
         JSONObject obj = new JSONObject();
+
+        CfgAion config = CfgAion.inst();
+
+        obj.put("id", config.getId());
+        obj.put("basePath", config.getBasePath());
+
         obj.put("net", configNet());
         obj.put("consensus", configConsensus());
         obj.put("sync", configSync());
+        obj.put("api", configApi());
         obj.put("db", configDb());
         obj.put("tx", configTx());
 
         return new RpcMsg(obj);
     }
+
+    // TODO: we can refactor these in the future to be in
+    // their respective classes, for now put the toJson here
 
     private static JSONObject configNet() {
         CfgNet config = CfgAion.inst().getNet();
@@ -1445,6 +1455,8 @@ public class ApiWeb3Aion extends ApiAion {
         obj.put("mining", config.getMining());
         obj.put("minerAddress", config.getMinerAddress());
         obj.put("threads", config.getCpuMineThreads());
+        obj.put("extraData", config.getExtraData());
+        obj.put("isSeed", config.isSeed());
 
         // base.consensus.energyStrategy
         CfgEnergyStrategy nrg = config.getEnergyStrategy();
@@ -1464,6 +1476,46 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject obj = new JSONObject();
         obj.put("showStatus", config.getShowStatus());
         obj.put("blocksQueueMax", config.getBlocksQueueMax());
+        return obj;
+    }
+
+    private static JSONObject configApi() {
+        CfgApi config = CfgAion.inst().getApi();
+
+        JSONObject obj = new JSONObject();
+
+        // base.api.rpc
+        CfgApiRpc rpcConfig = config.getRpc();
+        JSONObject rpc = new JSONObject();
+        rpc.put("ip", rpcConfig.getIp());
+        rpc.put("port", rpcConfig.getPort());
+        rpc.put("corsEnabled", rpcConfig.getCorsEnabled());
+        rpc.put("active", rpcConfig.getActive());
+        rpc.put("maxThread", rpcConfig.getMaxthread());
+
+        // end
+        obj.put("rpc", rpc);
+
+        // base.api.zmq
+        CfgApiZmq zmqConfig = config.getZmq();
+        JSONObject zmq = new JSONObject();
+
+        zmq.put("ip", zmqConfig.getIp());
+        zmq.put("port", zmqConfig.getPort());
+        zmq.put("active", zmqConfig.getActive());
+
+        // end
+        obj.put("zmq", zmq);
+
+        // base.api.nrg
+        CfgApiNrg nrgConfig = config.getNrg();
+        JSONObject nrg = new JSONObject();
+
+        nrg.put("defaultPrice", nrgConfig.getNrgPriceDefault());
+        nrg.put("maxPrice", nrgConfig.getNrgPriceMax());
+
+        // end
+        obj.put("nrg", nrg);
         return obj;
     }
 
