@@ -1,14 +1,14 @@
 package org.aion.evtmgr.impl.es;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.slf4j.Logger;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class EventExecuteService {
 
@@ -77,7 +77,7 @@ public class EventExecuteService {
             try {
                 return callbackEvt.add(event);
             } catch (IllegalStateException e) {
-                LOG.error("ExecutorService Q is full!");
+                LOG.warn("ExecutorService Q is full!");
                 return false;
             }
         } else {

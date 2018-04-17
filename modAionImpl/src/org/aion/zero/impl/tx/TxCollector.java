@@ -2,6 +2,7 @@ package org.aion.zero.impl.tx;
 
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.types.AionTransaction;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +40,12 @@ public class TxCollector {
     private LinkedBlockingQueue<AionTransaction> transactionQueue;
 
     private ReentrantLock broadcastLock = new ReentrantLock();
+    private Logger LOG;
 
 
-    public TxCollector(IP2pMgr p2p) {
+    public TxCollector(IP2pMgr p2p, final Logger logTx) {
         this.p2p = p2p;
+        this.LOG = logTx;
 
         // Leave unbounded for now, may need to restrict queue size and drop tx until able to process tx
         transactionQueue = new LinkedBlockingQueue<>();
@@ -52,6 +55,9 @@ public class TxCollector {
         int initDelay = 10;
         broadcastTxExec.scheduleAtFixedRate(this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
 
+    }
+
+    public TxCollector(IP2pMgr p2pMgr) {
     }
 
     /*
@@ -111,6 +117,10 @@ public class TxCollector {
         this.lastBroadcast.set(System.currentTimeMillis());
 
         if (!transactions.isEmpty()) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("TxCollector.broadcastTx Tx#{}", transactions.size());
+            }
+
             TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p));
         }
     }

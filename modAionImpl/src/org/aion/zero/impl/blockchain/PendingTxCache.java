@@ -218,8 +218,8 @@ public class PendingTxCache {
             return new ArrayList<>();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("cacheTx.flush cacheTx# {}", cacheTxSize());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("cacheTx.flush cacheTx# {}", cacheTxSize());
         }
 
         int cacheTxNumber = 0;
@@ -252,8 +252,8 @@ public class PendingTxCache {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("cacheTx.flush after cacheTx# {}", cacheTxNumber);
+        if (LOG.isInfoEnabled()) {
+            LOG.info("cacheTx.flush after cacheTx# {}", cacheTxNumber);
         }
 
         Map<BigInteger, AionTransaction> timeMap = new LinkedHashMap<>();

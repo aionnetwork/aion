@@ -167,7 +167,14 @@ public final class BroadcastTxHandler extends Handler {
                 }
             } catch (Exception e) {
                 // do nothing, invalid transaction from bad peer
+                if (log.isDebugEnabled()) {
+                    log.debug("castRawTx exception: " + e.toString());
+                }
             }
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("BroadcastTxHandler.castRawTx Tx#{} validTx#{}", broadCastTx.size(), rtn.size());
         }
 
         return rtn;
