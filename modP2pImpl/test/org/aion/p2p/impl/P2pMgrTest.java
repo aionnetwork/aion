@@ -25,21 +25,12 @@
 
 package org.aion.p2p.impl;
 
-import org.aion.p2p.INode;
-import org.aion.p2p.INodeObserver;
 import org.aion.p2p.impl1.P2pMgr;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**

@@ -51,15 +51,6 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> activeNodes = new ConcurrentHashMap<>();
 
-    // private volatile INodeObserver observer;
-
-    // public synchronized void registerNodeObserver(INodeObserver observer) {
-    // if (this.observer != null) {
-    // throw new IllegalStateException("cannot register multiple observers");
-    // }
-    // this.observer = observer;
-    // }
-
     public Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
     }
