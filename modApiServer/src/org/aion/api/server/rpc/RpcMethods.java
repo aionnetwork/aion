@@ -125,7 +125,9 @@ public class RpcMethods {
      */
     private final Map<String, RpcMethod> personal = Map.ofEntries(
             Map.entry("personal_unlockAccount", (params) -> api.personal_unlockAccount(params)),
-            Map.entry("personal_listAccounts", (params) -> api.eth_accounts())
+            Map.entry("personal_listAccounts", (params) -> api.eth_accounts()),
+            Map.entry("personal_lockAccount", (params) -> api.personal_lockAccount(params)),
+            Map.entry("personal_newAccount", (params) -> api.personal_newAccount(params))
     );
 
     /**

@@ -29,6 +29,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.protobuf.ByteString;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.rpc.RpcError;
@@ -49,6 +50,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
@@ -1091,6 +1093,42 @@ public class ApiWeb3Aion extends ApiAion {
 
         return new RpcMsg(unlockAccount(_account, _password, duration));
     }
+
+    public RpcMsg personal_lockAccount(Object _params) {
+        String _account;
+        String _password;
+        if (_params instanceof JSONArray) {
+            _account = ((JSONArray)_params).get(0) + "";
+            _password = ((JSONArray)_params).get(1) + "";
+        }
+        else if (_params instanceof JSONObject) {
+            _account = ((JSONObject)_params).get("address") + "";
+            _password = ((JSONObject)_params).get("password") + "";
+        }
+        else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        return new RpcMsg(lockAccount(Address.wrap(_account), _password));
+    }
+
+    public RpcMsg personal_newAccount(Object _params) {
+        String _password;
+        if (_params instanceof JSONArray) {
+            _password = ((JSONArray)_params).get(0) + "";
+        }
+        else if (_params instanceof JSONObject) {
+            _password = ((JSONObject)_params).get("password") + "";
+        }
+        else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        String address = Keystore.create(_password);
+
+        return new RpcMsg(TypeConverter.toJsonHex(address));
+    }
+
 
     /* -------------------------------------------------------------------------
      * debug
