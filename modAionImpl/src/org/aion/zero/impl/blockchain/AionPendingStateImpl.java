@@ -587,8 +587,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
 
         if (txSum.isRejected()) {
-            if (LOG.isErrorEnabled()) {
-                LOG.error("addPendingTransactionImpl tx is rejected due to: {}", txSum.getReceipt().getError());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("addPendingTransactionImpl tx is rejected due to: {}", txSum.getReceipt().getError());
             }
             fireTxUpdate(txSum.getReceipt(), PendingTransactionState.DROPPED, best.get());
             return false;
