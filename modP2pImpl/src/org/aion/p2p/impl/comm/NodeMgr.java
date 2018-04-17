@@ -211,13 +211,6 @@ public class NodeMgr implements INodeMgr {
         return tempNodes.size();
     }
 
-    /**
-     * for test
-     */
-    public void clearTempNodes() {
-        this.tempNodes.clear();
-    }
-
     public int activeNodesSize() {
         return activeNodes.size();
     }
@@ -243,7 +236,10 @@ public class NodeMgr implements INodeMgr {
     }
 
     public Node allocNode(String ip, int p0, int p1) {
-        return new Node(ip, p0, p1);
+        Node n = new Node(ip, p0, p1);
+        if(seedIps.contains(ip))
+            n.setFromBootList(true);
+        return n;
     }
 
     public List<Node> getActiveNodesList() {
@@ -271,31 +267,6 @@ public class NodeMgr implements INodeMgr {
             return null;
     }
 
-    public INode getRandomRealtime(long bbn) {
-
-        List<Integer> keysArr = new ArrayList<>();
-
-        for (Node n : activeNodes.values()) {
-            if ((n.getBestBlockNumber() == 0) || (n.getBestBlockNumber() > bbn)) {
-                keysArr.add(n.getIdHash());
-            }
-        }
-
-        int nodesCount = keysArr.size();
-        if (nodesCount > 0) {
-            Random r = new Random(System.currentTimeMillis());
-
-            try {
-                int randomNodeKeyIndex = r.nextInt(keysArr.size());
-                int randomNodeKey = keysArr.get(randomNodeKeyIndex);
-                return this.getActiveNode(randomNodeKey);
-            } catch (IllegalArgumentException e) {
-                return null;
-            }
-        } else
-            return null;
-    }
-
     /**
      * @param _nodeIdHash
      *            int
@@ -304,7 +275,6 @@ public class NodeMgr implements INodeMgr {
      * @param _p2pMgr
      *            P2pMgr
      */
-
     // Attention: move node from container need sync to avoid node not belong to
     // any container during transit.
     public synchronized void moveOutboundToActive(int _nodeIdHash, String _shortId, final IP2pMgr _p2pMgr) {
