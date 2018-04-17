@@ -345,10 +345,6 @@ public class NodeMgr implements INodeMgr {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
             }
-
-            // if (this.observer != null)
-            // this.observer.newActiveNode(_channelHashCode, node.getIp(),
-            // node.getPort());
         }
     }
 
