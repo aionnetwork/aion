@@ -313,7 +313,7 @@ public class NodeMgr implements INodeMgr {
             node.setConnection("outbound");
             INode previous = activeNodes.put(_nodeIdHash, node);
             if (previous != null)
-                _p2pMgr.closeSocket(((Node) previous).getChannel());
+                _p2pMgr.closeSocket(node.getChannel());
             else {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
@@ -340,7 +340,7 @@ public class NodeMgr implements INodeMgr {
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.put(node.getIdHash(), node);
             if (previous != null)
-                _p2pMgr.closeSocket(((Node) previous).getChannel());
+                _p2pMgr.closeSocket(node.getChannel());
             else {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
