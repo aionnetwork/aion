@@ -28,7 +28,6 @@ import org.aion.base.Constant;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
@@ -562,6 +561,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         if (!TXValidator.isValid(tx)) {
             LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
+            fireDroppedTx(tx, "INVALID_TX");
             return false;
         }
 
@@ -571,14 +571,17 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             // check energy usage
             AionTransaction poolTx = txPool.getPoolTx(tx.getFrom(), txNonce);
             if (poolTx == null) {
-                LOG.error("addPendingTransactionImpl no same tx nonce in the pool addr[{}] nonce[{}], hash[{}]",
-                        tx.getFrom().toString(), txNonce.toString(), Hash256.wrap(tx.getHash()).toString());
+                LOG.error("addPendingTransactionImpl no same tx nonce in the pool {}",
+                        tx.toString());
+
+                fireDroppedTx(tx, "REPAYTX_POOL_EXCEPTION");
                 return false;
             } else {
                 long price = (poolTx.getNrgPrice() << 1);
                 if (price > 0 && price <= tx.getNrgPrice()) {
                     txSum = executeTx(tx, true);
                 } else {
+                    fireDroppedTx(tx, "REPAYTX_LOWPRICE");
                     return false;
                 }
             }
@@ -618,6 +621,13 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             return true;
         }
+    }
+
+    private void fireDroppedTx(AionTransaction tx, String error) {
+        AionTxReceipt rp = new AionTxReceipt();
+        rp.setTransaction(tx);
+        rp.setError(error);
+        fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
     }
 
     private AionTxReceipt createDroppedReceipt(AionTransaction tx, String error) {
