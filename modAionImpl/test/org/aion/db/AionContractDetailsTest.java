@@ -40,6 +40,7 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionContractDetailsImpl;
@@ -51,6 +52,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -60,16 +62,6 @@ public class AionContractDetailsTest {
     private static final int IN_MEMORY_STORAGE_LIMIT = 1000000; // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit();
 
     protected IRepositoryConfig repoConfig = new IRepositoryConfig() {
-        @Override
-        public String[] getVendorList() {
-            return new String[]{DBVendor.MOCKDB.toValue()};
-        }
-
-        @Override
-        public String getActiveVendor() {
-            return DBVendor.MOCKDB.toValue();
-        }
-
         @Override
         public String getDbPath() {
             return "";
@@ -86,54 +78,11 @@ public class AionContractDetailsTest {
         }
 
         @Override
-        public boolean isAutoCommitEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDbCacheEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDbCompressionEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isHeapCacheEnabled() {
-            return false;
-        }
-
-        @Override
-        public String getMaxHeapCacheSize() {
-            return "0";
-        }
-
-        @Override
-        public boolean isHeapCacheStatsEnabled() {
-            return false;
-        }
-
-        @Override
-        public int getMaxFdAllocSize() {
-            return LevelDBConstants.MAX_OPEN_FILES;
-        }
-
-        // default levelDB setting, may want to change this later
-        @Override
-        public int getBlockSize() {
-            return LevelDBConstants.BLOCK_SIZE;
-        }
-
-        @Override
-        public int getWriteBufferSize() {
-            return LevelDBConstants.WRITE_BUFFER_SIZE;
-        }
-
-        @Override
-        public int getCacheSize() {
-            return LevelDBConstants.CACHE_SIZE;
+        public Properties getDatabaseConfig(String db_name) {
+            Properties props = new Properties();
+            props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+            props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+            return props;
         }
     };
 

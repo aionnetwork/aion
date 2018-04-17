@@ -75,14 +75,10 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         private static CfgAion config = CfgAion.inst();
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
-                new RepositoryConfig(new String[] { config.getDb().getVendor() }, config.getDb().getVendor(),
-                        new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(), -1,
-                        ContractDetailsAion.getInstance(), config.getDb().isAutoCommitEnabled(),
-                        config.getDb().isDbCacheEnabled(), config.getDb().isDbCompressionEnabled(),
-                        config.getDb().isHeapCacheEnabled(), config.getDb().getMaxHeapCacheSize(),
-                        config.getDb().isHeapCacheStatsEnabled(), config.getDb().getFdOpenAllocSize(),
-                        config.getDb().getBlockSize(), config.getDb().getWriteBufferSize(),
-                        config.getDb().getCacheSize()));
+                new RepositoryConfig(new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(),
+                                     -1,
+                                     ContractDetailsAion.getInstance(),
+                                     config.getDb()));
     }
 
     public static AionRepositoryImpl inst() {

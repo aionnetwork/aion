@@ -151,6 +151,7 @@ public abstract class DatabaseFactory {
 
         if (dbType == DBVendor.MOCKDB) {
             // MockDB does not require name and path checks
+            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist!");
             return new MockDB(dbName);
         }
 
