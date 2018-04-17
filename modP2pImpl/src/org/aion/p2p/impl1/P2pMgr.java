@@ -59,7 +59,6 @@ public final class P2pMgr implements IP2pMgr {
 
     private final static int TIMEOUT_OUTBOUND_CONNECT = 10000;
 
-    // private final static int TIMEOUT_OUTBOUND_NODES = 10000;
     private final static int TIMEOUT_OUTBOUND_NODES = 10000;
 
     private final static int PERIOD_UPNP_PORT_MAPPING = 3600000;
@@ -89,7 +88,6 @@ public final class P2pMgr implements IP2pMgr {
     private NodeMgr nodeMgr = new NodeMgr();
     private ServerSocketChannel tcpServer;
     private Selector selector;
-    // private Lock selectorLock = new ReentrantLock();
 
     private ScheduledThreadPoolExecutor scheduledWorkers;
 
@@ -330,10 +328,10 @@ public final class P2pMgr implements IP2pMgr {
             while (P2pMgr.this.start.get()) {
                 try {
 
-                    if (lane == 0) {
-                        if (showLog)
-                            System.out.println("<p2p-write-queue-size:" + sendMsgQue.size() + ">");
-                    }
+//                    if (lane == 0) {
+//                        if (showLog)
+//                            System.out.println("<p2p-write-queue-size:" + sendMsgQue.size() + ">");
+//                    }
 
                     MsgOut mo = sendMsgQue.take();
 
@@ -393,13 +391,13 @@ public final class P2pMgr implements IP2pMgr {
         @Override
         public void run() {
 
-            while (true) {
+            while (P2pMgr.this.start.get()) {
                 try {
                     MsgIn mi = receiveMsgQue.take();
 
                     List<Handler> hs = handlers.get(mi.route);
                     if (hs == null)
-                        return;
+                        continue;
                     for (Handler hlr : hs) {
                         if (hlr == null)
                             continue;
@@ -407,12 +405,11 @@ public final class P2pMgr implements IP2pMgr {
                         try {
                             hlr.receive(mi.nid, mi.nsid, mi.msg);
                         } catch (Exception e) {
-                            System.out.println("Exception during kernel message handling:");
+
                         }
                     }
                 } catch (InterruptedException e) {
-                    System.out.println("Task receive interrupted");
-                    break;
+                    continue;
                 }
             }
         }
@@ -456,7 +453,7 @@ public final class P2pMgr implements IP2pMgr {
                     } catch (InterruptedException e) {
                         if (showLog)
                             System.out.println("<p2p-tcp-interrupted>");
-                        return;
+                        continue;
                     }
                     continue;
                 }
@@ -472,7 +469,7 @@ public final class P2pMgr implements IP2pMgr {
                 } catch (InterruptedException e) {
                     if (showLog)
                         System.out.println("<p2p-tcp-interrupted>");
-                    return;
+                    continue;
                 }
                 int nodeIdHash = node.getIdHash();
                 if (!nodeMgr.getOutboundNodes().containsKey(nodeIdHash) && !nodeMgr.hasActiveNode(nodeIdHash)) {
@@ -811,8 +808,6 @@ public final class P2pMgr implements IP2pMgr {
         boolean underRC = rb.shouldRoute(route, P2pConstant.READ_MAX_RATE);
 
         if (!underRC) {
-            System.out.println("DEBUG p2p shouldnot route " + route + " nid_" + rb.nodeIdHash + " cid_"
-                    + _sk.channel().hashCode());
             return currCnt;
         }
 
@@ -886,8 +881,7 @@ public final class P2pMgr implements IP2pMgr {
                 }
                 nodeMgr.moveInboundToActive(_channelHash, this);
             } else {
-                if (isShowLog())
-                    System.out.println("incompatible netId ours=" + this.selfNetId + " theirs=" + _netId);
+
             }
         }
     }
@@ -1002,7 +996,6 @@ public final class P2pMgr implements IP2pMgr {
             node.refreshTimestamp();
             receiveMsgQue.offer(new MsgIn(nid, nsid, _route, _msgBytes));
         } else {
-            System.out.println(" handle kernel msg failed. can't find node:" + _nodeIdHash);
         }
     }
 
