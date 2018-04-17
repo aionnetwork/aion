@@ -300,7 +300,7 @@ public final class Node implements INode {
 		return this.timestamp;
 	}
 
-	String getBinaryVersion() {
+	public String getBinaryVersion() {
 		return this.binaryVersion;
 	}
 

@@ -55,12 +55,10 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.p2p.INode;
 import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.core.RewardsCalculator;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -74,6 +72,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1138,12 +1138,19 @@ public class ApiWeb3Aion extends ApiAion {
             n.put("idShort", node.getIdShort());
             n.put("id", new String(node.getId()));
             n.put("idHash", node.getIdHash());
+            n.put("version", node.getBinaryVersion());
             n.put("blockNumber", node.getBestBlockNumber());
             n.put("totalDifficulty", node.getTotalDifficulty());
 
             JSONObject network = new JSONObject();
             network.put("remoteAddress", node.getIpStr() + ":" + node.getPort());
             n.put("network", network);
+            n.put("latestTimestamp", node.getTimestamp());
+
+            // generate a date corresponding to UTC date time (not local)
+            String utcTimestampDate = Instant.ofEpochMilli(node.getTimestamp()).atZone(ZoneOffset.UTC).toString();
+            n.put("latestTimestampUTC", utcTimestampDate);
+            n.put("version", node.getBinaryVersion());
 
             peerList.put(n);
         }
@@ -1266,6 +1273,25 @@ public class ApiWeb3Aion extends ApiAion {
         obj.put("block", Blk.AionBlockToJson(block, totalDiff, full));
         obj.put("raw", ByteUtil.toHexString(block.getEncoded()));
         return obj;
+    }
+
+    /**
+     * Very short blurb generated about our most important stats, intended for
+     * quick digestion and monitoring tool usage
+     */
+    // TODO
+    private RpcMsg priv_shortStats() {
+        return null;
+    }
+
+    // TODO
+    private RpcMsg priv_config() {
+        return null;
+    }
+
+    // TODO
+    private RpcMsg priv_genesis() {
+        return null;
     }
 
     /* -------------------------------------------------------------------------
