@@ -808,7 +808,8 @@ public final class P2pMgr implements IP2pMgr {
 
         int route = h.getRoute();
 
-        boolean underRC = (route == txBroadCastRoute ? rb.shouldRoute(route, P2pConstant.READ_MAX_RATE_TXBC) : rb.shouldRoute(route, P2pConstant.READ_MAX_RATE));
+        boolean underRC = rb.shouldRoute(route,
+                ((route == txBroadCastRoute) ? P2pConstant.READ_MAX_RATE_TXBC : P2pConstant.READ_MAX_RATE));
 
         if (!underRC) {
             return currCnt;
