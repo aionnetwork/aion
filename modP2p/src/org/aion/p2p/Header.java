@@ -28,7 +28,6 @@ package org.aion.p2p;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.aion.p2p.P2pConstant;
 
 /**
  * @author chris

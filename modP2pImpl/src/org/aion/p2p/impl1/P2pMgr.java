@@ -97,6 +97,9 @@ public final class P2pMgr implements IP2pMgr {
 
     private int errTolerance;
 
+    //TODO: need refactor by passing the parameter in the later version.
+    private final static int txBroadCastRoute = ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
+
     enum Dest {
         INBOUND, OUTBOUND, ACTIVE;
     }
@@ -805,7 +808,8 @@ public final class P2pMgr implements IP2pMgr {
 
         int route = h.getRoute();
 
-        boolean underRC = rb.shouldRoute(route, P2pConstant.READ_MAX_RATE);
+        boolean underRC = rb.shouldRoute(route,
+                ((route == txBroadCastRoute) ? P2pConstant.READ_MAX_RATE_TXBC : P2pConstant.READ_MAX_RATE));
 
         if (!underRC) {
             return currCnt;

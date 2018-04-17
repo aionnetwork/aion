@@ -79,6 +79,10 @@ public abstract class DatabaseFactory {
     }
 
     public static IByteArrayKeyValueDatabase connect(Properties info) {
+        return connect(info, false);
+    }
+
+    public static IByteArrayKeyValueDatabase connect(Properties info, boolean debug) {
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
         IByteArrayKeyValueDatabase db;
@@ -104,7 +108,7 @@ public abstract class DatabaseFactory {
         }
 
         // time operations during debug
-        if (LOG.isDebugEnabled()) {
+        if (debug) {
             return new TimedDatabase(db);
         } else {
             return db;
@@ -151,6 +155,7 @@ public abstract class DatabaseFactory {
 
         if (dbType == DBVendor.MOCKDB) {
             // MockDB does not require name and path checks
+            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist!");
             return new MockDB(dbName);
         }
 
@@ -231,8 +236,7 @@ public abstract class DatabaseFactory {
         return new MockDB(_dbName);
     }
 
-    private static boolean getBoolean(Properties info,
-                                      String prop) {
+    private static boolean getBoolean(Properties info, String prop) {
         return Boolean.parseBoolean(info.getProperty(prop));
     }
 

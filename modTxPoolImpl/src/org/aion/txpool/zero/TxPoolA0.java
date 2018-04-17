@@ -506,9 +506,8 @@ import java.util.stream.Collectors;
                                     return rtn;
                                 }
                             } else {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Reach blockLimit: txSize[{}], nrgConsume[{}], tx#[{}]", cnt_txSz,
-                                            cnt_nrg, rtn.size());
+                                if (LOG.isInfoEnabled()) {
+                                    LOG.info("TxPoolA0.snapshot return Tx[{}] TxSize[{}] Nrg[{}] Pool[{}]", rtn.size(), cnt_txSz, cnt_nrg, getMainMap().size());
                                 }
 
                                 return rtn;
