@@ -34,6 +34,8 @@
  ******************************************************************************/
 package org.aion.base.db;
 
+import java.util.Properties;
+
 /**
  * Represents a configuration interface accepted that should be accepted by the
  * repository to implement necessary configs
@@ -41,10 +43,6 @@ package org.aion.base.db;
  * @author yao
  */
 public interface IRepositoryConfig {
-
-    String[] getVendorList();
-
-    String getActiveVendor();
 
     /**
      * @return absolute path to the DB folder containing files
@@ -55,28 +53,5 @@ public interface IRepositoryConfig {
 
     IContractDetails contractDetailsImpl();
 
-    boolean isAutoCommitEnabled();
-
-    boolean isDbCacheEnabled();
-
-    boolean isDbCompressionEnabled();
-
-    boolean isHeapCacheEnabled();
-
-    boolean isHeapCacheStatsEnabled();
-
-    /**
-     * Size 0 corresponds to unlimited size.
-     *
-     * @return
-     */
-    String getMaxHeapCacheSize();
-
-    int getMaxFdAllocSize();
-
-    int getBlockSize();
-
-    int getWriteBufferSize();
-
-    int getCacheSize();
+    Properties getDatabaseConfig(String db_name);
 }

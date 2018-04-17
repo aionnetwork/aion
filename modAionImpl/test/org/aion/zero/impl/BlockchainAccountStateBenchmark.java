@@ -37,7 +37,9 @@ public class BlockchainAccountStateBenchmark {
             "level_db_state_test",
             "level_db_expansion_test",
             "h2_db_state_test",
-            "h2_db_expansion_test"
+            "h2_db_expansion_test",
+            "rocks_db_state_test",
+            "rocks_db_expansion_test"
     };
 
     public static void resetFileState() {
@@ -68,39 +70,14 @@ public class BlockchainAccountStateBenchmark {
         StandaloneBlockchain.Bundle mockBundle = new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
-                .withRepoConfig(new MockRepositoryConfig() {
-                    @Override
-                    public String[] getVendorList() {
-                        return new String[] { DBVendor.MOCKDB.toValue() };
-                    }
-
-                    @Override
-                    public String getActiveVendor() {
-                        return DBVendor.MOCKDB.toValue();
-                    }
-
-                    @Override
-                    public String getDbPath() {
-                        return "";
-                    }
-                })
+                .withRepoConfig(new MockRepositoryConfig(DBVendor.MOCKDB))
                 .build();
 
         // levelDB
         StandaloneBlockchain.Bundle levelDbBundle = new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
-                .withRepoConfig(new MockRepositoryConfig() {
-                    @Override
-                    public String[] getVendorList() {
-                        return new String[] { DBVendor.LEVELDB.toValue() };
-                    }
-
-                    @Override
-                    public String getActiveVendor() {
-                        return DBVendor.LEVELDB.toValue();
-                    }
-
+                .withRepoConfig(new MockRepositoryConfig(DBVendor.LEVELDB) {
                     @Override
                     public String getDbPath() {
                         return baseTestPath + "/" + dbPaths[1];
@@ -112,20 +89,10 @@ public class BlockchainAccountStateBenchmark {
         StandaloneBlockchain.Bundle rocksDbBundle = new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
-                .withRepoConfig(new MockRepositoryConfig() {
-                    @Override
-                    public String[] getVendorList() {
-                        return new String[] { DBVendor.ROCKSDB.toValue() };
-                    }
-
-                    @Override
-                    public String getActiveVendor() {
-                        return DBVendor.ROCKSDB.toValue();
-                    }
-
+                .withRepoConfig(new MockRepositoryConfig(DBVendor.ROCKSDB) {
                     @Override
                     public String getDbPath() {
-                        return baseTestPath + "/" + dbPaths[1];
+                        return baseTestPath + "/" + dbPaths[5];
                     }
                 })
                 .build();
@@ -134,17 +101,7 @@ public class BlockchainAccountStateBenchmark {
         StandaloneBlockchain.Bundle h2DbBundle = new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
-                .withRepoConfig(new MockRepositoryConfig() {
-                    @Override
-                    public String[] getVendorList() {
-                        return new String[] { DBVendor.H2.toValue() };
-                    }
-
-                    @Override
-                    public String getActiveVendor() {
-                        return DBVendor.H2.toValue();
-                    }
-
+                .withRepoConfig(new MockRepositoryConfig(DBVendor.H2) {
                     @Override
                     public String getDbPath() {
                         return baseTestPath + "/" + dbPaths[3];
