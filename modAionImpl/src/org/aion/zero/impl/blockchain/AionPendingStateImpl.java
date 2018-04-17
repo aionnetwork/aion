@@ -464,8 +464,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         }
 
                         txNonce = txNonce.add(BigInteger.ONE);
-                    } while (cache != null && (tx = cache.get(txNonce)) != null && (limit-- > 0)
-                            && (txPool.size() + txBuffer.size() < MAX_VALIDATED_PENDING_TXS));
+                    } while (cache != null &&
+                            (tx = cache.get(txNonce)) != null &&
+                            (limit-- > 0) &&
+                            (txBuffer == null ? txPool.size() : txPool.size() + txBuffer.size()) < MAX_VALIDATED_PENDING_TXS);
                 } else if (bestRepoNonce(tx.getFrom()).compareTo(txNonce) < 1) {
                     // repay Tx
                     if (addPendingTransactionImpl(tx, txNonce)) {
