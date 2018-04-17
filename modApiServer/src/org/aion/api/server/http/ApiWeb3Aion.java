@@ -55,12 +55,14 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.p2p.INode;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.sync.PeerState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -1148,7 +1150,7 @@ public class ApiWeb3Aion extends ApiAion {
             n.put("latestTimestamp", node.getTimestamp());
 
             // generate a date corresponding to UTC date time (not local)
-            String utcTimestampDate = Instant.ofEpochMilli(node.getTimestamp()).atZone(ZoneOffset.UTC).toString();
+            String utcTimestampDate = Instant.ofEpochMilli(node.getTimestamp()).atOffset(ZoneOffset.UTC).toString();
             n.put("latestTimestampUTC", utcTimestampDate);
             n.put("version", node.getBinaryVersion());
 
@@ -1280,18 +1282,116 @@ public class ApiWeb3Aion extends ApiAion {
      * quick digestion and monitoring tool usage
      */
     // TODO
-    private RpcMsg priv_shortStats() {
-        return null;
+    public RpcMsg priv_shortStats() {
+        AionBlock block = this.ac.getBlockchain().getBestBlock();
+        Map<Integer, INode> peer = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+
+        // this could be optimized (cached)
+        INode maxPeer = null;
+        for (INode p : peer.values()) {
+            if (maxPeer == null) {
+                maxPeer = p;
+                continue;
+            }
+
+            if (p.getTotalDifficulty().compareTo(maxPeer.getTotalDifficulty()) > 0)
+                maxPeer = p;
+        }
+
+        // basic local configuration
+        CfgAion config = CfgAion.inst();
+
+        JSONObject obj = new JSONObject();
+        obj.put("id", config.getId());
+        obj.put("genesisHash", ByteUtil.toHexString(config.getGenesis().getHash()));
+        obj.put("version", Version.KERNEL_VERSION);
+        obj.put("bootBlock", this.ac.getAionHub().getStartingBlock().getNumber());
+
+
+        long time = System.currentTimeMillis();
+        obj.put("timestamp", time);
+        obj.put("timestampUTC", Instant.ofEpochMilli(time).atOffset(ZoneOffset.UTC).toString());
+
+        // base.blockchain
+        JSONObject blockchain = new JSONObject();
+        blockchain.put("bestBlockhash", ByteUtil.toHexString(block.getHash()));
+        blockchain.put("bestNumber", block.getNumber());
+        blockchain.put("totalDifficulty", this.ac.getBlockchain()
+                .getTotalDifficultyByHash(new Hash256(block.getHash())));
+        // end
+        obj.put("local", blockchain);
+
+        // base.network
+        JSONObject network = new JSONObject();
+        // remote
+        if (maxPeer != null) {
+            // base.network.best
+            JSONObject remote = new JSONObject();
+            remote.put("id", new String(maxPeer.getId()));
+            remote.put("totalDifficulty", maxPeer.getTotalDifficulty());
+            remote.put("bestNumber", maxPeer.getBestBlockNumber());
+            remote.put("version", maxPeer.getBinaryVersion());
+            remote.put("timestamp", maxPeer.getTimestamp());
+            remote.put("timestampUTC", Instant.ofEpochMilli(maxPeer.getTimestamp()).atOffset(ZoneOffset.UTC).toString());
+            // end
+            network.put("best", remote);
+        }
+
+        // end
+        network.put("peerCount", peer.size());
+        obj.put("network", network);
+
+        return new RpcMsg(obj);
     }
 
     // TODO
-    private RpcMsg priv_config() {
+    public RpcMsg priv_config() {
         return null;
     }
 
-    // TODO
-    private RpcMsg priv_genesis() {
-        return null;
+    /**
+     * This may seem similar to a superset of peers, with the difference
+     * being that this should only contain a subset of peers we are
+     * actively syncing from
+     */
+    public RpcMsg priv_syncPeers() {
+        // contract here is we do NOT modify the peerStates in any way
+        Iterator<Map.Entry<Integer, PeerState>> peerStates = this.ac.getAionHub().getSyncMgr().getPeerStatesIterator();
+
+        // also retrieve nodes from p2p to see if we can piece together a full state
+        Map<Integer, INode> nodeState = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+
+        JSONArray array = new JSONArray();
+        while (peerStates.hasNext()) {
+            // begin []
+            Map.Entry<Integer, PeerState> peerState = peerStates.next();
+            JSONObject peerObj = new JSONObject();
+            INode node;
+            if ((node = nodeState.get(peerState.getKey())) != null) {
+                // base[].node
+                JSONObject nodeObj = new JSONObject();
+                nodeObj.put("id", new String(node.getId()));
+                nodeObj.put("totalDifficulty", node.getTotalDifficulty());
+                nodeObj.put("bestNumber", node.getBestBlockNumber());
+                nodeObj.put("version", node.getBinaryVersion());
+                nodeObj.put("timestamp", node.getTimestamp());
+                nodeObj.put("timestampUTC", Instant.ofEpochMilli(node.getTimestamp()).atOffset(ZoneOffset.UTC).toString());
+
+                //end
+                peerObj.put("node", nodeObj);
+            }
+
+            PeerState ps = peerState.getValue();
+            peerObj.put("idHash", peerState.getKey());
+            peerObj.put("lastRequestTimestamp", ps.getLastHeaderRequest());
+            peerObj.put("lastRequestTimestampUTC", Instant.ofEpochMilli(ps.getLastHeaderRequest()).atOffset(ZoneOffset.UTC).toString());
+            peerObj.put("mode", ps.getMode().toString());
+            peerObj.put("base", ps.getBase());
+
+            // end
+            array.put(peerObj);
+        }
+        return new RpcMsg(array);
     }
 
     /* -------------------------------------------------------------------------

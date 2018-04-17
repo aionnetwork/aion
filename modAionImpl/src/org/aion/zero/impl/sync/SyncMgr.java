@@ -312,4 +312,13 @@ public final class SyncMgr {
         start.set(false);
         workers.shutdown();
     }
+
+    /**
+     * Reasoning behind only returning iterator is that we
+     * don't want other parties to unsafely modify the mapping
+     * in an unsafe fashion
+     */
+    public Iterator<Map.Entry<Integer, PeerState>> getPeerStatesIterator() {
+        return this.peerStates.entrySet().iterator();
+    }
 }
