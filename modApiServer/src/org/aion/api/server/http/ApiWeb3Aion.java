@@ -49,7 +49,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.mcf.config.CfgNetP2p;
+import org.aion.mcf.config.*;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
@@ -59,6 +59,8 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.CfgConsensusPow;
+import org.aion.zero.impl.config.CfgEnergyStrategy;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -1344,11 +1346,6 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(obj);
     }
 
-    // TODO
-    public RpcMsg priv_config() {
-        return null;
-    }
-
     /**
      * This may seem similar to a superset of peers, with the difference
      * being that this should only contain a subset of peers we are
@@ -1392,6 +1389,97 @@ public class ApiWeb3Aion extends ApiAion {
             array.put(peerObj);
         }
         return new RpcMsg(array);
+    }
+
+
+    public RpcMsg priv_config() {
+        JSONObject obj = new JSONObject();
+        obj.put("net", configNet());
+        obj.put("consensus", configConsensus());
+        obj.put("sync", configSync());
+        obj.put("db", configDb());
+        obj.put("tx", configTx());
+
+        return new RpcMsg(obj);
+    }
+
+    private static JSONObject configNet() {
+        CfgNet config = CfgAion.inst().getNet();
+        JSONObject obj = new JSONObject();
+
+        // begin base.net.p2p
+        CfgNetP2p configP2p = config.getP2p();
+        JSONObject p2p = new JSONObject();
+        p2p.put("ip", configP2p.getIp());
+        p2p.put("port", configP2p.getPort());
+        p2p.put("bootlistSyncOnly", configP2p.getBootlistSyncOnly());
+        p2p.put("discover", configP2p.getDiscover());
+        p2p.put("errorTolerance", configP2p.getErrorTolerance());
+        p2p.put("maxActiveNodes", configP2p.getMaxActiveNodes());
+        p2p.put("maxTempNodes", configP2p.getMaxTempNodes());
+        p2p.put("showLog", configP2p.getShowLog());
+        p2p.put("showStatus", configP2p.getShowStatus());
+        p2p.put("txBroadcastBuffer", configP2p.getTxBroadcastbuffer());
+
+        // end
+        obj.put("p2p", p2p);
+
+        // begin base.net.nodes[]
+        JSONArray nodeArray = new JSONArray();
+        for (String n : config.getNodes()) {
+            nodeArray.put(n);
+        }
+
+        // end
+        obj.put("nodes", nodeArray);
+        // begin base
+        obj.put("id", config.getId());
+
+        // end
+        return obj;
+    }
+
+    private static JSONObject configConsensus() {
+        CfgConsensusPow config = CfgAion.inst().getConsensus();
+        JSONObject obj = new JSONObject();
+        obj.put("mining", config.getMining());
+        obj.put("minerAddress", config.getMinerAddress());
+        obj.put("threads", config.getCpuMineThreads());
+
+        // base.consensus.energyStrategy
+        CfgEnergyStrategy nrg = config.getEnergyStrategy();
+        JSONObject nrgObj = new JSONObject();
+        nrgObj.put("strategy", nrg.getStrategy());
+        nrgObj.put("target", nrg.getTarget());
+        nrgObj.put("upper", nrg.getUpperBound());
+        nrgObj.put("lower", nrg.getLowerBound());
+
+        // end
+        obj.put("energyStrategy", nrgObj);
+        return obj;
+    }
+
+    private static JSONObject configSync() {
+        CfgSync config = CfgAion.inst().getSync();
+        JSONObject obj = new JSONObject();
+        obj.put("showStatus", config.getShowStatus());
+        obj.put("blocksQueueMax", config.getBlocksQueueMax());
+        return obj;
+    }
+
+    // this is temporarily disabled until DB configuration changes come in
+    private static JSONObject configDb() {
+        return new JSONObject();
+    }
+
+    private static JSONObject configTx() {
+        CfgTx config = CfgAion.inst().getTx();
+        JSONObject obj = new JSONObject();
+        obj.put("cacheMax", config.getCacheMax());
+        obj.put("poolBackup", config.getPoolBackup());
+        obj.put("buffer", config.getBuffer());
+        obj.put("poolDump", config.getPoolDump());
+        return obj;
     }
 
     /* -------------------------------------------------------------------------
