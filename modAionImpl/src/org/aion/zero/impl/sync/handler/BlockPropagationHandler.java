@@ -38,17 +38,16 @@ package org.aion.zero.impl.sync.handler;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
+
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -94,10 +93,13 @@ public class BlockPropagationHandler {
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
+    private final boolean isSyncOnlyNode;
+
     public BlockPropagationHandler(final int cacheSize,
                                    final IAionBlockchain blockchain,
                                    final IP2pMgr p2pManager,
-                                   BlockHeaderValidator<A0BlockHeader> headerValidator) {
+                                   BlockHeaderValidator<A0BlockHeader> headerValidator,
+                                   final boolean isSyncOnlyNode) {
         this.cacheSize = cacheSize;
 
         // all accesses to cacheMap are guarded by instance
@@ -110,11 +112,13 @@ public class BlockPropagationHandler {
         this.p2pManager = p2pManager;
 
         this.blockHeaderValidator = headerValidator;
+
+        this.isSyncOnlyNode = isSyncOnlyNode;
     }
 
     // assumption here is that blocks propagated have unique hashes
     public void propagateNewBlock(final AionBlock block) {
-        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+        if(isSyncOnlyNode)
             return;
 
         if (block == null)
@@ -133,7 +137,6 @@ public class BlockPropagationHandler {
     }
 
     public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
-
         if (block == null)
             return PropStatus.DROPPED;
 
@@ -204,7 +207,7 @@ public class BlockPropagationHandler {
     }
 
     private boolean send(AionBlock block, int nodeId) {
-        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+        if(isSyncOnlyNode)
             return true;
 
         // current proposal is to send to all peers with lower blockNumbers

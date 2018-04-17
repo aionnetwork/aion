@@ -42,7 +42,6 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
-import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.impl.valid.TXValidator;
@@ -73,16 +72,20 @@ public final class BroadcastTxHandler extends Handler {
 
     private final boolean buffer;
 
-    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean enableBuffer) {
+    private final boolean isSyncOnlyNode;
+
+    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean enableBuffer, final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
         this.txQueue = new LinkedBlockingQueue<>(50_000);
         this.buffer = enableBuffer;
+        this.isSyncOnlyNode = isSyncOnlyNode;
 
-        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+        if(isSyncOnlyNode)
             return;
+        // don't run the buffertask in sync-node mode
 
         if (this.buffer) {
             log.info("BufferTask buffer enable!");
@@ -116,7 +119,7 @@ public final class BroadcastTxHandler extends Handler {
 
     @Override
     public final void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if(CfgAion.inst().getNet().getP2p().isSyncOnlyNode())
+        if(isSyncOnlyNode)
             return;
 
         if (_msgBytes == null || _msgBytes.length == 0)
