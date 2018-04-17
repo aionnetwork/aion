@@ -59,10 +59,6 @@ public final class ReqStatusHandler extends Handler {
 
 	private byte[] genesisHash;
 
-	private static final int UPDATE_INTERVAL = 500;
-	private ResStatus cache;
-	private long cacheTs = 0;
-
 	public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
 			final byte[] _genesisHash) {
 		super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
@@ -78,28 +74,12 @@ public final class ReqStatusHandler extends Handler {
 			this.log.debug("<req-status node={}>", _displayId);
 		}
 
-		long currTs = System.currentTimeMillis();
-
-		// check if need rebuild cache.
-		if ((currTs - cacheTs) > UPDATE_INTERVAL) {
-
-			// prevent N rebuild within same interval.
-			synchronized (this) {
-				// cache maybe updated by one request. recheck if already updated.
-				if ((currTs - cacheTs) > UPDATE_INTERVAL) {
-					try {
-						cache = new ResStatus(this.chain.getBestBlock().getNumber(),
-								this.chain.getTotalDifficulty().toByteArray(), this.chain.getBestBlockHash(),
-								this.genesisHash);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-				// udpate cache rebuild timestemp.
-				cacheTs = currTs;
-			}
-		}
-		cacheTs = currTs;
-		this.mgr.send(_nodeIdHashcode, cache);
+		this.mgr.send(
+			_nodeIdHashcode,
+            new ResStatus(this.chain.getBestBlock().getNumber(),
+			this.chain.getTotalDifficulty().toByteArray(),
+            this.chain.getBestBlockHash(),
+			this.genesisHash)
+        );
 	}
 }
