@@ -308,7 +308,7 @@
 		<exec executable="tar">
 			<arg line="-xf fastvm_v${version}.tar.gz -C native/linux" />
 		</exec>
-		<move file="native/linux/fastvm_v${version}" tofile="native/linux/fastvm" />
+		<move file="native/linux/fastvm_v${version}" tofile="native/linux/fastvm" overwrite="true" />
 
 		<exec executable="wget">
 			<arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${version}/solidity_v${version}.tar.gz" />
@@ -316,7 +316,7 @@
 		<exec executable="tar">
 			<arg line="-xf solidity_v${version}.tar.gz -C native/linux" />
 		</exec>
-		<move file="native/linux/solidity_v${version}" tofile="native/linux/solidity" />
+		<move file="native/linux/solidity_v${version}" tofile="native/linux/solidity" overwrite="true" />
 	</target>
 
 	<target name="clean">
