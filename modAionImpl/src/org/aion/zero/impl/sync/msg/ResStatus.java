@@ -93,6 +93,8 @@ public final class ResStatus extends Msg {
      */
     public byte[] getTotalDifficulty() { return this.totalDifficulty; }
 
+    public byte[] getGenesisHash() { return this.genesisHash; }
+
     public static ResStatus decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length < minLen)
             return null;
