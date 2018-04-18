@@ -10,8 +10,6 @@
 			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
 			<!--size of thread pool allocated for rpc requests-->
 			<threads>1</threads>
-			<!--enable web3 filters. some web3 clients depend on this and wont work as expected if turned off-->
-			<filters-enabled>true</filters-enabled>
 		</rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
 		<nrg-recommendation>

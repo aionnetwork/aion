@@ -160,13 +160,6 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(this.maxthread + "");
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("enable web3 filters. some web3 clients depend on this and wont work as expected if turned off");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("filters-enabled");
-            xmlWriter.writeCharacters(String.valueOf(this.filtersEnabled));
-            xmlWriter.writeEndElement();
-
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
