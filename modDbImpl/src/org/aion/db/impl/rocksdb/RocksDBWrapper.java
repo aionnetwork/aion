@@ -2,7 +2,6 @@ package org.aion.db.impl.rocksdb;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
-import org.iq80.leveldb.DBIterator;
 import org.rocksdb.*;
 
 import java.io.File;
@@ -237,6 +236,47 @@ public class RocksDBWrapper extends AbstractDB {
             db.delete(k);
         } catch (RocksDBException e) {
             LOG.error("Unable to delete key " + Arrays.toString(k) + ". " + e);
+        }
+    }
+
+    WriteBatch batch = null;
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        check(key);
+
+        check();
+
+        if (batch == null) {
+            batch = new WriteBatch();
+        }
+
+        try {
+            if (value == null) {
+                batch.delete(key);
+            } else {
+                batch.put(key, value);
+            }
+        } catch (RocksDBException e) {
+            LOG.error("Unable to add to batch operation on " + this.toString() + ".", e);
+        } finally {
+            // attempting to write directly since batch operation didn't work
+            put(key, value);
+            batch.close();
+            batch = null;
+        }
+    }
+
+    @Override
+    public void commitBatch() {
+        if (batch != null) {
+            try {
+                db.write(new WriteOptions(), batch);
+            } catch (RocksDBException e) {
+                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            }
+            batch.close();
+            batch = null;
         }
     }
 

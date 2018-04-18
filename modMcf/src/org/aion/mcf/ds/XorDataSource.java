@@ -110,4 +110,13 @@ public class XorDataSource implements IByteArrayKeyValueStore {
         return false;
     }
 
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void commitBatch() {
+        throw new UnsupportedOperationException();
+    }
 }
