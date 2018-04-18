@@ -41,8 +41,6 @@ public interface IP2pMgr {
 	 */
 	Map<Integer, INode> getActiveNodes();
 
-	INodeMgr getNodeMgr();
-
 	/**
 	 * @param _hs
 	 *            List<Handler>

@@ -55,7 +55,9 @@ public class P2pMgrTest {
         int port2 = 30304;
 
         // we want node 1 to connect to node 2
-        String[] nodes = new String[] { "p2p://" + id2 + "@" + ip + ":" + port2 };
+        String[] nodes = new String[] {
+                "p2p://" + id2 + "@" + ip + ":" + port2
+        };
 
         // to guarantee they don't receive the same port
         while (port2 == port1) {

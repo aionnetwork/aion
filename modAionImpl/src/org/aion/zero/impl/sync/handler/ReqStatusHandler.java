@@ -59,11 +59,11 @@ public final class ReqStatusHandler extends Handler {
 
 	private byte[] genesisHash;
 
-    private static final int UPDATE_INTERVAL = 500;
+    private final int UPDATE_INTERVAL = 500;
 
-    private ResStatus cache;
+    private volatile ResStatus cache;
 
-    private long cacheTs = 0;
+    private volatile long cacheTs = 0;
 
 	public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
 			final byte[] _genesisHash) {
@@ -72,32 +72,27 @@ public final class ReqStatusHandler extends Handler {
 		this.chain = _chain;
 		this.mgr = _mgr;
 		this.genesisHash = _genesisHash;
+		this.cache = new ResStatus(0, new byte[0], new byte[0], _genesisHash);
 	}
 
 	@Override
 	public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-        long currTs = System.currentTimeMillis();
 
-        // check if need rebuild cache.
-        if ((currTs - cacheTs) > UPDATE_INTERVAL) {
+	    long now = System.currentTimeMillis();
 
-            // prevent N rebuild within same interval.
-            synchronized (this) {
-                // cache maybe updated by one request. recheck if already updated.
-                if ((currTs - cacheTs) > UPDATE_INTERVAL) {
-                    try {
-                        cache = new ResStatus(this.chain.getBestBlock().getNumber(),
-                                this.chain.getTotalDifficulty().toByteArray(), this.chain.getBestBlockHash(),
-                                this.genesisHash);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+        if ((now - cacheTs) > this.UPDATE_INTERVAL) {
+            synchronized (cache) {
+                try {
+                    cache = new ResStatus(this.chain.getBestBlock().getNumber(),
+                            this.chain.getTotalDifficulty().toByteArray(), this.chain.getBestBlockHash(),
+                            this.genesisHash);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                // udpate cache rebuild timestemp.
-                cacheTs = currTs;
+                cacheTs = now;
             }
         }
-        cacheTs = currTs;
+
         this.mgr.send(_nodeIdHashcode, cache);
         this.log.debug("<req-status node={} return-blk={}>",
             _displayId,

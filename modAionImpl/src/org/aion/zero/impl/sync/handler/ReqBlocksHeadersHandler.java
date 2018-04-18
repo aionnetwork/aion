@@ -67,8 +67,6 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    //private final Map<Long, A0BlockHeader> cache = Collections.synchronizedMap(new LRUMap<>(1024));
-
     public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
         this.log = _log;
@@ -90,7 +88,6 @@ public final class ReqBlocksHeadersHandler extends Handler {
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, rbhs);
         } else {
-            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             this.log.error("<req-headers decode-error msg-bytes={} node={}>", _msgBytes == null ? 0 : _msgBytes.length,
                     _nodeIdHashcode);
         }
