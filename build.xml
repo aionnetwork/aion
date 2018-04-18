@@ -146,7 +146,7 @@
 
 	<target name="logenv">
 		<echo message="ANT_VERSION: ${ant.version}"/>
-		<echo message="JAVA_VERSION: ${ant.java.version}"/>
+		<echo message="JAVA_VERSION: ${java.version}"/>
 		<echo message="JAVA_HOME: ${java.home}"/>
 	</target>
 
