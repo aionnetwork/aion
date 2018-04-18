@@ -64,7 +64,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(1024));
+    private final Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(512));
 
     private final boolean isSyncOnlyNode;
 

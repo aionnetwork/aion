@@ -25,21 +25,12 @@
 
 package org.aion.p2p.impl;
 
-import org.aion.p2p.INode;
-import org.aion.p2p.INodeObserver;
 import org.aion.p2p.impl1.P2pMgr;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -64,7 +55,9 @@ public class P2pMgrTest {
         int port2 = 30304;
 
         // we want node 1 to connect to node 2
-        String[] nodes = new String[] { "p2p://" + id2 + "@" + ip + ":" + port2 };
+        String[] nodes = new String[] {
+                "p2p://" + id2 + "@" + ip + ":" + port2
+        };
 
         // to guarantee they don't receive the same port
         while (port2 == port1) {

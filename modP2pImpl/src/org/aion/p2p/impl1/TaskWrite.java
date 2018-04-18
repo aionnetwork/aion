@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author chris
@@ -74,7 +72,6 @@ public class TaskWrite implements Runnable {
         }
 
         try {
-            // channelBuffer.lock.tryLock(2, TimeUnit.MILLISECONDS);
             channelBuffer.lock.lock();
 
             /*
@@ -110,19 +107,14 @@ public class TaskWrite implements Runnable {
             } catch (IOException ex2) {
                 String reason = ex2.getMessage();
                 if (showLog) {
-                    System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + ">" + ex2.getMessage());
+                    System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + " err=" + ex2.getMessage() + ">");
                 }
                 if (reason.equals("Broken pipe".intern())) {
                     channelBuffer.isClosed.set(true);
                 }
-            } finally {
-                // channelBuffer.refreshHeader();
-                // channelBuffer.refreshBody();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            // channelBuffer.refreshHeader();
-            // channelBuffer.refreshBody();
         } finally {
             channelBuffer.lock.unlock();
         }

@@ -59,6 +59,12 @@ public final class ReqStatusHandler extends Handler {
 
 	private byte[] genesisHash;
 
+    private final int UPDATE_INTERVAL = 500;
+
+    private volatile ResStatus cache;
+
+    private volatile long cacheTs = 0;
+
 	public ReqStatusHandler(final Logger _log, final IAionBlockchain _chain, final IP2pMgr _mgr,
 			final byte[] _genesisHash) {
 		super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
@@ -66,20 +72,31 @@ public final class ReqStatusHandler extends Handler {
 		this.chain = _chain;
 		this.mgr = _mgr;
 		this.genesisHash = _genesisHash;
+		this.cache = new ResStatus(0, new byte[0], new byte[0], _genesisHash);
 	}
 
 	@Override
 	public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-		if (log.isDebugEnabled()) {
-			this.log.debug("<req-status node={}>", _displayId);
-		}
 
-		this.mgr.send(
-			_nodeIdHashcode,
-            new ResStatus(this.chain.getBestBlock().getNumber(),
-			this.chain.getTotalDifficulty().toByteArray(),
-            this.chain.getBestBlockHash(),
-			this.genesisHash)
+	    long now = System.currentTimeMillis();
+
+        if ((now - cacheTs) > this.UPDATE_INTERVAL) {
+            synchronized (cache) {
+                try {
+                    cache = new ResStatus(this.chain.getBestBlock().getNumber(),
+                            this.chain.getTotalDifficulty().toByteArray(), this.chain.getBestBlockHash(),
+                            this.genesisHash);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                cacheTs = now;
+            }
+        }
+
+        this.mgr.send(_nodeIdHashcode, cache);
+        this.log.debug("<req-status node={} return-blk={}>",
+            _displayId,
+            cache.getBestBlockNumber()
         );
 	}
 }

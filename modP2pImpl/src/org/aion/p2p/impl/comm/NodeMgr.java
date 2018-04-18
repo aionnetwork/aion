@@ -29,10 +29,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-import java.io.FileWriter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,43 +37,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class NodeMgr implements INodeMgr {
 
     private final static int TIMEOUT_INBOUND_NODES = 10000;
-    private static final String BASE_PATH = System.getProperty("user.dir");
-    private static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
 
     private final Set<String> seedIps = new HashSet<>();
-    private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
     private final BlockingQueue<Node> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> activeNodes = new ConcurrentHashMap<>();
 
-    // private volatile INodeObserver observer;
-
-    // public synchronized void registerNodeObserver(INodeObserver observer) {
-    // if (this.observer != null) {
-    // throw new IllegalStateException("cannot register multiple observers");
-    // }
-    // this.observer = observer;
-    // }
-
     public Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
-    }
-
-    public void dumpAllNodeInfo() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("   ==================== ALL PEERS METRIC ===========================\n");
-        List<Node> all = new ArrayList<>(allNodes.values());
-        all.sort((a, b) -> (int) (b.getBestBlockNumber() - a.getBestBlockNumber()));
-        int cnt = 0;
-        for (Node n : all) {
-            char isSeed = n.getIfFromBootList() ? 'Y' : 'N';
-            sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d PORT_CONN:%5d FC:%1d BB:%8d  \n", cnt,
-                    n.getIdShort(), isSeed, n.getIpStr(), n.getPort(), n.getConnectedPort(),
-                    n.peerMetric.metricFailedConn, n.getBestBlockNumber()));
-            cnt++;
-        }
-        System.out.println(sb.toString());
     }
 
     private final static char[] hexArray = "0123456789abcdef".toCharArray();
@@ -143,40 +111,12 @@ public class NodeMgr implements INodeMgr {
         return sb.toString();
     }
 
-    private void updateMetric(final Node _n) {
-        if (_n.hasFullInfo()) {
-            int fullHash = _n.getFullHash();
-            if (allNodes.containsKey(fullHash)) {
-                Node orig = allNodes.get(fullHash);
-
-                // pull out metric.
-                _n.peerMetric = orig.peerMetric;
-                _n.copyNodeStatus(orig);
-            }
-            allNodes.put(fullHash, _n);
-        }
-    }
-
-    public void updateAllNodesInfo(INode _n) {
-        Node n = (Node) _n;
-
-        if (n.hasFullInfo()) {
-            int fullHash = n.getFullHash();
-            if (allNodes.containsKey(fullHash)) {
-                Node orig = allNodes.get(fullHash);
-                // pull out metric.
-                orig.copyNodeStatus(n);
-            }
-        }
-    }
-
     /**
      * @param _n
      *            Node
      */
     public void tempNodesAdd(final Node _n) {
         if (!tempNodes.contains(_n)) {
-            updateMetric(_n);
             tempNodes.add(_n);
         }
     }
@@ -194,16 +134,14 @@ public class NodeMgr implements INodeMgr {
     }
 
     public void inboundNodeAdd(final Node _n) {
-        updateMetric(_n);
         inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
 
     public void addOutboundNode(final Node _n) {
-        updateMetric(_n);
         outboundNodes.put(_n.getIdHash(), _n);
     }
 
-    public synchronized Node tempNodesTake() throws InterruptedException {
+    public Node tempNodesTake() throws InterruptedException {
         return tempNodes.take();
     }
 
@@ -229,10 +167,6 @@ public class NodeMgr implements INodeMgr {
 
     public Node getOutboundNode(int k) {
         return outboundNodes.get(k);
-    }
-
-    public Map<Integer, Node> getNodes() {
-        return allNodes;
     }
 
     public Node allocNode(String ip, int p0, int p1) {
@@ -283,15 +217,11 @@ public class NodeMgr implements INodeMgr {
             node.setConnection("outbound");
             INode previous = activeNodes.put(_nodeIdHash, node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel(), "duplicated-outbound-vs-active");
             else {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
-
-            // if (this.observer != null)
-            // this.observer.newActiveNode(_nodeIdHash, node.getIp(),
-            // node.getPort());
         }
     }
 
@@ -310,7 +240,7 @@ public class NodeMgr implements INodeMgr {
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.put(node.getIdHash(), node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel(), "duplicated-inbound-vs-active");
             else {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
@@ -318,43 +248,25 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    public void rmMetricFailedNodes() {
-        {
-            Iterator nodesIt = tempNodes.iterator();
-            while (nodesIt.hasNext()) {
-                Node n = (Node) nodesIt.next();
-                if (n.peerMetric.shouldNotConn() && !n.getIfFromBootList())
-                    tempNodes.remove(n);
+    public void rmTimeOutInbound(final IP2pMgr _p2pMgr) {
+        Iterator inboundIt = inboundNodes.keySet().iterator();
+        while (inboundIt.hasNext()) {
+            int key = (int) inboundIt.next();
+            Node node = inboundNodes.get(key);
+            if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
+                _p2pMgr.closeSocket(node.getChannel(), "inbound-timeout ip=" + node.getIpStr());
+                inboundIt.remove();
             }
         }
     }
 
-    public void rmTimeOutInbound(IP2pMgr pmgr) {
-        {
-            Iterator inboundIt = inboundNodes.keySet().iterator();
-            while (inboundIt.hasNext()) {
-                int key = (int) inboundIt.next();
-                Node node = inboundNodes.get(key);
-                if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
-
-                    pmgr.closeSocket(node.getChannel());
-
-                    inboundIt.remove();
-
-                    if (pmgr.isShowLog())
-                        System.out.println("<p2p-clear inbound-timeout>");
-                }
-            }
-        }
-    }
-
-    public void rmTimeOutActives(IP2pMgr pmgr) {
+    public void rmTimeOutActives(IP2pMgr _p2pMgr) {
         long now = System.currentTimeMillis();
 
         OptionalDouble average = activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
-        if (pmgr.isShowLog()) {
+        if (_p2pMgr.isShowLog()) {
             System.out.printf("<p2p average-delay=%.0fms>\n", average.orElse(0));
         }
 
@@ -365,30 +277,21 @@ public class NodeMgr implements INodeMgr {
 
             if (now - node.getTimestamp() > timeout || !node.getChannel().isConnected()) {
 
-                pmgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel(), "active-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
                 activeIt.remove();
-                if (pmgr.isShowLog())
-                    System.out.println("<p2p-clear-active ip=" + node.getIpStr() + " node=" + node.getIdShort() + ">");
-
-                // if (this.observer != null)
-                // this.observer.removeActiveNode(key);
             }
         }
     }
 
-    public void dropActive(Integer nodeIdHash, IP2pMgr pmgr) {
+    public void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr) {
         Node node = activeNodes.remove(nodeIdHash);
-
-        // if we tried to drop a node that is already dropped
         if (node == null)
             return;
-
-        // this.observer.removeActiveNode(nodeIdHash);
-        pmgr.closeSocket(node.getChannel());
+        _p2pMgr.closeSocket(node.getChannel(), "drop-active node=" + node.getIdShort() + " ip=" + node.getIpStr());
     }
 
-    public void removeActive(Integer nodeIdHash, IP2pMgr pmgr) {
-        dropActive(nodeIdHash, pmgr);
+    public void removeActive(int nodeIdHash, final IP2pMgr _p2pMgr) {
+        dropActive(nodeIdHash, _p2pMgr);
     }
 
     /**
@@ -397,46 +300,14 @@ public class NodeMgr implements INodeMgr {
      */
     public void shutdown(final IP2pMgr _p2pMgr) {
         try {
-            activeNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
+            activeNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(), "p2p-shutdown"));
             activeNodes.clear();
-            outboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
+            outboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(),"p2p-shutdown"));
             outboundNodes.clear();
-            inboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
+            inboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(),"p2p-shutdown"));
             inboundNodes.clear();
         } catch (Exception e) {
 
-        }
-    }
-
-    public void persistNodes() {
-        XMLOutputFactory output = XMLOutputFactory.newInstance();
-        output.setProperty("escapeCharacters", false);
-        XMLStreamWriter sw = null;
-        try {
-            sw = output.createXMLStreamWriter(new FileWriter(PEER_LIST_FILE_PATH));
-            sw.writeStartDocument("utf-8", "1.0");
-            sw.writeCharacters("\r\n");
-            sw.writeStartElement("aion-peers");
-
-            for (Node node : allNodes.values()) {
-                sw.writeCharacters(node.toXML());
-            }
-
-            sw.writeCharacters("\r\n");
-            sw.writeEndElement();
-            sw.flush();
-            sw.close();
-
-        } catch (Exception e) {
-            System.out.println("<error on-write-peers-xml-to-file>");
-        } finally {
-            if (sw != null) {
-                try {
-                    sw.close();
-                } catch (XMLStreamException e) {
-                    System.out.println("<error on-close-stream-writer>");
-                }
-            }
         }
     }
 
