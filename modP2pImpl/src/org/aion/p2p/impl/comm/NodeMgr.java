@@ -29,10 +29,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-import java.io.FileWriter;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,11 +37,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class NodeMgr implements INodeMgr {
 
     private final static int TIMEOUT_INBOUND_NODES = 10000;
-    private static final String BASE_PATH = System.getProperty("user.dir");
-    private static final String PEER_LIST_FILE_PATH = BASE_PATH + "/config/peers.xml";
 
     private final Set<String> seedIps = new HashSet<>();
-    private final Map<Integer, Node> allNodes = new ConcurrentHashMap<>();
     private final BlockingQueue<Node> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, Node> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, Node> inboundNodes = new ConcurrentHashMap<>();
@@ -53,22 +46,6 @@ public class NodeMgr implements INodeMgr {
 
     public Map<Integer, Node> getOutboundNodes() {
         return outboundNodes;
-    }
-
-    public void dumpAllNodeInfo() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("   ==================== ALL PEERS METRIC ===========================\n");
-        List<Node> all = new ArrayList<>(allNodes.values());
-        all.sort((a, b) -> (int) (b.getBestBlockNumber() - a.getBestBlockNumber()));
-        int cnt = 0;
-        for (Node n : all) {
-            char isSeed = n.getIfFromBootList() ? 'Y' : 'N';
-            sb.append(String.format(" %3d ID:%6s SEED:%c IP:%15s PORT:%5d PORT_CONN:%5d FC:%1d BB:%8d  \n", cnt,
-                    n.getIdShort(), isSeed, n.getIpStr(), n.getPort(), n.getConnectedPort(),
-                    n.peerMetric.metricFailedConn, n.getBestBlockNumber()));
-            cnt++;
-        }
-        System.out.println(sb.toString());
     }
 
     private final static char[] hexArray = "0123456789abcdef".toCharArray();
@@ -134,40 +111,12 @@ public class NodeMgr implements INodeMgr {
         return sb.toString();
     }
 
-    private void updateMetric(final Node _n) {
-        if (_n.hasFullInfo()) {
-            int fullHash = _n.getFullHash();
-            if (allNodes.containsKey(fullHash)) {
-                Node orig = allNodes.get(fullHash);
-
-                // pull out metric.
-                _n.peerMetric = orig.peerMetric;
-                _n.copyNodeStatus(orig);
-            }
-            allNodes.put(fullHash, _n);
-        }
-    }
-
-    public void updateAllNodesInfo(INode _n) {
-        Node n = (Node) _n;
-
-        if (n.hasFullInfo()) {
-            int fullHash = n.getFullHash();
-            if (allNodes.containsKey(fullHash)) {
-                Node orig = allNodes.get(fullHash);
-                // pull out metric.
-                orig.copyNodeStatus(n);
-            }
-        }
-    }
-
     /**
      * @param _n
      *            Node
      */
     public void tempNodesAdd(final Node _n) {
         if (!tempNodes.contains(_n)) {
-            updateMetric(_n);
             tempNodes.add(_n);
         }
     }
@@ -185,16 +134,14 @@ public class NodeMgr implements INodeMgr {
     }
 
     public void inboundNodeAdd(final Node _n) {
-        updateMetric(_n);
         inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
 
     public void addOutboundNode(final Node _n) {
-        updateMetric(_n);
         outboundNodes.put(_n.getIdHash(), _n);
     }
 
-    public synchronized Node tempNodesTake() throws InterruptedException {
+    public Node tempNodesTake() throws InterruptedException {
         return tempNodes.take();
     }
 
@@ -220,10 +167,6 @@ public class NodeMgr implements INodeMgr {
 
     public Node getOutboundNode(int k) {
         return outboundNodes.get(k);
-    }
-
-    public Map<Integer, Node> getNodes() {
-        return allNodes;
     }
 
     public Node allocNode(String ip, int p0, int p1) {
@@ -396,38 +339,6 @@ public class NodeMgr implements INodeMgr {
             inboundNodes.clear();
         } catch (Exception e) {
 
-        }
-    }
-
-    public void persistNodes() {
-        XMLOutputFactory output = XMLOutputFactory.newInstance();
-        output.setProperty("escapeCharacters", false);
-        XMLStreamWriter sw = null;
-        try {
-            sw = output.createXMLStreamWriter(new FileWriter(PEER_LIST_FILE_PATH));
-            sw.writeStartDocument("utf-8", "1.0");
-            sw.writeCharacters("\r\n");
-            sw.writeStartElement("aion-peers");
-
-            for (Node node : allNodes.values()) {
-                sw.writeCharacters(node.toXML());
-            }
-
-            sw.writeCharacters("\r\n");
-            sw.writeEndElement();
-            sw.flush();
-            sw.close();
-
-        } catch (Exception e) {
-            System.out.println("<error on-write-peers-xml-to-file>");
-        } finally {
-            if (sw != null) {
-                try {
-                    sw.close();
-                } catch (XMLStreamException e) {
-                    System.out.println("<error on-close-stream-writer>");
-                }
-            }
         }
     }
 
