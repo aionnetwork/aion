@@ -33,7 +33,4 @@ public class SyncInfo {
     public long chainBestBlkNumber;
 
     public long networkBestBlkNumber;
-
-    public int blksImportMax;
-    
 }

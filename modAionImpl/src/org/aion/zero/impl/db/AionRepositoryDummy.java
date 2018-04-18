@@ -39,6 +39,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.core.AccountState;
 //import org.aion.types.vm.DataWord;
+import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.types.IAionBlock;
@@ -95,8 +96,11 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
                     accountState.setCodeHash(h256(contractDetails.getCode()));
                     worldState.put(hash, accountState);
                     if (logger.isDebugEnabled()) {
-                        logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]", Hex.toHexString(hash.getData()),
-                                accountState.getNonce(), accountState.getBalance(), contractDetails.getStorage());
+                        logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
+                                     Hex.toHexString(hash.getData()),
+                                     accountState.getNonce(),
+                                     accountState.getBalance(),
+                                     Hex.toHexString(contractDetails.getStorageHash()));
                     }
 
                 }
@@ -292,7 +296,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         if (details == null) {
             details = this.cfg.contractDetailsImpl();
         } else {
-            details = details.clone();
+            details = new ContractDetailsCacheImpl(details);
         }
 
         cacheAccounts.put(addr.toByteArrayWrapper(), account);

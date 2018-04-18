@@ -43,19 +43,26 @@ public class BlockConstants implements IBlockConstants {
      * The lower bound of difficulty, this value is currently set to 32 to
      * accomodate for single node testing.
      */
-    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(16);
+    private static final long MINIMUM_DIFFICULTY_LONG = 16;
+    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(MINIMUM_DIFFICULTY_LONG);
 
     /**
      * Divisor for the maximum increase or decrease in energyLimit from one
      * block to the next.
      */
-    private static final BigInteger ENERGY_LIMIT_DIVISOR = BigInteger.valueOf(1024);
-    private static final BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(2048);
+    private static final long ENERGY_LIMIT_DIVISOR_LONG = 1024;
+    private static final long DIFFICULTY_BOUND_DIVISOR_LONG = 2048;
+    private static final BigInteger ENERGY_LIMIT_DIVISOR = BigInteger.valueOf(ENERGY_LIMIT_DIVISOR_LONG);
+    private static final BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(DIFFICULTY_BOUND_DIVISOR_LONG);
 
     /**
      * The lowest possible value of energy, cannot be lower than this bound
+     *
+     * This value is derived from (at minimum) the ability to send 50
+     * Pure / Ambient-Cost transactions
      */
-    private static final BigInteger ENERGY_LOWER_BOUND = BigInteger.valueOf(5000);
+    private static final long ENERGY_LOWER_BOUND_LONG = 1050000;
+    private static final BigInteger ENERGY_LOWER_BOUND = BigInteger.valueOf(ENERGY_LOWER_BOUND_LONG);
 
     public static int DURATION_LIMIT = 8;
 
@@ -63,22 +70,26 @@ public class BlockConstants implements IBlockConstants {
      * Rewards not set yet, but this is the projected amount based on a 10
      * second block time
      */
-    private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
+    private static final BigInteger BLOCK_REWARD = new BigInteger("1497989283243310185");
 
     private static final int BLOCK_TIME_LOWER_BOUND = 5;
     private static final int BLOCK_TIME_UPPER_BOUND = 15;
 
     /**
      * Constants for ramp-up, the ramp-up function will apply within this range
-     * TODO: This will need to be revamped to actual values
      */
     private static final long RAMP_UP_LOWER_BOUND = 0;
     private static final long RAMP_UP_UPPER_BOUND = 259200; // 1 month
 
     /**
+     * Ramp-up initial parameter, this value is calculates based on the
+     * monetary policy paper, assuming:
+     */
+    private static final BigInteger RAMP_UP_START_VALUE = new BigInteger("748994641621655092");
+    private static final BigInteger RAMP_UP_END_VALUE = BLOCK_REWARD;
+
+    /**
      * Desired block time
-     * 
-     * @return
      */
     private static final long EXPECTED_BLOCK_TIME = 10;
 
@@ -106,8 +117,18 @@ public class BlockConstants implements IBlockConstants {
     }
 
     @Override
+    public long getEnergyDivisorLimitLong() {
+        return ENERGY_LIMIT_DIVISOR_LONG;
+    }
+
+    @Override
     public BigInteger getDifficultyBoundDivisor() {
         return DIFFICULTY_BOUND_DIVISOR;
+    }
+
+    @Override
+    public long getDifficultyBoundDivisorLong() {
+        return DIFFICULTY_BOUND_DIVISOR_LONG;
     }
 
     @Override
@@ -166,6 +187,10 @@ public class BlockConstants implements IBlockConstants {
      * The lower bound for energy calculations, energy should not go below this
      * value
      */
+    public long getEnergyLowerBoundLong() {
+        return ENERGY_LOWER_BOUND_LONG;
+    }
+
     public BigInteger getEnergyLowerBound() {
         return ENERGY_LOWER_BOUND;
     }
@@ -191,5 +216,15 @@ public class BlockConstants implements IBlockConstants {
      */
     public Address getTokenBridgingAddress() {
         return Address.ZERO_ADDRESS();
+    }
+
+    @Override
+    public BigInteger getRampUpStartValue() {
+        return RAMP_UP_START_VALUE;
+    }
+
+    @Override
+    public BigInteger getRampUpEndValue() {
+        return RAMP_UP_END_VALUE;
     }
 }

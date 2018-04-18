@@ -42,8 +42,11 @@ import org.h2.mvstore.MVStore;
 import org.h2.mvstore.MVStoreTool;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /*
  * IMPORTANT IMPLEMENTATION NOTE:
@@ -111,83 +114,58 @@ public class H2MVMap extends AbstractDB {
 
     // IDatabase functionality -----------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean open() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         if (isOpen()) {
-            // releasing write lock and return status
-            lock.writeLock().unlock();
             return true;
         }
 
+        LOG.debug("init database {}", this.toString());
+
+        File f = new File(path);
+
+        // make directory for db file if none exists
+        if (!f.exists()) {
+            if (!f.mkdirs()) {
+                LOG.error("Failed to initialize the database storage for " + this.toString() + ".");
+                return false;
+            }
+        }
+
         try {
-            LOG.debug("init database {}", this.toString());
+            // cleanup artifacts of ungraceful compacting-process shutdown
+            MVStoreTool.compactCleanUp(dbFilePath);
 
-            File f = new File(path);
+            store = setupMVStoreBuilder().open();
 
-            // make directory for db file if none exists
-            if (!f.exists()) {
-                if (!f.mkdirs()) {
-                    LOG.error("Failed to initialize the database storage for " + this.toString() + ".");
-                    // releasing write lock and return status
-                    lock.writeLock().unlock();
-                    return false;
-                }
+            if (store != null) {
+                mvStoreFileRef = store.getFileStore();
+                map = store.openMap(name);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + ".");
+                return false;
+            }
+        } catch (Exception e) {
+            if (e instanceof NullPointerException) {
+                LOG.error("Failed to open the database " + this.toString()
+                        + ". A probable cause is that the H2 database cannot access the file path.", e);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
             }
 
-            try {
-                // cleanup artifacts of ungraceful compacting-process shutdown
-                MVStoreTool.compactCleanUp(dbFilePath);
-
-                store = setupMVStoreBuilder().open();
-
-                if (store != null) {
-                    mvStoreFileRef = store.getFileStore();
-                    map = store.openMap(name);
-                } else {
-                    LOG.error("Failed to open the database " + this.toString() + ".");
-                    // releasing write lock and return status
-                    lock.writeLock().unlock();
-                    return false;
-                }
-            } catch (Exception e) {
-                if (e instanceof NullPointerException) {
-                    LOG.error("Failed to open the database " + this.toString()
-                            + ". A probable cause is that the H2 database cannot access the file path.", e);
-                } else {
-                    LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
-                }
-
-                // close the connection and cleanup if needed
-                close();
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+            // close the connection and cleanup if needed
+            close();
         }
 
         return isOpen();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void close() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         // do nothing if already closed
         if (store == null) {
             // but ensure the map is also null
             map = null;
-            // releasing write lock
-            lock.writeLock().unlock();
             return;
         }
 
@@ -205,65 +183,29 @@ public class H2MVMap extends AbstractDB {
             // ensuring the store is null after close was called
             store = null;
             map = null; // MVMap automatically closed upon MVStore closing
-            // releasing write lock
-            lock.writeLock().unlock();
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isOpen() {
-        // acquire read lock
-        lock.readLock().lock();
-
-        // map is only null on successful close
-        boolean open = map != null;
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return open;
+        return map != null;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isCreatedOnDisk() {
-        // acquire read lock
-        lock.readLock().lock();
-
         // since this is a single-file db, the file defined by "path" should exist on a
         // successful call to open()
-        boolean onDisk = new File(dbFilePath).exists();
-
-        // releasing read lock
-        lock.readLock().unlock();
-
-        return onDisk;
+        return new File(dbFilePath).exists();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public long approximateSize() {
-        // acquire read lock
-        lock.readLock().lock();
-
         long size = -1L;
 
-        try {
-            check();
+        check();
 
-            if (this.mvStoreFileRef != null) {
-                size = this.mvStoreFileRef.size();
-            }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+        if (this.mvStoreFileRef != null) {
+            size = this.mvStoreFileRef.size();
         }
 
         return size;
@@ -271,105 +213,59 @@ public class H2MVMap extends AbstractDB {
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isEmpty() {
-        // acquire read lock
-        lock.readLock().lock();
-
         boolean status = true;
 
-        try {
-            // this runtime exception should not be caught here
-            check();
+        // this runtime exception should not be caught here
+        check();
 
-            try {
-                status = map.isEmpty();
-            } catch (Exception e) {
-                LOG.error("Unable to extract information from database " + this.toString() + ".", e);
-            }
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
+        try {
+            status = map.isEmpty();
+        } catch (Exception e) {
+            LOG.error("Unable to extract information from database " + this.toString() + ".", e);
         }
 
         return status;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Set<byte[]> keys() {
-        // acquire read lock
-        lock.readLock().lock();
 
         Set<byte[]> keys = new HashSet<>();
 
-        try {
-            check();
+        check();
 
-            keys.addAll(map.keySet());
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
+        keys.addAll(map.keySet());
 
         return keys;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public byte[] getInternal(byte[] k) {
         return map.get(k);
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void put(byte[] k, byte[] v) {
         check(k);
 
-        // acquire write lock
-        lock.writeLock().lock();
+        check();
 
-        try {
-            check();
-
-            if (v == null) {
-                map.remove(k);
-            } else {
-                map.put(k, v);
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        if (v == null) {
+            map.remove(k);
+        } else {
+            map.put(k, v);
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public void delete(byte[] k) {
         check(k);
 
-        // acquire write lock
-        lock.writeLock().lock();
+        check();
 
-        try {
-            check();
-
-            map.remove(k);
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
-        }
+        map.remove(k);
     }
 
     /**
@@ -391,68 +287,57 @@ public class H2MVMap extends AbstractDB {
     public void putBatch(Map<byte[], byte[]> inputMap) {
         check(inputMap.keySet());
 
-        // acquire write lock
-        lock.writeLock().lock();
+        // this runtime exception should not be caught here
+        check();
 
         try {
-            // this runtime exception should not be caught here
-            check();
+            // doesn't actually have functionality for batch operations
+            for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
+                byte[] key = e.getKey();
+                byte[] value = e.getValue();
 
-            try {
-                // doesn't actually have functionality for batch operations
-                for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
-                    byte[] key = e.getKey();
-                    byte[] value = e.getValue();
-
-                    if (value == null) {
-                        map.remove(key);
-                    } else {
-                        map.put(key, value);
-                    }
+                if (value == null) {
+                    map.remove(key);
+                } else {
+                    map.put(key, value);
                 }
-            } catch (Exception e) {
-                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
             }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        } catch (Exception e) {
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
         }
     }
 
-    /**
-     * @inheritDoc
-     */
+    @Override
+    public void putToBatch(byte[] k, byte[] v) {
+        // same as put since batch operations are not supported
+        put(k, v);
+    }
+
+    @Override
+    public void commitBatch() {
+        // nothing to do since batch operations are not supported
+    }
+
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
         check(keys);
 
-        // acquire write lock
-        lock.writeLock().lock();
+        // this runtime exception should not be caught here
+        check();
 
         try {
-            // this runtime exception should not be caught here
-            check();
-
-            try {
-                for (byte[] k : keys) {
-                    // can handle null keys correctly
-                    map.remove(k);
-                }
-            } catch (Exception e) {
-                LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
+            for (byte[] k : keys) {
+                // can handle null keys correctly
+                map.remove(k);
             }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+        } catch (Exception e) {
+            LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);
         }
     }
 
     // AbstractDB functionality ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        // acquire write lock
-        lock.writeLock().lock();
-
         boolean success = false;
 
         try {
@@ -470,9 +355,6 @@ public class H2MVMap extends AbstractDB {
             success = true;
         } catch (Exception e) {
             LOG.error("Unable to commit heap cache to " + this.toString() + ".", e);
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
         }
 
         return success;
@@ -484,28 +366,20 @@ public class H2MVMap extends AbstractDB {
      * file. Changes are flushed to the file, and old chunks are overwritten.
      */
     public void compact() {
-        // acquire write lock
-        lock.writeLock().lock();
-
         LOG.info("Compacting " + this.toString() + ".");
 
-        try {
-            store.setRetentionTime(0);
+        store.setRetentionTime(0);
+
+        // old implementation with time limit
+        // long start = System.nanoTime();
+        while (store.compact(95, 16 * 1024 * 1024)) {
+            store.sync();
+            store.compactMoveChunks(95, 16 * 1024 * 1024);
 
             // old implementation with time limit
-            // long start = System.nanoTime();
-            while (store.compact(95, 16 * 1024 * 1024)) {
-                store.sync();
-                store.compactMoveChunks(95, 16 * 1024 * 1024);
-
-                // old implementation with time limit
-                // maxCompactTime: the maximum time in milliseconds to compact
-                // long time = System.nanoTime() - start;
-                // if (time > TimeUnit.MILLISECONDS.toNanos(maxCompactTime)) { break; }
-            }
-        } finally {
-            // releasing write lock
-            lock.writeLock().unlock();
+            // maxCompactTime: the maximum time in milliseconds to compact
+            // long time = System.nanoTime() - start;
+            // if (time > TimeUnit.MILLISECONDS.toNanos(maxCompactTime)) { break; }
         }
     }
 

@@ -38,15 +38,15 @@ import java.io.Writer;
  */
 public final class CfgSync {
 
-    private int blocksImportMax;
-
     private int blocksQueueMax;
 
     private boolean showStatus;
 
+    private static int BLOCKS_QUEUE_MAX = 32;
+
     public CfgSync() {
-        this.blocksImportMax = 192;
-        this.blocksQueueMax = 2000;
+        this.blocksQueueMax = BLOCKS_QUEUE_MAX;
+
         this.showStatus = false;
     }
 
@@ -58,9 +58,6 @@ public final class CfgSync {
             case XMLStreamReader.START_ELEMENT:
                 String elementName = sr.getLocalName().toLowerCase();
                 switch (elementName) {
-                case "blocks-import-max":
-                    this.blocksImportMax = Integer.parseInt(Cfg.readValue(sr));
-                    break;
                 case "blocks-queue-max":
                     this.blocksQueueMax = Integer.parseInt(Cfg.readValue(sr));
                     break;
@@ -90,16 +87,10 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("sync");
 
-            // sub-element blocks-import-max
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("blocks-import-max");
-            xmlWriter.writeCharacters(this.getBlocksImportMax() + "");
-            xmlWriter.writeEndElement();
-
             // sub-element blocks-queue-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-queue-max");
-            xmlWriter.writeCharacters(this.getBlocksQueueMax() + "");
+            xmlWriter.writeCharacters(BLOCKS_QUEUE_MAX + "");
             xmlWriter.writeEndElement();
 
             // sub-element show-status
@@ -121,10 +112,6 @@ public final class CfgSync {
         } catch (IOException | XMLStreamException e) {
             return "";
         }
-    }
-
-    public int getBlocksImportMax() {
-        return this.blocksImportMax;
     }
 
     public int getBlocksQueueMax() {

@@ -38,15 +38,14 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.h2.store.fs.FileUtils;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Common functionality for database implementations.
@@ -58,10 +57,8 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
-    protected final ReadWriteLock lock = new ReentrantReadWriteLock();
-
     protected static final int DEFAULT_CACHE_SIZE_BYTES = 128 * 1024 * 1024; // 128mb
-    protected static final int DEFAULT_WRITE_BUFFER_SIZE_BYTES = 10 * 1024 * 1024; // 10mb
+    protected static final int DEFAULT_WRITE_BUFFER_SIZE_BYTES = 16 * 1024 * 1024; // 16mb
 
     protected final String name;
     protected String path = null;
@@ -88,9 +85,6 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
                 ",compression=" + (enableDbCompression ? "ON" : "OFF") + ">"; //
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean commit() {
         // not implemented since we always commit the changes to the database for this implementation
@@ -102,17 +96,24 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
         LOG.warn("Compact not supported by " + this.toString() + ".");
     }
 
-    /**
-     * @inheritDoc
-     */
+    @Override
+    public void drop() {
+        close();
+
+        try (Stream<Path> stream = Files.walk(new File(path).toPath())) {
+            stream.map(Path::toFile).forEach(File::delete);
+        } catch (Exception e) {
+            LOG.error("Unable to delete path due to: ", e);
+        }
+
+        open();
+    }
+
     @Override
     public Optional<String> getName() {
         return Optional.ofNullable(this.name);
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Optional<String> getPath() {
         return Optional.ofNullable(this.path);
@@ -135,7 +136,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * Checks that the given key is not null.
      * Throws a {@link IllegalArgumentException} if the key is null.
      */
-    protected static void check(byte[] k) {
+    public static void check(byte[] k) {
         if (k == null) {
             throw new IllegalArgumentException("The database does not accept null keys.");
         }
@@ -145,32 +146,23 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * Checks that the given collection of keys does not contain null values.
      * Throws a {@link IllegalArgumentException} if a null key is present.
      */
-    protected static void check(Collection<byte[]> keys) {
+    public static void check(Collection<byte[]> keys) {
         if (keys.contains(null)) {
             throw new IllegalArgumentException("The database does not accept null keys.");
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isClosed() {
         return !isOpen();
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isAutoCommitEnabled() {
         // autocommit is always enabled when not overwritten by the class
         return true;
     }
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public boolean isPersistent() {
         // always persistent when not overwritten by the class
@@ -186,14 +178,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      */
     @Override
     public boolean isLocked() {
-        // being able to acquire a write lock means that the resource is not locked
-        // only one write lock can be taken at a time, also excluding any concurrent read locks
-        if (lock.writeLock().tryLock()) {
-            lock.writeLock().unlock();
-            return false;
-        } else {
-            return true;
-        }
+        return false;
     }
 
     /**
@@ -203,26 +188,13 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
 
     // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
-    /**
-     * @inheritDoc
-     */
     @Override
     public Optional<byte[]> get(byte[] k) {
         check(k);
 
-        // acquire read lock
-        lock.readLock().lock();
+        check();
 
-        byte[] v;
-
-        try {
-            check();
-
-            v = getInternal(k);
-        } finally {
-            // releasing read lock
-            lock.readLock().unlock();
-        }
+        byte[] v = getInternal(k);
 
         return Optional.ofNullable(v);
     }
@@ -235,4 +207,5 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * @return the value stored in the database for the give key.
      */
     protected abstract byte[] getInternal(byte[] k);
+
 }

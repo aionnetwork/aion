@@ -67,13 +67,7 @@ public interface IContractDetails<DW> {
 
     byte[] getEncoded();
 
-    int getStorageSize();
-
-    Set<DW> getStorageKeys();
-
     Map<DW, DW> getStorage(Collection<DW> keys);
-
-    Map<DW, DW> getStorage();
 
     void setStorage(List<DW> storageKeys, List<DW> storageValues);
 
@@ -82,8 +76,6 @@ public interface IContractDetails<DW> {
     Address getAddress();
 
     void setAddress(Address address);
-
-    IContractDetails<DW> clone();
 
     String toString();
 

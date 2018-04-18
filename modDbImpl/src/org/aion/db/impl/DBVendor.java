@@ -34,7 +34,7 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
-//import org.aion.mcf.db.AbstractRepository;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 import java.util.List;
 import java.util.Map;
@@ -43,22 +43,27 @@ import java.util.concurrent.ConcurrentHashMap;
 // @ThreadSafe
 public enum DBVendor {
 
-    UNKNOWN("unknown", false),
-    LEVELDB("leveldb", true),
-    H2("h2", true),
+    /** Used in correlation with implementations of {@link IDriver}. */
+    UNKNOWN("unknown", false), //
+    /** Using an instance of {@link org.aion.db.impl.leveldb.LevelDB}. */
+    LEVELDB("leveldb", true), //
+    /** Using an instance of {@link RocksDBWrapper}. */
+    ROCKSDB("rocksdb", true),
+    /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
+    H2("h2", true), //
+    /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
     MOCKDB("mockdb", false);
-    
+
     private static final Map<String, DBVendor> stringToTypeMap = new ConcurrentHashMap<>();
-    
-    static 
-    {
+
+    static {
         for (DBVendor type : DBVendor.values()) {
-           stringToTypeMap.put(type.value, type);
+            stringToTypeMap.put(type.value, type);
         }
     }
-    
+
     /* map implemented using concurrent hash map */
-    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, H2, MOCKDB);
+    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
 
     private final String value;
     private final boolean persistence;
@@ -69,26 +74,21 @@ public enum DBVendor {
     }
 
     // public interface
-    public static DBVendor fromString(String s) 
-    {
-        if (s == null) return DBVendor.UNKNOWN;
-        
+    public static DBVendor fromString(String s) {
+        if (s == null) { return DBVendor.UNKNOWN; }
+
         DBVendor type = stringToTypeMap.get(s);
-        if (type == null) 
-            return DBVendor.UNKNOWN;
-        
+        if (type == null) { return DBVendor.UNKNOWN; }
+
         return type;
     }
-    
-    
+
     public String toValue() {
         return value;
     }
 
     /**
-     * Check whether the DB provided by the vendor is intended to be persistent,
-     * this is mainly used by {@link AbstractRepository} to check whether
-     * folders should be created for the desired database files
+     * Check whether the DB provided by the vendor is intended to be persistent.
      *
      * @return {@code true} if the DB provider is intended to be persistent
      */

@@ -23,9 +23,10 @@
  ******************************************************************************/
 package org.aion.crypto.ed25519;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.base.util.NativeLoader;
+import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.libsodium.jni.NaCl;
@@ -33,7 +34,7 @@ import org.libsodium.jni.Sodium;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.nio.ByteBuffer;
 
 /**
  * ED25519 key implementation based on libsodium.
@@ -45,6 +46,14 @@ public class ECKeyEd25519 implements ECKey {
     protected static int PUBKEY_BYTES;
     protected static int SECKEY_BYTES;
     protected static int SIG_BYTES;
+
+    /**
+     * Indicates the first type of accounts that we have a normal
+     * account, this is shared by both regular and contract accounts
+     */
+    private static final byte DEFAULT_ACCOUNT_ID = ByteUtil.hexStringToBytes("0xA0")[0];
+
+    private final byte[] address;
 
     static {
         NativeLoader.loadLibrary("sodium");
@@ -60,12 +69,14 @@ public class ECKeyEd25519 implements ECKey {
     public ECKeyEd25519(byte[] pk, byte[] sk) {
         this.pk = pk;
         this.sk = sk;
+        this.address = computeAddress(pk);
     }
 
     public ECKeyEd25519() {
         pk = new byte[PUBKEY_BYTES];
         sk = new byte[SECKEY_BYTES];
         Sodium.crypto_sign_ed25519_keypair(pk, sk);
+        this.address = computeAddress(pk);
     }
 
     public ECKey fromPrivate(BigInteger privKey) {
@@ -83,12 +94,18 @@ public class ECKeyEd25519 implements ECKey {
         return new ECKeyEd25519(pk, sk);
     }
 
+    /**
+     * <p>Modified address for Q2 testNet, this variant will have
+     * one byte reserved for further address space modifications,
+     * while the remaining 31-bytes contain a hash[1:] of the PK where
+     * [1:] denotes all but the first byte</p>
+     */
     public byte[] computeAddress(byte[] pubBytes) {
-        return pubBytes;
+        return AddressSpecs.computeA0Address(pubBytes);
     }
 
     public byte[] getAddress() {
-        return computeAddress(pk);
+        return this.address;
     }
 
     public byte[] getPubKey() {

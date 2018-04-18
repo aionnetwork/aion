@@ -82,6 +82,8 @@
                 <pathelement location="${dir.lib}/libJson.jar"/>
                 <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar"/>
                 <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
+                <pathelement location="${dir.lib}/guava-19.0.jar" />
+                <pathelement location="${dir.lib}/nanohttpd-2.3.1-with-deps.jar" />
             </modulepath>
         </javac>
 

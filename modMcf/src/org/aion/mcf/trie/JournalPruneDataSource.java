@@ -233,6 +233,16 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
     }
 
     @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void commitBatch() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void deleteBatch(Collection<byte[]> keys) {
         throw new UnsupportedOperationException();
     }

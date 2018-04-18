@@ -38,5 +38,5 @@ import org.aion.mcf.types.AbstractBlockHeader;
  */
 @FunctionalInterface
 public interface IDifficultyCalculator {
-    BigInteger calculateDifficulty(AbstractBlockHeader current, AbstractBlockHeader parent);
+    BigInteger calculateDifficulty(AbstractBlockHeader current, AbstractBlockHeader dependency);
 }

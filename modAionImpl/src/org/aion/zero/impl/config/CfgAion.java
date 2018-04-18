@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.xml.stream.*;
 import org.aion.mcf.config.*;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
 
@@ -58,6 +59,7 @@ public final class CfgAion extends Cfg {
         this.db = new CfgDb();
         this.log = new CfgLog();
         this.tx = new CfgTx();
+        this.reports = new CfgReports();
     }
 
     private static class CfgAionHolder {
@@ -70,7 +72,19 @@ public final class CfgAion extends Cfg {
 
     @Override
     public void setGenesis() {
-        this.genesis = GenesisBlockLoader.loadJSON(GENESIS_FILE_PATH);
+        try {
+            this.genesis = GenesisBlockLoader.loadJSON(GENESIS_FILE_PATH);
+        } catch (IOException | HeaderStructureException e) {
+            System.out.println(String.format("Genesis load exception %s", e.getMessage()));
+            System.out.println("defaulting to default AionGenesis configuration");
+            try {
+                this.genesis = (new AionGenesis.Builder()).build();
+            } catch (HeaderStructureException e2) {
+                // if this fails, it means our DEFAULT genesis violates header rules
+                // this is catastrophic
+                throw new RuntimeException(e2);
+            }
+        }
     }
 
     public CfgConsensusPow getConsensus() {
@@ -188,6 +202,9 @@ public final class CfgAion extends Cfg {
                     case "tx":
                         this.tx.fromXML(sr);
                         break;
+                    case "reports":
+                        this.reports.fromXML(sr);
+                        break;
                     default:
                         skipElement(sr);
                         break;
@@ -289,6 +306,7 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getDb().toXML());
             sw.writeCharacters(this.getLog().toXML());
             sw.writeCharacters(this.getTx().toXML());
+            sw.writeCharacters(this.getReports().toXML());
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();

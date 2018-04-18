@@ -24,26 +24,27 @@
 
 package org.aion.zero.impl.types;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.rlp.RLP;
-import org.aion.rlp.RLPElement;
-import org.aion.rlp.RLPList;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.IAionBlock;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
+import org.aion.rlp.RLPList;
+import org.aion.zero.exceptions.HeaderStructureException;
+import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
+
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -54,7 +55,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
 
     /* Private */
     private byte[] rlpEncoded;
-    private boolean parsed = false;
+    private volatile boolean parsed = false;
 
     private Trie txsState;
 
@@ -72,10 +73,15 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     }
 
     public AionBlock(byte[] rawData) {
-        LOG.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
     }
 
+    /**
+     * All construction using this codepath leads from DB queries or creation of
+     * new blocks
+     *
+     * @implNote do not use this construction path for unsafe sources
+     */
     public AionBlock(A0BlockHeader header, List<AionTransaction> transactionsList) {
         this(header.getParentHash(), header.getCoinbase(), header.getLogsBloom(), header.getDifficulty(),
                 header.getNumber(), header.getTimestamp(), header.getExtraData(), header.getNonce(),
@@ -89,42 +95,74 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
             long energyLimit) {
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
-        builder.withParentHash(parentHash).withCoinbase(coinbase).withLogsBloom(logsBloom).withDifficulty(difficulty)
-                .withNumber(number).withTimestamp(timestamp).withExtraData(extraData).withNonce(nonce)
-                .withReceiptTrieRoot(receiptsRoot).withTxTrieRoot(transactionsRoot).withStateRoot(stateRoot)
-                .withSolution(solutions).withEnergyConsumed(energyConsumed).withEnergyLimit(energyLimit);
+
+        try {
+            builder.withParentHash(parentHash)
+                    .withCoinbase(coinbase)
+                    .withLogsBloom(logsBloom)
+                    .withDifficulty(difficulty)
+                    .withNumber(number)
+                    .withTimestamp(timestamp)
+                    .withExtraData(extraData)
+                    .withNonce(nonce)
+                    .withReceiptTrieRoot(receiptsRoot)
+                    .withTxTrieRoot(transactionsRoot)
+                    .withStateRoot(stateRoot)
+                    .withSolution(solutions)
+                    .withEnergyConsumed(energyConsumed)
+                    .withEnergyLimit(energyLimit);
+        } catch (HeaderStructureException e) {
+            throw new RuntimeException(e);
+        }
+
         this.header = builder.build();
         this.transactionsList = transactionsList == null ? new CopyOnWriteArrayList<>() : transactionsList;
         this.parsed = true;
     }
 
+    /**
+     * Constructor used in genesis creation, note that although genesis does check
+     * whether the fields are correct, we emit a checked exception if in some
+     * unforseen circumstances we deem the fields as incorrect
+     */
     protected AionBlock(byte[] parentHash, Address coinbase, byte[] logsBloom, byte[] difficulty, long number,
-            long timestamp, byte[] extraData, byte[] nonce, long energyLimit) {
+            long timestamp, byte[] extraData, byte[] nonce, long energyLimit) throws HeaderStructureException {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
-        builder.withParentHash(parentHash).withCoinbase(coinbase).withLogsBloom(logsBloom).withDifficulty(difficulty)
-                .withNumber(number).withTimestamp(timestamp).withExtraData(extraData).withNonce(nonce)
+        builder.withParentHash(parentHash)
+                .withCoinbase(coinbase)
+                .withLogsBloom(logsBloom)
+                .withDifficulty(difficulty)
+                .withNumber(number)
+                .withTimestamp(timestamp)
+                .withExtraData(extraData)
+                .withNonce(nonce)
                 .withEnergyLimit(energyLimit);
         this.header = builder.build();
         this.parsed = true;
     }
 
-    public synchronized void parseRLP() {
-        if (parsed) {
+    public void parseRLP() {
+        if (this.parsed) {
             return;
         }
 
-        RLPList params = RLP.decode2(rlpEncoded);
-        RLPList block = (RLPList) params.get(0);
+        synchronized (this) {
+            if (this.parsed)
+                return;
+            
+            RLPList params = RLP.decode2(rlpEncoded);
+            RLPList block = (RLPList) params.get(0);
 
-        // Parse Header
-        RLPList header = (RLPList) block.get(0);
-        this.header = new A0BlockHeader(header);
+            // Parse Header
+            RLPList header = (RLPList) block.get(0);
+            this.header = new A0BlockHeader(header);
 
-        // Parse Transactions
-        RLPList txTransactions = (RLPList) block.get(1);
-        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
+            // Parse Transactions
+            RLPList txTransactions = (RLPList) block.get(1);
+            this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
 
-        this.parsed = true;
+            this.parsed = true;
+        }
     }
 
     public int size() {
@@ -192,8 +230,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     public BigInteger getCumulativeDifficulty() {
         // TODO: currently returning incorrect total difficulty
         parseRLP();
-        BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
-        return calcDifficulty;
+        return new BigInteger(1, this.header.getDifficulty());
     }
 
     public long getTimestamp() {

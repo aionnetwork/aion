@@ -38,7 +38,7 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class HdlrZmq implements IHdlr {
 
@@ -54,6 +54,10 @@ public class HdlrZmq implements IHdlr {
         this.api = api;
 
         LOGGER.info("AionAPI Implementation Initiated");
+    }
+
+    public void shutDown() {
+        api.shutDown();
     }
 
     public byte[] process(byte[] request, byte[] socketId) {
@@ -80,26 +84,22 @@ public class HdlrZmq implements IHdlr {
             // TODO Auto-generated catch block
             LOGGER.error("zmq takeTxWait failed! " + e.getMessage());
         }
-        Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
-        while (entry == null) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                LOGGER.error("HdlrZmq.getTxWait exception " + e.getMessage());
-            }
+        Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry = null;
+        if (txWait != null) {
             entry = this.api.getMsgIdMapping().get(txWait.getTxHash());
         }
 
-        this.api.getQueue().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
-                txWait.getState(), txWait.getTxResult()));
+        if (entry != null) {
+            this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
+                    txWait.getState(), txWait.getTxResult(), txWait.getTxReceipt().getError()));
 
-        // INCLUDED(3);
-        if (txWait.getState() == 1 || txWait.getState() == 2) {
-            this.api.getPendingReceipts().put(txWait.getTxHash(), txWait.getTxReceipt());
-        } else {
-            this.api.getPendingReceipts().remove(txWait.getTxHash());
-            this.api.getMsgIdMapping().remove(txWait.getTxHash());
+            // INCLUDED(3);
+            if (txWait.getState() == 1 || txWait.getState() == 2) {
+                this.api.getPendingReceipts().put(txWait.getTxHash(), txWait.getTxReceipt());
+            } else {
+                this.api.getPendingReceipts().remove(txWait.getTxHash());
+                this.api.getMsgIdMapping().remove(txWait.getTxHash());
+            }
         }
     }
 
@@ -107,16 +107,16 @@ public class HdlrZmq implements IHdlr {
         return this.api.getFilter();
     }
 
-    public LinkedBlockingQueue<TxPendingStatus> getTxStatusQueue() {
-        return this.api.getQueue();
+    public BlockingQueue<TxPendingStatus> getTxStatusQueue() {
+        return this.api.getPendingStatus();
     }
 
-    public byte[] toRspMsg(byte[] msgHash, int txCode) {
-        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash);
+    public byte[] toRspMsg(byte[] msgHash, int txCode, String error) {
+        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes());
     }
 
-    public byte[] toRspMsg(byte[] msgHash, int txCode, byte[] result) {
-        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, result);
+    public byte[] toRspMsg(byte[] msgHash, int txCode, String error, byte[] result) {
+        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes(), result);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class HdlrZmq implements IHdlr {
     }
 
     public void shutdown() {
-        this.getTxStatusQueue().add(new TxPendingStatus(null, null, null, 0, null));
-        this.api.txWait.add(new TxWaitingMappingUpdate(null, 0, null));
+        this.getTxStatusQueue().add(new TxPendingStatus(null, null, null, 0, null, ""));
+        this.api.getTxWait().add(new TxWaitingMappingUpdate(null, 0, null));
     }
 }

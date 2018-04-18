@@ -24,6 +24,7 @@
 		<pathelement location="${dir.mod}/modLogger.jar" />
 		<pathelement location="${dir.mod}/modAionBase.jar" />
 		<pathelement location="${dir.lib}/leveldbjni-all-1.18.3.jar" />
+		<pathelement location="${dir.lib}/rocksdbjni-5.11.3.jar" />
 		<pathelement location="${dir.lib}/h2-mvstore-1.4.196.jar" />
 	</path>
 

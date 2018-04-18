@@ -51,7 +51,7 @@ public interface IAionChain extends IChainInstancePOW, QueryInterface {
 
     AionTransaction createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data);
 
-    Future<List<AionTransaction>> submitTransaction(AionTransaction transaction);
+    void broadcastTransaction(AionTransaction transaction);
 
     AionTxReceipt callConstant(AionTransaction tx, IAionBlock block);
 

@@ -55,4 +55,5 @@ public abstract class Handler {
      */
     public abstract void receive(int _id, String _displayId, final byte[] _msg);
 
+    public void shutDown() {}
 }

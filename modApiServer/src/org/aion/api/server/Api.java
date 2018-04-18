@@ -35,7 +35,7 @@ import org.aion.log.LogEnum;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
-import org.aion.zero.impl.blockchain.NonceMgr;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.mcf.types.AbstractBlock;
 import org.slf4j.Logger;
 
@@ -50,28 +50,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
     private final Compiler solc = Compiler.getInstance();
-    protected final NonceMgr nm = NonceMgr.inst();
-
-    public long parseBnOrId(String _bnOrId) {
-        if ("earliest".equalsIgnoreCase(_bnOrId)) {
-            return 0;
-        } else if ("latest".equalsIgnoreCase(_bnOrId)) {
-            return getBestBlock().getNumber();
-        } else if ("pending".equalsIgnoreCase(_bnOrId)) {
-            return -1;
-        } else {
-            try {
-                if (_bnOrId.startsWith("0x")) {
-                    return TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
-                } else {
-                    return Long.parseLong(_bnOrId);
-                }
-            } catch (NumberFormatException e) {
-                LOG.debug("err on parsing block number #" + _bnOrId);
-                return 0;
-            }
-        }
-    }
+    protected final AionPendingStateImpl pendingState = AionPendingStateImpl.inst();
 
     public abstract String getCoinbase();
 

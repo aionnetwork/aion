@@ -158,6 +158,9 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      */
     void putBatch(Map<K, V> inputMap);
 
+    void putToBatch(byte[] key, byte[] value);
+    void commitBatch();
+
     /**
      * Similar to delete, except operates on a list of keys
      *
@@ -168,5 +171,4 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      *             if the collection contains a null key
      */
     void deleteBatch(Collection<K> keys);
-
 }

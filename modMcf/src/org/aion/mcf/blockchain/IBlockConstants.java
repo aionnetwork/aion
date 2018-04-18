@@ -48,9 +48,19 @@ public interface IBlockConstants {
     BigInteger getEnergyDivisorLimit();
 
     /**
+     * The divisor for energy (long)
+     */
+    long getEnergyDivisorLimitLong();
+
+    /**
      * The divisor for difficulty
      */
     BigInteger getDifficultyBoundDivisor();
+
+    /**
+     * Divisor for difficulty (long)
+     */
+    long getDifficultyBoundDivisorLong();
 
     /**
      * The intended block time, specified in seconds
@@ -84,7 +94,16 @@ public interface IBlockConstants {
     BigInteger getEnergyLowerBound();
 
     /**
+     * Lower bound of an energyLimit value (long)
+     */
+    long getEnergyLowerBoundLong();
+
+    /**
      * Maximum accepted clock drift difference (seconds)
      */
     long getClockDriftBufferTime();
+
+    BigInteger getRampUpStartValue();
+
+    BigInteger getRampUpEndValue();
 }

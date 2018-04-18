@@ -29,17 +29,22 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.core.AccountState;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.vm.PrecompiledContracts;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
+import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.vm.types.DataWord;
@@ -58,16 +63,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     private static IRepositoryConfig repoConfig = new IRepositoryConfig() {
         @Override
-        public String[] getVendorList() {
-            return new String[] { DBVendor.MOCKDB.toValue() };
-        }
-
-        @Override
-        public String getActiveVendor() {
-            return DBVendor.MOCKDB.toValue();
-        }
-
-        @Override
         public String getDbPath() {
             return "";
         }
@@ -83,35 +78,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         }
 
         @Override
-        public boolean isAutoCommitEnabled() {
-            return false;
+        public Properties getDatabaseConfig(String db_name) {
+            Properties props = new Properties();
+            props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+            props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+            return props;
         }
-
-        @Override
-        public boolean isDbCacheEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDbCompressionEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isHeapCacheEnabled() {
-            return true;
-        }
-
-        @Override
-        public String getMaxHeapCacheSize() {
-            return "0";
-        }
-
-        @Override
-        public boolean isHeapCacheStatsEnabled() {
-            return false;
-        }
-
     };
 
     protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig) {
@@ -157,7 +129,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         private ChainConfiguration configuration;
         private List<ECKey> defaultKeys = new ArrayList<>();
         private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
-        private boolean blockPruningEnabled = false;
+
+        private IRepositoryConfig repoConfig;
 
         public static final int INITIAL_ACC_LEN = 10;
         public static final BigInteger DEFAULT_BALANCE = new BigInteger("1000000000000000000000000");
@@ -194,6 +167,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
+        public Builder withRepoConfig(IRepositoryConfig config) {
+            this.repoConfig = config;
+            return this;
+        }
+
         public Builder withA0Config(A0BCConfig config) {
             this.a0Config = config;
             return this;
@@ -213,27 +191,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
-        public Builder withBlockPruningEnabled() {
-            blockPruningEnabled = true;
-            return this;
-        }
-
         private IRepositoryConfig generateRepositoryConfig() {
-            if (!blockPruningEnabled) {
-                return repoConfig;
-            }
-
             return new IRepositoryConfig() {
-                @Override
-                public String[] getVendorList() {
-                    return new String[] { DBVendor.MOCKDB.toValue() };
-                }
-
-                @Override
-                public String getActiveVendor() {
-                    return DBVendor.MOCKDB.toValue();
-                }
-
                 @Override
                 public String getDbPath() {
                     return "";
@@ -241,7 +200,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                 @Override
                 public int getPrune() {
-                    return 0;
+                    return -1;
                 }
 
                 @Override
@@ -250,35 +209,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
 
                 @Override
-                public boolean isAutoCommitEnabled() {
-                    return false;
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
                 }
-
-                @Override
-                public boolean isDbCacheEnabled() {
-                    return false;
-                }
-
-                @Override
-                public boolean isDbCompressionEnabled() {
-                    return false;
-                }
-
-                @Override
-                public boolean isHeapCacheEnabled() {
-                    return true;
-                }
-
-                @Override
-                public String getMaxHeapCacheSize() {
-                    return "0";
-                }
-
-                @Override
-                public boolean isHeapCacheStatsEnabled() {
-                    return false;
-                }
-
             };
         }
 
@@ -309,6 +245,14 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     return 1;
                 }
 
+                @Override
+                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
+                    return new TargetStrategy(
+                            configuration.getConstants().getEnergyLowerBoundLong(),
+                            configuration.getConstants().getEnergyDivisorLimitLong(),
+                            10_000_000L);
+                }
+
             } : this.a0Config;
 
             if (this.configuration == null) {
@@ -330,8 +274,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                         @Override
                         public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
                             return new BlockHeaderValidator<A0BlockHeader>(
-                                    Arrays.asList(new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
-                                            new EnergyConsumedRule()));
+                                    Arrays.asList(
+                                            new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
+                                            new EnergyConsumedRule(),
+                                            new AionHeaderVersionRule()));
                         }
                     };
                 } else {
@@ -339,15 +285,22 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             }
 
-            IRepositoryConfig repoConfig = generateRepositoryConfig();
-            StandaloneBlockchain bc = new StandaloneBlockchain(this.a0Config, this.configuration, repoConfig);
+            if (this.repoConfig == null)
+                this.repoConfig = generateRepositoryConfig();
+
+            StandaloneBlockchain bc = new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
                 genesisBuilder.addPreminedAccount(Address.wrap(acc.getKey()), acc.getValue());
             }
 
-            AionGenesis genesis = genesisBuilder.build();
+            AionGenesis genesis;
+            try {
+                genesis = genesisBuilder.build();
+            } catch (HeaderStructureException e) {
+                throw new RuntimeException(e);
+            }
             bc.genesis = genesis;
 
             IRepositoryCache track = bc.getRepository().startTracking();

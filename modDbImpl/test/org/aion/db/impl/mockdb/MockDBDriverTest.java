@@ -37,13 +37,13 @@ package org.aion.db.impl.mockdb;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.impl.mockdb.MockDB;
-import org.aion.db.impl.mockdb.MockDBDriver;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Properties;
 
+import static org.aion.db.impl.DatabaseFactory.Props.DB_NAME;
+import static org.aion.db.impl.DatabaseFactory.Props.DB_TYPE;
 import static org.junit.Assert.*;
 
 public class MockDBDriverTest {
@@ -59,8 +59,8 @@ public class MockDBDriverTest {
         driver = new MockDBDriver();
 
         props = new Properties();
-        props.setProperty("db_type", vendor.toValue());
-        props.setProperty("db_name", "test");
+        props.setProperty(DB_TYPE, vendor.toValue());
+        props.setProperty(DB_NAME, "test");
 
         db = null;
     }
@@ -71,7 +71,7 @@ public class MockDBDriverTest {
         db = DatabaseFactory.connect(props);
         assertNotNull(db);
 
-        props.setProperty("db_type", driver.getClass().getName());
+        props.setProperty(DB_TYPE, driver.getClass().getName());
         db = driver.connect(props);
         assertNotNull(db);
     }
@@ -79,7 +79,7 @@ public class MockDBDriverTest {
     @Test
     public void testDriverReturnNull() {
         // It should return null if given incorrect properties.
-        props.setProperty("db_type", "leveldb");
+        props.setProperty(DB_TYPE, "leveldb");
         db = DatabaseFactory.connect(props);
         assertNull(db);
 

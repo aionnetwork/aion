@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -27,32 +27,17 @@ package org.aion.zero.impl.db;
 import org.aion.base.db.DetailsProvider;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryConfig;
+import org.aion.mcf.config.CfgDb;
+
+import java.util.Map;
+import java.util.Properties;
 
 public class RepositoryConfig implements IRepositoryConfig {
 
-    private final String[] vendorList;
-    private final String activeVendor;
     private final String dbPath;
     private final int prune;
     private final DetailsProvider detailsProvider;
-
-    private boolean enable_auto_commit;
-    private boolean enable_db_cache;
-    private boolean enable_db_compression;
-
-    private boolean enable_heap_cache;
-    private String max_heap_cache_size;
-    private boolean enable_heap_cache_stats;
-
-    @Override
-    public String[] getVendorList() {
-        return vendorList;
-    }
-
-    @Override
-    public String getActiveVendor() {
-        return activeVendor;
-    }
+    private final Map<String, Properties> cfg;
 
     @Override
     public String getDbPath() {
@@ -70,63 +55,21 @@ public class RepositoryConfig implements IRepositoryConfig {
     }
 
     @Override
-    public boolean isAutoCommitEnabled() {
-        return enable_auto_commit;
+    public Properties getDatabaseConfig(String db_name) {
+        Properties prop = cfg.get(db_name);
+        if (prop == null) {
+            prop = cfg.get(CfgDb.Names.DEFAULT);
+        }
+        return new Properties(prop);
     }
 
-    @Override
-    public boolean isDbCacheEnabled() {
-        return enable_db_cache;
-    }
-
-    @Override
-    public boolean isDbCompressionEnabled() {
-        return enable_db_compression;
-    }
-
-    @Override
-    public boolean isHeapCacheEnabled() {
-        return enable_heap_cache;
-    }
-
-    @Override
-    public String getMaxHeapCacheSize() {
-        return max_heap_cache_size;
-    }
-
-    @Override
-    public boolean isHeapCacheStatsEnabled() {
-        return enable_heap_cache_stats;
-
-    }
-
-    public RepositoryConfig(final String[] vendorList, //
-            final String activeVendor, //
-            final String dbPath, //
-            final int prune, //
-            final DetailsProvider detailsProvider, //
-            final boolean enable_auto_commit, //
-            final boolean enable_db_cache, //
-            final boolean enable_db_compression, //
-            final boolean enable_heap_cache, //
-            final String max_heap_cache_size, //
-            final boolean enable_heap_cache_stats) { //
-
-        this.vendorList = vendorList;
-        this.activeVendor = activeVendor;
+    public RepositoryConfig(final String dbPath,
+                            final int prune,
+                            final DetailsProvider detailsProvider,
+                            final CfgDb cfgDb) {
         this.dbPath = dbPath;
         this.prune = prune;
         this.detailsProvider = detailsProvider;
-
-        // parameters for describing database functionality
-        this.enable_auto_commit = enable_auto_commit;
-        this.enable_db_cache = enable_db_cache;
-        this.enable_db_compression = enable_db_compression;
-
-        // parameters for describing cache functionality
-        this.enable_heap_cache = enable_heap_cache;
-        this.max_heap_cache_size = max_heap_cache_size;
-        this.enable_heap_cache_stats = enable_heap_cache_stats;
+        this.cfg = cfgDb.asProperties();
     }
-
 }

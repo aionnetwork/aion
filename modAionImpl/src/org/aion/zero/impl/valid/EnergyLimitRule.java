@@ -28,6 +28,7 @@ import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
 
 import java.math.BigInteger;
+import java.util.List;
 
 /**
  * Energy limit rule is defined as the following (no documentation yet)
@@ -39,57 +40,40 @@ import java.math.BigInteger;
  */
 public class EnergyLimitRule extends DependentBlockHeaderRule<A0BlockHeader> {
 
-    private final BigInteger energyLimitDivisor;
-    private final BigInteger energyLimitLowerBounds;
+    private final long energyLimitDivisor;
+    private final long energyLimitLowerBounds;
 
-    public EnergyLimitRule(BigInteger energyLimitDivisor, BigInteger energyLimitLowerBounds) {
+    public EnergyLimitRule(long energyLimitDivisor, long energyLimitLowerBounds) {
         this.energyLimitDivisor = energyLimitDivisor;
         this.energyLimitLowerBounds = energyLimitLowerBounds;
     }
 
     @Override
-    public boolean validate(A0BlockHeader header, A0BlockHeader parent) {
-        errors.clear();
+    public boolean validate(A0BlockHeader header, A0BlockHeader parent, List<RuleError> errors) {
+        long energyLimit = header.getEnergyLimit();
+        long parentEnergyLimit = parent.getEnergyLimit();
+        long parentEnergyQuotient = parentEnergyLimit / this.energyLimitDivisor;
 
-        BigInteger energyLimit = BigInteger.valueOf(header.getEnergyLimit());
-        BigInteger parentEnergyLimit = BigInteger.valueOf(parent.getEnergyLimit());
-        BigInteger parentEnergyQuotient = parentEnergyLimit.divide(energyLimitDivisor);
-
-        if (energyLimit.compareTo(this.energyLimitLowerBounds) < 0) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("Proposed energyLimit ").append(energyLimit).append(" is below the minimum expected ")
-                    .append(this.energyLimitLowerBounds);
-            errors.add(builder.toString());
+        // check that energy is atleast equal to lower bounds, otherwise block is invalid
+        if (energyLimit < this.energyLimitLowerBounds) {
+            addError("energyLimit ("
+                    + energyLimit
+                    + ") lower than lower bound ("
+                    + this.energyLimitLowerBounds
+                    + ")", errors);
             return false;
         }
 
-        // check the upper bound
-        int res = energyLimit.compareTo(parentEnergyLimit);
-        if (res == 0) { // if energy did not change
-            return true;
-        } else if (res > 0) {
-            BigInteger parentUpperBound = parentEnergyLimit.add(parentEnergyQuotient);
-            boolean isBounded = energyLimit.compareTo(parentUpperBound) <= 0;
-
-            if (!isBounded) {
-                StringBuilder builder = new StringBuilder();
-                builder.append("Difference exceeds upper energyLimit bounds. Given ").append(energyLimit)
-                        .append(", expected ").append(parentUpperBound);
-                errors.add(builder.toString());
-                return false;
-            }
-
-        } else {
-            BigInteger parentLowerBound = parentEnergyLimit.subtract(parentEnergyQuotient);
-            boolean isBounded = energyLimit.compareTo(parentLowerBound) >= 0;
-
-            if (!isBounded) {
-                StringBuilder builder = new StringBuilder();
-                builder.append("Difference exceeds lower energyLimit bounds. Given ").append(energyLimit)
-                        .append(", expected ").append(parentLowerBound);
-                errors.add(builder.toString());
-                return false;
-            }
+        // magnitude of distance between parent energy and current energy
+        long energyDeltaMag = Math.abs(energyLimit - parentEnergyLimit);
+        if (energyDeltaMag > parentEnergyQuotient) {
+            addError("energyLimit ("
+                    + energyLimit
+                    + ") of current block has delta ("
+                    + energyDeltaMag
+                    + ") greater than bounds ("
+                    + parentEnergyQuotient +")", errors);
+            return false;
         }
         return true;
     }

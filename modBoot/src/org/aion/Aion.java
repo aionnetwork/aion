@@ -25,27 +25,29 @@
 
 package org.aion;
 
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
-
-import java.util.ServiceLoader;
-
-import org.aion.api.server.http.HttpServer;
+import org.aion.api.server.http.NanoServer;
 import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.log.AionLoggerFactory;
 import org.aion.evtmgr.EventMgrModule;
+import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+
+import java.util.ServiceLoader;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 public class Aion {
 
@@ -86,12 +88,13 @@ public class Aion {
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         System.out.println(                
-                        "                     ______                  \n" +
-                        "      .'.       |  .~      ~.  |..          |\n" +
-                        "    .'   `.     | |          | |  ``..      |\n" +
-                        "  .''''''''`.   | |          | |      ``..  |\n" +
-                        ".'           `. |  `.______.'  |          ``|\n\n" +                          
-                        "                     NETWORK\n\n"
+                        "                     _____                  \n" +
+                        "      .'.       |  .~     ~.  |..          |\n" +
+                        "    .'   `.     | |         | |  ``..      |\n" +
+                        "  .''''''''`.   | |         | |      ``..  |\n" +
+                        ".'           `. |  `._____.'  |          ``|\n\n" +
+                        "                    NETWORK  v" + KERNEL_VERSION +
+                                "\n\n"
                 );
 
         IAionChain ac = AionFactory.create();
@@ -106,7 +109,6 @@ public class Aion {
          * Start Threads.
          */
         Thread zmqThread = null;
-
         ProtocolProcessor processor = null;
         if (cfg.getApi().getZmq().getActive()) {
             IHdlr handler = new HdlrZmq(new ApiAion0(ac));
@@ -118,8 +120,17 @@ public class Aion {
             zmqThread.start();
         }
 
-        
-        HttpServer.start(ac.getAionHub().getP2pMgr());
+        NanoServer rpcServer = null;
+        if(cfg.getApi().getRpc().getActive()) {
+            CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
+            rpcServer = new NanoServer(
+                    rpcCfg.getIp(),
+                    rpcCfg.getPort(),
+                    rpcCfg.getCorsEnabled(),
+                    rpcCfg.getEnabled(),
+                    rpcCfg.getMaxthread());
+            rpcServer.start();
+        }
 
         /*
          * This is a hack, but used to let us pass zmqThread into thread
@@ -129,38 +140,53 @@ public class Aion {
             final Thread zmqThread;
             final IMineRunner miner;
             final ProtocolProcessor pp;
+            final NanoServer rpc;
             
-            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp) {
+            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, NanoServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;
+                this.rpc = rpc;
             }
         }
 
-        ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor);
+        ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
         
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                LOG.info("Starting shutdown process...");
 
-                if (holder.pp != null) {
-                    LOG.info("Shutting down zmq ProtocolProcessor");
-                    try {
-                        holder.pp.shutdown();
-                        LOG.info("Shutdown zmq ProtocolProcessor... Done!");
-                    } catch (InterruptedException e) {
-                        LOG.info("Shutdown zmq ProtocolProcessor failed! {}", e.getMessage());
-                    }
+            LOG.info("Starting shutdown process...");
+
+            if (holder.rpc != null) {
+                LOG.info("Shutting down RpcServer");
+                holder.rpc.shutdown();
+                LOG.info("Shutdown RpcServer ... Done!");
+            }
+
+            if (holder.pp != null) {
+                LOG.info("Shutting down zmq ProtocolProcessor");
+                try {
+                    holder.pp.shutdown();
+                    LOG.info("Shutdown zmq ProtocolProcessor... Done!");
+                } catch (InterruptedException e) {
+                    LOG.info("Shutdown zmq ProtocolProcessor failed! {}", e.getMessage());
+                    Thread.currentThread().interrupt();
                 }
+            }
 
-                if (holder.miner != null) {
-                    LOG.info("Shutting down sealer");
-                    holder.miner.stopMining();
-                    LOG.info("Shutdown sealer... Done!");
-                }
+            if (holder.miner != null) {
+                LOG.info("Shutting down sealer");
+                holder.miner.stopMining();
+                holder.miner.shutdown();
+                LOG.info("Shutdown sealer... Done!");
+            }
 
-                // TODO : HTTPServer shutdown
-                LOG.info("Shutting down the AionHub...");
-                ac.getAionHub().close();
-        }, "Shutdown"));
+            LOG.info("Shutting down the AionHub...");
+            ac.getAionHub().close();
+
+            LOG.info("---------------------------------------------");
+            LOG.info("| Aion kernel graceful shutdown successful! |");
+            LOG.info("---------------------------------------------");
+
+        }, "shutdown"));
     }
 }

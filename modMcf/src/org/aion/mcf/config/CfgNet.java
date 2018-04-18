@@ -45,7 +45,7 @@ public final class CfgNet {
     private int id;
 
     public CfgNet() {
-        this.id = 0;
+        this.id = 2;
         this.nodes = new String[0];
         this.p2p = new CfgNetP2p();
     }

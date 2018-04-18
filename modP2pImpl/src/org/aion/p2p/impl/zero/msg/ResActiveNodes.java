@@ -33,8 +33,8 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.INode;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.Act;
-import org.aion.p2p.impl.Node;
+import org.aion.p2p.impl.comm.Act;
+import org.aion.p2p.impl.comm.Node;
 
 /**
  *
@@ -55,7 +55,8 @@ public final class ResActiveNodes extends Msg {
     private final static int MAX_NODES = 40;
 
     /**
-     * @param _nodes List
+     * @param _nodes
+     *            List
      */
     public ResActiveNodes(final List<Node> _nodes) {
         super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
@@ -74,7 +75,8 @@ public final class ResActiveNodes extends Msg {
     }
 
     /**
-     * @param _bytes byte[]
+     * @param _bytes
+     *            byte[]
      * @return ResActiveNodes
      */
     public static ResActiveNodes decode(final byte[] _bytes) {
@@ -83,6 +85,11 @@ public final class ResActiveNodes extends Msg {
         else {
             ByteBuffer buf = ByteBuffer.wrap(_bytes);
             int count = buf.get();
+
+            // fix bug: https://github.com/aionnetwork/aion/issues/390
+            if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
+                return null;
+
             ArrayList<Node> activeNodes = new ArrayList<>();
             for (int i = 0; i < count; i++) {
                 byte[] nodeIdBytes = new byte[36];

@@ -2,6 +2,7 @@ package org.aion.p2p.impl;
 
 import static org.junit.Assert.*;
 
+import org.aion.p2p.impl.comm.Node;
 import org.junit.Test;
 
 import java.util.UUID;

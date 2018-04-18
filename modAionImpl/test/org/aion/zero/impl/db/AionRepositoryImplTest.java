@@ -40,6 +40,8 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.mcf.core.AccountState;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
@@ -54,6 +56,7 @@ import org.aion.zero.impl.db.ContractDetailsAion;
 
 import java.math.BigInteger;
 import java.util.Optional;
+import java.util.Properties;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -62,16 +65,6 @@ import static com.google.common.truth.Truth.assertThat;
 public class AionRepositoryImplTest {
 
     protected IRepositoryConfig repoConfig = new IRepositoryConfig() {
-        @Override
-        public String[] getVendorList() {
-            return new String[] { DBVendor.MOCKDB.toValue() };
-        }
-
-        @Override
-        public String getActiveVendor() {
-            return DBVendor.MOCKDB.toValue();
-        }
-
         @Override
         public String getDbPath() {
             return "";
@@ -88,35 +81,12 @@ public class AionRepositoryImplTest {
         }
 
         @Override
-        public boolean isAutoCommitEnabled() {
-            return false;
+        public Properties getDatabaseConfig(String db_name) {
+            Properties props = new Properties();
+            props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+            props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+            return props;
         }
-
-        @Override
-        public boolean isDbCacheEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isDbCompressionEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isHeapCacheEnabled() {
-            return true;
-        }
-
-        @Override
-        public String getMaxHeapCacheSize() {
-            return "0";
-        }
-
-        @Override
-        public boolean isHeapCacheStatsEnabled() {
-            return false;
-        }
-
     };
 
     @Test

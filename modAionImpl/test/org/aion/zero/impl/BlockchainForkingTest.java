@@ -34,7 +34,9 @@
  ******************************************************************************/
 package org.aion.zero.impl;
 
+import org.aion.base.util.BIUtil;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -42,7 +44,9 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -71,9 +75,18 @@ public class BlockchainForkingTest {
 
         StandaloneBlockchain bc = b.bc;
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        AionBlock sameBlock = new AionBlock(block.getEncoded());
 
         ImportResult firstRes = bc.tryToConnect(block);
-        ImportResult secondRes = bc.tryToConnect(block);
+
+        // check that the returned block is the first block
+        assertThat(bc.getBestBlock() == block).isTrue();
+
+        ImportResult secondRes = bc.tryToConnect(sameBlock);
+
+        // the second block should get rejected, so check that the reference still refers
+        // to the first block (we dont change the published reference)
+        assertThat(bc.getBestBlock() == block).isTrue();
 
         assertThat(firstRes).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(secondRes).isEqualTo(ImportResult.EXIST);
@@ -99,7 +112,7 @@ public class BlockchainForkingTest {
      *
      */
     @Test
-    public void testHigherDifficultyBlockFork() {
+    public void testInvalidFirstBlockDifficulty() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle b = builder
                 .withValidatorConfiguration("simple")
@@ -128,11 +141,133 @@ public class BlockchainForkingTest {
         ImportResult result = bc.tryToConnect(standardBlock);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
+        // assert that the block we just inserted (best) is the instance that is returned
+        assertThat(bc.getBestBlock() == standardBlock).isTrue();
+
         System.out.println(new ByteArrayWrapper(bc.getRepository().getRoot()));
 
         ImportResult higherDifficultyResult = bc.tryToConnect(higherDifficultyBlock);
 
-        assertThat(higherDifficultyResult).isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.getBestBlockHash()).isEqualTo(higherDifficultyBlock.getHash());
+        /**
+         * With our updates to difficulty verification and calculation,
+         * this block is now invalid
+         */
+        assertThat(higherDifficultyResult).isEqualTo(ImportResult.INVALID_BLOCK);
+        assertThat(bc.getBestBlockHash()).isEqualTo(standardBlock.getHash());
+
+        // the object reference here is intentional
+        assertThat(bc.getBestBlock() == standardBlock).isTrue();
+    }
+
+    /*-
+     *
+     * Recall previous forking logic worked as follows:
+     *
+     *          [ parent block ]
+     *          /              \
+     *         /                \
+     *        /                  \
+     *  [block_1]              [block_2]
+     *  TD=101                 TD=102
+     *
+     * Where if block_1 had a greater timestamp (and thus lower TD) than
+     * block_2, then block_2 would be accepted as the best block for
+     * that particular level (until later re-orgs prove this to be untrue)
+     *
+     * With our changes to difficulty calculations, difficulty is calculated
+     * with respect to the two previous blocks (parent, grandParent) blocks
+     * in the sequence.
+     *
+     * This leads to the following:
+     *
+     *          [ parent block - 1] TD = 50
+     *                  |
+     *                  |
+     *          [ parent block ] D = 50
+     *          /              \
+     *         /                \
+     *        /                  \
+     *    [block_1]            [block_2]
+     *    TD=100               TD=100
+     *
+     * Where both blocks are guaranteed to have the same TD if they directly
+     * branch off of the same parent. In fact, this guarantees us that the
+     * first block coming in from the network (for a particular level) is
+     * the de-facto best block for a short period of time.
+     *
+     * It is only when the block after comes in (for both chains) that a re-org
+     * will happen on one of the chains (possibly)
+     *
+     *
+     *             ...prev
+     *   [block_1]              [block_2]
+     *   T(n) = T(n-1) + 4      T(n) = T(n-1) + 20
+     *       |                         |
+     *       |                         |
+     *       |                         |
+     *   [block_1_2]            [block_1_2]
+     *   TD = 160               TD = 140
+     *
+     * At which point a re-org should occur on most blocks. Remember that this reorg
+     * is a minimum, given equal hashing power and particularily bad luck, two parties
+     * could indefinitely stay on their respective chains, but the chances of this is
+     * extraordinarily small.
+     */
+    @Test
+    public void testSecondBlockHigherDifficultyFork() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts()
+                .build();
+
+        long time = System.currentTimeMillis();
+
+        StandaloneBlockchain bc = bundle.bc;
+        List<ECKey> accs = bundle.privateKeys;
+
+        // generate three blocks, on the third block we get flexiblity
+        // for what difficulties can occur
+
+        AionBlock firstBlock = bc.createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(firstBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // now connect the second block
+        AionBlock secondBlock = bc.createNewBlockInternal(firstBlock, Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(secondBlock, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // now on the third block, we diverge with one block having higher TD than the other
+        AionBlock fasterSecondBlock = bc.createNewBlockInternal(secondBlock, Collections.emptyList(), true, time / 1000L);
+        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
+
+        slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
+
+        assertThat(bc.tryToConnectInternal(fasterSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+        // represents the amount of time we would have waited for the lower TD block to come in
+        long timeDelta = 1000L;
+
+        // loweredDifficulty = bi - bi / 1024
+        BigInteger loweredDifficulty = BIUtil.max(secondBlock
+                .getDifficultyBI()
+                .subtract(secondBlock.getDifficultyBI().divide(BigInteger.valueOf(1024L))), BigInteger.valueOf(16L));
+
+        time += 100;
+
+        AionBlock fastBlockDescendant  = bc.createNewBlockInternal(fasterSecondBlock, Collections.emptyList(), true, time / 1000L);
+        AionBlock slowerBlockDescendant = bc.createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
+
+        // increment by another hundred (this is supposed to be when the slower block descendant is completed)
+        time += 100;
+
+        assertThat(fastBlockDescendant.getDifficultyBI()).isGreaterThan(slowerBlockDescendant.getDifficultyBI());
+        System.out.println("faster block descendant TD: " + fastBlockDescendant.getDifficultyBI());
+        System.out.println("slower block descendant TD: " + slowerBlockDescendant.getDifficultyBI());
+
+        assertThat(bc.tryToConnectInternal(slowerBlockDescendant, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(fastBlockDescendant, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant);
     }
 }

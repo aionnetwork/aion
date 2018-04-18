@@ -12,14 +12,14 @@ fi
 
 # download jre9 if can't find the jre env
 if [ ! -d "$JDK_PATH" ]; then
-  wget -nc --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/9.0.4+11/c2514751926b4512b076cc82f959763f/jdk-9.0.4_linux-x64_bin.tar.gz" -O $PACK_PATH/jdk-9.0.4_linux-x64_bin.tar.gz
-  tar -xf $PACK_PATH/jdk-9.0.4_linux-x64_bin.tar.gz -C $PACK_PATH
-  mv $PACK_PATH/jdk-9.0.4 $JDK_PATH
+  wget -nc --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_linux-x64_bin.tar.gz" -O $PACK_PATH/jdk-10.0.1_linux-x64_bin.tar.gz
+  tar -xf $PACK_PATH/jdk-10.0.1_linux-x64_bin.tar.gz -C $PACK_PATH
+  mv $PACK_PATH/jdk-10.0.1 $JDK_PATH
 fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging --output $JDK_RT
+  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management --output $JDK_RT
 fi
 
 # download the web3.js if can't find the web3.js env
@@ -42,4 +42,3 @@ if [ ! -d "$DOCS_PATH" ]; then
   mkdir $DOCS_PATH
   cp -r ./docs/** $DOCS_PATH
 fi
-

@@ -9,6 +9,8 @@ import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
+import java.math.BigInteger;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,8 +47,12 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public byte[] getTotalDifficulty() {
-            return new byte[0];
+        public BigInteger getTotalDifficulty() {
+            return BigInteger.ZERO;
+        }
+
+        @Override public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash,
+                BigInteger _totalDifficulty) {
         }
 
         @Override
@@ -70,8 +76,13 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void updateStatus(long _bestBlockNumber, byte[] _bestBlockHash, byte[] _totalDifficulty) {
+        public long getTimestamp() {
+            return 0;
+        }
 
+        @Override
+        public String getBinaryVersion() {
+            return "";
         }
     }
 
@@ -104,8 +115,18 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public String version() {
-            return null;
+        public List<Short> versions() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public int chainId() {
+            return 0;
+        }
+
+        @Override
+        public void errCheck(int nodeIdHashcode, String _displayId) {
+
         }
 
         @Override
@@ -121,6 +142,20 @@ public class BlockPropagationTest {
         @Override
         public void send(int _id, Msg _msg) {
 
+        }
+
+        @Override
+        public void dropActive(Integer hash) {
+        }
+
+        @Override
+        public boolean isShowLog() {
+            return false;
+        }
+
+        @Override
+        public void closeSocket(SocketChannel socket) {
+            // do nothing
         }
     }
 
@@ -169,9 +204,9 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
     }
 
     // given two peers, and one sends you a new block, propagate to the other
@@ -223,10 +258,10 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         // block is processed
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -273,11 +308,11 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         // block is processed
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -317,7 +352,7 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented
@@ -325,7 +360,7 @@ public class BlockPropagationTest {
         // recall that we're using another blockchain and faked the propagation
         // so our blockchain should view this block as a new block
         // therefore if the filter fails, this block will actually be CONNECTED
-        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+        assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
 
         // we expect the counter to be incremented once (on propagation)
         assertThat(sendCount.get()).isEqualTo(1);

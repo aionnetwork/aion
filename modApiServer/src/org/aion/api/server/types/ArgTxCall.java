@@ -24,6 +24,7 @@
 
 package org.aion.api.server.types;
 
+import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
@@ -58,7 +59,7 @@ public final class ArgTxCall {
         this.nrgPrice = _nrgPrice;
     }
 
-    public static ArgTxCall fromJSON(final JSONObject _jsonObj){
+    public static ArgTxCall fromJSON(final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit){
         try {
             Address from = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
             Address to = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
@@ -69,11 +70,19 @@ public final class ArgTxCall {
             BigInteger nonce = nonceStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(nonceStr) : TypeConverter.StringNumberAsBigInt(nonceStr);
             BigInteger value = valueStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(valueStr) : TypeConverter.StringNumberAsBigInt(valueStr);
 
-            // 7A120 | 500000
-            String nrgStr = _jsonObj.optString("gas", "0x7A120");
-            String nrgPriceStr = _jsonObj.optString("gasPrice", "0x01");
-            long nrg = nrgStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue() : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
-            long nrgPrice = nrgPriceStr.indexOf("0x") >=0 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue() : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
+            String nrgStr = _jsonObj.optString("gas", null);
+            String nrgPriceStr = _jsonObj.optString("gasPrice", null);
+
+            long nrg = defaultNrgLimit;
+            if (nrgStr != null)
+                nrg = nrgStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue() : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
+            
+            long nrgPrice;
+            if (nrgPriceStr != null)
+                nrgPrice = nrgPriceStr.indexOf("0x") >=0 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue() : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
+            else
+                nrgPrice = oracle.getNrgPrice();
+
 
             return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
         } catch(Exception ex) {

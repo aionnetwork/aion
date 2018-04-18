@@ -28,6 +28,7 @@ package org.aion.p2p;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+
 /**
  * @author chris
  */
@@ -35,17 +36,21 @@ public final class Header {
 
     public final static int LEN = 8;
 
-    private final static int MAX_BODY_LEN_BYTES = 2 * 200 * 1024 * 1024;
+    private final static int MAX_BODY_LEN_BYTES = P2pConstant.MAX_BODY_SIZE;
     private final short ver;
     private final byte ctrl;
     private final byte action;
     private int len;
 
     /**
-     * @param _ver short
-     * @param _ctrl byte
-     * @param _action byte
-     * @param _len byte
+     * @param _ver
+     *            short
+     * @param _ctrl
+     *            byte
+     * @param _action
+     *            byte
+     * @param _len
+     *            byte
      */
     Header(short _ver, byte _ctrl, byte _action, int _len) {
         this.ver = _ver;
@@ -71,7 +76,9 @@ public final class Header {
     /**
      * @return byte
      */
-    public byte getAction() { return this.action; }
+    public byte getAction() {
+        return this.action;
+    }
 
     /**
      * @return int
@@ -79,6 +86,7 @@ public final class Header {
     public int getRoute() {
         return (ver << 16) | (ctrl << 8) | action;
     }
+
     /**
      * @return int
      */
@@ -86,7 +94,7 @@ public final class Header {
         return this.len;
     }
 
-    public void setLen(int _len){
+    public void setLen(int _len) {
         this.len = _len;
     }
 
@@ -98,9 +106,11 @@ public final class Header {
     }
 
     /**
-     * @param _headerBytes byte[]
+     * @param _headerBytes
+     *            byte[]
      * @return Header
-     * @throws IOException when exeeds MAX_BODY_LEN_BYTES
+     * @throws IOException
+     *             when exeeds MAX_BODY_LEN_BYTES
      */
     public static Header decode(final byte[] _headerBytes) throws IOException {
         if (_headerBytes == null || _headerBytes.length != LEN)
@@ -111,7 +121,7 @@ public final class Header {
             byte ctrl = bb1.get();
             byte action = bb1.get();
             int len = bb1.getInt();
-            if(len > MAX_BODY_LEN_BYTES)
+            if (len > MAX_BODY_LEN_BYTES)
                 throw new IOException("exceed-max-body-size");
             return new Header(ver, ctrl, action, len);
         }

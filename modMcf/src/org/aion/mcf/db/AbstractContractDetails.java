@@ -24,16 +24,16 @@
  ******************************************************************************/
 package org.aion.mcf.db;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.aion.crypto.HashUtil.h256;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.aion.crypto.HashUtil.h256;
 
 /**
  * Abstract contract details.
@@ -49,6 +49,7 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
 
     protected AbstractContractDetails() {
+        this(0, 64 * 1024);
     }
 
     protected AbstractContractDetails(int prune, int memStorageLimit) {
@@ -116,12 +117,10 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
         return deleted;
     }
 
-    public abstract IContractDetails<DW> clone();
-
     @Override
     public String toString() {
         String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";
-        ret += "  Storage: " + getStorage().toString();
+        ret += "  Storage: " + getStorageHash();
         return ret;
     }
 }

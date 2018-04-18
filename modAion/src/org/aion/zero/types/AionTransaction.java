@@ -191,11 +191,19 @@ public class AionTransaction extends AbstractTransaction {
         return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
 
+    public BigInteger getNonceBI() {
+        return new BigInteger(1, getNonce());
+    }
+
     public byte[] getTimeStamp() {
         if (!parsed) {
             rlpParse();
         }
         return this.timeStamp == null ? ZERO_BYTE_ARRAY : this.timeStamp;
+    }
+
+    public BigInteger getTimeStampBI() {
+        return new BigInteger(1, getTimeStamp());
     }
 
     public long getNrg() {
@@ -296,7 +304,7 @@ public class AionTransaction extends AbstractTransaction {
         }
 
         try {
-            from = Address.wrap(this.signature.getPubkey(null));
+            from = Address.wrap(this.signature.getAddress());
             return from;
         } catch (Exception e) {
             e.printStackTrace();

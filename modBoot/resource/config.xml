@@ -3,28 +3,47 @@
 	<mode>aion</mode>
 	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
-		<rpc active="true" ip="127.0.0.1" port="8545"></rpc>
+		<rpc active="true" ip="127.0.0.1" port="8545">
+			<!--boolean, enable/disable cross origin requests (browser enforced)-->
+			<cors-enabled>false</cors-enabled>
+			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
+			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
+			<!--size of thread pool allocated for rpc requests-->
+			<threads>1</threads>
+		</rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
+		<nrg-recommendation>
+			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
+			<default>1E9</default>
+			<!--max NRG price recommended by oracle-->
+			<max>100E9</max>
+			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
+			<oracle-enabled>false</oracle-enabled>
+		</nrg-recommendation>
 	</api>
 	<net>
-		<id>0</id>
+		<id>2</id>
 		<nodes>
-			<node>p2p://2da62542-999f-4405-bdb3-50d8c61bed61@52.237.31.69:30303</node>
-			<node>p2p://c1f42646-279a-441e-bba7-bfebfc1eec63@52.179.100.107:30303</node>
-			<node>p2p://d9242b38-cf4e-4654-9995-2727fee3dd9d@13.95.218.95:30303</node>
-			<node>p2p://0466a78b-814b-4a5d-844e-7054e48f0d28@191.232.176.213:30303</node>
-			<node>p2p://f9ea8c08-6f2d-4e64-91a2-d7186d76e096@52.231.206.150:30303</node>
+			<node>p2p://c33d1066-8c7e-496c-9c4e-c89318280274@13.92.155.115:30303</node>
+			<node>p2p://c33d2207-729a-4584-86f1-e19ab97cf9ce@51.144.42.220:30303</node>
+			<node>p2p://c33d391d-a86d-408c-b6f7-13b1c1e810d7@13.95.218.95:30303</node>
+			<node>p2p://c33d4535-5523-42fa-901d-f0dd8c269d7d@191.232.176.213:30303</node>
+			<node>p2p://c33d5406-6359-4198-a15a-bbe3110390e8@52.231.206.150:30303</node>
+			<node>p2p://0ffce2e5-411d-47d1-b7a4-0167b952b0cf@66.207.217.190:30303</node>
 		</nodes>
 		<p2p>
-			<ip>127.0.0.1</ip>
+			<ip>0.0.0.0</ip>
 			<port>30303</port>
 			<discover>false</discover>
 			<show-status>false</show-status>
+			<show-log>false</show-log>
+			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
 	<sync>
-		<blocks-import-max>192</blocks-import-max>
-		<blocks-queue-max>2000</blocks-queue-max>
+		<!-- Downloaded blocks queue limit. This affects memory footprint -->
+		<blocks-queue-max>32</blocks-queue-max>
+		<!-- Display syncing status -->
 		<show-status>false</show-status>
 	</sync>
 	<consensus>
@@ -32,12 +51,22 @@
 		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
 		<cpu-mine-threads>2</cpu-mine-threads>
 		<extra-data>AION</extra-data>
+		<nrg-strategy>
+			<!-- <monotonic-increase></monotonic-increase> -->
+			<!-- <decaying></decaying> -->
+			<!-- <targetted target="10000000"></targetted> -->
+			<clamped-decay upper-bound="25000000" lower-bound="15000000"></clamped-decay>
+		</nrg-strategy>
 	</consensus>
 	<db>
 		<path>database</path>
 		<vendor>leveldb</vendor>
 		<enable_db_cache>true</enable_db_cache>
 		<enable_db_compression>true</enable_db_compression>
+		<max_fd_alloc_size>1024</max_fd_alloc_size>
+		<block_size>16mB</block_size>
+		<write_buffer_size>64mB</write_buffer_size>
+		<cache_size>128mB</cache_size>
 	</db>
 	<log>
 		<GEN>INFO</GEN>
@@ -45,5 +74,6 @@
 		<SYNC>INFO</SYNC>
 		<CONS>INFO</CONS>
 		<DB>ERROR</DB>
+		<API>INFO</API>
 	</log>
 </aion>

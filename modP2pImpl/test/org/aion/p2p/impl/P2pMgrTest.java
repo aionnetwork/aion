@@ -25,17 +25,12 @@
 
 package org.aion.p2p.impl;
 
-import org.aion.p2p.INode;
+import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.Map;
 import java.util.UUID;
 
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -50,6 +45,62 @@ public class P2pMgrTest {
     private int port1 = 30303;
     private int port2 = 30304;
 
+    public Map.Entry<P2pMgr, P2pMgr> newTwoNodeSetup() {
+        String ip = "127.0.0.1";
+
+        String id1 = UUID.randomUUID().toString();
+        String id2 = UUID.randomUUID().toString();
+
+        int port1 = 30303;
+        int port2 = 30304;
+
+        // we want node 1 to connect to node 2
+        String[] nodes = new String[] {
+                "p2p://" + id2 + "@" + ip + ":" + port2
+        };
+
+        // to guarantee they don't receive the same port
+        while (port2 == port1) {
+            port2 = TestUtilities.getFreePort();
+        }
+
+        System.out.println("connector on: " + TestUtilities.formatAddr(id1, ip, port1));
+        P2pMgr connector = new P2pMgr(0,
+                "",
+                id1,
+                ip,
+                port1,
+                nodes,
+                false,
+                128,
+                128,
+                false,
+                true,
+                false,
+                false,
+                "",
+                50);
+
+        System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
+        P2pMgr receiver = new P2pMgr(0,
+                "",
+                id2,
+                ip,
+                port2,
+                new String[0],
+                false,
+                128,
+                128,
+                false,
+                true,
+                false,
+                false,
+                "",
+                50);
+
+        return Map.entry(connector, receiver);
+    }
+
     @Test
     public void testIgnoreSameNodeIdAsSelf() {
 
@@ -57,7 +108,21 @@ public class P2pMgrTest {
                 "p2p://" + nodeId1 + "@" + ip2+ ":" + port2
         };
 
-        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, false, false);
+        P2pMgr p2p = new P2pMgr(0,
+                "",
+                nodeId1,
+                ip1,
+                port1,
+                nodes,
+                false,
+                128,
+                128,
+                false,
+                false,
+                false,
+                false,
+                "",
+                50);
         assertEquals(p2p.getTempNodesCount(), 0);
 
     }
@@ -69,7 +134,21 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip1+ ":" + port1
         };
 
-        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, false, false);
+        P2pMgr p2p = new P2pMgr(0,
+                "",
+                nodeId1,
+                ip1,
+                port1,
+                nodes,
+                false,
+                128,
+                128,
+                false,
+                false,
+                false,
+                false,
+                "",
+                50);
         assertEquals(0,p2p.getTempNodesCount());
 
     }
@@ -83,67 +162,21 @@ public class P2pMgrTest {
                 "p2p://" + nodeId2 + "@" + ip2+ ":" + port2,
         };
 
-        P2pMgr p2p = new P2pMgr(0, "",nodeId1, ip1, port1, nodes, false, 128, 128,false, false, false);
+        P2pMgr p2p = new P2pMgr(0,
+                "",
+                nodeId1,
+                ip1,
+                port1,
+                nodes,
+                false,
+                128,
+                128,
+                false,
+                false,
+                false,
+                false,
+                "",
+                50);
         assertEquals(p2p.getTempNodesCount(), 3);
-
     }
-
-//    @Test
-//    public void testConnect() throws InterruptedException {
-//
-//        String ip = "127.0.0.1";
-//        String id1 = UUID.randomUUID().toString();
-//        String id2 = UUID.randomUUID().toString();
-//        int port1 = 30303;
-//        int port2 = 30304;
-//
-//        P2pMgr receiver = new P2pMgr(
-//                0, "",
-//                id1,
-//                ip,
-//                port1,
-//                new String[]{
-//                        "p2p://" + id2 + "@" + ip + ":" + port2
-//                },
-//                false,
-//                128,
-//                128,
-//                false,
-//                false,
-//                false
-//        );
-//
-//        // clear temp nodes list but keep seed ips list
-//        receiver.clearTempNodes();
-//        receiver.run();
-//
-//        P2pMgr connector = new P2pMgr(
-//                0, "",
-//                id2,
-//                ip,
-//                port2,
-//                new String[]{
-//                        "p2p://" + id1 + "@" + ip + ":" + port1
-//                },
-//                false,
-//                128,
-//                128,
-//                false,
-//                false,
-//                false
-//        );
-//        connector.run();
-//        Thread.sleep(10000);
-//        assertEquals(1, receiver.getActiveNodes().size());
-//        assertEquals(1, connector.getActiveNodes().size());
-//
-//        // check seed ips contains ip as incoming node
-//        Map<Integer, INode> ns = receiver.getActiveNodes();
-//        Map.Entry<Integer, INode> entry = ns.entrySet().iterator().next();
-//        assertNotNull(entry);
-//        assertTrue(((Node)entry.getValue()).getIfFromBootList());
-//        receiver.shutdown();
-//        connector.shutdown();
-//
-//    }
 }

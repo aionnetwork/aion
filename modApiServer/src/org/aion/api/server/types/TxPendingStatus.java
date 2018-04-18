@@ -33,6 +33,7 @@ public class TxPendingStatus {
     ByteArrayWrapper socketId;
     ByteArrayWrapper msgHash;
     ByteArrayWrapper txResult;
+    String error;
     private final static int txRetCodeOffset = 102;
 
     /*  */
@@ -44,13 +45,14 @@ public class TxPendingStatus {
     int state;
 
     public TxPendingStatus(ByteArrayWrapper txHash, ByteArrayWrapper id, ByteArrayWrapper msgHash, int v,
-            ByteArrayWrapper txRes) {
+            ByteArrayWrapper txRes, String error) {
         // TODO Auto-generated constructor stub
         this.txhash = txHash;
         this.socketId = id;
         this.msgHash = msgHash;
         this.state = v;
         this.txResult = txRes;
+        this.error = error;
     }
 
     public byte[] getSocketId() {
@@ -72,6 +74,8 @@ public class TxPendingStatus {
     public byte[] getTxResult() {
         return this.txResult.getData();
     }
+
+    public String getError() { return this.error; }
 
     public int toTxReturnCode() {
         return this.state + txRetCodeOffset;

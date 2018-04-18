@@ -25,6 +25,8 @@
 package org.aion.equihash;
 
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.aion.base.util.ByteUtil;
 import org.aion.base.util.NativeLoader;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
@@ -111,32 +113,20 @@ public class Equihash {
      */
     public Solution mine(IAionBlock block, byte[] nonce) {
 
-        //Copy blockheader to create a local copy to modify
         A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
 
-        //Get timestamp
-        long timeStamp = System.currentTimeMillis() / 1000;
+        byte[] inputBytes = updateHeader.getMineHash();
 
-        //Update header
-        updateHeader.setTimestamp(timeStamp);
 
-        byte[] blockHeader = updateHeader.getHeaderBytes(true);
-
-        // Target needs to be adjusted after further exploration
-        BigInteger target = valueOf(2).pow(256).divide(new BigInteger(block.getHeader().getDifficulty()));
+        BigInteger target = updateHeader.getPowBoundaryBI();
 
         int[][] generatedSolutions;
 
         // Convert byte to LE order (in place)
         toLEByteArray(nonce);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(
-                    "Mining Nonce: " + toHexString(nonce) + " Nonce Size: " + nonce.length + "  " + toHexString(nonce));
-        }
-
         // Get solutions for this nonce
-        generatedSolutions = getSolutionsForNonce(blockHeader, nonce);
+        generatedSolutions = getSolutionsForNonce(inputBytes, nonce);
 
         // Increment number of solutions
         this.totalSolGenerated.addAndGet(generatedSolutions.length);
@@ -151,12 +141,12 @@ public class Equihash {
 
             // Verify if any of the solutions pass the difficulty filter, return if true.
             byte[] minimal = EquiUtils.getMinimalFromIndices(generatedSolutions[i], cBitLen);
-            updateHeader.setSolution(minimal);
-            updateHeader.setNonce(nonce);
+
+            byte[] validationBytes = merge(inputBytes, nonce, minimal);
 
             // Found a valid solution
-            if (isValidBlock(updateHeader, target)) {
-                return new Solution(block, nonce, minimal, timeStamp);
+            if (isValidBlock(validationBytes, target)) {
+                return new Solution(block, nonce, minimal);
             }
         }
 
@@ -166,23 +156,19 @@ public class Equihash {
     /**
      * Checks if the solution meets difficulty requirements for this block.
      *
-     * @param nc
-     *            BlockHeader
      * @param target
      *            Target under which hash must fall below
-     * @return True is the solution meets target conitions; false otherwise.
+     * @return True is the solution meets target conditions; false otherwise.
      */
-    private boolean isValidBlock(A0BlockHeader nc, BigInteger target) {
+    private boolean isValidBlock(byte[] validationBytes, BigInteger target) {
         boolean isValid = false;
 
         // Default blake2b without personalization to test if hash is below
         // difficulty
-        BigInteger hdrDigest = new BigInteger(1, HashUtil.h256(nc.getHeaderBytes(false)));
+        BigInteger hdrDigest = new BigInteger(1, HashUtil.h256(validationBytes));
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Header digest: " + hdrDigest);
-            LOG.debug("Target:        " + target);
-            LOG.debug("Difficulty:    " + new BigInteger(nc.getDifficulty()));
+            LOG.debug("Comparing header digest {} to target {}: ", hdrDigest, target);
         }
 
         if (hdrDigest.compareTo(target) < 0) {

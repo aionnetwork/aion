@@ -44,14 +44,20 @@ import java.io.Writer;
 
 public final class CfgConsensusPow extends CfgConsensus {
 
+    private final CfgEnergyStrategy cfgEnergyStrategy;
+
     CfgConsensusPow() {
         this.mining = true;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
-        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1);
+        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors
         this.extraData = "AION";
+        this.cfgEnergyStrategy = new CfgEnergyStrategy();
+        this.seed = false;
     }
 
     private boolean mining;
+
+    private boolean seed;
 
     private String minerAddress;
 
@@ -63,34 +69,41 @@ public final class CfgConsensusPow extends CfgConsensus {
         loop: while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                case "mining":
-                    this.mining = Boolean.parseBoolean(Cfg.readValue(sr));
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "mining":
+                            this.mining = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "seed":
+                            this.seed = Boolean.parseBoolean(Cfg.readValue(sr));
+                                break;
+                        case "miner-address":
+                            this.minerAddress = Cfg.readValue(sr);
+                            break;
+                        case "cpu-mine-threads":
+                            this.cpuMineThreads = Byte.valueOf(Cfg.readValue(sr));
+                            break;
+                        case "extra-data":
+                            this.extraData = Cfg.readValue(sr);
+                            break;
+                        case "nrg-strategy":
+                            this.cfgEnergyStrategy.fromXML(sr);
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
                     break;
-                case "miner-address":
-                    this.minerAddress = Cfg.readValue(sr);
-                    break;
-                case "cpu-mine-threads":
-                    this.cpuMineThreads = Byte.valueOf(Cfg.readValue(sr));
-                    break;
-                case "extra-data":
-                    this.extraData = Cfg.readValue(sr);
-                    break;
-                default:
-                    Cfg.skipElement(sr);
-                    break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
 
     String toXML() {
         final XMLOutputFactory output = XMLOutputFactory.newInstance();
+        output.setProperty("escapeCharacters", false);
         XMLStreamWriter xmlWriter;
         String xml;
         try {
@@ -117,6 +130,12 @@ public final class CfgConsensusPow extends CfgConsensus {
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("extra-data");
             xmlWriter.writeCharacters(this.getExtraData());
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("nrg-strategy");
+            xmlWriter.writeCharacters(this.cfgEnergyStrategy.toXML());
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t");
@@ -158,4 +177,11 @@ public final class CfgConsensusPow extends CfgConsensus {
         return this.minerAddress;
     }
 
+    public CfgEnergyStrategy getEnergyStrategy() {
+        return this.cfgEnergyStrategy;
+    }
+
+    public boolean isSeed() {
+        return seed;
+    }
 }

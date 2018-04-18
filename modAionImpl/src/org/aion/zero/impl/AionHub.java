@@ -42,17 +42,15 @@ import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.impl.P2pMgr;
+import org.aion.p2p.impl1.P2pMgr;
+import org.aion.utils.TaskDumpHeap;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.blockchain.NonceMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.pow.AionPoW;
-import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
-import org.aion.zero.impl.sync.handler.BroadcastNewBlockHandler;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.handler.*;
 import org.aion.zero.impl.tx.AionTransactionExecThread;
@@ -62,119 +60,138 @@ import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 public class AionHub {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
+	private static final Logger LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
 
-    private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
+	private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-    private IP2pMgr p2pMgr;
+	private IP2pMgr p2pMgr;
 
-    private CfgAion cfg;
+	private CfgAion cfg;
 
-    private SyncMgr syncMgr;
+	private SyncMgr syncMgr;
 
-    private BlockPropagationHandler propHandler;
+	private BlockPropagationHandler propHandler;
 
-    private IPendingStateInternal<AionBlock, AionTransaction> mempool;
+	private IPendingStateInternal<AionBlock, AionTransaction> mempool;
 
-    private IAionBlockchain blockchain;
+	private IAionBlockchain blockchain;
 
-    // TODO: Refactor to interface later
-    private AionRepositoryImpl repository;
+	// TODO: Refactor to interface later
+	private AionRepositoryImpl repository;
 
-    private ITransactionExecThread<AionTransaction> txThread;
+	private ITransactionExecThread<AionTransaction> txThread;
 
-    private IEventMgr eventMgr;
+	private IEventMgr eventMgr;
 
-    private AionPoW pow;
+	private AionPoW pow;
 
-    /**
-     * A "cached" block that represents our local best block when the
-     * application is first booted.
-     */
-    private volatile AionBlock startingBlock;
+	private AtomicBoolean start = new AtomicBoolean(true);
 
-    /**
-     * Initialize as per the <a href=
-     * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
-     * holder pattern
-     */
-    private static class Holder {
-        static final AionHub INSTANCE = new AionHub();
-    }
+	/**
+	 * A "cached" block that represents our local best block when the application is
+	 * first booted.
+	 */
+	private volatile AionBlock startingBlock;
 
-    public static AionHub inst() {
-        return Holder.INSTANCE;
-    }
+	/**
+	 * Initialize as per the <a href=
+	 * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
+	 * holder pattern
+	 */
+	private static class Holder {
+		static final AionHub INSTANCE = new AionHub();
+	}
 
-    public AionHub() {
+	public static AionHub inst() {
+		return Holder.INSTANCE;
+	}
 
-        this.cfg = CfgAion.inst();
+	public AionHub() {
 
-        // load event manager before init blockchain instance
-        loadEventMgr();
+		this.cfg = CfgAion.inst();
 
-        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
-        blockchain.setEventManager(this.eventMgr);
-        this.blockchain = blockchain;
+		// load event manager before init blockchain instance
+		loadEventMgr();
 
-        this.repository = AionRepositoryImpl.inst();
+		AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+		blockchain.setEventManager(this.eventMgr);
+		this.blockchain = blockchain;
 
-        this.mempool = AionPendingStateImpl.inst();
+		this.repository = AionRepositoryImpl.inst();
 
-        // nonceMgr init after the repo and the tx pending pool were inited!
-        blockchain.setNonceMgr(NonceMgr.inst());
+		this.mempool = AionPendingStateImpl.inst();
 
-        this.txThread = AionTransactionExecThread.getInstance();
+		this.txThread = AionTransactionExecThread.getInstance();
 
-        loadBlockchain();
+		loadBlockchain();
 
         this.startingBlock = this.blockchain.getBestBlock();
+        if (!cfg.getConsensus().isSeed()) {
+            this.mempool.updateBest();
+        }
 
-        /*
-         * p2p hook up start sync mgr needs to be initialed after
-         * loadBlockchain() method
-         */
-        CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
-        this.p2pMgr = new P2pMgr(
-                this.cfg.getNet().getId(), Version.KERNEL_VERSION,
-                this.cfg.getId(), cfgNetP2p.getIp(), cfgNetP2p.getPort(), this.cfg.getNet().getNodes(),
-                cfgNetP2p.getDiscover(), 128, 128, cfgNetP2p.getShowStatus(),
-                cfgNetP2p.getShowLog(), cfgNetP2p.getBootlistSyncOnly());
+        if (cfg.getTx().getPoolBackup()) {
+            this.mempool.loadPendingTx();
+        }
 
-        this.syncMgr = SyncMgr.inst();
-        this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksImportMax(),
-                this.cfg.getSync().getBlocksQueueMax(), this.cfg.getSync().getShowStatus());
+		String reportsFolder = "";
+		if (cfg.getReports().isEnabled()) {
+			File rpf = new File(cfg.getBasePath(), cfg.getReports().getPath());
+			rpf.mkdirs();
+			reportsFolder = rpf.getAbsolutePath();
+		}
 
-        ChainConfiguration chainConfig = new ChainConfiguration();
-        this.propHandler = new BlockPropagationHandler(1024,
-                this.blockchain,
-                this.p2pMgr,
-                chainConfig.createBlockHeaderValidator());
+		/*
+		 * p2p hook up start sync mgr needs to be initialed after loadBlockchain()
+		 * method
+		 */
+		CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
 
-        registerCallback();
-        this.p2pMgr.run();
+		// there two p2p impletation , now just point to impl1.
+		this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
+				cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(), cfgNetP2p.getMaxTempNodes(),
+				cfgNetP2p.getMaxActiveNodes(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(),
+				cfgNetP2p.getBootlistSyncOnly(), false, "", cfgNetP2p.getErrorTolerance());
 
-        this.pow = new AionPoW();
-        this.pow.init(blockchain, mempool, eventMgr);
+		this.syncMgr = SyncMgr.inst();
+		this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksQueueMax(),
+				this.cfg.getSync().getShowStatus(), this.cfg.getReports().isEnabled(), reportsFolder);
+
+		ChainConfiguration chainConfig = new ChainConfiguration();
+		this.propHandler = new BlockPropagationHandler(1024, this.blockchain, this.p2pMgr,
+				chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().isSyncOnlyNode());
+
+		registerCallback();
+		this.p2pMgr.run();
+
+		this.pow = new AionPoW();
+		this.pow.init(blockchain, mempool, eventMgr);
+
+        if (cfg.getReports().isHeapDumpEnabled()) {
+            new Thread(new TaskDumpHeap(this.start, cfg.getReports().getHeapDumpInterval(), reportsFolder), "dump-heap")
+                    .start();
+        }
     }
 
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusHandler(syncLog, this.p2pMgr, this.syncMgr));
-        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksImportMax()));
-        cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr));
-        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getSync().getBlocksImportMax()));
-        cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr));
-        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, NonceMgr.inst()));
-        cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler));
+        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
+        cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr, this.p2pMgr));
+        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
+        cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr, this.p2pMgr));
+        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
+        cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler, this.p2pMgr));
         this.p2pMgr.register(cbs);
     }
 
@@ -365,6 +382,11 @@ public class AionHub {
             }
         }
 
+        if (getPendingState() != null) {
+            getPendingState().shutDown();
+            LOG.info("<shutdown-pendingState>");
+        }
+
         LOG.info("shutting down consensus...");
         pow.shutdown();
         LOG.info("shutdown consensus... Done!");
@@ -374,6 +396,8 @@ public class AionHub {
             repository.close();
             LOG.info("shutdown DB... Done!");
         }
+
+        this.start.set(false);
     }
 
     public SyncMgr getSyncMgr() {
@@ -391,4 +415,5 @@ public class AionHub {
     public AionBlock getStartingBlock() {
         return this.startingBlock;
     }
+
 }

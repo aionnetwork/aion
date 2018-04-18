@@ -44,6 +44,7 @@ import java.util.Set;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.crypto.HashUtil;
 import org.junit.Test;
@@ -63,7 +64,7 @@ public class GenesisSpecificationTest {
      * correct genesis specs
      */
     @Test
-    public void defaultGenesisBlockTest() {
+    public void defaultGenesisBlockTest() throws HeaderStructureException {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
         AionGenesis genesis = genesisBuilder.build();
 
@@ -94,7 +95,7 @@ public class GenesisSpecificationTest {
      * {@link AionGenesis.Builder}
      */
     @Test
-    public void overrideGenesisBlockTest() {
+    public void overrideGenesisBlockTest() throws HeaderStructureException {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
         
         // values to override defaults with
@@ -111,13 +112,12 @@ public class GenesisSpecificationTest {
             .withCoinbase(Address.wrap(overrideAddress))
             .withDifficulty(overrideValue.toByteArray())
             .withEnergyLimit(overrideValue.longValue())
-            .withExtraData(overrideHash)
             .withNonce(overrideHash)
             .withNumber(overrideValue.longValue())
             .withTimestamp(overrideValue.longValue())
             .addPreminedAccount(Address.wrap(overrideAddress), defaultAccountState);
-        
-        AionGenesis genesis = genesisBuilder.build();
+
+            AionGenesis genesis = genesisBuilder.build();
         
         assertThat(genesis.getParentHash()).isEqualTo(overrideHash);
         assertThat(genesis.getCoinbase().toBytes()).isEqualTo(overrideAddress);
@@ -131,6 +131,6 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getCumulativeDifficulty()).isEqualTo(overrideValue);
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
         
-        assertThat(genesis.getPremine().keySet().equals(accountStateSet));
+        assertThat(genesis.getPremine().keySet()).isEqualTo(accountStateSet);
     }
 }

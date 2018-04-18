@@ -26,82 +26,173 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import org.aion.db.impl.DBVendor;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.aion.db.impl.DatabaseFactory.Props;
 
 /**
  * @author chris
  */
 public class CfgDb {
 
-    public CfgDb() {
-        this.vendor = DBVendor.LEVELDB.toValue();
-        this.path = "database";
+    public static class Names {
+        public static final String DEFAULT = "default";
 
-        this.enable_auto_commit = false;
-        this.enable_db_cache = true;
-        this.enable_db_compression = true;
-        this.enable_heap_cache = true;
-        // size 0 means unbound
-        this.max_heap_cache_size = "0";
-        this.enable_heap_cache_stats = false;
+        public static final String BLOCK = "block";
+        public static final String INDEX = "index";
+
+        public static final String DETAILS = "details";
+        public static final String STORAGE = "storage";
+
+        public static final String STATE = "state";
+        public static final String TRANSACTION = "transaction";
+
+        public static final String TX_CACHE = "pendingtxCache";
+        public static final String TX_POOL = "pendingtxPool";
     }
 
-    protected String path;
+    private String path;
 
-    private String vendor;
+    private boolean expert = false;
 
-    private boolean enable_auto_commit;
-    private boolean enable_db_cache;
-    private boolean enable_db_compression;
+    // individual db configurations
+    private Map<String, CfgDbDetails> specificConfig;
 
-    private boolean enable_heap_cache;
-    private String max_heap_cache_size;
-    private boolean enable_heap_cache_stats;
+    public CfgDb() {
+        this.path = "database";
+        this.specificConfig = new HashMap<>();
+        this.specificConfig.put(Names.DEFAULT, new CfgDbDetails());
+    }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
+        CfgDbDetails dbDefault = specificConfig.get(Names.DEFAULT);
+
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                case "path":
-                    this.path = Cfg.readValue(sr);
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "path":
+                            this.path = Cfg.readValue(sr);
+                            break;
+                        case "expert":
+                            this.expert = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "vendor":
+                            dbDefault.vendor = Cfg.readValue(sr);
+                            break;
+                        case Props.ENABLE_AUTO_COMMIT:
+                            dbDefault.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.ENABLE_DB_CACHE:
+                            dbDefault.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.ENABLE_DB_COMPRESSION:
+                            dbDefault.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.ENABLE_HEAP_CACHE:
+                            dbDefault.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.MAX_HEAP_CACHE_SIZE:
+                            dbDefault.max_heap_cache_size = Cfg.readValue(sr);
+                            break;
+                        case Props.ENABLE_HEAP_CACHE_STATS:
+                            dbDefault.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.BLOCK_SIZE:
+                            dbDefault.block_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.block_size);
+                            break;
+                        case Props.MAX_FD_ALLOC:
+                            int i = Integer.parseInt(Cfg.readValue(sr));
+                            dbDefault.max_fd_open_alloc = Math.max(CfgDbDetails.MIN_FD_OPEN_ALLOC, i);
+                            break;
+                        case Props.WRITE_BUFFER_SIZE:
+                            dbDefault.write_buffer_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.write_buffer_size);
+                            break;
+                        case Props.READ_BUFFER_SIZE:
+                            dbDefault.read_buffer_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.read_buffer_size);
+                            break;
+                        case Props.DB_CACHE_SIZE:
+                            dbDefault.cache_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.cache_size);
+                            break;
+                        case Names.DEFAULT: {
+                            dbDefault.fromXML(sr);
+                            this.specificConfig.put(Names.DEFAULT, dbDefault);
+                            break;
+                        }
+                        case Names.BLOCK: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.BLOCK, dbConfig);
+                            break;
+                        }
+                        case Names.INDEX: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.INDEX, dbConfig);
+                            break;
+                        }
+                        case Names.DETAILS: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.DETAILS, dbConfig);
+                            break;
+                        }
+                        case Names.STORAGE: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.STORAGE, dbConfig);
+                            break;
+                        }
+                        case Names.STATE: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.STATE, dbConfig);
+                            break;
+                        }
+                        case Names.TRANSACTION: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.TRANSACTION, dbConfig);
+                            break;
+                        }
+                        case Names.TX_POOL: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.TX_POOL, dbConfig);
+                            break;
+                        }
+                        case Names.TX_CACHE: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.TX_CACHE, dbConfig);
+                            break;
+                        }
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
                     break;
-                case "vendor":
-                    this.vendor = Cfg.readValue(sr);
-                    break;
-                case "enable_auto_commit":
-                    this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "enable_db_cache":
-                    this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "enable_db_compression":
-                    this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "enable_heap_cache":
-                    this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "max_heap_cache_size":
-                    this.max_heap_cache_size = Cfg.readValue(sr);
-                    break;
-                case "enable_heap_cache_stats":
-                    this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                default:
-                    Cfg.skipElement(sr);
-                    break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
+            }
+        }
+
+        // if not expert user set the same default vendor for all databases
+        if (!expert) {
+            for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+                entry.getValue().vendor = dbDefault.vendor;
             }
         }
     }
@@ -121,40 +212,21 @@ public class CfgDb {
             xmlWriter.writeCharacters(this.getPath());
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("vendor");
-            xmlWriter.writeCharacters(this.getVendor());
-            xmlWriter.writeEndElement();
+            if (!expert) {
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("vendor");
+                xmlWriter.writeCharacters(this.specificConfig.get(Names.DEFAULT).vendor);
+                xmlWriter.writeEndElement();
+            } else {
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("expert");
+                xmlWriter.writeCharacters(String.valueOf(expert));
+                xmlWriter.writeEndElement();
+            }
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_auto_commit");
-            xmlWriter.writeCharacters(String.valueOf(this.isAutoCommitEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_db_cache");
-            xmlWriter.writeCharacters(String.valueOf(this.isDbCacheEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_db_compression");
-            xmlWriter.writeCharacters(String.valueOf(this.isDbCompressionEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_heap_cache");
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("max_heap_cache_size");
-            xmlWriter.writeCharacters(String.valueOf(this.getMaxHeapCacheSize()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_heap_cache_stats");
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapCacheStatsEnabled()));
-            xmlWriter.writeEndElement();
+            for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+                entry.getValue().toXML(entry.getKey(), xmlWriter, expert);
+            }
 
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
@@ -174,54 +246,19 @@ public class CfgDb {
         return this.path;
     }
 
-    public String getVendor() {
-        return this.vendor;
+    public Map<String, Properties> asProperties() {
+        Map<String, Properties> props = new HashMap<>();
+
+        for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+            props.put(entry.getKey(), entry.getValue().asProperties());
+        }
+
+        return props;
     }
 
-    public boolean isAutoCommitEnabled() {
-        return enable_auto_commit;
+    public void setHeapCacheEnabled(boolean value) {
+        for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+            entry.getValue().enable_heap_cache = value;
+        }
     }
-
-    public boolean isDbCacheEnabled() {
-        return enable_db_cache;
-    }
-
-    public boolean isDbCompressionEnabled() {
-        return enable_db_compression;
-    }
-
-    public boolean isHeapCacheEnabled() {
-        return enable_heap_cache;
-    }
-
-    public String getMaxHeapCacheSize() {
-        return max_heap_cache_size;
-    }
-
-    public boolean isHeapCacheStatsEnabled() {
-        return enable_heap_cache_stats;
-    }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

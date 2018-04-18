@@ -24,15 +24,8 @@
 
 package org.aion.api.server.pb;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-
-import org.aion.mcf.account.Keystore;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
@@ -40,150 +33,235 @@ import org.aion.api.server.types.*;
 import org.aion.base.type.*;
 import org.aion.base.util.*;
 import org.aion.equihash.EquihashMiner;
+import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.callback.EventCallbackA0;
+import org.aion.evtmgr.impl.callback.EventCallback;
+import org.aion.evtmgr.impl.es.EventExecuteService;
+import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.account.Keystore;
+import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.json.JSONArray;
 import org.apache.commons.collections4.map.LRUMap;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
+@SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
 
     private final static byte JAVAAPI_VAR = 2;
     private final static int JAVAAPI_REQHEADER_LEN = 4;
     private final static int TX_HASH_LEN = 32;
+    private final static int ACCOUNT_CREATE_LIMIT = 100;
 
-    private static final int ACCOUNT_CREATE_LIMIT = 100;
+    private BlockingQueue<TxPendingStatus> pendingStatus;
+    private BlockingQueue<TxWaitingMappingUpdate> txWait;
+    private Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> msgIdMapping;
+
+    protected void onBlock(AionBlockSummary cbs) {
+        Set<Long> keys = installedFilters.keySet();
+        for (Long key : keys) {
+            Fltr fltr = installedFilters.get(key);
+            if (fltr.isExpired()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("<fltr key={} expired removed>", key);
+                }
+                installedFilters.remove(key);
+            } else {
+                List<AionTxReceipt> txrs = cbs.getReceipts();
+                if (fltr.getType() == Fltr.Type.EVENT
+                        && !Optional.ofNullable(txrs).orElse(Collections.emptyList()).isEmpty()) {
+                    FltrCt _fltr = (FltrCt) fltr;
+
+                    for (AionTxReceipt txr : txrs) {
+                        AionTransaction tx = txr.getTransaction();
+                        Address contractAddress = Optional.ofNullable(tx.getTo())
+                                .orElse(tx.getContractAddress());
+
+                        Integer cnt = 0;
+                        txr.getLogInfoList().forEach(bi -> bi.getTopics().forEach(lg -> {
+                            if (_fltr.isFor(contractAddress, ByteUtil.toHexString(lg))) {
+                                IBlock<AionTransaction, ?> blk = (cbs).getBlock();
+                                List<AionTransaction> txList = blk.getTransactionsList();
+                                int insideCnt = 0;
+                                for (AionTransaction t : txList) {
+                                    if (Arrays.equals(t.getHash(), tx.getHash())) {
+                                        break;
+                                    }
+                                    insideCnt++;
+                                }
+
+                                EvtContract ec = new EvtContract(bi.getAddress().toBytes(),
+                                        bi.getData(), blk.getHash(), blk.getNumber(), cnt,
+                                        ByteUtil.toHexString(lg), false, insideCnt, tx.getHash());
+
+                                _fltr.add(ec);
+                            }
+                        }));
+                    }
+                }
+            }
+        }
+    }
+
+    protected void pendingTxReceived(ITransaction _tx) {
+        installedFilters.values().forEach((f) -> {
+            if (f.getType() == Fltr.Type.TRANSACTION) {
+                f.add(new EvtTx(_tx));
+            }
+        });
+    }
+
+    protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+        ByteArrayWrapper txHashW = ByteArrayWrapper.wrap(
+                ((AionTxReceipt) _txRcpt).getTransaction().getHash());
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("ApiAionA0.onPendingTransactionUpdate - txHash: [{}], state: [{}]", txHashW.toString(), _state.getValue());
+        }
+
+        if (getMsgIdMapping().get(txHashW) != null) {
+            if (pendingStatus.remainingCapacity() == 0) {
+                pendingStatus.poll();
+                LOG.warn(
+                        "ApiAionA0.onPendingTransactionUpdate - txPend ingStatus queue full, drop the first message.");
+            }
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("ApiAionA0.onPendingTransactionUpdate - the pending Tx state : [{}]", _state.getValue());
+            }
+
+            pendingStatus.add(new TxPendingStatus(txHashW,
+                    getMsgIdMapping().get(txHashW).getValue(),
+                    getMsgIdMapping().get(txHashW).getKey(),
+                    _state.getValue(),
+                    ByteArrayWrapper.wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null ? EMPTY_BYTE_ARRAY : ((AionTxReceipt) _txRcpt).getExecutionResult()),
+                    ((AionTxReceipt) _txRcpt).getError()));
+
+
+
+            if (_state.isPending()) {
+                pendingReceipts.put(txHashW, ((AionTxReceipt) _txRcpt));
+            } else {
+                pendingReceipts.remove(txHashW);
+                getMsgIdMapping().remove(txHashW);
+            }
+        } else {
+            if (txWait.remainingCapacity() == 0) {
+                txWait.poll();
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("ApiAionA0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
+                }
+            }
+
+            // waiting origin Api call status been callback
+            try {
+                txWait.put(new TxWaitingMappingUpdate(txHashW, _state.getValue(), ((AionTxReceipt) _txRcpt)));
+            } catch (InterruptedException e) {
+                LOG.error("ApiAionA0.onPendingTransactionUpdate txWait.put exception", e.getMessage());
+            }
+        }
+    }
+
+    private boolean isFilterEnabled;
+
+    private Map<ByteArrayWrapper, AionBlockSummary> explorerBlockCache;
+
+    private void cacheBlock(AionBlockSummary cbs) {
+        // put the block summary in the cache
+        explorerBlockCache.put(new ByteArrayWrapper(cbs.getBlock().getHash()), cbs);
+    }
+
+    private boolean isBlkCacheEnabled;
+
+    private EventExecuteService eesBlkCache;
+
+    private final class EpBlkCache implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+                try {
+                    IEvent e = eesBlkCache.take();
+                    if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBLOCK0.getValue()) {
+                        cacheBlock((AionBlockSummary)e.getFuncArgs().get(0));
+                    } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                        go = false;
+                    }
+                } catch (Exception e) {
+                    LOG.debug("EpBlkCache - excepted out", e);
+                }
+            }
+        }
+    }
 
     @SuppressWarnings("rawtypes")
     public ApiAion0(IAionChain ac) {
         super(ac);
         this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(10000, 100));
 
-        IHandler hdrTx = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
-        if (hdrTx != null) {
-            hdrTx.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        public void onPendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state, IBlock _blk) {
+        int MAP_SIZE = 50_000;
+        this.pendingStatus = new LinkedBlockingQueue(MAP_SIZE);
+        this.txWait = new LinkedBlockingQueue(MAP_SIZE);
+        this.msgIdMapping = Collections.synchronizedMap(new LRUMap<>(MAP_SIZE, 100));
 
-                            ByteArrayWrapper txHashW = new ByteArrayWrapper(
-                                    ((AionTxReceipt) _txRcpt).getTransaction().getHash());
-                            LOG.debug("ApiAionA0.onPendingTransactionUpdate - txHash: [{}], state: [{}]",
-                                    txHashW.toString(), _state.getValue());
 
-                            if (getMsgIdMapping().get(txHashW) != null) {
-                                if (txPendingStatus.remainingCapacity() == 0) {
-                                    txPendingStatus.poll();
-                                    LOG.warn(
-                                            "ApiAionA0.onPendingTransactionUpdate - txPend ingStatus queue full, drop the first message.");
-                                }
+        isFilterEnabled = CfgAion.inst().getApi().getZmq().isFiltersEnabled();
 
-                                LOG.debug("ApiAionA0.onPendingTransactionUpdate - the pending Tx state : [{}]",
-                                        _state.getValue());
-                                txPendingStatus.add(new TxPendingStatus(txHashW,
-                                        getMsgIdMapping().get(txHashW).getValue(),
-                                        getMsgIdMapping().get(txHashW).getKey(), _state.getValue(),
-                                        ByteArrayWrapper.wrap(((AionTxReceipt) _txRcpt).getExecutionResult() == null
-                                                ? ByteUtil.EMPTY_BYTE_ARRAY
-                                                : ((AionTxReceipt) _txRcpt).getExecutionResult())));
+        isBlkCacheEnabled = CfgAion.inst().getApi().getZmq().isBlockSummaryCacheEnabled();
 
-                                if (_state.isPending()) {
-                                    pendingReceipts.put(txHashW, ((AionTxReceipt) _txRcpt));
-                                } else {
-                                    pendingReceipts.remove(txHashW);
-                                    getMsgIdMapping().remove(txHashW);
-                                }
-                            } else {
-                                if (txWait.remainingCapacity() == 0) {
-                                    txWait.poll();
-                                    LOG.debug(
-                                            "ApiAionA0.onPendingTransactionUpdate - txWait queue full, drop the first message.");
-                                }
+        if (isBlkCacheEnabled) {
+            explorerBlockCache = Collections.synchronizedMap(new LRUMap<>(20)); // use the default loadfactor
+            eesBlkCache = new EventExecuteService(100_000, "explorer-blk-cache", Thread.MIN_PRIORITY, LOG);
+            Set<Integer> eventSN = new HashSet<>();
+            int sn = IHandler.TYPE.BLOCK0.getValue() << 8;
+            eventSN.add(sn + EventBlock.CALLBACK.ONBLOCK0.getValue());
+            eesBlkCache.setFilter(eventSN);
+            eesBlkCache.start(new EpBlkCache());
 
-                                // waiting origin Api call status been callback
-                                try {
-                                    txWait.put(new TxWaitingMappingUpdate(txHashW, _state.getValue(),
-                                            ((AionTxReceipt) _txRcpt)));
-                                } catch (InterruptedException e) {
-                                    LOG.error("ApiAionA0.onPendingTransactionUpdate txWait.put exception",
-                                            e.getMessage());
-                                }
-                            }
-                        }
-
-                        public void onPendingTxReceived(ITransaction _tx) {
-                            installedFilters.values().forEach((f) -> {
-                                if (f.getType() == Fltr.Type.TRANSACTION) {
-                                    f.add(new EvtTx((AionTransaction) _tx));
-                                }
-                            });
-                        }
-                    });
+            IHandler hdrBlk = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
+            if (hdrBlk != null) {
+                hdrBlk.eventCallback(new EventCallback(eesBlkCache, LOG));
+            }
         }
 
-        IHandler hdrBlk = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
-        if (hdrBlk != null) {
-            hdrBlk.eventCallback(
-                    new EventCallbackA0<IBlock, ITransaction, ITxReceipt, IBlockSummary, ITxExecSummary, ISolution>() {
-                        @Override
-                        public void onBlock(IBlockSummary cbs) {
+        if (isFilterEnabled) {
+            startES("EpApi");
 
-                            Set<Long> keys = installedFilters.keySet();
-                            for (Long key : keys) {
-                                Fltr fltr = installedFilters.get(key);
-                                if (fltr.isExpired()) {
-                                    LOG.debug("<fltr key={} expired removed>", key);
-                                    installedFilters.remove(key);
-                                } else {
-                                    @SuppressWarnings("unchecked")
-                                    List<AionTxReceipt> txrs = ((AionBlockSummary) cbs).getReceipts();
-                                    if (fltr.getType() == Fltr.Type.EVENT
-                                            && !Optional.ofNullable(txrs).orElse(Collections.emptyList()).isEmpty()) {
-                                        FltrCt _fltr = (FltrCt) fltr;
+            IHandler hdrTx = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.TX0.getValue());
+            if (hdrTx != null) {
+                hdrTx.eventCallback(new EventCallback(ees, LOG));
 
-                                        for (AionTxReceipt txr : txrs) {
-                                            AionTransaction tx = txr.getTransaction();
-                                            Address contractAddress = Optional.ofNullable(tx.getTo())
-                                                    .orElse(tx.getContractAddress());
+            }
 
-                                            Integer cnt = 0;
-                                            txr.getLogInfoList().forEach(bi -> bi.getTopics().forEach(lg -> {
-                                                if (_fltr.isFor(contractAddress, ByteUtil.toHexString(lg))) {
-                                                    IBlock<AionTransaction, ?> blk = (cbs).getBlock();
-                                                    List<AionTransaction> txList = blk.getTransactionsList();
-                                                    int insideCnt = 0;
-                                                    for (AionTransaction t : txList) {
-                                                        if (Arrays.equals(t.getHash(), tx.getHash())) {
-                                                            break;
-                                                        }
-                                                        insideCnt++;
-                                                    }
-
-                                                    EvtContract ec = new EvtContract(bi.getAddress().toBytes(),
-                                                            bi.getData(), blk.getHash(), blk.getNumber(), cnt,
-                                                            ByteUtil.toHexString(lg), false, insideCnt, tx.getHash());
-
-                                                    _fltr.add(ec);
-                                                }
-                                            }));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
+            IHandler hdrBlk = this.ac.getAionHub().getEventMgr().getHandler(IHandler.TYPE.BLOCK0.getValue());
+            if (hdrBlk != null) {
+                hdrBlk.eventCallback(new EventCallback(ees, LOG));
+            }
         }
     }
 
@@ -217,8 +295,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             Message.rsp_protocolVersion rsp = Message.rsp_protocolVersion.newBuilder()
                     .setApi(String.valueOf(this.getApiVersion())).setDb(AionHub.getRepoVersion())
                     .setKernel(Version.KERNEL_VERSION).setMiner(EquihashMiner.VERSION)
-                    .setNet(this.ac.getAionHub().getP2pMgr().version())
-                    .setTxpool(this.ac.getAionHub().getPendingState().getVersion()).setVm("0.1.0").build();
+                    .setNet(this.p2pProtocolVersion())
+                    .setTxpool(this.ac.getAionHub().getPendingState().getVersion())
+                    .setVm("0.1.0").build();
 
             byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
@@ -245,8 +324,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         case Message.Funcs.f_contractDeploy_VALUE: {
 
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             Message.req_contractDeploy req;
@@ -258,8 +336,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 // instead of str format like "0xhex".!
                 byte[] bytes = req.getData().toByteArray();
                 if (bytes == null || bytes.length <= 4) {
-                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_ct_bytecode_VALUE,
-                            ApiUtil.getApiMsgHash(request));
+                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_ct_bytecode_VALUE, msgHash);
                 }
 
                 ArgTxCall params = new ArgTxCall(Address.wrap(req.getFrom().toByteArray()), null,
@@ -271,23 +348,22 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.createContract(params);
 
                 if (result != null) {
-                    getMsgIdMapping().put(new ByteArrayWrapper(result.transId), new AbstractMap.SimpleEntry<>(
-                            new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
-                    LOG.debug("ApiAionA0.process.ContractDeploy - msgIdMapping.put: [{}] ",
-                            new ByteArrayWrapper(result.transId).toString());
+                    getMsgIdMapping().put(ByteArrayWrapper.wrap(result.transId), new AbstractMap.SimpleEntry<>(
+                            ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("ApiAionA0.process.ContractDeploy - msgIdMapping.put: [{}] ", ByteArrayWrapper.wrap(result.transId).toString());
+                    }
                 }
             } catch (Exception e) {
                 LOG.error("ApiAionA0.process.ContractDeploy exception [{}] ", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             Message.rsp_contractDeploy rsp = Message.rsp_contractDeploy.newBuilder()
-                    .setContractAddress(ByteString.copyFrom(result != null ? result.address.toBytes() : new byte[0]))
-                    .setTxHash(ByteString.copyFrom(result != null ? result.transId : new byte[0])).build();
+                    .setContractAddress(ByteString.copyFrom(result != null ? result.address.toBytes() : EMPTY_BYTE_ARRAY))
+                    .setTxHash(ByteString.copyFrom(result != null ? result.transId : EMPTY_BYTE_ARRAY)).build();
 
-            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE,
-                    ApiUtil.getApiMsgHash(request));
+            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE, msgHash);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
 
@@ -423,8 +499,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         case Message.Funcs.f_sendTransaction_VALUE: {
 
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             byte[] data = parseMsgReq(request, msgHash);
@@ -441,25 +516,24 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.sendTransaction(params);
             } catch (InvalidProtocolBufferException e) {
                 LOG.error("ApiAionA0.process.sendTransaction exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             if (result == null) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
             }
 
-            getMsgIdMapping().put(new ByteArrayWrapper(result), new AbstractMap.SimpleEntry<>(
-                    new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
-            LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]",
-                    new ByteArrayWrapper(result).toString());
+            getMsgIdMapping().put(ByteArrayWrapper.wrap(result), new AbstractMap.SimpleEntry<>(
+                    ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]",
+                        ByteArrayWrapper.wrap(result).toString());
+            }
 
             Message.rsp_sendTransaction rsp = Message.rsp_sendTransaction.newBuilder()
                     .setTxHash(ByteString.copyFrom(result)).build();
 
-            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE,
-                    ApiUtil.getApiMsgHash(request));
+            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE, msgHash);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
         case Message.Funcs.f_getCode_VALUE: {
@@ -518,16 +592,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setFrom(ByteString.copyFrom(result.fromAddr.toBytes())).setBlockNumber(result.blockNumber)
                         .setBlockHash(ByteString
                                 .copyFrom(result.blockHash != null ? ByteUtil.hexStringToBytes(result.blockHash)
-                                        : ByteUtil.EMPTY_BYTE_ARRAY))
+                                        : EMPTY_BYTE_ARRAY))
                         .setContractAddress(ByteString.copyFrom(
                                 result.contractAddress != null ? ByteUtil.hexStringToBytes(result.contractAddress)
-                                        : ByteUtil.EMPTY_BYTE_ARRAY))
+                                        : EMPTY_BYTE_ARRAY))
                         .setTxIndex(result.transactionIndex)
                         .setTxHash(ByteString.copyFrom(
                                 result.transactionHash != null ? ByteUtil.hexStringToBytes(result.transactionHash)
-                                        : ByteUtil.EMPTY_BYTE_ARRAY))
+                                        : EMPTY_BYTE_ARRAY))
                         .setTo(ByteString
-                                .copyFrom(result.toAddr == null ? ByteUtil.EMPTY_BYTE_ARRAY : result.toAddr.toBytes()))
+                                .copyFrom(result.toAddr == null ? EMPTY_BYTE_ARRAY : result.toAddr.toBytes()))
                         .setNrgConsumed(result.nrgUsed).setCumulativeNrgUsed(result.cumulativeNrgUsed).addAllLogs(logs)
                         .build();
 
@@ -894,7 +968,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             try {
                 Message.rsp_syncInfo rsp = Message.rsp_syncInfo.newBuilder().setChainBestBlock(sync.chainBestBlkNumber)
                         .setNetworkBestBlock(sync.networkBestBlkNumber).setSyncing(!sync.done)
-                        .setMaxImportBlocks(sync.blksImportMax).build();
+                        .setMaxImportBlocks(24).build();
 
                 byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
                 return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
@@ -989,8 +1063,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
         case Message.Funcs.f_estimateNrg_VALUE: {
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             byte[] data = parseMsgReq(request, msgHash);
@@ -1006,8 +1079,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.estimateNrg(params);
             } catch (InvalidProtocolBufferException e) {
                 LOG.error("ApiAionA0.process.estimateNrg exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             Message.rsp_estimateNrg rsp = Message.rsp_estimateNrg.newBuilder().setNrg(result).build();
@@ -1092,8 +1164,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         case Message.Funcs.f_signedTransaction_VALUE:
         case Message.Funcs.f_rawTransaction_VALUE: {
             if (service != Message.Servs.s_tx_VALUE) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE, msgHash);
             }
 
             byte[] data = parseMsgReq(request, msgHash);
@@ -1110,25 +1181,23 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 result = this.sendTransaction(encodedTx);
             } catch (InvalidProtocolBufferException e) {
                 LOG.error("ApiAionA0.process.sendTransaction exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             }
 
             if (result == null) {
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE,
-                        ApiUtil.getApiMsgHash(request));
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
             }
 
-            getMsgIdMapping().put(new ByteArrayWrapper(result), new AbstractMap.SimpleEntry<>(
-                    new ByteArrayWrapper(ApiUtil.getApiMsgHash(request)), new ByteArrayWrapper(socketId)));
-            LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]",
-                    new ByteArrayWrapper(result).toString());
+            getMsgIdMapping().put(ByteArrayWrapper.wrap(result), new AbstractMap.SimpleEntry<>(
+                    ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("ApiAionA0.process.sendTransaction - msgIdMapping.put: [{}]", ByteArrayWrapper.wrap(result).toString());
+            }
 
             Message.rsp_sendTransaction rsp = Message.rsp_sendTransaction.newBuilder()
                     .setTxHash(ByteString.copyFrom(result)).build();
 
-            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE,
-                    ApiUtil.getApiMsgHash(request));
+            byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_tx_Recved_VALUE, msgHash);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
         case Message.Funcs.f_eventRegister_VALUE: {
@@ -1266,6 +1335,149 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
                     return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                 }
+            } catch (Exception e) {
+                LOG.error("ApiAionA0.process.getBlockDetailsByNumber exception: [{}]", e.getMessage());
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE);
+            }
+        }
+        case Message.Funcs.f_getBlockSqlByRange_VALUE: {
+            if (service != Message.Servs.s_admin_VALUE) {
+                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE);
+            }
+
+            byte[] data = parseMsgReq(request, msgHash);
+            Message.req_getBlockSqlByRange req;
+
+            try {
+                if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: start");
+
+                req = Message.req_getBlockSqlByRange.parseFrom(data);
+                long latestBlkNum = this.getBestBlock().getNumber();
+
+                Long _blkStart = req.getBlkNumberStart();
+                Long _blkEnd = req.getBlkNumberEnd();
+
+                // no null check here
+
+                long blkStart = -1;
+                long blkEnd = -1;
+
+                if (_blkStart < 0)
+                    blkStart = 0;
+                else
+                    blkStart = _blkStart;
+
+                if (_blkEnd > latestBlkNum)
+                    blkEnd = latestBlkNum;
+                else
+                    blkEnd = _blkEnd;
+
+                if (blkEnd < blkStart)
+                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_arguments_VALUE);
+
+                // truncate the thing
+                if (blkEnd - blkStart > 1000) {
+                    blkStart = blkEnd - 1000 + 1;
+
+                    if (blkStart < 0) blkStart = 0;
+                }
+
+                if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: range " + blkStart + "-" + blkEnd);
+
+                Long lastBlockTimestamp = null;
+                long listLength = blkEnd - blkStart + 1;
+                List<Message.t_BlockSql> bds = new ArrayList<>();
+
+                for (int i = 0; i < listLength; i++) {
+                    long blkNum = blkStart  + i;
+                    Map.Entry<AionBlock, BigInteger> entry = getBlockWithTotalDifficulty(blkNum);
+                    AionBlock b = entry.getKey();
+                    BigInteger td = entry.getValue();
+                    long blocktime = 0;
+                    if (blkNum != 0 && lastBlockTimestamp == null) {
+                        lastBlockTimestamp = getBlock(blkNum - 1).getTimestamp();
+                    }
+                    if (blkNum == 0)
+                        blocktime = 0;
+                    else
+                        blocktime = b.getTimestamp() - lastBlockTimestamp;
+
+                    lastBlockTimestamp = b.getTimestamp();
+
+                    String blockSql = generateBlockSqlStatement(b, td, blocktime);
+
+                    List <String> transactionSql = new ArrayList<>();
+
+                    AionBlockSummary bs = null;
+                    if (explorerBlockCache != null) {
+                        // remove from cache since after consumed, we're probably not gonna revisit it
+                        bs = explorerBlockCache.remove(new ByteArrayWrapper(b.getHash()));
+                    }
+
+                    if (bs != null) {
+
+                        if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: cache HIT for #: " + b.getNumber());
+
+                        Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
+                        for (AionTxReceipt r : bs.getReceipts()) {
+                            receipts.put(new ByteArrayWrapper(r.getTransaction().getHash()), r);
+                        }
+
+                        List<AionTransaction> txns = b.getTransactionsList();
+                        for (int j = 0; j < txns.size(); j++) {
+                            AionTransaction tx = txns.get(j);
+                            AionTxReceipt r = receipts.get(new ByteArrayWrapper(tx.getHash()));
+                            if (r == null) {
+                                if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: transaction not in Block Summary: " + b.getNumber() + "." + j);
+                                AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain())
+                                        .getTransactionInfoLite(tx.getHash(), b.getHash());
+                                r = ti.getReceipt();
+                            }
+                            if (r == null) {
+                                LOG.error("BlockSqlByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
+                            }
+                            else {
+                                transactionSql.add(generateTransactionSqlStatement(b, tx, r.getLogInfoList(), j, r.getEnergyUsed()));
+                            }
+                        }
+                    } else {
+                        if (LOG.isDebugEnabled()) LOG.debug("BlockSqlByRange: cache MISS for #: " + b.getNumber());
+                        List<AionTransaction> txs = b.getTransactionsList();
+
+                        transactionSql = txs.parallelStream()
+                                .filter(Objects::nonNull)
+                                .map((AionTransaction tx) -> {
+                                    AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain())
+                                            .getTransactionInfoLite(tx.getHash(), b.getHash());
+                                    if (ti == null) {
+                                        LOG.error("BlockSqlByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
+                                        return null;
+                                    } else {
+                                        return generateTransactionSqlStatement(b, tx, ti.getReceipt().getLogInfoList(), ti.getIndex(), ti.getReceipt().getEnergyUsed());
+                                    }
+                                }).filter(Objects::nonNull)
+                                .collect(Collectors.toList());
+                    }
+
+                    Message.t_BlockSql sqlObj =
+                            Message.t_BlockSql.newBuilder()
+                                    .setBlockNumber(b.getNumber())
+                                    .setBlockHash(ByteUtil.toHexString(b.getHash()))
+                                    .setParentHash(ByteUtil.toHexString(b.getParentHash()))
+                                    .setBlock(blockSql)
+                                    .addAllTx(transactionSql)
+                                    .build();
+
+                    bds.add(sqlObj);
+                }
+
+                Message.rsp_getBlockSqlByRange rsp =
+                        Message.rsp_getBlockSqlByRange.newBuilder()
+                        .addAllBlkSql(bds)
+                        .build();
+
+                byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
+                return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
             } catch (Exception e) {
                 LOG.error("ApiAionA0.process.getBlockDetailsByNumber exception: [{}]", e.getMessage());
                 return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE);
@@ -1409,6 +1621,24 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         }
     }
 
+    @Override
+    public void shutDown() {
+        if (isFilterEnabled) {
+            shutDownES();
+        }
+
+        if (isBlkCacheEnabled) {
+            eesBlkCache.shutdown();
+        }
+    }
+    @Override public Map<ByteArrayWrapper, Entry<ByteArrayWrapper, ByteArrayWrapper>> getMsgIdMapping() {
+        return this.msgIdMapping;
+    }
+
+    @Override public TxWaitingMappingUpdate takeTxWait() throws Throwable {
+        return txWait.take();
+    }
+
     private byte[] createBlockMsg(AionBlock blk) {
         if (blk == null) {
             return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_arguments_VALUE);
@@ -1435,9 +1665,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .setNrgConsume(tx.getNrgConsume())
                 .setNrgPrice(tx.getNrgPrice())
                 .setTxHash(ByteString.copyFrom(tx.getHash()))
-                .setData(ByteString.copyFrom(tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData()))
+                .setData(ByteString.copyFrom(tx.getData() == null ? EMPTY_BYTE_ARRAY : tx.getData()))
                 .setNonce(ByteString.copyFrom(tx.getNonce()))
-                .setTo(ByteString.copyFrom(tx.getTo() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getTo().toBytes()))
+                .setTo(ByteString.copyFrom(tx.getTo() == null ? EMPTY_BYTE_ARRAY : tx.getTo().toBytes()))
                 .setValue(ByteString.copyFrom(tx.getValue()))
                 .setTxIndex((int)tx.getTxIndexInBlock())
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimeStamp()))
@@ -1496,6 +1726,130 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return bs;
     }
 
+    private String generateBlockSqlStatement(AionBlock b, BigInteger td, long blocktime) {
+        /*
+        create table block_cache(
+            block_number bigint(64) primary key,
+
+            block_hash varchar(64),
+            miner_address varchar(64),
+            parent_hash varchar(64),
+
+            receipt_tx_root varchar(64),
+            state_root varchar(64),
+            tx_trie_root varchar(64),
+
+            extra_data varchar(64),
+            nonce text,
+            bloom text,
+            solution text,
+
+            difficulty text,
+            total_difficulty text,
+
+            nrg_consumed bigint(64),
+            nrg_limit bigint(64),
+            size bigint(64),
+
+            block_timestamp bigint(64),
+            num_transactions bigint(64),
+            block_time bigint(64));
+         */
+        String stmt =
+                b.getNumber()+","+
+
+                "'"+ByteUtil.toHexString(b.getHash())+"',"+
+                "'"+ByteUtil.toHexString(b.getCoinbase().toBytes())+"',"+
+                "'"+ByteUtil.toHexString(b.getParentHash())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getReceiptsRoot())+"',"+
+                "'"+ByteUtil.toHexString(b.getStateRoot())+"',"+
+                "'"+ByteUtil.toHexString(b.getTxTrieRoot())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getExtraData())+"',"+
+                "'"+ByteUtil.toHexString(b.getNonce())+"',"+
+                "'"+ByteUtil.toHexString(b.getLogBloom())+"',"+
+                "'"+ByteUtil.toHexString(b.getHeader().getSolution())+"',"+
+
+                "'"+ByteUtil.toHexString(b.getDifficulty())+"',"+
+                "'"+ByteUtil.toHexString(td.toByteArray())+"',"+
+
+                b.getNrgConsumed()+","+
+                b.getNrgLimit()+","+
+                b.getEncoded().length+","+
+
+                b.getTimestamp()+","+
+                b.getTransactionsList().size()+","+
+                blocktime;
+
+        return stmt;
+    }
+
+    private String generateTransactionSqlStatement(AionBlock b, AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed) {
+        JSONArray logs = new JSONArray();
+        for (Log l : _logs) {
+            JSONArray log = new JSONArray();
+            log.put(l.getAddress().toString()); // address
+            log.put(ByteUtil.toHexString(l.getData())); // data
+            JSONArray topics = new JSONArray();
+            for (byte[] topic : l.getTopics()) {
+                topics.put(ByteUtil.toHexString(topic));
+            }
+            log.put(topics); // topics
+            logs.put(log);
+        }
+
+        /*
+        create table transaction_cache(
+            transaction_hash varchar(64),
+            block_hash varchar(64),
+
+            block_number bigint(64),
+            transaction_index bigint(64),
+
+            from_addr varchar(64),
+            to_addr varchar(64),
+
+            nrg_consumed bigint(64),
+            nrg_price bigint(64),
+
+            transaction_timestamp bigint(64),
+            block_timestamp bigint(64),
+
+            value text,
+            transaction_log text,
+
+            data text,
+            nonce text,
+
+            primary key(block_number,transaction_index));
+         */
+
+        String stmt =
+                "'"+ByteUtil.toHexString(t.getHash())+"',"+
+                "'"+ByteUtil.toHexString(b.getHash())+"',"+
+
+                b.getNumber()+","+
+                txIndex+","+
+
+                "'"+ByteUtil.toHexString(t.getFrom().toBytes())+"',"+
+                "'"+ByteUtil.toHexString(t.getTo().toBytes())+"',"+
+
+                nrgConsumed+","+
+                t.getNrgPrice()+","+
+
+                ByteUtil.byteArrayToLong(t.getTimeStamp())+","+
+                b.getTimestamp()+","+
+
+                "'"+ByteUtil.toHexString(t.getValue())+"',"+
+                "'"+logs.toString()+"',"+
+
+                "'"+ByteUtil.toHexString(t.getData())+"',"+
+                "'"+ByteUtil.toHexString(t.getNonce())+"'";
+
+        return stmt;
+    }
+
     private List<Message.t_BlockDetail> getRsp_getBlockDetails(List<Map.Entry<AionBlock, BigInteger>> blks) {
         List<Message.t_BlockDetail> bds = blks.parallelStream().filter(Objects::nonNull).map(blk -> {
             AionBlock b = blk.getKey();
@@ -1520,21 +1874,20 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             List<AionTransaction> txs = b.getTransactionsList();
 
-            List<Message.t_TxDetail> tds = new ArrayList<>();
-            long cumulativeNrg = 0L;
+            List<Message.t_TxDetail> tds = txs.parallelStream().filter(Objects::nonNull).map((AionTransaction tx) -> {
+                AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash(), b.getHash());
 
-            // Can't use parallel streams here since we need to compute cumulativeNrg, which is done iteratively
-            for (AionTransaction tx : txs) {
-                AionTxInfo ti = this.ac.getAionHub().getBlockchain().getTransactionInfo(tx.getHash());
-                cumulativeNrg += ti.getReceipt().getEnergyUsed();
-                TxRecpt rt = new TxRecpt(b, ti, cumulativeNrg);
-
-                List<Message.t_LgEle> tles = Arrays.asList(rt.logs).parallelStream()
+                List<Message.t_LgEle> tles = ti.getReceipt().getLogInfoList().parallelStream()
                         .map(log -> {
+                            List<String> topics = new ArrayList<>();
+                            for (int i = 0; i < log.getTopics().size(); i++) {
+                                topics.add(TypeConverter.toJsonHex(log.getTopics().get(i)));
+                            }
+
                             return Message.t_LgEle.newBuilder()
-                                    .setData(ByteString.copyFrom(ByteUtil.hexStringToBytes(log.data)))
-                                    .setAddress(ByteString.copyFrom(Address.wrap(log.address).toBytes()))
-                                    .addAllTopics(Arrays.asList(log.topics))
+                                    .setData(ByteString.copyFrom(log.getData()))
+                                    .setAddress(ByteString.copyFrom(log.getAddress().toBytes()))
+                                    .addAllTopics(topics)
                                     .build();
                         }).filter(Objects::nonNull).collect(Collectors.toList());
 
@@ -1544,18 +1897,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setFrom(ByteString.copyFrom(tx.getFrom().toBytes()))
                         .setNonce(ByteString.copyFrom(tx.getNonce()))
                         .setValue(ByteString.copyFrom(tx.getValue()))
-                        .setNrgConsumed(rt.nrgUsed)
+                        .setNrgConsumed(ti.getReceipt().getEnergyUsed())
                         .setNrgPrice(tx.getNrgPrice())
                         .setTxHash(ByteString.copyFrom(tx.getHash()))
-                        .setTxIndex(rt.transactionIndex)
+                        .setTxIndex(ti.getIndex())
                         .addAllLogs(tles);
 
-                if (rt.contractAddress != null)
-                    tdBuilder.setContract(ByteString.copyFrom(ByteUtil.hexStringToBytes(rt.contractAddress)));
-
-                Message.t_TxDetail td = tdBuilder.build();
-                tds.add(td);
-            }
+                return tdBuilder.build();
+            }).filter(Objects::nonNull).collect(Collectors.toList());
 
             return builder.addAllTx(tds).build();
         }).filter(Objects::nonNull).collect(Collectors.toList());
@@ -1567,10 +1916,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     // causes this function to return in Exception
     private List<Map.Entry<AionBlock, BigInteger>> getBlkAndDifficultyForBlkNumList(List<Long> blkNum) {
         return blkNum.parallelStream()
-                .map(n -> {
-                    AionBlock b = this.getBlock(n);
-                    return Map.entry(b, this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(b.getHash()));
-                })
+                .map(n -> { return getBlockWithTotalDifficulty(n); })
                 .collect(Collectors.toList());
     }
 
@@ -1597,5 +1943,20 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     @Override
     public Map<ByteArrayWrapper, AionTxReceipt> getPendingReceipts() {
         return this.pendingReceipts;
+    }
+
+    @Override public BlockingQueue<TxPendingStatus> getPendingStatus() {
+        return this.pendingStatus;
+    }
+
+    @Override public BlockingQueue<TxWaitingMappingUpdate> getTxWait() {
+        return this.txWait;
+    }
+
+    @Override
+    public byte[] parseMsgReq(byte[] request, byte[] msgHash) {
+        int headerLen = msgHash == null ? this.getApiHeaderLen() : this.getApiHeaderLen() + msgHash.length;
+        return ByteBuffer.allocate(request.length - headerLen).put(request, headerLen, request.length - headerLen)
+                .array();
     }
 }

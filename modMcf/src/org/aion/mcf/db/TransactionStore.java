@@ -19,13 +19,10 @@
  *
  * Contributors :
  *     Aion foundation.
- *
  ******************************************************************************/
 package org.aion.mcf.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.aion.base.db.Flushable;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.FastByteComparisons;
@@ -36,65 +33,100 @@ import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static org.aion.base.util.Utils.dummy;
+
 public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>>
-        extends ObjectDataSource<List<INFO>> {
+        implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final Object object = new Object();
+    private final ObjectDataSource<List<INFO>> source;
 
-    public boolean put(INFO tx) {
-        byte[] txHash = tx.getReceipt().getTransaction().getHash();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-        List<INFO> existingInfos = null;
-        synchronized (lastSavedTxHash) {
-            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
-                existingInfos = get(txHash);
+    public TransactionStore(IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
+        source = new ObjectDataSource(src, serializer);
+    }
+
+    public boolean putToBatch(INFO tx) {
+        lock.writeLock().lock();
+
+        try {
+            byte[] txHash = tx.getReceipt().getTransaction().getHash();
+
+            List<INFO> existingInfos = null;
+            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null || !lastSavedTxHash.isFull()) {
+                existingInfos = source.get(txHash);
             }
-        }
 
-        if (existingInfos == null) {
-            existingInfos = new ArrayList<>();
-        } else {
-            for (AbstractTxInfo<TXR, TX> info : existingInfos) {
-                if (FastByteComparisons.equal(info.getBlockHash(), tx.getBlockHash())) {
-                    return false;
+            if (existingInfos == null) {
+                existingInfos = new ArrayList<>();
+            } else {
+                for (AbstractTxInfo<TXR, TX> info : existingInfos) {
+                    if (FastByteComparisons.equal(info.getBlockHash(), tx.getBlockHash())) {
+                        return false;
+                    }
                 }
             }
-        }
-        existingInfos.add(tx);
-        put(txHash, existingInfos);
+            existingInfos.add(tx);
+            source.putToBatch(txHash, existingInfos);
 
-        return true;
+            return true;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public void flushBatch(){
+        source.flushBatch();
     }
 
     public INFO get(byte[] txHash, byte[] blockHash) {
-        List<INFO> existingInfos = get(txHash);
-        for (INFO info : existingInfos) {
-            if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
-                return info;
+        lock.readLock().lock();
+
+        try {
+            List<INFO> existingInfos = source.get(txHash);
+            for (INFO info : existingInfos) {
+                if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
+                    return info;
+                }
             }
+            return null;
+        } finally {
+            lock.readLock().unlock();
         }
-        return null;
     }
 
-    public TransactionStore(IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
-        super(src, serializer);
-        // withCacheSize(256);
-        withCacheOnWrite(true);
+    public List<INFO> get(byte[] key) {
+        lock.readLock().lock();
+        try {
+            return source.get(key);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void flush() {
-        if (!getSrc().isAutoCommitEnabled()) {
-            getSrc().commit();
+        lock.writeLock().lock();
+        try {
+            source.flush();
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     @Override
     public void close() {
+        lock.writeLock().lock();
         try {
-            super.close();
-        } catch (Exception e) {
-            throw e;
+            source.close();
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 }
