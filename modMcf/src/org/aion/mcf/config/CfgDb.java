@@ -22,9 +22,6 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
-import org.aion.base.util.Utils;
-import org.aion.db.impl.DBVendor;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -32,7 +29,9 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 
@@ -41,90 +40,32 @@ import static org.aion.db.impl.DatabaseFactory.Props;
  */
 public class CfgDb {
 
-    public final int MIN_FD_OPEN_ALLOC = 1024;
-    public final String DEFAULT_BLOCK_SIZE = "16mB";
-    public final String DEFAULT_WRITE_BUFFER_SIZE = "64mB";
-    public final String DEFAULT_READ_BUFFER_SIZE = "64mB";
-    public final String DEFAULT_CACHE_SIZE = "128mB";
+    public static class Names {
+        public static final String DEFAULT = "default";
 
-    public CfgDb() {
-        this.vendor = DBVendor.LEVELDB.toValue();
-        this.path = "database";
+        public static final String BLOCK = "block";
+        public static final String INDEX = "index";
 
-        this.enable_auto_commit = true;
-        this.enable_db_cache = true;
-        this.enable_db_compression = true;
-        this.enable_heap_cache = false;
-        // size 0 means unbound
-        this.max_heap_cache_size = "1024";
-        this.enable_heap_cache_stats = false;
-        this.read_buffer_size = 64 * (int) Utils.MEGA_BYTE;
+        public static final String DETAILS = "details";
+        public static final String STORAGE = "storage";
 
-        // corresponds to DEFAULT_BLOCK_SIZE
-        this.block_size = 16 * (int) Utils.MEGA_BYTE;
-        this.max_fd_open_alloc = MIN_FD_OPEN_ALLOC;
+        public static final String STATE = "state";
+        public static final String TRANSACTION = "transaction";
 
-        // corresponds to DEFAULT_WRITE_BUFFER_SIZE
-        this.write_buffer_size = 64 * (int) Utils.MEGA_BYTE;
-
-        // corresponds to DEFAULT_CACHE_SIZE
-        this.cache_size = 128 * (int) Utils.MEGA_BYTE;
+        public static final String TX_CACHE = "pendingtxCache";
+        public static final String TX_POOL = "pendingtxPool";
     }
 
     protected String path;
 
-    private String vendor;
+    // individual db configurations
+    private Map<String, CfgDbDetails> specificConfig;
 
-    private boolean enable_auto_commit;
-    private boolean enable_db_cache;
-    private boolean enable_db_compression;
-
-    private boolean enable_heap_cache;
-    private String max_heap_cache_size;
-    private boolean enable_heap_cache_stats;
-    private int read_buffer_size;
-
-    /**
-     * <p>The maximum block size</p>
-     *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
-     */
-    private int block_size;
-
-    /**
-     * <p>The maximum allocated file descriptor that will be allocated per
-     * database, therefore the total amount of file descriptors that are required is
-     * {@code NUM_DB * max_fd_open_alloc}</p>
-     *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
-     */
-    private int max_fd_open_alloc;
-
-    /**
-     * <p>The size of the write buffer that will be applied per database, for more
-     * information, see <a href="https://github.com/google/leveldb/blob/master/include/leveldb/options.h">here</a></p>
-     *
-     * From LevelDB docs:
-     *
-     * <p>Amount of data to build up in memory (backed by an unsorted log
-     * on disk) before converting to a sorted on-disk file.</p>
-     *
-     * <p>Larger values increase performance, especially during bulk loads.
-     * Up to two write buffers may be held in memory at the same time,
-     * so you may wish to adjust this parameter to control memory usage.
-     * Also, a larger write buffer will result in a longer recovery time
-     * the next time the database is opened.</p>
-     *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
-     */
-    private int write_buffer_size;
-
-    /**
-     * <p>Specify the size of the cache used by LevelDB</p>
-     *
-     * <p>This parameter is specific to {@link org.aion.db.impl.leveldb.LevelDB}</p>
-     */
-    private int cache_size;
+    public CfgDb() {
+        this.path = "database";
+        this.specificConfig = new HashMap<>();
+        this.specificConfig.put(Names.DEFAULT, new CfgDbDetails());
+    }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -133,47 +74,105 @@ public class CfgDb {
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
+                    CfgDbDetails dbDefault = specificConfig.get(Names.DEFAULT);
                     switch (elementName) {
                         case "path":
                             this.path = Cfg.readValue(sr);
                             break;
                         case "vendor":
-                            this.vendor = Cfg.readValue(sr);
+                            dbDefault.vendor = Cfg.readValue(sr);
                             break;
                         case Props.ENABLE_AUTO_COMMIT:
-                            this.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
+                            dbDefault.enable_auto_commit = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case Props.ENABLE_DB_CACHE:
-                            this.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            dbDefault.enable_db_cache = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case Props.ENABLE_DB_COMPRESSION:
-                            this.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
+                            dbDefault.enable_db_compression = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case Props.ENABLE_HEAP_CACHE:
-                            this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            dbDefault.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case Props.MAX_HEAP_CACHE_SIZE:
-                            this.max_heap_cache_size = Cfg.readValue(sr);
+                            dbDefault.max_heap_cache_size = Cfg.readValue(sr);
                             break;
                         case Props.ENABLE_HEAP_CACHE_STATS:
-                            this.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
+                            dbDefault.enable_heap_cache_stats = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case Props.BLOCK_SIZE:
-                            this.block_size = parseFileSizeSafe(Cfg.readValue(sr), this.block_size);
+                            dbDefault.block_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.block_size);
                             break;
                         case Props.MAX_FD_ALLOC:
                             int i = Integer.parseInt(Cfg.readValue(sr));
-                            this.max_fd_open_alloc = Math.max(MIN_FD_OPEN_ALLOC, i);
+                            dbDefault.max_fd_open_alloc = Math.max(CfgDbDetails.MIN_FD_OPEN_ALLOC, i);
                             break;
                         case Props.WRITE_BUFFER_SIZE:
-                            this.write_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.write_buffer_size);
+                            dbDefault.write_buffer_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.write_buffer_size);
                             break;
                         case Props.READ_BUFFER_SIZE:
-                            this.read_buffer_size = parseFileSizeSafe(Cfg.readValue(sr), this.read_buffer_size);
+                            dbDefault.read_buffer_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.read_buffer_size);
                             break;
                         case Props.DB_CACHE_SIZE:
-                            this.cache_size = parseFileSizeSafe(Cfg.readValue(sr), this.cache_size);
+                            dbDefault.cache_size = CfgDbDetails
+                                    .parseFileSizeSafe(Cfg.readValue(sr), dbDefault.cache_size);
                             break;
+                        case Names.DEFAULT: {
+                            dbDefault.fromXML(sr);
+                            this.specificConfig.put(Names.DEFAULT, dbDefault);
+                            break;
+                        }
+                        case Names.BLOCK: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.BLOCK, dbConfig);
+                            break;
+                        }
+                        case Names.INDEX: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.INDEX, dbConfig);
+                            break;
+                        }
+                        case Names.DETAILS: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.DETAILS, dbConfig);
+                            break;
+                        }
+                        case Names.STORAGE: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.STORAGE, dbConfig);
+                            break;
+                        }
+                        case Names.STATE: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.STATE, dbConfig);
+                            break;
+                        }
+                        case Names.TRANSACTION: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.TRANSACTION, dbConfig);
+                            break;
+                        }
+                        case Names.TX_POOL: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.TX_POOL, dbConfig);
+                            break;
+                        }
+                        case Names.TX_CACHE: {
+                            CfgDbDetails dbConfig = new CfgDbDetails();
+                            dbConfig.fromXML(sr);
+                            this.specificConfig.put(Names.TX_CACHE, dbConfig);
+                            break;
+                        }
                         default:
                             Cfg.skipElement(sr);
                             break;
@@ -183,20 +182,6 @@ public class CfgDb {
                     break loop;
             }
         }
-    }
-
-    private static int parseFileSizeSafe(String input,
-                                         int fallback) {
-        if (input == null || input.isEmpty()) { return fallback; }
-
-        Optional<Long> maybeSize = Utils.parseSize(input);
-        if (!maybeSize.isPresent()) { return fallback; }
-
-        // present
-        long size = maybeSize.get();
-        if (size > Integer.MAX_VALUE || size <= 0) { return fallback; }
-
-        return (int) size;
     }
 
     public String toXML() {
@@ -214,45 +199,9 @@ public class CfgDb {
             xmlWriter.writeCharacters(this.getPath());
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("vendor");
-            xmlWriter.writeCharacters(this.getVendor());
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.ENABLE_DB_CACHE);
-            xmlWriter.writeCharacters(String.valueOf(this.isDbCacheEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.ENABLE_DB_COMPRESSION);
-            xmlWriter.writeCharacters(String.valueOf(this.isDbCompressionEnabled()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.BLOCK_SIZE);
-            xmlWriter.writeCharacters(DEFAULT_BLOCK_SIZE);
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.MAX_FD_ALLOC);
-            xmlWriter.writeCharacters(String.valueOf(MIN_FD_OPEN_ALLOC));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.WRITE_BUFFER_SIZE);
-            xmlWriter.writeCharacters(String.valueOf(DEFAULT_WRITE_BUFFER_SIZE));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.READ_BUFFER_SIZE);
-            xmlWriter.writeCharacters(String.valueOf(DEFAULT_READ_BUFFER_SIZE));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement(Props.DB_CACHE_SIZE);
-            xmlWriter.writeCharacters(String.valueOf(DEFAULT_CACHE_SIZE));
-            xmlWriter.writeEndElement();
+            for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+                entry.getValue().toXML(entry.getKey(), xmlWriter);
+            }
 
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
@@ -272,77 +221,19 @@ public class CfgDb {
         return this.path;
     }
 
-    public String getVendor() {
-        return this.vendor;
+    public Map<String, Properties> asProperties() {
+        Map<String, Properties> props = new HashMap<>();
+
+        for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+            props.put(entry.getKey(), entry.getValue().asProperties());
+
+        }
+        return props;
     }
 
-    public boolean isAutoCommitEnabled() {
-        return enable_auto_commit;
-    }
-
-    public boolean isDbCacheEnabled() {
-        return enable_db_cache;
-    }
-
-    public boolean isDbCompressionEnabled() {
-        return enable_db_compression;
-    }
-
-    public boolean isHeapCacheEnabled() {
-        return enable_heap_cache;
-    }
-
-    public String getMaxHeapCacheSize() {
-        return max_heap_cache_size;
-    }
-
-    public boolean isHeapCacheStatsEnabled() {
-        return enable_heap_cache_stats;
-    }
-
-    public void setHeapCacheEnabled(boolean enable_heap_cache) {
-        this.enable_heap_cache = enable_heap_cache;
-    }
-
-    public int getFdOpenAllocSize() {
-        return this.max_fd_open_alloc;
-    }
-
-    public int getBlockSize() {
-        return this.block_size;
-    }
-
-    public int getWriteBufferSize() {
-        return this.write_buffer_size;
-    }
-
-    public int getCacheSize() {
-        return this.cache_size;
-    }
-
-    public int getReadBufferSize() {
-        return this.read_buffer_size;
+    public void setHeapCacheEnabled(boolean value) {
+        for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+            entry.getValue().enable_heap_cache = value;
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

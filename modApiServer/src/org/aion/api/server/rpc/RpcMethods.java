@@ -78,6 +78,8 @@ public class RpcMethods {
     private final Map<String, RpcMethod> ops = Map.ofEntries(
             Map.entry("ops_getAccountState", (params) -> api.ops_getAccountState(params)),
             Map.entry("ops_getChainHeadViewBestBlock", (params) -> api.ops_getChainHeadViewBestBlock()),
+            Map.entry("ops_getTransaction", (params) -> api.ops_getTransaction(params)),
+            Map.entry("ops_getBlock", (params) -> api.ops_getBlock(params)),
             Map.entry("ops_getChainHeadView", (params) -> api.ops_getChainHeadView()),
             Map.entry("eth_getBalance", (params) -> api.eth_getBalance(params)),
             Map.entry("eth_sendRawTransaction", (params) -> api.eth_sendRawTransaction(params)),
@@ -122,7 +124,9 @@ public class RpcMethods {
      */
     private final Map<String, RpcMethod> personal = Map.ofEntries(
             Map.entry("personal_unlockAccount", (params) -> api.personal_unlockAccount(params)),
-            Map.entry("personal_listAccounts", (params) -> api.eth_accounts())
+            Map.entry("personal_listAccounts", (params) -> api.eth_accounts()),
+            Map.entry("personal_lockAccount", (params) -> api.personal_lockAccount(params)),
+            Map.entry("personal_newAccount", (params) -> api.personal_newAccount(params))
     );
 
     /**

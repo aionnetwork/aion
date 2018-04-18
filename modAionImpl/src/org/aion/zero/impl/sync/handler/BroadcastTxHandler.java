@@ -50,9 +50,10 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author chris
@@ -66,30 +67,29 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final Timer timer;
-
     private LinkedBlockingQueue<AionTransaction> txQueue;
 
-    private final boolean buffer;
+    private ScheduledExecutorService ex;
 
-    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean enableBuffer) {
+    private final boolean isSyncOnlyNode;
+
+    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
         this.txQueue = new LinkedBlockingQueue<>(50_000);
-        this.buffer = enableBuffer;
+        this.isSyncOnlyNode = isSyncOnlyNode;
 
-        if (this.buffer) {
-            log.info("BufferTask buffer enable!");
-            this.timer = new Timer("TimerBC");
-            this.timer.scheduleAtFixedRate(new BufferTask(), 5000, 500);
-        } else {
-            timer = null;
-        }
+        if(isSyncOnlyNode)
+            return;
+        // don't run the buffertask in sync-node mode
+
+        this.ex = Executors.newSingleThreadScheduledExecutor();
+        this.ex.scheduleWithFixedDelay(new BufferTask(), 5000, 500, TimeUnit.MILLISECONDS);
     }
 
-    private class BufferTask extends TimerTask {
+    private class BufferTask implements Runnable {
         @Override
         public void run() {
             if (!txQueue.isEmpty()) {
@@ -112,6 +112,9 @@ public final class BroadcastTxHandler extends Handler {
 
     @Override
     public final void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(isSyncOnlyNode)
+            return;
+
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
 
@@ -133,22 +136,18 @@ public final class BroadcastTxHandler extends Handler {
             return;
         }
 
-        if (this.buffer) {
-            try {
-                for (AionTransaction tx : castRawTx(broadCastTx)) {
-                    if (!txQueue.offer(tx)) {
-                        if (log.isTraceEnabled()) {
-                            log.trace("<BroadcastTxHandler txQueue full! {}>", _displayId);
-                        }
-                        break;
+        try {
+            for (AionTransaction tx : castRawTx(broadCastTx)) {
+                if (!txQueue.offer(tx)) {
+                    if (log.isTraceEnabled()) {
+                        log.trace("<BroadcastTxHandler txQueue full! {}>", _displayId);
                     }
+                    break;
                 }
-
-            } catch (Throwable e) {
-                log.error("BroadcastTxHandler throw {}", e.toString());
             }
-        } else {
-            pendingState.addPendingTransactions(castRawTx(broadCastTx));
+
+        } catch (Throwable e) {
+            log.error("BroadcastTxHandler throw {}", e.toString());
         }
     }
 
@@ -167,7 +166,14 @@ public final class BroadcastTxHandler extends Handler {
                 }
             } catch (Exception e) {
                 // do nothing, invalid transaction from bad peer
+                if (log.isDebugEnabled()) {
+                    log.debug("castRawTx exception: " + e.toString());
+                }
             }
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("BroadcastTxHandler.castRawTx Tx#{} validTx#{}", broadCastTx.size(), rtn.size());
         }
 
         return rtn;
@@ -176,8 +182,8 @@ public final class BroadcastTxHandler extends Handler {
     @Override
     public void shutDown() {
         log.info("BroadcastTxHandler shutdown!");
-        if (timer != null) {
-            timer.cancel();
+        if (ex != null) {
+            ex.shutdown();
         }
     }
 }

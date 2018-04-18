@@ -178,7 +178,9 @@ final class TaskImportBlocks implements Runnable {
                 }
             }
 
-            state.resetLastHeaderRequest(); // so we can continue immediately
+            if (state != null) {
+                state.resetLastHeaderRequest(); // so we can continue immediately
+            }
 
             this.statis.update(this.chain.getBestBlock().getNumber());
         }

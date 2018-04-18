@@ -204,7 +204,7 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
     }
@@ -258,7 +258,7 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
@@ -308,7 +308,7 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block)).isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
@@ -352,7 +352,7 @@ public class BlockPropagationTest {
                 1024,
                 anotherBundle.bc, // NOTE: not the same blockchain that generated the block
                 p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator());
+                anotherBundle.bc.getBlockHeaderValidator(), false);
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented

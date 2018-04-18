@@ -3,19 +3,13 @@ package org.aion.zero.impl;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.leveldb.LevelDBConstants;
+import org.aion.db.impl.DatabaseFactory;
 import org.aion.zero.impl.db.ContractDetailsAion;
 
-public class MockRepositoryConfig implements IRepositoryConfig {
-    @Override
-    public String[] getVendorList() {
-        return new String[] { DBVendor.MOCKDB.toValue() };
-    }
+import java.util.Properties;
 
-    @Override
-    public String getActiveVendor() {
-        return DBVendor.MOCKDB.toValue();
-    }
+public class MockRepositoryConfig implements IRepositoryConfig {
+    private DBVendor vendor = DBVendor.MOCKDB;
 
     @Override
     public String getDbPath() {
@@ -33,53 +27,14 @@ public class MockRepositoryConfig implements IRepositoryConfig {
     }
 
     @Override
-    public boolean isAutoCommitEnabled() {
-        return false;
+    public Properties getDatabaseConfig(String db_name) {
+        Properties props = new Properties();
+        props.setProperty(DatabaseFactory.Props.DB_TYPE, vendor.toValue());
+        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+        return props;
     }
 
-    @Override
-    public boolean isDbCacheEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isDbCompressionEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isHeapCacheEnabled() {
-        return false;
-    }
-
-    @Override
-    public String getMaxHeapCacheSize() {
-        return "0";
-    }
-
-    @Override
-    public boolean isHeapCacheStatsEnabled() {
-        return false;
-    }
-
-    @Override
-    public int getMaxFdAllocSize() {
-        return LevelDBConstants.MAX_OPEN_FILES;
-    }
-
-    // default levelDB setting, may want to change this later
-    @Override
-    public int getBlockSize() {
-        return LevelDBConstants.BLOCK_SIZE;
-    }
-
-    @Override
-    public int getWriteBufferSize() {
-        return LevelDBConstants.WRITE_BUFFER_SIZE;
-    }
-
-    @Override
-    public int getCacheSize() {
-        return LevelDBConstants.CACHE_SIZE;
+    public MockRepositoryConfig(DBVendor vendor) {
+        this.vendor = vendor;
     }
 }

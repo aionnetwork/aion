@@ -44,7 +44,7 @@ public final class CfgNetP2p {
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
         this.errorTolerance = 50;
-        this.txBroadcastbuffer = true;
+        this.isSyncOnlyNode = false;
     }
 
     private String ip;
@@ -59,13 +59,13 @@ public final class CfgNetP2p {
 
     private boolean bootlistSyncOnly;
 
+    private boolean isSyncOnlyNode;
+
     private int maxTempNodes;
 
     private int maxActiveNodes;
 
     private int errorTolerance;
-
-    private boolean txBroadcastbuffer;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -93,14 +93,14 @@ public final class CfgNetP2p {
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
+                case "sync-only-node":
+                    this.isSyncOnlyNode = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
                 case "max-temp-nodes":
                     this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
                     break;
                 case "max-active-nodes":
                     this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
-                    break;
-                case "txbroadcastbuffer":
-                    this.txBroadcastbuffer = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "err-tolerance":
                     this.errorTolerance = Integer.parseInt(Cfg.readValue(sr));
@@ -211,7 +211,7 @@ public final class CfgNetP2p {
         return errorTolerance;
     }
 
-    public boolean getTxBroadcastbuffer() {
-        return txBroadcastbuffer;
+    public boolean isSyncOnlyNode() {
+        return isSyncOnlyNode;
     }
 }
