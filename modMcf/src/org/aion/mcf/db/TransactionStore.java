@@ -52,7 +52,7 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
         source = new ObjectDataSource(src, serializer);
     }
 
-    public boolean put(INFO tx) {
+    public boolean putToBatch(INFO tx) {
         lock.writeLock().lock();
 
         try {
@@ -73,12 +73,16 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
                 }
             }
             existingInfos.add(tx);
-            source.put(txHash, existingInfos);
+            source.putToBatch(txHash, existingInfos);
 
             return true;
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    public void flushBatch(){
+        source.flushBatch();
     }
 
     public INFO get(byte[] txHash, byte[] blockHash) {

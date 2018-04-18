@@ -313,6 +313,42 @@ public class LevelDB extends AbstractDB {
         }
     }
 
+    WriteBatch batch = null;
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        check(key);
+
+        check();
+
+        if (batch == null) {
+            batch = db.createWriteBatch();
+        }
+
+        if (value == null) {
+            batch.delete(key);
+        } else {
+            batch.put(key, value);
+        }
+    }
+
+    @Override
+    public void commitBatch() {
+        if (batch != null) {
+            try {
+                db.write(batch);
+            } catch (DBException e) {
+                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            }
+            try {
+                batch.close();
+            } catch (IOException e) {
+                LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+            }
+            batch = null;
+        }
+    }
+
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
         check(keys);

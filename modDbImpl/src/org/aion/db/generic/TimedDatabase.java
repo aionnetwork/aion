@@ -196,8 +196,7 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public void put(byte[] key,
-                    byte[] value) {
+    public void put(byte[] key, byte[] value) {
         long t1 = System.nanoTime();
         database.put(key, value);
         long t2 = System.nanoTime();
@@ -221,6 +220,24 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(database.toString() + " putBatch(" + keyValuePairs.size() + ") in " + (t2 - t1) + " ns.");
+    }
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        long t1 = System.nanoTime();
+        database.putToBatch(key, value);
+        long t2 = System.nanoTime();
+
+        LOG.debug(database.toString() + " putToBatch(key,value) in " + (t2 - t1) + " ns.");
+    }
+
+    @Override
+    public void commitBatch() {
+        long t1 = System.nanoTime();
+        database.commitBatch();
+        long t2 = System.nanoTime();
+
+        LOG.debug(database.toString() + " commitBatch() in " + (t2 - t1) + " ns.");
     }
 
     @Override

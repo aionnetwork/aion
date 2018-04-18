@@ -308,6 +308,17 @@ public class H2MVMap extends AbstractDB {
     }
 
     @Override
+    public void putToBatch(byte[] k, byte[] v) {
+        // same as put since batch operations are not supported
+        put(k, v);
+    }
+
+    @Override
+    public void commitBatch() {
+        // nothing to do since batch operations are not supported
+    }
+
+    @Override
     public void deleteBatch(Collection<byte[]> keys) {
         check(keys);
 

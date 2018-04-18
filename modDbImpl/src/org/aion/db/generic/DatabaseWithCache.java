@@ -44,8 +44,10 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.iq80.leveldb.DBException;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -75,8 +77,10 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     /** Flag for determining how to handle commits. */
     private boolean enableAutoCommit;
 
-    public DatabaseWithCache(AbstractDB _database, boolean enableAutoCommit, String max_cache_size,
-            boolean enableStats) {
+    public DatabaseWithCache(AbstractDB _database,
+                             boolean enableAutoCommit,
+                             String max_cache_size,
+                             boolean enableStats) {
         this(enableAutoCommit, max_cache_size, enableStats);
         database = _database;
     }
@@ -447,6 +451,24 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
         if (enableAutoCommit) {
             flushInternal();
         }
+    }
+
+    @Override
+    public void putToBatch(byte[] k, byte[] v) {
+        AbstractDB.check(k);
+
+        check();
+
+        ByteArrayWrapper key = ByteArrayWrapper.wrap(k);
+
+        this.loadingCache.put(key, Optional.ofNullable(v));
+        // keeping track of dirty data
+        this.dirtyEntries.put(key, v);
+    }
+
+    @Override
+    public void commitBatch() {
+        flushInternal();
     }
 
     @Override

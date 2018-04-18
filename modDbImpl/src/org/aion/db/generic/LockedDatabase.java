@@ -310,6 +310,44 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        try {
+            database.putToBatch(key, value);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not put batch due to ", e);
+            }
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void commitBatch() {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        try {
+            database.commitBatch();
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not put batch due to ", e);
+            }
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
     public void deleteBatch(Collection<byte[]> keys) {
         // acquire write lock
         lock.writeLock().lock();

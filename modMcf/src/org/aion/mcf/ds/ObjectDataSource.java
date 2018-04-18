@@ -63,6 +63,15 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
         src.put(key, bytes);
     }
 
+    public void putToBatch(byte[] key, V value) {
+        byte[] bytes = serializer.serialize(value);
+        src.putToBatch(key, bytes);
+    }
+
+    public void flushBatch() {
+        src.commitBatch();
+    }
+
     public void delete(byte[] key) {
         src.delete(key);
     }
