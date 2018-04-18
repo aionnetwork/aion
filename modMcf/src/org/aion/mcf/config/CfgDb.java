@@ -56,7 +56,9 @@ public class CfgDb {
         public static final String TX_POOL = "pendingtxPool";
     }
 
-    protected String path;
+    private String path;
+
+    private boolean expert = false;
 
     // individual db configurations
     private Map<String, CfgDbDetails> specificConfig;
@@ -68,16 +70,20 @@ public class CfgDb {
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
+        CfgDbDetails dbDefault = specificConfig.get(Names.DEFAULT);
+
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
-                    CfgDbDetails dbDefault = specificConfig.get(Names.DEFAULT);
                     switch (elementName) {
                         case "path":
                             this.path = Cfg.readValue(sr);
+                            break;
+                        case "expert":
+                            this.expert = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case "vendor":
                             dbDefault.vendor = Cfg.readValue(sr);
@@ -182,6 +188,13 @@ public class CfgDb {
                     break loop;
             }
         }
+
+        // if not expert user set the same default vendor for all databases
+        if (!expert) {
+            for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
+                entry.getValue().vendor = dbDefault.vendor;
+            }
+        }
     }
 
     public String toXML() {
@@ -199,8 +212,20 @@ public class CfgDb {
             xmlWriter.writeCharacters(this.getPath());
             xmlWriter.writeEndElement();
 
+            if (!expert) {
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("vendor");
+                xmlWriter.writeCharacters(this.specificConfig.get(Names.DEFAULT).vendor);
+                xmlWriter.writeEndElement();
+            } else {
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("expert");
+                xmlWriter.writeCharacters(String.valueOf(expert));
+                xmlWriter.writeEndElement();
+            }
+
             for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
-                entry.getValue().toXML(entry.getKey(), xmlWriter);
+                entry.getValue().toXML(entry.getKey(), xmlWriter, expert);
             }
 
             xmlWriter.writeCharacters("\r\n\t");
@@ -226,8 +251,8 @@ public class CfgDb {
 
         for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
             props.put(entry.getKey(), entry.getValue().asProperties());
-
         }
+
         return props;
     }
 
