@@ -1353,15 +1353,14 @@ public class ApiWeb3Aion extends ApiAion {
      */
     public RpcMsg priv_syncPeers() {
         // contract here is we do NOT modify the peerStates in any way
-        Iterator<Map.Entry<Integer, PeerState>> peerStates = this.ac.getAionHub().getSyncMgr().getPeerStatesIterator();
+        Map<Integer, PeerState> peerStates = this.ac.getAionHub().getSyncMgr().getPeerStates();
 
         // also retrieve nodes from p2p to see if we can piece together a full state
         Map<Integer, INode> nodeState = this.ac.getAionHub().getP2pMgr().getActiveNodes();
 
         JSONArray array = new JSONArray();
-        while (peerStates.hasNext()) {
+        for (Map.Entry<Integer, PeerState> peerState : peerStates.entrySet()) {
             // begin []
-            Map.Entry<Integer, PeerState> peerState = peerStates.next();
             JSONObject peerObj = new JSONObject();
             INode node;
             if ((node = nodeState.get(peerState.getKey())) != null) {
