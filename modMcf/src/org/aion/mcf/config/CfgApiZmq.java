@@ -30,6 +30,9 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CfgApiZmq {
 
@@ -37,18 +40,55 @@ public class CfgApiZmq {
         this.active = true;
         this.ip = "127.0.0.1";
         this.port = 8547;
+        this.filtersEnabled = true;
+        this.blockSummaryCacheEnabled = false;
     }
 
     protected boolean active;
-
     protected String ip;
-
     protected int port;
+    protected boolean filtersEnabled;
+    protected boolean blockSummaryCacheEnabled;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         this.active = Boolean.parseBoolean(sr.getAttributeValue(null, "active"));
         this.ip = sr.getAttributeValue(null, "ip");
         this.port = Integer.parseInt(sr.getAttributeValue(null, "port"));
+
+        // get the nested elements
+        loop:
+        while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "filters-enabled":
+                            try {
+                                filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
+                                //e.printStackTrace();
+                            }
+                            break;
+                        case "block-summary-cache":
+                            try {
+                                blockSummaryCacheEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
+                                //e.printStackTrace();
+                            }
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
+            }
+        }
+
         sr.next();
     }
 
@@ -85,13 +125,12 @@ public class CfgApiZmq {
     public boolean getActive() {
         return this.active;
     }
-
     public String getIp() {
         return this.ip;
     }
-
     public int getPort() {
         return this.port;
     }
-
+    public boolean isFiltersEnabled() { return this.filtersEnabled; }
+    public boolean isBlockSummaryCacheEnabled() { return this.blockSummaryCacheEnabled; }
 }

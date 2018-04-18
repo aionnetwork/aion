@@ -45,6 +45,7 @@ public final class CfgNetP2p {
         this.maxActiveNodes = 128;
         this.errorTolerance = 50;
         this.txBroadcastbuffer = true;
+        this.isSyncOnlyNode = false;
     }
 
     private String ip;
@@ -58,6 +59,8 @@ public final class CfgNetP2p {
     private boolean showLog;
 
     private boolean bootlistSyncOnly;
+
+    private boolean isSyncOnlyNode;
 
     private int maxTempNodes;
 
@@ -92,6 +95,9 @@ public final class CfgNetP2p {
                     break;
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                case "sync-only-node":
+                    this.isSyncOnlyNode = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "max-temp-nodes":
                     this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
@@ -213,5 +219,9 @@ public final class CfgNetP2p {
 
     public boolean getTxBroadcastbuffer() {
         return txBroadcastbuffer;
+    }
+
+    public boolean isSyncOnlyNode() {
+        return isSyncOnlyNode;
     }
 }

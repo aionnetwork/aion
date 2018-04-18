@@ -87,13 +87,16 @@ public class BlockPropagationHandler {
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
+    private final boolean isSyncOnlyNode;
+
     private static final byte[] genesis = CfgAion.inst().getGenesis().getHash();
+
 
     public BlockPropagationHandler(final int cacheSize,
                                    final IAionBlockchain blockchain,
                                    final IP2pMgr p2pManager,
-                                   BlockHeaderValidator<A0BlockHeader> headerValidator) {
-
+                                   BlockHeaderValidator<A0BlockHeader> headerValidator,
+                                   final boolean isSyncOnlyNode) {
         /*
          * Size of the cache maintained within the map, a lower cacheSize
          * saves space, but indicates we may "forget" about a block sooner.
@@ -112,6 +115,8 @@ public class BlockPropagationHandler {
         this.p2pManager = p2pManager;
 
         this.blockHeaderValidator = headerValidator;
+
+        this.isSyncOnlyNode = isSyncOnlyNode;
     }
 
     // assumption here is that blocks propagated have unique hashes
@@ -131,8 +136,7 @@ public class BlockPropagationHandler {
         });
     }
 
-    PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
-
+    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
         if (block == null)
             return PropStatus.DROPPED;
 
@@ -217,6 +221,9 @@ public class BlockPropagationHandler {
     }
 
     private boolean send(AionBlock block, int nodeId) {
+        if(isSyncOnlyNode)
+            return true;
+
         // current proposal is to send to all peers with lower blockNumbers
         AtomicBoolean sent = new AtomicBoolean();
         this.p2pManager.getActiveNodes().values()

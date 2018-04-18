@@ -66,19 +66,26 @@ public final class BroadcastTxHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final Timer timer;
+    private Timer timer;
 
     private LinkedBlockingQueue<AionTransaction> txQueue;
 
     private final boolean buffer;
 
-    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean enableBuffer) {
+    private final boolean isSyncOnlyNode;
+
+    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean enableBuffer, final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
         this.txQueue = new LinkedBlockingQueue<>(50_000);
         this.buffer = enableBuffer;
+        this.isSyncOnlyNode = isSyncOnlyNode;
+
+        if(isSyncOnlyNode)
+            return;
+        // don't run the buffertask in sync-node mode
 
         if (this.buffer) {
             log.info("BufferTask buffer enable!");
@@ -112,6 +119,9 @@ public final class BroadcastTxHandler extends Handler {
 
     @Override
     public final void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(isSyncOnlyNode)
+            return;
+
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
 

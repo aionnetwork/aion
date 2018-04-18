@@ -168,7 +168,7 @@ public class AionHub {
 
 		ChainConfiguration chainConfig = new ChainConfiguration();
 		this.propHandler = new BlockPropagationHandler(1024, this.blockchain, this.p2pMgr,
-				chainConfig.createBlockHeaderValidator());
+				chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().isSyncOnlyNode());
 
 		registerCallback();
 		this.p2pMgr.run();
@@ -186,11 +186,11 @@ public class AionHub {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusHandler(syncLog, this.p2pMgr, this.syncMgr));
-        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr));
+        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
         cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr, this.p2pMgr));
-        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr));
+        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr, this.p2pMgr));
-        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, cfg.getNet().getP2p().getTxBroadcastbuffer()));
+        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, cfg.getNet().getP2p().getTxBroadcastbuffer(), this.cfg.getNet().getP2p().isSyncOnlyNode()));
         cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler, this.p2pMgr));
         this.p2pMgr.register(cbs);
     }
