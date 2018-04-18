@@ -61,6 +61,9 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -114,8 +117,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private boolean dumpPool;
 
-    private Timer timer;
-
     private boolean isSeed;
 
     private boolean loadPendingTx;
@@ -126,7 +127,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private Map<byte[], byte[]> backupPendingCacheAdd;
     private Set<byte[]> backupPendingPoolRemove;
 
-    class TxBuffTask extends TimerTask {
+    private ScheduledExecutorService ex;
+
+    class TxBuffTask implements Runnable {
         @Override public void run() {
             processTxBuffer();
         }
@@ -135,33 +138,37 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private synchronized void processTxBuffer() {
         if (!txBuffer.isEmpty()) {
             List<AionTransaction> txs = new ArrayList<>();
-            for (AionTxExecSummary s : txBuffer) {
-                txs.add(s.getTransaction());
-            }
-
-            List<AionTransaction> newPending = txPool.add(txs);
-
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("processTxBuffer buffer#{} poolNewTx#{}", txs.size(), newPending.size());
-            }
-
-            int cnt = 0;
-            for (AionTxExecSummary summary : txBuffer) {
-                if (newPending.get(cnt) != null && !newPending.get(cnt).equals(summary.getTransaction())) {
-                    AionTxReceipt rp = new AionTxReceipt();
-                    rp.setTransaction(newPending.get(cnt));
-                    fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
+            try {
+                for (AionTxExecSummary s : txBuffer) {
+                    txs.add(s.getTransaction());
                 }
-                cnt++;
 
-                fireTxUpdate(summary.getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
-            }
+                List<AionTransaction> newPending = txPool.add(txs);
 
-            if (!txs.isEmpty() && !loadPendingTx) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("processTxBuffer tx#{}",  txs.size());
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("processTxBuffer buffer#{} poolNewTx#{}", txs.size(), newPending.size());
                 }
-                AionImpl.inst().broadcastTransactions(txs);
+
+                int cnt = 0;
+                for (AionTxExecSummary summary : txBuffer) {
+                    if (newPending.get(cnt) != null && !newPending.get(cnt).equals(summary.getTransaction())) {
+                        AionTxReceipt rp = new AionTxReceipt();
+                        rp.setTransaction(newPending.get(cnt));
+                        fireTxUpdate(rp, PendingTransactionState.DROPPED, best.get());
+                    }
+                    cnt++;
+
+                    fireTxUpdate(summary.getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
+                }
+
+                if (!txs.isEmpty() && !loadPendingTx) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("processTxBuffer tx#{}", txs.size());
+                    }
+                    AionImpl.inst().broadcastTransactions(txs);
+                }
+            } catch (Throwable e) {
+                LOG.error("processTxBuffer throw {}", e.toString());
             }
 
             txBuffer.clear();
@@ -317,9 +324,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             this.bufferEnable = CfgAion.inst().getTx().getBuffer();
             if (bufferEnable) {
                 LOG.info("TxBuf enable!");
+                this.ex = Executors.newSingleThreadScheduledExecutor();
+                this.ex.scheduleWithFixedDelay(new TxBuffTask(), 5000, 500, TimeUnit.MILLISECONDS);
+
                 this.txBuffer = Collections.synchronizedList(new ArrayList<>());
-                timer = new Timer("TxBuf");
-                timer.schedule(new TxBuffTask(), 10000, 500);
             }
 
             ees.start(new EpPS());
@@ -861,7 +869,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             receipt.setTransaction(tx);
 
             if (txSum.isRejected()) {
-                LOG.warn("Invalid transaction in txpool: {}", tx);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Invalid transaction in txpool: {}", tx);
+                }
                 txPool.remove(Collections.singletonList(tx));
 
                 if (poolBackUp) {
@@ -922,7 +932,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     @Override public void shutDown() {
         if (this.bufferEnable) {
-            timer.cancel();
+            ex.shutdown();
         }
 
         if (ees != null) {

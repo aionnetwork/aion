@@ -190,7 +190,7 @@ public class AionHub {
         cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr, this.p2pMgr));
         cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr, this.p2pMgr));
-        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, cfg.getNet().getP2p().getTxBroadcastbuffer()));
+        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr));
         cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler, this.p2pMgr));
         this.p2pMgr.register(cbs);
     }
