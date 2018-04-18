@@ -1473,7 +1473,6 @@ public class ApiWeb3Aion extends ApiAion {
         p2p.put("maxTempNodes", configP2p.getMaxTempNodes());
         p2p.put("showLog", configP2p.getShowLog());
         p2p.put("showStatus", configP2p.getShowStatus());
-        p2p.put("txBroadcastBuffer", configP2p.getTxBroadcastbuffer());
 
         // end
         obj.put("p2p", p2p);
