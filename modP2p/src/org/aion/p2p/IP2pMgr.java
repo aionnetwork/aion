@@ -72,13 +72,11 @@ public interface IP2pMgr {
 	 */
 	void run();
 
-	void dropActive(Integer _nodeIdHash);
-
 	List<Short> versions();
 
 	int chainId();
 
-	void closeSocket(final SocketChannel _sc);
+	void closeSocket(final SocketChannel _sc, String _reason);
 
 	boolean isShowLog();
 

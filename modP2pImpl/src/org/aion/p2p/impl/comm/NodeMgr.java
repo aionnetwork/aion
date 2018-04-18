@@ -217,15 +217,11 @@ public class NodeMgr implements INodeMgr {
             node.setConnection("outbound");
             INode previous = activeNodes.put(_nodeIdHash, node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel(), "duplicated-outbound-vs-active");
             else {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-outbound-to-active node-id=" + _shortId + ">");
             }
-
-            // if (this.observer != null)
-            // this.observer.newActiveNode(_nodeIdHash, node.getIp(),
-            // node.getPort());
         }
     }
 
@@ -244,7 +240,7 @@ public class NodeMgr implements INodeMgr {
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.put(node.getIdHash(), node);
             if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel(), "duplicated-inbound-vs-active");
             else {
                 if (_p2pMgr.isShowLog())
                     System.out.println("<p2p action=move-inbound-to-active channel-id=" + _channelHashCode + ">");
@@ -252,43 +248,25 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    public void rmMetricFailedNodes() {
-        {
-            Iterator nodesIt = tempNodes.iterator();
-            while (nodesIt.hasNext()) {
-                Node n = (Node) nodesIt.next();
-                if (n.peerMetric.shouldNotConn() && !n.getIfFromBootList())
-                    tempNodes.remove(n);
+    public void rmTimeOutInbound(final IP2pMgr _p2pMgr) {
+        Iterator inboundIt = inboundNodes.keySet().iterator();
+        while (inboundIt.hasNext()) {
+            int key = (int) inboundIt.next();
+            Node node = inboundNodes.get(key);
+            if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
+                _p2pMgr.closeSocket(node.getChannel(), "inbound-timeout ip=" + node.getIpStr());
+                inboundIt.remove();
             }
         }
     }
 
-    public void rmTimeOutInbound(IP2pMgr pmgr) {
-        {
-            Iterator inboundIt = inboundNodes.keySet().iterator();
-            while (inboundIt.hasNext()) {
-                int key = (int) inboundIt.next();
-                Node node = inboundNodes.get(key);
-                if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
-
-                    pmgr.closeSocket(node.getChannel());
-
-                    inboundIt.remove();
-
-                    if (pmgr.isShowLog())
-                        System.out.println("<p2p-clear inbound-timeout>");
-                }
-            }
-        }
-    }
-
-    public void rmTimeOutActives(IP2pMgr pmgr) {
+    public void rmTimeOutActives(IP2pMgr _p2pMgr) {
         long now = System.currentTimeMillis();
 
         OptionalDouble average = activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
-        if (pmgr.isShowLog()) {
+        if (_p2pMgr.isShowLog()) {
             System.out.printf("<p2p average-delay=%.0fms>\n", average.orElse(0));
         }
 
@@ -299,30 +277,21 @@ public class NodeMgr implements INodeMgr {
 
             if (now - node.getTimestamp() > timeout || !node.getChannel().isConnected()) {
 
-                pmgr.closeSocket(node.getChannel());
+                _p2pMgr.closeSocket(node.getChannel(), "active-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
                 activeIt.remove();
-                if (pmgr.isShowLog())
-                    System.out.println("<p2p-clear-active ip=" + node.getIpStr() + " node=" + node.getIdShort() + ">");
-
-                // if (this.observer != null)
-                // this.observer.removeActiveNode(key);
             }
         }
     }
 
-    public void dropActive(Integer nodeIdHash, IP2pMgr pmgr) {
+    public void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr) {
         Node node = activeNodes.remove(nodeIdHash);
-
-        // if we tried to drop a node that is already dropped
         if (node == null)
             return;
-
-        // this.observer.removeActiveNode(nodeIdHash);
-        pmgr.closeSocket(node.getChannel());
+        _p2pMgr.closeSocket(node.getChannel(), "drop-active node=" + node.getIdShort() + " ip=" + node.getIpStr());
     }
 
-    public void removeActive(Integer nodeIdHash, IP2pMgr pmgr) {
-        dropActive(nodeIdHash, pmgr);
+    public void removeActive(int nodeIdHash, final IP2pMgr _p2pMgr) {
+        dropActive(nodeIdHash, _p2pMgr);
     }
 
     /**
@@ -331,11 +300,11 @@ public class NodeMgr implements INodeMgr {
      */
     public void shutdown(final IP2pMgr _p2pMgr) {
         try {
-            activeNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
+            activeNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(), "p2p-shutdown"));
             activeNodes.clear();
-            outboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
+            outboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(),"p2p-shutdown"));
             outboundNodes.clear();
-            inboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel()));
+            inboundNodes.forEach((k, n) -> _p2pMgr.closeSocket(n.getChannel(),"p2p-shutdown"));
             inboundNodes.clear();
         } catch (Exception e) {
 

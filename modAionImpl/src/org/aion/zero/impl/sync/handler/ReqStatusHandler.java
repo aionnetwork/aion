@@ -99,7 +99,7 @@ public final class ReqStatusHandler extends Handler {
         }
         cacheTs = currTs;
         this.mgr.send(_nodeIdHashcode, cache);
-        this.log.debug("<req-status node={} res-blk={}>",
+        this.log.debug("<req-status node={} return-blk={}>",
             _displayId,
             cache.getBestBlockNumber()
         );
