@@ -42,11 +42,13 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -195,6 +197,18 @@ public abstract class ApiAion extends Api {
         } else if (blkNr == 0) {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
             return new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList());
+        } else {
+            LOG.debug("ApiAion.getBlock - incorrect argument");
+            return null;
+        }
+    }
+
+    public Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
+        if (blkNr > 0) {
+            return ((AionBlockStore)this.ac.getBlockchain().getBlockStore()).getChainBlockByNumberWithTotalDifficulty(blkNr);
+        } else if (blkNr == 0) {
+            AionGenesis genBlk = CfgAion.inst().getGenesis();
+            return Map.entry(new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()), genBlk.getDifficultyBI());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;

@@ -69,14 +69,21 @@ public final class BroadcastTxHandler extends Handler {
 
     private LinkedBlockingQueue<AionTransaction> txQueue;
 
-    private final ScheduledExecutorService ex;
+    private ScheduledExecutorService ex;
 
-    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr) {
+    private final boolean isSyncOnlyNode;
+
+    public BroadcastTxHandler(final Logger _log, final IPendingStateInternal _pendingState, final IP2pMgr _p2pMgr, final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.log = _log;
         this.pendingState = _pendingState;
         this.p2pMgr = _p2pMgr;
         this.txQueue = new LinkedBlockingQueue<>(50_000);
+        this.isSyncOnlyNode = isSyncOnlyNode;
+
+        if(isSyncOnlyNode)
+            return;
+        // don't run the buffertask in sync-node mode
 
         this.ex = Executors.newSingleThreadScheduledExecutor();
         this.ex.scheduleWithFixedDelay(new BufferTask(), 5000, 500, TimeUnit.MILLISECONDS);
@@ -105,6 +112,9 @@ public final class BroadcastTxHandler extends Handler {
 
     @Override
     public final void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(isSyncOnlyNode)
+            return;
+
         if (_msgBytes == null || _msgBytes.length == 0)
             return;
 
@@ -172,6 +182,8 @@ public final class BroadcastTxHandler extends Handler {
     @Override
     public void shutDown() {
         log.info("BroadcastTxHandler shutdown!");
-        ex.shutdown();
+        if (ex != null) {
+            ex.shutdown();
+        }
     }
 }
