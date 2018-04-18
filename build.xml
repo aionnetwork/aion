@@ -300,6 +300,23 @@
 			<arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I${dir.build.native} -I${dir.native}/linux/sodium -mtune=generic -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ${dir.native}/linux/equihash/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium" />
 		</exec>
 
+		<property name="version" value="0.2.0" />
+
+		<exec executable="wget">
+			<arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${version}/fastvm_v${version}.tar.gz" />
+		</exec>
+		<exec executable="tar">
+			<arg line="-xf fastvm_v${version}.tar.gz -C native/linux" />
+		</exec>
+		<move file="native/linux/fastvm_v${version}" tofile="native/linux/fastvm" />
+
+		<exec executable="wget">
+			<arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${version}/solidity_v${version}.tar.gz" />
+		</exec>
+		<exec executable="tar">
+			<arg line="-xf solidity_v${version}.tar.gz -C native/linux" />
+		</exec>
+		<move file="native/linux/solidity_v${version}" tofile="native/linux/solidity" />
 	</target>
 
 	<target name="clean">

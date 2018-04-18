@@ -31,3 +31,11 @@
 /node2/
 /node3/
 /node4/
+
+# fastvm and solidity
+fastvm_*.tar.gz
+solidity_*.tar.gz
+native/linux/fastvm
+native/linux/solidity
+
+
