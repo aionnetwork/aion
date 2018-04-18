@@ -173,8 +173,7 @@ public class CfgDbDetails {
         }
     }
 
-    public static int parseFileSizeSafe(String input,
-                                        int fallback) {
+    public static int parseFileSizeSafe(String input, int fallback) {
         if (input == null || input.isEmpty()) { return fallback; }
 
         Optional<Long> maybeSize = Utils.parseSize(input);
@@ -187,14 +186,16 @@ public class CfgDbDetails {
         return (int) size;
     }
 
-    public void toXML(String name, XMLStreamWriter xmlWriter) throws XMLStreamException {
+    public void toXML(String name, XMLStreamWriter xmlWriter, boolean expert) throws XMLStreamException {
         xmlWriter.writeCharacters("\r\n\t\t");
         xmlWriter.writeStartElement(name);
 
-        xmlWriter.writeCharacters("\r\n\t\t\t");
-        xmlWriter.writeStartElement("vendor");
-        xmlWriter.writeCharacters(this.vendor);
-        xmlWriter.writeEndElement();
+        if (expert) {
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("vendor");
+            xmlWriter.writeCharacters(this.vendor);
+            xmlWriter.writeEndElement();
+        }
 
         xmlWriter.writeCharacters("\r\n\t\t\t");
         xmlWriter.writeStartElement(Props.ENABLE_DB_CACHE);
