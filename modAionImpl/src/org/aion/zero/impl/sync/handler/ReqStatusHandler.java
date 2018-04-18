@@ -35,11 +35,11 @@
 
 package org.aion.zero.impl.sync.handler;
 
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.slf4j.Logger;

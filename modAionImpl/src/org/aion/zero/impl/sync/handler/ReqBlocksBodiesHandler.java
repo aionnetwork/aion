@@ -37,11 +37,7 @@ package org.aion.zero.impl.sync.handler;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.p2p.Ctrl;
-import org.aion.p2p.Handler;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.P2pConstant;
-import org.aion.p2p.Ver;
+import org.aion.p2p.*;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
@@ -70,15 +66,21 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(512));
 
-    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+    private final boolean isSyncOnlyNode;
+
+    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
+        this.isSyncOnlyNode = isSyncOnlyNode;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(isSyncOnlyNode)
+            return;
+
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
 

@@ -46,10 +46,7 @@ import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
-
 import java.util.List;
-
-//import org.apache.commons.collections4.map.LRUMap;
 
 /**
  *
@@ -67,15 +64,21 @@ public final class ReqBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr) {
+    private final boolean isSyncOnlyNode;
+
+    public ReqBlocksHeadersHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
         this.log = _log;
         this.blockchain = _blockchain;
         this.p2pMgr = _p2pMgr;
+        this.isSyncOnlyNode = isSyncOnlyNode;
     }
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
+        if(isSyncOnlyNode)
+            return;
+
         ReqBlocksHeaders reqHeaders = ReqBlocksHeaders.decode(_msgBytes);
         if (reqHeaders != null) {
             long fromBlock = reqHeaders.getFromBlock();
