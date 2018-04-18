@@ -144,6 +144,12 @@
 		</junit>
 	</target>-->
 
+	<target name="logenv">
+		<echo message="ANT_VERSION: ${ant.version}"/>
+		<echo message="JAVA_VERSION: ${ant.java.version}"/>
+		<echo message="JAVA_HOME: ${java.home}"/>
+	</target>
+
 	<target name="test" depends="clean, build, test_modules_collect_reports" />
 
 	<target name="ci_build" depends="clean, build, ci_test_modules_collect_reports" />
@@ -182,7 +188,7 @@
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 	</target>
 
-	<target name="clean_build" depends="clean, mod_build, build" />
+	<target name="clean_build" depends="logenv, clean, mod_build, build" />
 
 	<target name="build_test" depends="build, test" />
 
@@ -328,7 +334,7 @@
 		<delete dir="${dir.modfile}" />
 	</target>
 
-	<target name="pack_build">
+	<target name="pack_build" depends="logenv">
 		<antcall target="clean_build">
 			<param name="compile.debug" value="off" />
 		</antcall>
