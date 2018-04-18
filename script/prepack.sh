@@ -12,9 +12,18 @@ fi
 
 # download jre9 if can't find the jre env
 if [ ! -d "$JDK_PATH" ]; then
-  wget -nc --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/9.0.4+11/c2514751926b4512b076cc82f959763f/jdk-9.0.4_linux-x64_bin.tar.gz" -O $PACK_PATH/jdk-9.0.4_linux-x64_bin.tar.gz
-  tar -xf $PACK_PATH/jdk-9.0.4_linux-x64_bin.tar.gz -C $PACK_PATH
-  mv $PACK_PATH/jdk-9.0.4 $JDK_PATH
+
+  if [ ! -d "$JAVA_HOME"]; then
+    echo "missing $JAVA_HOME in environment, cannot proceed with packaging"
+    exit 1
+  fi
+
+  # remove previous JDK in $PATH_PACK if it exists
+  rm -rf $PACK_PATH/jdk
+  mkdir $PACK_PATH/jdk
+
+  # copy the contents of $JAVA_HOME into the jdk
+  cp -r $JAVA_HOME/* $PACK_PATH/jdk
 fi
 
 # generate aion runtime

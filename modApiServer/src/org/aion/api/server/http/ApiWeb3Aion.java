@@ -29,7 +29,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-import com.google.protobuf.ByteString;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.rpc.RpcError;
@@ -50,6 +49,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.config.*;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.core.AccountState;
@@ -58,14 +58,16 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.CfgConsensusPow;
+import org.aion.zero.impl.config.CfgEnergyStrategy;
 import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.core.RewardsCalculator;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.sync.PeerState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -77,6 +79,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1183,12 +1187,19 @@ public class ApiWeb3Aion extends ApiAion {
             n.put("idShort", node.getIdShort());
             n.put("id", new String(node.getId()));
             n.put("idHash", node.getIdHash());
+            n.put("version", node.getBinaryVersion());
             n.put("blockNumber", node.getBestBlockNumber());
             n.put("totalDifficulty", node.getTotalDifficulty());
 
             JSONObject network = new JSONObject();
             network.put("remoteAddress", node.getIpStr() + ":" + node.getPort());
             n.put("network", network);
+            n.put("latestTimestamp", node.getTimestamp());
+
+            // generate a date corresponding to UTC date time (not local)
+            String utcTimestampDate = Instant.ofEpochMilli(node.getTimestamp()).atOffset(ZoneOffset.UTC).toString();
+            n.put("latestTimestampUTC", utcTimestampDate);
+            n.put("version", node.getBinaryVersion());
 
             peerList.put(n);
         }
@@ -1310,6 +1321,259 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject obj = new JSONObject();
         obj.put("block", Blk.AionBlockToJson(block, totalDiff, full));
         obj.put("raw", ByteUtil.toHexString(block.getEncoded()));
+        return obj;
+    }
+
+    /**
+     * Very short blurb generated about our most important stats, intended for
+     * quick digestion and monitoring tool usage
+     */
+    // TODO
+    public RpcMsg priv_shortStats() {
+        AionBlock block = this.ac.getBlockchain().getBestBlock();
+        Map<Integer, INode> peer = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+
+        // this could be optimized (cached)
+        INode maxPeer = null;
+        for (INode p : peer.values()) {
+            if (maxPeer == null) {
+                maxPeer = p;
+                continue;
+            }
+
+            if (p.getTotalDifficulty().compareTo(maxPeer.getTotalDifficulty()) > 0)
+                maxPeer = p;
+        }
+
+        // basic local configuration
+        CfgAion config = CfgAion.inst();
+
+        JSONObject obj = new JSONObject();
+        obj.put("id", config.getId());
+        obj.put("genesisHash", ByteUtil.toHexString(config.getGenesis().getHash()));
+        obj.put("version", Version.KERNEL_VERSION);
+        obj.put("bootBlock", this.ac.getAionHub().getStartingBlock().getNumber());
+
+
+        long time = System.currentTimeMillis();
+        obj.put("timestamp", time);
+        obj.put("timestampUTC", Instant.ofEpochMilli(time).atOffset(ZoneOffset.UTC).toString());
+
+        // base.blockchain
+        JSONObject blockchain = new JSONObject();
+        blockchain.put("bestBlockhash", ByteUtil.toHexString(block.getHash()));
+        blockchain.put("bestNumber", block.getNumber());
+        blockchain.put("totalDifficulty", this.ac.getBlockchain()
+                .getTotalDifficultyByHash(new Hash256(block.getHash())));
+        // end
+        obj.put("local", blockchain);
+
+        // base.network
+        JSONObject network = new JSONObject();
+        // remote
+        if (maxPeer != null) {
+            // base.network.best
+            JSONObject remote = new JSONObject();
+            remote.put("id", new String(maxPeer.getId()));
+            remote.put("totalDifficulty", maxPeer.getTotalDifficulty());
+            remote.put("bestNumber", maxPeer.getBestBlockNumber());
+            remote.put("version", maxPeer.getBinaryVersion());
+            remote.put("timestamp", maxPeer.getTimestamp());
+            remote.put("timestampUTC", Instant.ofEpochMilli(maxPeer.getTimestamp()).atOffset(ZoneOffset.UTC).toString());
+            // end
+            network.put("best", remote);
+        }
+
+        // end
+        network.put("peerCount", peer.size());
+        obj.put("network", network);
+
+        return new RpcMsg(obj);
+    }
+
+    /**
+     * This may seem similar to a superset of peers, with the difference
+     * being that this should only contain a subset of peers we are
+     * actively syncing from
+     */
+    public RpcMsg priv_syncPeers() {
+        // contract here is we do NOT modify the peerStates in any way
+        Map<Integer, PeerState> peerStates = this.ac.getAionHub().getSyncMgr().getPeerStates();
+
+        // also retrieve nodes from p2p to see if we can piece together a full state
+        Map<Integer, INode> nodeState = this.ac.getAionHub().getP2pMgr().getActiveNodes();
+
+        JSONArray array = new JSONArray();
+        for (Map.Entry<Integer, PeerState> peerState : peerStates.entrySet()) {
+            // begin []
+            JSONObject peerObj = new JSONObject();
+            INode node;
+            if ((node = nodeState.get(peerState.getKey())) != null) {
+                // base[].node
+                JSONObject nodeObj = new JSONObject();
+                nodeObj.put("id", new String(node.getId()));
+                nodeObj.put("totalDifficulty", node.getTotalDifficulty());
+                nodeObj.put("bestNumber", node.getBestBlockNumber());
+                nodeObj.put("version", node.getBinaryVersion());
+                nodeObj.put("timestamp", node.getTimestamp());
+                nodeObj.put("timestampUTC", Instant.ofEpochMilli(node.getTimestamp()).atOffset(ZoneOffset.UTC).toString());
+
+                //end
+                peerObj.put("node", nodeObj);
+            }
+
+            PeerState ps = peerState.getValue();
+            peerObj.put("idHash", peerState.getKey());
+            peerObj.put("lastRequestTimestamp", ps.getLastHeaderRequest());
+            peerObj.put("lastRequestTimestampUTC", Instant.ofEpochMilli(ps.getLastHeaderRequest()).atOffset(ZoneOffset.UTC).toString());
+            peerObj.put("mode", ps.getMode().toString());
+            peerObj.put("base", ps.getBase());
+
+            // end
+            array.put(peerObj);
+        }
+        return new RpcMsg(array);
+    }
+
+
+    public RpcMsg priv_config() {
+        JSONObject obj = new JSONObject();
+
+        CfgAion config = CfgAion.inst();
+
+        obj.put("id", config.getId());
+        obj.put("basePath", config.getBasePath());
+
+        obj.put("net", configNet());
+        obj.put("consensus", configConsensus());
+        obj.put("sync", configSync());
+        obj.put("api", configApi());
+        obj.put("db", configDb());
+        obj.put("tx", configTx());
+
+        return new RpcMsg(obj);
+    }
+
+    // TODO: we can refactor these in the future to be in
+    // their respective classes, for now put the toJson here
+
+    private static JSONObject configNet() {
+        CfgNet config = CfgAion.inst().getNet();
+        JSONObject obj = new JSONObject();
+
+        // begin base.net.p2p
+        CfgNetP2p configP2p = config.getP2p();
+        JSONObject p2p = new JSONObject();
+        p2p.put("ip", configP2p.getIp());
+        p2p.put("port", configP2p.getPort());
+        p2p.put("bootlistSyncOnly", configP2p.getBootlistSyncOnly());
+        p2p.put("discover", configP2p.getDiscover());
+        p2p.put("errorTolerance", configP2p.getErrorTolerance());
+        p2p.put("maxActiveNodes", configP2p.getMaxActiveNodes());
+        p2p.put("maxTempNodes", configP2p.getMaxTempNodes());
+        p2p.put("showLog", configP2p.getShowLog());
+        p2p.put("showStatus", configP2p.getShowStatus());
+
+        // end
+        obj.put("p2p", p2p);
+
+        // begin base.net.nodes[]
+        JSONArray nodeArray = new JSONArray();
+        for (String n : config.getNodes()) {
+            nodeArray.put(n);
+        }
+
+        // end
+        obj.put("nodes", nodeArray);
+        // begin base
+        obj.put("id", config.getId());
+
+        // end
+        return obj;
+    }
+
+    private static JSONObject configConsensus() {
+        CfgConsensusPow config = CfgAion.inst().getConsensus();
+        JSONObject obj = new JSONObject();
+        obj.put("mining", config.getMining());
+        obj.put("minerAddress", config.getMinerAddress());
+        obj.put("threads", config.getCpuMineThreads());
+        obj.put("extraData", config.getExtraData());
+        obj.put("isSeed", config.isSeed());
+
+        // base.consensus.energyStrategy
+        CfgEnergyStrategy nrg = config.getEnergyStrategy();
+        JSONObject nrgObj = new JSONObject();
+        nrgObj.put("strategy", nrg.getStrategy());
+        nrgObj.put("target", nrg.getTarget());
+        nrgObj.put("upper", nrg.getUpperBound());
+        nrgObj.put("lower", nrg.getLowerBound());
+
+        // end
+        obj.put("energyStrategy", nrgObj);
+        return obj;
+    }
+
+    private static JSONObject configSync() {
+        CfgSync config = CfgAion.inst().getSync();
+        JSONObject obj = new JSONObject();
+        obj.put("showStatus", config.getShowStatus());
+        obj.put("blocksQueueMax", config.getBlocksQueueMax());
+        return obj;
+    }
+
+    private static JSONObject configApi() {
+        CfgApi config = CfgAion.inst().getApi();
+
+        JSONObject obj = new JSONObject();
+
+        // base.api.rpc
+        CfgApiRpc rpcConfig = config.getRpc();
+        JSONObject rpc = new JSONObject();
+        rpc.put("ip", rpcConfig.getIp());
+        rpc.put("port", rpcConfig.getPort());
+        rpc.put("corsEnabled", rpcConfig.getCorsEnabled());
+        rpc.put("active", rpcConfig.getActive());
+        rpc.put("maxThread", rpcConfig.getMaxthread());
+
+        // end
+        obj.put("rpc", rpc);
+
+        // base.api.zmq
+        CfgApiZmq zmqConfig = config.getZmq();
+        JSONObject zmq = new JSONObject();
+
+        zmq.put("ip", zmqConfig.getIp());
+        zmq.put("port", zmqConfig.getPort());
+        zmq.put("active", zmqConfig.getActive());
+
+        // end
+        obj.put("zmq", zmq);
+
+        // base.api.nrg
+        CfgApiNrg nrgConfig = config.getNrg();
+        JSONObject nrg = new JSONObject();
+
+        nrg.put("defaultPrice", nrgConfig.getNrgPriceDefault());
+        nrg.put("maxPrice", nrgConfig.getNrgPriceMax());
+
+        // end
+        obj.put("nrg", nrg);
+        return obj;
+    }
+
+    // this is temporarily disabled until DB configuration changes come in
+    private static JSONObject configDb() {
+        return new JSONObject();
+    }
+
+    private static JSONObject configTx() {
+        CfgTx config = CfgAion.inst().getTx();
+        JSONObject obj = new JSONObject();
+        obj.put("cacheMax", config.getCacheMax());
+        obj.put("poolBackup", config.getPoolBackup());
+        obj.put("buffer", config.getBuffer());
+        obj.put("poolDump", config.getPoolDump());
         return obj;
     }
 

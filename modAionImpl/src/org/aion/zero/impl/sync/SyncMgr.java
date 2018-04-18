@@ -312,4 +312,9 @@ public final class SyncMgr {
         start.set(false);
         workers.shutdown();
     }
+
+
+    public Map<Integer, PeerState> getPeerStates() {
+        return new HashMap<>(this.peerStates);
+    }
 }

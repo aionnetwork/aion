@@ -74,6 +74,16 @@ public class BlockPropagationTest {
         public int getPort() {
             return 0;
         }
+
+        @Override
+        public long getTimestamp() {
+            return 0;
+        }
+
+        @Override
+        public String getBinaryVersion() {
+            return "";
+        }
     }
 
     private static class P2pMock implements IP2pMgr {

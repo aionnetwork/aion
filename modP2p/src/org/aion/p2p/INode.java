@@ -74,6 +74,8 @@ public interface INode {
      */
     BigInteger getTotalDifficulty();
 
+    long getTimestamp();
+
     /**
      * @param _bestBlockNumber long
      * @param _bestBlockHash byte[]
@@ -81,4 +83,5 @@ public interface INode {
      */
     void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty);
 
+    String getBinaryVersion();
 }

@@ -4,7 +4,6 @@ import org.aion.api.server.http.ApiWeb3Aion;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.json.JSONArray;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -197,6 +196,9 @@ public class RpcMethods {
             Map.entry("priv_getPendingSize", (params) -> api.priv_getPendingSize()),
             Map.entry("priv_dumpTransaction", (params) -> api.priv_dumpTransaction(params)),
             Map.entry("priv_dumpBlockByHash", (params) -> api.priv_dumpBlockByHash(params)),
-            Map.entry("priv_dumpBlockByNumber", (params) -> api.priv_dumpBlockByNumber(params))
+            Map.entry("priv_dumpBlockByNumber", (params) -> api.priv_dumpBlockByNumber(params)),
+            Map.entry("priv_shortStats", (params) -> api.priv_shortStats()),
+            Map.entry("priv_config", (params) -> api.priv_config()),
+            Map.entry("priv_syncPeers", (params) -> api.priv_syncPeers())
     );
 }
