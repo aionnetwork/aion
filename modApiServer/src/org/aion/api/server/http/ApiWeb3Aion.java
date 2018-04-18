@@ -1664,7 +1664,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         if (block == null) return new RpcMsg(JSONObject.NULL);
 
-        AionTransaction tx = block.getTransactionsList().get(txInfo.getIndex());
+        AionTransaction tx = txInfo.getReceipt().getTransaction();
 
         if (tx == null) return new RpcMsg(JSONObject.NULL);
 

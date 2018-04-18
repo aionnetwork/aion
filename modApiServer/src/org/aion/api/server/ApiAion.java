@@ -208,7 +208,7 @@ public abstract class ApiAion extends Api {
             return ((AionBlockStore)this.ac.getBlockchain().getBlockStore()).getChainBlockByNumberWithTotalDifficulty(blkNr);
         } else if (blkNr == 0) {
             AionGenesis genBlk = CfgAion.inst().getGenesis();
-            return Map.entry(new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()), BigInteger.ZERO);
+            return Map.entry(new AionBlock(genBlk.getHeader(), genBlk.getTransactionsList()), genBlk.getDifficultyBI());
         } else {
             LOG.debug("ApiAion.getBlock - incorrect argument");
             return null;
