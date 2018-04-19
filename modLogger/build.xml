@@ -16,6 +16,7 @@
 	</target>
 
 	<target name="build">
+		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}"/>
 		<javac 
 			debug="${compile.debug}"

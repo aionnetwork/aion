@@ -129,10 +129,11 @@
     </target>
 
     <target name="build">
+        <echo message="compiling with debug=${compile.debug}" />
         <mkdir dir="${dir.dest}"/>
         <mkdir dir="${dir.native}"/>
         <antcall target="pre_build"/>
-        <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./"
+        <javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./"
                destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
             <modulepath>

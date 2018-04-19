@@ -28,6 +28,7 @@
     <!-- Build Related -->
 
     <target name="compile">
+        <echo message="compiling with debug=${compile.debug}" />
         <mkdir dir="${main.build.dir}" />
         <copy includeemptydirs="false" todir="${main.src.dir}">
             <file file="module-info.java" />
