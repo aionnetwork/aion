@@ -1036,16 +1036,21 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         bestNetBlk.sort(Comparator.reverseOrder());
 
+        int position = bestNetBlk.size()/3;
+        if (position > 3) {
+            position -= 1;
+        }
+
         if (LOG.isDebugEnabled()) {
             StringBuilder blk = new StringBuilder();
             for (Long l : bestNetBlk) {
                 blk.append(l.toString()).append(" ");
             }
 
-            LOG.debug("getNetworkBestBlk13 {} NetworkBest:{}", bestNetBlk.get(bestNetBlk.size()/3), blk.toString());
+            LOG.debug("getNetworkBestBlk13 peers[{}] 1/3[{}] NetworkBest[{}]", bestNetBlk.size(), bestNetBlk.get(position), blk.toString());
         }
 
-        return bestNetBlk.get(bestNetBlk.size()/3);
+        return bestNetBlk.get(position);
     }
 
     private void recoverCache() {
