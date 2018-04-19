@@ -23,13 +23,12 @@
  ******************************************************************************/
 package org.aion.mcf.blockchain;
 
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
-
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
+
+import java.math.BigInteger;
+import java.util.List;
 
 public interface IPendingState<TX extends ITransaction> {
 
