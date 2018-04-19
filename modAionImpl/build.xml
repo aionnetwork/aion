@@ -97,7 +97,10 @@
             <formatter type="plain" usefile="false"/>
             <formatter type="xml"/>
             <batchtest todir="${test.report.dir}">
-                <fileset dir="${src.test}" includes="**/*Test.java"/>
+                <fileset dir="${src.test}">
+                    <include name="**/*Test.java"/>
+                    <exclude name="**/EquihashSolutionRuleTest.java"/>
+                </fileset>
             </batchtest>
         </junit>
     </target>
@@ -123,7 +126,10 @@
             <formatter type="plain" usefile="false"/>
             <formatter type="xml"/>
             <batchtest todir="${test.report.dir}">
-                <fileset dir="${src.test}" includes="**/*Test.java"/>
+                <fileset dir="${src.test}">
+                    <include name="**/*Test.java"/>
+                    <exclude name="**/EquihashSolutionRuleTest.java"/>
+                </fileset>
             </batchtest>
         </junit>
     </target>
