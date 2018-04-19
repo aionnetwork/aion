@@ -100,11 +100,6 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public INodeMgr getNodeMgr() {
-            return null;
-        }
-
-        @Override
         public void shutdown() {
 
         }
@@ -144,9 +139,6 @@ public class BlockPropagationTest {
 
         }
 
-        @Override
-        public void dropActive(Integer hash) {
-        }
 
         @Override
         public boolean isShowLog() {
@@ -154,8 +146,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void closeSocket(SocketChannel socket) {
-            // do nothing
+        public void closeSocket(SocketChannel _sc, String _reason) {
         }
     }
 
