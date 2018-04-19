@@ -49,7 +49,7 @@ public final class PeerMetric {
             metricFailedConn--;
     }
 
-    public void ban() {
+    void ban() {
         metricBanConnTs = System.currentTimeMillis();
     }
 

@@ -971,7 +971,7 @@
 //					Thread.sleep(PERIOD_CLEAR);
 //
 //					// selectorLock.lock();
-//					nodeMgr.rmTimeOutInbound(P2pMgr.this);
+//					nodeMgr.timeoutInbound(P2pMgr.this);
 //					// selectorLock.unlock();
 //
 //					Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
@@ -1001,7 +1001,7 @@
 //					}
 //
 //					// selectorLock.lock();
-//					nodeMgr.rmTimeOutActives(P2pMgr.this);
+//					nodeMgr.timeoutActive(P2pMgr.this);
 //					// selectorLock.unlock();
 //
 //				} catch (InterruptedException interrupted) {

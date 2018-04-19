@@ -513,7 +513,7 @@ public final class P2pMgr implements IP2pMgr {
                 try {
                     Thread.sleep(PERIOD_CLEAR);
 
-                    nodeMgr.rmTimeOutInbound(P2pMgr.this);
+                    nodeMgr.timeoutInbound(P2pMgr.this);
 
                     Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
                     while (outboundIt.hasNext()) {
@@ -530,14 +530,12 @@ public final class P2pMgr implements IP2pMgr {
                             continue;
 
                         if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
-                            closeSocket(node.getChannel(), "outbound-timeout-" + node.getIdShort());
+                            closeSocket(node.getChannel(), "outbound-timeout node=" + node.getIdShort());
                             outboundIt.remove();
-                            if (showLog)
-                                System.out.println("<p2p-clear outbound-timeout>");
                         }
                     }
 
-                    nodeMgr.rmTimeOutActives(P2pMgr.this);
+                    nodeMgr.timeoutActive(P2pMgr.this);
 
                 } catch (Exception e) {
                 }
@@ -667,7 +665,6 @@ public final class P2pMgr implements IP2pMgr {
         } catch (IOException e) {
             if (showLog)
                 System.out.println("<p2p inbound-accept-io-exception>");
-            return;
         }
     }
 
@@ -948,13 +945,6 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    /**
-     * @return NodeMgr
-     */
-    public NodeMgr getNodeMgr() {
-        return this.nodeMgr;
-    }
-
     @Override
     public void run() {
         try {
@@ -1060,11 +1050,12 @@ public final class P2pMgr implements IP2pMgr {
     public void shutdown() {
         start.set(false);
         scheduledWorkers.shutdownNow();
-        nodeMgr.shutdown(this);
 
         for (List<Handler> hdrs : handlers.values()) {
             hdrs.forEach(hdr -> hdr.shutDown());
         }
+
+        nodeMgr.shutdown(this);
     }
 
     @Override
@@ -1082,7 +1073,7 @@ public final class P2pMgr implements IP2pMgr {
      *
      * @param nodeIdHash
      */
-    public void removeActive(int nodeIdHash) {
+    void removeActive(int nodeIdHash) {
         nodeMgr.removeActive(nodeIdHash, this);
     }
 
@@ -1091,18 +1082,16 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public void errCheck(int nodeIdHashcode, String _displayId) {
-        int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1));
-
+    public void errCheck(int _nodeIdHash, String _displayId) {
+        int cnt = (errCnt.get(_nodeIdHash) == null ? 1 : (errCnt.get(_nodeIdHash).intValue() + 1));
         if (cnt > this.errTolerance) {
-            ban(nodeIdHashcode);
-            errCnt.put(nodeIdHashcode, 0);
-
-            if (isShowLog()) {
-                System.out.println("<ban node: " + (_displayId == null ? nodeIdHashcode : _displayId) + ">");
+            ban(_nodeIdHash);
+            errCnt.put(_nodeIdHash, 0);
+            if (showLog) {
+                System.out.println("<p2p-ban node=" + (_displayId == null ? _nodeIdHash : _displayId) + " err-count=" + cnt + ">");
             }
         } else {
-            errCnt.put(nodeIdHashcode, cnt);
+            errCnt.put(_nodeIdHash, cnt);
         }
     }
 
