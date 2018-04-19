@@ -29,6 +29,7 @@
 package org.aion.db.generic;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -191,7 +192,7 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         Optional<byte[]> value = database.get(key);
         long t2 = System.nanoTime();
 
-        LOG.debug(database.toString() + " get(key) in " + (t2 - t1) + " ns.");
+        LOG.debug(database.toString() + " get(key) in " + (t2 - t1) + " ns." + "\n\t\t\t\t\tkey = " + Hex.toHexString(key));
         return value;
     }
 
@@ -201,7 +202,8 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         database.put(key, value);
         long t2 = System.nanoTime();
 
-        LOG.debug(database.toString() + " put(key,value) in " + (t2 - t1) + " ns.");
+        LOG.debug(database.toString() + " put(key,value) in " + (t2 - t1) + " ns." + "\n\t\t\t\t\tkey = " + Hex.toHexString(key)
+                          + "\n\t\t\t\t\tvalue = " + Hex.toHexString(value));
     }
 
     @Override
@@ -210,7 +212,7 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         database.delete(key);
         long t2 = System.nanoTime();
 
-        LOG.debug(database.toString() + " delete(key) in " + (t2 - t1) + " ns.");
+        LOG.debug(database.toString() + " delete(key) in " + (t2 - t1) + " ns." + "\n\t\t\t\t\tkey = " + Hex.toHexString(key));
     }
 
     @Override
@@ -228,7 +230,8 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         database.putToBatch(key, value);
         long t2 = System.nanoTime();
 
-        LOG.debug(database.toString() + " putToBatch(key,value) in " + (t2 - t1) + " ns.");
+        LOG.debug(database.toString() + " putToBatch(key,value) in " + (t2 - t1) + " ns." + "\n\t\t\t\t\tkey = " + Hex
+                .toHexString(key) + "\n\t\t\t\t\tvalue = " + Hex.toHexString(value));
     }
 
     @Override
