@@ -15,6 +15,7 @@
 		<delete file="${dir.mod}/modEvtMgr.jar" />
 	</target>
 	<target name="build">
+		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}" />
 		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java" />
 		<jar destfile="modEvtMgr.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
