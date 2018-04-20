@@ -726,7 +726,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         best.set(newBlock);
 
-        if (best.get().getNumber() + 128 < getNetworkBestBlk13()) {
+        if (best.get().getNumber() + 128 < getPeersBestBlk13()) {
             closeToNetworkBest = false;
         } else {
             closeToNetworkBest = true;
@@ -1020,37 +1020,37 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
     }
 
-    private long getNetworkBestBlk13() {
+    private long getPeersBestBlk13() {
         if (this.p2pMgr == null) {
             return 0;
         }
 
-        List<Long> bestNetBlk = new ArrayList<>();
+        List<Long> peersBest = new ArrayList<>();
         for (INode node : p2pMgr.getActiveNodes().values()) {
-            bestNetBlk.add(node.getBestBlockNumber());
+            peersBest.add(node.getBestBlockNumber());
         }
 
-        if (bestNetBlk.isEmpty()) {
+        if (peersBest.isEmpty()) {
             return 0;
         }
 
-        bestNetBlk.sort(Comparator.reverseOrder());
+        peersBest.sort(Comparator.reverseOrder());
 
-        int position = bestNetBlk.size()/3;
+        int position = peersBest.size()/3;
         if (position > 3) {
             position -= 1;
         }
 
         if (LOG.isDebugEnabled()) {
             StringBuilder blk = new StringBuilder();
-            for (Long l : bestNetBlk) {
+            for (Long l : peersBest) {
                 blk.append(l.toString()).append(" ");
             }
 
-            LOG.debug("getNetworkBestBlk13 peers[{}] 1/3[{}] NetworkBest[{}]", bestNetBlk.size(), bestNetBlk.get(position), blk.toString());
+            LOG.debug("getPeersBestBlk13 peers[{}] 1/3[{}] PeersBest[{}]", peersBest.size(), peersBest.get(position), blk.toString());
         }
 
-        return bestNetBlk.get(position);
+        return peersBest.get(position);
     }
 
     private void recoverCache() {
