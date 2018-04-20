@@ -25,21 +25,12 @@
 
 package org.aion.p2p.impl.comm;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-
 import org.aion.p2p.INode;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 
 /*
  *
@@ -68,9 +59,7 @@ public final class Node implements INode {
 
 	private int idHash;
 
-	private int fullHash = -1;
-
-	/**
+    /**
 	 * for display only
 	 */
 	private String idShort;
@@ -80,8 +69,6 @@ public final class Node implements INode {
 	private String ipStr;
 
 	private int port;
-
-	private int portConnected;
 
 	private long timestamp;
 
@@ -104,29 +91,14 @@ public final class Node implements INode {
 	public PeerMetric peerMetric = new PeerMetric();
 
 	/**
-	 * constructor for initial stage of persisted peer info from file system
-	 */
-	private Node(boolean fromBootList, String _ipStr) {
-		this.fromBootList = fromBootList;
-		this.idHash = 0;
-		this.ip = ipStrToBytes(_ipStr);
-		this.ipStr = _ipStr;
-		this.port = -1;
-		this.portConnected = -1;
-		this.timestamp = System.currentTimeMillis();
-		this.bestBlockNumber = 0L;
-	}
-
-	/**
 	 * constructor for initial stage of connections from network
 	 */
-	Node(String _ipStr, int port, int portConnected) {
+	Node(String _ipStr, int port) {
 		this.fromBootList = false;
 		this.idHash = 0;
 		this.ip = ipStrToBytes(_ipStr);
 		this.ipStr = _ipStr;
 		this.port = port;
-		this.portConnected = portConnected;
 		this.timestamp = System.currentTimeMillis();
 		this.bestBlockNumber = 0L;
 	}
@@ -144,7 +116,6 @@ public final class Node implements INode {
 		this.ip = _ip;
 		this.ipStr = ipBytesToStr(_ip);
 		this.port = _port;
-		this.portConnected = -1;
 		this.timestamp = System.currentTimeMillis();
 		this.bestBlockNumber = 0L;
 	}
@@ -235,10 +206,6 @@ public final class Node implements INode {
 		this.port = _port;
 	}
 
-	public void setPortConnected(final int _port) {
-		this.portConnected = _port;
-	}
-
 	public void setBinaryVersion(String _revision) {
 		this.binaryVersion = _revision;
 	}
@@ -289,10 +256,6 @@ public final class Node implements INode {
 		return this.port;
 	}
 
-	public int getConnectedPort() {
-		return portConnected;
-	}
-
 	/**
 	 * @return long
 	 */
@@ -324,27 +287,8 @@ public final class Node implements INode {
 	/**
 	 * @return String
 	 */
-	public String getConnection() {
+	String getConnection() {
 		return this.connection;
-	}
-
-	boolean hasFullInfo() {
-		return (id != null) && (ip != null) && (port > 0);
-	}
-
-	int getFullHash() {
-		if (fullHash > 0)
-			return fullHash;
-		else {
-			if (hasFullInfo()) {
-				ByteBuffer bb = ByteBuffer.allocate(id.length + ip.length + 4);
-				bb.putInt(port);
-				bb.put(id);
-				bb.put(ip);
-				return Arrays.hashCode(bb.array());
-			}
-		}
-		return -1;
 	}
 
 	@Override
@@ -373,113 +317,4 @@ public final class Node implements INode {
 		this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
 	}
 
-	void copyNodeStatus(Node _n) {
-		if (_n.bestBlockNumber > this.bestBlockNumber) {
-			this.bestBlockNumber = _n.getBestBlockNumber();
-			this.bestBlockHash = _n.bestBlockHash;
-			this.totalDifficulty = _n.getTotalDifficulty();
-		}
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o instanceof Node) {
-			Node other = (Node) o;
-			return this.getFullHash() == other.getFullHash();
-		}
-		return false;
-	}
-
-	String toXML() {
-		final XMLOutputFactory output = XMLOutputFactory.newInstance();
-		XMLStreamWriter sw;
-		String xml;
-		try {
-			Writer strWriter = new StringWriter();
-			sw = output.createXMLStreamWriter(strWriter);
-
-			sw.writeCharacters("\r\n\t");
-			sw.writeStartElement("node");
-			sw.writeStartElement("ip");
-			sw.writeCharacters(getIpStr());
-			sw.writeEndElement();
-
-			sw.writeStartElement("port");
-			sw.writeCharacters(String.valueOf(getPort()));
-			sw.writeEndElement();
-
-			sw.writeStartElement("id");
-			sw.writeCharacters(new String(getId()));
-			sw.writeEndElement();
-
-			sw.writeStartElement("failedConn");
-			sw.writeCharacters(String.valueOf(peerMetric.metricFailedConn));
-			sw.writeEndElement();
-			sw.writeEndElement();
-
-			xml = strWriter.toString();
-			strWriter.flush();
-			strWriter.close();
-			sw.flush();
-			sw.close();
-			return xml;
-		} catch (IOException | XMLStreamException e) {
-			return "";
-		}
-	}
-
-	public static Node fromXML(final XMLStreamReader sr) throws XMLStreamException {
-		String id = null;
-		String ip = null;
-		int port = 0;
-		int failedConn = 0;
-
-		while (sr.hasNext()) {
-			int eventType = sr.next();
-			switch (eventType) {
-			case XMLStreamReader.START_ELEMENT:
-				String elementName = sr.getLocalName().toLowerCase();
-				switch (elementName) {
-				case "ip":
-					ip = readValue(sr);
-					break;
-				case "port":
-					port = Integer.parseInt(readValue(sr));
-					break;
-				case "id":
-					id = readValue(sr);
-					break;
-				case "failedconn":
-					failedConn = Integer.parseInt(readValue(sr));
-					break;
-				default:
-					break;
-				}
-				break;
-			case XMLStreamReader.END_ELEMENT:
-				Node node = new Node(false, ip);
-				if (id == null)
-					return null;
-				node.setId(id.getBytes());
-				node.setPort(port);
-				node.peerMetric.metricFailedConn = failedConn;
-				return node;
-			}
-		}
-		return null;
-	}
-
-	private static String readValue(final XMLStreamReader sr) throws XMLStreamException {
-		StringBuilder str = new StringBuilder();
-		readLoop: while (sr.hasNext()) {
-			switch (sr.next()) {
-			case XMLStreamReader.CHARACTERS:
-				str.append(sr.getText());
-				break;
-			case XMLStreamReader.END_ELEMENT:
-				break readLoop;
-			}
-		}
-		return str.toString();
-	}
 }

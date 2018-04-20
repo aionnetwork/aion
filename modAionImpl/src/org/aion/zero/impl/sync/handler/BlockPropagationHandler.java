@@ -132,11 +132,11 @@ public class BlockPropagationHandler {
         this.p2pManager.getActiveNodes().values().forEach(n -> {
             if (log.isDebugEnabled())
                 log.debug("<sending-new-block=" + block.getShortHash() + " to=" + n.getIdShort() + ">");
-            this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
+            this.p2pManager.send(n.getIdHash(), n.getIdShort(), new BroadcastNewBlock(block));
         });
     }
 
-    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
+    PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
         if (block == null)
             return PropStatus.DROPPED;
 
@@ -202,7 +202,7 @@ public class BlockPropagationHandler {
                             td.longValue() -  n.getTotalDifficulty().longValue(),
                             result.name()
                         );
-                        this.p2pManager.send(n.getIdHash(), rs);
+                        this.p2pManager.send(n.getIdHash(), n.getIdShort(), rs);
                     });
         }
 
@@ -237,7 +237,7 @@ public class BlockPropagationHandler {
                 .forEach(n -> {
                     if (log.isDebugEnabled())
                         log.debug("<sending-new-block hash=" + block.getShortHash() + " to-node=" + n.getIdShort() + ">");
-                    this.p2pManager.send(n.getIdHash(), new BroadcastNewBlock(block));
+                    this.p2pManager.send(n.getIdHash(), n.getIdShort(), new BroadcastNewBlock(block));
                     sent.getAndSet(true);
                 });
         return sent.get();

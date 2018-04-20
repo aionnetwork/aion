@@ -91,6 +91,7 @@ final class TaskGetBodies implements Runnable {
             }
 
             int idHash = hw.getNodeIdHash();
+            String displayId = hw.getDisplayId();
             List<A0BlockHeader> headers = hw.getHeaders();
             if (headers.isEmpty()) {
                 continue;
@@ -103,7 +104,7 @@ final class TaskGetBodies implements Runnable {
                         hw.getDisplayId());
             }
 
-            p2p.send(idHash, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+            p2p.send(idHash, displayId, new ReqBlocksBodies(headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             headersWithBodiesRequested.put(idHash, hw);
         }
     }

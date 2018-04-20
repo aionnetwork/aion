@@ -148,7 +148,7 @@
 //		for (String _bootNode : _bootNodes) {
 //			Node node = Node.parseP2p(_bootNode);
 //			if (node != null && validateNode(node)) {
-//				nodeMgr.tempNodesAdd(node);
+//				nodeMgr.addTempNode(node);
 //				nodeMgr.seedIpAdd(node.getIpStr());
 //			}
 //		}
@@ -253,7 +253,7 @@
 //		// attach to NodeMgr
 //		Node node = nodeMgr.allocNode(ip, localPort, port);
 //		node.setChannel(channel);
-//		nodeMgr.inboundNodeAdd(node);
+//		nodeMgr.addInboundNode(node);
 //	}
 //
 //	/**
@@ -512,7 +512,7 @@
 //							if (nodeMgr.tempNodesSize() >= this.maxTempNodes)
 //								return;
 //							if (validateNode(incomingNode))
-//								nodeMgr.tempNodesAdd(incomingNode);
+//								nodeMgr.addTempNode(incomingNode);
 //						}
 //					}
 //				}
@@ -887,7 +887,7 @@
 //				try {
 //					node = nodeMgr.tempNodesTake();
 //					if (node.getIfFromBootList())
-//						nodeMgr.tempNodesAdd(node);
+//						nodeMgr.addTempNode(node);
 //					if (node.peerMetric.shouldNotConn()) {
 //						continue;
 //					}
