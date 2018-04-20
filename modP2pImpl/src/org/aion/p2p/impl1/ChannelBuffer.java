@@ -38,28 +38,32 @@ import java.util.concurrent.locks.Lock;
 class ChannelBuffer {
 
     class RouteStatus {
-        long ts;
-        int cnt;
+        long timestamp;
+        int count;
+        RouteStatus(){
+            this.timestamp = System.currentTimeMillis();
+            count = 0;
+        }
     }
 
     private Map<Integer, RouteStatus> routes = new HashMap<>();
 
     /**
-     * @param _route       int
-     * @param _reqsPerSec  int requests within 1 s
-     * @return             boolean flag if under route control
+     * @param _route          int
+     * @param _maxReqsPerSec  int requests within 1 s
+     * @return                boolean flag if under route control
      */
-    synchronized boolean shouldRoute(int _route, int _reqsPerSec) {
+    synchronized boolean shouldRoute(int _route, int _maxReqsPerSec) {
         long now = System.currentTimeMillis();
         RouteStatus prev = routes.putIfAbsent(_route, new RouteStatus());
         if (prev != null) {
-            if ((now - prev.ts) > 1000) {
-                prev.cnt = 0;
-                prev.ts = now;
+            if ((now - prev.timestamp) > 1000) {
+                prev.count = 0;
+                prev.timestamp = now;
                 return true;
             }
-            boolean shouldRoute = prev.cnt < _reqsPerSec;
-            prev.cnt++;
+            boolean shouldRoute = prev.count < _maxReqsPerSec;
+            prev.count++;
             return shouldRoute;
         } else
             return true;

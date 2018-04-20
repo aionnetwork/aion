@@ -8,8 +8,6 @@ public interface INodeMgr {
 
 	void moveOutboundToActive(int _nodeIdHash, String _shortId, final IP2pMgr _p2pMgr);
 
-	void dropActive(int _nodeIdHash, final IP2pMgr _p2pMgr);
-
-	void removeActive(int nodeIdHash, final IP2pMgr _p2pMgr);
+	void dropActive(int _nodeIdHash, final IP2pMgr _p2pMgr, String _reason);
 
 }

@@ -341,15 +341,11 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    public void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr) {
+    public void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr, String _reason) {
         Node node = activeNodes.remove(nodeIdHash);
         if (node == null)
             return;
-        _p2pMgr.closeSocket(node.getChannel(), "drop-active node=" + node.getIdShort() + " ip=" + node.getIpStr());
-    }
-
-    public void removeActive(int nodeIdHash, final IP2pMgr _p2pMgr) {
-        dropActive(nodeIdHash, _p2pMgr);
+        _p2pMgr.closeSocket(node.getChannel(), _reason);
     }
 
     /**
