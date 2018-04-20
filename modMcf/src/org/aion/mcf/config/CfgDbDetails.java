@@ -48,6 +48,7 @@ public class CfgDbDetails {
         this.enable_db_cache = true;
         this.enable_db_compression = true;
         this.enable_heap_cache = false;
+        this.heap_cache_type = "none";
         // size 0 means unbound
         this.max_heap_cache_size = "1024";
         this.enable_heap_cache_stats = false;
@@ -71,6 +72,7 @@ public class CfgDbDetails {
 
     public boolean enable_auto_commit;
     public boolean enable_heap_cache;
+    public String heap_cache_type;
     public String max_heap_cache_size;
     public boolean enable_heap_cache_stats;
 
@@ -139,6 +141,9 @@ public class CfgDbDetails {
                             break;
                         case Props.ENABLE_HEAP_CACHE:
                             this.enable_heap_cache = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case Props.HEAP_CACHE_TYPE:
+                            this.heap_cache_type = Cfg.readValue(sr);
                             break;
                         case Props.MAX_HEAP_CACHE_SIZE:
                             this.max_heap_cache_size = Cfg.readValue(sr);
@@ -246,6 +251,7 @@ public class CfgDbDetails {
 
         props.setProperty(Props.ENABLE_AUTO_COMMIT, String.valueOf(this.enable_auto_commit));
         props.setProperty(Props.ENABLE_HEAP_CACHE, String.valueOf(this.enable_heap_cache));
+        props.setProperty(Props.HEAP_CACHE_TYPE, this.heap_cache_type);
         props.setProperty(Props.MAX_HEAP_CACHE_SIZE, this.max_heap_cache_size);
         props.setProperty(Props.ENABLE_HEAP_CACHE_STATS, String.valueOf(this.enable_heap_cache_stats));
 
