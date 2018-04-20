@@ -245,8 +245,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     }
 
+    private static final AionPendingStateImpl initializeAionPendingState() {
+        AionPendingStateImpl ps = new AionPendingStateImpl(AionRepositoryImpl.inst());
+        ps.init(AionBlockchainImpl.inst());
+        return ps;
+    }
+
     private static class Holder {
-        static final AionPendingStateImpl INSTANCE = new AionPendingStateImpl(AionRepositoryImpl.inst());
+        static final AionPendingStateImpl INSTANCE = initializeAionPendingState();
     }
 
     public static AionPendingStateImpl inst() {
