@@ -94,7 +94,7 @@ class ChannelBuffer {
     /**
      * Indicates whether this channel is closed.
      */
-    public AtomicBoolean isClosed = new AtomicBoolean(false);
+    AtomicBoolean isClosed = new AtomicBoolean(false);
 
     void readHead(ByteBuffer buf) {
         buf.get(bsHead);
