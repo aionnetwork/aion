@@ -173,6 +173,8 @@ public class AionHub {
 		registerCallback();
 		this.p2pMgr.run();
 
+        ((AionPendingStateImpl)this.mempool).setP2pMgr(this.p2pMgr);
+
 		this.pow = new AionPoW();
 		this.pow.init(blockchain, mempool, eventMgr);
 
