@@ -331,7 +331,6 @@ public final class P2pMgr implements IP2pMgr {
 
                     if (node != null) {
                         SelectionKey sk = node.getChannel().keyFor(selector);
-
                         if (sk != null) {
                             Object attachment = sk.attachment();
                             if (attachment != null) {
@@ -340,7 +339,6 @@ public final class P2pMgr implements IP2pMgr {
                                 tw.run();
                             }
                         }
-                        node.refreshTimestamp();
                     } else {
                         if(showLog)
                             System.out.println("msg.node " + mo.displayId + " not found for msg to write");
@@ -392,7 +390,7 @@ public final class P2pMgr implements IP2pMgr {
             Thread.currentThread().setName("p2p-ts");
             String status = nodeMgr.dumpNodeInfo(selfShortId);
             System.out.println(status);
-            System.out.println("-------------------------------------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
             System.out.println("recv queue [" + receiveMsgQue.size() + "] send queue [" + sendMsgQue.size() + "]\n");
         }
     }
@@ -761,8 +759,15 @@ public final class P2pMgr implements IP2pMgr {
                                 handleKernelMsg(rb.nodeIdHash, route, bodyBytes);
                             } else {
                                 try{
-                                    if(showLog)
-                                        System.out.println("<p2p not-exits-on-active ip=" + ((SocketChannel)_sk.channel()).socket().getInetAddress().getHostAddress() + " route=" + ver + "-" + ctrl + "-" + act +" count=" + rb.getRouteCount(route).cnt + " node=" + rb.displayId + ">");
+                                    if(showLog) {
+                                        SocketChannel sc = (SocketChannel)_sk.channel();
+                                        System.out.println(
+                                            "<p2p node-not-exits-on-active channel=" + sc.hashCode() +
+                                            " ip=" + sc.socket().getInetAddress().getHostAddress() +
+                                        " route=" + ver + "-" + ctrl + "-" + act + " count=" + rb.getRouteCount(route).cnt + " node=" + rb.displayId + ">");
+
+                                        System.out.println(nodeMgr.dumpNodeInfo(selfShortId));
+                                    }
                                 } catch (Exception ex){
 
                                 }

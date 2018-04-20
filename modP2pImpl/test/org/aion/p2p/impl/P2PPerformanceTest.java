@@ -117,7 +117,7 @@ public class P2PPerformanceTest {
         @Override
         public void receive(int _id, String _displayId, byte[] _msg) {
             System.out.println("ping!");
-            this.p2pMgr.send(_id, PONG_MSG);
+            this.p2pMgr.send(_id, _displayId, PONG_MSG);
         }
     }
 
@@ -138,7 +138,7 @@ public class P2PPerformanceTest {
         @Override
         public void receive(int _id, String _displayId, byte[] _msg) {
             System.out.println("pong!");
-            this.p2pMgr.send(_id, PING_MSG);
+            this.p2pMgr.send(_id, _displayId, PING_MSG);
         }
     }
 

@@ -80,10 +80,10 @@ public class NodeMgr implements INodeMgr {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         sb.append(String.format(
-                "================================================================== p2p-status-%6s ==================================================================\n",
+                "======================================================================== p2p-status-%6s =========================================================================\n",
                 selfShortId));
         sb.append(String.format(
-                "temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                            s - seed node, td - total difficulty, # - block number, bv - binary version\n",
+                "temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                                         s - seed node, td - total difficulty, # - block number, bv - binary version\n",
                 tempNodesSize(), inboundNodes.size(), outboundNodes.size(), activeNodes.size()));
         List<Node> sorted = new ArrayList<>(activeNodes.values());
         if (sorted.size() > 0) {
@@ -94,9 +94,10 @@ public class NodeMgr implements INodeMgr {
             sb.append("              ip");
             sb.append("  port");
             sb.append("     conn");
-            sb.append("              bv\n");
+            sb.append("              bv");
+            sb.append("           ci\n");
             sb.append(
-                    "-------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+                    "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             sorted.sort((n1, n2) -> {
                 int tdCompare = n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
                 if (tdCompare == 0) {
@@ -108,11 +109,16 @@ public class NodeMgr implements INodeMgr {
             });
             for (Node n : sorted) {
                 try {
-                    sb.append(String.format("id:%6s %c %16s %10d %64s %15s %5d %8s %15s\n", n.getIdShort(),
+                    sb.append(String.format("id:%6s %c %16s %10d %64s %15s %5d %8s %15s %12s\n",
+                            n.getIdShort(),
                             n.getIfFromBootList() ? 'y' : ' ', n.getTotalDifficulty().toString(10),
                             n.getBestBlockNumber(),
                             n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()), n.getIpStr(),
-                            n.getPort(), n.getConnection(), n.getBinaryVersion()));
+                            n.getPort(),
+                            n.getConnection(),
+                            n.getBinaryVersion(),
+                            n.getChannel().hashCode())
+                    );
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
