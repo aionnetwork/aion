@@ -41,6 +41,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -67,6 +68,7 @@ public class ChainConfigurationTest {
         MockitoAnnotations.initMocks(this);
     }
 
+    @Ignore
     @Test
     public void testValidation() throws HeaderStructureException {
         int n = 210;

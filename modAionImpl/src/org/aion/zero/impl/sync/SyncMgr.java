@@ -101,6 +101,11 @@ public final class SyncMgr {
         }
     });
 
+    private Thread syncGb = null;
+    private Thread syncIb = null;
+    private Thread syncGs = null;
+    private Thread syncSs = null;
+
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
 
     private static final class AionSyncMgrHolder {
@@ -172,12 +177,17 @@ public final class SyncMgr {
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.downloadedHeaders, this.headersWithBodiesRequested, this.peerStates, log), "sync-gb").start();
-        new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, statics, this.downloadedBlocks, this.importedBlockHashes, this.peerStates, log), "sync-ib").start();
-        new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs").start();
+        syncGb = new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.downloadedHeaders, this.headersWithBodiesRequested, this.peerStates, log), "sync-gb");
+        syncGb.start();
+        syncIb = new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, statics, this.downloadedBlocks, this.importedBlockHashes, this.peerStates, log), "sync-ib");
+        syncIb.start();
+        syncGs = new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs");
+        syncGs.start();
 
-        if(_showStatus)
-            new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss").start();
+        if(_showStatus) {
+            syncSs = new Thread(new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus, statics, log, _printReport, _reportFolder), "sync-ss");
+            syncSs.start();
+        }
 
         setupEventHandler();
     }
@@ -311,6 +321,23 @@ public final class SyncMgr {
     public synchronized void shutdown() {
         start.set(false);
         workers.shutdown();
+
+        interruptAndWait(syncGb, 10000);
+        interruptAndWait(syncIb, 10000);
+        interruptAndWait(syncGs, 10000);
+        interruptAndWait(syncSs, 10000);
+    }
+
+    private void interruptAndWait(Thread t, long timeout) {
+        if (t != null) {
+            log.info("Stopping thread: " + t.getName());
+            t.interrupt();
+            try {
+                t.join(timeout);
+            } catch (InterruptedException e) {
+                log.warn("Failed to stop " + t.getName());
+            }
+        }
     }
 
 
