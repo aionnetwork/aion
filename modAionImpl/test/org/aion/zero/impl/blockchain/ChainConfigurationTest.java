@@ -68,16 +68,16 @@ public class ChainConfigurationTest {
         MockitoAnnotations.initMocks(this);
     }
 
-    @Ignore
+    @Ignore //To be re-enabled later
     @Test
     public void testValidation() throws HeaderStructureException {
-//        int n = 210;
-//        int k = 9;
-//        byte[] nonce = {1,0,0,0,0,0,0,
-//                        0,0,0,0,0,0,0,
-//                        0,0,0,0,0,0,0,
-//                        0,0,0,0,0,0,0};
-//        // setup mock
+        int n = 210;
+        int k = 9;
+        byte[] nonce = {1,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0};
+        // setup mock
 //        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
 //        builder.withDifficulty(BigInteger.valueOf(1).toByteArray());
 //        builder.withNonce(nonce);
