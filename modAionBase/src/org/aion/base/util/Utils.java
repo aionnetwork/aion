@@ -128,6 +128,29 @@ public class Utils {
     }
 
     /**
+     * Validate a passed hex string is a valid address
+     *
+     *
+     */
+    public static boolean isValidAddress(String address) {
+        if(address == null || address.isEmpty() || address.length() < 64) {
+            return false;
+        }
+
+        String toCheck;
+        if(address.startsWith("0x")) {
+            address = address.substring(2);
+        }
+
+        // Will need to change this for a1, a2....
+        if(address.startsWith("a0")) {
+            return address.length() == 64 && address.substring(2).matches("^[0-9A-Fa-f]+$");
+        }else {
+            return false;
+        }
+    }
+
+    /**
      * @param addr
      *            length should be 20
      * @return short string represent 1f21c...
