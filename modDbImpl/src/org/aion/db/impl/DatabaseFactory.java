@@ -29,10 +29,7 @@
 package org.aion.db.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.db.generic.DatabaseWithCache;
-import org.aion.db.generic.LockedDatabase;
-import org.aion.db.generic.SpecialLockedDatabase;
-import org.aion.db.generic.TimedDatabase;
+import org.aion.db.generic.*;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
@@ -66,6 +63,7 @@ public abstract class DatabaseFactory {
         public static final String DB_CACHE_SIZE = "cache_size";
 
         public static final String ENABLE_HEAP_CACHE = "enable_heap_cache";
+        public static final String HEAP_CACHE_TYPE = "heap_cache_type";
         public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
         public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
 
@@ -138,11 +136,26 @@ public abstract class DatabaseFactory {
      * @return A database implementation with a caching layer.
      */
     private static IByteArrayKeyValueDatabase connectWithCache(Properties info) {
-        boolean enableAutoCommit = getBoolean(info, Props.ENABLE_AUTO_COMMIT);
-        return new DatabaseWithCache(connectBasic(info),
-                                     enableAutoCommit,
-                                     info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
-                                     getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
+        switch (info.getProperty(Props.HEAP_CACHE_TYPE)) {
+            case "read-write": {
+                return new DatabaseWithCache(connectBasic(info),
+                                             getBoolean(info, Props.ENABLE_AUTO_COMMIT),
+                                             info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
+                                             getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
+            }
+            case "light-read": {
+                return new LightCachedReadsDatabase(connectBasic(info), getInt(info, Props.MAX_HEAP_CACHE_SIZE, 1024));
+            }
+            case "lru-read": {
+                return new LRUCachedReadsDatabase(connectBasic(info),
+                                                  getInt(info, Props.MAX_HEAP_CACHE_SIZE, 1024),
+                                                  getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
+            }
+            default: {
+                // if no correct type was given return basic db instance
+                return connectBasic(info);
+            }
+        }
     }
 
     /**
@@ -213,8 +226,7 @@ public abstract class DatabaseFactory {
     /**
      * @return A database implementation based on a driver implementing the {@link IDriver} interface.
      */
-    public static IByteArrayKeyValueDatabase connect(String driverName,
-                                                     Properties info) {
+    public static IByteArrayKeyValueDatabase connect(String driverName, Properties info) {
         try {
             // see if the given name is a valid driver
             IDriver driver = ((Class<? extends IDriver>) Class.forName(driverName)).getDeclaredConstructor()
@@ -240,9 +252,7 @@ public abstract class DatabaseFactory {
         return Boolean.parseBoolean(info.getProperty(prop));
     }
 
-    private static int getInt(Properties info,
-                              String prop,
-                              int defaultValue) {
+    private static int getInt(Properties info, String prop, int defaultValue) {
         return Integer.parseInt(info.getProperty(prop, String.valueOf(defaultValue)));
     }
 }
