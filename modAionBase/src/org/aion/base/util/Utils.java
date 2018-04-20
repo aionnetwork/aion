@@ -137,7 +137,6 @@ public class Utils {
             return false;
         }
 
-        String toCheck;
         if(address.startsWith("0x")) {
             address = address.substring(2);
         }
