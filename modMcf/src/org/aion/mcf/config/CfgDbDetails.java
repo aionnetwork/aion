@@ -237,6 +237,31 @@ public class CfgDbDetails {
         xmlWriter.writeCharacters(String.valueOf(DEFAULT_CACHE_SIZE));
         xmlWriter.writeEndElement();
 
+        xmlWriter.writeCharacters("\r\n\t\t\t");
+        xmlWriter.writeStartElement(Props.ENABLE_HEAP_CACHE);
+        xmlWriter.writeCharacters(String.valueOf(this.enable_heap_cache));
+        xmlWriter.writeEndElement();
+
+        xmlWriter.writeCharacters("\r\n\t\t\t");
+        xmlWriter.writeStartElement(Props.ENABLE_AUTO_COMMIT);
+        xmlWriter.writeCharacters(String.valueOf(this.enable_auto_commit));
+        xmlWriter.writeEndElement();
+
+        xmlWriter.writeCharacters("\r\n\t\t\t");
+        xmlWriter.writeStartElement(Props.HEAP_CACHE_TYPE);
+        xmlWriter.writeCharacters(String.valueOf(this.heap_cache_type));
+        xmlWriter.writeEndElement();
+
+        xmlWriter.writeCharacters("\r\n\t\t\t");
+        xmlWriter.writeStartElement(Props.MAX_HEAP_CACHE_SIZE);
+        xmlWriter.writeCharacters(String.valueOf(this.max_heap_cache_size));
+        xmlWriter.writeEndElement();
+
+        xmlWriter.writeCharacters("\r\n\t\t\t");
+        xmlWriter.writeStartElement(Props.ENABLE_HEAP_CACHE_STATS);
+        xmlWriter.writeCharacters(String.valueOf(this.enable_heap_cache_stats));
+        xmlWriter.writeEndElement();
+
         xmlWriter.writeCharacters("\r\n\t\t");
         xmlWriter.writeEndElement();
     }

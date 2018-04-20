@@ -67,6 +67,22 @@
 		<block_size>16mB</block_size>
 		<write_buffer_size>64mB</write_buffer_size>
 		<cache_size>128mB</cache_size>
+		<block>
+			<enable_heap_cache>true</enable_heap_cache>
+			<heap_cache_type>light-read</heap_cache_type>
+			<max_heap_cache_size>30</max_heap_cache_size>
+		</block>
+		<index>
+			<enable_heap_cache>true</enable_heap_cache>
+			<heap_cache_type>light-read</heap_cache_type>
+			<max_heap_cache_size>30</max_heap_cache_size>
+		</index>
+		<details>
+			<enable_heap_cache>true</enable_heap_cache>
+			<heap_cache_type>lru-read</heap_cache_type>
+			<max_heap_cache_size>3000</max_heap_cache_size>
+		</details>
+
 	</db>
 	<log>
 		<GEN>INFO</GEN>
