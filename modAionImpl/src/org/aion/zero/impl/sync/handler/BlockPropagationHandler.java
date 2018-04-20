@@ -136,7 +136,7 @@ public class BlockPropagationHandler {
         });
     }
 
-    PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
+    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
         if (block == null)
             return PropStatus.DROPPED;
 

@@ -188,7 +188,9 @@ public class NodeMgr implements INodeMgr {
     }
 
     public Map<Integer, INode> getActiveNodesMap() {
-        return new HashMap(activeNodes);
+        synchronized(activeNodes){
+            return new HashMap(activeNodes);
+        }
     }
 
     public INode getRandom() {
