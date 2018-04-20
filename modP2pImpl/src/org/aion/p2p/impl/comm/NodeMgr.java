@@ -323,9 +323,13 @@ public class NodeMgr implements INodeMgr {
             int key = (int) activeIt.next();
             Node node = getActiveNode(key);
 
-            if (now - node.getTimestamp() > timeout || !node.getChannel().isConnected()) {
-
+            if (now - node.getTimestamp() > timeout) {
                 _p2pMgr.closeSocket(node.getChannel(), "active-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
+                activeIt.remove();
+            }
+
+            if (!node.getChannel().isConnected()) {
+                _p2pMgr.closeSocket(node.getChannel(), "channel-already-closed node=" + node.getIdShort() + " ip=" + node.getIpStr());
                 activeIt.remove();
             }
         }
