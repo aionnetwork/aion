@@ -131,5 +131,4 @@ public final class ReqHandshake1 extends ReqHandshake {
             return buf.array();
         }
     }
-
 }

@@ -35,9 +35,6 @@
 
 package org.aion.zero.impl.sync;
 
-//import java.util.HashSet;
-//import java.util.Set;
-
 /**
  * @author chris
  */
@@ -59,26 +56,6 @@ public final class Act {
 
     public static final byte BROADCAST_BLOCK = 7;
 
-//    private static final byte UNKNOWN = Byte.MAX_VALUE;
 
-//    private static Set<Byte> active = new HashSet<>() {{
-//        add(REQ_STATUS);
-//        add(RES_STATUS);
-//        add(REQ_BLOCKS_HEADERS);
-//        add(RES_BLOCKS_HEADERS);
-//        add(REQ_BLOCKS_BODIES);
-//        add(RES_BLOCKS_BODIES);
-//        add(BROADCAST_TX);
-//        add(BROADCAST_BLOCK);
-//    }};
-
-//    /**
-//     * @param _act byte
-//     * @return byte
-//     * method provided to filter any decoded sync action (byte)
-//     */
-//    static byte filter(byte _act){
-//        return active.contains(_act) ? _act : UNKNOWN;
-//    }
 
 }

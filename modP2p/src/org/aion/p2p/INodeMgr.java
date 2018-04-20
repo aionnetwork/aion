@@ -2,7 +2,7 @@ package org.aion.p2p;
 
 public interface INodeMgr {
 
-	void rmTimeOutActives(final IP2pMgr _p2pMgr);
+	void timeoutActive(final IP2pMgr _p2pMgr);
 
 	void moveInboundToActive(int _channelHashCode, final IP2pMgr _p2pMgr);
 

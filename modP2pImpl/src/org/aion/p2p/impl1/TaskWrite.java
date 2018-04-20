@@ -45,9 +45,7 @@ public class TaskWrite implements Runnable {
     private ChannelBuffer channelBuffer;
     private P2pMgr p2pMgr;
 
-    TaskWrite(boolean _showLog, String _nodeShortId, SocketChannel _sc, Msg _msg, ChannelBuffer _cb, P2pMgr p2pMgr
-
-    ) {
+    TaskWrite(boolean _showLog, String _nodeShortId, SocketChannel _sc, Msg _msg, ChannelBuffer _cb, P2pMgr p2pMgr) {
 
         this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;

@@ -89,7 +89,7 @@ public final class ReqBlocksHeadersHandler extends Handler {
             List<A0BlockHeader> headers = this.blockchain.getListOfHeadersStartFrom(
                     new BlockIdentifier(null, fromBlock), 0, Math.min(take, MAX_NUM_OF_BLOCKS), false);
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
-            this.p2pMgr.send(_nodeIdHashcode, rbhs);
+            this.p2pMgr.send(_nodeIdHashcode, _displayId, rbhs);
         } else {
             this.log.error("<req-headers decode-error msg-bytes={} node={}>", _msgBytes == null ? 0 : _msgBytes.length,
                     _nodeIdHashcode);
