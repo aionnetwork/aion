@@ -399,7 +399,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     @Override public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
 
-        if (isSeed || !closeToNetworkBest) {
+        if ((isSeed || !closeToNetworkBest) && !loadPendingTx) {
             return seedProcess(transactions);
         } else {
             List<AionTransaction> newPending = new ArrayList<>();
