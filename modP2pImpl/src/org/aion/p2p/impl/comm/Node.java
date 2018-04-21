@@ -70,7 +70,7 @@ public final class Node implements INode {
 
 	private int port;
 
-	private long timestamp;
+	private volatile long timestamp;
 
 	private long bestBlockNumber;
 
@@ -182,7 +182,7 @@ public final class Node implements INode {
 		return new Node(true, _id, _ip, _port);
 	}
 
-	void setFromBootList(boolean _ifBoot) {
+	public void setFromBootList(boolean _ifBoot) {
 		this.fromBootList = _ifBoot;
 	}
 
