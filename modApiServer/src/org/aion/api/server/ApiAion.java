@@ -163,12 +163,12 @@ public abstract class ApiAion extends Api {
         blockTemplateLock.lock();
         try {
             AionBlock bestBlock = ((AionPendingStateImpl) ac.getAionHub().getPendingState()).getBestBlock();
-            byte[] bestBlockStaticHash = bestBlock.getHeader().getStaticHash();
+            byte[] bestBlockHash = bestBlock.getHeader().getMineHash();
 
-            if(currentBestBlockHash == null || !Arrays.equals(bestBlockStaticHash, currentBestBlockHash)) {
+            if(currentBestBlockHash == null || !Arrays.equals(bestBlockHash, currentBestBlockHash)) {
 
                 // Record new best block on the chain
-                currentBestBlockHash = bestBlock.getHeader().getStaticHash();
+                currentBestBlockHash = bestBlockHash;
 
                 // Generate new block template
                 AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
