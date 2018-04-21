@@ -29,7 +29,7 @@ import org.aion.p2p.P2pConstant;
 
 public final class PeerMetric {
 
-    int metricFailedConn;
+    private int metricFailedConn;
     private long metricFailedConnTs;
     private long metricBanConnTs;
 
