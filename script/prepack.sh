@@ -34,7 +34,7 @@ fi
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH
   cp ./modBoot/resource/** $CONFIG_PATH
-  mv $CONFIG_PATH/testnet.json $CONFIG_PATH/genesis.json
+  mv $CONFIG_PATH/genesis.json $CONFIG_PATH/genesis.json
 fi
 
 # copy the doc files if can't find the docs env

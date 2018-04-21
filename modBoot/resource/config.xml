@@ -22,7 +22,7 @@
 		</nrg-recommendation>
 	</api>
 	<net>
-		<id>2</id>
+		<id>3</id>
 		<nodes>
 			<node>p2p://c33d1066-8c7e-496c-9c4e-c89318280274@13.92.155.115:30303</node>
 			<node>p2p://c33d2207-729a-4584-86f1-e19ab97cf9ce@51.144.42.220:30303</node>
@@ -55,7 +55,7 @@
 			<!-- <monotonic-increase></monotonic-increase> -->
 			<!-- <decaying></decaying> -->
 			<!-- <targetted target="10000000"></targetted> -->
-			<clamped-decay upper-bound="25000000" lower-bound="15000000"></clamped-decay>
+			<clamped-decay upper-bound="15000000" lower-bound="10000000"></clamped-decay>
 		</nrg-strategy>
 	</consensus>
 	<db>
