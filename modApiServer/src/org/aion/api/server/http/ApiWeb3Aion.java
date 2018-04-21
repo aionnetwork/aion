@@ -78,7 +78,9 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -99,12 +101,22 @@ public class ApiWeb3Aion extends ApiAion {
 
     private final int OPS_RECENT_ENTITY_COUNT = 32;
     private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 4;
+
+    private final int STRATUM_RECENT_BLK_COUNT = 128;
+    private final int STRATUM_BLKTIME_INCLUDED_COUNT = 32;
+    private final int STRATUM_CACHE_TIME_SECONDS = 15;
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
     // doesn't need to be protected for concurrent access, since only one write in the constructor.
     private boolean isFilterEnabled;
+
+    private ExecutorService cacheUpdateExecutor;
+    private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
+
+    private ExecutorService MinerStatsExecutor;
+    private final LoadingCache<String, MinerStatsView> MinerStats;
 
     protected void onBlock(AionBlockSummary cbs) {
         if (isFilterEnabled) {
@@ -216,6 +228,37 @@ public class ApiWeb3Aion extends ApiAion {
 
         cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
+
+
+        MinerStats = CacheBuilder.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
+                .build(
+                        new CacheLoader<String, MinerStatsView>() {
+                            public MinerStatsView load(String key) { // no checked exception
+                                Address miner = new Address(key);
+                                MinerStatsView view = new MinerStatsView(STRATUM_RECENT_BLK_COUNT, miner.toBytes()).update();
+                                return view;
+                            }
+
+                            public ListenableFuture<MinerStatsView> reload(final String key, MinerStatsView prev) {
+                                try {
+                                    ListenableFutureTask<MinerStatsView> task = ListenableFutureTask.create(new Callable<MinerStatsView>() {
+                                        public MinerStatsView call() {
+                                            return new MinerStatsView(prev).update();
+                                        }
+                                    });
+                                    MinerStatsExecutor.execute(task);
+                                    return task;
+                                } catch (Throwable e) {
+                                    LOG.debug("<miner-stats - could not queue up task: ", e);
+                                    throw(e);
+                                } // exception is swallowed by refresh and load. so just log it for our logs
+                            }
+                        });
+
+        MinerStatsExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1), new MinerStatsThreadFactory());
     }
 
     // --------------------------------------------------------------------
@@ -1793,7 +1836,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             /*
             if (hashQueue.peekFirst() != null) {
-                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
+                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
                 System.out.println("----------------------------------------------------------");
                 System.out.println("isParentHashMatch? " + FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()));
                 System.out.println("blk.getNumber() " + blk.getNumber());
@@ -1843,10 +1886,10 @@ public class ApiWeb3Aion extends ApiAion {
             }
 
             /*
-            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
+            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
             System.out.println("----------------------------------------------------------");
             for (int i = hashQueue.size() - 1; i >= 0; i--) {
-                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blkObjList.get(hashQueue.get(i)).getNumber());
+                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blocks.get(hashQueue.get(i)).getNumber());
             }
             */
             this.response = buildResponse();
@@ -1877,9 +1920,6 @@ public class ApiWeb3Aion extends ApiAion {
     private enum CachedResponseType {
         CHAIN_HEAD
     }
-
-    private ExecutorService cacheUpdateExecutor;
-    private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
 
     public RpcMsg ops_getChainHeadView() {
         try {
@@ -2294,6 +2334,202 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         return new RpcMsg(obj);
+    }
+
+    // always gets the latest 20 blocks and transactions
+    private class MinerStatsView {
+        LinkedList<byte[]> hashQueue; // more precisely a dequeue
+        Map<byte[], AionBlock> blocks;
+        private JSONObject response;
+        private int qSize;
+        private byte[] miner;
+
+        public MinerStatsView(MinerStatsView cv) {
+            hashQueue = new LinkedList<>(cv.hashQueue);
+            blocks = new HashMap<>(cv.blocks);
+            response = new JSONObject(cv.response, JSONObject.getNames(cv.response));
+            qSize = cv.qSize;
+            miner = cv.miner;
+        }
+
+        public MinerStatsView(int _qSize, byte[] _miner) {
+            hashQueue = new LinkedList<>();
+            blocks = new HashMap<>();
+            response = new JSONObject();
+            qSize = _qSize;
+            miner = _miner;
+        }
+
+        private JSONObject buildResponse() {
+            BigInteger lastDifficulty = new BigInteger(blocks.get(hashQueue.get(0)).getDifficulty());
+            BigInteger blkTimeAccumulator = BigInteger.ZERO;
+            long minedCount = 0L;
+
+            int minedByMiner = 0;
+            int totalSampledBlocks = hashQueue.size();
+
+            double minerHashrateShare = 0;
+            BigDecimal minerHashrate = BigDecimal.ZERO;
+            BigDecimal networkHashrate = BigDecimal.ZERO;
+
+            int blkTimesAccumulated = 0;
+            Long lastBlkTimestamp = null;
+            AionBlock b = null;
+
+            try {
+                // index 0 = latest block
+                for (int i = 0; i < hashQueue.size(); i++) {
+                    byte[] hash = hashQueue.get(i);
+
+                    b = blocks.get(hash);
+
+                    // only accumulate block times over the last 32 blocks
+                    if (i <= STRATUM_BLKTIME_INCLUDED_COUNT) {
+                        if (lastBlkTimestamp != null) {
+                            System.out.println("blocktime for [" +  b.getNumber() + "] = " + (lastBlkTimestamp - b.getTimestamp()));
+                            blkTimeAccumulator = blkTimeAccumulator.add(BigInteger.valueOf(lastBlkTimestamp - b.getTimestamp()));
+                            blkTimesAccumulated++;
+                        }
+                        lastBlkTimestamp = b.getTimestamp();
+                    }
+
+                    if (FastByteComparisons.equal(b.getCoinbase().toBytes(), miner)) {
+                        minedByMiner++;
+                    }
+                }
+
+                BigDecimal blkTime = BigDecimal.ZERO;
+
+                if (blkTimesAccumulated > 0) {
+                    blkTime = new BigDecimal(blkTimeAccumulator).divide(BigDecimal.valueOf(blkTimesAccumulated), 4, RoundingMode.HALF_UP);
+                }
+
+                if (blkTime.compareTo(BigDecimal.ZERO) == 1) {
+                    networkHashrate = (new BigDecimal(lastDifficulty)).divide(blkTime, 4, RoundingMode.HALF_UP);
+                }
+
+                if (totalSampledBlocks > 0) {
+                    minerHashrateShare =  minedByMiner / (double) totalSampledBlocks;
+                }
+
+                minerHashrate = BigDecimal.valueOf(minerHashrateShare).multiply(networkHashrate);
+
+            } catch (Throwable t) {
+                LOG.error("failed to compute miner metrics", t);
+            }
+
+            JSONObject o = new JSONObject();
+            o.put("networkHashrate", networkHashrate.toString());
+            o.put("minerHashrate", minerHashrate.toString());
+            o.put("minerHashrateShare", minerHashrateShare);
+            return o;
+        }
+
+        public MinerStatsView update() {
+            // get the latest head
+            AionBlock blk = getBestBlock();
+
+            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
+                return this; // nothing to do
+            }
+
+            // evict data as necessary
+            LinkedList<Map.Entry<byte[],AionBlock>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), blk));
+            int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
+
+            /*
+            if (hashQueue.peekFirst() != null) {
+                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
+                System.out.println("----------------------------------------------------------");
+                System.out.println("isParentHashMatch? " + FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()));
+                System.out.println("blk.getNumber() " + blk.getNumber());
+            }
+            System.out.println("blkNum: " + blk.getNumber() +
+                    " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
+                    " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+            */
+
+            while(FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()) == false
+                    && itr < qSize
+                    && blk.getNumber() > 2) {
+
+                blk = getBlockByHash(blk.getParentHash());
+                tempStack.push(Map.entry(blk.getHash(), blk));
+                itr++;
+                /*
+                System.out.println("blkNum: " + blk.getNumber() +
+                        " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
+                        " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+                */
+            }
+
+            // evict out the right number of elements first
+            for (int i = 0; i < tempStack.size(); i++) {
+                byte[] tailHash = hashQueue.pollLast();
+                if (tailHash != null) {
+                    blocks.remove(tailHash);
+                }
+            }
+
+            // empty out the stack into the queue
+            while (!tempStack.isEmpty()) {
+                // add to the queue
+                Map.Entry<byte[], AionBlock> element = tempStack.pop();
+                byte[] hash = element.getKey();
+                AionBlock blkObj = element.getValue();
+
+                hashQueue.push(hash);
+                blocks.put(hash, blkObj);
+            }
+
+            /*
+            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
+            System.out.println("----------------------------------------------------------");
+            for (int i = hashQueue.size() - 1; i >= 0; i--) {
+                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blocks.get(hashQueue.get(i)).getNumber());
+            }
+            */
+            this.response = buildResponse();
+
+            return this;
+        }
+
+        public JSONObject getResponse() {
+            return response;
+        }
+    }
+
+    public class MinerStatsThreadFactory implements ThreadFactory {
+        private final AtomicInteger tnum = new AtomicInteger(1);
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "miner-stats-" + tnum.getAndIncrement());
+            t.setPriority(Thread.MIN_PRIORITY);
+            return t;
+        }
+    }
+
+    public RpcMsg stratum_getMinerStats(Object _params) {
+        String _address;
+        if (_params instanceof JSONArray) {
+            _address = ((JSONArray)_params).get(0) + "";
+        }
+        else if (_params instanceof JSONObject) {
+            _address = ((JSONObject)_params).get("address") + "";
+        }
+        else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        try {
+            MinerStatsView v = MinerStats.get(_address);
+            return new RpcMsg(v.getResponse());
+        } catch (Exception e) {
+            LOG.error("<rpc-server - cannot get cached response for stratum_getMinerStats: ", e);
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Cached response retrieve failed.");
+        }
     }
 
     // --------------------------------------------------------------------
