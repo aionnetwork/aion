@@ -101,6 +101,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     }
 
 
+    private static class Holder {
+        static final EquihashMiner INSTANCE = new EquihashMiner();
+    }
 
     /**
      * Singleton instance
@@ -108,10 +111,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
      * @return Equihash miner instance
      */
     public static EquihashMiner inst() {
-        if (inst == null) {
-            inst = new EquihashMiner();
-        }
-        return inst;
+        return Holder.INSTANCE;
     }
 
     /**

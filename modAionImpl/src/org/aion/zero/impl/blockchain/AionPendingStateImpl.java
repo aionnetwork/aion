@@ -108,8 +108,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private AtomicReference<AionBlock> best;
 
-    static private AionPendingStateImpl inst;
-
     private PendingTxCache pendingTxCache;
 
     private EventExecuteService ees;
@@ -247,12 +245,18 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     }
 
-    public synchronized static AionPendingStateImpl inst() {
-        if (inst == null) {
-            inst = new AionPendingStateImpl(AionRepositoryImpl.inst());
-            inst.init(AionBlockchainImpl.inst());
-        }
-        return inst;
+    private static final AionPendingStateImpl initializeAionPendingState() {
+        AionPendingStateImpl ps = new AionPendingStateImpl(AionRepositoryImpl.inst());
+        ps.init(AionBlockchainImpl.inst());
+        return ps;
+    }
+
+    private static class Holder {
+        static final AionPendingStateImpl INSTANCE = initializeAionPendingState();
+    }
+
+    public static AionPendingStateImpl inst() {
+        return Holder.INSTANCE;
     }
 
     private AionPendingStateImpl(AionRepositoryImpl repository) {

@@ -54,10 +54,12 @@ public class AccountManager {
         accounts = new HashMap<>();
     }
 
+    private static class Holder {
+        static final AccountManager INSTANCE = new AccountManager();
+    }
+
     public static AccountManager inst() {
-        if (inst == null)
-            inst = new AccountManager();
-        return inst;
+        return Holder.INSTANCE;
     }
 
     // Retrieve ECKey from active accounts list from manager perspective
