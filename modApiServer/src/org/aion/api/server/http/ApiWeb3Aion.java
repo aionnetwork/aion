@@ -2361,12 +2361,11 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         private JSONObject buildResponse() {
-            BigInteger lastDifficulty = new BigInteger(blocks.get(hashQueue.get(0)).getDifficulty());
-            BigInteger blkTimeAccumulator = BigInteger.ZERO;
+            BigInteger lastDifficulty = BigInteger.ZERO;
+            long blkTimeAccumulator = 0;
             long minedCount = 0L;
 
             int minedByMiner = 0;
-            int totalSampledBlocks = hashQueue.size();
 
             double minerHashrateShare = 0;
             BigDecimal minerHashrate = BigDecimal.ZERO;
@@ -2378,16 +2377,20 @@ public class ApiWeb3Aion extends ApiAion {
 
             try {
                 // index 0 = latest block
-                for (int i = 0; i < hashQueue.size(); i++) {
-                    byte[] hash = hashQueue.get(i);
-
+                int i = 0;
+                ListIterator li = hashQueue.listIterator(0);
+                while(li.hasNext()) {
+                    byte[] hash = (byte[]) li.next();
                     b = blocks.get(hash);
+
+                    if (i == 0)
+                        lastDifficulty = b.getDifficultyBI();
 
                     // only accumulate block times over the last 32 blocks
                     if (i <= STRATUM_BLKTIME_INCLUDED_COUNT) {
                         if (lastBlkTimestamp != null) {
                             System.out.println("blocktime for [" +  b.getNumber() + "] = " + (lastBlkTimestamp - b.getTimestamp()));
-                            blkTimeAccumulator = blkTimeAccumulator.add(BigInteger.valueOf(lastBlkTimestamp - b.getTimestamp()));
+                            blkTimeAccumulator += lastBlkTimestamp - b.getTimestamp();
                             blkTimesAccumulated++;
                         }
                         lastBlkTimestamp = b.getTimestamp();
@@ -2396,20 +2399,21 @@ public class ApiWeb3Aion extends ApiAion {
                     if (FastByteComparisons.equal(b.getCoinbase().toBytes(), miner)) {
                         minedByMiner++;
                     }
+
+                    i++;
                 }
 
-                BigDecimal blkTime = BigDecimal.ZERO;
-
+                double blkTime = 0L;
                 if (blkTimesAccumulated > 0) {
-                    blkTime = new BigDecimal(blkTimeAccumulator).divide(BigDecimal.valueOf(blkTimesAccumulated), 4, RoundingMode.HALF_UP);
+                    blkTime = blkTimeAccumulator / (double) blkTimesAccumulated;
                 }
 
-                if (blkTime.compareTo(BigDecimal.ZERO) == 1) {
-                    networkHashrate = (new BigDecimal(lastDifficulty)).divide(blkTime, 4, RoundingMode.HALF_UP);
+                if (blkTime > 0) {
+                    networkHashrate = (new BigDecimal(lastDifficulty)).divide(BigDecimal.valueOf(blkTime), 4, RoundingMode.HALF_UP);
                 }
 
-                if (totalSampledBlocks > 0) {
-                    minerHashrateShare =  minedByMiner / (double) totalSampledBlocks;
+                if (i > 0) {
+                    minerHashrateShare =  minedByMiner / (double) i;
                 }
 
                 minerHashrate = BigDecimal.valueOf(minerHashrateShare).multiply(networkHashrate);
@@ -2428,6 +2432,8 @@ public class ApiWeb3Aion extends ApiAion {
         public MinerStatsView update() {
             // get the latest head
             AionBlock blk = getBestBlock();
+
+            if (blk == null) return this;
 
             if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
