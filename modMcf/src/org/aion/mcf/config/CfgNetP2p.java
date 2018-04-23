@@ -209,9 +209,9 @@ public final class CfgNetP2p {
         return errorTolerance;
     }
 
-    public boolean isClusterNodeMode() { return clusterNodeMode; }
+    public boolean inClusterNodeMode() { return clusterNodeMode; }
 
-    public boolean isSyncOnlyMode() {
+    public boolean inSyncOnlyMode() {
         return syncOnlyMode;
     }
 }

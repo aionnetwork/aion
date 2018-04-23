@@ -160,7 +160,7 @@ public class AionHub {
 		this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
 				cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(), cfgNetP2p.getMaxTempNodes(),
 				cfgNetP2p.getMaxActiveNodes(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(),
-				cfgNetP2p.isClusterNodeMode(), cfgNetP2p.getErrorTolerance());
+				cfgNetP2p.inClusterNodeMode(), cfgNetP2p.getErrorTolerance());
 
 		this.syncMgr = SyncMgr.inst();
 		this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksQueueMax(),
@@ -168,7 +168,7 @@ public class AionHub {
 
 		ChainConfiguration chainConfig = new ChainConfiguration();
 		this.propHandler = new BlockPropagationHandler(1024, this.blockchain, this.p2pMgr,
-				chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().isSyncOnlyMode());
+				chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().inSyncOnlyMode());
 
 		registerCallback();
 		this.p2pMgr.run();
@@ -188,11 +188,11 @@ public class AionHub {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLog, this.blockchain, this.p2pMgr, cfg.getGenesis().getHash()));
         cbs.add(new ResStatusHandler(syncLog, this.p2pMgr, this.syncMgr));
-        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyMode()));
+        cbs.add(new ReqBlocksHeadersHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
         cbs.add(new ResBlocksHeadersHandler(syncLog, this.syncMgr, this.p2pMgr));
-        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyMode()));
+        cbs.add(new ReqBlocksBodiesHandler(syncLog, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
         cbs.add(new ResBlocksBodiesHandler(syncLog, this.syncMgr, this.p2pMgr));
-        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyMode()));
+        cbs.add(new BroadcastTxHandler(syncLog, this.mempool, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
         cbs.add(new BroadcastNewBlockHandler(syncLog, this.propHandler, this.p2pMgr));
         this.p2pMgr.register(cbs);
     }
