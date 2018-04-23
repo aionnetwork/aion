@@ -85,35 +85,30 @@ public class AccountManager {
     }
 
     public boolean unlockAccount(Address _address, String _password, int _timeout) {
-        try {
-            int timeout = UNLOCK_DEFAULT;
-            if (_timeout > UNLOCK_MAX) {
-                timeout = UNLOCK_MAX;
-            } else if (_timeout > 0) {
-                timeout = _timeout;
-            }
+        int timeout = UNLOCK_DEFAULT;
+        if (_timeout > UNLOCK_MAX) {
+            timeout = UNLOCK_MAX;
+        } else if (_timeout > 0) {
+            timeout = _timeout;
+        }
 
-            ECKey key = Keystore.getKey(_address.toString(), _password);
+        ECKey key = Keystore.getKey(_address.toString(), _password);
 
-            if (Optional.ofNullable(key).isPresent()) {
-                Account acc = Holder.INSTANCE.accounts.get(_address);
+        if (Optional.ofNullable(key).isPresent()) {
+            Account acc = Holder.INSTANCE.accounts.get(_address);
 
-                long t = Instant.now().getEpochSecond() + timeout;
-                if (Optional.ofNullable(acc).isPresent()) {
-                    acc.updateTimeout(t);
-                } else {
-                    Account a = new Account(key, t);
-                    Holder.INSTANCE.accounts.put(_address, a);
-                }
-
-                LOGGER.debug("<unlock-success addr={}>", _address);
-                return true;
+            long t = Instant.now().getEpochSecond() + timeout;
+            if (Optional.ofNullable(acc).isPresent()) {
+                acc.updateTimeout(t);
             } else {
-                LOGGER.debug("<unlock-fail addr={}>", _address);
-                return false;
+                Account a = new Account(key, t);
+                Holder.INSTANCE.accounts.put(_address, a);
             }
-        } catch (Exception e){
-            e.printStackTrace();
+
+            LOGGER.debug("<unlock-success addr={}>", _address);
+            return true;
+        } else {
+            LOGGER.debug("<unlock-fail addr={}>", _address);
             return false;
         }
     }
