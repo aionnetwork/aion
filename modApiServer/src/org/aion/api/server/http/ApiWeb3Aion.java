@@ -1131,7 +1131,6 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-
         int duration = 300;
         if (_duration != null && !_duration.equals(null))
             duration = new BigInteger(_duration + "").intValueExact();
@@ -2364,7 +2363,7 @@ public class ApiWeb3Aion extends ApiAion {
                     // only accumulate block times over the last 32 blocks
                     if (i <= STRATUM_BLKTIME_INCLUDED_COUNT) {
                         if (lastBlkTimestamp != null) {
-                            System.out.println("blocktime for [" +  b.getNumber() + "] = " + (lastBlkTimestamp - b.getTimestamp()));
+//                            System.out.println("blocktime for [" +  b.getNumber() + "] = " + (lastBlkTimestamp - b.getTimestamp()));
                             blkTimeAccumulator += lastBlkTimestamp - b.getTimestamp();
                             blkTimesAccumulated++;
                         }
