@@ -36,13 +36,12 @@ public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends Abstra
     private TxBroadcaster() {
     }
 
-    static private TxBroadcaster instance;
+    private static class Holder {
+        static final TxBroadcaster INSTANCE = new TxBroadcaster();
+    }
 
     static public TxBroadcaster getInstance() {
-        if (instance == null) {
-            instance = new TxBroadcaster();
-        }
-        return instance;
+        return Holder.INSTANCE;
     }
 
     private ExecutorService executor = Executors.newFixedThreadPool(1);

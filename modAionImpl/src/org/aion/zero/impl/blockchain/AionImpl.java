@@ -62,16 +62,14 @@ public class AionImpl implements IAionChain {
 
     private CfgAion cfg;
 
-    static private AionImpl inst;
-
     private TxCollector collector;
 
+    private static class Holder {
+        static final AionImpl INSTANCE = new AionImpl();
+    }
 
     public static AionImpl inst() {
-        if (inst == null) {
-            inst = new AionImpl();
-        }
-        return inst;
+        return Holder.INSTANCE;
     }
 
     private AionImpl() {

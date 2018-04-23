@@ -33,47 +33,60 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 
 /**
- *
  * @author chris
- *
  */
 class ChannelBuffer {
 
     class RouteStatus {
-        long ts;
-        int cnt;
+        long timestamp;
+        int count;
+        RouteStatus(){
+            this.timestamp = System.currentTimeMillis();
+            count = 0;
+        }
     }
 
-    Map<Integer, RouteStatus> routes = new HashMap<>();
+    private boolean showLog;
+
+    private Map<Integer, RouteStatus> routes = new HashMap<>();
+
+    ChannelBuffer(boolean _showLog){
+        this.showLog = _showLog;
+    }
 
     /**
-     * @param _route
-     *            int
-     * @param _minTimeDiff
-     *            long, ms
-     * @return long prev a route control container add entry if not exist with
-     *         current timestamp and return true otherwise return compare of
-     *         (prev - now) with _minTimeDiff
-     *
+     * @param _route          int
+     * @param _maxReqsPerSec  int requests within 1 s
+     * @return                boolean flag if under route control
      */
-    public boolean shouldRoute(int _route, long _minTimeDiff) {
+    synchronized boolean shouldRoute(int _route, int _maxReqsPerSec) {
         long now = System.currentTimeMillis();
-        RouteStatus prev = routes.get(_route);
-
+        RouteStatus prev = routes.putIfAbsent(_route, new RouteStatus());
         if (prev != null) {
-            if ((now - prev.ts) > 1000) {
-                prev.cnt = 0;
-                prev.ts = now;
+            if ((now - prev.timestamp) > 1000) {
+                prev.count = 0;
+                prev.timestamp = now;
+                return true;
             }
-            boolean shouldRoute = prev.cnt < _minTimeDiff;
-            prev.cnt++;
+            boolean shouldRoute = prev.count < _maxReqsPerSec;
+            if(shouldRoute)
+                prev.count++;
 
+            if(showLog) {
+                if(!shouldRoute)
+                    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");
+                // too many msgs
+                //else
+                //    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");
+            }
             return shouldRoute;
-        } else {
-
-            routes.put(_route, new RouteStatus());
+        } else
             return true;
-        }
+    }
+
+
+    RouteStatus getRouteCount(int _route){
+        return routes.get(_route);
     }
 
     // buffer for buffer remaining after NIO select read.
@@ -83,23 +96,20 @@ class ChannelBuffer {
 
     int nodeIdHash = 0;
 
+    String displayId = "";
+
     Header header = null;
 
-    byte[] bsHead = new byte[Header.LEN];
+    private byte[] bsHead = new byte[Header.LEN];
 
     byte[] body = null;
 
     Lock lock = new java.util.concurrent.locks.ReentrantLock();
 
     /**
-     * write flag
-     */
-    public AtomicBoolean onWrite = new AtomicBoolean(false);
-
-    /**
      * Indicates whether this channel is closed.
      */
-    public AtomicBoolean isClosed = new AtomicBoolean(false);
+    AtomicBoolean isClosed = new AtomicBoolean(false);
 
     void readHead(ByteBuffer buf) {
         buf.get(bsHead);

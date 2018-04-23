@@ -77,9 +77,7 @@ public final class ReqStatusHandler extends Handler {
 
 	@Override
 	public void receive(int _nodeIdHashcode, String _displayId, byte[] _msg) {
-
 	    long now = System.currentTimeMillis();
-
         if ((now - cacheTs) > this.UPDATE_INTERVAL) {
             synchronized (cache) {
                 try {
@@ -93,7 +91,7 @@ public final class ReqStatusHandler extends Handler {
             }
         }
 
-        this.mgr.send(_nodeIdHashcode, cache);
+        this.mgr.send(_nodeIdHashcode, _displayId, cache);
         this.log.debug("<req-status node={} return-blk={}>",
             _displayId,
             cache.getBestBlockNumber()

@@ -39,10 +39,7 @@ import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.TypeConverter;
+import org.aion.base.util.*;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -78,10 +75,13 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -99,12 +99,22 @@ public class ApiWeb3Aion extends ApiAion {
 
     private final int OPS_RECENT_ENTITY_COUNT = 32;
     private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 4;
+
+    private final int STRATUM_RECENT_BLK_COUNT = 128;
+    private final int STRATUM_BLKTIME_INCLUDED_COUNT = 32;
+    private final int STRATUM_CACHE_TIME_SECONDS = 15;
     // TODO: Verify if need to use a concurrent map; locking may allow for use of a simple map
     private HashMap<ByteArrayWrapper, AionBlock> templateMap;
     private ReadWriteLock templateMapLock;
     private IEventMgr evtMgr;
     // doesn't need to be protected for concurrent access, since only one write in the constructor.
     private boolean isFilterEnabled;
+
+    private ExecutorService cacheUpdateExecutor;
+    private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
+
+    private ExecutorService MinerStatsExecutor;
+    private final LoadingCache<String, MinerStatsView> MinerStats;
 
     protected void onBlock(AionBlockSummary cbs) {
         if (isFilterEnabled) {
@@ -216,6 +226,37 @@ public class ApiWeb3Aion extends ApiAion {
 
         cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
+
+
+        MinerStats = CacheBuilder.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
+                .build(
+                        new CacheLoader<String, MinerStatsView>() {
+                            public MinerStatsView load(String key) { // no checked exception
+                                Address miner = new Address(key);
+                                MinerStatsView view = new MinerStatsView(STRATUM_RECENT_BLK_COUNT, miner.toBytes()).update();
+                                return view;
+                            }
+
+                            public ListenableFuture<MinerStatsView> reload(final String key, MinerStatsView prev) {
+                                try {
+                                    ListenableFutureTask<MinerStatsView> task = ListenableFutureTask.create(new Callable<MinerStatsView>() {
+                                        public MinerStatsView call() {
+                                            return new MinerStatsView(prev).update();
+                                        }
+                                    });
+                                    MinerStatsExecutor.execute(task);
+                                    return task;
+                                } catch (Throwable e) {
+                                    LOG.debug("<miner-stats - could not queue up task: ", e);
+                                    throw(e);
+                                } // exception is swallowed by refresh and load. so just log it for our logs
+                            }
+                        });
+
+        MinerStatsExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1), new MinerStatsThreadFactory());
     }
 
     // --------------------------------------------------------------------
@@ -1090,7 +1131,6 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-
         int duration = 300;
         if (_duration != null && !_duration.equals(null))
             duration = new BigInteger(_duration + "").intValueExact();
@@ -1793,7 +1833,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             /*
             if (hashQueue.peekFirst() != null) {
-                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
+                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
                 System.out.println("----------------------------------------------------------");
                 System.out.println("isParentHashMatch? " + FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()));
                 System.out.println("blk.getNumber() " + blk.getNumber());
@@ -1843,10 +1883,10 @@ public class ApiWeb3Aion extends ApiAion {
             }
 
             /*
-            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blkObjList.get(hashQueue.peekFirst()).getNumber());
+            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
             System.out.println("----------------------------------------------------------");
             for (int i = hashQueue.size() - 1; i >= 0; i--) {
-                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blkObjList.get(hashQueue.get(i)).getNumber());
+                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blocks.get(hashQueue.get(i)).getNumber());
             }
             */
             this.response = buildResponse();
@@ -1877,9 +1917,6 @@ public class ApiWeb3Aion extends ApiAion {
     private enum CachedResponseType {
         CHAIN_HEAD
     }
-
-    private ExecutorService cacheUpdateExecutor;
-    private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
 
     public RpcMsg ops_getChainHeadView() {
         try {
@@ -2122,10 +2159,8 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject obj = new JSONObject();
         obj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
         obj.put("height", bestBlock.getNumber());
-        obj.put("target", toHexString(bestBlock.getHeader().getPowBoundary())); // TODO: Pool eventually calculates itself
-        obj.put("transactions", new JSONArray());
+        obj.put("target", toHexString(bestBlock.getHeader().getPowBoundary()));
         obj.put("headerHash", toHexString(bestBlock.getHeader().getMineHash()));
-        obj.put("partialHash", toHexString(bestBlock.getHeader().getStaticHash())); // May not be the same as headerHash in future
 
         return new RpcMsg(obj);
     }
@@ -2137,21 +2172,8 @@ public class ApiWeb3Aion extends ApiAion {
     public RpcMsg stratum_validateaddress(Object _params) {
         /*
          * "isvalid" : true|false, (boolean) If the address is valid or not.
-         * If not, this is the only property returned. "address" :
-         * "address", (string) The bitcoin address validated "scriptPubKey"
-         * : "hex", (string) The hex encoded scriptPubKey generated by the
-         * address "ismine" : true|false, (boolean) If the address is yours
-         * or not "iswatchonly" : true|false, (boolean) If the address is
-         * watchonly "isscript" : true|false, (boolean) If the key is a
-         * script "pubkey" : "publickeyhex", (string) The hex value of the
-         * raw public key "iscompressed" : true|false, (boolean) If the
-         * address is compressed "account" : "account" (string) DEPRECATED.
-         * The account associated with the address, "" is the default
-         * account "timestamp" : timestamp, (number, optional) The creation
-         * time of the key if available in seconds since epoch (Jan 1 1970
-         * GMT) "hdkeypath" : "keypath" (string, optional) The HD keypath if
-         * the key is HD and available "hdmasterkeyid" : "<hash160>"
-         * (string, optional) The Hash160 of the HD master pubkey
+         * "address", (string) The aion address validated to ensure address is valid
+         * address "ismine" : true|false, (boolean) If the address is contained in the keystore.
          */
         String _address;
         if (_params instanceof JSONArray) {
@@ -2166,22 +2188,18 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        obj.put("isvalid", true);
+        obj.put("isvalid", Utils.isValidAddress(_address));
         obj.put("address", _address + "");
-        obj.put("scriptPubKey", "hex");
-        obj.put("ismine", true);
-        obj.put("iswatchonly", true);
-        obj.put("isscript", true);
-        obj.put("timestamp", 0);
-        obj.put("hdkeypath", "");
-        obj.put("hdmasterkeyid", new byte[0]); // new byte[160]
-
+        obj.put("ismine", Keystore.exist(_address));
         return new RpcMsg(obj);
     }
 
+
     public RpcMsg stratum_getdifficulty() {
-        // TODO: This needs to be refactored to return valid data
-        return new RpcMsg(0x4000);
+        /*
+        * Return the highest known difficulty
+         */
+        return new RpcMsg(getBestBlock().getDifficultyBI().toString(16));
     }
 
     public RpcMsg stratum_getmininginfo() {
@@ -2189,14 +2207,10 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
         obj.put("blocks", bestBlock.getNumber());
-        obj.put("currentblocksize", 0);
+        obj.put("currentblocksize", bestBlock.getEncoded().length);
         obj.put("currentblocktx", bestBlock.getTransactionsList().size());
-        obj.put("difficulty", 3368767.14053294);
-        obj.put("errors", "");
-        obj.put("genproclimit", -1);
-        obj.put("hashespersec", 0);
-        obj.put("pooledtx", 0);
-        obj.put("testnet", false);
+        obj.put("difficulty", bestBlock.getDifficultyBI().toString(16));
+        obj.put("testnet", true);
 
         return new RpcMsg(obj);
     }
@@ -2294,6 +2308,208 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         return new RpcMsg(obj);
+    }
+
+    // always gets the latest 20 blocks and transactions
+    private class MinerStatsView {
+        LinkedList<byte[]> hashQueue; // more precisely a dequeue
+        Map<byte[], AionBlock> blocks;
+        private JSONObject response;
+        private int qSize;
+        private byte[] miner;
+
+        public MinerStatsView(MinerStatsView cv) {
+            hashQueue = new LinkedList<>(cv.hashQueue);
+            blocks = new HashMap<>(cv.blocks);
+            response = new JSONObject(cv.response, JSONObject.getNames(cv.response));
+            qSize = cv.qSize;
+            miner = cv.miner;
+        }
+
+        public MinerStatsView(int _qSize, byte[] _miner) {
+            hashQueue = new LinkedList<>();
+            blocks = new HashMap<>();
+            response = new JSONObject();
+            qSize = _qSize;
+            miner = _miner;
+        }
+
+        private JSONObject buildResponse() {
+            BigInteger lastDifficulty = BigInteger.ZERO;
+            long blkTimeAccumulator = 0;
+            long minedCount = 0L;
+
+            int minedByMiner = 0;
+
+            double minerHashrateShare = 0;
+            BigDecimal minerHashrate = BigDecimal.ZERO;
+            BigDecimal networkHashrate = BigDecimal.ZERO;
+
+            int blkTimesAccumulated = 0;
+            Long lastBlkTimestamp = null;
+            AionBlock b = null;
+
+            try {
+                // index 0 = latest block
+                int i = 0;
+                ListIterator li = hashQueue.listIterator(0);
+                while(li.hasNext()) {
+                    byte[] hash = (byte[]) li.next();
+                    b = blocks.get(hash);
+
+                    if (i == 0)
+                        lastDifficulty = b.getDifficultyBI();
+
+                    // only accumulate block times over the last 32 blocks
+                    if (i <= STRATUM_BLKTIME_INCLUDED_COUNT) {
+                        if (lastBlkTimestamp != null) {
+//                            System.out.println("blocktime for [" +  b.getNumber() + "] = " + (lastBlkTimestamp - b.getTimestamp()));
+                            blkTimeAccumulator += lastBlkTimestamp - b.getTimestamp();
+                            blkTimesAccumulated++;
+                        }
+                        lastBlkTimestamp = b.getTimestamp();
+                    }
+
+                    if (FastByteComparisons.equal(b.getCoinbase().toBytes(), miner)) {
+                        minedByMiner++;
+                    }
+
+                    i++;
+                }
+
+                double blkTime = 0L;
+                if (blkTimesAccumulated > 0) {
+                    blkTime = blkTimeAccumulator / (double) blkTimesAccumulated;
+                }
+
+                if (blkTime > 0) {
+                    networkHashrate = (new BigDecimal(lastDifficulty)).divide(BigDecimal.valueOf(blkTime), 4, RoundingMode.HALF_UP);
+                }
+
+                if (i > 0) {
+                    minerHashrateShare =  minedByMiner / (double) i;
+                }
+
+                minerHashrate = BigDecimal.valueOf(minerHashrateShare).multiply(networkHashrate);
+
+            } catch (Throwable t) {
+                LOG.error("failed to compute miner metrics", t);
+            }
+
+            JSONObject o = new JSONObject();
+            o.put("networkHashrate", networkHashrate.toString());
+            o.put("minerHashrate", minerHashrate.toString());
+            o.put("minerHashrateShare", minerHashrateShare);
+            return o;
+        }
+
+        public MinerStatsView update() {
+            // get the latest head
+            AionBlock blk = getBestBlock();
+
+            if (blk == null) return this;
+
+            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
+                return this; // nothing to do
+            }
+
+            // evict data as necessary
+            LinkedList<Map.Entry<byte[],AionBlock>> tempStack = new LinkedList<>();
+            tempStack.push(Map.entry(blk.getHash(), blk));
+            int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
+
+            /*
+            if (hashQueue.peekFirst() != null) {
+                System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
+                System.out.println("----------------------------------------------------------");
+                System.out.println("isParentHashMatch? " + FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()));
+                System.out.println("blk.getNumber() " + blk.getNumber());
+            }
+            System.out.println("blkNum: " + blk.getNumber() +
+                    " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
+                    " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+            */
+
+            while(FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()) == false
+                    && itr < qSize
+                    && blk.getNumber() > 2) {
+
+                blk = getBlockByHash(blk.getParentHash());
+                tempStack.push(Map.entry(blk.getHash(), blk));
+                itr++;
+                /*
+                System.out.println("blkNum: " + blk.getNumber() +
+                        " parentHash: " + TypeConverter.toJsonHex(blk.getParentHash()) +
+                        " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
+                */
+            }
+
+            // evict out the right number of elements first
+            for (int i = 0; i < tempStack.size(); i++) {
+                byte[] tailHash = hashQueue.pollLast();
+                if (tailHash != null) {
+                    blocks.remove(tailHash);
+                }
+            }
+
+            // empty out the stack into the queue
+            while (!tempStack.isEmpty()) {
+                // add to the queue
+                Map.Entry<byte[], AionBlock> element = tempStack.pop();
+                byte[] hash = element.getKey();
+                AionBlock blkObj = element.getValue();
+
+                hashQueue.push(hash);
+                blocks.put(hash, blkObj);
+            }
+
+            /*
+            System.out.println("[" + 0 + "]: " + TypeConverter.toJsonHex(hashQueue.peekFirst()) + " - " + blocks.get(hashQueue.peekFirst()).getNumber());
+            System.out.println("----------------------------------------------------------");
+            for (int i = hashQueue.size() - 1; i >= 0; i--) {
+                System.out.println("[" + i + "]: " + TypeConverter.toJsonHex(hashQueue.get(i)) + " - " + blocks.get(hashQueue.get(i)).getNumber());
+            }
+            */
+            this.response = buildResponse();
+
+            return this;
+        }
+
+        public JSONObject getResponse() {
+            return response;
+        }
+    }
+
+    public class MinerStatsThreadFactory implements ThreadFactory {
+        private final AtomicInteger tnum = new AtomicInteger(1);
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "miner-stats-" + tnum.getAndIncrement());
+            t.setPriority(Thread.MIN_PRIORITY);
+            return t;
+        }
+    }
+
+    public RpcMsg stratum_getMinerStats(Object _params) {
+        String _address;
+        if (_params instanceof JSONArray) {
+            _address = ((JSONArray)_params).get(0) + "";
+        }
+        else if (_params instanceof JSONObject) {
+            _address = ((JSONObject)_params).get("address") + "";
+        }
+        else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        try {
+            MinerStatsView v = MinerStats.get(_address);
+            return new RpcMsg(v.getResponse());
+        } catch (Exception e) {
+            LOG.error("<rpc-server - cannot get cached response for stratum_getMinerStats: ", e);
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Cached response retrieve failed.");
+        }
     }
 
     // --------------------------------------------------------------------

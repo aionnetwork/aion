@@ -45,7 +45,6 @@ public class AccountManager {
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     private static final int UNLOCK_MAX = 86400, // sec
             UNLOCK_DEFAULT = 60; // sec
-    private static AccountManager inst = null;
 
     private Map<Address, Account> accounts = null;
 
@@ -54,10 +53,12 @@ public class AccountManager {
         accounts = new HashMap<>();
     }
 
+    private static class Holder {
+        static final AccountManager INSTANCE = new AccountManager();
+    }
+
     public static AccountManager inst() {
-        if (inst == null)
-            inst = new AccountManager();
-        return inst;
+        return Holder.INSTANCE;
     }
 
     // Retrieve ECKey from active accounts list from manager perspective
@@ -65,13 +66,13 @@ public class AccountManager {
     // Can use this method as check if unlocked
     public ECKey getKey(final Address _address) {
 
-        Account acc = inst.accounts.get(_address);
+        Account acc = accounts.get(_address);
 
         if (Optional.ofNullable(acc).isPresent()) {
             if (acc.getTimeout() >= Instant.now().getEpochSecond()) {
                 return acc.getKey();
             } else {
-                inst.accounts.remove(_address);
+                accounts.remove(_address);
             }
         }
 
@@ -79,11 +80,10 @@ public class AccountManager {
     }
 
     public List<Account> getAccounts() {
-        return inst.accounts.values().stream().collect(Collectors.toList());
+        return accounts.values().stream().collect(Collectors.toList());
     }
 
     public boolean unlockAccount(Address _address, String _password, int _timeout) {
-
         int timeout = UNLOCK_DEFAULT;
         if (_timeout > UNLOCK_MAX) {
             timeout = UNLOCK_MAX;
@@ -94,14 +94,14 @@ public class AccountManager {
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
-            Account acc = inst.accounts.get(_address);
+            Account acc = accounts.get(_address);
 
             long t = Instant.now().getEpochSecond() + timeout;
             if (Optional.ofNullable(acc).isPresent()) {
                 acc.updateTimeout(t);
             } else {
                 Account a = new Account(key, t);
-                inst.accounts.put(_address, a);
+                accounts.put(_address, a);
             }
 
             LOGGER.debug("<unlock-success addr={}>", _address);
@@ -117,7 +117,7 @@ public class AccountManager {
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
-            Account acc = inst.accounts.get(_address);
+            Account acc = accounts.get(_address);
 
             if (Optional.ofNullable(acc).isPresent()) {
                 acc.updateTimeout(Instant.now().getEpochSecond() - 1);

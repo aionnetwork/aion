@@ -129,7 +129,7 @@ final class TaskGetHeaders implements Runnable {
             log.debug("<get-headers mode={} from-num={} size={} node={}>", state.getMode(), from, size, node.getIdShort());
         }
         ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, size);
-        this.p2p.send(node.getIdHash(), rbh);
+        this.p2p.send(node.getIdHash(), node.getIdShort(), rbh);
 
         // update timestamp
         state.setLastHeaderRequest(now);

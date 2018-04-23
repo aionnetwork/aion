@@ -160,7 +160,7 @@ public class AionHub {
 		this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
 				cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(), cfgNetP2p.getMaxTempNodes(),
 				cfgNetP2p.getMaxActiveNodes(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(),
-				cfgNetP2p.getBootlistSyncOnly(), false, "", cfgNetP2p.getErrorTolerance());
+				cfgNetP2p.getBootlistSyncOnly(), cfgNetP2p.getErrorTolerance());
 
 		this.syncMgr = SyncMgr.inst();
 		this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksQueueMax(),
@@ -172,6 +172,8 @@ public class AionHub {
 
 		registerCallback();
 		this.p2pMgr.run();
+
+        ((AionPendingStateImpl)this.mempool).setP2pMgr(this.p2pMgr);
 
 		this.pow = new AionPoW();
 		this.pow.init(blockchain, mempool, eventMgr);
