@@ -60,8 +60,6 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
     private IEventMgr evtMgr;
 
-    private static EquihashMiner inst;
-
     // Equihash parameters
     private int n;
     private int k;
