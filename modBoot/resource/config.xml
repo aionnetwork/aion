@@ -58,14 +58,13 @@
 		</nrg-strategy>
 	</consensus>
 	<db>
+		<!--Sets the physical location on disk where data will be stored.-->
 		<path>database</path>
+		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
+		<!--Caution: changing implementation requires re-syncing from genesis!-->
 		<vendor>leveldb</vendor>
-		<enable_db_cache>true</enable_db_cache>
-		<enable_db_compression>true</enable_db_compression>
-		<max_fd_alloc_size>1024</max_fd_alloc_size>
-		<block_size>16mB</block_size>
-		<write_buffer_size>64mB</write_buffer_size>
-		<cache_size>128mB</cache_size>
+		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
+		<enable_db_compression>false</enable_db_compression>
 	</db>
 	<log>
 		<GEN>INFO</GEN>
