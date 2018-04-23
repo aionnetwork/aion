@@ -62,7 +62,9 @@ public final class P2pMgr implements IP2pMgr {
     private final int maxTempNodes;
     private final int maxActiveNodes;
 
-    private final boolean syncSeedsOnly;
+    // In this mode, this node only connects to the seed nodes but accept any inbound connections.
+    private final boolean clusterNodeMode;
+
     private final boolean showStatus;
     private final boolean showLog;
     private final int selfNetId;
@@ -524,7 +526,7 @@ public final class P2pMgr implements IP2pMgr {
      */
     public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[] _bootNodes,
                   boolean _upnpEnable, int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog,
-                  boolean _bootlistSyncOnly, int _errorTolerance) {
+                  boolean _clusterMode, int _errorTolerance) {
         this.selfNetId = _netId;
         this.selfRevision = _revision;
         this.selfNodeId = _nodeId.getBytes();
@@ -537,7 +539,7 @@ public final class P2pMgr implements IP2pMgr {
         this.maxActiveNodes = _maxActiveNodes;
         this.showStatus = _showStatus;
         this.showLog = _showLog;
-        this.syncSeedsOnly = _bootlistSyncOnly;
+        this.clusterNodeMode = _clusterMode;
         this.errTolerance = _errorTolerance;
 
         nodeMgr = new NodeMgr(_maxActiveNodes, _maxTempNodes);
@@ -618,11 +620,6 @@ public final class P2pMgr implements IP2pMgr {
 
             String ip = channel.socket().getInetAddress().getHostAddress();
             int port = channel.socket().getPort();
-
-            if (syncSeedsOnly && nodeMgr.isSeedIp(ip)) {
-                channel.close();
-                return;
-            }
 
             Node node = nodeMgr.allocNode(ip, 0);
             node.setChannel(channel);
@@ -876,7 +873,7 @@ public final class P2pMgr implements IP2pMgr {
                 break;
 
             case Act.RES_ACTIVE_NODES:
-                if (syncSeedsOnly)
+                if (clusterNodeMode)
                     break;
 
                 if (rb.nodeIdHash != 0) {
@@ -961,7 +958,7 @@ public final class P2pMgr implements IP2pMgr {
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
 
-            if (!syncSeedsOnly)
+            if (!clusterNodeMode)
                 scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000,
                         PERIOD_REQUEST_ACTIVE_NODES, TimeUnit.MILLISECONDS);
 

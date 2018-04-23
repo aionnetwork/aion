@@ -1506,13 +1506,14 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject p2p = new JSONObject();
         p2p.put("ip", configP2p.getIp());
         p2p.put("port", configP2p.getPort());
-        p2p.put("bootlistSyncOnly", configP2p.getBootlistSyncOnly());
         p2p.put("discover", configP2p.getDiscover());
         p2p.put("errorTolerance", configP2p.getErrorTolerance());
         p2p.put("maxActiveNodes", configP2p.getMaxActiveNodes());
         p2p.put("maxTempNodes", configP2p.getMaxTempNodes());
         p2p.put("showLog", configP2p.getShowLog());
         p2p.put("showStatus", configP2p.getShowStatus());
+        p2p.put("clusterNodeMode", configP2p.inClusterNodeMode());
+        p2p.put("syncOnlyMode", configP2p.inSyncOnlyMode());
 
         // end
         obj.put("p2p", p2p);
