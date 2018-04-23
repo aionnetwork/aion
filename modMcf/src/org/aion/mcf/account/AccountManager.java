@@ -45,7 +45,6 @@ public class AccountManager {
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     private static final int UNLOCK_MAX = 86400, // sec
             UNLOCK_DEFAULT = 60; // sec
-    private static AccountManager inst = null;
 
     private Map<Address, Account> accounts = null;
 
