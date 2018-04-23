@@ -67,13 +67,13 @@ public class AccountManager {
     // Can use this method as check if unlocked
     public ECKey getKey(final Address _address) {
 
-        Account acc = Holder.INSTANCE.accounts.get(_address);
+        Account acc = accounts.get(_address);
 
         if (Optional.ofNullable(acc).isPresent()) {
             if (acc.getTimeout() >= Instant.now().getEpochSecond()) {
                 return acc.getKey();
             } else {
-                Holder.INSTANCE.accounts.remove(_address);
+                accounts.remove(_address);
             }
         }
 
@@ -81,7 +81,7 @@ public class AccountManager {
     }
 
     public List<Account> getAccounts() {
-        return Holder.INSTANCE.accounts.values().stream().collect(Collectors.toList());
+        return accounts.values().stream().collect(Collectors.toList());
     }
 
     public boolean unlockAccount(Address _address, String _password, int _timeout) {
@@ -95,14 +95,14 @@ public class AccountManager {
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
-            Account acc = Holder.INSTANCE.accounts.get(_address);
+            Account acc = accounts.get(_address);
 
             long t = Instant.now().getEpochSecond() + timeout;
             if (Optional.ofNullable(acc).isPresent()) {
                 acc.updateTimeout(t);
             } else {
                 Account a = new Account(key, t);
-                Holder.INSTANCE.accounts.put(_address, a);
+                accounts.put(_address, a);
             }
 
             LOGGER.debug("<unlock-success addr={}>", _address);
@@ -118,7 +118,7 @@ public class AccountManager {
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
-            Account acc = Holder.INSTANCE.accounts.get(_address);
+            Account acc = accounts.get(_address);
 
             if (Optional.ofNullable(acc).isPresent()) {
                 acc.updateTimeout(Instant.now().getEpochSecond() - 1);
