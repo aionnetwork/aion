@@ -84,11 +84,13 @@ public class TaskWrite implements Runnable {
             buf.flip();
 
             try {
+                int attempts = 0;
                 while (buf.hasRemaining()) {
-                    // @Attention:  very important sleep , otherwise when NIO write buffer full, 
-                    // without sleep will hangup this thread.
-                    Thread.sleep(0, 1);
-                    sc.write(buf);
+                    if (sc.write(buf) == 0 && (++attempts) >= 2) {
+                        if(showLog)
+                            System.out.println("<p2p fail-write attemps=" + attempts + " node=" + this.nodeShortId + ">");
+                       throw new IOException("Broken pipe");
+                    }
                 }
             } catch (ClosedChannelException ex1) {
                 if (showLog) {
@@ -100,9 +102,9 @@ public class TaskWrite implements Runnable {
                 if (showLog) {
                     System.out.println("<p2p write-msg-io-exception node=" + this.nodeShortId + " err=" + ex2.getMessage() + ">");
                 }
-                if (reason.equals("Broken pipe")) {
+                if (reason != null && reason.equals("Broken pipe"))
                     channelBuffer.isClosed.set(true);
-                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
