@@ -948,7 +948,7 @@ public final class P2pMgr implements IP2pMgr {
                 thrdOut.start();
             }
 
-            for (int i = 0, m = Runtime.getRuntime().availableProcessors(); i < m; i++) {
+            for (int i = 0, m = Runtime.getRuntime().availableProcessors() * 2; i < m; i++) {
                 Thread t = new Thread(new TaskReceive(), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
