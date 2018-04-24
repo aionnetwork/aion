@@ -11,7 +11,7 @@
   },
   "energyLimit": "15000000",
   "nonce": "0x00",
-  "difficulty": "0x10",
+  "difficulty": "0x4000",
   "coinbase": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "timestamp": "1524528000",
   "parentHash": "0x6a6d99a2ef14ab3b835dfc92fb918d76c37f6578a69825fbe19cd366485604b1",
