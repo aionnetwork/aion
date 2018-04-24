@@ -54,7 +54,7 @@
 			<!-- <monotonic-increase></monotonic-increase> -->
 			<!-- <decaying></decaying> -->
 			<!-- <targetted target="10000000"></targetted> -->
-			<clamped-decay upper-bound="15000000" lower-bound="10000000"></clamped-decay>
+			<clamped-decay upper-bound="20000000" lower-bound="15000000"></clamped-decay>
 		</nrg-strategy>
 	</consensus>
 	<db>
