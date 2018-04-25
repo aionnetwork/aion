@@ -351,6 +351,20 @@ public class AionHub {
                     LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
         }
 
+        byte[] genesisHash = cfg.getGenesis().getHash();
+        byte[] databaseGenHash = blockchain.getBlockByNumber(0).getHash();
+
+        // this indicates that DB and genesis are inconsistent
+        if (!Arrays.equals(cfg.getGenesis().getHash(), blockchain.getBlockByNumber(0).getHash())) {
+            LOG.error("genesis json rootHash {} is inconsistent with database rootHash {}\n" +
+                            "your configuration and genesis are incompatible, please do the following:\n" +
+                            "\t1) Remove your database folder\n" +
+                            "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n" +
+                            "\t3) Reboot with correct genesis and empty database\n",
+                    ByteUtil.toHexString(genesisHash), ByteUtil.toHexString(databaseGenHash));
+            System.exit(-1);
+        }
+
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
