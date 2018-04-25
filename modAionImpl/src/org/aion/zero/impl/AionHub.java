@@ -352,16 +352,25 @@ public class AionHub {
         }
 
         byte[] genesisHash = cfg.getGenesis().getHash();
-        byte[] databaseGenHash = blockchain.getBlockByNumber(0).getHash();
+        byte[] databaseGenHash = blockchain.getBlockByNumber(0) == null ? null : blockchain.getBlockByNumber(0).getHash();
 
         // this indicates that DB and genesis are inconsistent
-        if (!Arrays.equals(cfg.getGenesis().getHash(), blockchain.getBlockByNumber(0).getHash())) {
+        if (genesisHash == null || databaseGenHash == null || (!Arrays.equals(genesisHash, databaseGenHash))) {
+            if (genesisHash == null) {
+                LOG.error("failed to load genesis from config");
+            }
+
+            if (databaseGenHash == null) {
+                LOG.error("failed to load block 0 from database");
+            }
+
             LOG.error("genesis json rootHash {} is inconsistent with database rootHash {}\n" +
                             "your configuration and genesis are incompatible, please do the following:\n" +
                             "\t1) Remove your database folder\n" +
                             "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n" +
                             "\t3) Reboot with correct genesis and empty database\n",
-                    ByteUtil.toHexString(genesisHash), ByteUtil.toHexString(databaseGenHash));
+                    genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
+                    databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
             System.exit(-1);
         }
 
