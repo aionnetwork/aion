@@ -53,7 +53,7 @@ public interface IAionBlockchain
      * @return {@code true} if the recovery was successful, {@code false}
      *         otherwise
      */
-    boolean recoverWorldState(IRepository repository, long blockNumber);
+    boolean recoverWorldState(IRepository repository, AionBlock block);
 
     /**
      * Heuristic for skipping the call to tryToConnect with very large or very small block number.

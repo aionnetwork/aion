@@ -1304,12 +1304,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized boolean recoverWorldState(IRepository repository, long blockNumber) {
+    public synchronized boolean recoverWorldState(IRepository repository, AionBlock block) {
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;
 
         Map<Long, AionBlock> dirtyBlocks = new HashMap<>();
         AionBlock other;
 
+        long blockNumber = block.getNumber();
         // find all the blocks missing a world state
         long index = blockNumber;
         do {
