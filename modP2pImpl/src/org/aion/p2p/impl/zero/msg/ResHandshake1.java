@@ -56,22 +56,29 @@ public final class ResHandshake1 extends ResHandshake {
             return null;
         else {
 
-            // decode success
-            boolean success = _bytes[0] == 0x00 ? false : true;
+            try{
 
-            // decode binary version
-            byte len = _bytes[1];
-            String binaryVersion = "unknown";
-            int binaryVersionBytesLen = _bytes.length;
-            if(len > 0 && binaryVersionBytesLen >= MIN_LEN + len){
-                byte[] binaryVersionBytes = Arrays.copyOfRange(_bytes, MIN_LEN, MIN_LEN + len);
-                try{
-                    binaryVersion = new String(binaryVersionBytes, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
+                // decode success
+                boolean success = _bytes[0] == 0x00 ? false : true;
 
+                // decode binary version
+                byte len = _bytes[1];
+                String binaryVersion = "unknown";
+                int binaryVersionBytesLen = _bytes.length;
+                if(len > 0 && binaryVersionBytesLen >= MIN_LEN + len){
+                    byte[] binaryVersionBytes = Arrays.copyOfRange(_bytes, MIN_LEN, MIN_LEN + len);
+                    try{
+                        binaryVersion = new String(binaryVersionBytes, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+
+                    }
                 }
+                return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
+
+            } catch (Exception e) {
+                System.out.println("<p2p res-handshake-decode error=" + e.getMessage() + ">");
+                return null;
             }
-            return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
         }
     }
 
