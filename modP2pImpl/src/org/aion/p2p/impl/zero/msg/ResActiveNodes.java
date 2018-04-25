@@ -83,24 +83,32 @@ public final class ResActiveNodes extends Msg {
         if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0)
             return null;
         else {
-            ByteBuffer buf = ByteBuffer.wrap(_bytes);
-            int count = buf.get();
 
-            // fix bug: https://github.com/aionnetwork/aion/issues/390
-            if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
+            try{
+
+                ByteBuffer buf = ByteBuffer.wrap(_bytes);
+                int count = buf.get();
+
+                // fix bug: https://github.com/aionnetwork/aion/issues/390
+                if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
+                    return null;
+
+                ArrayList<Node> activeNodes = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    byte[] nodeIdBytes = new byte[36];
+                    buf.get(nodeIdBytes);
+                    byte[] ipBytes = new byte[8];
+                    buf.get(ipBytes);
+                    int port = buf.getInt();
+                    Node n = new Node(false, nodeIdBytes, ipBytes, port);
+                    activeNodes.add(n);
+                }
+                return new ResActiveNodes(activeNodes);
+
+            } catch (Exception e) {
+                System.out.println("<p2p res-active-nodes error=" + e.getMessage() + ">");
                 return null;
-
-            ArrayList<Node> activeNodes = new ArrayList<>();
-            for (int i = 0; i < count; i++) {
-                byte[] nodeIdBytes = new byte[36];
-                buf.get(nodeIdBytes);
-                byte[] ipBytes = new byte[8];
-                buf.get(ipBytes);
-                int port = buf.getInt();
-                Node n = new Node(false, nodeIdBytes, ipBytes, port);
-                activeNodes.add(n);
             }
-            return new ResActiveNodes(activeNodes);
         }
     }
 

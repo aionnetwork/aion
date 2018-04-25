@@ -773,7 +773,12 @@ public final class P2pMgr implements IP2pMgr {
             case Ver.V0:
                 switch (ctrl) {
                     case Ctrl.NET:
-                        handleP2pMsg(_sk, act, bodyBytes);
+                        try {
+                            handleP2pMsg(_sk, act, bodyBytes);
+                        } catch(Exception ex){
+                            if(showLog)
+                                System.out.println("<p2p handle-p2p-msg error=" + ex.getMessage() +">");
+                        }
                         break;
                     case Ctrl.SYNC:
 
@@ -880,6 +885,7 @@ public final class P2pMgr implements IP2pMgr {
      *            byte[]
      */
     private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes) {
+
 
         ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
