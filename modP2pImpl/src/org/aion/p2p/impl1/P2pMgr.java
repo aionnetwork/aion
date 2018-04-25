@@ -90,7 +90,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private int errTolerance;
 
-    //TODO: need refactor by passing the parameter in the later version.
+    // TODO: need refactor by passing the parameter in the later version.
     private final static int txBroadCastRoute = (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
     enum Dest {
@@ -105,6 +105,7 @@ public final class P2pMgr implements IP2pMgr {
             dest = _dest;
             timestamp = System.currentTimeMillis();
         }
+
         int nodeId;
         String displayId;
         Msg msg;
@@ -119,6 +120,7 @@ public final class P2pMgr implements IP2pMgr {
             this.route = route;
             this.msg = msg;
         }
+
         int nid;
         String nsid;
         int route;
@@ -250,15 +252,21 @@ public final class P2pMgr implements IP2pMgr {
                             chanBuf.isClosed.set(true);
 
                         } catch (ClosedChannelException e) {
-                            closeSocket((SocketChannel) sk.channel(), chanBuf.displayId + "-read-msg-closed-channel-exception");
+                            closeSocket((SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-closed-channel-exception");
 
                         } catch (IOException e) {
-                            closeSocket((SocketChannel) sk.channel(), chanBuf.displayId + "-read-msg-io-exception: " + e.getMessage());
+                            closeSocket((SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-io-exception: " + e.getMessage());
                             chanBuf.isClosed.set(true);
 
                         } catch (CancelledKeyException e) {
                             chanBuf.isClosed.set(true);
-                            closeSocket((SocketChannel) sk.channel(), chanBuf.displayId + "-read-msg-key-cancelled-exception");
+                            closeSocket((SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-key-cancelled-exception");
+                        } catch (Exception e) {
+                            if (showLog)
+                                System.out.println("<p2p-pi global exception>");
                         }
                     }
                 }
@@ -282,6 +290,7 @@ public final class P2pMgr implements IP2pMgr {
 
         static final int TOTAL_LANE = (1 << 5) - 1;
         int lane;
+
         TaskSend(int _lane) {
             this.lane = _lane;
         }
@@ -294,7 +303,7 @@ public final class P2pMgr implements IP2pMgr {
                     // if timeout , throw away this msg.
                     long now = System.currentTimeMillis();
                     if (now - mo.timestamp > P2pConstant.WRITE_MSG_TIMEOUT) {
-                        if(showLog)
+                        if (showLog)
                             System.out.println("<p2p timeout-msg to-node=" + mo.displayId + " timestamp=" + now + ">");
                         continue;
                     }
@@ -330,15 +339,15 @@ public final class P2pMgr implements IP2pMgr {
                             }
                         }
                     } else {
-                        if(showLog)
+                        if (showLog)
                             System.out.println("<p2p msg-" + mo.dest.name() + "->" + mo.displayId + " node-not-exit");
                     }
                 } catch (InterruptedException e) {
-                    if(showLog)
+                    if (showLog)
                         System.out.println("<p2p task-send-interrupted>");
                     return;
-                } catch(Exception e){
-                    if(showLog)
+                } catch (Exception e) {
+                    if (showLog)
                         e.printStackTrace();
                 }
             }
@@ -363,16 +372,16 @@ public final class P2pMgr implements IP2pMgr {
                         try {
                             hlr.receive(mi.nid, mi.nsid, mi.msg);
                         } catch (Exception e) {
-                            if(showLog)
+                            if (showLog)
                                 e.printStackTrace();
                         }
                     }
                 } catch (InterruptedException e) {
-                    if(showLog)
+                    if (showLog)
                         System.out.println("<p2p task-receive-interrupted>");
                     return;
-                } catch (Exception e){
-                    if(showLog)
+                } catch (Exception e) {
+                    if (showLog)
                         e.printStackTrace();
                 }
             }
@@ -385,7 +394,8 @@ public final class P2pMgr implements IP2pMgr {
             Thread.currentThread().setName("p2p-ts");
             String status = nodeMgr.dumpNodeInfo(selfShortId);
             System.out.println(status);
-            System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+            System.out.println(
+                    "--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
             System.out.println("recv queue [" + receiveMsgQue.size() + "] send queue [" + sendMsgQue.size() + "]\n");
         }
     }
@@ -411,19 +421,19 @@ public final class P2pMgr implements IP2pMgr {
                 Node node;
                 try {
                     node = nodeMgr.tempNodesTake();
-                    if(nodeMgr.isSeedIp(node.getIpStr()))
+                    if (nodeMgr.isSeedIp(node.getIpStr()))
                         node.setFromBootList(true);
                     if (node.getIfFromBootList())
                         nodeMgr.addTempNode(node);
-//                    if (node.peerMetric.shouldNotConn()) {
-//                        continue;
-//                    }
+                    // if (node.peerMetric.shouldNotConn()) {
+                    // continue;
+                    // }
                 } catch (InterruptedException e) {
                     if (showLog)
                         System.out.println("<p2p-tcp-interrupted>");
                     return;
-                } catch (Exception e){
-                    if(showLog)
+                } catch (Exception e) {
+                    if (showLog)
                         e.printStackTrace();
                     continue;
                 }
@@ -433,13 +443,15 @@ public final class P2pMgr implements IP2pMgr {
                     try {
                         SocketChannel channel = SocketChannel.open();
 
-                        channel.socket().connect(new InetSocketAddress(node.getIpStr(), _port), TIMEOUT_OUTBOUND_CONNECT);
+                        channel.socket().connect(new InetSocketAddress(node.getIpStr(), _port),
+                                TIMEOUT_OUTBOUND_CONNECT);
                         configChannel(channel);
 
                         if (channel.finishConnect() && channel.isConnected()) {
 
                             if (showLog)
-                                System.out.println("<p2p success-connect node-id=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
+                                System.out.println("<p2p success-connect node-id=" + node.getIdShort() + " ip="
+                                        + node.getIpStr() + ">");
 
                             SelectionKey sk = channel.register(selector, SelectionKey.OP_READ);
                             ChannelBuffer rb = new ChannelBuffer(P2pMgr.this.showLog);
@@ -451,23 +463,27 @@ public final class P2pMgr implements IP2pMgr {
                             node.setChannel(channel);
                             nodeMgr.addOutboundNode(node);
 
-                            if(showLog)
-                                System.out.println("<p2p prepare-request-handshake -> id=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
-                            sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), cachedReqHandshake1, Dest.OUTBOUND));
-                            //node.peerMetric.decFailedCount();
+                            if (showLog)
+                                System.out.println("<p2p prepare-request-handshake -> id=" + node.getIdShort() + " ip="
+                                        + node.getIpStr() + ">");
+                            sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), cachedReqHandshake1,
+                                    Dest.OUTBOUND));
+                            // node.peerMetric.decFailedCount();
 
                         } else {
                             if (showLog)
-                                System.out.println("<p2p fail-connect node-id=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
+                                System.out.println("<p2p fail-connect node-id=" + node.getIdShort() + " ip="
+                                        + node.getIpStr() + ">");
                             channel.close();
                             // node.peerMetric.incFailedCount();
                         }
                     } catch (IOException e) {
                         if (showLog)
-                            System.out.println("<p2p connect-outbound io-exception addr=" + node.getIpStr() + ":" + _port + " result=failed>");
+                            System.out.println("<p2p connect-outbound io-exception addr=" + node.getIpStr() + ":"
+                                    + _port + " result=failed>");
                         // node.peerMetric.incFailedCount();
-                    } catch(Exception e){
-                        if(showLog)
+                    } catch (Exception e) {
+                        if (showLog)
                             e.printStackTrace();
                     }
                 }
@@ -514,15 +530,24 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _nodeId         byte[36]
-     * @param _ip             String
-     * @param _port           int
-     * @param _bootNodes      String[]
-     * @param _upnpEnable     boolean
-     * @param _maxTempNodes   int
-     * @param _maxActiveNodes int
-     * @param _showStatus     boolean
-     * @param _showLog        boolean
+     * @param _nodeId
+     *            byte[36]
+     * @param _ip
+     *            String
+     * @param _port
+     *            int
+     * @param _bootNodes
+     *            String[]
+     * @param _upnpEnable
+     *            boolean
+     * @param _maxTempNodes
+     *            int
+     * @param _maxActiveNodes
+     *            int
+     * @param _showStatus
+     *            boolean
+     * @param _showLog
+     *            boolean
      */
     public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[] _bootNodes,
                   boolean _upnpEnable, int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog,
@@ -558,11 +583,12 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _node Node
+     * @param _node
+     *            Node
      * @return boolean
      */
     private boolean validateNode(final Node _node) {
-        if(_node != null){
+        if (_node != null) {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort = !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
             boolean notActive = !nodeMgr.hasActiveNode(_node.getIdHash());
@@ -573,7 +599,8 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _channel SocketChannel TODO: check option
+     * @param _channel
+     *            SocketChannel TODO: check option
      */
     private void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
@@ -588,7 +615,8 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _sc SocketChannel
+     * @param _sc
+     *            SocketChannel
      */
     public void closeSocket(final SocketChannel _sc, String _reason) {
         if (showLog)
@@ -609,7 +637,7 @@ public final class P2pMgr implements IP2pMgr {
         SocketChannel channel;
         try {
 
-            if(nodeMgr.activeNodesSize() >= this.maxActiveNodes)
+            if (nodeMgr.activeNodesSize() >= this.maxActiveNodes)
                 return;
 
             channel = tcpServer.accept();
@@ -637,7 +665,8 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * SocketChannel
      *
-     * @throws IOException IOException
+     * @throws IOException
+     *             IOException
      */
     private int readHeader(final ChannelBuffer _cb, ByteBuffer readBuffer, int cnt) throws IOException {
 
@@ -661,7 +690,8 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * SocketChannel
      *
-     * @throws IOException IOException
+     * @throws IOException
+     *             IOException
      */
     private int readBody(final ChannelBuffer _cb, ByteBuffer readBuffer, int cnt) throws IOException {
 
@@ -689,8 +719,10 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _sk SelectionKey
-     * @throws IOException IOException
+     * @param _sk
+     *            SelectionKey
+     * @throws IOException
+     *             IOException
      */
     private int read(final SelectionKey _sk, ByteBuffer _readBuffer, int _cnt) throws IOException {
 
@@ -731,8 +763,9 @@ public final class P2pMgr implements IP2pMgr {
                 ((route == txBroadCastRoute) ? P2pConstant.READ_MAX_RATE_TXBC : P2pConstant.READ_MAX_RATE));
 
         if (!underRC) {
-            if(showLog)
-                System.out.println("<p2p over-called-route="  + ver + "-" + ctrl + "-" + act + " calls=" + rb.getRouteCount(route).count + " node=" + rb.displayId + ">");
+            if (showLog)
+                System.out.println("<p2p over-called-route=" + ver + "-" + ctrl + "-" + act + " calls="
+                        + rb.getRouteCount(route).count + " node=" + rb.displayId + ">");
             return currCnt;
         }
 
@@ -745,21 +778,23 @@ public final class P2pMgr implements IP2pMgr {
                     case Ctrl.SYNC:
 
                         if (!handlers.containsKey(route)) {
-                            if(showLog)
-                                System.out.println("<p2p unregistered-route="  + ver + "-" + ctrl + "-" + act + " node=" + rb.displayId + ">");
+                            if (showLog)
+                                System.out.println("<p2p unregistered-route=" + ver + "-" + ctrl + "-" + act + " node="
+                                        + rb.displayId + ">");
                             return currCnt;
                         }
 
                         handleKernelMsg(rb.nodeIdHash, route, bodyBytes);
                         break;
                     default:
-                        if(showLog)
-                            System.out.println("<p2p invalid-route="  + ver + "-" + ctrl + "-" + act + " node=" + rb.displayId + ">");
+                        if (showLog)
+                            System.out.println(
+                                    "<p2p invalid-route=" + ver + "-" + ctrl + "-" + act + " node=" + rb.displayId + ">");
                         break;
                 }
                 break;
             default:
-                if(showLog)
+                if (showLog)
                     System.out.println("<p2p unhandled-ver=" + ver + " node=" + rb.displayId + ">");
                 break;
         }
@@ -782,14 +817,20 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _buffer      ChannelBuffer
-     * @param _channelHash int
-     * @param _nodeId      byte[]
-     * @param _netId       int
-     * @param _port        int
-     * @param _revision    byte[]
-     *                     <p>
-     *                     Construct node info after handshake request success
+     * @param _buffer
+     *            ChannelBuffer
+     * @param _channelHash
+     *            int
+     * @param _nodeId
+     *            byte[]
+     * @param _netId
+     *            int
+     * @param _port
+     *            int
+     * @param _revision
+     *            byte[]
+     *            <p>
+     *            Construct node info after handshake request success
      */
     private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId,
                                     int _port, final byte[] _revision) {
@@ -815,7 +856,7 @@ public final class P2pMgr implements IP2pMgr {
                 }
 
             } else {
-                if(showLog)
+                if (showLog)
                     System.out.println("<p2p handshake-rule-fail>");
             }
         }
@@ -831,9 +872,12 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _sk       SelectionKey
-     * @param _act      ACT
-     * @param _msgBytes byte[]
+     * @param _sk
+     *            SelectionKey
+     * @param _act
+     *            ACT
+     * @param _msgBytes
+     *            byte[]
      */
     private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes) {
 
@@ -867,8 +911,8 @@ public final class P2pMgr implements IP2pMgr {
                 if (rb.nodeIdHash != 0) {
                     Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null)
-                        sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(), new ResActiveNodes(nodeMgr.getActiveNodesList()),
-                                Dest.ACTIVE));
+                        sendMsgQue.offer(new MsgOut(node.getIdHash(), node.getIdShort(),
+                                new ResActiveNodes(nodeMgr.getActiveNodesList()), Dest.ACTIVE));
                 }
                 break;
 
@@ -901,9 +945,12 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /**
-     * @param _nodeIdHash int
-     * @param _route      int
-     * @param _msgBytes   byte[]
+     * @param _nodeIdHash
+     *            int
+     * @param _route
+     *            int
+     * @param _msgBytes
+     *            byte[]
      */
     private void handleKernelMsg(int _nodeIdHash, int _route, final byte[] _msgBytes) {
         Node node = nodeMgr.getActiveNode(_nodeIdHash);
@@ -932,11 +979,12 @@ public final class P2pMgr implements IP2pMgr {
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
-            if(showLog)
-                this.handlers.forEach((route, callbacks)->{
+            if (showLog)
+                this.handlers.forEach((route, callbacks) -> {
                     Handler handler = callbacks.get(0);
                     Header h = handler.getHeader();
-                    System.out.println("<p2p-handler route=" + route + " v-c-a=" + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction() + " name=" + handler.getClass().getSimpleName() +">");
+                    System.out.println("<p2p-handler route=" + route + " v-c-a=" + h.getVer() + "-" + h.getCtrl() + "-"
+                            + h.getAction() + " name=" + handler.getClass().getSimpleName() + ">");
                 });
 
             for (int i = 0; i < TaskSend.TOTAL_LANE; i++) {
@@ -945,7 +993,7 @@ public final class P2pMgr implements IP2pMgr {
                 thrdOut.start();
             }
 
-            for (int i = 0, m = Runtime.getRuntime().availableProcessors() * 2; i < m; i++) {
+            for (int i = 0, m = Runtime.getRuntime().availableProcessors(); i < m; i++) {
                 Thread t = new Thread(new TaskReceive(), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
@@ -1053,8 +1101,10 @@ public final class P2pMgr implements IP2pMgr {
     /**
      * Remove an active node if exists.
      *
-     * @param _nodeIdHash int
-     * @param _reason String
+     * @param _nodeIdHash
+     *            int
+     * @param _reason
+     *            String
      */
     void dropActive(int _nodeIdHash, String _reason) {
         nodeMgr.dropActive(_nodeIdHash, this, _reason);
@@ -1071,7 +1121,8 @@ public final class P2pMgr implements IP2pMgr {
             ban(_nodeIdHash);
             errCnt.put(_nodeIdHash, 0);
             if (showLog) {
-                System.out.println("<p2p-ban node=" + (_displayId == null ? _nodeIdHash : _displayId) + " err-count=" + cnt + ">");
+                System.out.println(
+                        "<p2p-ban node=" + (_displayId == null ? _nodeIdHash : _displayId) + " err-count=" + cnt + ">");
             }
         } else {
             errCnt.put(_nodeIdHash, cnt);
