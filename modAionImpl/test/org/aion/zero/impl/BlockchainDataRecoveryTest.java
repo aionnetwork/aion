@@ -100,7 +100,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock.getNumber());
+        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -152,7 +152,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock.getNumber());
+        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -203,7 +203,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock.getNumber());
+        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
