@@ -395,4 +395,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         lockDetails.readLock().unlock();
         lockAccounts.readLock().unlock();
     }
+
+    @Override
+    public boolean isSnapshot() {
+        return repository.isSnapshot();
+    }
 }
