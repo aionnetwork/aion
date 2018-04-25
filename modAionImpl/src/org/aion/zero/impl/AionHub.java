@@ -160,7 +160,7 @@ public class AionHub {
 		this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
 				cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(), cfgNetP2p.getMaxTempNodes(),
 				cfgNetP2p.getMaxActiveNodes(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(),
-				cfgNetP2p.getBootlistSyncOnly(), false, "", cfgNetP2p.getErrorTolerance());
+				cfgNetP2p.getBootlistSyncOnly(), cfgNetP2p.getErrorTolerance());
 
 		this.syncMgr = SyncMgr.inst();
 		this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksQueueMax(),
@@ -172,6 +172,8 @@ public class AionHub {
 
 		registerCallback();
 		this.p2pMgr.run();
+
+        ((AionPendingStateImpl)this.mempool).setP2pMgr(this.p2pMgr);
 
 		this.pow = new AionPoW();
 		this.pow.init(blockchain, mempool, eventMgr);
@@ -347,6 +349,29 @@ public class AionHub {
             blockchain.setTotalDifficulty(totalDifficulty);
             LOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
                     LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
+        }
+
+        byte[] genesisHash = cfg.getGenesis().getHash();
+        byte[] databaseGenHash = blockchain.getBlockByNumber(0) == null ? null : blockchain.getBlockByNumber(0).getHash();
+
+        // this indicates that DB and genesis are inconsistent
+        if (genesisHash == null || databaseGenHash == null || (!Arrays.equals(genesisHash, databaseGenHash))) {
+            if (genesisHash == null) {
+                LOG.error("failed to load genesis from config");
+            }
+
+            if (databaseGenHash == null) {
+                LOG.error("failed to load block 0 from database");
+            }
+
+            LOG.error("genesis json rootHash {} is inconsistent with database rootHash {}\n" +
+                            "your configuration and genesis are incompatible, please do the following:\n" +
+                            "\t1) Remove your database folder\n" +
+                            "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n" +
+                            "\t3) Reboot with correct genesis and empty database\n",
+                    genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
+                    databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
+            System.exit(-1);
         }
 
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {

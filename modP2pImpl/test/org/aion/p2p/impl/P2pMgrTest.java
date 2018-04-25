@@ -77,8 +77,6 @@ public class P2pMgrTest {
                 false,
                 true,
                 false,
-                false,
-                "",
                 50);
 
         System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
@@ -94,8 +92,6 @@ public class P2pMgrTest {
                 false,
                 true,
                 false,
-                false,
-                "",
                 50);
 
         return Map.entry(connector, receiver);
@@ -120,8 +116,6 @@ public class P2pMgrTest {
                 false,
                 false,
                 false,
-                false,
-                "",
                 50);
         assertEquals(p2p.getTempNodesCount(), 0);
 
@@ -146,8 +140,6 @@ public class P2pMgrTest {
                 false,
                 false,
                 false,
-                false,
-                "",
                 50);
         assertEquals(0,p2p.getTempNodesCount());
 
@@ -174,8 +166,6 @@ public class P2pMgrTest {
                 false,
                 false,
                 false,
-                false,
-                "",
                 50);
         assertEquals(p2p.getTempNodesCount(), 3);
     }

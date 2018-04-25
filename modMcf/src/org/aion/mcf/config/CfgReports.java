@@ -37,6 +37,8 @@ import java.io.Writer;
  */
 public class CfgReports {
 
+    private boolean print = false;
+
     private boolean enable;
     private String path;
     private int dump_interval;
@@ -55,6 +57,7 @@ public class CfgReports {
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
+        this.print = true;
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
@@ -92,55 +95,59 @@ public class CfgReports {
     }
 
     public String toXML() {
-        final XMLOutputFactory output = XMLOutputFactory.newInstance();
-        XMLStreamWriter xmlWriter;
-        String xml;
-        try {
-            Writer strWriter = new StringWriter();
-            xmlWriter = output.createXMLStreamWriter(strWriter);
-            xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeStartElement("reports");
+        if (print) {
+            final XMLOutputFactory output = XMLOutputFactory.newInstance();
+            XMLStreamWriter xmlWriter;
+            String xml;
+            try {
+                Writer strWriter = new StringWriter();
+                xmlWriter = output.createXMLStreamWriter(strWriter);
+                xmlWriter.writeCharacters("\r\n\t");
+                xmlWriter.writeStartElement("reports");
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable");
-            xmlWriter.writeCharacters(String.valueOf(this.isEnabled()));
-            xmlWriter.writeEndElement();
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("enable");
+                xmlWriter.writeCharacters(String.valueOf(this.isEnabled()));
+                xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("path");
-            xmlWriter.writeCharacters(this.getPath());
-            xmlWriter.writeEndElement();
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("path");
+                xmlWriter.writeCharacters(this.getPath());
+                xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("dump_interval");
-            xmlWriter.writeCharacters(String.valueOf(this.getDumpInterval()));
-            xmlWriter.writeEndElement();
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("dump_interval");
+                xmlWriter.writeCharacters(String.valueOf(this.getDumpInterval()));
+                xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("block_frequency");
-            xmlWriter.writeCharacters(String.valueOf(this.getBlockFrequency()));
-            xmlWriter.writeEndElement();
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("block_frequency");
+                xmlWriter.writeCharacters(String.valueOf(this.getBlockFrequency()));
+                xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("enable_heap_dumps");
-            xmlWriter.writeCharacters(String.valueOf(this.isHeapDumpEnabled()));
-            xmlWriter.writeEndElement();
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("enable_heap_dumps");
+                xmlWriter.writeCharacters(String.valueOf(this.isHeapDumpEnabled()));
+                xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("heap_dump_interval");
-            xmlWriter.writeCharacters(String.valueOf(this.getHeapDumpInterval()));
-            xmlWriter.writeEndElement();
+                xmlWriter.writeCharacters("\r\n\t\t");
+                xmlWriter.writeStartElement("heap_dump_interval");
+                xmlWriter.writeCharacters(String.valueOf(this.getHeapDumpInterval()));
+                xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeEndElement();
-            xml = strWriter.toString();
-            strWriter.flush();
-            strWriter.close();
-            xmlWriter.flush();
-            xmlWriter.close();
-            return xml;
-        } catch (IOException | XMLStreamException e) {
-            e.printStackTrace();
+                xmlWriter.writeCharacters("\r\n\t");
+                xmlWriter.writeEndElement();
+                xml = strWriter.toString();
+                strWriter.flush();
+                strWriter.close();
+                xmlWriter.flush();
+                xmlWriter.close();
+                return xml;
+            } catch (IOException | XMLStreamException e) {
+                e.printStackTrace();
+                return "";
+            }
+        } else {
             return "";
         }
     }

@@ -29,12 +29,10 @@
 
 package org.aion.zero.impl.sync;
 
+import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.slf4j.Logger;
-
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -69,10 +67,10 @@ final class TaskGetStatus implements Runnable {
     public void run() {
         while (this.run.get()) {
             try {
-                Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-
-                for (int id : ids) {
-                    p2p.send(id, reqStatus);
+                // Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
+                for (INode n : p2p.getActiveNodes().values()) {
+                    // System.out.println("requesting-status from-node=" + n.getIdShort());
+                    p2p.send(n.getIdHash(), n.getIdShort(), reqStatus);
                 }
                 Thread.sleep(interval);
             } catch (Exception e) {

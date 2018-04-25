@@ -77,36 +77,42 @@ public final class ReqHandshake1 extends ReqHandshake {
         if (_bytes == null || _bytes.length < MIN_LEN)
             return null;
         else {
-            ByteBuffer buf = ByteBuffer.wrap(_bytes);
 
-            // decode node id
-            byte[] nodeId = new byte[36];
-            buf.get(nodeId);
+            try{
+                ByteBuffer buf = ByteBuffer.wrap(_bytes);
 
-            // decode net id
-            int netId = buf.getInt();
+                // decode node id
+                byte[] nodeId = new byte[36];
+                buf.get(nodeId);
 
-            // decode ip
-            byte[] ip = new byte[8];
-            buf.get(ip);
+                // decode net id
+                int netId = buf.getInt();
 
-            // decode port
-            int port = buf.getInt();
+                // decode ip
+                byte[] ip = new byte[8];
+                buf.get(ip);
 
-            // decode revision
-            byte revisionLen = buf.get();
-            byte[] revision = new byte[revisionLen];
-            buf.get(revision);
+                // decode port
+                int port = buf.getInt();
 
-            // decode versions
-            byte versionsLen = buf.get();
-            List<Short> versions = new ArrayList<>();
-            for(byte i = 0; i < versionsLen; i++){
-                short version = buf.getShort();
-                versions.add(version);
+                // decode revision
+                byte revisionLen = buf.get();
+                byte[] revision = new byte[revisionLen];
+                buf.get(revision);
+
+                // decode versions
+                byte versionsLen = buf.get();
+                List<Short> versions = new ArrayList<>();
+                for(byte i = 0; i < versionsLen; i++){
+                    short version = buf.getShort();
+                    versions.add(version);
+                }
+
+                return new ReqHandshake1(nodeId, netId, ip, port, revision, versions);
+            } catch (Exception e) {
+                System.out.println("<p2p req-handshake-decode error=" + e.getMessage() + ">");
+                return null;
             }
-
-            return new ReqHandshake1(nodeId, netId, ip, port, revision, versions);
         }
     }
 
@@ -131,5 +137,4 @@ public final class ReqHandshake1 extends ReqHandshake {
             return buf.array();
         }
     }
-
 }

@@ -43,6 +43,8 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
+import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
 import org.aion.vm.TransactionExecutor;
@@ -71,6 +73,7 @@ import java.util.stream.Stream;
 public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, AionTransaction> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
+    private IP2pMgr p2pMgr;
 
     public static class TransactionSortedSet extends TreeSet<AionTransaction> {
 
@@ -105,8 +108,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private AtomicReference<AionBlock> best;
 
-    static private AionPendingStateImpl inst;
-
     private PendingTxCache pendingTxCache;
 
     private EventExecuteService ees;
@@ -128,6 +129,11 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private Set<byte[]> backupPendingPoolRemove;
 
     private ScheduledExecutorService ex;
+
+    private boolean closeToNetworkBest = false;
+
+    private static long NRGPRICE_MIN =            10_000_000_000L;  // 10 PLAT  (10 * 10 ^ -9 AION)
+    private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L;  //  9 AION
 
     class TxBuffTask implements Runnable {
         @Override public void run() {
@@ -242,12 +248,18 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     }
 
-    public synchronized static AionPendingStateImpl inst() {
-        if (inst == null) {
-            inst = new AionPendingStateImpl(AionRepositoryImpl.inst());
-            inst.init(AionBlockchainImpl.inst());
-        }
-        return inst;
+    private static final AionPendingStateImpl initializeAionPendingState() {
+        AionPendingStateImpl ps = new AionPendingStateImpl(AionRepositoryImpl.inst());
+        ps.init(AionBlockchainImpl.inst());
+        return ps;
+    }
+
+    private static class Holder {
+        static final AionPendingStateImpl INSTANCE = initializeAionPendingState();
+    }
+
+    public static AionPendingStateImpl inst() {
+        return Holder.INSTANCE;
     }
 
     private AionPendingStateImpl(AionRepositoryImpl repository) {
@@ -394,7 +406,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     @Override public synchronized List<AionTransaction> addPendingTransactions(List<AionTransaction> transactions) {
 
-        if (isSeed) {
+        if ((isSeed || !closeToNetworkBest) && !loadPendingTx) {
             return seedProcess(transactions);
         } else {
             List<AionTransaction> newPending = new ArrayList<>();
@@ -568,8 +580,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private boolean addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
 
         if (!TXValidator.isValid(tx)) {
-            LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
+            LOG.error("invalid Tx [{}]", tx.toString());
             fireDroppedTx(tx, "INVALID_TX");
+            return false;
+        }
+
+        if (inValidTxNrgPrice(tx)) {
+            LOG.error("invalid Tx Nrg price [{}]", tx.toString());
+            fireDroppedTx(tx, "INVALID_TX_NRG_PRICE");
             return false;
         }
 
@@ -629,6 +647,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             return true;
         }
+    }
+
+    private boolean inValidTxNrgPrice(AionTransaction tx) {
+        return tx.getNrgPrice() < NRGPRICE_MIN || tx.getNrgPrice() > NRGPRICE_MAX;
     }
 
     private void fireDroppedTx(AionTransaction tx, String error) {
@@ -720,6 +742,16 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
 
         best.set(newBlock);
+
+        if (best.get().getNumber() + 128 < getPeersBestBlk13()) {
+            closeToNetworkBest = false;
+        } else {
+            closeToNetworkBest = true;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("PendingStateImpl.processBest: closeToNetworkBest[{}]", closeToNetworkBest);
+        }
 
         updateState(best.get());
 
@@ -999,6 +1031,45 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     }
 
+    public void setP2pMgr(final IP2pMgr p2pMgr) {
+        if (!this.isSeed) {
+            this.p2pMgr = p2pMgr;
+        }
+    }
+
+    private long getPeersBestBlk13() {
+        if (this.p2pMgr == null) {
+            return 0;
+        }
+
+        List<Long> peersBest = new ArrayList<>();
+        for (INode node : p2pMgr.getActiveNodes().values()) {
+            peersBest.add(node.getBestBlockNumber());
+        }
+
+        if (peersBest.isEmpty()) {
+            return 0;
+        }
+
+        peersBest.sort(Comparator.reverseOrder());
+
+        int position = peersBest.size()/3;
+        if (position > 3) {
+            position -= 1;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            StringBuilder blk = new StringBuilder();
+            for (Long l : peersBest) {
+                blk.append(l.toString()).append(" ");
+            }
+
+            LOG.debug("getPeersBestBlk13 peers[{}] 1/3[{}] PeersBest[{}]", peersBest.size(), peersBest.get(position), blk.toString());
+        }
+
+        return peersBest.get(position);
+    }
+
     private void recoverCache() {
 
         LOG.info("pendingCacheTx loading from DB");
@@ -1074,6 +1145,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         addPendingTransactions(pendingPoolTx);
         long t2 = System.currentTimeMillis() - t1;
         LOG.info("{} pendingPoolTx loaded from DB loaded into the txpool, {} ms", pendingPoolTx.size(), t2);
+
     }
 
     @Override public String getVersion() {

@@ -183,7 +183,8 @@ public class RpcMethods {
             Map.entry("getmininginfo", (params) -> api.stratum_getmininginfo()),
             Map.entry("submitblock", (params) -> api.stratum_submitblock(params)),
             Map.entry("getblocktemplate", (params) -> api.stratum_getwork()),
-            Map.entry("getHeaderByBlockNumber", (params) -> api.stratum_getHeaderByBlockNumber(params))
+            Map.entry("getHeaderByBlockNumber", (params) -> api.stratum_getHeaderByBlockNumber(params)),
+            Map.entry("getMinerStats", (params) -> api.stratum_getMinerStats(params))
     );
 
     /**

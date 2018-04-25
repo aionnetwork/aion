@@ -237,30 +237,6 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         return HashUtil.h256(getEncoded());
     }
 
-    /*
-     * Get hash of the static portion of the header; used to identify block templates submitted by the pool.
-     * Also to be used in BHv2 implementation
-     */
-    public byte[] getStaticHash() {
-        //Buffer size = header size (496) - timestamp (8)
-        ByteBuffer b = ByteBuffer.allocate(489);
-
-        b.put(version);
-        b.putLong(this.number);
-        b.put(this.parentHash, 0, this.parentHash.length);
-        b.put(this.coinbase.toBytes(), 0, 32);
-        b.put(this.stateRoot, 0, this.stateRoot.length);
-        b.put(this.txTrieRoot, 0, this.txTrieRoot.length);
-        b.put(this.receiptTrieRoot, 0, this.receiptTrieRoot.length);
-        b.put(this.logsBloom, 0, this.logsBloom.length);
-        b.put(this.difficulty,0,this.difficulty.length);
-        b.put(this.extraData, 0, this.extraData.length);
-        b.putLong(this.energyConsumed);
-        b.putLong(this.energyLimit);
-
-        return HashUtil.h256(b.array());
-    }
-
     public byte[] getEncoded() {
         return this.getEncoded(true); // with nonce
     }
@@ -380,12 +356,12 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     public byte[] getHeaderBytes(boolean toMine) {
         byte[] hdrBytes;
         if(toMine) {
-            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
                     this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
                     this.difficulty, this.extraData, longToBytes(this.energyConsumed),
                     longToBytes(this.energyLimit), longToBytes(this.timestamp));
         }else {
-            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
                     this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
                     this.difficulty, this.extraData, longToBytes(this.energyConsumed),
                     longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
@@ -393,6 +369,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         return hdrBytes;
     }
 
+    /**
+     * Get hash of the header bytes to mine a block
+     *
+     * @return Blake2b digest (32 bytes) of the raw header bytes.
+     */
     public byte[] getMineHash() {
         if(this.mineHashBytes == null) {
             this.mineHashBytes = HashUtil.h256(getHeaderBytes(true));
