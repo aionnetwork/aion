@@ -121,6 +121,11 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      */
     IRepository getSnapshotTo(byte[] root);
 
+    /**
+     * @return {@code true} if the repository is a snapshot (with limited functionality), {@code false} otherwise
+     */
+    boolean isSnapshot();
+
     // TODO: perhaps remove
     BSB getBlockStore();
 
