@@ -708,12 +708,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 writer.newLine();
 
                 for (BlockInfo bi : levelBlocks) {
-                    writer.append("Block hash from index database: " + Hex.toHexString(bi.getHash()) + "\nTotal Difficulty: " + bi
-                            .getCummDifficulty());
+                    writer.append("\nBlock hash from index database: " + Hex.toHexString(bi.getHash())
+                                          + "\nTotal Difficulty: " + bi.getCummDifficulty() + "\nBlock on main chain: "
+                                          + String.valueOf(bi.isMainChain()).toUpperCase());
                     writer.newLine();
                     AionBlock blk = getBlockByHash(bi.getHash());
                     if (blk != null) {
-                        writer.append("Full block data:\n");
+                        writer.append("\nFull block data:\n");
                         writer.append(blk.toString());
                         writer.newLine();
                     } else {
