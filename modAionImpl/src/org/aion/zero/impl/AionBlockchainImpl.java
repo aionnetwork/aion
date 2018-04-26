@@ -31,7 +31,6 @@ import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -54,9 +53,9 @@ import org.aion.vm.TransactionExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -1305,23 +1304,37 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public synchronized boolean recoverWorldState(IRepository repository, AionBlock block) {
-        AionRepositoryImpl repo = (AionRepositoryImpl) repository;
-
-        Map<Long, AionBlock> dirtyBlocks = new HashMap<>();
-        AionBlock other;
+        if (block == null) {
+            LOG.error("World state recovery attempted with null block.");
+            return false;
+        }
+        if (repository.isSnapshot()) {
+            LOG.error("World state recovery attempted with snapshot repository.");
+            return false;
+        }
 
         long blockNumber = block.getNumber();
+        LOG.info("Corrupt world state at block hash = {}, number = {}. Looking for block with valid world state ...",
+                 block.getShortHash(),
+                 blockNumber);
+
+        AionRepositoryImpl repo = (AionRepositoryImpl) repository;
+
+        Stack<AionBlock> dirtyBlocks = new Stack<>();
+        // already known to be missing the state
+        dirtyBlocks.push(block);
+
+        AionBlock other = block;
+
         // find all the blocks missing a world state
-        long index = blockNumber;
         do {
-            other = repo.getBlockStore().getChainBlockByNumber(index);
+            other = repo.getBlockStore().getBlockByHash(other.getParentHash());
 
             // cannot recover if no valid states exist (must build from genesis)
             if (other == null) {
                 return false;
             } else {
-                dirtyBlocks.put(other.getNumber(), other);
-                index--;
+                dirtyBlocks.push(other);
             }
         } while (!repo.isValidRoot(other.getStateRoot()));
 
@@ -1329,25 +1342,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
         repo.syncToRoot(other.getStateRoot());
 
         // remove the last added block because it has a correct world state
-        index = other.getNumber();
-        dirtyBlocks.remove(index);
+        dirtyBlocks.pop();
 
-        LOG.info("Corrupt world state at block #" + blockNumber + ". Rebuilding from block #" + index + ".");
-        index++;
+        LOG.info("Valid state found at block hash = {}, number = {}.", other.getShortHash(), other.getNumber());
 
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
-            LOG.info("Rebuilding block #" + index + ".");
-            other = dirtyBlocks.remove(index);
+            other = dirtyBlocks.pop();
+            LOG.info("Rebuilding block hash = {}, number = {}.", other.getShortHash(), other.getNumber());
             this.add(other, true);
-            index++;
         }
 
         // update the repository
         repo.flush();
 
         // return a flag indicating if the recovery worked
-        if (repo.isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot())) {
+        if (repo.isValidRoot(block.getStateRoot())) {
             return true;
         } else {
             // reverting back one block
