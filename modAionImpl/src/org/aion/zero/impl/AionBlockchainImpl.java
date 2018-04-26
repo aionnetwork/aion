@@ -512,6 +512,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block.getNumber());
             }
 
+            if (!repository.isValidRoot(block.getStateRoot())) {
+                recoverWorldState(repository, block);
+            }
             // retry of well known block
             return EXIST;
         }
