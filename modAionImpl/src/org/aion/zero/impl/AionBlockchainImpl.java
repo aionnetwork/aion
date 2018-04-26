@@ -513,8 +513,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             if (!repository.isValidRoot(block.getStateRoot())) {
+                // correct the world state for this block
                 recoverWorldState(repository, block);
             }
+
+            if (!repository.isIndexed(block.getHash(), block.getNumber())) {
+                // TODO: correct the index for this block
+
+            }
+
             // retry of well known block
             return EXIST;
         }
