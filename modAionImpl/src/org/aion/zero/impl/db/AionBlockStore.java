@@ -762,6 +762,17 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public boolean isIndexed(byte[] hash, long level) {
+        lock.readLock().lock();
+
+        try {
+            // when null -> there was no block info for the hash
+            return getBlockInfoForHash(getBlockInfoForLevel(level), hash) != null;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
     public static class BlockInfo implements Serializable {
 
         public BlockInfo() {}
