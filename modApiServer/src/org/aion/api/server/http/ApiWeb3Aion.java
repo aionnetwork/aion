@@ -110,6 +110,8 @@ public class ApiWeb3Aion extends ApiAion {
     // doesn't need to be protected for concurrent access, since only one write in the constructor.
     private boolean isFilterEnabled;
 
+    private boolean isSeedMode;
+
     private ExecutorService cacheUpdateExecutor;
     private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
 
@@ -167,6 +169,8 @@ public class ApiWeb3Aion extends ApiAion {
         templateMap = new HashMap<>();
         templateMapLock = new ReentrantReadWriteLock();
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
+        isSeedMode = CfgAion.inst().getConsensus().isSeed();
+
 
         // instantiate nrg price oracle
         IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
@@ -2119,6 +2123,10 @@ public class ApiWeb3Aion extends ApiAion {
 
     public RpcMsg stratum_getwork() {
         // TODO: Change this to a synchronized map implementation mapping
+
+        if (isSeedMode) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "SeedNodeIsOpened");
+        }
 
         AionBlock bestBlock = getBlockTemplate();
         ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getMineHash());

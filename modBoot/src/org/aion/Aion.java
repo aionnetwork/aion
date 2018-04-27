@@ -99,7 +99,11 @@ public class Aion {
 
         IAionChain ac = AionFactory.create();
                 
-        IMineRunner nm = ac.getBlockMiner();
+        IMineRunner nm = null;
+
+        if (!cfg.getConsensus().isSeed()) {
+            nm = ac.getBlockMiner();
+        }
 
         if (nm != null) {
             nm.delayedStartMining(10);
