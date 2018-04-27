@@ -690,6 +690,47 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public BigInteger correctIndexEntry(AionBlock block, BigInteger parentTotalDifficulty) {
+        lock.writeLock().lock();
+
+        try {
+            long blockNumber = block.getNumber();
+            List<BlockInfo> levelBlocks = getBlockInfoForLevel(blockNumber);
+
+            // correct block info
+            BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, block.getHash());
+            if (blockInfo == null) {
+                blockInfo = new BlockInfo();
+            }
+            blockInfo.setHash(block.getHash());
+            blockInfo.setCummDifficulty(block.getDifficultyBI().add(parentTotalDifficulty));
+            // assuming side chain, with warnings upon encountered issues
+            blockInfo.setMainChain(false);
+
+            // looking through the other block info on that level
+            List<BlockInfo> mainChain = new ArrayList<>();
+            for (BlockInfo bi : levelBlocks) {
+                if (bi.isMainChain()) {
+                    mainChain.add(bi);
+                }
+            }
+
+            // ensuring that there exists only one main chain at present
+            if (mainChain.size() > 1) {
+                LOG.error("The database is corrupted. There are two different main chain blocks at level {}."
+                                  + " Please stop the kernel and repair the block information by executing:\t./aion.sh -r",
+                          blockNumber);
+            }
+
+            levelBlocks.add(blockInfo);
+            setBlockInfoForLevel(blockNumber, levelBlocks);
+
+            return blockInfo.getCummDifficulty();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
         lock.readLock().lock();
 
