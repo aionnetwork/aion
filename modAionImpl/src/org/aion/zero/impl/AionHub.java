@@ -137,10 +137,12 @@ public class AionHub {
         this.startingBlock = this.blockchain.getBestBlock();
         if (!cfg.getConsensus().isSeed()) {
             this.mempool.updateBest();
-        }
 
-        if (cfg.getTx().getPoolBackup()) {
-            this.mempool.loadPendingTx();
+            if (cfg.getTx().getPoolBackup()) {
+                this.mempool.loadPendingTx();
+            }
+        } else {
+            LOG.info("Seed node mode enabled!");
         }
 
 		String reportsFolder = "";
