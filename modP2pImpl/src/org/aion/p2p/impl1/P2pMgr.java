@@ -269,7 +269,7 @@ public final class P2pMgr implements IP2pMgr {
                                     System.out.println("<p2p-pi global exception>");
                             }
                         }
-                    } catch(CancelledKeyException ex) {
+                    } catch(Exception ex) {
                     }
                 }
             }
