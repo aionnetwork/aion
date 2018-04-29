@@ -980,7 +980,7 @@ public final class P2pMgr implements IP2pMgr {
         try {
             selector = Selector.open();
 
-            scheduledWorkers = new ScheduledThreadPoolExecutor(1);
+            scheduledWorkers = new ScheduledThreadPoolExecutor(2);
 
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
