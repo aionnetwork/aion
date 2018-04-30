@@ -696,6 +696,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         try {
             long blockNumber = block.getNumber();
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(blockNumber);
+            if (levelBlocks == null) {
+                levelBlocks = new ArrayList<>();
+            }
 
             // correct block info
             BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, block.getHash());
@@ -984,6 +987,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
      * @implNote The method calling this method must handle the locking.
      */
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
+        if (blocks == null)
+            return null;
         for (BlockInfo blockInfo : blocks) {
             if (Arrays.equals(hash, blockInfo.getHash())) {
                 return blockInfo;

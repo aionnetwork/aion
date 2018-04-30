@@ -1411,9 +1411,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         } while (!repo.isIndexed(other.getHash(), other.getNumber()));
 
-        // sync to the last correct state
-        repo.syncToRoot(other.getStateRoot());
-
         // remove the last added block because it has a correct world state
         BigInteger parentTD = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
 
