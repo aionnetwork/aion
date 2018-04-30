@@ -58,7 +58,7 @@ public class BlockchainIndexIntegrityTest {
     public static void setup() {
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "INFO");
+        cfg.put("CONS", "INFO");
 
         AionLoggerFactory.init(cfg);
     }
