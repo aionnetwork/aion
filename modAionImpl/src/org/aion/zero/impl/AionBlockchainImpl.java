@@ -1343,7 +1343,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             } else {
                 dirtyBlocks.push(other);
             }
-        } while (!repo.isValidRoot(other.getStateRoot()));
+        } while (!repo.isValidRoot(other.getStateRoot()) && other.getNumber() > 0);
+
+        if (other.getNumber() == 0 && !repo.isValidRoot(other.getStateRoot())) {
+            LOG.info("Rebuild state FAILED because a valid state could not be found.");
+            return false;
+        }
 
         // sync to the last correct state
         repo.syncToRoot(other.getStateRoot());
@@ -1409,7 +1414,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
             } else {
                 dirtyBlocks.push(other);
             }
-        } while (!repo.isIndexed(other.getHash(), other.getNumber()));
+        } while (!repo.isIndexed(other.getHash(), other.getNumber()) && other.getNumber() > 0);
+
+        if (other.getNumber() == 0 && !repo.isIndexed(other.getHash(), other.getNumber())) {
+            LOG.info("Rebuild index FAILED because a valid index could not be found.");
+            return false;
+        }
 
         // remove the last added block because it has a correct world state
         BigInteger parentTD = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
