@@ -232,6 +232,10 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             List<BlockInfo> blockInfos = index.get(number);
 
+            if (blockInfos == null) {
+                return null;
+            }
+
             for (BlockInfo blockInfo : blockInfos) {
                 if (blockInfo.isMainChain()) {
                     byte[] hash = blockInfo.getHash();
@@ -297,6 +301,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             Long level = block.getNumber();
             List<BlockInfo> blockInfos = index.get(level.intValue());
+            if (blockInfos == null){
+                return ZERO;
+            }
             for (BlockInfo blockInfo : blockInfos) {
                 if (Arrays.equals(blockInfo.getHash(), hash)) {
                     return blockInfo.getCummDifficulty();
@@ -944,7 +951,14 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         indexIntegrityCheck();
     }
 
-    public void indexIntegrityCheck() {
+    public enum IntegrityCheckResult {
+        MISSING_GENESIS,
+        MISSING_LEVEL,
+        FIXED,
+        CORRECT
+    }
+
+    public IntegrityCheckResult indexIntegrityCheck() {
         if (index.size() > 0) {
             LOG.info("Checking the integrity of the total difficulty information...");
 
@@ -979,7 +993,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 List<BlockInfo> infos = getBlockInfoForLevel(0);
                 if (infos == null) {
                     LOG.error("Missing genesis block information. Cannot recover without deleting database.");
-                    return;
+                    return IntegrityCheckResult.MISSING_GENESIS;
                 }
 
                 for (BlockInfo bi : infos) {
@@ -997,9 +1011,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 do {
                     infos = getBlockInfoForLevel(level);
                     if (infos == null) {
-                        LOG.error("Missing block information. Cannot recover without reverting to block number {}.",
+                        LOG.error("Missing block information at level {}."
+                                          + " Cannot recover without reverting to block number {}.",
+                                  level,
                                   (level - 1));
-                        return;
+                        return IntegrityCheckResult.MISSING_LEVEL;
                     }
 
                     for (BlockInfo bi : infos) {
@@ -1017,7 +1033,12 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 } while (level < index.size());
 
                 LOG.info("Total difficulty correction COMPLETE.");
+                return IntegrityCheckResult.FIXED;
+            } else {
+                return IntegrityCheckResult.CORRECT;
             }
+        } else {
+            return IntegrityCheckResult.CORRECT;
         }
     }
 
