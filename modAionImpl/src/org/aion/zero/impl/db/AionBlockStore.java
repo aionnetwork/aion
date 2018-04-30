@@ -941,6 +941,84 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     @Override
     public void load() {
+        indexIntegrityCheck();
+    }
+
+    public void indexIntegrityCheck() {
+        if (index.size() > 0) {
+            LOG.info("Checking the integrity of the total difficulty information...");
+
+            // check each block's total difficulty till genesis
+            boolean correct = true;
+            AionBlock block = getBestBlock();
+            while (correct && block.getNumber() > 0) {
+                // it is correct if there is no inconsistency wrt to the parent
+                correct = getTotalDifficultyForHash(block.getHash())
+                        .equals(getTotalDifficultyForHash(block.getParentHash()).add(block.getDifficultyBI()));
+                LOG.info("Total difficulty for block hash: {} number: {} is {}.",
+                         block.getShortHash(),
+                         block.getNumber(),
+                         correct ? "OK" : "NOT OK");
+                // check parent next
+                block = getBlockByHash(block.getParentHash());
+            }
+
+            // check correct TD for genesis block
+            if (block.getNumber() == 0) {
+                correct = getTotalDifficultyForHash(block.getHash()).equals(block.getDifficultyBI());
+                LOG.info("Total difficulty for block hash: {} number: {} is {}.",
+                         block.getShortHash(),
+                         block.getNumber(),
+                         correct ? "OK" : "NOT OK");
+            }
+
+            // if any inconsistency, correct the TD
+            if (!correct) {
+                LOG.info("Integrity check of total difficulty found INVALID information. Correcting ...");
+
+                List<BlockInfo> infos = getBlockInfoForLevel(0);
+                if (infos == null) {
+                    LOG.error("Missing genesis block information. Cannot recover without deleting database.");
+                    return;
+                }
+
+                for (BlockInfo bi : infos) {
+                    block = getBlockByHash(bi.getHash());
+                    bi.setCummDifficulty(block.getDifficultyBI());
+                    LOG.info("Correcting total difficulty for block hash: {} number: {} to {}.",
+                             block.getShortHash(),
+                             block.getNumber(),
+                             bi.getCummDifficulty());
+                }
+                setBlockInfoForLevel(0, infos);
+
+                long level = 1;
+
+                do {
+                    infos = getBlockInfoForLevel(level);
+                    if (infos == null) {
+                        LOG.error("Missing block information. Cannot recover without reverting to block number {}.",
+                                  (level - 1));
+                        return;
+                    }
+
+                    for (BlockInfo bi : infos) {
+                        block = getBlockByHash(bi.getHash());
+                        bi.setCummDifficulty(block.getDifficultyBI()
+                                                     .add(getTotalDifficultyForHash(block.getParentHash())));
+                        LOG.info("Correcting total difficulty for block hash: {} number: {} to {}.",
+                                 block.getShortHash(),
+                                 block.getNumber(),
+                                 bi.getCummDifficulty());
+                    }
+                    setBlockInfoForLevel(level, infos);
+
+                    level++;
+                } while (level < index.size());
+
+                LOG.info("Total difficulty correction COMPLETE.");
+            }
+        }
     }
 
     @Override

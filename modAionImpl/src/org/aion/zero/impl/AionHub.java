@@ -378,7 +378,7 @@ public class AionHub {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
 
-        this.repository.getBlockStore().load();
+//        this.repository.getBlockStore().load();
     }
 
     public void close() {
