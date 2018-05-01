@@ -31,7 +31,6 @@ import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -54,9 +53,9 @@ import org.aion.vm.TransactionExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -125,7 +124,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     private volatile AionBlock pubBestBlock;
 
-    private BigInteger totalDifficulty = ZERO;
+    private volatile BigInteger pubBestTD = ZERO;
+
+    private volatile BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
 
     private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
@@ -150,7 +151,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * future we may have to create a "chain configuration provider" to provide
      * us different configurations.
      */
-    protected ChainConfiguration chainConfiguration;
+    ChainConfiguration chainConfiguration;
 
     /**
      * Helper method for generating the adapter between this class and
@@ -262,7 +263,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param eventManager
      */
-    public void setEventManager(IEventMgr eventManager) {
+    void setEventManager(IEventMgr eventManager) {
         this.evtMgr = eventManager;
     }
 
@@ -392,7 +393,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return hashes;
     }
 
-    public static byte[] calcTxTrie(List<AionTransaction> transactions) {
+    private static byte[] calcTxTrie(List<AionTransaction> transactions) {
 
         Trie txsState = new TrieImpl(null);
 
@@ -413,7 +414,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private State pushState(byte[] bestBlockHash) {
         State push = stateStack.push(new State());
         this.bestBlock = getBlockStore().getBlockByHash(bestBlockHash);
-        totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
+        this.totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
         this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
     }
@@ -425,7 +426,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.totalDifficulty = state.savedTD;
     }
 
-    public void dropState() {
+    private void dropState() {
         stateStack.pop();
     }
 
@@ -504,7 +505,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * changing the state of the world. Decoupled from wrapper function {@link #tryToConnect(AionBlock)}
      * so we can feed timestamps manually
      */
-    protected ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
+    ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
         // Check block exists before processing more rules
         if (getBlockStore().getMaxNumber() >= block.getNumber() && getBlockStore().isBlockExist(block.getHash())) {
 
@@ -517,8 +518,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return EXIST;
         }
 
-        long currentTimestamp = currTimeSeconds;
-        if (block.getTimestamp() > (currentTimestamp + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
+        if (block.getTimestamp() > (currTimeSeconds + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
             return INVALID_BLOCK;
 
         if (LOG.isDebugEnabled()) {
@@ -536,10 +536,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
         } else {
             if (getBlockStore().isBlockExist(block.getParentHash())) {
-                BigInteger oldTotalDiff = getTotalDifficulty();
+                BigInteger oldTotalDiff = getInternalTD();
                 summary = tryConnectAndFork(block);
                 ret = summary == null ? INVALID_BLOCK
-                        : (isMoreThan(getTotalDifficulty(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
+                        : (isMoreThan(getInternalTD(), oldTotalDiff) ? IMPORTED_BEST : IMPORTED_NOT_BEST);
             } else {
                 summary = null;
                 ret = NO_PARENT;
@@ -549,6 +549,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update best block reference
         if (ret == IMPORTED_BEST) {
             pubBestBlock = bestBlock;
+            pubBestTD = summary.getTotalDifficulty();
         }
 
         // fire block events
@@ -582,7 +583,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return createNewBlockInternal(parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
     }
 
-    protected AionBlock createNewBlockInternal(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime, long currTimeSeconds) {
+    AionBlock createNewBlockInternal(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime,
+            long currTimeSeconds) {
         long time = currTimeSeconds;
 
         if (parent.getTimestamp() >= time) {
@@ -663,7 +665,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             List<AionTxReceipt> receipts = summary.getReceipts();
 
             updateTotalDifficulty(block);
-            summary.setTotalDifficulty(getTotalDifficulty());
+            summary.setTotalDifficulty(getInternalTD());
 
             storeBlock(block, receipts);
 
@@ -750,7 +752,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Block rebuilt: number: {}, hash: {}, TD: {}", block.getNumber(), block.getShortHash(),
-                        totalDifficulty);
+                        getBlockStore().getTotalDifficulty());
 
         }
 
@@ -774,7 +776,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
     }
 
-    protected static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
+    private static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
         Trie receiptsTrie = new TrieImpl(null);
 
         if (receipts == null || receipts.isEmpty()) {
@@ -787,7 +789,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return receiptsTrie.getRootHash();
     }
 
-    protected byte[] calcLogBloom(List<AionTxReceipt> receipts) {
+    private byte[] calcLogBloom(List<AionTxReceipt> receipts) {
 
         Bloom retBloomFilter = new Bloom();
 
@@ -795,14 +797,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return retBloomFilter.getData();
         }
 
-        for (int i = 0; i < receipts.size(); i++) {
-            retBloomFilter.or(receipts.get(i).getBloomFilter());
+        for (AionTxReceipt receipt : receipts) {
+            retBloomFilter.or(receipt.getBloomFilter());
         }
 
         return retBloomFilter.getData();
     }
 
-    public IAionBlock getParent(A0BlockHeader header) {
+    private IAionBlock getParent(A0BlockHeader header) {
         return getBlockStore().getBlockByHash(header.getParentHash());
     }
 
@@ -1081,17 +1083,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public BigInteger getTotalDifficulty() {
+        return pubBestTD;
+    }
+
+    private BigInteger getInternalTD() {
         return totalDifficulty;
     }
 
-    @Override
-    public synchronized void updateTotalDifficulty(AionBlock block) {
+    private void updateTotalDifficulty(AionBlock block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
         LOG.debug("TD: updated to {}", totalDifficulty);
     }
 
     @Override
     public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.pubBestTD = totalDifficulty;
         this.totalDifficulty = totalDifficulty;
     }
 

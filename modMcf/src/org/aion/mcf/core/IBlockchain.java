@@ -20,9 +20,6 @@
  *******************************************************************************/
 package org.aion.mcf.core;
 
-import java.math.BigInteger;
-import java.util.List;
-
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
@@ -31,6 +28,9 @@ import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.types.BlockIdentifier;
+
+import java.math.BigInteger;
+import java.util.List;
 
 /**
  * Blockchain interface.
@@ -60,8 +60,6 @@ public interface IBlockchain<BLK extends IBlock, BH extends AbstractBlockHeader,
     boolean hasParentOnTheChain(BLK block);
 
     void close();
-
-    void updateTotalDifficulty(BLK block);
 
     void setTotalDifficulty(BigInteger totalDifficulty);
 
