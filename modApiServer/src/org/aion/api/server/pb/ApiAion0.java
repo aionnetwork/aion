@@ -24,14 +24,50 @@
 
 package org.aion.api.server.pb;
 
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
-import org.aion.api.server.types.*;
-import org.aion.base.type.*;
-import org.aion.base.util.*;
+import org.aion.api.server.types.ArgTxCall;
+import org.aion.api.server.types.CompiledContr;
+import org.aion.api.server.types.EvtContract;
+import org.aion.api.server.types.EvtTx;
+import org.aion.api.server.types.Fltr;
+import org.aion.api.server.types.FltrCt;
+import org.aion.api.server.types.SyncInfo;
+import org.aion.api.server.types.TxPendingStatus;
+import org.aion.api.server.types.TxRecpt;
+import org.aion.api.server.types.TxRecptLg;
+import org.aion.base.type.Address;
+import org.aion.base.type.Hash256;
+import org.aion.base.type.IBlock;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
+import org.aion.base.util.TypeConverter;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IHandler;
@@ -55,25 +91,11 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
 
-    private final static byte JAVAAPI_VAR = 2;
+    public final static byte JAVAAPI_VAR = 2;
     private final static int JAVAAPI_REQHEADER_LEN = 4;
     private final static int TX_HASH_LEN = 32;
     private final static int ACCOUNT_CREATE_LIMIT = 100;
@@ -81,6 +103,18 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private BlockingQueue<TxPendingStatus> pendingStatus;
     private BlockingQueue<TxWaitingMappingUpdate> txWait;
     private Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> msgIdMapping;
+
+    static public boolean heartBeatMsg(byte[] msg) {
+        if (msg == null || msg.length != JAVAAPI_REQHEADER_LEN) {
+            return false;
+        }
+
+        if (msg[0] < JAVAAPI_VAR) {
+            return false;
+        }
+
+        return msg[1] == Message.Servs.s_hb_VALUE;
+    }
 
     protected void onBlock(AionBlockSummary cbs) {
         Set<Long> keys = installedFilters.keySet();
@@ -277,12 +311,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         }
 
         short service = (short) request[1];
-        if (service == Message.Servs.s_hb_VALUE) {
-            // Todo(jay): return HashType
-            return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_heartbeatReturn_VALUE);
-        } else if (service >= Message.Servs.s_NA_VALUE) {
-            return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_call_VALUE);
-        }
 
         switch ((short) request[2]) {
         // General Module
@@ -1920,7 +1948,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .collect(Collectors.toList());
     }
 
-    @Override
     public byte getApiVersion() {
         return JAVAAPI_VAR;
     }
