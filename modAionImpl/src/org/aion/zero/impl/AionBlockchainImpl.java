@@ -1421,6 +1421,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
 
+        // TODO: correct the size value
+
         // remove the last added block because it has a correct world state
         BigInteger parentTD = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
 
