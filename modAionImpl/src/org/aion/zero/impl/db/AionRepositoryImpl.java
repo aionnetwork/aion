@@ -695,6 +695,14 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         return this.detailsDatabase;
     }
 
+    /**
+     * For testing.
+     * @return
+     */
+    public IByteArrayKeyValueDatabase getIndexDatabase() {
+        return this.indexDatabase;
+    }
+
     @Override
     public String toString() {
         return "AionRepositoryImpl{ identityHashCode=" + System.identityHashCode(this) + ", " + //
