@@ -64,8 +64,15 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     private IByteArrayKeyValueDatabase blocksDS;
     private ObjectDataSource<AionBlock> blocks;
 
+    private boolean checkIntegrity = true;
+
     public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
         init(index, blocks);
+    }
+
+    public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks, boolean checkIntegrity) {
+        this(index, blocks);
+        this.checkIntegrity = checkIntegrity;
     }
 
     private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
@@ -301,7 +308,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             }
 
             Long level = block.getNumber();
-            List<BlockInfo> blockInfos = index.get(level.intValue());
+            List<BlockInfo> blockInfos = index.get(level.longValue());
             if (blockInfos == null){
                 return ZERO;
             }
@@ -949,7 +956,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     @Override
     public void load() {
-        indexIntegrityCheck();
+        if (checkIntegrity) {
+            indexIntegrityCheck();
+        }
     }
 
     public enum IntegrityCheckResult {

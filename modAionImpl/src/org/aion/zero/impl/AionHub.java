@@ -254,6 +254,7 @@ public class AionHub {
 
     private void loadBlockchain() {
 
+        // function repurposed for integrity checks since previously not implemented
         this.repository.getBlockStore().load();
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();

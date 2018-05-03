@@ -62,6 +62,7 @@ public class CfgDb {
     private String path;
     private String vendor;
     private boolean compression;
+    private boolean check_integrity;
 
     /**
      * Enabling expert mode allows more detailed database configurations.
@@ -77,6 +78,7 @@ public class CfgDb {
         this.path = "database";
         this.vendor = DBVendor.LEVELDB.toValue();
         this.compression = false;
+        this.check_integrity = true;
 
         if (expert) {
             this.specificConfig = new HashMap<>();
@@ -94,6 +96,9 @@ public class CfgDb {
                     switch (elementName) {
                         case "path":
                             this.path = Cfg.readValue(sr);
+                            break;
+                        case "check_integrity":
+                            this.check_integrity = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         // parameter considered only when expert==false
                         case "vendor":
@@ -194,6 +199,13 @@ public class CfgDb {
             xmlWriter.writeCharacters(this.getPath());
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("Boolean value. Enable/disable database integrity check run at startup.");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("check_integrity");
+            xmlWriter.writeCharacters(String.valueOf(this.check_integrity));
+            xmlWriter.writeEndElement();
+
             if (!expert) {
                 xmlWriter.writeCharacters("\r\n\t\t");
                 xmlWriter.writeComment(
@@ -243,10 +255,14 @@ public class CfgDb {
             for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
                 propSet.put(entry.getKey(), entry.getValue().asProperties());
             }
+
+            Properties props = propSet.get(Names.DEFAULT);
+            props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
         } else {
             Properties props = new Properties();
             props.setProperty(Props.DB_TYPE, this.vendor);
             props.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.compression));
+            props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
 
             props.setProperty(Props.ENABLE_DB_CACHE, "true");
             props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(128 * (int) Utils.MEGA_BYTE));
