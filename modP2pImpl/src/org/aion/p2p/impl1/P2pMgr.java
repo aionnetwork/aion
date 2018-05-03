@@ -270,7 +270,10 @@ public final class P2pMgr implements IP2pMgr {
                             }
                         }
                     } catch(Exception ex) {
-                        ex.printStackTrace();
+                        if(showLog) {
+                            System.out.println("<p2p-pi on-sk-exception=" + ex.getMessage() + ">");
+                            ex.printStackTrace();
+                        }
                     }
                 }
             }
