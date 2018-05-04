@@ -177,6 +177,11 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
+    public boolean isIndexed(byte[] hash, long level) {
+        return repository.isIndexed(hash, level);
+    }
+
+    @Override
     public List<byte[]> getPoolTx() {
         throw new UnsupportedOperationException(
                 "getPoolTx should be called on the tracked repository.");
