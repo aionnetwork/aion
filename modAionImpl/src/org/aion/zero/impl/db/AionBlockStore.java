@@ -705,6 +705,50 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public BigInteger correctIndexEntry(AionBlock block, BigInteger parentTotalDifficulty) {
+        lock.writeLock().lock();
+
+        try {
+            long blockNumber = block.getNumber();
+            List<BlockInfo> levelBlocks = getBlockInfoForLevel(blockNumber);
+            if (levelBlocks == null) {
+                levelBlocks = new ArrayList<>();
+            }
+
+            // correct block info
+            BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, block.getHash());
+            if (blockInfo == null) {
+                blockInfo = new BlockInfo();
+            }
+            blockInfo.setHash(block.getHash());
+            blockInfo.setCummDifficulty(block.getDifficultyBI().add(parentTotalDifficulty));
+            // assuming side chain, with warnings upon encountered issues
+            blockInfo.setMainChain(false);
+
+            // looking through the other block info on that level
+            List<BlockInfo> mainChain = new ArrayList<>();
+            for (BlockInfo bi : levelBlocks) {
+                if (bi.isMainChain()) {
+                    mainChain.add(bi);
+                }
+            }
+
+            // ensuring that there exists only one main chain at present
+            if (mainChain.size() > 1) {
+                LOG.error("The database is corrupted. There are two different main chain blocks at level {}."
+                                  + " Please stop the kernel and repair the block information by executing:\t./aion.sh -r",
+                          blockNumber);
+            }
+
+            levelBlocks.add(blockInfo);
+            setBlockInfoForLevel(blockNumber, levelBlocks);
+
+            return blockInfo.getCummDifficulty();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
         lock.readLock().lock();
 
@@ -723,12 +767,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 writer.newLine();
 
                 for (BlockInfo bi : levelBlocks) {
-                    writer.append("Block hash from index database: " + Hex.toHexString(bi.getHash()) + "\nTotal Difficulty: " + bi
-                            .getCummDifficulty());
+                    writer.append("\nBlock hash from index database: " + Hex.toHexString(bi.getHash())
+                                          + "\nTotal Difficulty: " + bi.getCummDifficulty() + "\nBlock on main chain: "
+                                          + String.valueOf(bi.isMainChain()).toUpperCase());
                     writer.newLine();
                     AionBlock blk = getBlockByHash(bi.getHash());
                     if (blk != null) {
-                        writer.append("Full block data:\n");
+                        writer.append("\nFull block data:\n");
                         writer.append(blk.toString());
                         writer.newLine();
                     } else {
@@ -771,6 +816,17 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             maxBlocks -= i;
 
             return result;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public boolean isIndexed(byte[] hash, long level) {
+        lock.readLock().lock();
+
+        try {
+            // when null -> there was no block info for the hash
+            return getBlockInfoForHash(getBlockInfoForLevel(level), hash) != null;
         } finally {
             lock.readLock().unlock();
         }
@@ -946,6 +1002,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
      * @implNote The method calling this method must handle the locking.
      */
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
+        if (blocks == null)
+            return null;
         for (BlockInfo blockInfo : blocks) {
             if (Arrays.equals(hash, blockInfo.getHash())) {
                 return blockInfo;

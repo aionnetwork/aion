@@ -274,7 +274,7 @@ public class AionHub {
             long bestBlockNumber = bestBlock.getNumber();
             byte[] bestBlockRoot = bestBlock.getStateRoot();
 
-            recovered = this.blockchain.recoverWorldState(this.repository, bestBlockNumber);
+            recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
