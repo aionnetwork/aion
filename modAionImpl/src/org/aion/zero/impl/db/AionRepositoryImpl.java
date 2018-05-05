@@ -98,7 +98,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
                     AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
-            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase);
+            this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity);
 
             // Setup world trie.
             worldState = createStateTrie();
@@ -683,6 +683,13 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
      */
     public IByteArrayKeyValueDatabase getDetailsDatabase() {
         return this.detailsDatabase;
+    }
+
+    /**
+     * For testing.
+     */
+    public IByteArrayKeyValueDatabase getIndexDatabase() {
+        return this.indexDatabase;
     }
 
     @Override

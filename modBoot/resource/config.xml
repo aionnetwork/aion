@@ -62,6 +62,8 @@
 	<db>
 		<!--Sets the physical location on disk where data will be stored.-->
 		<path>database</path>
+		<!--Boolean value. Enable/disable database integrity check run at startup.-->
+		<check_integrity>true</check_integrity>
 		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
 		<!--Caution: changing implementation requires re-syncing from genesis!-->
 		<vendor>leveldb</vendor>
