@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$(dirname $0)"
+cd "$(dirname $(realpath $0))"
 
 KERVER=$(uname -r | grep -o "^4\.")
 
