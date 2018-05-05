@@ -136,7 +136,7 @@ public class RpcMethods {
             Map.entry("eth_getCompilers", (params) -> api.eth_getCompilers()),
             Map.entry("eth_compileSolidity", (params) -> api.eth_compileSolidity(params)),
 
-            //Map.entry("eth_accounts", (params) -> api.eth_accounts()), // belongs to the personal api
+            Map.entry("eth_accounts", (params) -> api.eth_accounts()), // belongs to the personal api
             Map.entry("eth_blockNumber", (params) -> api.eth_blockNumber()),
             Map.entry("eth_coinbase", (params) -> api.eth_coinbase()),
             Map.entry("eth_call", (params) -> api.eth_call(params)),
