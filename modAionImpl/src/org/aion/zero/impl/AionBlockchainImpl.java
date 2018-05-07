@@ -24,6 +24,30 @@
 
 package org.aion.zero.impl;
 
+import static java.lang.Math.max;
+import static java.lang.Runtime.getRuntime;
+import static java.math.BigInteger.ZERO;
+import static java.util.Collections.emptyList;
+import static org.aion.base.util.BIUtil.isMoreThan;
+import static org.aion.base.util.Hex.toHexString;
+import static org.aion.mcf.core.ImportResult.EXIST;
+import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
+import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
+import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
+import static org.aion.mcf.core.ImportResult.NO_PARENT;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -65,22 +89,13 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.types.*;
+import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
+import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static java.lang.Math.max;
-import static java.lang.Runtime.getRuntime;
-import static java.math.BigInteger.ZERO;
-import static java.util.Collections.emptyList;
-import static org.aion.base.util.BIUtil.isMoreThan;
-import static org.aion.base.util.Hex.toHexString;
-import static org.aion.mcf.core.ImportResult.*;
 
 // TODO: clean and clarify best block
 // bestKnownBlock - block with the highest block number
@@ -1086,13 +1101,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return pubBestTD;
     }
 
+    // this method is for the testing purpose
+    protected BigInteger getCacheTD() {
+        return totalDifficulty;
+    }
+
     private BigInteger getInternalTD() {
         return totalDifficulty;
     }
 
     private void updateTotalDifficulty(AionBlock block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
-        LOG.debug("TD: updated to {}", totalDifficulty);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("TD: updated to {}", totalDifficulty);
+        }
     }
 
     @Override
