@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Iterate over java files whose commit is: add, copy, modify, rename.
+java_commits="$(git diff --name-only --cached --diff-filter=ACMR | grep ".*java$")"
+for file in $java_commits
+do
+    # If file was removed but still in commit list
+    if [ -f $file ]
+    then
+        echo formatting $file
+        java -jar ./lib/google-java-format-1.5-all-deps.jar --replace --aosp $file
+    fi
+done
