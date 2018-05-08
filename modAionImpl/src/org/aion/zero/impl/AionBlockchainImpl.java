@@ -19,7 +19,6 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
  ******************************************************************************/
 
 package org.aion.zero.impl;
@@ -1327,7 +1326,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;
 
-        Stack<AionBlock> dirtyBlocks = new Stack<>();
+        Deque<AionBlock> dirtyBlocks = new ArrayDeque<>();
         // already known to be missing the state
         dirtyBlocks.push(block);
 
@@ -1398,7 +1397,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;
 
-        Stack<AionBlock> dirtyBlocks = new Stack<>();
+        Deque<AionBlock> dirtyBlocks = new ArrayDeque<>();
         // already known to be missing the state
         dirtyBlocks.push(block);
 
