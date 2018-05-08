@@ -388,7 +388,8 @@ public class BlockchainDataRecoveryTest {
         }
 
         // call the recovery functionality for the main chain subsection
-        boolean worked = chain.recoverIndexEntry(chain.getRepository(), chain.getBlockByHash(mainChainBlock.getParentHash()));
+        boolean worked = chain
+                .recoverIndexEntry(chain.getRepository(), chain.getBlockByHash(mainChainBlock.getParentHash()));
 
         // ensure that the index was corrupted only for the side chain
         assertThat(repo.isIndexed(sideChainBlock.getHash(), sideChainBlock.getNumber())).isFalse();
@@ -537,5 +538,82 @@ public class BlockchainDataRecoveryTest {
         // check that the index recovery failed
         assertThat(worked).isFalse();
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+    }
+
+    /**
+     * Test the index recovery when the index database contains only the genesis index and is missing the size key.
+     */
+    @Test
+    public void testRecoverIndexWithStartFromGenesisWithoutSize() {
+        final int NUMBER_OF_BLOCKS = 3;
+
+        // build a blockchain with a few blocks
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // all blocks will be incorrect
+        ImportResult result;
+        Map<Long, byte[]> blocksToDelete = new HashMap<>();
+        for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
+            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+            result = chain.tryToConnect(next);
+            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+            blocksToDelete.put(next.getNumber(), next.getHash());
+        }
+
+        AionBlock bestBlock = chain.getBestBlock();
+        assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
+
+        chain.getRepository().flush();
+
+        // delete index entries from the database
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+
+        Map<Long, byte[]> deletedInfo = new HashMap<>();
+
+        byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
+        deletedInfo.put(-1L, indexDatabase.get(sizeKey).get());
+        indexDatabase.delete(sizeKey);
+
+        for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
+            byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
+            // saving the data for checking recovery
+            deletedInfo.put(entry.getKey(), indexDatabase.get(indexKey).get());
+            // deleting the block info
+            indexDatabase.delete(indexKey);
+            // ensure that the index was corrupted
+            assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
+        }
+
+        // ensure that the index was corrupted
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+
+        // call the recovery functionality
+        boolean worked = chain.recoverIndexEntry(chain.getRepository(), bestBlock);
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the index was recovered
+        assertThat(worked).isTrue();
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isTrue();
+
+        // ensure the size key was recovered
+        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
+        assertThat(indexDatabase.get(sizeKey).get()).isEqualTo(deletedInfo.get(-1L));
+        deletedInfo.remove(-1L);
+
+        // check that the index information is correct
+        for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
+            long level = entry.getKey();
+            byte[] hash = entry.getValue();
+            // checking at block store level
+            assertThat(repo.isIndexed(hash, level)).isTrue();
+            // checking at database level
+            byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
+            assertThat(deletedInfo.get(level)).isEqualTo(indexDatabase.get(indexKey).get());
+        }
     }
 }

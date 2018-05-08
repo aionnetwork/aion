@@ -818,6 +818,21 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     /**
+     * First checks if the size key is missing or smaller than it should be.
+     * If it is incorrect, the method attempts to correct it by setting it to the given level.
+     */
+    public void correctSize(long maxNumber, Logger log) {
+        // correcting the size if smaller than should be
+        long storedSize = index.getStoredSize();
+        if (maxNumber >= storedSize) {
+            // can't change size directly, so we do a put + delete the next level to reset it
+            index.set(maxNumber + 1, new ArrayList<>());
+            index.remove(maxNumber + 1);
+            log.info("Corrupted index size corrected from {} to {}.", storedSize, index.getStoredSize());
+        }
+    }
+
+    /**
      * Sets the block as main chain and all its ancestors. Used by the data recovery methods.
      */
     public void correctMainChain(AionBlock block, Logger log) {

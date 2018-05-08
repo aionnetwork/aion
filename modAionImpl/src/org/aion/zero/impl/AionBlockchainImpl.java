@@ -1420,7 +1420,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
 
-        // TODO: correct the size value
+        // if the size key is missing we set it to the MAX(best block, this block, current value)
+        long maxNumber = getBlockStore().getMaxNumber();
+        if (bestBlock != null && bestBlock.getNumber() > maxNumber) {
+            maxNumber = bestBlock.getNumber();
+        }
+        if (block.getNumber() > maxNumber) {
+            maxNumber = bestBlock.getNumber();
+        }
+        getBlockStore().correctSize(maxNumber, LOG);
 
         // remove the last added block because it has a correct world state
         BigInteger totalDiff = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
