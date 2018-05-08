@@ -50,6 +50,7 @@ import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.handler.*;
@@ -272,6 +273,17 @@ public class AionHub {
             byte[] bestBlockRoot = bestBlock.getStateRoot();
 
             recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
+
+            if (!this.repository.isValidRoot(bestBlock.getStateRoot())) {
+                // reverting back one block
+                LOG.info("Rebuild state FAILED. Reverting to previous block.");
+
+                long blockNumber = bestBlock.getNumber() - 1;
+                RecoveryUtils.Status status = RecoveryUtils.revertTo(this.blockchain, blockNumber);
+
+                recovered = (status == RecoveryUtils.Status.SUCCESS) && this.repository
+                        .isValidRoot(this.repository.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot());
+            }
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();

@@ -1368,16 +1368,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         repo.flush();
 
         // return a flag indicating if the recovery worked
-        if (repo.isValidRoot(block.getStateRoot())) {
-            return true;
-        } else {
-            // reverting back one block
-            LOG.info("Rebuild state FAILED. Reverting to previous block.");
-            RecoveryUtils.Status status = RecoveryUtils.revertTo(this, blockNumber - 1);
-
-            return (status == RecoveryUtils.Status.SUCCESS) && repo
-                    .isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber - 1).getStateRoot());
-        }
+        return repo.isValidRoot(block.getStateRoot());
     }
 
     @Override
