@@ -817,6 +817,36 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    /**
+     * Sets the block as main chain and all its ancestors. Used by the data recovery methods.
+     */
+    public void correctMainChain(AionBlock block, Logger log) {
+        lock.writeLock().lock();
+
+        try {
+            List<BlockInfo> infos = getBlockInfoForLevel(block.getNumber());
+            if (infos != null) {
+                BlockInfo thisBlockInfo = getBlockInfoForHash(infos, block.getHash());
+                // recursion stops when the block is null or is already main chain
+                if (thisBlockInfo != null && !thisBlockInfo.isMainChain()) {
+                    log.info("Setting block hash: {}, number: {} to main chain.",
+                             block.getShortHash(),
+                             block.getNumber());
+                    // fix the info for the current block
+                    infos.remove(thisBlockInfo);
+                    thisBlockInfo.setMainChain(true);
+                    infos.add(thisBlockInfo);
+                    setBlockInfoForLevel(block.getNumber(), infos);
+
+                    // fix the info for ancestor
+                    correctMainChain(getBlockByHash(block.getParentHash()), log);
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public static class BlockInfo implements Serializable {
 
         public BlockInfo() {}

@@ -1423,7 +1423,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // TODO: correct the size value
 
         // remove the last added block because it has a correct world state
-        BigInteger parentTD = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
+        BigInteger totalDiff = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
 
         LOG.info("Valid index found at block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
 
@@ -1431,7 +1431,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         while (!dirtyBlocks.isEmpty()) {
             other = dirtyBlocks.pop();
             LOG.info("Rebuilding index for block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
-            parentTD = repo.getBlockStore().correctIndexEntry(other, parentTD);
+            totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff);
         }
 
         // update the repository
@@ -1439,6 +1439,31 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // return a flag indicating if the recovery worked
         if (repo.isIndexed(block.getHash(), block.getNumber())) {
+            AionBlock mainChain = getBlockStore().getBestBlock();
+            BigInteger mainChainTotalDiff = getBlockStore().getTotalDifficultyForHash(mainChain.getHash());
+
+            // check if the main chain needs to be updated
+            if (mainChainTotalDiff.compareTo(totalDiff) < 0) {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("branching: from = {}/{}, to = {}/{}",
+                             mainChain.getNumber(),
+                             toHexString(mainChain.getHash()),
+                             block.getNumber(),
+                             toHexString(block.getHash()));
+                }
+                getBlockStore().reBranch(block);
+                repo.syncToRoot(block.getStateRoot());
+                repo.flush();
+            } else {
+                if (mainChain.getNumber() > block.getNumber()) {
+                    // checking if the current recovered blocks are a subsection of the main chain
+                    AionBlock ancestor = getBlockByNumber(block.getNumber() + 1);
+                    if (ancestor != null && FastByteComparisons.equal(ancestor.getParentHash(), block.getHash())) {
+                        getBlockStore().correctMainChain(block, LOG);
+                        repo.flush();
+                    }
+                }
+            }
             return true;
         } else {
             LOG.info("Rebuild index FAILED.");
