@@ -4,7 +4,7 @@
 java_commits="$(git diff --name-only --cached --diff-filter=ACMR | grep ".*java$")"
 for file in $java_commits
 do
-    # If file was removed but still in commit list
+    # If file was removed but still in commit list, ignore it.
     if [ -f $file ]
     then
         echo formatting $file
