@@ -839,22 +839,31 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         lock.writeLock().lock();
 
         try {
-            List<BlockInfo> infos = getBlockInfoForLevel(block.getNumber());
-            if (infos != null) {
-                BlockInfo thisBlockInfo = getBlockInfoForHash(infos, block.getHash());
-                // recursion stops when the block is null or is already main chain
-                if (thisBlockInfo != null && !thisBlockInfo.isMainChain()) {
+            AionBlock currentBlock = block;
+            if (currentBlock != null) {
+                List<BlockInfo> infos = getBlockInfoForLevel(currentBlock.getNumber());
+                BlockInfo thisBlockInfo = getBlockInfoForHash(infos, currentBlock.getHash());
+
+                // loop stops when the block is null or is already main chain
+                while (thisBlockInfo != null && !thisBlockInfo.isMainChain()) {
                     log.info("Setting block hash: {}, number: {} to main chain.",
-                             block.getShortHash(),
-                             block.getNumber());
+                             currentBlock.getShortHash(),
+                             currentBlock.getNumber());
+
                     // fix the info for the current block
                     infos.remove(thisBlockInfo);
                     thisBlockInfo.setMainChain(true);
                     infos.add(thisBlockInfo);
-                    setBlockInfoForLevel(block.getNumber(), infos);
+                    setBlockInfoForLevel(currentBlock.getNumber(), infos);
 
-                    // fix the info for ancestor
-                    correctMainChain(getBlockByHash(block.getParentHash()), log);
+                    // fix the info for parent
+                    currentBlock = getBlockByHash(currentBlock.getParentHash());
+                    if (currentBlock != null) {
+                        infos = getBlockInfoForLevel(currentBlock.getNumber());
+                        thisBlockInfo = getBlockInfoForHash(infos, currentBlock.getHash());
+                    } else {
+                        thisBlockInfo = null;
+                    }
                 }
             }
         } finally {
@@ -1029,11 +1038,15 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     /**
+     * @return the hash information if it is present in the list
+     *         or {@code null} when the given block list is {@code null}
+     *         or the hash is not present in the list
      * @implNote The method calling this method must handle the locking.
      */
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
-        if (blocks == null)
+        if (blocks == null) {
             return null;
+        }
         for (BlockInfo blockInfo : blocks) {
             if (Arrays.equals(hash, blockInfo.getHash())) {
                 return blockInfo;
