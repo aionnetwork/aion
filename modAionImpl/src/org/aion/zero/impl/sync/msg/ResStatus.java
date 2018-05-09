@@ -88,6 +88,10 @@ public final class ResStatus extends Msg {
         return this.bestHash;
     }
 
+    public byte[] getGenesisHash() {
+        return genesisHash;
+    }
+
     /**
      * @return byte[]
      */
