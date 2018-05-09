@@ -64,6 +64,8 @@
 		<path>database</path>
 		<!--Boolean value. Enable/disable database integrity check run at startup.-->
 		<check_integrity>true</check_integrity>
+		<!--Integer value. Number of blocks after which to prune. Pruning disabled when negative.-->
+		<prune>1000</prune>
 		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
 		<!--Caution: changing implementation requires re-syncing from genesis!-->
 		<vendor>leveldb</vendor>

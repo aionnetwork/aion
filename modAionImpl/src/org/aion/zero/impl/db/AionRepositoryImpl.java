@@ -76,7 +76,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
                 new RepositoryConfig(new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(),
-                                     -1,
+                                     config.getDb().getPrune(),
                                      ContractDetailsAion.getInstance(),
                                      config.getDb()));
     }

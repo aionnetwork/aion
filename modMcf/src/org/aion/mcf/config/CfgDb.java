@@ -63,6 +63,7 @@ public class CfgDb {
     private String vendor;
     private boolean compression;
     private boolean check_integrity;
+    private int prune;
 
     /**
      * Enabling expert mode allows more detailed database configurations.
@@ -79,6 +80,7 @@ public class CfgDb {
         this.vendor = DBVendor.LEVELDB.toValue();
         this.compression = false;
         this.check_integrity = true;
+        this.prune = -1;
 
         if (expert) {
             this.specificConfig = new HashMap<>();
@@ -99,6 +101,9 @@ public class CfgDb {
                             break;
                         case "check_integrity":
                             this.check_integrity = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "prune":
+                            this.prune = Integer.parseInt(Cfg.readValue(sr));
                             break;
                         // parameter considered only when expert==false
                         case "vendor":
@@ -206,6 +211,13 @@ public class CfgDb {
             xmlWriter.writeCharacters(String.valueOf(this.check_integrity));
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("Integer value. Number of blocks after which to prune. Pruning disabled when negative.");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("prune");
+            xmlWriter.writeCharacters(String.valueOf(this.prune));
+            xmlWriter.writeEndElement();
+
             if (!expert) {
                 xmlWriter.writeCharacters("\r\n\t\t");
                 xmlWriter.writeComment(
@@ -246,6 +258,10 @@ public class CfgDb {
 
     public String getPath() {
         return this.path;
+    }
+
+    public int getPrune() {
+        return this.prune;
     }
 
     public Map<String, Properties> asProperties() {

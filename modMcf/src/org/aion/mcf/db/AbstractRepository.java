@@ -243,6 +243,9 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
             stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
             pruneBlockCount = pruneEnabled ? this.cfg.getPrune() : -1;
+            if (pruneEnabled) {
+                LOGGEN.info("Pruning block count set to {}.", pruneBlockCount);
+            }
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;
         }
