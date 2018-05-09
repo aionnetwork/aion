@@ -255,6 +255,16 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     @Override
+    public boolean isIndexed(byte[] hash, long level) {
+        rwLock.readLock().lock();
+        try {
+            return blockStore.isIndexed(hash, level);
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
+    @Override
     public void syncToRoot(final byte[] root) {
         rwLock.writeLock().lock();
         try {

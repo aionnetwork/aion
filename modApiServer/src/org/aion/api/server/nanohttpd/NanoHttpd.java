@@ -29,8 +29,10 @@ public class NanoHttpd extends NanoHTTPD {
 
     protected Response addCORSHeaders(Response resp) {
         resp.addHeader("Access-Control-Allow-Origin", "*");
+        resp.addHeader("Access-Control-Allow-Headers", "origin,accept,content-type");
         resp.addHeader("Access-Control-Allow-Credentials", "true");
-        resp.addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+        resp.addHeader("Access-Control-Allow-Methods", "POST");
+        resp.addHeader("Access-Control-Max-Age", "86400");
         return resp;
     }
 

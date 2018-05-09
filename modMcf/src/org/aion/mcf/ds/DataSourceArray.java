@@ -93,23 +93,31 @@ public class DataSourceArray<V> implements Flushable {
         return value;
     }
 
+    public long getStoredSize() {
+        long size;
+
+        // Read the value from the database directly and
+        // convert to the size, and if it doesn't exist, 0.
+        Optional<byte[]> optBytes = src.getSrc().get(sizeKey);
+        if (!optBytes.isPresent()) {
+            size = 0L;
+        } else {
+            byte[] bytes = optBytes.get();
+
+            if (bytes.length == 4) {
+                size = (long) ByteUtil.byteArrayToInt(bytes);
+            } else {
+                size = ByteUtil.byteArrayToLong(bytes);
+            }
+        }
+
+        return size;
+    }
+
     public long size() {
 
         if (size < 0) {
-            // Read the value from the database directly and
-            // convert to the size, and if it doesn't exist, 0.
-            Optional<byte[]> optBytes = src.getSrc().get(sizeKey);
-            if (!optBytes.isPresent()) {
-                size = 0L;
-            } else {
-                byte[] bytes = optBytes.get();
-
-                if (bytes.length == 4) {
-                    size = (long) ByteUtil.byteArrayToInt(bytes);
-                } else {
-                    size = ByteUtil.byteArrayToLong(bytes);
-                }
-            }
+            size = getStoredSize();
         }
 
         return size;

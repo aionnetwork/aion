@@ -283,4 +283,9 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
         return db;
     }
+
+    @Override
+    public boolean isSnapshot() {
+        return isSnapshot;
+    }
 }
