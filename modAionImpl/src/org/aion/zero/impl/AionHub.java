@@ -359,8 +359,7 @@ public class AionHub {
         } else {
 
             blockchain.setBestBlock(bestBlock);
-            BigInteger totalDifficulty = this.repository.getBlockStore().getTotalDifficulty();
-            blockchain.setTotalDifficulty(totalDifficulty);
+            blockchain.setTotalDifficulty(this.repository.getBlockStore().getTotalDifficulty());
             LOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
                     LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
         }
