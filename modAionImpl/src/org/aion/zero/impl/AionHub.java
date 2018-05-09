@@ -257,6 +257,7 @@ public class AionHub {
 
     private void loadBlockchain() {
 
+        // function repurposed for integrity checks since previously not implemented
         this.repository.getBlockStore().load();
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
@@ -391,7 +392,7 @@ public class AionHub {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
 
-        this.repository.getBlockStore().load();
+//        this.repository.getBlockStore().load();
     }
 
     public void close() {
