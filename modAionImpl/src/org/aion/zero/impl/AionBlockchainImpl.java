@@ -19,7 +19,6 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
  ******************************************************************************/
 
 package org.aion.zero.impl;
@@ -31,7 +30,6 @@ import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -54,9 +52,9 @@ import org.aion.vm.TransactionExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -509,8 +507,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (getBlockStore().getMaxNumber() >= block.getNumber() && getBlockStore().isBlockExist(block.getHash())) {
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Block already exist hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
-                        block.getNumber());
+                LOG.debug("Block already exists hash: {}, number: {}", block.getShortHash(), block.getNumber());
+            }
+
+            if (!repository.isValidRoot(block.getStateRoot())) {
+                // correct the world state for this block
+                recoverWorldState(repository, block);
+            }
+
+            if (!repository.isIndexed(block.getHash(), block.getNumber())) {
+                // correct the index for this block
+                recoverIndexEntry(repository, block);
             }
 
             // retry of well known block
@@ -522,8 +529,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return INVALID_BLOCK;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Try connect block hash: {}, number: {}", toHexString(block.getHash()).substring(0, 6),
-                    block.getNumber());
+            LOG.debug("Try connect block hash: {}, number: {}", block.getShortHash(), block.getNumber());
         }
 
         final ImportResult ret;
@@ -1304,57 +1310,163 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized boolean recoverWorldState(IRepository repository, long blockNumber) {
+    public synchronized boolean recoverWorldState(IRepository repository, AionBlock block) {
+        if (block == null) {
+            LOG.error("World state recovery attempted with null block.");
+            return false;
+        }
+        if (repository.isSnapshot()) {
+            LOG.error("World state recovery attempted with snapshot repository.");
+            return false;
+        }
+
+        long blockNumber = block.getNumber();
+        LOG.info("Corrupt world state at block hash: {}, number: {}."
+                         + " Looking for ancestor block with valid world state ...", block.getShortHash(), blockNumber);
+
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;
 
-        Map<Long, AionBlock> dirtyBlocks = new HashMap<>();
-        AionBlock other;
+        Deque<AionBlock> dirtyBlocks = new ArrayDeque<>();
+        // already known to be missing the state
+        dirtyBlocks.push(block);
+
+        AionBlock other = block;
 
         // find all the blocks missing a world state
-        long index = blockNumber;
         do {
-            other = repo.getBlockStore().getChainBlockByNumber(index);
+            other = repo.getBlockStore().getBlockByHash(other.getParentHash());
 
             // cannot recover if no valid states exist (must build from genesis)
             if (other == null) {
                 return false;
             } else {
-                dirtyBlocks.put(other.getNumber(), other);
-                index--;
+                dirtyBlocks.push(other);
             }
-        } while (!repo.isValidRoot(other.getStateRoot()));
+        } while (!repo.isValidRoot(other.getStateRoot()) && other.getNumber() > 0);
+
+        if (other.getNumber() == 0 && !repo.isValidRoot(other.getStateRoot())) {
+            LOG.info("Rebuild state FAILED because a valid state could not be found.");
+            return false;
+        }
 
         // sync to the last correct state
         repo.syncToRoot(other.getStateRoot());
 
         // remove the last added block because it has a correct world state
-        index = other.getNumber();
-        dirtyBlocks.remove(index);
+        dirtyBlocks.pop();
 
-        LOG.info("Corrupt world state at block #" + blockNumber + ". Rebuilding from block #" + index + ".");
-        index++;
+        LOG.info("Valid state found at block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
 
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
-            LOG.info("Rebuilding block #" + index + ".");
-            other = dirtyBlocks.remove(index);
+            other = dirtyBlocks.pop();
+            LOG.info("Rebuilding block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
             this.add(other, true);
-            index++;
         }
 
         // update the repository
         repo.flush();
 
         // return a flag indicating if the recovery worked
-        if (repo.isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot())) {
+        return repo.isValidRoot(block.getStateRoot());
+    }
+
+    @Override
+    public synchronized boolean recoverIndexEntry(IRepository repository, AionBlock block) {
+        if (block == null) {
+            LOG.error("Index recovery attempted with null block.");
+            return false;
+        }
+        if (repository.isSnapshot()) {
+            LOG.error("Index recovery attempted with snapshot repository.");
+            return false;
+        }
+
+        LOG.info("Missing index at block hash: {}, number: {}. Looking for ancestor block with valid index ...",
+                 block.getShortHash(),
+                 block.getNumber());
+
+        AionRepositoryImpl repo = (AionRepositoryImpl) repository;
+
+        Deque<AionBlock> dirtyBlocks = new ArrayDeque<>();
+        // already known to be missing the state
+        dirtyBlocks.push(block);
+
+        AionBlock other = block;
+
+        // find all the blocks missing a world state
+        do {
+            other = repo.getBlockStore().getBlockByHash(other.getParentHash());
+
+            // cannot recover if no valid states exist (must build from genesis)
+            if (other == null) {
+                return false;
+            } else {
+                dirtyBlocks.push(other);
+            }
+        } while (!repo.isIndexed(other.getHash(), other.getNumber()) && other.getNumber() > 0);
+
+        if (other.getNumber() == 0 && !repo.isIndexed(other.getHash(), other.getNumber())) {
+            LOG.info("Rebuild index FAILED because a valid index could not be found.");
+            return false;
+        }
+
+        // if the size key is missing we set it to the MAX(best block, this block, current value)
+        long maxNumber = getBlockStore().getMaxNumber();
+        if (bestBlock != null && bestBlock.getNumber() > maxNumber) {
+            maxNumber = bestBlock.getNumber();
+        }
+        if (block.getNumber() > maxNumber) {
+            maxNumber = bestBlock.getNumber();
+        }
+        getBlockStore().correctSize(maxNumber, LOG);
+
+        // remove the last added block because it has a correct world state
+        BigInteger totalDiff = getBlockStore().getTotalDifficultyForHash(dirtyBlocks.pop().getHash());
+
+        LOG.info("Valid index found at block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
+
+        // rebuild world state for dirty blocks
+        while (!dirtyBlocks.isEmpty()) {
+            other = dirtyBlocks.pop();
+            LOG.info("Rebuilding index for block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
+            totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff);
+        }
+
+        // update the repository
+        repo.flush();
+
+        // return a flag indicating if the recovery worked
+        if (repo.isIndexed(block.getHash(), block.getNumber())) {
+            AionBlock mainChain = getBlockStore().getBestBlock();
+            BigInteger mainChainTotalDiff = getBlockStore().getTotalDifficultyForHash(mainChain.getHash());
+
+            // check if the main chain needs to be updated
+            if (mainChainTotalDiff.compareTo(totalDiff) < 0) {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("branching: from = {}/{}, to = {}/{}",
+                             mainChain.getNumber(),
+                             toHexString(mainChain.getHash()),
+                             block.getNumber(),
+                             toHexString(block.getHash()));
+                }
+                getBlockStore().reBranch(block);
+                repo.syncToRoot(block.getStateRoot());
+                repo.flush();
+            } else {
+                if (mainChain.getNumber() > block.getNumber()) {
+                    // checking if the current recovered blocks are a subsection of the main chain
+                    AionBlock ancestor = getBlockByNumber(block.getNumber() + 1);
+                    if (ancestor != null && FastByteComparisons.equal(ancestor.getParentHash(), block.getHash())) {
+                        getBlockStore().correctMainChain(block, LOG);
+                        repo.flush();
+                    }
+                }
+            }
             return true;
         } else {
-            // reverting back one block
-            LOG.info("Rebuild FAILED. Reverting to previous block.");
-            RecoveryUtils.Status status = RecoveryUtils.revertTo(this, blockNumber - 1);
-
-            return (status == RecoveryUtils.Status.SUCCESS) && repo
-                    .isValidRoot(repo.getBlockStore().getChainBlockByNumber(blockNumber - 1).getStateRoot());
+            LOG.info("Rebuild index FAILED.");
+            return false;
         }
     }
 

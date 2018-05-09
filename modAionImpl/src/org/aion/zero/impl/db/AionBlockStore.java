@@ -690,6 +690,50 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    public BigInteger correctIndexEntry(AionBlock block, BigInteger parentTotalDifficulty) {
+        lock.writeLock().lock();
+
+        try {
+            long blockNumber = block.getNumber();
+            List<BlockInfo> levelBlocks = getBlockInfoForLevel(blockNumber);
+            if (levelBlocks == null) {
+                levelBlocks = new ArrayList<>();
+            }
+
+            // correct block info
+            BlockInfo blockInfo = getBlockInfoForHash(levelBlocks, block.getHash());
+            if (blockInfo == null) {
+                blockInfo = new BlockInfo();
+            }
+            blockInfo.setHash(block.getHash());
+            blockInfo.setCummDifficulty(block.getDifficultyBI().add(parentTotalDifficulty));
+            // assuming side chain, with warnings upon encountered issues
+            blockInfo.setMainChain(false);
+
+            // looking through the other block info on that level
+            List<BlockInfo> mainChain = new ArrayList<>();
+            for (BlockInfo bi : levelBlocks) {
+                if (bi.isMainChain()) {
+                    mainChain.add(bi);
+                }
+            }
+
+            // ensuring that there exists only one main chain at present
+            if (mainChain.size() > 1) {
+                LOG.error("The database is corrupted. There are two different main chain blocks at level {}."
+                                  + " Please stop the kernel and repair the block information by executing:\t./aion.sh -r",
+                          blockNumber);
+            }
+
+            levelBlocks.add(blockInfo);
+            setBlockInfoForLevel(blockNumber, levelBlocks);
+
+            return blockInfo.getCummDifficulty();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
         lock.readLock().lock();
 
@@ -708,12 +752,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 writer.newLine();
 
                 for (BlockInfo bi : levelBlocks) {
-                    writer.append("Block hash from index database: " + Hex.toHexString(bi.getHash()) + "\nTotal Difficulty: " + bi
-                            .getCummDifficulty());
+                    writer.append("\nBlock hash from index database: " + Hex.toHexString(bi.getHash())
+                                          + "\nTotal Difficulty: " + bi.getCummDifficulty() + "\nBlock on main chain: "
+                                          + String.valueOf(bi.isMainChain()).toUpperCase());
                     writer.newLine();
                     AionBlock blk = getBlockByHash(bi.getHash());
                     if (blk != null) {
-                        writer.append("Full block data:\n");
+                        writer.append("\nFull block data:\n");
                         writer.append(blk.toString());
                         writer.newLine();
                     } else {
@@ -758,6 +803,71 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             return result;
         } finally {
             lock.readLock().unlock();
+        }
+    }
+
+    public boolean isIndexed(byte[] hash, long level) {
+        lock.readLock().lock();
+
+        try {
+            // when null -> there was no block info for the hash
+            return getBlockInfoForHash(getBlockInfoForLevel(level), hash) != null;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
+     * First checks if the size key is missing or smaller than it should be.
+     * If it is incorrect, the method attempts to correct it by setting it to the given level.
+     */
+    public void correctSize(long maxNumber, Logger log) {
+        // correcting the size if smaller than should be
+        long storedSize = index.getStoredSize();
+        if (maxNumber >= storedSize) {
+            // can't change size directly, so we do a put + delete the next level to reset it
+            index.set(maxNumber + 1, new ArrayList<>());
+            index.remove(maxNumber + 1);
+            log.info("Corrupted index size corrected from {} to {}.", storedSize, index.getStoredSize());
+        }
+    }
+
+    /**
+     * Sets the block as main chain and all its ancestors. Used by the data recovery methods.
+     */
+    public void correctMainChain(AionBlock block, Logger log) {
+        lock.writeLock().lock();
+
+        try {
+            AionBlock currentBlock = block;
+            if (currentBlock != null) {
+                List<BlockInfo> infos = getBlockInfoForLevel(currentBlock.getNumber());
+                BlockInfo thisBlockInfo = getBlockInfoForHash(infos, currentBlock.getHash());
+
+                // loop stops when the block is null or is already main chain
+                while (thisBlockInfo != null && !thisBlockInfo.isMainChain()) {
+                    log.info("Setting block hash: {}, number: {} to main chain.",
+                             currentBlock.getShortHash(),
+                             currentBlock.getNumber());
+
+                    // fix the info for the current block
+                    infos.remove(thisBlockInfo);
+                    thisBlockInfo.setMainChain(true);
+                    infos.add(thisBlockInfo);
+                    setBlockInfoForLevel(currentBlock.getNumber(), infos);
+
+                    // fix the info for parent
+                    currentBlock = getBlockByHash(currentBlock.getParentHash());
+                    if (currentBlock != null) {
+                        infos = getBlockInfoForLevel(currentBlock.getNumber());
+                        thisBlockInfo = getBlockInfoForHash(infos, currentBlock.getHash());
+                    } else {
+                        thisBlockInfo = null;
+                    }
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -928,9 +1038,15 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     /**
+     * @return the hash information if it is present in the list
+     *         or {@code null} when the given block list is {@code null}
+     *         or the hash is not present in the list
      * @implNote The method calling this method must handle the locking.
      */
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
+        if (blocks == null) {
+            return null;
+        }
         for (BlockInfo blockInfo : blocks) {
             if (Arrays.equals(hash, blockInfo.getHash())) {
                 return blockInfo;
