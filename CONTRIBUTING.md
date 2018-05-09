@@ -4,7 +4,7 @@
 
 Check out our [Aion Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual), [Installation and Cofiguration](https://github.com/aionnetwork/aion/wiki/Installation), [FAQ](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual#faqs), and articles on our [wiki](https://github.com/aionnetwork/aion/wiki)!
 
-For further questions and discussions see our [Aion Forum](https://forum.aion.network/)
+For further questions and discussions see our [Aion Forum](https://forum.aion.network/).
 
 ## Report bugs!
 
@@ -28,4 +28,4 @@ If you would like to contribute to Aion, please **fork it**, fix bugs or impleme
 
 ## License.
 
-By contributing to Aion, you agree that your contributions will be licensed under the [GPLv3 License](../LICENSE).
+By contributing to Aion, you agree that your contributions will be licensed under the [GPLv3 License](LICENSE).
