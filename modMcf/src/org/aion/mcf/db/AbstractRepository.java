@@ -48,7 +48,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static org.aion.db.impl.DatabaseFactory.Props;
 
 //import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
-// import org.aion.mcf.trie.JournalPruneDataSource;
+import org.aion.mcf.trie.JournalPruneDataSource;
 
 /**
  * Abstract Repository class.
@@ -94,7 +94,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
-    // protected JournalPruneDataSource<BLK, BH> stateDSPrune;
+    protected JournalPruneDataSource<BLK, BH> stateDSPrune;
     protected DetailsDataStore<BLK, BH> detailsDS;
 
     // Read Write Lock
@@ -241,9 +241,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
-            // disabling use of JournalPruneDataSource until functionality properly tested
-            // TODO-AR: enable pruning with the JournalPruneDataSource
-            // stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
+            stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
             pruneBlockCount = pruneEnabled ? this.cfg.getPrune() : -1;
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;
