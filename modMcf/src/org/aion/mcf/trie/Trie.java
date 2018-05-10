@@ -91,6 +91,8 @@ public interface Trie {
     void undo();
 
     String getTrieDump();
+    String getTrieDump(byte[] stateRoot);
+    int getTrieSize(byte[] stateRoot);
 
     boolean validate();
 
