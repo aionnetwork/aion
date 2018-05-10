@@ -1,6 +1,6 @@
 {
   "alloc": {
-    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a": {
+    "0xa025f4fd54064e869f158c1b4eb0ed34820f67e60ee80a53b469f725efc06378": {
       "balance": "465934586660000000000000000"
     },
     "0xa0e6a0c9c85db355fdceccc44444618b3213b3d5c3c3e26dcfe039ed07f310cd": {
@@ -34,7 +34,7 @@
       "balance": "314159000000000000000000"
     }
   },
-  "networkBalanceAlloc": {
+  "networkBalanceAllocs": {
     "0": {
       "balance": "465934586660000000000000000"
     }
