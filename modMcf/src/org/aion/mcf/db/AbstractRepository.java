@@ -32,6 +32,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.exception.InvalidFilePathException;
+import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.mcf.vm.types.DataWord;
@@ -48,7 +49,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static org.aion.db.impl.DatabaseFactory.Props;
 
 //import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
-import org.aion.mcf.trie.JournalPruneDataSource;
 
 /**
  * Abstract Repository class.
@@ -243,8 +243,10 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
             stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
             pruneBlockCount = pruneEnabled ? this.cfg.getPrune() : -1;
-            if (pruneEnabled) {
+            if (pruneEnabled && pruneBlockCount > 0) {
                 LOGGEN.info("Pruning block count set to {}.", pruneBlockCount);
+            } else {
+                stateDSPrune.setPruneEnabled(false);
             }
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;

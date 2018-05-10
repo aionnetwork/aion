@@ -76,7 +76,12 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
         // repository singleton instance
         private final static AionRepositoryImpl inst = new AionRepositoryImpl(
                 new RepositoryConfig(new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath(),
-                                     config.getDb().getPrune(),
+                                     config.getDb().getPrune() > 0 ?
+                                             // if the value is smaller than backward step
+                                             // there is the risk of importing state-less blocks after reboot
+                                             (128 > config.getDb().getPrune() ? 128 : config.getDb().getPrune()) :
+                                             // negative value => pruning disabled
+                                             config.getDb().getPrune(),
                                      ContractDetailsAion.getInstance(),
                                      config.getDb()));
     }
@@ -115,7 +120,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
     }
 
     private Trie createStateTrie() {
-        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount >= 0);
+        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount > 0);
     }
 
     @Override
@@ -501,7 +506,7 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
             worldState.sync();
             detailsDS.syncLargeStorage();
 
-            if (pruneBlockCount >= 0) {
+            if (pruneBlockCount > 0) {
                 stateDSPrune.storeBlockChanges(blockHeader);
                 detailsDS.getStorageDSPrune().storeBlockChanges(blockHeader);
                 pruneBlocks(blockHeader);
