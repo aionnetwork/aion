@@ -272,8 +272,38 @@ public class AionHub {
                 bestBlock != null && // recover only for non-null blocks
                 !this.repository.isValidRoot(bestBlock.getStateRoot())) {
 
+            LOG.info("Recovery initiated due to corrupt world state at block " + bestBlock.getNumber() + ".");
+
             long bestBlockNumber = bestBlock.getNumber();
             byte[] bestBlockRoot = bestBlock.getStateRoot();
+
+            // ensure that the genesis state exists before attempting recovery
+            AionGenesis genesis = cfg.getGenesis();
+            if (!this.repository.isValidRoot(genesis.getStateRoot())) {
+                LOG.info(
+                        "Corrupt world state for genesis block hash: " + genesis.getShortHash() + ", number: " + genesis
+                                .getNumber() + ".");
+                IRepositoryCache track = repository.startTracking();
+
+                Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
+                track.createAccount(networkBalanceAddress);
+
+                for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
+                    track.addStorageRow(networkBalanceAddress,
+                                        new DataWord(addr.getKey()),
+                                        new DataWord(addr.getValue()));
+                }
+
+                for (Address addr : genesis.getPremine().keySet()) {
+                    track.createAccount(addr);
+                    track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
+                }
+                track.flush();
+
+                this.repository.commitBlock(genesis.getHeader());
+                this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+                LOG.info("Rebuilding genesis block SUCCEEDED.");
+            }
 
             recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
 
