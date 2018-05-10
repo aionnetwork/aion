@@ -49,6 +49,8 @@ public enum DBVendor {
     LEVELDB("leveldb", true), //
     /** Using an instance of {@link RocksDBWrapper}. */
     ROCKSDB("rocksdb", true),
+    /**/
+    REDISDB("redisdb", true),
     /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
     H2("h2", true), //
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
@@ -63,7 +65,7 @@ public enum DBVendor {
     }
 
     /* map implemented using concurrent hash map */
-    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
+    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, REDISDB, H2, MOCKDB);
 
     private final String value;
     private final boolean persistence;

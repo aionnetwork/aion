@@ -37,6 +37,7 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.redisdb.RedisDbWrapper;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.log.AionLoggerFactory;
@@ -200,6 +201,9 @@ public abstract class DatabaseFactory {
                                           getInt(info, Props.WRITE_BUFFER_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE),
                                           getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
                                           getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
+            }
+            case REDISDB: {
+                return new RedisDbWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
             }
             case H2: {
                 return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
