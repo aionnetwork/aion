@@ -832,6 +832,60 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
+    /**
+     * First checks if the size key is missing or smaller than it should be.
+     * If it is incorrect, the method attempts to correct it by setting it to the given level.
+     */
+    public void correctSize(long maxNumber, Logger log) {
+        // correcting the size if smaller than should be
+        long storedSize = index.getStoredSize();
+        if (maxNumber >= storedSize) {
+            // can't change size directly, so we do a put + delete the next level to reset it
+            index.set(maxNumber + 1, new ArrayList<>());
+            index.remove(maxNumber + 1);
+            log.info("Corrupted index size corrected from {} to {}.", storedSize, index.getStoredSize());
+        }
+    }
+
+    /**
+     * Sets the block as main chain and all its ancestors. Used by the data recovery methods.
+     */
+    public void correctMainChain(AionBlock block, Logger log) {
+        lock.writeLock().lock();
+
+        try {
+            AionBlock currentBlock = block;
+            if (currentBlock != null) {
+                List<BlockInfo> infos = getBlockInfoForLevel(currentBlock.getNumber());
+                BlockInfo thisBlockInfo = getBlockInfoForHash(infos, currentBlock.getHash());
+
+                // loop stops when the block is null or is already main chain
+                while (thisBlockInfo != null && !thisBlockInfo.isMainChain()) {
+                    log.info("Setting block hash: {}, number: {} to main chain.",
+                             currentBlock.getShortHash(),
+                             currentBlock.getNumber());
+
+                    // fix the info for the current block
+                    infos.remove(thisBlockInfo);
+                    thisBlockInfo.setMainChain(true);
+                    infos.add(thisBlockInfo);
+                    setBlockInfoForLevel(currentBlock.getNumber(), infos);
+
+                    // fix the info for parent
+                    currentBlock = getBlockByHash(currentBlock.getParentHash());
+                    if (currentBlock != null) {
+                        infos = getBlockInfoForLevel(currentBlock.getNumber());
+                        thisBlockInfo = getBlockInfoForHash(infos, currentBlock.getHash());
+                    } else {
+                        thisBlockInfo = null;
+                    }
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     public static class BlockInfo implements Serializable {
 
         public BlockInfo() {}
@@ -999,11 +1053,15 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     /**
+     * @return the hash information if it is present in the list
+     *         or {@code null} when the given block list is {@code null}
+     *         or the hash is not present in the list
      * @implNote The method calling this method must handle the locking.
      */
     private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
-        if (blocks == null)
+        if (blocks == null) {
             return null;
+        }
         for (BlockInfo blockInfo : blocks) {
             if (Arrays.equals(hash, blockInfo.getHash())) {
                 return blockInfo;

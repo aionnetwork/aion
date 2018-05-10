@@ -697,7 +697,6 @@ public class AionRepositoryImpl extends AbstractRepository<AionBlock, A0BlockHea
 
     /**
      * For testing.
-     * @return
      */
     public IByteArrayKeyValueDatabase getIndexDatabase() {
         return this.indexDatabase;
