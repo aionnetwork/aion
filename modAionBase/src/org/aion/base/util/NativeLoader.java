@@ -1,39 +1,39 @@
 /*
- *****************************************************************************
- Copyright (c) 2017-2018 Aion foundation.
-
- This file is part of the aion network project.
-
- The aion network project is free software: you can redistribute it
- and/or modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation, either version 3 of
- the License, or any later version.
-
- The aion network project is distributed in the hope that it will
- be useful, but WITHOUT ANY WARRANTY; without even the implied
- warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- See the GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with the aion network project source files.
- If not, see <https://www.gnu.org/licenses/>.
-
- The aion network project leverages useful source code from other
- open source projects. We greatly appreciate the effort that was
- invested in these projects and we thank the individual contributors
- for their work. For provenance information and contributors
- please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
-
- Contributors to the aion source files in decreasing order of code volume:
- Aion foundation.
- <ether.camp> team through the ethereumJ library.
- Ether.Camp Inc. (US) team through Ethereum Harmony.
- John Tromp through the Equihash solver.
- Samuel Neves through the BLAKE2 implementation.
- Zcash project team.
- Bitcoinj team.
- *****************************************************************************
- */
+*****************************************************************************
+* Copyright (c) 2017-2018 Aion foundation.
+*
+* This file is part of the aion network project.
+*
+* The aion network project is free software: you can redistribute it
+* and/or modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation, either version 3 of
+* the License, or any later version.
+*
+* The aion network project is distributed in the hope that it will
+* be useful, but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with the aion network project source files.
+* If not, see <https://www.gnu.org/licenses/>.
+*
+* The aion network project leverages useful source code from other
+* open source projects. We greatly appreciate the effort that was
+* invested in these projects and we thank the individual contributors
+* for their work. For provenance information and contributors
+* please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+*
+* Contributors to the aion source files in decreasing order of code volume:
+* Aion foundation.
+* <ether.camp> team through the ethereumJ library.
+* Ether.Camp Inc. (US) team through Ethereum Harmony.
+* John Tromp through the Equihash solver.
+* Samuel Neves through the BLAKE2 implementation.
+* Zcash project team.
+* Bitcoinj team.
+*****************************************************************************
+*/
 package org.aion.base.util;
 
 import java.io.File;
@@ -98,8 +98,8 @@ public class NativeLoader {
                 String line = s.nextLine();
 
                 if (line.startsWith("/") || line.startsWith(".")) { // for debug
-                                                                    // purpose
-                                                                    // mainly
+                    // purpose
+                    // mainly
                     System.load(line);
                 } else {
                     System.load(new File(dir, line).getCanonicalPath());
@@ -110,7 +110,8 @@ public class NativeLoader {
         }
     }
 
-    public static void loadLibraryFromJar(@SuppressWarnings("rawtypes") Class clz, String path) throws IOException {
+    public static void loadLibraryFromJar(@SuppressWarnings("rawtypes") Class clz, String path)
+            throws IOException {
 
         if (!path.startsWith("/")) {
             throw new IllegalArgumentException("The path has to be absolute (start with '/').");
@@ -131,7 +132,8 @@ public class NativeLoader {
 
         // Check if the filename is okay
         if (filename == null || prefix.length() < 3) {
-            throw new IllegalArgumentException("The filename has to be at least 3 characters long.");
+            throw new IllegalArgumentException(
+                    "The filename has to be at least 3 characters long.");
         }
 
         // Prepare temporary file
@@ -169,5 +171,4 @@ public class NativeLoader {
         // Finally, load the library
         System.load(temp.getAbsolutePath());
     }
-
 }
