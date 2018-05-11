@@ -41,7 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Random;
-
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.junit.Before;
@@ -54,8 +53,7 @@ public class KeystoreTest {
         StringBuffer sb = new StringBuffer(length);
         while (sb.length() < length) {
             char c = (char) (rand.nextInt() & Character.MAX_VALUE);
-            if (Character.isDefined(c)) 
-                sb.append(c);
+            if (Character.isDefined(c)) sb.append(c);
         }
         return sb.toString();
     }
@@ -75,7 +73,6 @@ public class KeystoreTest {
         System.out.println("new addr: " + address);
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
-
     }
 
     @Test

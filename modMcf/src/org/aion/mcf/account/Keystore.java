@@ -50,7 +50,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.*;
 import org.aion.crypto.ECKey;
@@ -59,9 +58,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/**
- *  key store class.
- */
+/** key store class. */
 public class Keystore {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -106,8 +103,7 @@ public class Keystore {
             String fileName = "UTC--" + iso_date + "--" + address;
             try {
                 Path keyFile = PATH.resolve(fileName);
-                if (!Files.exists(keyFile))
-                    keyFile = Files.createFile(keyFile, attr);
+                if (!Files.exists(keyFile)) keyFile = Files.createFile(keyFile, attr);
                 String path = keyFile.toString();
                 FileOutputStream fos = new FileOutputStream(path);
                 fos.write(content);
@@ -149,9 +145,19 @@ public class Keystore {
             return new java.util.HashMap<>();
         }
 
-        List<File> matchedFile = files.parallelStream().filter(file -> account.entrySet().parallelStream()
-                .anyMatch(ac -> file.getName().contains(ac.getKey().toString())))
-                .collect(Collectors.toList());
+        List<File> matchedFile =
+                files.parallelStream()
+                        .filter(
+                                file ->
+                                        account.entrySet()
+                                                .parallelStream()
+                                                .anyMatch(
+                                                        ac ->
+                                                                file.getName()
+                                                                        .contains(
+                                                                                ac.getKey()
+                                                                                        .toString())))
+                        .collect(Collectors.toList());
 
         Map<Address, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
@@ -183,15 +189,16 @@ public class Keystore {
 
     private static List<String> addAddrs(List<File> files) {
         List<String> addresses = new ArrayList<>();
-        files.forEach((file) -> {
-            String[] frags = file.getName().split("--");
-            if (frags.length == 3) {
-                String addr = TypeConverter.toJsonHex(frags[2]);
-                if (addr.startsWith(ADDR_PREFIX + AION_PREFIX)) {
-                    addresses.add(addr);
-                }
-            }
-        });
+        files.forEach(
+                (file) -> {
+                    String[] frags = file.getName().split("--");
+                    if (frags.length == 3) {
+                        String addr = TypeConverter.toJsonHex(frags[2]);
+                        if (addr.startsWith(ADDR_PREFIX + AION_PREFIX)) {
+                            addresses.add(addr);
+                        }
+                    }
+                });
         return addresses;
     }
 
@@ -257,28 +264,39 @@ public class Keystore {
         int count = 0;
         for (Map.Entry<String, String> keySet : importKey.entrySet()) {
             if (count < IMPORT_LIMIT) {
-                String addr = keySet.getKey().startsWith(ADDR_PREFIX) ? keySet.getKey().substring(2) : keySet.getKey();
+                String addr =
+                        keySet.getKey().startsWith(ADDR_PREFIX)
+                                ? keySet.getKey().substring(2)
+                                : keySet.getKey();
 
                 if (addr.startsWith(AION_PREFIX)) {
                     ECKey key = KeystoreFormat.fromKeystore(Hex.decode(addr), keySet.getValue());
                     String address = Keystore.create(keySet.getValue(), key);
                     if (!address.equals(ADDR_PREFIX)) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("The private key was imported, the address is {}", keySet.getKey());
+                            LOG.debug(
+                                    "The private key was imported, the address is {}",
+                                    keySet.getKey());
                         }
                     } else {
-                        LOG.error("Failed to import the private key {}. Already exists?", keySet.getKey());
+                        LOG.error(
+                                "Failed to import the private key {}. Already exists?",
+                                keySet.getKey());
                         // only return the failed import privateKey.
                         rtn.add(keySet.getKey());
                     }
                 } else {
-                    LOG.error("Failed to import the private key {}. Format incorrect!", keySet.getKey());
+                    LOG.error(
+                            "Failed to import the private key {}. Format incorrect!",
+                            keySet.getKey());
                     // only return the failed import privateKey.
                     rtn.add(keySet.getKey());
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("The account import limit was reached, the address didn't import into keystore {}", keySet.getKey());
+                    LOG.debug(
+                            "The account import limit was reached, the address didn't import into keystore {}",
+                            keySet.getKey());
                 }
                 rtn.add(keySet.getKey());
             }

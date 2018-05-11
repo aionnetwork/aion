@@ -48,13 +48,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
-
 import org.junit.Test;
 
 public class FileDateTimeComparatorTest {
-    
+
     /**
      * Generates a list that should go from latest date to earliest
+     *
      * @return
      */
     public static List<File> generateValidFiles() {
@@ -68,10 +68,10 @@ public class FileDateTimeComparatorTest {
             String fileName = "UTC--" + iso_date + "--" + "blah";
             nameList.add(new File(fileName));
         }
-        
+
         return nameList;
     }
-    
+
     @Test
     public void testComparator() {
         List<File> l = generateValidFiles();
@@ -81,7 +81,7 @@ public class FileDateTimeComparatorTest {
         for (int i = (l.size() - 1); i >= 0; i--) {
             expectedFileNames.add(l.get(i).getName());
         }
-        
+
         // note: this will fail if we use a odd number of files!
         for (int i = 0; i < l.size(); i++) {
             assertThat(l.get(i).getName(), is(not(equalTo(expectedFileNames.get(i)))));
@@ -93,44 +93,44 @@ public class FileDateTimeComparatorTest {
             assertThat(l.get(i).getName(), is(equalTo(expectedFileNames.get(i))));
         }
     }
-    
+
     /**
-     * Throw in some garbage files Expected behaviour is that these garbage
-     * files get moved to the back
+     * Throw in some garbage files Expected behaviour is that these garbage files get moved to the
+     * back
      */
     @Test
     public void testComparatorWithGarbage() {
         List<File> l = generateValidFiles();
-        
+
         List<String> expectedFileNames = new ArrayList<String>();
-        
+
         for (int i = (l.size() - 1); i >= 0; i--) {
             expectedFileNames.add(l.get(i).getName());
         }
-        
+
         File garbageFile1 = new File("blargh");
         File garbageFile2 = new File("UTC--cats--blah");
         File garbageFile3 = null;
-        
+
         l.add(5, garbageFile1);
         l.add(6, garbageFile2);
         l.add(7, garbageFile3);
-        
+
         expectedFileNames.add(garbageFile2.getName());
         expectedFileNames.add(garbageFile1.getName());
         expectedFileNames.add(null);
-        
+
         l.sort(new FileDateTimeComparator());
-        
-        System.out.println("l size: " + l.size() + " expectedFileName size: " + expectedFileNames.size());
-        
+
+        System.out.println(
+                "l size: " + l.size() + " expectedFileName size: " + expectedFileNames.size());
+
         for (int i = 0; i < l.size(); i++) {
-            if(l.get(i) != null) {
+            if (l.get(i) != null) {
                 String a = l.get(i).getName();
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
             }
         }
     }
-    
 }

@@ -48,9 +48,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/**
- * Account Manger Class
- */
+/** Account Manger Class */
 public class AccountManager {
 
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
