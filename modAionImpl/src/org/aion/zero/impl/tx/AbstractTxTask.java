@@ -33,7 +33,6 @@ import org.aion.base.type.IMsg;
 import org.aion.base.type.ITransaction;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
-import org.aion.zero.impl.sync.msg.BroadcastTx;
 
 /**
  * @author jin
@@ -69,10 +68,9 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
 
         try {
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
-            if (activeNodes != null && !activeNodes.isEmpty()) {
+            if (activeNodes != null) {
                 for (Map.Entry<Integer, INode> e : activeNodes.entrySet()) {
                     this.p2pMgr.send(e.getKey(), e.getValue().getIdShort(), this.msg);
-//                    this.p2pMgr.send(e.getKey(), e.getValue().getIdShort(), new BroadcastTx((List<ITransaction>) this.tx));
                 }
             }
 

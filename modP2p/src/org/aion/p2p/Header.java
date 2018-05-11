@@ -63,6 +63,7 @@ public final class Header implements IMsgHeader {
     /**
      * @return short
      */
+    @Override
     public short getVer() {
         return this.ver;
     }
@@ -70,6 +71,7 @@ public final class Header implements IMsgHeader {
     /**
      * @return byte
      */
+    @Override
     public byte getCtrl() {
         return this.ctrl;
     }
@@ -77,6 +79,7 @@ public final class Header implements IMsgHeader {
     /**
      * @return byte
      */
+    @Override
     public byte getAction() {
         return this.action;
     }
@@ -84,6 +87,7 @@ public final class Header implements IMsgHeader {
     /**
      * @return int
      */
+    @Override
     public int getRoute() {
         return (ver << 16) | (ctrl << 8) | action;
     }
@@ -91,10 +95,12 @@ public final class Header implements IMsgHeader {
     /**
      * @return int
      */
+    @Override
     public int getLen() {
         return this.len;
     }
 
+    @Override
     public void setLen(int _len) {
         this.len = _len;
     }
@@ -102,6 +108,7 @@ public final class Header implements IMsgHeader {
     /**
      * @return byte[]
      */
+    @Override
     public byte[] encode() {
         return ByteBuffer.allocate(LEN).putInt(this.getRoute()).putInt(len).array();
     }

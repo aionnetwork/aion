@@ -1,7 +1,5 @@
 package org.aion.base.type;
 
-import java.nio.ByteBuffer;
-
 public interface IMsgHeader {
 
     short getVer();

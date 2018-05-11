@@ -51,13 +51,8 @@ public abstract class Msg implements IMsg {
      * @return Header
      */
     @Override
-    public IMsgHeader getHeader(){
+    public IMsgHeader getHeader() {
         return this.header;
     }
-
-    /**
-     * @return byte[]
-     */
-//    public abstract byte[] encode();
 
 }
