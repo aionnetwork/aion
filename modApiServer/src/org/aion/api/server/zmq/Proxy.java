@@ -24,6 +24,8 @@
 
 package org.aion.api.server.zmq;
 
+import static org.aion.api.server.pb.ApiAion0.heartBeatMsg;
+
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +38,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Proxy {
     protected static final Logger LOG = LoggerFactory.getLogger(LogEnum.API.toString());
-    protected static AtomicBoolean shutDown = new AtomicBoolean(false);
+    private static AtomicBoolean shutDown = new AtomicBoolean(false);
 
-    public static boolean proxy(Socket frontend, Socket backend, Socket callback, Socket event) {
-        PollItem[] items = new PollItem[4];
+    static void proxy(Socket frontend, Socket backend, Socket callback, Socket event, Socket hb) {
+        PollItem[] items = new PollItem[5];
         items[0] = new PollItem(frontend, Poller.POLLIN);
         items[1] = new PollItem(backend, Poller.POLLIN);
         items[2] = new PollItem(callback, Poller.POLLIN);
         items[3] = new PollItem(event, Poller.POLLIN);
+        items[4] = new PollItem(hb, Poller.POLLIN);
 
         try {
             while (!shutDown.get()) {
@@ -56,8 +59,8 @@ public class Proxy {
                 // Process a request.
                 if (items[0].isReadable()) {
                     while (true) {
-                        if (!msgProcess(frontend, backend)) {
-                            return false;
+                        if (msgProcessRecv(frontend, backend, hb)) {
+                            return;
                         }
                         break;
                     }
@@ -65,8 +68,8 @@ public class Proxy {
                 // Process a reply.
                 if (items[1].isReadable()) {
                     while (true) {
-                        if (!msgProcess(backend, frontend)) {
-                            return false;
+                        if (msgProcessSend(backend, frontend)) {
+                            return;
                         }
                         break;
                     }
@@ -75,8 +78,8 @@ public class Proxy {
                 // Process a callback
                 if (items[2].isReadable()) {
                     while (true) {
-                        if (!msgProcess(callback, frontend)) {
-                            return false;
+                        if (msgProcessSend(callback, frontend)) {
+                            return;
                         }
                         break;
                     }
@@ -84,8 +87,18 @@ public class Proxy {
 
                 if (items[3].isReadable()) {
                     while (true) {
-                        if (!msgProcess(event, frontend)) {
-                            return false;
+                        if (msgProcessSend(event, frontend)) {
+                            return;
+                        }
+                        break;
+                    }
+                }
+
+                // heartBeat reply
+                if (items[4].isReadable()) {
+                    while (true) {
+                        if (msgProcessSend(hb, frontend)) {
+                            return;
                         }
                         break;
                     }
@@ -97,13 +110,12 @@ public class Proxy {
             LOG.error("aion.api.server.zmq.Proxy exception" + e.getMessage());
         }
 
-        return true;
     }
 
-    private static boolean msgProcess(Socket receiver, Socket sender) {
+    private static boolean msgProcessRecv(Socket receiver, Socket sender, Socket hb) {
         byte[] msg = receiver.recv(0);
         if (msg == null) {
-            return false;
+            return true;
         }
 
         byte[] msgMore = null;
@@ -111,25 +123,56 @@ public class Proxy {
             msgMore = receiver.recv(0);
 
             if (msgMore == null) {
-                return false;
+                return true;
+            }
+        }
+
+        if (heartBeatMsg(msgMore)) {
+            if (!hb.send(msg, ZMQ.SNDMORE)) {
+                return true;
+            }
+
+            return !hb.send(msgMore, ZMQ.DONTWAIT);
+        } else {
+            if (!sender.send(msg, msgMore == null ? ZMQ.DONTWAIT : ZMQ.SNDMORE)) {
+                return true;
+            }
+
+            if (msgMore != null) {
+                return !sender.send(msgMore, ZMQ.DONTWAIT);
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean msgProcessSend(Socket receiver, Socket sender) {
+        byte[] msg = receiver.recv(0);
+        if (msg == null) {
+            return true;
+        }
+
+        byte[] msgMore = null;
+        if (receiver.hasReceiveMore()) {
+            msgMore = receiver.recv(0);
+
+            if (msgMore == null) {
+                return true;
             }
         }
 
         if (!sender.send(msg, msgMore == null ? ZMQ.DONTWAIT : ZMQ.SNDMORE)) {
-            return false;
+            return true;
         }
 
         if (msgMore != null) {
-
-            if (!sender.send(msgMore, ZMQ.DONTWAIT)) {
-                return false;
-            }
+            return !sender.send(msgMore, ZMQ.DONTWAIT);
         }
 
-        return true;
+        return false;
     }
 
-    public void shutdown() throws InterruptedException {
+    public static void shutdown() throws InterruptedException {
         LOG.info("zmq-proxy thread shuting down...");
         shutDown.set(true);
 

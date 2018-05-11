@@ -356,12 +356,12 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     public byte[] getHeaderBytes(boolean toMine) {
         byte[] hdrBytes;
         if(toMine) {
-            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
                     this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
                     this.difficulty, this.extraData, longToBytes(this.energyConsumed),
                     longToBytes(this.energyLimit), longToBytes(this.timestamp));
         }else {
-            hdrBytes = merge(longToBytes(this.version), longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
+            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
                     this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
                     this.difficulty, this.extraData, longToBytes(this.energyConsumed),
                     longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
@@ -369,6 +369,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         return hdrBytes;
     }
 
+    /**
+     * Get hash of the header bytes to mine a block
+     *
+     * @return Blake2b digest (32 bytes) of the raw header bytes.
+     */
     public byte[] getMineHash() {
         if(this.mineHashBytes == null) {
             this.mineHashBytes = HashUtil.h256(getHeaderBytes(true));

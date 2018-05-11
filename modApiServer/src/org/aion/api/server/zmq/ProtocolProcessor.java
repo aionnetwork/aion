@@ -24,20 +24,9 @@
 
 package org.aion.api.server.zmq;
 
-import org.aion.api.server.pb.IHdlr;
-import org.aion.api.server.pb.Message;
-import org.aion.api.server.types.EvtContract;
-import org.aion.api.server.types.Fltr;
-import org.aion.api.server.types.TxPendingStatus;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
-import org.aion.mcf.config.CfgApiZmq;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.slf4j.Logger;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQ.Context;
-import org.zeromq.ZMQ.Socket;
+import static org.aion.api.server.pb.ApiAion0.JAVAAPI_VAR;
+import static org.zeromq.ZMQ.DEALER;
+import static org.zeromq.ZMQ.ROUTER;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -46,9 +35,21 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.zeromq.ZMQ.DEALER;
-import static org.zeromq.ZMQ.ROUTER;
+import org.aion.api.server.ApiUtil;
+import org.aion.api.server.pb.IHdlr;
+import org.aion.api.server.pb.Message;
+import org.aion.api.server.types.EvtContract;
+import org.aion.api.server.types.Fltr;
+import org.aion.api.server.types.TxPendingStatus;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.mcf.config.CfgApiZmq;
+import org.slf4j.Logger;
+import org.zeromq.ZMQ;
+import org.zeromq.ZMQ.Context;
+import org.zeromq.ZMQ.Socket;
 
 public class ProtocolProcessor implements Runnable {
 
@@ -57,8 +58,9 @@ public class ProtocolProcessor implements Runnable {
     private static final String AION_ZMQ_WK_TH = "inproc://aionZmqWkTh";
     private static final String AION_ZMQ_CB_TH = "inproc://aionZmqCbTh";
     private static final String AION_ZMQ_EV_TH = "inproc://aionZmqEvTh";
+    private static final String AION_ZMQ_HB_TH = "inproc://aionZmqHbTh";
+
     private CfgApiZmq cfgApi;
-    private Proxy proxy = new Proxy();
     private AtomicBoolean shutDown = new AtomicBoolean();
 
     private static final long zmqHWM = 100_000;
@@ -71,14 +73,14 @@ public class ProtocolProcessor implements Runnable {
 
     public void shutdown() throws InterruptedException {
         handler.shutDown();
-        proxy.shutdown();
+        Proxy.shutdown();
     }
 
     @Override
     public void run() {
         LOG.info("Starting Aion Api Server <port={}>", cfgApi.getPort());
         String bindAddr = "tcp://" + cfgApi.getIp() + ":" + cfgApi.getPort();
-        int msgTh = 4;
+        int msgTh = 5;
 
         try {
             // create context.
@@ -98,14 +100,17 @@ public class ProtocolProcessor implements Runnable {
             Socket evSock = ctx.socket(DEALER);
             evSock.bind(AION_ZMQ_EV_TH);
 
+            Socket hbSock = ctx.socket(DEALER);
+            hbSock.bind(AION_ZMQ_HB_TH);
+
             ExecutorService es = Executors.newFixedThreadPool(msgTh);
             es.execute(() -> callbackRun(ctx));
             es.execute(this::txWaitRun);
             es.execute(() -> eventRun(ctx));
             es.execute(() -> workerRun(ctx));
+            es.execute(() -> hbRun(ctx));
 
-
-            proxy.proxy(feSock, wkSocks, cbSock, evSock);
+            Proxy.proxy(feSock, wkSocks, cbSock, evSock, hbSock);
 
             if (LOG.isInfoEnabled()) {
                 LOG.info("ProtocolProcessor.run thread finish.");
@@ -122,6 +127,7 @@ public class ProtocolProcessor implements Runnable {
             wkSocks.close();
             cbSock.close();
             evSock.close();
+            hbSock.close();
             // Shutdown ExecutorService
             es.shutdown();
 
@@ -208,13 +214,7 @@ public class ProtocolProcessor implements Runnable {
                 continue;
             }
 
-            if (tps == null || tps.isEmpty()) {
-
-                if (tps == null) {
-                    if (LOG.isErrorEnabled()) {
-                        LOG.error("queue take null tps");
-                    }
-                }
+            if (tps.isEmpty()) {
                 continue;
             }
 
@@ -284,6 +284,52 @@ public class ProtocolProcessor implements Runnable {
         sock.close();
         if (LOG.isInfoEnabled()) {
             LOG.info("close workerRun Sockets...");
+        }
+    }
+
+    private void hbRun(ZMQ.Context ctx) {
+        Socket sock = ctx.socket(ZMQ.DEALER);
+        sock.connect(AION_ZMQ_HB_TH);
+
+        while (!shutDown.get()) {
+            try {
+                byte[] socketId = sock.recv(0);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("ProtocolProcessor.hbRun socketID: [{}]", Hex.toHexString(socketId));
+                }
+                if (socketId != null && socketId.length == SOCKETID_LEN) {
+                    byte[] req = sock.recv(0);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("ProtocolProcessor.hbRun reqMsg: [{}]", Hex.toHexString(req));
+                    }
+                    byte[] rsp = ApiUtil.toReturnHeader(JAVAAPI_VAR, Message.Retcode.r_heartbeatReturn_VALUE);
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("ProtocolProcessor.hbRun rspMsg: [{}]", Hex.toHexString(rsp));
+                    }
+
+                    try {
+                        sock.send(socketId, ZMQ.SNDMORE);
+                        sock.send(rsp, ZMQ.PAIR);
+                    } catch (Exception e) {
+                        if (LOG.isErrorEnabled()) {
+                            LOG.error("ProtocolProcessor.hbRun sock.send exception: " + e.getMessage());
+                        }
+                    }
+                } else {
+                    if (LOG.isErrorEnabled()) {
+                        LOG.error("ProtocolProcessor.hbRun incorrect socketID [{}]",
+                            socketId == null ? "null" : Hex.toHexString(socketId));
+                    }
+                }
+            } catch (Exception e) {
+                if (LOG.isErrorEnabled()) {
+                    LOG.error("ProtocolProcessor hbRun exception!! " + e.getMessage());
+                }
+            }
+        }
+        sock.close();
+        if (LOG.isInfoEnabled()) {
+            LOG.info("close hbRun Sockets...");
         }
     }
 }

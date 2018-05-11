@@ -27,6 +27,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 import java.io.File;
 import java.io.IOException;
@@ -158,7 +159,7 @@ public class RecoveryUtils {
     /**
      * Used by internal world state recovery method.
      */
-    public static Status revertTo(AionBlockchainImpl blockchain, long nbBlock) {
+    public static Status revertTo(IAionBlockchain blockchain, long nbBlock) {
         IBlockStoreBase store = blockchain.getBlockStore();
 
         IBlock bestBlock = store.getBestBlock();

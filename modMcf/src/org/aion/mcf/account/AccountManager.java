@@ -66,13 +66,13 @@ public class AccountManager {
     // Can use this method as check if unlocked
     public ECKey getKey(final Address _address) {
 
-        Account acc = accounts.get(_address);
+        Account acc = this.accounts.get(_address);
 
         if (Optional.ofNullable(acc).isPresent()) {
             if (acc.getTimeout() >= Instant.now().getEpochSecond()) {
                 return acc.getKey();
             } else {
-                accounts.remove(_address);
+                this.accounts.remove(_address);
             }
         }
 
@@ -80,7 +80,7 @@ public class AccountManager {
     }
 
     public List<Account> getAccounts() {
-        return accounts.values().stream().collect(Collectors.toList());
+        return this.accounts.values().stream().collect(Collectors.toList());
     }
 
     public boolean unlockAccount(Address _address, String _password, int _timeout) {
@@ -94,14 +94,14 @@ public class AccountManager {
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
-            Account acc = accounts.get(_address);
+            Account acc = this.accounts.get(_address);
 
             long t = Instant.now().getEpochSecond() + timeout;
             if (Optional.ofNullable(acc).isPresent()) {
                 acc.updateTimeout(t);
             } else {
                 Account a = new Account(key, t);
-                accounts.put(_address, a);
+                this.accounts.put(_address, a);
             }
 
             LOGGER.debug("<unlock-success addr={}>", _address);
@@ -117,7 +117,7 @@ public class AccountManager {
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
-            Account acc = accounts.get(_address);
+            Account acc = this.accounts.get(_address);
 
             if (Optional.ofNullable(acc).isPresent()) {
                 acc.updateTimeout(Instant.now().getEpochSecond() - 1);

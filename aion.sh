@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$(dirname $0)"
+cd "$(dirname $(realpath $0))"
 
 KERVER=$(uname -r | grep -o "^4\.")
 
@@ -37,5 +37,5 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
-env EVMJIT="-cache=1" ./rt/bin/java -Xms2g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./heapdump.hprof \
+env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
         -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"

@@ -132,6 +132,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private boolean closeToNetworkBest = false;
 
+    private static long NRGPRICE_MIN =            10_000_000_000L;  // 10 PLAT  (10 * 10 ^ -9 AION)
+    private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L;  //  9 AION
+
     class TxBuffTask implements Runnable {
         @Override public void run() {
             processTxBuffer();
@@ -577,8 +580,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private boolean addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
 
         if (!TXValidator.isValid(tx)) {
-            LOG.error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
+            LOG.error("invalid Tx [{}]", tx.toString());
             fireDroppedTx(tx, "INVALID_TX");
+            return false;
+        }
+
+        if (inValidTxNrgPrice(tx)) {
+            LOG.error("invalid Tx Nrg price [{}]", tx.toString());
+            fireDroppedTx(tx, "INVALID_TX_NRG_PRICE");
             return false;
         }
 
@@ -638,6 +647,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             return true;
         }
+    }
+
+    private boolean inValidTxNrgPrice(AionTransaction tx) {
+        return tx.getNrgPrice() < NRGPRICE_MIN || tx.getNrgPrice() > NRGPRICE_MAX;
     }
 
     private void fireDroppedTx(AionTransaction tx, String error) {

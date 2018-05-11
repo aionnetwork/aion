@@ -44,7 +44,7 @@ public final class CfgApiNrg {
     CfgApiNrg() {
         // recommend setting the defaultPrice to a safe-low known nrg price accepted by most miners on the network
         // (this value fluctuates over time, depending on network conditions)
-        this.defaultPrice = 1_000_000_000L; // 1E9 AION
+        this.defaultPrice = 10_000_000_000L; // 10E9 AION
         this.maxPrice = 100_000_000_000L; // 100E9 AION
         this.oracleEnabled = false; // ship with oracle disabled
     }
