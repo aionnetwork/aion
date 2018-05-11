@@ -55,4 +55,15 @@ public abstract class Msg implements IMsg {
         return this.header;
     }
 
+    /**
+     * Returns a zero-length byte array, this method must be override. It is here so that subclasses
+     * cast as different super classes will have compatible encode methods if super is invoked in
+     * the encode method.
+     * @return
+     */
+    @Override
+    public byte[] encode() {
+        return new byte[0];
+    }
+
 }

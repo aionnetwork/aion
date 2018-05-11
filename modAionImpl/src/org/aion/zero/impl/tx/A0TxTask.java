@@ -27,6 +27,7 @@ package org.aion.zero.impl.tx;
 import java.util.List;
 
 import org.aion.base.type.IMsg;
+import org.aion.mcf.tx.AbstractTxTask;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.types.AionTransaction;
 
