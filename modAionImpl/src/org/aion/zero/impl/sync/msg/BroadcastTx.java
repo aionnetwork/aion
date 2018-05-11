@@ -37,21 +37,16 @@ package org.aion.zero.impl.sync.msg;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.aion.base.type.ITransaction;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import org.aion.p2p.impl.zero.msg.ReqActiveNodes;
-import org.aion.rlp.RLPElement;
-import org.aion.zero.impl.sync.Act;
 import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.zero.impl.sync.Act;
 
-/**
- * @author chris
- *
- */
+/** @author chris */
 public final class BroadcastTx extends Msg {
 
     private final List<? extends ITransaction> txl;
@@ -67,7 +62,7 @@ public final class BroadcastTx extends Msg {
     @Override
     public byte[] encode() {
         List<byte[]> encodedTx = new ArrayList<>();
-        for(ITransaction tx : txl) {
+        for (ITransaction tx : txl) {
             encodedTx.add(tx.getEncoded());
         }
 

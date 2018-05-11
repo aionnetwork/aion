@@ -15,5 +15,4 @@ public interface IMsgHeader {
     void setLen(int _len);
 
     byte[] encode();
-
 }

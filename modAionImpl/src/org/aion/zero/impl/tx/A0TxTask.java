@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,13 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.tx;
 
 import java.util.List;
-
 import org.aion.base.type.IMsg;
 import org.aion.mcf.tx.AbstractTxTask;
 import org.aion.p2p.IP2pMgr;
@@ -40,5 +39,4 @@ public class A0TxTask extends AbstractTxTask<AionTransaction, IP2pMgr> {
     public A0TxTask(List<AionTransaction> _tx, IP2pMgr _p2pMgr, IMsg _msg) {
         super(_tx, _p2pMgr, _msg);
     }
-
 }
