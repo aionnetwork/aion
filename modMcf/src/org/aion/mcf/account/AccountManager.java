@@ -1,4 +1,5 @@
-/*******************************************************************************
+/*
+ ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,20 +18,30 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
- * Contributors:
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *
- ******************************************************************************/
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
+ *****************************************************************************
+ */
 package org.aion.mcf.account;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
@@ -46,7 +57,7 @@ public class AccountManager {
     private static final int UNLOCK_MAX = 86400, // sec
             UNLOCK_DEFAULT = 60; // sec
 
-    private Map<Address, Account> accounts = null;
+    private Map<Address, Account> accounts;
 
     private AccountManager() {
         LOGGER.debug("<account-manager init>");
@@ -80,22 +91,22 @@ public class AccountManager {
     }
 
     public List<Account> getAccounts() {
-        return this.accounts.values().stream().collect(Collectors.toList());
+        return new ArrayList<>(this.accounts.values());
     }
 
     public boolean unlockAccount(Address _address, String _password, int _timeout) {
-
-        int timeout = UNLOCK_DEFAULT;
-        if (_timeout > UNLOCK_MAX) {
-            timeout = UNLOCK_MAX;
-        } else if (_timeout > 0) {
-            timeout = _timeout;
-        }
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
         if (Optional.ofNullable(key).isPresent()) {
             Account acc = this.accounts.get(_address);
+
+            int timeout = UNLOCK_DEFAULT;
+            if (_timeout > UNLOCK_MAX) {
+                timeout = UNLOCK_MAX;
+            } else if (_timeout > 0) {
+                timeout = _timeout;
+            }
 
             long t = Instant.now().getEpochSecond() + timeout;
             if (Optional.ofNullable(acc).isPresent()) {
@@ -105,10 +116,14 @@ public class AccountManager {
                 this.accounts.put(_address, a);
             }
 
-            LOGGER.debug("<unlock-success addr={}>", _address);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("<unlock-success addr={}>", _address);
+            }
             return true;
         } else {
-            LOGGER.debug("<unlock-fail addr={}>", _address);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("<unlock-fail addr={}>", _address);
+            }
             return false;
         }
     }
@@ -124,10 +139,14 @@ public class AccountManager {
                 acc.updateTimeout(Instant.now().getEpochSecond() - 1);
             }
 
-            LOGGER.debug("<lock-success addr={}>", _address);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("<lock-success addr={}>", _address);
+            }
             return true;
         } else {
-            LOGGER.debug("<lock-fail addr={}>", _address);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("<lock-fail addr={}>", _address);
+            }
             return false;
         }
     }
