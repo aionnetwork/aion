@@ -37,8 +37,6 @@ package org.aion.mcf.trie;
 import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockHeader;
 import org.aion.base.util.ByteArrayWrapper;
 
 /**
@@ -48,12 +46,11 @@ import org.aion.base.util.ByteArrayWrapper;
  * submitted to the underlying DataSource with respect to following inserts. E.g. if the key was
  * deleted at block N and then inserted at block N + 10 this delete is not passed.
  */
-public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockHeader>
-        implements IByteArrayKeyValueStore {
+public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     private class Updates {
-
-        BH blockHeader;
+        ByteArrayWrapper blockHeader;
+        long blockNumber;
         Set<ByteArrayWrapper> insertedKeys = new HashSet<>();
         Set<ByteArrayWrapper> deletedKeys = new HashSet<>();
     }
@@ -157,20 +154,22 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
         return cnt;
     }
 
-    public synchronized void storeBlockChanges(BH header) {
+    public synchronized void storeBlockChanges(byte[] blockHash, long blockNumber) {
         if (!enabled) {
             return;
         }
-        currentUpdates.blockHeader = header;
-        blockUpdates.put(new ByteArrayWrapper(header.getHash()), currentUpdates);
+        ByteArrayWrapper hash = new ByteArrayWrapper(blockHash);
+        currentUpdates.blockHeader = hash;
+        currentUpdates.blockNumber = blockNumber;
+        blockUpdates.put(hash, currentUpdates);
         currentUpdates = new Updates();
     }
 
-    public synchronized void prune(BH header) {
+    public synchronized void prune(byte[] blockHash, long blockNumber) {
         if (!enabled) {
             return;
         }
-        ByteArrayWrapper blockHashW = new ByteArrayWrapper(header.getHash());
+        ByteArrayWrapper blockHashW = new ByteArrayWrapper(blockHash);
         Updates updates = blockUpdates.remove(blockHashW);
         if (updates != null) {
             for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
@@ -188,20 +187,19 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
             }
             src.deleteBatch(batchRemove);
 
-            rollbackForkBlocks(header.getNumber());
+            rollbackForkBlocks(blockNumber);
         }
     }
 
     private void rollbackForkBlocks(long blockNum) {
         for (Updates updates : new ArrayList<>(blockUpdates.values())) {
-            if (updates.blockHeader.getNumber() == blockNum) {
+            if (updates.blockNumber == blockNum) {
                 rollback(updates.blockHeader);
             }
         }
     }
 
-    private synchronized void rollback(BH header) {
-        ByteArrayWrapper blockHashW = new ByteArrayWrapper(header.getHash());
+    private synchronized void rollback(ByteArrayWrapper blockHashW) {
         Updates updates = blockUpdates.remove(blockHashW);
         Map<byte[], byte[]> batchRemove = new HashMap<>();
         for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
