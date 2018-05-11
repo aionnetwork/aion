@@ -1,5 +1,6 @@
 package org.aion.zero.impl.sync;
 
+import org.aion.base.type.IMsg;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -135,7 +136,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void send(int _id, String s, Msg _msg) {
+        public void send(int _id, String s, IMsg _msg) {
 
         }
 
@@ -186,7 +187,7 @@ public class BlockPropagationTest {
 
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(int _nodeId, String s, Msg _msg) {
+            public void send(int _nodeId, String s, IMsg _msg) {
                 throw new RuntimeException("should not have called send");
             }
         };
@@ -231,7 +232,7 @@ public class BlockPropagationTest {
         AtomicInteger times = new AtomicInteger();
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(int _nodeId, String s, Msg _msg) {
+            public void send(int _nodeId, String s, IMsg _msg) {
                 if (_nodeId != receiverMock.getIdHash())
                     throw new RuntimeException("should only send to receiver");
                 times.getAndIncrement();
@@ -286,7 +287,7 @@ public class BlockPropagationTest {
         AtomicInteger times = new AtomicInteger();
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(int _nodeId, String s, Msg _msg) {
+            public void send(int _nodeId, String s, IMsg _msg) {
                 if (_nodeId != receiverMock.getIdHash())
                     throw new RuntimeException("should only send to receiver");
                 times.getAndIncrement();
@@ -334,7 +335,7 @@ public class BlockPropagationTest {
         AtomicInteger sendCount = new AtomicInteger();
         P2pMock p2pMock = new P2pMock(node) {
             @Override
-            public void send(int _nodeId, String s, Msg _msg) {
+            public void send(int _nodeId, String s, IMsg _msg) {
                 sendCount.getAndIncrement();
             }
         };

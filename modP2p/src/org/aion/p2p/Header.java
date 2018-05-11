@@ -27,12 +27,13 @@ package org.aion.p2p;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import org.aion.base.type.IMsgHeader;
 
 
 /**
  * @author chris
  */
-public final class Header {
+public final class Header implements IMsgHeader {
 
     public final static int LEN = 8;
 

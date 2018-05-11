@@ -53,9 +53,9 @@ import org.aion.rlp.RLPList;
  */
 public final class BroadcastTx extends Msg {
 
-    private final List<ITransaction> txl;
+    private final List<? extends ITransaction> txl;
 
-    public BroadcastTx(final List<ITransaction> _txl) {
+    public BroadcastTx(final List<? extends ITransaction> _txl) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_TX);
         this.txl = _txl;
     }

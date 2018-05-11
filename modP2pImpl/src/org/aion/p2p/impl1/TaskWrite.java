@@ -25,6 +25,8 @@
 
 package org.aion.p2p.impl1;
 
+import org.aion.base.type.IMsg;
+import org.aion.base.type.IMsgHeader;
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 import java.io.IOException;
@@ -40,11 +42,11 @@ public class TaskWrite implements Runnable {
     private boolean showLog;
     private String nodeShortId;
     private SocketChannel sc;
-    private Msg msg;
+    private IMsg msg;
     private ChannelBuffer channelBuffer;
     private P2pMgr p2pMgr;
 
-    TaskWrite(boolean _showLog, String _nodeShortId, final SocketChannel _sc, final Msg _msg, final ChannelBuffer _cb, final P2pMgr _p2pMgr) {
+    TaskWrite(boolean _showLog, String _nodeShortId, final SocketChannel _sc, final IMsg _msg, final ChannelBuffer _cb, final P2pMgr _p2pMgr) {
         this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
@@ -71,7 +73,7 @@ public class TaskWrite implements Runnable {
              */
             byte[] bodyBytes = msg.encode();
             int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-            Header h = msg.getHeader();
+            IMsgHeader h = msg.getHeader();
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 

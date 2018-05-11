@@ -1,6 +1,8 @@
 package org.aion.zero.impl.tx;
 
+import org.aion.base.type.ITransaction;
 import org.aion.p2p.IP2pMgr;
+import org.aion.zero.impl.sync.msg.BroadcastTx;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
@@ -121,7 +123,7 @@ public class TxCollector {
                 LOG.trace("TxCollector.broadcastTx Tx#{}", transactions.size());
             }
 
-            TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p));
+            TxBroadcaster.getInstance().submitTransaction(new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
         }
     }
 

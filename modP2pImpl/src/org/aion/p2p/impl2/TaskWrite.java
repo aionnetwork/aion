@@ -25,6 +25,7 @@
 
 package org.aion.p2p.impl2;
 
+import org.aion.base.type.IMsgHeader;
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl2.selector.MainIOLoop;
@@ -61,7 +62,7 @@ public class TaskWrite implements Runnable {
 		try {
 			byte[] bodyBytes = msg.encode();
 			int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-			Header h = msg.getHeader();
+			IMsgHeader h = msg.getHeader();
 			h.setLen(bodyLen);
 			byte[] headerBytes = h.encode();
 
