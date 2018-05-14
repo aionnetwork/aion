@@ -35,9 +35,14 @@
 package org.aion.mcf.trie;
 
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.slf4j.Logger;
 
 /**
  * The DataSource which doesn't immediately forward delete updates (unlike inserts) but collects
@@ -47,6 +52,9 @@ import org.aion.base.util.ByteArrayWrapper;
  * deleted at block N and then inserted at block N + 10 this delete is not passed.
  */
 public class JournalPruneDataSource implements IByteArrayKeyValueStore {
+
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     private class Updates {
         ByteArrayWrapper blockHeader;
@@ -82,58 +90,99 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     }
 
     public void setPruneEnabled(boolean e) {
+        lock.writeLock().lock();
+
         enabled = e;
+
+        lock.writeLock().unlock();
     }
 
-    public synchronized void put(byte[] key, byte[] value) {
-        ByteArrayWrapper keyW = new ByteArrayWrapper(key);
+    public void put(byte[] key, byte[] value) {
+        lock.writeLock().lock();
 
-        // Check to see the value exists.
-        if (value != null) {
+        try {
+            ByteArrayWrapper keyW = new ByteArrayWrapper(key);
 
-            // If it exists and pruning is enabled.
-            if (enabled) {
-                currentUpdates.insertedKeys.add(keyW);
-                incRef(keyW);
-            }
+            // Check to see the value exists.
+            if (value != null) {
 
-            // put to source database.
-            src.put(key, value);
-
-        } else {
-            // Value does not exist, so we delete from current updates
-            if (enabled) {
-                currentUpdates.deletedKeys.add(keyW);
-            }
-            // delete is not sent to source db
-        }
-    }
-
-    public synchronized void delete(byte[] key) {
-        if (!enabled) {
-            return;
-        }
-        currentUpdates.deletedKeys.add(new ByteArrayWrapper(key));
-        // delete is delayed
-    }
-
-    public synchronized void updateBatch(Map<byte[], byte[]> rows) {
-        Map<byte[], byte[]> insertsOnly = new HashMap<>();
-        for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
-            ByteArrayWrapper keyW = new ByteArrayWrapper(entry.getKey());
-            if (entry.getValue() != null) {
+                // If it exists and pruning is enabled.
                 if (enabled) {
                     currentUpdates.insertedKeys.add(keyW);
                     incRef(keyW);
                 }
-                insertsOnly.put(entry.getKey(), entry.getValue());
+
+                // put to source database.
+                src.put(key, value);
+
             } else {
+                // Value does not exist, so we delete from current updates
                 if (enabled) {
                     currentUpdates.deletedKeys.add(keyW);
                 }
+                // delete is not sent to source db
             }
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not put key-value pair due to ", e);
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
-        src.putBatch(insertsOnly);
+    }
+
+    public void delete(byte[] key) {
+        lock.writeLock().lock();
+
+        try {
+            if (!enabled) {
+                return;
+            }
+            currentUpdates.deletedKeys.add(new ByteArrayWrapper(key));
+            // delete is delayed
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not delete key due to ", e);
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void putBatch(Map<byte[], byte[]> inputMap) {
+        lock.writeLock().lock();
+
+        try {
+            Map<byte[], byte[]> insertsOnly = new HashMap<>();
+            for (Map.Entry<byte[], byte[]> entry : inputMap.entrySet()) {
+                ByteArrayWrapper keyW = new ByteArrayWrapper(entry.getKey());
+                if (entry.getValue() != null) {
+                    if (enabled) {
+                        currentUpdates.insertedKeys.add(keyW);
+                        incRef(keyW);
+                    }
+                    insertsOnly.put(entry.getKey(), entry.getValue());
+                } else {
+                    if (enabled) {
+                        currentUpdates.deletedKeys.add(keyW);
+                    }
+                }
+            }
+            src.putBatch(insertsOnly);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not put batch due to ", e);
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private void incRef(ByteArrayWrapper keyW) {
@@ -154,40 +203,52 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
         return cnt;
     }
 
-    public synchronized void storeBlockChanges(byte[] blockHash, long blockNumber) {
-        if (!enabled) {
-            return;
+    public void storeBlockChanges(byte[] blockHash, long blockNumber) {
+        lock.writeLock().lock();
+
+        try {
+            if (!enabled) {
+                return;
+            }
+            ByteArrayWrapper hash = new ByteArrayWrapper(blockHash);
+            currentUpdates.blockHeader = hash;
+            currentUpdates.blockNumber = blockNumber;
+            blockUpdates.put(hash, currentUpdates);
+            currentUpdates = new Updates();
+        } finally {
+            lock.writeLock().unlock();
         }
-        ByteArrayWrapper hash = new ByteArrayWrapper(blockHash);
-        currentUpdates.blockHeader = hash;
-        currentUpdates.blockNumber = blockNumber;
-        blockUpdates.put(hash, currentUpdates);
-        currentUpdates = new Updates();
     }
 
-    public synchronized void prune(byte[] blockHash, long blockNumber) {
-        if (!enabled) {
-            return;
-        }
-        ByteArrayWrapper blockHashW = new ByteArrayWrapper(blockHash);
-        Updates updates = blockUpdates.remove(blockHashW);
-        if (updates != null) {
-            for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
-                decRef(insertedKey).dbRef = true;
-            }
+    public void prune(byte[] blockHash, long blockNumber) {
+        lock.writeLock().lock();
 
-            List<byte[]> batchRemove = new ArrayList<>();
-            for (ByteArrayWrapper key : updates.deletedKeys) {
-                Ref ref = refCount.get(key);
-                if (ref == null || ref.journalRefs == 0) {
-                    batchRemove.add(key.getData());
-                } else if (ref != null) {
-                    ref.dbRef = false;
+        try {
+            if (!enabled) {
+                return;
+            }
+            ByteArrayWrapper blockHashW = new ByteArrayWrapper(blockHash);
+            Updates updates = blockUpdates.remove(blockHashW);
+            if (updates != null) {
+                for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
+                    decRef(insertedKey).dbRef = true;
                 }
-            }
-            src.deleteBatch(batchRemove);
 
-            rollbackForkBlocks(blockNumber);
+                List<byte[]> batchRemove = new ArrayList<>();
+                for (ByteArrayWrapper key : updates.deletedKeys) {
+                    Ref ref = refCount.get(key);
+                    if (ref == null || ref.journalRefs == 0) {
+                        batchRemove.add(key.getData());
+                    } else if (ref != null) {
+                        ref.dbRef = false;
+                    }
+                }
+                src.deleteBatch(batchRemove);
+
+                rollbackForkBlocks(blockNumber);
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -199,7 +260,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
         }
     }
 
-    private synchronized void rollback(ByteArrayWrapper blockHashW) {
+    private void rollback(ByteArrayWrapper blockHashW) {
         Updates updates = blockUpdates.remove(blockHashW);
         Map<byte[], byte[]> batchRemove = new HashMap<>();
         for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
@@ -220,29 +281,54 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     }
 
     public int getDeletedKeysCount() {
-        return currentUpdates.deletedKeys.size();
+        lock.readLock().lock();
+        try {
+            return currentUpdates.deletedKeys.size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public int getInsertedKeysCount() {
-        return currentUpdates.insertedKeys.size();
+        lock.readLock().lock();
+        try {
+            return currentUpdates.insertedKeys.size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public Optional<byte[]> get(byte[] key) {
-        return src.get(key);
+        lock.readLock().lock();
+        try {
+            return src.get(key);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public Set<byte[]> keys() {
-        return src.keys();
+        lock.readLock().lock();
+        try {
+            return src.keys();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void close() {
-        src.close();
-    }
+        lock.writeLock().lock();
 
-    @Override
-    public void putBatch(Map<byte[], byte[]> inputMap) {
-        updateBatch(inputMap);
+        try {
+            src.close();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -257,20 +343,38 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
-        if (!enabled) {
-            return;
+        lock.writeLock().lock();
+        try {
+            if (!enabled) {
+                return;
+            }
+            // deletes are delayed
+            keys.forEach(key -> currentUpdates.deletedKeys.add(new ByteArrayWrapper(key)));
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not delete batch due to ", e);
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
-        // deletes are delayed
-        keys.forEach(key -> currentUpdates.deletedKeys.add(new ByteArrayWrapper(key)));
     }
 
     @Override
     public boolean isEmpty() {
-        // the delayed deletes are not considered by this check until applied to the db
-        if (!currentUpdates.insertedKeys.isEmpty()) {
-            return false;
-        } else {
-            return src.isEmpty();
+        lock.readLock().lock();
+        try {
+            // the delayed deletes are not considered by this check until applied to the db
+            if (!currentUpdates.insertedKeys.isEmpty()) {
+                return false;
+            } else {
+                return src.isEmpty();
+            }
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
