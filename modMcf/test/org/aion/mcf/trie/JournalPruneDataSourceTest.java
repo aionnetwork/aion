@@ -29,12 +29,15 @@
 package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
+import static org.junit.Assert.assertTrue;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.impl.DatabaseTestUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -609,7 +612,7 @@ public class JournalPruneDataSourceTest {
 
     @Test(expected = RuntimeException.class)
     public void testIsEmpty_wClosedDatabase_wInsertedKeys() {
-        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        db.put(randomBytes(32), randomBytes(32));
 
         source_db.close();
         assertThat(source_db.isOpen()).isFalse();
@@ -634,7 +637,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt get on closed db
-        db.get(DatabaseTestUtils.randomBytes(32));
+        db.get(randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -643,7 +646,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt put on closed db
-        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        db.put(randomBytes(32), randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -652,7 +655,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt put on closed db
-        db.put(DatabaseTestUtils.randomBytes(32), null);
+        db.put(randomBytes(32), null);
     }
 
     @Test(expected = RuntimeException.class)
@@ -661,7 +664,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         // attempt delete on closed db
-        db.delete(DatabaseTestUtils.randomBytes(32));
+        db.delete(randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -670,9 +673,9 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         Map<byte[], byte[]> map = new HashMap<>();
-        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
-        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
-        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(randomBytes(32), randomBytes(32));
+        map.put(randomBytes(32), randomBytes(32));
+        map.put(randomBytes(32), randomBytes(32));
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -684,9 +687,9 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.isOpen()).isFalse();
 
         List<byte[]> list = new ArrayList<>();
-        list.add(DatabaseTestUtils.randomBytes(32));
-        list.add(DatabaseTestUtils.randomBytes(32));
-        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(randomBytes(32));
+        list.add(randomBytes(32));
+        list.add(randomBytes(32));
 
         // attempt deleteBatch on closed db
         db.deleteBatch(list);
@@ -705,7 +708,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.open()).isTrue();
 
         // attempt put with null key
-        db.put(null, DatabaseTestUtils.randomBytes(32));
+        db.put(null, randomBytes(32));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -721,9 +724,9 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.open()).isTrue();
 
         Map<byte[], byte[]> map = new HashMap<>();
-        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
-        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
-        map.put(null, DatabaseTestUtils.randomBytes(32));
+        map.put(randomBytes(32), randomBytes(32));
+        map.put(randomBytes(32), randomBytes(32));
+        map.put(null, randomBytes(32));
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -734,12 +737,18 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.open()).isTrue();
 
         List<byte[]> list = new ArrayList<>();
-        list.add(DatabaseTestUtils.randomBytes(32));
-        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(randomBytes(32));
+        list.add(randomBytes(32));
         list.add(null);
 
         // attempt deleteBatch on closed db
         db.deleteBatch(list);
+    }
+
+    public static byte[] randomBytes(int length) {
+        byte[] result = new byte[length];
+        new Random().nextBytes(result);
+        return result;
     }
 
     // Concurrent access tests ----------------------------------------------------
@@ -747,13 +756,6 @@ public class JournalPruneDataSourceTest {
     private static final int CONCURRENT_THREADS = 200;
     private static final int TIME_OUT = 100; // in seconds
     private static final boolean DISPLAY_MESSAGES = false;
-
-    private static int count = 0;
-
-    private static synchronized int getNext() {
-        count++;
-        return count;
-    }
 
     private void addThread_IsEmpty(List<Runnable> threads, JournalPruneDataSource db) {
         threads.add(
@@ -797,7 +799,7 @@ public class JournalPruneDataSourceTest {
     private void addThread_Put(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
                 () -> {
-                    db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
+                    db.put(key.getBytes(), randomBytes(32));
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
                                 Thread.currentThread().getName() + ": " + key + " ADDED");
@@ -820,9 +822,9 @@ public class JournalPruneDataSourceTest {
         threads.add(
                 () -> {
                     Map<byte[], byte[]> map = new HashMap<>();
-                    map.put((key + 1).getBytes(), DatabaseTestUtils.randomBytes(32));
-                    map.put((key + 2).getBytes(), DatabaseTestUtils.randomBytes(32));
-                    map.put((key + 3).getBytes(), DatabaseTestUtils.randomBytes(32));
+                    map.put((key + 1).getBytes(), randomBytes(32));
+                    map.put((key + 2).getBytes(), randomBytes(32));
+                    map.put((key + 3).getBytes(), randomBytes(32));
                     db.putBatch(map);
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
@@ -1042,6 +1044,59 @@ public class JournalPruneDataSourceTest {
         // ensuring close
         db.close();
         assertThat(source_db.isClosed()).isTrue();
+    }
+
+    /**
+     * From <a
+     * href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
+     * Wiki on multithreaded code and concurrency</a>
+     */
+    public static void assertConcurrent(
+            final String message,
+            final List<? extends Runnable> runnables,
+            final int maxTimeoutSeconds)
+            throws InterruptedException {
+        final int numThreads = runnables.size();
+        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+        try {
+            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
+            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
+            final CountDownLatch allDone = new CountDownLatch(numThreads);
+            for (final Runnable submittedTestRunnable : runnables) {
+                threadPool.submit(
+                        () -> {
+                            allExecutorThreadsReady.countDown();
+                            try {
+                                afterInitBlocker.await();
+                                submittedTestRunnable.run();
+                            } catch (final Throwable e) {
+                                exceptions.add(e);
+                            } finally {
+                                allDone.countDown();
+                            }
+                        });
+            }
+            // wait until all threads are ready
+            assertTrue(
+                    "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
+                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
+            // start all test runners
+            afterInitBlocker.countDown();
+            assertTrue(
+                    message + " timeout! More than" + maxTimeoutSeconds + "seconds",
+                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
+        } finally {
+            threadPool.shutdownNow();
+        }
+        if (!exceptions.isEmpty()) {
+            for (Throwable e : exceptions) {
+                e.printStackTrace();
+            }
+        }
+        assertTrue(
+                message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
+                exceptions.isEmpty());
     }
 
     // Pruning tests ----------------------------------------------------
