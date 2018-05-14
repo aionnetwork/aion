@@ -182,8 +182,8 @@ public abstract class AbstractRepository<
 
             // getting state specific properties
             sharedProps = cfg.getDatabaseConfig(STATE_DB);
-            // locking enabled for state
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "true");
+            // locking enabled for state when JournalPrune not used
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STATE_DB);
             this.stateDatabase = connectAndOpen(sharedProps);
