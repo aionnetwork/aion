@@ -30,11 +30,10 @@ package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.db.impl.DatabaseTestUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -77,6 +76,8 @@ public class JournalPruneDataSourceTest {
         source_db.close();
         assertThat(source_db.isClosed()).isTrue();
     }
+
+    // Pruning disabled tests ----------------------------------------------------
 
     @Test
     public void testPut_woPrune() {
@@ -314,6 +315,8 @@ public class JournalPruneDataSourceTest {
         assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
+    // Pruning enabled tests ----------------------------------------------------
+
     @Test
     public void testPut_wPrune() {
         db.setPruneEnabled(true);
@@ -548,5 +551,151 @@ public class JournalPruneDataSourceTest {
         // ensure no cached values
         assertThat(db.getInsertedKeysCount()).isEqualTo(3);
         assertThat(db.getDeletedKeysCount()).isEqualTo(3);
+    }
+
+    // Access with exception tests ----------------------------------------------------
+
+    @Test(expected = RuntimeException.class)
+    public void testIsEmpty_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt isEmpty on closed db
+        db.isEmpty();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testIsEmpty_wClosedDatabase_wInsertedKeys() {
+        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+        assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+
+        // attempt isEmpty on closed db
+        db.isEmpty();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testKeys_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt keys on closed db
+        db.keys();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testGet_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt get on closed db
+        db.get(DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testPut_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt put on closed db
+        db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testPut_wClosedDatabase_wNullValue() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt put on closed db
+        db.put(DatabaseTestUtils.randomBytes(32), null);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testDelete_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt delete on closed db
+        db.delete(DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testPutBatch_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        Map<byte[], byte[]> map = new HashMap<>();
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+
+        // attempt putBatch on closed db
+        db.putBatch(map);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testDeleteBatch_wClosedDatabase() {
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        List<byte[]> list = new ArrayList<>();
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
+
+        // attempt deleteBatch on closed db
+        db.deleteBatch(list);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGet_wNullKey() {
+        assertThat(source_db.open()).isTrue();
+
+        // attempt get with null key
+        db.get(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPut_wNullKey() {
+        assertThat(source_db.open()).isTrue();
+
+        // attempt put with null key
+        db.put(null, DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDelete_wNullKey() {
+        assertThat(source_db.open()).isTrue();
+
+        // attempt delete with null key
+        db.delete(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPutBatch_wNullKey() {
+        assertThat(source_db.open()).isTrue();
+
+        Map<byte[], byte[]> map = new HashMap<>();
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(null, DatabaseTestUtils.randomBytes(32));
+
+        // attempt putBatch on closed db
+        db.putBatch(map);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDeleteBatch_wNullKey() {
+        assertThat(source_db.open()).isTrue();
+
+        List<byte[]> list = new ArrayList<>();
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(DatabaseTestUtils.randomBytes(32));
+        list.add(null);
+
+        // attempt deleteBatch on closed db
+        db.deleteBatch(list);
     }
 }

@@ -98,6 +98,8 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     }
 
     public void put(byte[] key, byte[] value) {
+        checkNotNull(key);
+
         lock.writeLock().lock();
 
         try {
@@ -116,6 +118,8 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
                 src.put(key, value);
 
             } else {
+                checkOpen();
+
                 // Value does not exist, so we delete from current updates
                 if (enabled) {
                     currentUpdates.deletedKeys.add(keyW);
@@ -134,9 +138,13 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     }
 
     public void delete(byte[] key) {
+        checkNotNull(key);
+
         lock.writeLock().lock();
 
         try {
+            checkOpen();
+
             if (!enabled) {
                 return;
             }
@@ -155,6 +163,8 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void putBatch(Map<byte[], byte[]> inputMap) {
+        checkNotNull(inputMap.keySet());
+
         lock.writeLock().lock();
 
         try {
@@ -343,8 +353,13 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
+        checkNotNull(keys);
+
         lock.writeLock().lock();
+
         try {
+            checkOpen();
+
             if (!enabled) {
                 return;
             }
@@ -364,9 +379,11 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     @Override
     public boolean isEmpty() {
         lock.readLock().lock();
+
         try {
             // the delayed deletes are not considered by this check until applied to the db
             if (!currentUpdates.insertedKeys.isEmpty()) {
+                checkOpen();
                 return false;
             } else {
                 return src.isEmpty();
@@ -380,5 +397,38 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     public IByteArrayKeyValueDatabase getSrc() {
         return src;
+    }
+
+    /**
+     * Checks that the data store connection is open. Throws a {@link RuntimeException} if the data
+     * store connection is closed.
+     *
+     * @implNote Always do this check after acquiring a lock on the class/data. Otherwise it might
+     *     produce inconsistent results due to lack of synchronization.
+     */
+    protected void checkOpen() {
+        if (!src.isOpen()) {
+            throw new RuntimeException("Data store is not opened: " + src);
+        }
+    }
+
+    /**
+     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
+     * is null.
+     */
+    public static void checkNotNull(byte[] k) {
+        if (k == null) {
+            throw new IllegalArgumentException("The data store does not accept null keys.");
+        }
+    }
+
+    /**
+     * Checks that the given collection of keys does not contain null values. Throws a {@link
+     * IllegalArgumentException} if a null key is present.
+     */
+    public static void checkNotNull(Collection<byte[]> keys) {
+        if (keys.contains(null)) {
+            throw new IllegalArgumentException("The data store does not accept null keys.");
+        }
     }
 }
