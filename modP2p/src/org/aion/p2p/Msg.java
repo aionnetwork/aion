@@ -25,13 +25,12 @@
 
 package org.aion.p2p;
 
-import org.aion.base.type.IMsg;
 import org.aion.base.type.IMsgHeader;
 
 /**
  * @author chris
  */
-public abstract class Msg implements IMsg {
+public abstract class Msg {
 
     private final IMsgHeader header;
 
@@ -50,9 +49,15 @@ public abstract class Msg implements IMsg {
     /**
      * @return Header
      */
-    @Override
     public IMsgHeader getHeader() {
         return this.header;
     }
+
+    /**
+     * Returns byte array encoding of message.
+     *
+     * @return
+     */
+    public abstract byte[] encode();
 
 }

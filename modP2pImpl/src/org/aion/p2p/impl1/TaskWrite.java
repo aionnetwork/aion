@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import org.aion.base.type.IMsg;
 import org.aion.base.type.IMsgHeader;
+import org.aion.p2p.Msg;
 
 /** @author chris */
 public class TaskWrite implements Runnable {
@@ -38,7 +38,7 @@ public class TaskWrite implements Runnable {
     private boolean showLog;
     private String nodeShortId;
     private SocketChannel sc;
-    private IMsg msg;
+    private Msg msg;
     private ChannelBuffer channelBuffer;
     private P2pMgr p2pMgr;
 
@@ -46,7 +46,7 @@ public class TaskWrite implements Runnable {
             boolean _showLog,
             String _nodeShortId,
             final SocketChannel _sc,
-            final IMsg _msg,
+            final Msg _msg,
             final ChannelBuffer _cb,
             final P2pMgr _p2pMgr) {
         this.showLog = _showLog;

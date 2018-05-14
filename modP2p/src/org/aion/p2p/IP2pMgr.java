@@ -28,7 +28,6 @@ package org.aion.p2p;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.IMsg;
 
 /** @author chris */
 public interface IP2pMgr {
@@ -46,7 +45,7 @@ public interface IP2pMgr {
      * @param _id int
      * @param _msg Msg
      */
-    void send(int _id, String _displayId, final IMsg _msg);
+    void send(int _id, String _displayId, final Msg _msg);
 
     /** Used to hook up with kernel to shutdown threads in network module */
     void shutdown();

@@ -27,10 +27,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import org.aion.base.type.IMsg;
 import org.aion.base.type.ITransaction;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Msg;
 
 /**
  * @author jin
@@ -44,15 +44,15 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
 
     protected final List<TX> tx;
     protected final P2P p2pMgr;
-    protected final IMsg msg;
+    protected final Msg msg;
 
-    public AbstractTxTask(TX _tx, P2P _p2pMgr, IMsg _msg) {
+    public AbstractTxTask(TX _tx, P2P _p2pMgr, Msg _msg) {
         this.tx = Collections.singletonList(_tx);
         this.p2pMgr = _p2pMgr;
         this.msg = _msg;
     }
 
-    public AbstractTxTask(List<TX> _tx, P2P _p2pMgr, IMsg _msg) {
+    public AbstractTxTask(List<TX> _tx, P2P _p2pMgr, Msg _msg) {
         this.tx = _tx;
         this.p2pMgr = _p2pMgr;
         this.msg = _msg;

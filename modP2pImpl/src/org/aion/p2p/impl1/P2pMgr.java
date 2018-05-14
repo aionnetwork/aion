@@ -33,7 +33,6 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.base.type.IMsg;
 import org.aion.p2p.*;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl.TaskRequestActiveNodes;
@@ -97,7 +96,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private static class MsgOut {
-        MsgOut(int _nodeId, String _displayId, IMsg _msg, Dest _dest) {
+        MsgOut(int _nodeId, String _displayId, Msg _msg, Dest _dest) {
             nodeId = _nodeId;
             displayId = _displayId;
             msg = _msg;
@@ -107,7 +106,7 @@ public final class P2pMgr implements IP2pMgr {
 
         int nodeId;
         String displayId;
-        IMsg msg;
+        Msg msg;
         Dest dest;
         long timestamp;
     }
@@ -1151,7 +1150,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
-    public void send(int _nodeIdHash, String _nodeIdShort, final IMsg _msg) {
+    public void send(int _nodeIdHash, String _nodeIdShort, final Msg _msg) {
         sendMsgQue.add(new MsgOut(_nodeIdHash, _nodeIdShort, _msg, Dest.ACTIVE));
     }
 
