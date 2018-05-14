@@ -26,7 +26,7 @@
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
  ******************************************************************************/
-package org.aion.trie;
+package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -36,7 +36,6 @@ import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.log.AionLoggerFactory;
-import org.aion.mcf.trie.JournalPruneDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -441,7 +440,7 @@ public class JournalPruneDataSourceTest {
     }
 
     @Test
-    public void testDeleteBatchWithPrune() {
+    public void testDeleteBatch_wPrune() {
         // ensure existence
         Map<byte[], byte[]> map = new HashMap<>();
         map.put(k1, v1);
@@ -467,7 +466,7 @@ public class JournalPruneDataSourceTest {
     }
 
     @Test
-    public void testKeys() {
+    public void testKeys_wPrune() {
         db.setPruneEnabled(true);
 
         // keys shouldn't be null even when empty
