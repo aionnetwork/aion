@@ -29,6 +29,7 @@
 package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
 
 import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -697,5 +698,249 @@ public class JournalPruneDataSourceTest {
 
         // attempt deleteBatch on closed db
         db.deleteBatch(list);
+    }
+
+    // Concurrent access tests ----------------------------------------------------
+
+    private static final int CONCURRENT_THREADS = 200;
+    private static final int TIME_OUT = 100; // in seconds
+    private static final boolean DISPLAY_MESSAGES = false;
+
+    private static int count = 0;
+
+    private static synchronized int getNext() {
+        count++;
+        return count;
+    }
+
+    private void addThread_IsEmpty(List<Runnable> threads, JournalPruneDataSource db) {
+        threads.add(
+                () -> {
+                    boolean check = db.isEmpty();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + (check ? "EMPTY" : "NOT EMPTY"));
+                    }
+                });
+    }
+
+    private void addThread_Keys(List<Runnable> threads, JournalPruneDataSource db) {
+        threads.add(
+                () -> {
+                    Set<byte[]> keys = db.keys();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName() + ": #keys = " + keys.size());
+                    }
+                });
+    }
+
+    private void addThread_Get(List<Runnable> threads, JournalPruneDataSource db, String key) {
+        threads.add(
+                () -> {
+                    boolean hasValue = db.get(key.getBytes()).isPresent();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + key
+                                        + " "
+                                        + (hasValue ? "PRESENT" : "NOT PRESENT"));
+                    }
+                });
+    }
+
+    private void addThread_Put(List<Runnable> threads, JournalPruneDataSource db, String key) {
+        threads.add(
+                () -> {
+                    db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName() + ": " + key + " ADDED");
+                    }
+                });
+    }
+
+    private void addThread_Delete(List<Runnable> threads, JournalPruneDataSource db, String key) {
+        threads.add(
+                () -> {
+                    db.delete(key.getBytes());
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName() + ": " + key + " DELETED");
+                    }
+                });
+    }
+
+    private void addThread_PutBatch(List<Runnable> threads, JournalPruneDataSource db, String key) {
+        threads.add(
+                () -> {
+                    Map<byte[], byte[]> map = new HashMap<>();
+                    map.put((key + 1).getBytes(), DatabaseTestUtils.randomBytes(32));
+                    map.put((key + 2).getBytes(), DatabaseTestUtils.randomBytes(32));
+                    map.put((key + 3).getBytes(), DatabaseTestUtils.randomBytes(32));
+                    db.putBatch(map);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + (key + 1)
+                                        + ", "
+                                        + (key + 2)
+                                        + ", "
+                                        + (key + 3)
+                                        + " ADDED");
+                    }
+                });
+    }
+
+    private void addThread_DeleteBatch(
+            List<Runnable> threads, JournalPruneDataSource db, String key) {
+        threads.add(
+                () -> {
+                    List<byte[]> list = new ArrayList<>();
+                    list.add((key + 1).getBytes());
+                    list.add((key + 2).getBytes());
+                    list.add((key + 3).getBytes());
+                    db.deleteBatch(list);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + (key + 1)
+                                        + ", "
+                                        + (key + 2)
+                                        + ", "
+                                        + (key + 3)
+                                        + " DELETED");
+                    }
+                });
+    }
+
+    @Test
+    public void testConcurrentAccessOnOpenDatabase() throws InterruptedException {
+        assertThat(source_db.isOpen()).isTrue();
+
+        // create distinct threads with
+        List<Runnable> threads = new ArrayList<>();
+
+        int threadSetCount = CONCURRENT_THREADS / 8;
+        if (threadSetCount < 3) {
+            threadSetCount = 3;
+        }
+
+        for (int i = 0; i < threadSetCount; i++) {
+            // 1. thread that checks empty
+            addThread_IsEmpty(threads, db);
+
+            // 2. thread that gets keys
+            addThread_Keys(threads, db);
+
+            String keyStr = "key-" + i + ".";
+
+            // 3. thread that gets entry
+            addThread_Get(threads, db, keyStr);
+
+            // 4. thread that puts entry
+            addThread_Put(threads, db, keyStr);
+
+            // 5. thread that deletes entry
+            addThread_Delete(threads, db, keyStr);
+
+            // 6. thread that puts entries
+            addThread_PutBatch(threads, db, keyStr);
+
+            // 7. thread that deletes entry
+            addThread_DeleteBatch(threads, db, keyStr);
+        }
+
+        // run threads and check for exceptions
+        assertConcurrent("Testing concurrent access. ", threads, TIME_OUT);
+
+        // ensuring close
+        db.close();
+        assertThat(source_db.isClosed()).isTrue();
+    }
+
+    @Test
+    public void testConcurrentPut() throws InterruptedException {
+        assertThat(source_db.isOpen()).isTrue();
+
+        // create distinct threads with
+        List<Runnable> threads = new ArrayList<>();
+
+        for (int i = 0; i < CONCURRENT_THREADS; i++) {
+            addThread_Put(threads, db, "key-" + i);
+        }
+
+        // run threads
+        assertConcurrent("Testing put(...) ", threads, TIME_OUT);
+
+        // check that all values were added
+        assertThat(db.keys().size()).isEqualTo(CONCURRENT_THREADS);
+
+        // ensuring close
+        db.close();
+        assertThat(source_db.isClosed()).isTrue();
+    }
+
+    @Test
+    public void testConcurrentPutBatch() throws InterruptedException {
+        assertThat(source_db.isOpen()).isTrue();
+
+        // create distinct threads with
+        List<Runnable> threads = new ArrayList<>();
+
+        for (int i = 0; i < CONCURRENT_THREADS; i++) {
+            addThread_PutBatch(threads, db, "key-" + i);
+        }
+
+        // run threads
+        assertConcurrent("Testing putBatch(...) ", threads, TIME_OUT);
+
+        // check that all values were added
+        assertThat(db.keys().size()).isEqualTo(3 * CONCURRENT_THREADS);
+
+        // ensuring close
+        db.close();
+        assertThat(source_db.isClosed()).isTrue();
+    }
+
+    @Test
+    public void testConcurrentUpdate() throws InterruptedException {
+        assertThat(source_db.isOpen()).isTrue();
+
+        // create distinct threads with
+        List<Runnable> threads = new ArrayList<>();
+
+        int threadSetCount = CONCURRENT_THREADS / 4;
+        if (threadSetCount < 3) {
+            threadSetCount = 3;
+        }
+
+        for (int i = 0; i < threadSetCount; i++) {
+            String keyStr = "key-" + i + ".";
+
+            // 1. thread that puts entry
+            addThread_Put(threads, db, keyStr);
+
+            // 2. thread that deletes entry
+            addThread_Delete(threads, db, keyStr);
+
+            // 3. thread that puts entries
+            addThread_PutBatch(threads, db, keyStr);
+
+            // 4. thread that deletes entry
+            addThread_DeleteBatch(threads, db, keyStr);
+        }
+
+        // run threads and check for exceptions
+        assertConcurrent("Testing concurrent updates. ", threads, TIME_OUT);
+
+        // ensuring close
+        db.close();
+        assertThat(source_db.isClosed()).isTrue();
     }
 }
