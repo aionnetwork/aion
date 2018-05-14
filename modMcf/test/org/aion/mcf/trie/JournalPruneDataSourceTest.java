@@ -318,6 +318,8 @@ public class JournalPruneDataSourceTest {
 
     // Pruning enabled tests ----------------------------------------------------
 
+    private static final byte[] b0 = "block0".getBytes();
+
     @Test
     public void testPut_wPrune() {
         db.setPruneEnabled(true);
@@ -332,6 +334,11 @@ public class JournalPruneDataSourceTest {
 
         // ensure the insert was propagated
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -356,6 +363,11 @@ public class JournalPruneDataSourceTest {
         // ensure the inserts were propagated
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -389,6 +401,11 @@ public class JournalPruneDataSourceTest {
         // ensure cached values
         assertThat(db.getDeletedKeysCount()).isEqualTo(2);
         assertThat(db.getInsertedKeysCount()).isEqualTo(2);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -423,6 +440,11 @@ public class JournalPruneDataSourceTest {
         // ensure cached values
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         assertThat(db.getInsertedKeysCount()).isEqualTo(3);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -441,6 +463,11 @@ public class JournalPruneDataSourceTest {
         // ensure cached values
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -467,6 +494,11 @@ public class JournalPruneDataSourceTest {
         // ensure cached values
         assertThat(db.getDeletedKeysCount()).isEqualTo(3);
         assertThat(db.getInsertedKeysCount()).isEqualTo(2);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -514,6 +546,11 @@ public class JournalPruneDataSourceTest {
         // ensure no cached values
         assertThat(db.getInsertedKeysCount()).isEqualTo(3);
         assertThat(db.getDeletedKeysCount()).isEqualTo(3);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     @Test
@@ -552,6 +589,11 @@ public class JournalPruneDataSourceTest {
         // ensure no cached values
         assertThat(db.getInsertedKeysCount()).isEqualTo(3);
         assertThat(db.getDeletedKeysCount()).isEqualTo(3);
+
+        // check store block
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(0);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
     // Access with exception tests ----------------------------------------------------
@@ -819,9 +861,44 @@ public class JournalPruneDataSourceTest {
                 });
     }
 
+    private void addThread_StoreBlockChanges(
+            List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
+        threads.add(
+                () -> {
+                    db.storeBlockChanges(hash.getBytes(), number);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": block ("
+                                        + hash
+                                        + ", "
+                                        + number
+                                        + ") STORED");
+                    }
+                });
+    }
+
+    private void addThread_Prune(
+            List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
+        threads.add(
+                () -> {
+                    db.prune(hash.getBytes(), number);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": block ("
+                                        + hash
+                                        + ", "
+                                        + number
+                                        + ") PRUNED");
+                    }
+                });
+    }
+
     @Test
     public void testConcurrentAccessOnOpenDatabase() throws InterruptedException {
         assertThat(source_db.isOpen()).isTrue();
+        db.setPruneEnabled(true);
 
         // create distinct threads with
         List<Runnable> threads = new ArrayList<>();
@@ -831,6 +908,8 @@ public class JournalPruneDataSourceTest {
             threadSetCount = 3;
         }
 
+        String keyStr, blockStr;
+
         for (int i = 0; i < threadSetCount; i++) {
             // 1. thread that checks empty
             addThread_IsEmpty(threads, db);
@@ -838,7 +917,7 @@ public class JournalPruneDataSourceTest {
             // 2. thread that gets keys
             addThread_Keys(threads, db);
 
-            String keyStr = "key-" + i + ".";
+            keyStr = "key-" + i + ".";
 
             // 3. thread that gets entry
             addThread_Get(threads, db, keyStr);
@@ -854,6 +933,14 @@ public class JournalPruneDataSourceTest {
 
             // 7. thread that deletes entry
             addThread_DeleteBatch(threads, db, keyStr);
+
+            blockStr = "block-" + i + ".";
+
+            // 8. thread that stores block changes
+            addThread_StoreBlockChanges(threads, db, blockStr, i);
+
+            // 9. thread that prunes
+            addThread_Prune(threads, db, blockStr, i);
         }
 
         // run threads and check for exceptions
@@ -867,6 +954,7 @@ public class JournalPruneDataSourceTest {
     @Test
     public void testConcurrentPut() throws InterruptedException {
         assertThat(source_db.isOpen()).isTrue();
+        db.setPruneEnabled(true);
 
         // create distinct threads with
         List<Runnable> threads = new ArrayList<>();
@@ -889,6 +977,7 @@ public class JournalPruneDataSourceTest {
     @Test
     public void testConcurrentPutBatch() throws InterruptedException {
         assertThat(source_db.isOpen()).isTrue();
+        db.setPruneEnabled(true);
 
         // create distinct threads with
         List<Runnable> threads = new ArrayList<>();
@@ -911,6 +1000,7 @@ public class JournalPruneDataSourceTest {
     @Test
     public void testConcurrentUpdate() throws InterruptedException {
         assertThat(source_db.isOpen()).isTrue();
+        db.setPruneEnabled(true);
 
         // create distinct threads with
         List<Runnable> threads = new ArrayList<>();
@@ -920,8 +1010,10 @@ public class JournalPruneDataSourceTest {
             threadSetCount = 3;
         }
 
+        String keyStr, blockStr;
+
         for (int i = 0; i < threadSetCount; i++) {
-            String keyStr = "key-" + i + ".";
+            keyStr = "key-" + i + ".";
 
             // 1. thread that puts entry
             addThread_Put(threads, db, keyStr);
@@ -934,6 +1026,14 @@ public class JournalPruneDataSourceTest {
 
             // 4. thread that deletes entry
             addThread_DeleteBatch(threads, db, keyStr);
+
+            blockStr = "block-" + i + ".";
+
+            // 5. thread that stores block changes
+            addThread_StoreBlockChanges(threads, db, blockStr, i);
+
+            // 6. thread that prunes
+            addThread_Prune(threads, db, blockStr, i);
         }
 
         // run threads and check for exceptions
@@ -942,5 +1042,436 @@ public class JournalPruneDataSourceTest {
         // ensuring close
         db.close();
         assertThat(source_db.isClosed()).isTrue();
+    }
+
+    // Pruning tests ----------------------------------------------------
+
+    private static final byte[] b1 = "block1".getBytes();
+    private static final byte[] b2 = "block2".getBytes();
+    private static final byte[] b3 = "block3".getBytes();
+
+    private static final byte[] k4 = "key4".getBytes();
+    private static final byte[] v4 = "value4".getBytes();
+
+    private static final byte[] k5 = "key5".getBytes();
+    private static final byte[] v5 = "value5".getBytes();
+
+    private static final byte[] k6 = "key6".getBytes();
+    private static final byte[] v6 = "value6".getBytes();
+
+    @Test
+    public void pruningTest() {
+        db.setPruneEnabled(true);
+
+        // block 0
+        db.put(k1, v1);
+        db.put(k2, v2);
+        db.put(k3, v3);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(3);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.get(k1).get()).isEqualTo(v1);
+        assertThat(source_db.get(k2).get()).isEqualTo(v2);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+
+        // block 1
+        db.put(k4, v4);
+        db.delete(k2);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.get(k2).isPresent()).isTrue();
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+
+        // block 2
+        db.put(k2, v3);
+        db.delete(k3);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).isPresent()).isTrue();
+
+        // block 3
+        db.put(k5, v5);
+        db.put(k6, v6);
+        db.delete(k2);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(2);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b3, 3);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(4);
+
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+        assertThat(source_db.get(k2).isPresent()).isTrue();
+
+        // prune block 0
+        db.prune(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+
+        assertThat(source_db.get(k1).get()).isEqualTo(v1);
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+
+        // prune block 1
+        db.prune(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+        // not deleted due to block 2 insert
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+
+        // prune block 2
+        db.prune(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).isPresent()).isFalse();
+
+        // prune block 3
+        db.prune(b3, 3);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(0);
+
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+        assertThat(source_db.get(k2).isPresent()).isFalse();
+    }
+
+    @Test
+    public void pruningTest_wBatch() {
+        db.setPruneEnabled(true);
+
+        Map<byte[], byte[]> map = new HashMap<>();
+
+        // block 0
+        map.put(k1, v1);
+        map.put(k2, v2);
+        map.put(k3, v3);
+        db.putBatch(map);
+
+        assertThat(db.getInsertedKeysCount()).isEqualTo(3);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(0);
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.get(k1).get()).isEqualTo(v1);
+        assertThat(source_db.get(k2).get()).isEqualTo(v2);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+
+        // block 1
+        map.clear();
+        map.put(k4, v4);
+        map.put(k2, null);
+        db.putBatch(map);
+
+        assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.get(k2).isPresent()).isTrue();
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+
+        // block 2
+        map.clear();
+        map.put(k2, v3);
+        map.put(k3, null);
+        db.putBatch(map);
+
+        assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).isPresent()).isTrue();
+
+        // block 3
+        map.clear();
+        map.put(k5, v5);
+        map.put(k6, v6);
+        map.put(k2, null);
+        db.putBatch(map);
+
+        assertThat(db.getInsertedKeysCount()).isEqualTo(2);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b3, 3);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(4);
+
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+        assertThat(source_db.get(k2).isPresent()).isTrue();
+
+        // prune block 0
+        db.prune(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+
+        assertThat(source_db.get(k1).get()).isEqualTo(v1);
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+
+        // prune block 1
+        db.prune(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+        // not deleted due to block 2 insert
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+
+        // prune block 2
+        db.prune(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).isPresent()).isFalse();
+
+        // prune block 3
+        db.prune(b3, 3);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(0);
+
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+        assertThat(source_db.get(k2).isPresent()).isFalse();
+    }
+
+    @Test
+    public void pruningTest_woStoredLevel() {
+
+        source_db.put(k2, v2);
+        source_db.put(k3, v3);
+
+        // block 2
+        db.put(k2, v3);
+        db.delete(k3);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(1);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).isPresent()).isTrue();
+
+        // block 3
+        db.put(k5, v5);
+        db.put(k6, v6);
+        db.delete(k2);
+        assertThat(db.getInsertedKeysCount()).isEqualTo(2);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
+        db.storeBlockChanges(b3, 3);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+        assertThat(source_db.get(k2).isPresent()).isTrue();
+
+        // prune block 0 (not stored)
+        db.prune(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        // prune block 1 (not stored)
+        db.prune(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+
+        // prune block 2
+        db.prune(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).isPresent()).isFalse();
+
+        // prune block 3
+        db.prune(b3, 3);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(0);
+
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+        assertThat(source_db.get(k2).isPresent()).isFalse();
+    }
+
+    @Test
+    public void pruningTest_wFork_onCurrentLevel() {
+        db.setPruneEnabled(true);
+
+        // block b0
+        db.put(k1, v1);
+        db.put(k2, v2);
+        db.put(k3, v3);
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.keys().size()).isEqualTo(3);
+        assertThat(source_db.get(k1).get()).isEqualTo(v1);
+        assertThat(source_db.get(k2).get()).isEqualTo(v2);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+
+        // block b1
+        db.put(k4, v4);
+        db.put(k1, v2);
+        db.delete(k2);
+        db.storeBlockChanges(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(source_db.get(k1).get()).isEqualTo(v2);
+        assertThat(source_db.get(k2).get()).isEqualTo(v2);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+
+        // block b2
+        db.put(k5, v5);
+        db.delete(k3);
+        db.put(k2, v3);
+        db.put(k1, v4);
+        db.put(k4, v6);
+        db.storeBlockChanges(b2, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+
+        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(source_db.get(k1).get()).isEqualTo(v4);
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).get()).isEqualTo(v6);
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+
+        // block b3 : note same level as block b2
+        db.put(k6, v6);
+        db.delete(k4);
+        db.put(k2, v4);
+        db.put(k1, v3);
+        db.storeBlockChanges(b3, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(4);
+
+        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(source_db.get(k1).get()).isEqualTo(v3);
+        assertThat(source_db.get(k2).get()).isEqualTo(v4);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).get()).isEqualTo(v6);
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+
+        // prune block b0
+        db.prune(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+        assertThat(source_db.keys().size()).isEqualTo(6);
+
+        // prune block b1
+        db.prune(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+        assertThat(source_db.keys().size()).isEqualTo(6);
+
+        // prune block b3 at level 2 (should be called for main chain block)
+        db.prune(b3, 2);
+        // also removed the updates for block b2
+        assertThat(db.getBlockUpdates().size()).isEqualTo(0);
+
+        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(source_db.get(k1).get()).isEqualTo(v3);
+        assertThat(source_db.get(k2).get()).isEqualTo(v4);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).isPresent()).isFalse();
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+    }
+
+    @Test
+    public void pruningTest_wFork_onPastLevel() {
+        db.setPruneEnabled(true);
+
+        // block b0
+        db.put(k1, v1);
+        db.put(k2, v2);
+        db.put(k3, v3);
+        db.storeBlockChanges(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+
+        assertThat(source_db.keys().size()).isEqualTo(3);
+        assertThat(source_db.get(k1).get()).isEqualTo(v1);
+        assertThat(source_db.get(k2).get()).isEqualTo(v2);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+
+        // block b1
+        db.put(k4, v4);
+        db.put(k1, v2);
+        db.delete(k2);
+        db.storeBlockChanges(b1, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(2);
+
+        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(source_db.get(k1).get()).isEqualTo(v2);
+        assertThat(source_db.get(k2).get()).isEqualTo(v2);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+
+        // block b2 : note same level as block b1
+        db.put(k5, v5);
+        db.delete(k3);
+        db.put(k2, v3);
+        db.put(k1, v4);
+        db.storeBlockChanges(b2, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+
+        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(source_db.get(k1).get()).isEqualTo(v4);
+        assertThat(source_db.get(k2).get()).isEqualTo(v3);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+
+        // block b3
+        db.put(k6, v6);
+        db.delete(k4);
+        db.put(k2, v4);
+        db.put(k1, v3);
+        db.storeBlockChanges(b3, 2);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(4);
+
+        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(source_db.get(k1).get()).isEqualTo(v3);
+        assertThat(source_db.get(k2).get()).isEqualTo(v4);
+        assertThat(source_db.get(k3).get()).isEqualTo(v3);
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+
+        // prune block b0
+        db.prune(b0, 0);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(3);
+        assertThat(source_db.keys().size()).isEqualTo(6);
+
+        // prune block b2 at level 1 : (should be called for main chain block)
+        db.prune(b2, 1);
+        assertThat(db.getBlockUpdates().size()).isEqualTo(1);
+        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(source_db.get(k1).get()).isEqualTo(v3);
+        assertThat(source_db.get(k2).get()).isEqualTo(v4);
+        assertThat(source_db.get(k3).isPresent()).isFalse();
+        // note: k4 must be explicitly deleted even if it was introduced in the discarded b1 block
+        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
+
+        // prune block b3
+        db.prune(b3, 2);
+        // also removed the updates for block b2
+        assertThat(db.getBlockUpdates().size()).isEqualTo(0);
+
+        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(source_db.get(k1).get()).isEqualTo(v3);
+        assertThat(source_db.get(k2).get()).isEqualTo(v4);
+        assertThat(source_db.get(k3).isPresent()).isFalse();
+        assertThat(source_db.get(k4).isPresent()).isFalse();
+        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k6).get()).isEqualTo(v6);
     }
 }
