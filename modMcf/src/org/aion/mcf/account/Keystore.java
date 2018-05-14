@@ -103,7 +103,8 @@ public class Keystore {
             String fileName = "UTC--" + iso_date + "--" + address;
             try {
                 Path keyFile = PATH.resolve(fileName);
-                if (!Files.exists(keyFile)) keyFile = Files.createFile(keyFile, attr);
+                if (!Files.exists(keyFile))
+                    keyFile = Files.createFile(keyFile, attr);
                 String path = keyFile.toString();
                 FileOutputStream fos = new FileOutputStream(path);
                 fos.write(content);
@@ -146,32 +147,38 @@ public class Keystore {
         }
 
         List<File> matchedFile =
-                files.parallelStream()
-                        .filter(
-                                file ->
-                                        account.entrySet()
-                                                .parallelStream()
-                                                .anyMatch(
-                                                        ac ->
-                                                                file.getName()
-                                                                        .contains(
-                                                                                ac.getKey()
-                                                                                        .toString())))
-                        .collect(Collectors.toList());
+            files.parallelStream()
+                .filter(
+                    file ->
+                        account.entrySet()
+                            .parallelStream()
+                            .anyMatch(
+                                ac ->
+                                    file.getName()
+                                        .contains(
+                                            ac.getKey()
+                                                .toString())))
+                .collect(Collectors.toList());
 
         Map<Address, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
             try {
                 String[] frags = file.getName().split("--");
                 if (frags.length == 3) {
-                    Address addr = Address.wrap(frags[2]);
-                    byte[] content = Files.readAllBytes(file.toPath());
+                    if (frags[2].startsWith(AION_PREFIX)) {
+                        Address addr = Address.wrap(frags[2]);
+                        byte[] content = Files.readAllBytes(file.toPath());
 
-                    String pw = account.get(addr);
-                    if (pw != null) {
-                        ECKey key = KeystoreFormat.fromKeystore(content, pw);
-                        if (key != null) {
-                            res.put(addr, ByteArrayWrapper.wrap(content));
+                        String pw = account.get(addr);
+                        if (pw != null) {
+                            ECKey key = KeystoreFormat.fromKeystore(content, pw);
+                            if (key != null) {
+                                res.put(addr, ByteArrayWrapper.wrap(content));
+                            }
+                        }
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Wrong address format: {}", frags[2]);
                         }
                     }
                 }
@@ -190,15 +197,18 @@ public class Keystore {
     private static List<String> addAddrs(List<File> files) {
         List<String> addresses = new ArrayList<>();
         files.forEach(
-                (file) -> {
-                    String[] frags = file.getName().split("--");
-                    if (frags.length == 3) {
-                        String addr = TypeConverter.toJsonHex(frags[2]);
-                        if (addr.startsWith(ADDR_PREFIX + AION_PREFIX)) {
-                            addresses.add(addr);
+            (file) -> {
+                String[] frags = file.getName().split("--");
+                if (frags.length == 3) {
+                    if (frags[2].startsWith(AION_PREFIX)) {
+                        addresses.add(TypeConverter.toJsonHex(frags[2]));
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Wrong address format: {}", frags[2]);
                         }
                     }
-                });
+                }
+            });
         return addresses;
     }
 
@@ -264,39 +274,28 @@ public class Keystore {
         int count = 0;
         for (Map.Entry<String, String> keySet : importKey.entrySet()) {
             if (count < IMPORT_LIMIT) {
-                String addr =
-                        keySet.getKey().startsWith(ADDR_PREFIX)
-                                ? keySet.getKey().substring(2)
-                                : keySet.getKey();
-
-                if (addr.startsWith(AION_PREFIX)) {
-                    ECKey key = KeystoreFormat.fromKeystore(Hex.decode(addr), keySet.getValue());
+                ECKey key = KeystoreFormat.fromKeystore(Hex.decode(keySet.getKey()), keySet.getValue());
+                if (key != null) {
                     String address = Keystore.create(keySet.getValue(), key);
                     if (!address.equals(ADDR_PREFIX)) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug(
-                                    "The private key was imported, the address is {}",
-                                    keySet.getKey());
+                                "The private key was imported, the address is {}",
+                                keySet.getKey());
                         }
                     } else {
                         LOG.error(
-                                "Failed to import the private key {}. Already exists?",
-                                keySet.getKey());
+                            "Failed to import the private key {}. Already exists?",
+                            keySet.getKey());
                         // only return the failed import privateKey.
                         rtn.add(keySet.getKey());
                     }
-                } else {
-                    LOG.error(
-                            "Failed to import the private key {}. Format incorrect!",
-                            keySet.getKey());
-                    // only return the failed import privateKey.
-                    rtn.add(keySet.getKey());
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(
-                            "The account import limit was reached, the address didn't import into keystore {}",
-                            keySet.getKey());
+                        "The account import limit was reached, the address didn't import into keystore {}",
+                        keySet.getKey());
                 }
                 rtn.add(keySet.getKey());
             }
@@ -304,5 +303,41 @@ public class Keystore {
         }
 
         return rtn;
+    }
+
+    /*
+     * Test method. Don't use it for the code dev.
+     */
+    protected static File getAccountFile(String address, String password) {
+        List<File> files = getFiles();
+        if (files == null) {
+            if (LOG.isWarnEnabled()) {
+                LOG.warn("No key file been stored in the kernel.");
+            }
+            return null;
+        }
+
+        Optional<File> matchedFile =
+            files.parallelStream()
+                .filter(
+                    file ->
+                        file.getName()
+                            .contains(address)
+                ).findFirst();
+
+        if (matchedFile.isPresent()) {
+            byte[] content = new byte[0];
+            try {
+                content = Files.readAllBytes(matchedFile.get().toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (null != KeystoreFormat.fromKeystore(content, password)) {
+                return matchedFile.get();
+            }
+        }
+
+        return null;
     }
 }
