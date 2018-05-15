@@ -64,6 +64,15 @@
 		<path>database</path>
 		<!--Boolean value. Enable/disable database integrity check run at startup.-->
 		<check_integrity>true</check_integrity>
+		<!--Configuration for data pruning behavior.-->
+		<prune>
+			<!--Boolean value. Enable/disable database pruning.-->
+			<enabled>true</enabled>
+			<!--Integer value with minimum set to 128. Only blocks older than best block level minus this number are candidates for pruning.-->
+			<current_count>128</current_count>
+			<!--Integer value with minimum set to 1000. States for blocks that are exact multiples of this number will not be pruned.-->
+			<archive_rate>10000</archive_rate>
+		</prune>
 		<!--Integer value. Number of blocks after which to prune. Pruning disabled when negative.-->
 		<prune>1000</prune>
 		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->

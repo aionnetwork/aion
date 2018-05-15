@@ -74,17 +74,6 @@ public class AionRepositoryImpl
                         new RepositoryConfig(
                                 new File(config.getBasePath(), config.getDb().getPath())
                                         .getAbsolutePath(),
-                                config.getDb().getPrune() > 0
-                                        ?
-                                        // if the value is smaller than backward step
-                                        // there is the risk of importing state-less blocks after
-                                        // reboot
-                                        (128 > config.getDb().getPrune()
-                                                ? 128
-                                                : config.getDb().getPrune())
-                                        :
-                                        // negative value => pruning disabled
-                                        config.getDb().getPrune(),
                                 ContractDetailsAion.getInstance(),
                                 config.getDb()));
     }
@@ -122,7 +111,7 @@ public class AionRepositoryImpl
     }
 
     private Trie createStateTrie() {
-        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneBlockCount > 0);
+        return new SecureTrie(stateDSPrune).withPruningEnabled(pruneEnabled);
     }
 
     @Override
@@ -512,7 +501,7 @@ public class AionRepositoryImpl
             worldState.sync();
             detailsDS.syncLargeStorage();
 
-            if (pruneBlockCount > 0) {
+            if (pruneEnabled) {
                 stateDSPrune.storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
                 detailsDS
                         .getStorageDSPrune()
@@ -554,7 +543,12 @@ public class AionRepositoryImpl
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateDSPrune = this.stateDSPrune;
+
+            // pruning config
+            repo.pruneEnabled = this.pruneEnabled;
             repo.pruneBlockCount = this.pruneBlockCount;
+            repo.archiveRate = this.archiveRate;
+
             repo.detailsDS = this.detailsDS;
             repo.isSnapshot = true;
 

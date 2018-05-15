@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -34,59 +34,61 @@
  ******************************************************************************/
 package org.aion.db;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
-import org.aion.db.impl.leveldb.LevelDBConstants;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.apache.commons.lang3.RandomUtils;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class AionContractDetailsTest {
 
-    private static final int IN_MEMORY_STORAGE_LIMIT = 1000000; // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit();
+    private static final int IN_MEMORY_STORAGE_LIMIT =
+            1000000; // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit();
 
-    protected IRepositoryConfig repoConfig = new IRepositoryConfig() {
-        @Override
-        public String getDbPath() {
-            return "";
-        }
+    protected IRepositoryConfig repoConfig =
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
 
-        @Override
-        public int getPrune() {
-            return 0;
-        }
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
 
-        @Override
-        public IContractDetails contractDetailsImpl() {
-            return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-        }
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
 
-        @Override
-        public Properties getDatabaseConfig(String db_name) {
-            Properties props = new Properties();
-            props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-            props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-            return props;
-        }
-    };
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
 
-    private static IContractDetails deserialize(byte[] rlp, IByteArrayKeyValueDatabase externalStorage) {
+    private static IContractDetails deserialize(
+            byte[] rlp, IByteArrayKeyValueDatabase externalStorage) {
         AionContractDetailsImpl result = new AionContractDetailsImpl();
         result.setExternalStorageDataSource(externalStorage);
         result.decode(rlp);
@@ -105,10 +107,11 @@ public class AionContractDetailsTest {
         byte[] key_2 = ByteUtil.hexStringToBytes("222222");
         byte[] val_2 = ByteUtil.hexStringToBytes("bbbbbb");
 
-        AionContractDetailsImpl contractDetails = new AionContractDetailsImpl(
-                -1, //CfgAion.inst().getDb().getPrune(),
-                1000000 //CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
-        );
+        AionContractDetailsImpl contractDetails =
+                new AionContractDetailsImpl(
+                        -1, // CfgAion.inst().getDb().getPrune(),
+                        1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
+                        );
         contractDetails.setCode(code);
         contractDetails.put(new DataWord(key_1), new DataWord(val_1));
         contractDetails.put(new DataWord(key_2), new DataWord(val_2));
@@ -117,20 +120,25 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl(data);
 
-        assertEquals(ByteUtil.toHexString(code),
-                ByteUtil.toHexString(contractDetails_.getCode()));
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode()));
 
-        assertEquals(ByteUtil.toHexString(val_1),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_1)).getNoLeadZeroesData()));
+        assertEquals(
+                ByteUtil.toHexString(val_1),
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_1)).getNoLeadZeroesData()));
 
-        assertEquals(ByteUtil.toHexString(val_2),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_2)).getNoLeadZeroesData()));
+        assertEquals(
+                ByteUtil.toHexString(val_2),
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_2)).getNoLeadZeroesData()));
     }
 
     @Test
     public void test_2() throws Exception {
 
-        byte[] code = ByteUtil.hexStringToBytes("7c0100000000000000000000000000000000000000000000000000000000600035046333d546748114610065578063430fe5f01461007c5780634d432c1d1461008d578063501385b2146100b857806357eb3b30146100e9578063dbc7df61146100fb57005b6100766004356024356044356102f0565b60006000f35b61008760043561039e565b60006000f35b610098600435610178565b8073ffffffffffffffffffffffffffffffffffffffff1660005260206000f35b6100c96004356024356044356101a0565b8073ffffffffffffffffffffffffffffffffffffffff1660005260206000f35b6100f1610171565b8060005260206000f35b610106600435610133565b8360005282602052816040528073ffffffffffffffffffffffffffffffffffffffff1660605260806000f35b5b60006020819052908152604090208054600182015460028301546003909301549192909173ffffffffffffffffffffffffffffffffffffffff1684565b5b60015481565b5b60026020526000908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b73ffffffffffffffffffffffffffffffffffffffff831660009081526020819052604081206002015481908302341080156101fe575073ffffffffffffffffffffffffffffffffffffffff8516600090815260208190526040812054145b8015610232575073ffffffffffffffffffffffffffffffffffffffff85166000908152602081905260409020600101548390105b61023b57610243565b3391506102e8565b6101966103ca60003973ffffffffffffffffffffffffffffffffffffffff3381166101965285166101b68190526000908152602081905260408120600201546101d6526101f68490526102169080f073ffffffffffffffffffffffffffffffffffffffff8616600090815260208190526040902060030180547fffffffffffffffffffffffff0000000000000000000000000000000000000000168217905591508190505b509392505050565b73ffffffffffffffffffffffffffffffffffffffff33166000908152602081905260408120548190821461032357610364565b60018054808201909155600090815260026020526040902080547fffffffffffffffffffffffff000000000000000000000000000000000000000016331790555b50503373ffffffffffffffffffffffffffffffffffffffff1660009081526020819052604090209081556001810192909255600290910155565b3373ffffffffffffffffffffffffffffffffffffffff166000908152602081905260409020600201555600608061019660043960048051602451604451606451600080547fffffffffffffffffffffffff0000000000000000000000000000000000000000908116909517815560018054909516909317909355600355915561013390819061006390396000f3007c0100000000000000000000000000000000000000000000000000000000600035046347810fe381146100445780637e4a1aa81461005557806383d2421b1461006957005b61004f6004356100ab565b60006000f35b6100636004356024356100fc565b60006000f35b61007460043561007a565b60006000f35b6001543373ffffffffffffffffffffffffffffffffffffffff9081169116146100a2576100a8565b60078190555b50565b73ffffffffffffffffffffffffffffffffffffffff8116600090815260026020526040902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016600117905550565b6001543373ffffffffffffffffffffffffffffffffffffffff9081169116146101245761012f565b600582905560068190555b505056");
+        byte[] code =
+                ByteUtil.hexStringToBytes(
+                        "7c0100000000000000000000000000000000000000000000000000000000600035046333d546748114610065578063430fe5f01461007c5780634d432c1d1461008d578063501385b2146100b857806357eb3b30146100e9578063dbc7df61146100fb57005b6100766004356024356044356102f0565b60006000f35b61008760043561039e565b60006000f35b610098600435610178565b8073ffffffffffffffffffffffffffffffffffffffff1660005260206000f35b6100c96004356024356044356101a0565b8073ffffffffffffffffffffffffffffffffffffffff1660005260206000f35b6100f1610171565b8060005260206000f35b610106600435610133565b8360005282602052816040528073ffffffffffffffffffffffffffffffffffffffff1660605260806000f35b5b60006020819052908152604090208054600182015460028301546003909301549192909173ffffffffffffffffffffffffffffffffffffffff1684565b5b60015481565b5b60026020526000908152604090205473ffffffffffffffffffffffffffffffffffffffff1681565b73ffffffffffffffffffffffffffffffffffffffff831660009081526020819052604081206002015481908302341080156101fe575073ffffffffffffffffffffffffffffffffffffffff8516600090815260208190526040812054145b8015610232575073ffffffffffffffffffffffffffffffffffffffff85166000908152602081905260409020600101548390105b61023b57610243565b3391506102e8565b6101966103ca60003973ffffffffffffffffffffffffffffffffffffffff3381166101965285166101b68190526000908152602081905260408120600201546101d6526101f68490526102169080f073ffffffffffffffffffffffffffffffffffffffff8616600090815260208190526040902060030180547fffffffffffffffffffffffff0000000000000000000000000000000000000000168217905591508190505b509392505050565b73ffffffffffffffffffffffffffffffffffffffff33166000908152602081905260408120548190821461032357610364565b60018054808201909155600090815260026020526040902080547fffffffffffffffffffffffff000000000000000000000000000000000000000016331790555b50503373ffffffffffffffffffffffffffffffffffffffff1660009081526020819052604090209081556001810192909255600290910155565b3373ffffffffffffffffffffffffffffffffffffffff166000908152602081905260409020600201555600608061019660043960048051602451604451606451600080547fffffffffffffffffffffffff0000000000000000000000000000000000000000908116909517815560018054909516909317909355600355915561013390819061006390396000f3007c0100000000000000000000000000000000000000000000000000000000600035046347810fe381146100445780637e4a1aa81461005557806383d2421b1461006957005b61004f6004356100ab565b60006000f35b6100636004356024356100fc565b60006000f35b61007460043561007a565b60006000f35b6001543373ffffffffffffffffffffffffffffffffffffffff9081169116146100a2576100a8565b60078190555b50565b73ffffffffffffffffffffffffffffffffffffffff8116600090815260026020526040902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0016600117905550565b6001543373ffffffffffffffffffffffffffffffffffffffff9081169116146101245761012f565b600582905560068190555b505056");
         Address address = Address.wrap(RandomUtils.nextBytes(Address.ADDRESS_LEN));
 
         byte[] key_0 = ByteUtil.hexStringToBytes("18d63b70aa690ad37cb50908746c9a55");
@@ -197,48 +205,60 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails_ = new AionContractDetailsImpl(data);
 
-        assertEquals(ByteUtil.toHexString(code),
-                ByteUtil.toHexString(contractDetails_.getCode()));
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(contractDetails_.getCode()));
 
         assertTrue(address.equals(contractDetails_.getAddress()));
 
-        assertEquals(ByteUtil.toHexString(val_1),
+        assertEquals(
+                ByteUtil.toHexString(val_1),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_1)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_2),
+        assertEquals(
+                ByteUtil.toHexString(val_2),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_2)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_3),
+        assertEquals(
+                ByteUtil.toHexString(val_3),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_3)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_4),
+        assertEquals(
+                ByteUtil.toHexString(val_4),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_4)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_5),
+        assertEquals(
+                ByteUtil.toHexString(val_5),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_5)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_6),
+        assertEquals(
+                ByteUtil.toHexString(val_6),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_6)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_7),
+        assertEquals(
+                ByteUtil.toHexString(val_7),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_7)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_8),
+        assertEquals(
+                ByteUtil.toHexString(val_8),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_8)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_9),
+        assertEquals(
+                ByteUtil.toHexString(val_9),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_9)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_10),
+        assertEquals(
+                ByteUtil.toHexString(val_10),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_10)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_11),
+        assertEquals(
+                ByteUtil.toHexString(val_11),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_11)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_12),
+        assertEquals(
+                ByteUtil.toHexString(val_12),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_12)).getData()));
 
-        assertEquals(ByteUtil.toHexString(val_13),
+        assertEquals(
+                ByteUtil.toHexString(val_13),
                 ByteUtil.toHexString(contractDetails_.get(new DataWord(key_13)).getData()));
     }
 
@@ -309,7 +329,6 @@ public class AionContractDetailsTest {
             elements.put(key, value);
             original.put(key, value);
         }
-
 
         original.syncStorage();
         assertTrue(!externalStorage.isEmpty());

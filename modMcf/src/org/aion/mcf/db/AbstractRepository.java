@@ -102,6 +102,7 @@ public abstract class AbstractRepository<
     // Block related parameters.
     protected long bestBlockNumber = 0;
     protected long pruneBlockCount;
+    protected long archiveRate;
     protected boolean pruneEnabled = true;
 
     // Current blockstore.
@@ -248,9 +249,17 @@ public abstract class AbstractRepository<
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
             stateDSPrune = new JournalPruneDataSource(stateDatabase);
-            pruneBlockCount = pruneEnabled ? this.cfg.getPrune() : -1;
-            if (pruneEnabled && pruneBlockCount > 0) {
-                LOGGEN.info("Pruning block count set to {}.", pruneBlockCount);
+
+            // pruning config
+            pruneEnabled = this.cfg.getPruneConfig().isEnabled();
+            pruneBlockCount = this.cfg.getPruneConfig().getCurrentCount();
+            archiveRate = this.cfg.getPruneConfig().getArchiveRate();
+
+            if (pruneEnabled) {
+                LOGGEN.info(
+                        "Pruning ENABLED. Block count set to {} and archive rate set to {}.",
+                        pruneBlockCount,
+                        archiveRate);
             } else {
                 stateDSPrune.setPruneEnabled(false);
             }

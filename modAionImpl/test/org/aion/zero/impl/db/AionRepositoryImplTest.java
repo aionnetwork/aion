@@ -39,15 +39,13 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Optional;
 import java.util.Properties;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.db.IRepositoryConfig;
+import org.aion.base.db.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
@@ -67,8 +65,8 @@ public class AionRepositoryImplTest {
                 }
 
                 @Override
-                public int getPrune() {
-                    return 0;
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
                 }
 
                 @Override

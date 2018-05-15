@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -22,25 +22,22 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
-import org.aion.base.util.Utils;
-import org.aion.db.impl.DBVendor;
+import static org.aion.db.impl.DatabaseFactory.Props;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import org.aion.base.util.Utils;
+import org.aion.db.impl.DBVendor;
 
-import static org.aion.db.impl.DatabaseFactory.Props;
-
-/**
- * @author chris
- */
+/** @author chris */
 public class CfgDb {
 
     public static class Names {
@@ -63,7 +60,7 @@ public class CfgDb {
     private String vendor;
     private boolean compression;
     private boolean check_integrity;
-    private int prune;
+    private CfgPrune prune;
 
     /**
      * Enabling expert mode allows more detailed database configurations.
@@ -80,7 +77,7 @@ public class CfgDb {
         this.vendor = DBVendor.LEVELDB.toValue();
         this.compression = false;
         this.check_integrity = true;
-        this.prune = -1;
+        this.prune = new CfgPrune();
 
         if (expert) {
             this.specificConfig = new HashMap<>();
@@ -103,79 +100,88 @@ public class CfgDb {
                             this.check_integrity = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case "prune":
-                            this.prune = Integer.parseInt(Cfg.readValue(sr));
+                            this.prune.fromXML(sr);
                             break;
-                        // parameter considered only when expert==false
+                            // parameter considered only when expert==false
                         case "vendor":
                             this.vendor = Cfg.readValue(sr);
                             break;
-                        // parameter considered only when expert==false
+                            // parameter considered only when expert==false
                         case Props.ENABLE_DB_COMPRESSION:
                             this.compression = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
-                        // parameter considered only when expert==true
-                        case Names.DEFAULT: {
-                            CfgDbDetails dbConfig = this.specificConfig.get(Names.DEFAULT);
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.DEFAULT, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.BLOCK: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.BLOCK, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.INDEX: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.INDEX, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.DETAILS: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.DETAILS, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.STORAGE: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.STORAGE, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.STATE: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.STATE, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.TRANSACTION: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.TRANSACTION, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.TX_POOL: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.TX_POOL, dbConfig);
-                            break;
-                        }
-                        // parameter considered only when expert==true
-                        case Names.TX_CACHE: {
-                            CfgDbDetails dbConfig = new CfgDbDetails();
-                            dbConfig.fromXML(sr);
-                            this.specificConfig.put(Names.TX_CACHE, dbConfig);
-                            break;
-                        }
+                            // parameter considered only when expert==true
+                        case Names.DEFAULT:
+                            {
+                                CfgDbDetails dbConfig = this.specificConfig.get(Names.DEFAULT);
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.DEFAULT, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.BLOCK:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.BLOCK, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.INDEX:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.INDEX, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.DETAILS:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.DETAILS, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.STORAGE:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.STORAGE, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.STATE:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.STATE, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.TRANSACTION:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.TRANSACTION, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.TX_POOL:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.TX_POOL, dbConfig);
+                                break;
+                            }
+                            // parameter considered only when expert==true
+                        case Names.TX_CACHE:
+                            {
+                                CfgDbDetails dbConfig = new CfgDbDetails();
+                                dbConfig.fromXML(sr);
+                                this.specificConfig.put(Names.TX_CACHE, dbConfig);
+                                break;
+                            }
                         default:
                             Cfg.skipElement(sr);
                             break;
@@ -205,25 +211,24 @@ public class CfgDb {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeComment("Boolean value. Enable/disable database integrity check run at startup.");
+            xmlWriter.writeComment(
+                    "Boolean value. Enable/disable database integrity check run at startup.");
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("check_integrity");
             xmlWriter.writeCharacters(String.valueOf(this.check_integrity));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeComment("Integer value. Number of blocks after which to prune. Pruning disabled when negative.");
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("prune");
-            xmlWriter.writeCharacters(String.valueOf(this.prune));
-            xmlWriter.writeEndElement();
+            xmlWriter.writeComment("Configuration for data pruning behavior.");
+            this.prune.toXML(xmlWriter);
 
             if (!expert) {
                 xmlWriter.writeCharacters("\r\n\t\t");
                 xmlWriter.writeComment(
                         "Database implementation used to store data; supported options: leveldb, h2, rocksdb.");
                 xmlWriter.writeCharacters("\r\n\t\t");
-                xmlWriter.writeComment("Caution: changing implementation requires re-syncing from genesis!");
+                xmlWriter.writeComment(
+                        "Caution: changing implementation requires re-syncing from genesis!");
                 xmlWriter.writeCharacters("\r\n\t\t");
                 xmlWriter.writeStartElement("vendor");
                 xmlWriter.writeCharacters(this.vendor);
@@ -260,7 +265,7 @@ public class CfgDb {
         return this.path;
     }
 
-    public int getPrune() {
+    public CfgPrune getPrune() {
         return this.prune;
     }
 
