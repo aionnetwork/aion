@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -474,6 +474,14 @@ public abstract class ApiAion extends Api {
 
     public BigInteger getBalance(Address _address) {
         return this.ac.getRepository().getBalance(_address);
+    }
+
+    public BigInteger getNonce(String _address) {
+        return this.ac.getRepository().getNonce(Address.wrap(_address));
+    }
+
+    public BigInteger getNonce(Address _address) {
+        return this.ac.getRepository().getNonce(_address);
     }
 
     // TODO: refactor these ad-hoc transaction creations - violates DRY and is messy
