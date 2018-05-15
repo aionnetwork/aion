@@ -29,28 +29,40 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public interface IP2pMgr {
 
-    /** @return Map */
+    /**
+     * @return Map
+     */
     Map<Integer, INode> getActiveNodes();
 
-    /** @param _hs List<Handler> */
+    /**
+     * @param _hs List<Handler>
+     */
     void register(final List<Handler> _hs);
 
-    /** @return INode */
+    /**
+     * @return INode
+     */
     INode getRandom();
 
     /**
-     * @param _id int
+     * @param _id  int
      * @param _msg Msg
      */
     void send(int _id, String _displayId, final Msg _msg);
 
-    /** Used to hook up with kernel to shutdown threads in network module */
+    /**
+     * Used to hook up with kernel to shutdown threads in network module
+     */
     void shutdown();
 
-    /** start all p2p process */
+    /**
+     * start all p2p process
+     */
     void run();
 
     List<Short> versions();
