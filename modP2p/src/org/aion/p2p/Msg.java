@@ -25,8 +25,6 @@
 
 package org.aion.p2p;
 
-import org.aion.base.type.IMsgHeader;
-
 /**
  * @author chris
  */

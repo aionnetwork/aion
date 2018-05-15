@@ -13,7 +13,6 @@
 		<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.mod}/modP2p.jar" />
 		<pathelement location="${dir.mod}/modP2pImpl.jar" />
-		<pathelement location="${dir.mod}/modAionBase.jar" />
 	</path>
 
 	<path id="cp">

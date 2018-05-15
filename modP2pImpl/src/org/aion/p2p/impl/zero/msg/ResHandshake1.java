@@ -73,7 +73,7 @@ public final class ResHandshake1 extends ResHandshake {
 
                     }
                 }
-                return new ResHandshake1(success, binaryVersion);
+                return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
 
             } catch (Exception e) {
                 System.out.println("<p2p res-handshake-decode error=" + e.getMessage() + ">");

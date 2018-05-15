@@ -28,7 +28,7 @@ package org.aion.p2p.impl2;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
-import org.aion.base.type.IMsgHeader;
+import org.aion.p2p.IMsgHeader;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl2.selector.MainIOLoop;
 

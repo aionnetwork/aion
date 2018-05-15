@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import org.aion.base.type.IMsgHeader;
+import org.aion.p2p.IMsgHeader;
 import org.aion.p2p.Msg;
 
 /** @author chris */

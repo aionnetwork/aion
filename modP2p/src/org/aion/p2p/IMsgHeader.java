@@ -1,4 +1,4 @@
-package org.aion.base.type;
+package org.aion.p2p;
 
 public interface IMsgHeader {
 
@@ -15,4 +15,5 @@ public interface IMsgHeader {
     void setLen(int _len);
 
     byte[] encode();
+
 }
