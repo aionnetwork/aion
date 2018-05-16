@@ -660,9 +660,13 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Null raw transaction provided.");
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
-        byte[] transactionHash = sendTransaction(rawTransaction);
 
-        return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
+        try {
+            byte[] transactionHash = sendTransaction(rawTransaction);
+            return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
+        } catch (Exception e) {
+            return new RpcMsg(null, RpcError.INTERNAL_ERROR, e.getMessage());
+        }
     }
 
     public RpcMsg eth_call(Object _params) {

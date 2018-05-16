@@ -549,15 +549,9 @@ public abstract class ApiAion extends Api {
             throw new NullPointerException();
         }
 
-        try {
-            AionTransaction tx = new AionTransaction(signedTx);
-
-            pendingState.addPendingTransaction(tx);
-
-            return tx.getHash();
-        } catch (Exception ex) {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
-        }
+        AionTransaction tx = new AionTransaction(signedTx);
+        pendingState.addPendingTransaction(tx);
+        return tx.getHash();
     }
 
     // --Commented out by Inspection START (02/02/18 6:58 PM):
