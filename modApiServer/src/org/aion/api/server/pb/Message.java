@@ -69830,11 +69830,6 @@ public final class Message {
      * <code>bytes address = 1;</code>
      */
     com.google.protobuf.ByteString getAddress();
-
-    /**
-     * <code>uint64 blockNumber = 2;</code>
-     */
-    long getBlockNumber();
   }
   /**
    * Protobuf type {@code org.aion.api.server.pb.req_getNonce}
@@ -69850,7 +69845,6 @@ public final class Message {
     }
     private req_getNonce() {
       address_ = com.google.protobuf.ByteString.EMPTY;
-      blockNumber_ = 0L;
     }
 
     @java.lang.Override
@@ -69889,11 +69883,6 @@ public final class Message {
               address_ = input.readBytes();
               break;
             }
-            case 16: {
-
-              blockNumber_ = input.readUInt64();
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -69927,15 +69916,6 @@ public final class Message {
       return address_;
     }
 
-    public static final int BLOCKNUMBER_FIELD_NUMBER = 2;
-    private long blockNumber_;
-    /**
-     * <code>uint64 blockNumber = 2;</code>
-     */
-    public long getBlockNumber() {
-      return blockNumber_;
-    }
-
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -69951,9 +69931,6 @@ public final class Message {
       if (!address_.isEmpty()) {
         output.writeBytes(1, address_);
       }
-      if (blockNumber_ != 0L) {
-        output.writeUInt64(2, blockNumber_);
-      }
       unknownFields.writeTo(output);
     }
 
@@ -69965,10 +69942,6 @@ public final class Message {
       if (!address_.isEmpty()) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, address_);
-      }
-      if (blockNumber_ != 0L) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(2, blockNumber_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -69988,8 +69961,6 @@ public final class Message {
       boolean result = true;
       result = result && getAddress()
           .equals(other.getAddress());
-      result = result && (getBlockNumber()
-          == other.getBlockNumber());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -70003,9 +69974,6 @@ public final class Message {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + ADDRESS_FIELD_NUMBER;
       hash = (53 * hash) + getAddress().hashCode();
-      hash = (37 * hash) + BLOCKNUMBER_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getBlockNumber());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -70137,8 +70105,6 @@ public final class Message {
         super.clear();
         address_ = com.google.protobuf.ByteString.EMPTY;
 
-        blockNumber_ = 0L;
-
         return this;
       }
 
@@ -70162,7 +70128,6 @@ public final class Message {
       public org.aion.api.server.pb.Message.req_getNonce buildPartial() {
         org.aion.api.server.pb.Message.req_getNonce result = new org.aion.api.server.pb.Message.req_getNonce(this);
         result.address_ = address_;
-        result.blockNumber_ = blockNumber_;
         onBuilt();
         return result;
       }
@@ -70206,9 +70171,6 @@ public final class Message {
         if (other == org.aion.api.server.pb.Message.req_getNonce.getDefaultInstance()) return this;
         if (other.getAddress() != com.google.protobuf.ByteString.EMPTY) {
           setAddress(other.getAddress());
-        }
-        if (other.getBlockNumber() != 0L) {
-          setBlockNumber(other.getBlockNumber());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -70262,32 +70224,6 @@ public final class Message {
       public Builder clearAddress() {
         
         address_ = getDefaultInstance().getAddress();
-        onChanged();
-        return this;
-      }
-
-      private long blockNumber_ ;
-      /**
-       * <code>uint64 blockNumber = 2;</code>
-       */
-      public long getBlockNumber() {
-        return blockNumber_;
-      }
-      /**
-       * <code>uint64 blockNumber = 2;</code>
-       */
-      public Builder setBlockNumber(long value) {
-        
-        blockNumber_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>uint64 blockNumber = 2;</code>
-       */
-      public Builder clearBlockNumber() {
-        
-        blockNumber_ = 0L;
         onChanged();
         return this;
       }
@@ -71531,69 +71467,68 @@ public final class Message {
       "rt\030\001 \001(\004\022\024\n\014blkNumberEnd\030\002 \001(\004\"W\n\032rsp_ge" +
       "tBlockDetailsByRange\0229\n\nblkDetails\030\001 \003(\013" +
       "2%.org.aion.api.server.pb.t_BlockDetail\"" +
-      "4\n\014req_getNonce\022\017\n\007address\030\001 \001(\014\022\023\n\013bloc" +
-      "kNumber\030\002 \001(\004\"\035\n\014rsp_getNonce\022\r\n\005nonce\030\001" +
-      " \001(\014*\204\001\n\005Servs\022\010\n\004s_hb\020\000\022\013\n\007s_admin\020\001\022\013\n" +
-      "\007s_chain\020\002\022\r\n\ts_account\020\003\022\010\n\004s_tx\020\004\022\t\n\005s" +
-      "_net\020\005\022\n\n\006s_mine\020\006\022\017\n\013s_privilege\020\007\022\014\n\010s" +
-      "_wallet\020\010\022\010\n\004s_NA\020\t*\265\n\n\005Funcs\022\025\n\021f_proto" +
-      "colVersion\020\000\022\022\n\016f_minerAddress\020\001\022\016\n\nf_ac" +
-      "counts\020\002\022\021\n\rf_blockNumber\020\003\022\020\n\014f_getBala" +
-      "nce\020\004\022\022\n\016f_getStorageAt\020\005\022\023\n\017f_unlockAcc" +
-      "ount\020\006\022\025\n\021f_sendTransaction\020\007\022\032\n\026f_getTr" +
-      "ansactionByHash\020\010\022\r\n\tf_compile\020\t\022\024\n\020f_co" +
-      "ntractDeploy\020\n\022\031\n\025f_getTransactionCount\020" +
-      "\013\022$\n f_getBlockTransactionCountByHash\020\014\022" +
-      "&\n\"f_getBlockTransactionCountByNumber\020\r\022" +
-      "\r\n\tf_getCode\020\016\022\n\n\006f_call\020\017\022\024\n\020f_getBlock" +
-      "ByHash\020\020\022\026\n\022f_getBlockByNumber\020\021\022\'\n#f_ge" +
-      "tTransactionByBlockHashAndIndex\020\022\022)\n%f_g" +
-      "etTransactionByBlockNumberAndIndex\020\023\022\033\n\027" +
-      "f_getTransactionReceipt\020\024\022\022\n\016f_getCompil" +
-      "ers\020\025\022\025\n\021f_compileSolidity\020\026\022\r\n\tf_getWor" +
-      "k\020\027\022\020\n\014f_submitWork\020\030\022\035\n\031f_fetchQueuedTr" +
-      "ansactions\020\031\022\027\n\023f_signedTransaction\020\032\022\024\n" +
-      "\020f_rawTransaction\020\033\022\021\n\rf_estimateNrg\020\034\022\014" +
-      "\n\010f_mining\020\035\022\016\n\nf_hashrate\020\036\022\024\n\020f_getAct" +
-      "iveNodes\020\037\022\024\n\020f_getSolcVersion\020 \022\017\n\013f_is" +
-      "Syncing\020!\022\016\n\nf_syncInfo\020\"\022\023\n\017f_getSystem" +
-      "Info\020#\022\023\n\017f_eventRegister\020$\022\025\n\021f_eventDe" +
-      "register\020%\022\023\n\017f_accountCreate\020&\022\021\n\rf_acc" +
-      "ountLock\020\'\022\023\n\017f_userPrivilege\020(\022\020\n\014f_eve" +
-      "ntQuery\020)\022\024\n\020f_importAccounts\020*\022\024\n\020f_exp" +
-      "ortAccounts\020+\022\034\n\030f_getBlockHeaderByNumbe" +
-      "r\020,\022\032\n\026f_getBlockHeaderByHash\020-\022\037\n\033f_get" +
-      "CurrentTotalDifficulty\020.\022\024\n\020f_getStaticN" +
-      "odes\020/\022\035\n\031f_getBlockDetailsByNumber\0200\022\035\n" +
-      "\031f_getBlockDetailsByLatest\0201\022\027\n\023f_getBlo" +
-      "cksByLatest\0202\022$\n f_getAccountDetailsByAd" +
-      "dressList\0203\022\024\n\020f_backupAccounts\0204\022\010\n\004f_N" +
-      "A\0205\022\030\n\024f_getBlockSqlByRange\0206\022\034\n\030f_getBl" +
-      "ockDetailsByRange\0207\022\016\n\nf_getNonce\0208*\241\007\n\007" +
-      "Retcode\022\n\n\006r_fail\020\000\022\r\n\tr_success\020\001\022\023\n\017r_" +
-      "wallet_nullcb\020\002\022\025\n\021r_heartbeatReturn\020\003\022\025" +
-      "\n\021r_privilegeReturn\020\004\022\r\n\tr_tx_Init\020d\022\017\n\013" +
-      "r_tx_Recved\020e\022\020\n\014r_tx_Dropped\020f\022\023\n\017r_tx_" +
-      "NewPending\020g\022\020\n\014r_tx_Pending\020h\022\021\n\rr_tx_I" +
-      "ncluded\020i\022\020\n\014r_tx_eventCb\020j\022\010\n\004r_NA\020k\022\036\n" +
-      "\021r_fail_header_len\020\377\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_" +
-      "service_call\020\376\377\377\377\377\377\377\377\377\001\022!\n\024r_fail_functi" +
-      "on_call\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_function_ex" +
-      "ception\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_api_version" +
-      "\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_ct_bytecode\020\372\377\377\377\377\377" +
-      "\377\377\377\001\022\034\n\017r_fail_null_rsp\020\371\377\377\377\377\377\377\377\377\001\022 \n\023r_" +
-      "fail_invalid_addr\020\370\377\377\377\377\377\377\377\377\001\022\'\n\032r_fail_n" +
-      "ull_compile_source\020\367\377\377\377\377\377\377\377\377\001\022$\n\027r_fail_" +
-      "compile_contract\020\366\377\377\377\377\377\377\377\377\001\022#\n\026r_fail_se" +
-      "ndTx_null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036\n\021r_fail_getco" +
-      "de_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail_getTxReceipt_" +
-      "null_recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_fail_zmqHandle" +
-      "r_exception\020\362\377\377\377\377\377\377\377\377\001\022(\n\033r_fail_hit_pen" +
-      "ding_tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%\n\030r_fail_txque" +
-      "ue_exception\020\360\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_functi" +
-      "on_arguments\020\357\377\377\377\377\377\377\377\377\001\022!\n\024r_fail_unsupp" +
-      "ort_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fail_unknown\020\355\377\377" +
-      "\377\377\377\377\377\377\001b\006proto3"
+      "\037\n\014req_getNonce\022\017\n\007address\030\001 \001(\014\"\035\n\014rsp_" +
+      "getNonce\022\r\n\005nonce\030\001 \001(\014*\204\001\n\005Servs\022\010\n\004s_h" +
+      "b\020\000\022\013\n\007s_admin\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_accou" +
+      "nt\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n" +
+      "\013s_privilege\020\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\265" +
+      "\n\n\005Funcs\022\025\n\021f_protocolVersion\020\000\022\022\n\016f_min" +
+      "erAddress\020\001\022\016\n\nf_accounts\020\002\022\021\n\rf_blockNu" +
+      "mber\020\003\022\020\n\014f_getBalance\020\004\022\022\n\016f_getStorage" +
+      "At\020\005\022\023\n\017f_unlockAccount\020\006\022\025\n\021f_sendTrans" +
+      "action\020\007\022\032\n\026f_getTransactionByHash\020\010\022\r\n\t" +
+      "f_compile\020\t\022\024\n\020f_contractDeploy\020\n\022\031\n\025f_g" +
+      "etTransactionCount\020\013\022$\n f_getBlockTransa" +
+      "ctionCountByHash\020\014\022&\n\"f_getBlockTransact" +
+      "ionCountByNumber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_c" +
+      "all\020\017\022\024\n\020f_getBlockByHash\020\020\022\026\n\022f_getBloc" +
+      "kByNumber\020\021\022\'\n#f_getTransactionByBlockHa" +
+      "shAndIndex\020\022\022)\n%f_getTransactionByBlockN" +
+      "umberAndIndex\020\023\022\033\n\027f_getTransactionRecei" +
+      "pt\020\024\022\022\n\016f_getCompilers\020\025\022\025\n\021f_compileSol" +
+      "idity\020\026\022\r\n\tf_getWork\020\027\022\020\n\014f_submitWork\020\030" +
+      "\022\035\n\031f_fetchQueuedTransactions\020\031\022\027\n\023f_sig" +
+      "nedTransaction\020\032\022\024\n\020f_rawTransaction\020\033\022\021" +
+      "\n\rf_estimateNrg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_has" +
+      "hrate\020\036\022\024\n\020f_getActiveNodes\020\037\022\024\n\020f_getSo" +
+      "lcVersion\020 \022\017\n\013f_isSyncing\020!\022\016\n\nf_syncIn" +
+      "fo\020\"\022\023\n\017f_getSystemInfo\020#\022\023\n\017f_eventRegi" +
+      "ster\020$\022\025\n\021f_eventDeregister\020%\022\023\n\017f_accou" +
+      "ntCreate\020&\022\021\n\rf_accountLock\020\'\022\023\n\017f_userP" +
+      "rivilege\020(\022\020\n\014f_eventQuery\020)\022\024\n\020f_import" +
+      "Accounts\020*\022\024\n\020f_exportAccounts\020+\022\034\n\030f_ge" +
+      "tBlockHeaderByNumber\020,\022\032\n\026f_getBlockHead" +
+      "erByHash\020-\022\037\n\033f_getCurrentTotalDifficult" +
+      "y\020.\022\024\n\020f_getStaticNodes\020/\022\035\n\031f_getBlockD" +
+      "etailsByNumber\0200\022\035\n\031f_getBlockDetailsByL" +
+      "atest\0201\022\027\n\023f_getBlocksByLatest\0202\022$\n f_ge" +
+      "tAccountDetailsByAddressList\0203\022\024\n\020f_back" +
+      "upAccounts\0204\022\010\n\004f_NA\0205\022\030\n\024f_getBlockSqlB" +
+      "yRange\0206\022\034\n\030f_getBlockDetailsByRange\0207\022\016" +
+      "\n\nf_getNonce\0208*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022\r" +
+      "\n\tr_success\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r_" +
+      "heartbeatReturn\020\003\022\025\n\021r_privilegeReturn\020\004" +
+      "\022\r\n\tr_tx_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_tx" +
+      "_Dropped\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx_" +
+      "Pending\020h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_eve" +
+      "ntCb\020j\022\010\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377\377" +
+      "\377\377\377\377\377\377\377\001\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377\377" +
+      "\377\001\022!\n\024r_fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&\n" +
+      "\031r_fail_function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037\n" +
+      "\022r_fail_api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail" +
+      "_ct_bytecode\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_r" +
+      "sp\020\371\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377\377" +
+      "\377\377\377\377\377\377\001\022\'\n\032r_fail_null_compile_source\020\367\377" +
+      "\377\377\377\377\377\377\377\001\022$\n\027r_fail_compile_contract\020\366\377\377\377" +
+      "\377\377\377\377\377\001\022#\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377\377" +
+      "\377\377\001\022\036\n\021r_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r" +
+      "_fail_getTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001\022" +
+      "(\n\033r_fail_zmqHandler_exception\020\362\377\377\377\377\377\377\377\377" +
+      "\001\022(\n\033r_fail_hit_pending_tx_limit\020\361\377\377\377\377\377\377" +
+      "\377\377\001\022%\n\030r_fail_txqueue_exception\020\360\377\377\377\377\377\377\377" +
+      "\377\001\022&\n\031r_fail_function_arguments\020\357\377\377\377\377\377\377\377" +
+      "\377\001\022!\n\024r_fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n" +
+      "\016r_fail_unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -72224,7 +72159,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_req_getNonce_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_getNonce_descriptor,
-        new java.lang.String[] { "Address", "BlockNumber", });
+        new java.lang.String[] { "Address", });
     internal_static_org_aion_api_server_pb_rsp_getNonce_descriptor =
       getDescriptor().getMessageTypes().get(102);
     internal_static_org_aion_api_server_pb_rsp_getNonce_fieldAccessorTable = new
