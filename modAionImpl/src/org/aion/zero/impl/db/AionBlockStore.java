@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  ******************************************************************************/
-
 package org.aion.zero.impl.db;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -635,7 +634,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             pruneSideChains(block);
 
             // bottom up repair of information
-            BigInteger parentTotalDifficulty = block.getCumulativeDifficulty();
+            // initial TD set to genesis TD
+            BigInteger parentTotalDifficulty = block.getHeader().getDifficultyBI();
             level = 1;
             while (level <= initialLevel) {
                 parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
@@ -672,7 +672,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             blocks.delete(wrongBlock.getHash());
         }
 
-        // set new block info without total difficulty
+        // set new block info with total difficulty = block difficulty
         blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(block.getHeader().getDifficultyBI());
         blockInfo.setHash(blockHash);
@@ -697,6 +697,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         } else {
             // correct block info
             BlockInfo blockInfo = levelBlocks.remove(0);
+            // total difficulty previously set to block difficulty
             blockInfo.setCummDifficulty(blockInfo.getCummDifficulty().add(parentTotalDifficulty));
             levelBlocks.add(blockInfo);
             setBlockInfoForLevel(level, levelBlocks);
