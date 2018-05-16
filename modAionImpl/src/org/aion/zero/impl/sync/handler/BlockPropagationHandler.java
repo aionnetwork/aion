@@ -181,12 +181,13 @@ public class BlockPropagationHandler {
         }
 
         // notify higher td peers in order to limit the rebroadcast on delay of res status updating
-        if(result.isBest()){
-            BigInteger td = blockchain.getTotalDifficulty();
+        if (result.isBest()) {
+            AionBlock bestBlock = blockchain.getBestBlock();
+            BigInteger td = bestBlock.getCumulativeDifficulty();
             ResStatus rs = new ResStatus(
-                blockchain.getBestBlock().getNumber(),
+                bestBlock.getNumber(),
                 td.toByteArray(),
-                blockchain.getBestBlockHash(),
+                bestBlock.getHash(),
                 genesis
             );
 

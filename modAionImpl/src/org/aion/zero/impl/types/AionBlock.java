@@ -59,6 +59,8 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
 
     private Trie txsState;
 
+    private BigInteger td = null;
+
     /* Constructors */
     private AionBlock() {
     }
@@ -228,9 +230,13 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     }
 
     public BigInteger getCumulativeDifficulty() {
-        // TODO: currently returning incorrect total difficulty
-        parseRLP();
-        return new BigInteger(1, this.header.getDifficulty());
+        if (td == null) {
+            // TODO: currently returning incorrect total difficulty
+            parseRLP();
+            return new BigInteger(1, this.header.getDifficulty());
+        } else {
+            return td;
+        }
     }
 
     public long getTimestamp() {
@@ -441,5 +447,9 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         }
 
         return block;
+    }
+
+    public void setCumulativeDifficulty(BigInteger _td){
+        td = _td;
     }
 }

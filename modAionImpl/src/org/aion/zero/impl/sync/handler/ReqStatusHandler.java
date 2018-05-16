@@ -42,6 +42,7 @@ import org.aion.p2p.Ver;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
 /**
@@ -80,13 +81,15 @@ public final class ReqStatusHandler extends Handler {
 	    long now = System.currentTimeMillis();
         if ((now - cacheTs) > this.UPDATE_INTERVAL) {
             synchronized (cache) {
-                try {
-                    cache = new ResStatus(this.chain.getBestBlock().getNumber(),
-                            this.chain.getTotalDifficulty().toByteArray(), this.chain.getBestBlockHash(),
-                            this.genesisHash);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+				try {
+					AionBlock bestBlock = chain.getBestBlock();
+					cache = new ResStatus(bestBlock.getNumber(),
+										  bestBlock.getCumulativeDifficulty().toByteArray(),
+										  bestBlock.getHash(),
+										  this.genesisHash);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
                 cacheTs = now;
             }
         }
