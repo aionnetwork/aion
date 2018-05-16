@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-import org.aion.p2p.IMsgHeader;
+import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 
 /** @author chris */
@@ -75,7 +75,7 @@ public class TaskWrite implements Runnable {
              */
             byte[] bodyBytes = msg.encode();
             int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-            IMsgHeader h = msg.getHeader();
+            Header h = msg.getHeader();
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 

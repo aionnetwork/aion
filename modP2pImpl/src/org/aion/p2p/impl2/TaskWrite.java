@@ -28,7 +28,7 @@ package org.aion.p2p.impl2;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
-import org.aion.p2p.IMsgHeader;
+import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl2.selector.MainIOLoop;
 
@@ -63,7 +63,7 @@ public class TaskWrite implements Runnable {
         try {
             byte[] bodyBytes = msg.encode();
             int bodyLen = bodyBytes == null ? 0 : bodyBytes.length;
-            IMsgHeader h = msg.getHeader();
+            Header h = msg.getHeader();
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 

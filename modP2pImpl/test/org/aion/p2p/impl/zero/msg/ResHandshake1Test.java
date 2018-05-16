@@ -58,11 +58,11 @@ public class ResHandshake1Test {
         byte[] mhBytes = rh1.encode();
         ResHandshake1 rh2 = ResHandshake1.decode(mhBytes);
 
-        assertEquals(((ResHandshake1) rh1).getSuccess(), rh2.getSuccess());
-        String v1 = ((ResHandshake1) rh1).getBinaryVersion();
+        assertEquals(rh1.getSuccess(), rh2.getSuccess());
+        String v1 = rh1.getBinaryVersion();
         String v2 = rh2.getBinaryVersion();
 
-        assertEquals(((ResHandshake1) rh1).getBinaryVersion(), rh2.getBinaryVersion());
+        assertEquals(rh1.getBinaryVersion(), rh2.getBinaryVersion());
 
     }
 

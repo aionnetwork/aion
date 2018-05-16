@@ -30,7 +30,7 @@ package org.aion.p2p;
  */
 public abstract class Msg {
 
-    private final IMsgHeader header;
+    private final Header header;
 
     /**
      * @param _ver short
@@ -47,7 +47,7 @@ public abstract class Msg {
     /**
      * @return Header
      */
-    public IMsgHeader getHeader() {
+    public Header getHeader() {
         return this.header;
     }
 

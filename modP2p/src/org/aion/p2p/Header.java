@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /** @author chris */
-public final class Header implements IMsgHeader {
+public final class Header {
 
     public static final int LEN = 8;
 
@@ -53,42 +53,35 @@ public final class Header implements IMsgHeader {
     }
 
     /** @return short */
-    @Override
     public short getVer() {
         return this.ver;
     }
 
     /** @return byte */
-    @Override
     public byte getCtrl() {
         return this.ctrl;
     }
 
     /** @return byte */
-    @Override
     public byte getAction() {
         return this.action;
     }
 
     /** @return int */
-    @Override
     public int getRoute() {
         return (ver << 16) | (ctrl << 8) | action;
     }
 
     /** @return int */
-    @Override
     public int getLen() {
         return this.len;
     }
 
-    @Override
     public void setLen(int _len) {
         this.len = _len;
     }
 
     /** @return byte[] */
-    @Override
     public byte[] encode() {
         return ByteBuffer.allocate(LEN).putInt(this.getRoute()).putInt(len).array();
     }
