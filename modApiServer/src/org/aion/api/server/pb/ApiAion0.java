@@ -1208,9 +1208,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 }
 
                 result = this.sendTransaction(encodedTx);
-            } catch (InvalidProtocolBufferException e) {
-                LOG.error("ApiAion0.process.rawTransaction exception: [{}]", e.getMessage());
-                return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE, msgHash);
             } catch (Exception e) {
                 LOG.error("ApiAion0.process.rawTransaction exception: [{}]", e.getMessage());
                 return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
