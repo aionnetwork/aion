@@ -22,7 +22,7 @@ public class CliTest {
     @Before
     public void setup() {
         cli = Mockito.spy(new Cli());
-        doReturn("password").when(cli).readPassword(any());
+        doReturn("password").when(cli).readPassword(any(), any());
     }
 
     @Test
