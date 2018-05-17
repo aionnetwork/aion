@@ -1,5 +1,9 @@
 package org.aion.cli;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Scanner;
 import org.aion.base.type.Address;
 import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
@@ -22,7 +26,13 @@ public class CliTest {
     @Before
     public void setup() {
         cli = Mockito.spy(new Cli());
-        doReturn("password").when(cli).readPassword(any());
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            doReturn("password").when(cli).readPassword(any(), reader);
+        } catch (IOException e) {
+            System.err.println("Error reading user input.");
+            e.printStackTrace();
+        }
     }
 
     @Test

@@ -31,6 +31,9 @@
 
 package org.aion.zero.impl.cli;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -41,6 +44,7 @@ import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
 import java.util.UUID;
+import org.aion.zero.impl.db.RecoveryUtils.Status;
 
 /**
  * Command line interface.
@@ -196,11 +200,17 @@ public class Cli {
     /**
      * Creates a new account.
      *
-     * @return boolean
+     * @return true only if the new account was successfully created, otherwise false.
      */
     private boolean createAccount() {
-        String password = readPassword("Please enter a password: ");
-        String password2 = readPassword("Please re-enter your password: ");
+        String password = null, password2 = null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            password = readPassword("Please enter a password: ", reader);
+            password2 = readPassword("Please re-enter your password: ", reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
 
         if (!password2.equals(password)) {
             System.out.println("Passwords do not match!");
@@ -244,7 +254,13 @@ public class Cli {
             return false;
         }
 
-        String password = readPassword("Please enter your password: ");
+        String password = null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            password = readPassword("Please enter your password: ", reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
         ECKey key = Keystore.getKey(address, password);
 
         if (key != null) {
@@ -274,8 +290,15 @@ public class Cli {
 
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
 
-        String password = readPassword("Please enter a password: ");
-        String password2 = readPassword("Please re-enter your password: ");
+        String password = null, password2 = null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            password = readPassword("Please enter a password: ", reader);
+            password2 = readPassword("Please re-enter your password: ", reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         if (!password2.equals(password)) {
             System.out.println("Passwords do not match!");
             return false;
@@ -292,14 +315,47 @@ public class Cli {
     }
 
     /**
-     * Reads a password from the console.
+     * Returns a password after prompting the user to enter it. This method attempts first to read
+     * user input from a console evironment and if one is not available it instead attempts to read
+     * from reader.
      *
-     * @param prompt String
-     * @return boolean
+     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
+     * @param prompt The read-password prompt to display to the user.
+     * @return The user-entered password.
      */
-    public String readPassword(String prompt) {
+    public String readPassword(String prompt, BufferedReader reader) {
+        if (prompt == null) {
+            throw new NullPointerException("readPassword given null prompt.");
+        }
+
         Console console = System.console();
+        if (console == null) {
+            return readPasswordFromReader(prompt, reader);
+        }
         return new String(console.readPassword(prompt));
+    }
+
+    /**
+     * Returns a password after prompting the user to enter it from reader.
+     *
+     * @throws NullPointerException if reader is null.
+     * @param prompt The read-password prompt to display to the user.
+     * @param reader The BufferedReader to read input from.
+     * @return The user-entered password.
+     */
+    private String readPasswordFromReader(String prompt, BufferedReader reader) {
+        if (reader == null) {
+            throw new NullPointerException("readPasswordFromReader given null reader.");
+        }
+        System.out.println(prompt);
+        try {
+            return reader.readLine();
+        } catch (IOException e) {
+            System.err.println("Error reading from BufferedReader: " + reader);
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;    // Make compiler happy; never get here.
     }
 
     private RecoveryUtils.Status revertTo(String blockNumber) {
