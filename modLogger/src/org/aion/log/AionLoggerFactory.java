@@ -59,7 +59,7 @@ public class AionLoggerFactory {
 
     private static LoggerContext loggerContext;
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
-    private static RollingFileAppender fileAppender; // JAY T
+    private static RollingFileAppender fileAppender;
     private static final PatternLayoutEncoder encoder = new PatternLayoutEncoder();
 
     static {
