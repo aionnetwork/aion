@@ -15,6 +15,7 @@
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 		<!-- pathelement location="${dir.lib}/modRlp.jar" / -->
 		<pathelement location="${dir.libfile}/commons-collections4-4.0.jar" />
+		<pathelement location="${dir.mod}/modP2p.jar" />
 	</path>
 
 	<path id="classpath.test">
@@ -39,7 +40,8 @@
 		<pathelement location="${dir.mod}/modAionBase.jar" />
 		<pathelement location="${dir.mod}/modAionImpl.jar" />
 		<pathelement location="${dir.mod}/modDbImpl.jar" />
-		<pathelement location="${dir.mod}/modLogger.jar" />		
+		<pathelement location="${dir.mod}/modLogger.jar" />
+		<pathelement location="${dir.mod}/modP2p.jar" />
 	</path>
 
 	<target name="clean_build" depends="clean">
@@ -129,11 +131,12 @@
 			<modulepath>
 				<!-- pathelement location="${dir.lib}/libnsc.jar" / -->
 				<!-- pathelement location="${dir.lib}/modAionBase.jar" / -->
+				<pathelement location="${dir.mod}/modP2p.jar" />
 				<pathelement location="${dir.mod}/modCrypto.jar" />
 				<pathelement location="${dir.mod}/modRlp.jar" />
 				<pathelement location="${dir.mod}/modAionBase.jar" />
 				<pathelement location="${dir.mod}/modLogger.jar" />
-                                <pathelement location="${dir.mod}/modDbImpl.jar" />
+				<pathelement location="${dir.mod}/modDbImpl.jar" />
 				<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 				<pathelement location="${dir.lib}/libnsc.jar" />
 				<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
