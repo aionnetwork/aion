@@ -4,7 +4,7 @@ Mainstream adoption of blockchains has been limited because of scalability, priv
 
 Core to our hypothesis is the idea that many blockchains will be created to solve unique business challenges within unique industries. As such, the Aion network is designed to support custom blockchain architectures while providing a trustless mechanism for cross-chain interoperability. 
 
-The [Aion White Papers](https://aion.network/whitepapers.html) provides more details regarding our design and project roadmap. 
+The [Aion White Papers](https://aion.network/developers/) provides more details regarding our design and project roadmap.
 
 This repository contains the main kernel implementation and releases for the Aion network.
 
