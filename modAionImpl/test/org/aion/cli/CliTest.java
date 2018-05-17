@@ -25,13 +25,7 @@ public class CliTest {
     @Before
     public void setup() {
         cli = Mockito.spy(new Cli());
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            doReturn("password").when(cli).readPassword(any(), eq(reader));
-        } catch (IOException e) {
-            System.err.println("Error reading user input.");
-            e.printStackTrace();
-        }
+        doReturn("password").when(cli).readPassword(any(), any());
     }
 
     @Test
