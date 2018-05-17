@@ -77,7 +77,7 @@ public class AionLoggerFactory {
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         /** Initialize Rolling-File-Appender */
-        String fileName = "./log/aionLog.dat";
+        String fileName = "./log/aionCurrentLog.dat";
         fileAppender = new RollingFileAppender();
         fileAppender.setContext(loggerContext);
         fileAppender.setName("aionlogger");
