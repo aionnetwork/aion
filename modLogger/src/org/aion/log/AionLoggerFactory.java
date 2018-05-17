@@ -36,6 +36,13 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.*;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
+import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
+import ch.qos.logback.core.rolling.helper.FileNamePattern;
+import ch.qos.logback.core.util.FileSize;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,12 +62,13 @@ import ch.qos.logback.classic.LoggerContext;
 public class AionLoggerFactory {
 
     /**
-     * Due to Cfg is abstract, use this static atribute to hold muti-chains
+     * Due to Cfg is abstract, use this static attribute to hold muti-chains
      * config attribute List<CfgLogModule>, which is chain neural.
      */
     private static Map<String, String> logModules;
     private static LoggerContext loggerContext;
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
+    private static RollingFileAppender fileAppender;                                       // JAY T
     private final static PatternLayoutEncoder encoder = new PatternLayoutEncoder();
     static {
         logModules = new HashMap<>();
@@ -76,6 +84,54 @@ public class AionLoggerFactory {
 
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
+        /**
+         * Initialize Rolling-File-Appender
+         */
+        String fileName = "./log/aionLog.dat";
+        fileAppender = new RollingFileAppender();
+        fileAppender.setContext(loggerContext);
+        fileAppender.setName("aionlogger");
+        fileAppender.setFile(fileName);
+
+        /**
+         * Initialize Triggering-Policy (CONDITION)
+         */
+        SizeBasedTriggeringPolicy tp = new SizeBasedTriggeringPolicy();
+        tp.setContext(loggerContext);
+        tp.start();
+
+        /**
+         * Initialize Rolling-Policy (BEHAVIOUR)
+         */
+        SizeAndTimeBasedRollingPolicy rp = new SizeAndTimeBasedRollingPolicy();
+        rp.setContext(loggerContext);
+
+        /**
+         * To modify period of each rollover;
+         * PER DAY: "aion.%d{yyyy-MM-dd}.%i.log"
+         * PER HOUR: "aion.%d{yyyy-MM-dd_HH}.%i.log"
+         * PER MIN: "aion.%d{yyyy-MM-dd_HH-mm}.%i.log"
+         * Link: https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy
+         * Currently set to PER HOUR
+         */
+        FileNamePattern fnp = new FileNamePattern("./log/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd_HH}.%i.log", loggerContext);
+        rp.setFileNamePattern(fnp.getPattern());
+
+        /**
+         * To modify size of each rollover file;
+         * Link: https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy
+         * Currently set to 100MB
+         */
+        rp.setMaxFileSize(new FileSize(100*1000*1000));
+        rp.setParent(fileAppender);
+        rp.start();
+
+        /**
+         * Sets TRIGGER & ROLLING policy
+         */
+        fileAppender.setTriggeringPolicy(tp);
+        fileAppender.setRollingPolicy(rp);
+
         encoder.setContext(loggerContext);
         encoder.setPattern("%date{yy-MM-dd HH:mm:ss.SSS} %-5level %-4c [%thread]: %message%n");
         encoder.start();
@@ -83,6 +139,14 @@ public class AionLoggerFactory {
         appender.setContext(loggerContext);
         appender.setEncoder(encoder);
         appender.start();
+
+        /**
+         * Set fileAppender configurations
+         */
+        fileAppender.setContext(loggerContext);
+        fileAppender.setEncoder(encoder);
+        fileAppender.setAppend(true);
+        fileAppender.start();
 
         ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootlogger.detachAndStopAllAppenders();
@@ -106,6 +170,7 @@ public class AionLoggerFactory {
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
+        newlogger.addAppender(fileAppender);
 
         boolean flag = false;
         Iterator<Entry<String, String>> it = logModules.entrySet().iterator();
