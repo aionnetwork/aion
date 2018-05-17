@@ -200,7 +200,7 @@ public class Keystore {
         ECKey key = null;
         List<File> files = getFiles();
         for (File file : files) {
-            if (file.getName().contains(_address)) {
+            if (file.getName().split("--")[2].equals(_address)) {
                 try {
                     byte[] content = Files.readAllBytes(file.toPath());
                     key = KeystoreFormat.fromKeystore(content, _password);
@@ -221,7 +221,8 @@ public class Keystore {
         List<File> files = getFiles();
         boolean flag = false;
         for (File file : files) {
-            if (file.getName().contains(_address)) {
+            String s = file.getName().split("--")[2];
+            if (file.getName().split("--")[2].equals(_address)) {
                 flag = true;
                 break;
             }

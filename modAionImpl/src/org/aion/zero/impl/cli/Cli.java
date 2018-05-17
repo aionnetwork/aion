@@ -28,12 +28,13 @@
  *
  */
 
-
 package org.aion.zero.impl.cli;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.UUID;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -41,10 +42,6 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
-
-import java.io.Console;
-import java.util.UUID;
-import org.aion.zero.impl.db.RecoveryUtils.Status;
 
 /**
  * Command line interface.
@@ -90,7 +87,7 @@ public class Cli {
                         default:
                             printHelp();
                             return 1;
-                        }
+                    }
                     break;
                 case "-c":
                     cfg.fromXML();
@@ -102,7 +99,13 @@ public class Cli {
                     cfg.fromXML();
                     System.out.println("\nInformation");
                     System.out.println("--------------------------------------------");
-                    System.out.println("current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    System.out.println(
+                            "current: p2p://"
+                                    + cfg.getId()
+                                    + "@"
+                                    + cfg.getNet().getP2p().getIp()
+                                    + ":"
+                                    + cfg.getNet().getP2p().getPort());
                     String[] nodes = cfg.getNet().getNodes();
                     if (nodes != null && nodes.length > 0) {
                         System.out.println("boot nodes list:");
@@ -112,7 +115,11 @@ public class Cli {
                     } else {
                         System.out.println("boot nodes list: 0");
                     }
-                    System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    System.out.println(
+                            "p2p: "
+                                    + cfg.getNet().getP2p().getIp()
+                                    + ":"
+                                    + cfg.getNet().getP2p().getPort());
                     break;
                 case "-r":
                     if (args.length < 2) {
@@ -121,15 +128,19 @@ public class Cli {
                         System.out.println("Finished database clean-up.");
                     } else {
                         switch (revertTo(args[1])) {
-                        case SUCCESS:
-                            System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
-                            break;
-                        case FAILURE:
-                            System.out.println("Unable to revert to block number " + args[1] + ".");
-                            return 1;
-                        case ILLEGAL_ARGUMENT:
-                        default:
-                            return 1;
+                            case SUCCESS:
+                                System.out.println(
+                                        "Blockchain successfully reverted to block number "
+                                                + args[1]
+                                                + ".");
+                                break;
+                            case FAILURE:
+                                System.out.println(
+                                        "Unable to revert to block number " + args[1] + ".");
+                                return 1;
+                            case ILLEGAL_ARGUMENT:
+                            default:
+                                return 1;
                         }
                     }
                     break;
@@ -146,7 +157,10 @@ public class Cli {
                         try {
                             count = Long.parseLong(args[1]);
                         } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                            System.out.println(
+                                    "The given argument <"
+                                            + args[1]
+                                            + "> cannot be converted to a number.");
                         }
                         System.out.println("Printing top " + count + " blocks from database.");
                         RecoveryUtils.dumpBlocks(count);
@@ -174,9 +188,7 @@ public class Cli {
         return 0;
     }
 
-    /**
-     * Print the CLI help info.
-     */
+    /** Print the CLI help info. */
     private void printHelp() {
         System.out.println("Usage: ./aion.sh [options] [arguments]");
         System.out.println();
@@ -191,7 +203,8 @@ public class Cli {
         System.out.println();
         System.out.println("  -i                           show information");
         System.out.println();
-        System.out.println("  -r                           remove blocks on side chains and correct block info");
+        System.out.println(
+                "  -r                           remove blocks on side chains and correct block info");
         System.out.println("  -r [block_number]            revert db up to specific block number");
         System.out.println();
         System.out.println("  -v                           show version");
@@ -244,8 +257,7 @@ public class Cli {
     /**
      * Dumps the private of the given account.
      *
-     * @param address
-     *            address of the account
+     * @param address address of the account
      * @return boolean
      */
     private boolean exportPrivateKey(String address) {
@@ -275,8 +287,7 @@ public class Cli {
     /**
      * Imports a private key.
      *
-     * @param privateKey
-     *            private key in hex string
+     * @param privateKey private key in hex string
      * @return boolean
      */
     private boolean importPrivateKey(String privateKey) {
@@ -289,6 +300,11 @@ public class Cli {
         }
 
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
+        if (key == null) {
+            System.out.println("Uable to recover private key." +
+                "Are you sure you did not import a public key? The provided key was: " + privateKey);
+            return false;
+        }
 
         String password = null, password2 = null;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
@@ -355,7 +371,7 @@ public class Cli {
             e.printStackTrace();
             System.exit(1);
         }
-        return null;    // Make compiler happy; never get here.
+        return null; // Make compiler happy; never get here.
     }
 
     private RecoveryUtils.Status revertTo(String blockNumber) {
@@ -365,11 +381,11 @@ public class Cli {
         try {
             block = Long.parseLong(blockNumber);
         } catch (NumberFormatException e) {
-            System.out.println("The given argument <" + blockNumber + "> cannot be converted to a number.");
+            System.out.println(
+                    "The given argument <" + blockNumber + "> cannot be converted to a number.");
             return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
         }
 
         return RecoveryUtils.revertTo(block);
     }
-
 }
