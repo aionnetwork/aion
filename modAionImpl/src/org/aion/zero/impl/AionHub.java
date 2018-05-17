@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
  ******************************************************************************/
-
 package org.aion.zero.impl;
 
 import org.aion.base.db.IRepository;
@@ -283,25 +281,9 @@ public class AionHub {
                 LOG.info(
                         "Corrupt world state for genesis block hash: " + genesis.getShortHash() + ", number: " + genesis
                                 .getNumber() + ".");
-                IRepositoryCache track = repository.startTracking();
 
-                Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
-                track.createAccount(networkBalanceAddress);
+                buildGenesis(genesis);
 
-                for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
-                    track.addStorageRow(networkBalanceAddress,
-                                        new DataWord(addr.getKey()),
-                                        new DataWord(addr.getValue()));
-                }
-
-                for (Address addr : genesis.getPremine().keySet()) {
-                    track.createAccount(addr);
-                    track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
-                }
-                track.flush();
-
-                this.repository.commitBlock(genesis.getHeader());
-                this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
                 LOG.info("Rebuilding genesis block SUCCEEDED.");
             }
 
@@ -353,24 +335,8 @@ public class AionHub {
 
             AionGenesis genesis = cfg.getGenesis();
 
-            // initialization section for network balance contract
-            IRepositoryCache track = repository.startTracking();
+            buildGenesis(genesis);
 
-            Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
-            track.createAccount(networkBalanceAddress);
-
-            for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
-                track.addStorageRow(networkBalanceAddress, new DataWord(addr.getKey()), new DataWord(addr.getValue()));
-            }
-
-            for (Address addr : genesis.getPremine().keySet()) {
-                track.createAccount(addr);
-                track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
-            }
-            track.flush();
-
-            repository.commitBlock(genesis.getHeader());
-            this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
             blockchain.setBestBlock(genesis);
             blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
 
@@ -423,6 +389,30 @@ public class AionHub {
         }
 
 //        this.repository.getBlockStore().load();
+    }
+
+    private void buildGenesis(AionGenesis genesis) {
+        // initialization section for network balance contract
+        IRepositoryCache track = repository.startTracking();
+
+        Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
+        track.createAccount(networkBalanceAddress);
+
+        for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
+            track.addStorageRow(
+                    networkBalanceAddress,
+                    new DataWord(addr.getKey()),
+                    new DataWord(addr.getValue()));
+        }
+
+        for (Address addr : genesis.getPremine().keySet()) {
+            track.createAccount(addr);
+            track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
+        }
+        track.flush();
+
+        this.repository.commitBlock(genesis.getHeader());
+        this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
     }
 
     public void close() {
