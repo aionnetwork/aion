@@ -2,6 +2,7 @@ package org.aion.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ public class CliTest {
         cli = Mockito.spy(new Cli());
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            doReturn("password").when(cli).readPassword(any(), reader);
+            doReturn("password").when(cli).readPassword(any(), eq(reader));
         } catch (IOException e) {
             System.err.println("Error reading user input.");
             e.printStackTrace();
