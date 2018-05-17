@@ -44,6 +44,7 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -90,7 +91,7 @@ public abstract class ApiAion extends Api {
     protected final String clientVersion = computeClientVersion();
 
     private ReentrantLock blockTemplateLock;
-    private volatile AionBlock currentTemplate;
+    private volatile BlockContext currentTemplate;
     private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
@@ -158,7 +159,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
-    protected AionBlock getBlockTemplate() {
+    protected BlockContext getBlockTemplate() {
 
         blockTemplateLock.lock();
         try {
@@ -174,9 +175,8 @@ public abstract class ApiAion extends Api {
                 AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
                 ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
 
-                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, new ArrayList<>(ret), false);
+                currentTemplate = ac.getAionHub().getBlockchain().createNewBlockContext(bestBlock, new ArrayList<>(ret), false);
             }
-
         } finally {
             blockTemplateLock.unlock();
         }
