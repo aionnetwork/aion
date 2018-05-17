@@ -301,8 +301,10 @@ public class Cli {
 
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
         if (key == null) {
-            System.out.println("Uable to recover private key." +
-                "Are you sure you did not import a public key? The provided key was: " + privateKey);
+            System.out.println(
+                    "Uable to recover private key."
+                            + "Are you sure you did not import a public key? The provided key was: "
+                            + privateKey);
             return false;
         }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  *
  * Copyright (c) 2017, 2018 Aion foundation.
  *
@@ -34,7 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.*;
 import org.aion.crypto.ECKey;
@@ -43,9 +42,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/**
- *  key store class.
- */
+/** key store class. */
 public class Keystore {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -89,8 +86,7 @@ public class Keystore {
             String fileName = "UTC--" + iso_date + "--" + address;
             try {
                 Path keyFile = PATH.resolve(fileName);
-                if (!Files.exists(keyFile))
-                    keyFile = Files.createFile(keyFile, attr);
+                if (!Files.exists(keyFile)) keyFile = Files.createFile(keyFile, attr);
                 String path = keyFile.toString();
                 FileOutputStream fos = new FileOutputStream(path);
                 fos.write(content);
@@ -132,9 +128,21 @@ public class Keystore {
             return new java.util.HashMap<>();
         }
 
-        List<File> matchedFile = files.parallelStream().filter(file -> account.entrySet().parallelStream()
-                .filter(ac -> file.getName().contains(ac.getKey().toString())).findFirst().isPresent())
-                .collect(Collectors.toList());
+        List<File> matchedFile =
+                files.parallelStream()
+                        .filter(
+                                file ->
+                                        account.entrySet()
+                                                .parallelStream()
+                                                .filter(
+                                                        ac ->
+                                                                file.getName()
+                                                                        .contains(
+                                                                                ac.getKey()
+                                                                                        .toString()))
+                                                .findFirst()
+                                                .isPresent())
+                        .collect(Collectors.toList());
 
         Map<Address, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
@@ -164,12 +172,13 @@ public class Keystore {
         List<String> addresses = new ArrayList<>();
         List<File> files = getFiles();
 
-        files.forEach((file) -> {
-            String[] frags = file.getName().split("--");
-            if (frags.length == 3) {
-                addresses.add(TypeConverter.toJsonHex(frags[2]));
-            }
-        });
+        files.forEach(
+                (file) -> {
+                    String[] frags = file.getName().split("--");
+                    if (frags.length == 3) {
+                        addresses.add(TypeConverter.toJsonHex(frags[2]));
+                    }
+                });
         return addresses.toArray(new String[addresses.size()]);
     }
 
@@ -184,12 +193,13 @@ public class Keystore {
 
         files.sort(COMPARE);
 
-        files.forEach((file) -> {
-            String[] frags = file.getName().split("--");
-            if (frags.length == 3) {
-                addresses.add(TypeConverter.toJsonHex(frags[2]));
-            }
-        });
+        files.forEach(
+                (file) -> {
+                    String[] frags = file.getName().split("--");
+                    if (frags.length == 3) {
+                        addresses.add(TypeConverter.toJsonHex(frags[2]));
+                    }
+                });
         return addresses;
     }
 
@@ -221,7 +231,6 @@ public class Keystore {
         List<File> files = getFiles();
         boolean flag = false;
         for (File file : files) {
-            String s = file.getName().split("--")[2];
             if (file.getName().split("--")[2].equals(_address)) {
                 flag = true;
                 break;
@@ -239,8 +248,11 @@ public class Keystore {
         int count = 0;
         for (Map.Entry<String, String> keySet : importKey.entrySet()) {
             if (count < 100) {
-                byte[] raw = Hex
-                        .decode(keySet.getKey().startsWith("0x") ? keySet.getKey().substring(2) : keySet.getKey());
+                byte[] raw =
+                        Hex.decode(
+                                keySet.getKey().startsWith("0x")
+                                        ? keySet.getKey().substring(2)
+                                        : keySet.getKey());
                 ECKey key = KeystoreFormat.fromKeystore(raw, keySet.getValue());
                 String address = Keystore.create(keySet.getValue(), key);
                 if (!address.equals("0x")) {
