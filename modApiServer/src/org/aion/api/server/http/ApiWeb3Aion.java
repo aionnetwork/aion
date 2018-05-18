@@ -660,8 +660,8 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Null raw transaction provided.");
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
-        byte[] transactionHash = sendTransaction(rawTransaction);
 
+        byte[] transactionHash = sendTransaction(rawTransaction);
         return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
     }
 
