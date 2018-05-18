@@ -13,15 +13,16 @@ import org.aion.p2p.P2pConstant;
 
 public class TaskInbound2 implements Runnable {
 
-    private AtomicBoolean start = new AtomicBoolean(true);
+    private AtomicBoolean start;
     private final boolean showLog;
     private final P2pMgr mgr;
     private final Selector selector;
 
-    public TaskInbound2(P2pMgr _mgr, boolean _showLog, Selector _selector) {
+    public TaskInbound2(P2pMgr _mgr, boolean _showLog, Selector _selector, AtomicBoolean _start) {
         this.showLog = _showLog;
         this.mgr = _mgr;
         this.selector = _selector;
+        this.start = _start;
     }
 
     @Override
@@ -41,8 +42,7 @@ public class TaskInbound2 implements Runnable {
             try {
                 num = this.selector.selectNow();
             } catch (IOException e) {
-                if (showLog)
-                    System.out.println("<p2p inbound-select-io-exception>");
+                if (showLog) System.out.println("<p2p inbound-select-io-exception>");
                 continue;
             }
 
@@ -57,13 +57,11 @@ public class TaskInbound2 implements Runnable {
                 final SelectionKey sk = keys.next();
                 keys.remove();
 
-                try{
+                try {
 
-                    if (!sk.isValid())
-                        continue;
+                    if (!sk.isValid()) continue;
 
-                    if (sk.isAcceptable())
-                        this.mgr.accept();
+                    if (sk.isAcceptable()) this.mgr.accept();
 
                     if (sk.isReadable()) {
 
@@ -104,8 +102,7 @@ public class TaskInbound2 implements Runnable {
 
                                 if (prevCnt == cnt) {
                                     break;
-                                } else
-                                    prevCnt = cnt;
+                                } else prevCnt = cnt;
 
                             } while (cnt > 0);
 
@@ -113,7 +110,10 @@ public class TaskInbound2 implements Runnable {
                             if (cnt > prevCnt) {
                                 chanBuf.buffRemain = 0;
                                 throw new P2pException(
-                                    "IO read overflow!  suppose read:" + prevCnt + " real left:" + cnt);
+                                        "IO read overflow!  suppose read:"
+                                                + prevCnt
+                                                + " real left:"
+                                                + cnt);
                             }
 
                             chanBuf.buffRemain = cnt;
@@ -134,40 +134,46 @@ public class TaskInbound2 implements Runnable {
                             }
 
                         } catch (NullPointerException e) {
-                            this.mgr.closeSocket((SocketChannel) sk.channel(), chanBuf.displayId + "-read-msg-null-exception");
+                            this.mgr.closeSocket(
+                                    (SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-null-exception");
                             chanBuf.isClosed.set(true);
                         } catch (P2pException e) {
-                            this.mgr.closeSocket((SocketChannel) sk.channel(), chanBuf.displayId + "-read-msg-p2p-exception");
+                            this.mgr.closeSocket(
+                                    (SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-p2p-exception");
                             chanBuf.isClosed.set(true);
 
                         } catch (ClosedChannelException e) {
-                            this.mgr.closeSocket((SocketChannel) sk.channel(),
-                                chanBuf.displayId + "-read-msg-closed-channel-exception");
+                            this.mgr.closeSocket(
+                                    (SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-closed-channel-exception");
 
                         } catch (IOException e) {
-                            this.mgr.closeSocket((SocketChannel) sk.channel(),
-                                chanBuf.displayId + "-read-msg-io-exception: " + e.getMessage());
+                            this.mgr.closeSocket(
+                                    (SocketChannel) sk.channel(),
+                                    chanBuf.displayId
+                                            + "-read-msg-io-exception: "
+                                            + e.getMessage());
                             chanBuf.isClosed.set(true);
 
                         } catch (CancelledKeyException e) {
                             chanBuf.isClosed.set(true);
-                            this.mgr.closeSocket((SocketChannel) sk.channel(),
-                                chanBuf.displayId + "-read-msg-key-cancelled-exception");
+                            this.mgr.closeSocket(
+                                    (SocketChannel) sk.channel(),
+                                    chanBuf.displayId + "-read-msg-key-cancelled-exception");
                         } catch (Exception e) {
-                            if (showLog)
-                                System.out.println("<p2p-pi global exception>");
+                            if (showLog) System.out.println("<p2p-pi global exception>");
                         }
                     }
-                } catch(Exception ex) {
-                    if(showLog) {
+                } catch (Exception ex) {
+                    if (showLog) {
                         System.out.println("<p2p-pi on-sk-exception=" + ex.getMessage() + ">");
                         ex.printStackTrace();
                     }
                 }
             }
         }
-        if (showLog)
-            System.out.println("<p2p-pi shutdown>");
+        if (showLog) System.out.println("<p2p-pi shutdown>");
     }
-
 }
