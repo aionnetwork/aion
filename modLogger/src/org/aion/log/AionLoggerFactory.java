@@ -63,9 +63,8 @@ public class AionLoggerFactory {
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
     private static final PatternLayoutEncoder encoder = new PatternLayoutEncoder();
 
-    /** Static declaration of logFile */
     private static boolean logToFile;
-
+    private static String logPath;
     private static RollingFileAppender fileAppender;
 
     static {
@@ -78,21 +77,21 @@ public class AionLoggerFactory {
 
     /** Change INITIALIZE signature to include LOGFILE */
     public static void init(final Map<String, String> _logModules) {
-        init(_logModules, false);
+        init(_logModules, false, "log");
     }
 
     // public static void init(final Map<String, String> _logModules) {
-    public static void init(final Map<String, String> _logModules, boolean _logToFile) {
+    public static void init(final Map<String, String> _logModules, boolean _logToFile, String _logToFolder) {
 
         logModules = _logModules;
         logToFile = _logToFile;
-
+        logPath = _logToFolder;
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         /** Toggles file appending configurations */
         if (logToFile) {
             /** Initialize Rolling-File-Appender */
-            String fileName = "./log/aionCurrentLog.dat";
+            String fileName = "./" + logPath + "/aionCurrent.log";
             fileAppender = new RollingFileAppender();
             fileAppender.setContext(loggerContext);
             fileAppender.setName("aionlogger");
@@ -163,7 +162,6 @@ public class AionLoggerFactory {
         if (loggerContext == null) {
             // System.out.println("If you see this line, meaning you are under
             // the unit test!!! If you are not. should report an issue.");
-            // init(new HashMap<>(), false);
             init(new HashMap<>());
         }
 
