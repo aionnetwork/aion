@@ -29,9 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class ResHandshake1 extends ResHandshake {
 
     // success(byte) + binary version len (byte)
@@ -43,7 +41,7 @@ public final class ResHandshake1 extends ResHandshake {
         super(_success);
         // utf-8
         this.binaryVersion =
-            _binaryVersion.length() > 63 ? _binaryVersion.substring(0, 63) : _binaryVersion;
+                _binaryVersion.length() > 63 ? _binaryVersion.substring(0, 63) : _binaryVersion;
     }
 
     public static ResHandshake1 decode(final byte[] _bytes) {
@@ -95,7 +93,7 @@ public final class ResHandshake1 extends ResHandshake {
         if (len > Byte.MAX_VALUE) {
             binaryVersionBytes = Arrays.copyOfRange(binaryVersionBytes, 0, Byte.MAX_VALUE);
             len = Byte.MAX_VALUE;
-            //Update the Version
+            // Update the Version
             try {
                 this.binaryVersion = new String(binaryVersionBytes, "UTF-8");
             } catch (UnsupportedEncodingException e) {
