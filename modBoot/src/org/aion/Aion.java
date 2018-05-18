@@ -36,6 +36,7 @@ import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiRpc;
+import org.aion.mcf.config.CfgLog;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -84,7 +85,11 @@ public class Aion {
 
 
         // If commit this out, the config setting will be ignore. all log module been set to "INFO" Level
-        AionLoggerFactory.init(cfg.getLog().getModules());
+
+        /** Change INITIALIZE signature to include LOGFILE */
+        // AionLoggerFactory.init(cfg.getLog().getModules());
+        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile());
+
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         System.out.println(                

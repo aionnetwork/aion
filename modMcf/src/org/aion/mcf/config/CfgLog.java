@@ -43,6 +43,9 @@ public class CfgLog {
 
     private Map<String, String> modules;
 
+    /** Declaree logFile variable */
+    private boolean logFile;
+
     public CfgLog() {
         modules = new HashMap<>();
         modules.put(LogEnum.CONS.name(), LogLevels.INFO.name());
@@ -53,6 +56,10 @@ public class CfgLog {
         modules.put(LogEnum.API.name(), LogLevels.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevels.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
+
+        /** TOGGLES LOGGING TO FILE - initializes logFile as FALSE */
+        this.logFile = false;
+
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -62,7 +69,19 @@ public class CfgLog {
             int eventType = sr.next();
             switch (eventType) {
             case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toUpperCase();
+
+                /** XML - Takes the input in config.xml and parse as T/F */
+                String elementName = sr.getLocalName().toLowerCase();
+                switch (elementName) {
+                    case "log-file":
+                        this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                        break;
+                    default:
+                        break;
+                }
+
+                elementName = sr.getLocalName().toUpperCase();
+                /** String elementName = sr.getLocalName().toUpperCase(); */
                 if (LogEnum.contains(elementName))
                     this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
                 break;
@@ -83,8 +102,24 @@ public class CfgLog {
             Writer strWriter = new StringWriter();
             xmlWriter = output.createXMLStreamWriter(strWriter);
             xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeStartElement("log");
+            xmlWriter.writeStartElement("Log");
             xmlWriter.writeCharacters("\r\n");
+
+            /** XML - Displays tag/entry in the config.xml */
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeStartElement("log-file");
+            xmlWriter.writeCharacters(this.logFile + "");
+            xmlWriter.writeEndElement();
+            xmlWriter.writeCharacters("\r\n");
+
+            /** Testing whether logFile retrieves boolean value */
+            /** if(logFile) {
+                xmlWriter.writeCharacters("\t\t");
+                xmlWriter.writeCharacters("testing for T");
+                xmlWriter.writeCharacters("\r\n");
+            } */
+
+
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
                 xmlWriter.writeStartElement(module.getKey().toUpperCase());
@@ -107,6 +142,11 @@ public class CfgLog {
 
     public Map<String, String> getModules() {
         return this.modules;
+    }
+
+    /** Method checks value of logFile as T/F */
+    public boolean getLogFile() {
+        return this.logFile;
     }
 
 }

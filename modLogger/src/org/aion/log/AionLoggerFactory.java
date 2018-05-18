@@ -26,7 +26,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
-import ch.qos.logback.core.rolling.*;
+import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
@@ -59,8 +59,12 @@ public class AionLoggerFactory {
 
     private static LoggerContext loggerContext;
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
-    private static RollingFileAppender fileAppender; // JAY T
     private static final PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+
+    /** Static declaration of logFile */
+    private static boolean logToFile;
+
+    private static RollingFileAppender fileAppender;
 
     static {
         logModules = new HashMap<>();
@@ -70,51 +74,69 @@ public class AionLoggerFactory {
         }
     }
 
+    /** Change INITIALIZE signature to include LOGFILE */
     public static void init(final Map<String, String> _logModules) {
+        init(_logModules, false);
+    }
+
+    // public static void init(final Map<String, String> _logModules) {
+    public static void init(final Map<String, String> _logModules, boolean _logToFile ) {
 
         logModules = _logModules;
 
+        /** Passed in argument */
+        logToFile = _logToFile;
+        // logToFile = true;
+
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        /** Initialize Rolling-File-Appender */
-        String fileName = "./log/aionCurrentLog.dat";
-        fileAppender = new RollingFileAppender();
-        fileAppender.setContext(loggerContext);
-        fileAppender.setName("aionlogger");
-        fileAppender.setFile(fileName);
+        /** Toggles file appending configurations */
+        if(logToFile) {
+            /** Initialize Rolling-File-Appender */
+            String fileName = "./log/aionCurrentLog.dat";
+            fileAppender = new RollingFileAppender();
+            fileAppender.setContext(loggerContext);
+            fileAppender.setName("aionlogger");
+            fileAppender.setFile(fileName);
 
-        /** Initialize Triggering-Policy (CONDITION) */
-        SizeBasedTriggeringPolicy tp = new SizeBasedTriggeringPolicy();
-        tp.setContext(loggerContext);
-        tp.start();
+            /** Initialize Triggering-Policy (CONDITION) */
+            SizeBasedTriggeringPolicy tp = new SizeBasedTriggeringPolicy();
+            tp.setContext(loggerContext);
+            tp.start();
 
-        /** Initialize Rolling-Policy (BEHAVIOUR) */
-        SizeAndTimeBasedRollingPolicy rp = new SizeAndTimeBasedRollingPolicy();
-        rp.setContext(loggerContext);
+            /** Initialize Rolling-Policy (BEHAVIOUR) */
+            SizeAndTimeBasedRollingPolicy rp = new SizeAndTimeBasedRollingPolicy();
+            rp.setContext(loggerContext);
 
-        /**
-         * To modify period of each rollover; PER DAY: "aion.%d{yyyy-MM-dd}.%i.log" PER HOUR:
-         * "aion.%d{yyyy-MM-dd_HH}.%i.log" PER MIN: "aion.%d{yyyy-MM-dd_HH-mm}.%i.log" Link:
-         * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy Currently set to PER
-         * HOUR
-         */
-        FileNamePattern fnp =
+            /**
+             * To modify period of each rollover;
+             * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy
+             * (Currently set to PER DAY)
+             */
+            FileNamePattern fnp =
                 new FileNamePattern(
-                        "./log/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd_HH}.%i.log", loggerContext);
-        rp.setFileNamePattern(fnp.getPattern());
+                    "./log/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
+            rp.setFileNamePattern(fnp.getPattern());
 
-        /**
-         * To modify size of each rollover file; Link:
-         * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy Currently set
-         * to 100MB
-         */
-        rp.setMaxFileSize(new FileSize(100 * 1000 * 1000));
-        rp.setParent(fileAppender);
-        rp.start();
+            /**
+             * To modify size of each rollover file;
+             * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy
+             * (Currently set to 100MB)
+             */
+            rp.setMaxFileSize(new FileSize(100 * 1000 * 1000));
+            rp.setParent(fileAppender);
+            rp.start();
 
-        /** Sets TRIGGER & ROLLING policy */
-        fileAppender.setTriggeringPolicy(tp);
-        fileAppender.setRollingPolicy(rp);
+            /** Sets TRIGGER & ROLLING policy */
+            fileAppender.setTriggeringPolicy(tp);
+            fileAppender.setRollingPolicy(rp);
+
+            /** Set fileAppender configurations */
+            fileAppender.setContext(loggerContext);
+            fileAppender.setEncoder(encoder);
+            fileAppender.setAppend(true);
+            fileAppender.start();
+        }
 
         encoder.setContext(loggerContext);
         encoder.setPattern("%date{yy-MM-dd HH:mm:ss.SSS} %-5level %-4c [%thread]: %message%n");
@@ -123,12 +145,6 @@ public class AionLoggerFactory {
         appender.setContext(loggerContext);
         appender.setEncoder(encoder);
         appender.start();
-
-        /** Set fileAppender configurations */
-        fileAppender.setContext(loggerContext);
-        fileAppender.setEncoder(encoder);
-        fileAppender.setAppend(true);
-        fileAppender.start();
 
         ch.qos.logback.classic.Logger rootlogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootlogger.detachAndStopAllAppenders();
@@ -148,12 +164,17 @@ public class AionLoggerFactory {
         if (loggerContext == null) {
             // System.out.println("If you see this line, meaning you are under
             // the unit test!!! If you are not. should report an issue.");
+            //init(new HashMap<>(), false);
             init(new HashMap<>());
         }
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
-        newlogger.addAppender(fileAppender);
+
+        /** Toggle file appending */
+        if(logToFile) {
+            newlogger.addAppender(fileAppender);
+        }
 
         boolean flag = false;
         Iterator<Entry<String, String>> it = logModules.entrySet().iterator();
