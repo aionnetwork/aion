@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -34,12 +34,10 @@
  ******************************************************************************/
 package org.aion.mcf.ds;
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
+import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-
-import java.util.*;
 
 public class XorDataSource implements IByteArrayKeyValueStore {
     IByteArrayKeyValueStore source;
@@ -89,8 +87,9 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     }
 
     public void updateBatch(Map<ByteArrayWrapper, byte[]> rows, boolean erasure) {
-        //not supported
-        throw new UnsupportedOperationException("ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
+        // not supported
+        throw new UnsupportedOperationException(
+                "ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
     }
 
     @Override
@@ -102,6 +101,11 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     public void deleteBatch(Collection<byte[]> keys) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void check() {
+        source.check();
     }
 
     @Override

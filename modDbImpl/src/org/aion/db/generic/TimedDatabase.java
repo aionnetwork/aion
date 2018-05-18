@@ -253,6 +253,15 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
+    public void check() {
+        long t1 = System.nanoTime();
+        database.check();
+        long t2 = System.nanoTime();
+
+        LOG.debug(database.toString() + " check() in " + (t2 - t1) + " ns.");
+    }
+
+    @Override
     public void drop() {
         long t1 = System.nanoTime();
         database.drop();

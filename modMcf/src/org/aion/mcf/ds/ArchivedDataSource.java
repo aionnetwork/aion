@@ -118,6 +118,12 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
     }
 
     @Override
+    public void check() {
+        data.check();
+        archive.check();
+    }
+
+    @Override
     public void close() {
         data.close();
         archive.close();

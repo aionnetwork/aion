@@ -147,4 +147,13 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      * @throws IllegalArgumentException if the collection contains a null key
      */
     void deleteBatch(Collection<K> keys);
+
+    /**
+     * Checks that the data store connection is open. Throws a {@link RuntimeException} if the data
+     * store connection is closed.
+     *
+     * @implNote Always do this check after acquiring a lock on the class/data. Otherwise it might
+     *     produce inconsistent results due to lack of synchronization.
+     */
+    void check();
 }
