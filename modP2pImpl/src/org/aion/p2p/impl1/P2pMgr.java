@@ -643,7 +643,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /** @param _channel SocketChannel TODO: check option */
-    private void configChannel(final SocketChannel _channel) throws IOException {
+    void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
 
@@ -1100,9 +1100,14 @@ public final class P2pMgr implements IP2pMgr {
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskStatus2(this.nodeMgr, this.selfShortId, this.sendMsgQue,
-                        this.receiveMsgQue), 2, PERIOD_SHOW_STATUS,
-                    TimeUnit.MILLISECONDS);
+                        new TaskStatus2(
+                                this.nodeMgr,
+                                this.selfShortId,
+                                this.sendMsgQue,
+                                this.receiveMsgQue),
+                        2,
+                        PERIOD_SHOW_STATUS,
+                        TimeUnit.MILLISECONDS);
 
             if (!syncSeedsOnly)
                 scheduledWorkers.scheduleWithFixedDelay(
@@ -1115,7 +1120,9 @@ public final class P2pMgr implements IP2pMgr {
             thrdClear.setPriority(Thread.NORM_PRIORITY);
             thrdClear.start();
 
-            Thread thrdConn = new Thread(new TaskConnectPeers(), "p2p-conn");
+            Thread thrdConn = new Thread(new TaskConnectPeers2(this, this.start, this.showLog,
+                this.nodeMgr, this.maxActiveNodes, this.selector, this.sendMsgQue,
+                cachedReqHandshake1), "p2p-conn");
             thrdConn.setPriority(Thread.NORM_PRIORITY);
             thrdConn.start();
 

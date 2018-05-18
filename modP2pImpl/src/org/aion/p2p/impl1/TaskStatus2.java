@@ -11,8 +11,11 @@ public class TaskStatus2 implements Runnable {
     private LinkedBlockingQueue<MsgOut> sendMsgQue;
     private LinkedBlockingQueue<MsgIn> receiveMsgQue;
 
-    public TaskStatus2(NodeMgr _nodeMgr, String _selfShortId,
-        LinkedBlockingQueue<MsgOut> _sendMsgQue, LinkedBlockingQueue<MsgIn> _receiveMsgQue) {
+    public TaskStatus2(
+            NodeMgr _nodeMgr,
+            String _selfShortId,
+            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            LinkedBlockingQueue<MsgIn> _receiveMsgQue) {
         this.nodeMgr = _nodeMgr;
         this.selfShortId = _selfShortId;
         this.sendMsgQue = _sendMsgQue;
@@ -25,12 +28,12 @@ public class TaskStatus2 implements Runnable {
         String status = this.nodeMgr.dumpNodeInfo(this.selfShortId);
         System.out.println(status);
         System.out.println(
-            "--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                "--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
         System.out.println(
-            "recv queue ["
-                + this.receiveMsgQue.size()
-                + "] send queue ["
-                + this.sendMsgQue.size()
-                + "]\n");
+                "recv queue ["
+                        + this.receiveMsgQue.size()
+                        + "] send queue ["
+                        + this.sendMsgQue.size()
+                        + "]\n");
     }
 }
