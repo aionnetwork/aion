@@ -1,3 +1,28 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ * This file is part of the aion network project.
+ *
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
+ *
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
+ *
+ * Aion foundation.
+ *
+ */
+
 package org.aion.p2p.impl1;
 
 import java.io.IOException;
@@ -37,16 +62,22 @@ public class TaskInbound implements Runnable {
     private final P2pMgr mgr;
     private final Selector selector;
     private final NodeMgr nodeMgr;
-    private ServerSocketChannel tcpServer;
     private final Map<Integer, List<Handler>> handlers;
+    private ServerSocketChannel tcpServer;
     private LinkedBlockingQueue<MsgOut> sendMsgQue;
     private ResHandshake1 cachedResHandshake1;
     private LinkedBlockingQueue<MsgIn> receiveMsgQue;
 
-    public TaskInbound(P2pMgr _mgr, Selector _selector, AtomicBoolean _start, NodeMgr _nodeMgr,
-        ServerSocketChannel _tcpServer, Map<Integer, List<Handler>> _handlers,
-        LinkedBlockingQueue<MsgOut> _sendMsgQue, ResHandshake1 _cachedResHandshake1,
-        LinkedBlockingQueue<MsgIn> _receiveMsgQue) {
+    TaskInbound(
+            P2pMgr _mgr,
+            Selector _selector,
+            AtomicBoolean _start,
+            NodeMgr _nodeMgr,
+            ServerSocketChannel _tcpServer,
+            Map<Integer, List<Handler>> _handlers,
+            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            ResHandshake1 _cachedResHandshake1,
+            LinkedBlockingQueue<MsgIn> _receiveMsgQue) {
 
         this.mgr = _mgr;
         this.selector = _selector;
@@ -236,7 +267,8 @@ public class TaskInbound implements Runnable {
             node.setChannel(channel);
             this.nodeMgr.addInboundNode(node);
 
-            if (this.mgr.isShowLog()) System.out.println("<p2p new-connection " + ip + ":" + port + ">");
+            if (this.mgr.isShowLog())
+                System.out.println("<p2p new-connection " + ip + ":" + port + ">");
 
         } catch (IOException e) {
             if (this.mgr.isShowLog()) System.out.println("<p2p inbound-accept-io-exception>");
@@ -249,7 +281,7 @@ public class TaskInbound implements Runnable {
      * @throws IOException IOException
      */
     private int readHeader(final ChannelBuffer _cb, ByteBuffer readBuffer, int cnt)
-        throws IOException {
+            throws IOException {
 
         if (cnt < Header.LEN) return cnt;
 
@@ -267,7 +299,7 @@ public class TaskInbound implements Runnable {
      * @throws IOException IOException
      */
     private int readBody(final ChannelBuffer _cb, ByteBuffer readBuffer, int cnt)
-        throws IOException {
+            throws IOException {
 
         int bodyLen = _cb.header.getLen();
 
@@ -326,26 +358,26 @@ public class TaskInbound implements Runnable {
         int route = h.getRoute();
 
         boolean underRC =
-            rb.shouldRoute(
-                route,
-                ((route == P2pMgr.txBroadCastRoute)
-                    ? P2pConstant.READ_MAX_RATE_TXBC
-                    : P2pConstant.READ_MAX_RATE));
+                rb.shouldRoute(
+                        route,
+                        ((route == P2pMgr.txBroadCastRoute)
+                                ? P2pConstant.READ_MAX_RATE_TXBC
+                                : P2pConstant.READ_MAX_RATE));
 
         if (!underRC) {
             if (this.mgr.isShowLog())
                 System.out.println(
-                    "<p2p over-called-route="
-                        + ver
-                        + "-"
-                        + ctrl
-                        + "-"
-                        + act
-                        + " calls="
-                        + rb.getRouteCount(route).count
-                        + " node="
-                        + rb.displayId
-                        + ">");
+                        "<p2p over-called-route="
+                                + ver
+                                + "-"
+                                + ctrl
+                                + "-"
+                                + act
+                                + " calls="
+                                + rb.getRouteCount(route).count
+                                + " node="
+                                + rb.displayId
+                                + ">");
             return currCnt;
         }
 
@@ -358,22 +390,22 @@ public class TaskInbound implements Runnable {
                         } catch (Exception ex) {
                             if (this.mgr.isShowLog())
                                 System.out.println(
-                                    "<p2p handle-p2p-msg error=" + ex.getMessage() + ">");
+                                        "<p2p handle-p2p-msg error=" + ex.getMessage() + ">");
                         }
                         break;
                     case Ctrl.SYNC:
                         if (!this.handlers.containsKey(route)) {
                             if (this.mgr.isShowLog())
                                 System.out.println(
-                                    "<p2p unregistered-route="
-                                        + ver
-                                        + "-"
-                                        + ctrl
-                                        + "-"
-                                        + act
-                                        + " node="
-                                        + rb.displayId
-                                        + ">");
+                                        "<p2p unregistered-route="
+                                                + ver
+                                                + "-"
+                                                + ctrl
+                                                + "-"
+                                                + act
+                                                + " node="
+                                                + rb.displayId
+                                                + ">");
                             return currCnt;
                         }
 
@@ -382,15 +414,15 @@ public class TaskInbound implements Runnable {
                     default:
                         if (this.mgr.isShowLog())
                             System.out.println(
-                                "<p2p invalid-route="
-                                    + ver
-                                    + "-"
-                                    + ctrl
-                                    + "-"
-                                    + act
-                                    + " node="
-                                    + rb.displayId
-                                    + ">");
+                                    "<p2p invalid-route="
+                                            + ver
+                                            + "-"
+                                            + ctrl
+                                            + "-"
+                                            + act
+                                            + " node="
+                                            + rb.displayId
+                                            + ">");
                         break;
                 }
                 break;
@@ -418,12 +450,12 @@ public class TaskInbound implements Runnable {
                     ReqHandshake1 reqHandshake1 = ReqHandshake1.decode(_msgBytes);
                     if (reqHandshake1 != null) {
                         handleReqHandshake(
-                            rb,
-                            _sk.channel().hashCode(),
-                            reqHandshake1.getNodeId(),
-                            reqHandshake1.getNetId(),
-                            reqHandshake1.getPort(),
-                            reqHandshake1.getRevision());
+                                rb,
+                                _sk.channel().hashCode(),
+                                reqHandshake1.getNodeId(),
+                                reqHandshake1.getNetId(),
+                                reqHandshake1.getPort(),
+                                reqHandshake1.getRevision());
                     }
                 }
                 break;
@@ -443,11 +475,11 @@ public class TaskInbound implements Runnable {
                     Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null)
                         this.sendMsgQue.offer(
-                            new MsgOut(
-                                node.getIdHash(),
-                                node.getIdShort(),
-                                new ResActiveNodes(nodeMgr.getActiveNodesList()),
-                                Dest.ACTIVE));
+                                new MsgOut(
+                                        node.getIdHash(),
+                                        node.getIdShort(),
+                                        new ResActiveNodes(nodeMgr.getActiveNodesList()),
+                                        Dest.ACTIVE));
                 }
                 break;
 
@@ -463,14 +495,16 @@ public class TaskInbound implements Runnable {
                             List<Node> incomingNodes = resActiveNodes.getNodes();
                             for (Node incomingNode : incomingNodes) {
                                 if (nodeMgr.tempNodesSize() >= this.mgr.getMaxTempNodes()) return;
-                                if (this.mgr.validateNode(incomingNode)) nodeMgr.addTempNode(incomingNode);
+                                if (this.mgr.validateNode(incomingNode))
+                                    nodeMgr.addTempNode(incomingNode);
                             }
                         }
                     }
                 }
                 break;
             default:
-                if (this.mgr.isShowLog()) System.out.println("<p2p unknown-route act=" + _act + ">");
+                if (this.mgr.isShowLog())
+                    System.out.println("<p2p unknown-route act=" + _act + ">");
                 break;
         }
     }
@@ -485,12 +519,12 @@ public class TaskInbound implements Runnable {
      *     <p>Construct node info after handshake request success
      */
     private void handleReqHandshake(
-        final ChannelBuffer _buffer,
-        int _channelHash,
-        final byte[] _nodeId,
-        int _netId,
-        int _port,
-        final byte[] _revision) {
+            final ChannelBuffer _buffer,
+            int _channelHash,
+            final byte[] _nodeId,
+            int _netId,
+            int _port,
+            final byte[] _revision) {
         Node node = nodeMgr.getInboundNode(_channelHash);
         if (node != null && node.peerMetric.notBan()) {
             if (handshakeRuleCheck(_netId)) {
@@ -510,11 +544,11 @@ public class TaskInbound implements Runnable {
                     node.setBinaryVersion(binaryVersion);
                     nodeMgr.moveInboundToActive(_channelHash, this.mgr);
                     this.sendMsgQue.offer(
-                        new MsgOut(
-                            node.getIdHash(),
-                            node.getIdShort(),
-                            this.cachedResHandshake1,
-                            Dest.ACTIVE));
+                            new MsgOut(
+                                    node.getIdHash(),
+                                    node.getIdShort(),
+                                    this.cachedResHandshake1,
+                                    Dest.ACTIVE));
                 }
 
             } else {
