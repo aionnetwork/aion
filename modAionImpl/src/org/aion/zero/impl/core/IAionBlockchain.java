@@ -26,6 +26,7 @@ package org.aion.zero.impl.core;
 
 import org.aion.base.db.IRepository;
 import org.aion.mcf.core.IBlockchain;
+import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
@@ -42,6 +43,8 @@ public interface IAionBlockchain
         extends IBlockchain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
 
     AionBlock createNewBlock(AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+
+    BlockContext createNewBlockContext(AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
     AionBlock getBestBlock();
 
