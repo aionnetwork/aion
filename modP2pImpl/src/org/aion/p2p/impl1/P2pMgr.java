@@ -95,7 +95,7 @@ public final class P2pMgr implements IP2pMgr {
         INBOUND, OUTBOUND, ACTIVE
     }
 
-    private static class MsgOut {
+    static class MsgOut {
         MsgOut(int _nodeId, String _displayId, Msg _msg, Dest _dest) {
             nodeId = _nodeId;
             displayId = _displayId;
@@ -111,7 +111,7 @@ public final class P2pMgr implements IP2pMgr {
         long timestamp;
     }
 
-    private static class MsgIn {
+    static class MsgIn {
         MsgIn(int nid, String nsid, int route, byte[] msg) {
             this.nid = nid;
             this.nsid = nsid;
@@ -639,7 +639,7 @@ public final class P2pMgr implements IP2pMgr {
         }
     }
 
-    private void accept() {
+    void accept() {
         SocketChannel channel;
         try {
 
@@ -735,7 +735,7 @@ public final class P2pMgr implements IP2pMgr {
      * @throws IOException
      *             IOException
      */
-    private int read(final SelectionKey _sk, ByteBuffer _readBuffer, int _cnt) throws IOException {
+    int read(final SelectionKey _sk, ByteBuffer _readBuffer, int _cnt) throws IOException {
 
         int currCnt = 0;
 
@@ -992,7 +992,8 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            Thread thrdIn = new Thread(new TaskInbound(), "p2p-in");
+            Thread thrdIn = new Thread(new TaskInbound2(this, this.showLog, this.selector), "p2p-in");
+//            Thread thrdIn = new Thread(new TaskInbound(), "p2p-in");
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
