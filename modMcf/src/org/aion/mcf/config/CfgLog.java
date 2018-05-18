@@ -105,6 +105,10 @@ public class CfgLog {
                 xmlWriter.writeCharacters("\r\n");
             }
             
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeComment(
+                "Logger implementation used to store logs; supported options");
+            
             /** XML - Displays toggle in the config.xml */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeStartElement("log-file");
