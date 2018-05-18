@@ -38,10 +38,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.ds.ArchivedDataSource;
 import org.slf4j.Logger;
 
 /**
@@ -89,13 +91,19 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
     private AtomicBoolean enabled = new AtomicBoolean(true);
+    private final boolean hasArchive;
 
     public JournalPruneDataSource(IByteArrayKeyValueStore src) {
         this.src = src;
+        this.hasArchive = src instanceof ArchivedDataSource;
     }
 
     public void setPruneEnabled(boolean _enabled) {
         enabled.set(_enabled);
+    }
+
+    public boolean isArchiveEnabled() {
+        return hasArchive;
     }
 
     public void put(byte[] key, byte[] value) {
@@ -413,6 +421,14 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     public IByteArrayKeyValueStore getSrc() {
         return src;
+    }
+
+    public IByteArrayKeyValueDatabase getArchiveSource() {
+        if (!hasArchive) {
+            return null;
+        } else {
+            return ((ArchivedDataSource) src).getArchiveDatabase();
+        }
     }
 
     @Override

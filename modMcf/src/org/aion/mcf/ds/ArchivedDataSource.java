@@ -128,4 +128,8 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
         data.close();
         archive.close();
     }
+
+    public IByteArrayKeyValueDatabase getArchiveDatabase() {
+        return archive;
+    }
 }

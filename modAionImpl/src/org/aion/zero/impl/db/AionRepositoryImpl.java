@@ -502,6 +502,11 @@ public class AionRepositoryImpl
             detailsDS.syncLargeStorage();
 
             if (pruneEnabled) {
+                if (blockHeader.getNumber() % archiveRate == 0 && stateDSPrune.isArchiveEnabled()) {
+                    // archive block
+                    worldState.saveDiffStateToDatabase(
+                            blockHeader.getStateRoot(), stateDSPrune.getArchiveSource());
+                }
                 stateDSPrune.storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
                 detailsDS
                         .getStorageDSPrune()
