@@ -2,6 +2,7 @@ package org.aion.db.impl.redisdb;
 
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
+import org.aion.db.impl.DBConstants;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
@@ -9,12 +10,12 @@ import redis.clients.jedis.Pipeline;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
-public class RedisDbWrapper extends AbstractDB {
+public class RedisWrapper extends AbstractDB {
     private JedisPool pool;
 
-    public RedisDbWrapper(String name, String path, boolean enableDbCache, boolean enableDbCompression) {
+    public RedisWrapper(String name, String path, boolean enableDbCache, boolean enableDbCompression) {
         super(name, path, enableDbCache, enableDbCompression);
-        pool = RedisDBConstants.getDb(name);
+        pool = RedisConstants.getDb(name);
     }
 
     @Override
@@ -24,9 +25,9 @@ public class RedisDbWrapper extends AbstractDB {
 
             for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
                 if (e.getValue() == null) {
-                    tmpBatch.del(new String(e.getKey().getData(), RedisDBConstants.CHARSET));
+                    tmpBatch.del(new String(e.getKey().getData(), DBConstants.CHARSET));
                 } else {
-                    tmpBatch.set(new String(e.getKey().getData(), RedisDBConstants.CHARSET), new String(e.getValue() , RedisDBConstants.CHARSET));
+                    tmpBatch.set(new String(e.getKey().getData(), DBConstants.CHARSET), new String(e.getValue() , DBConstants.CHARSET));
                 }
             }
 
@@ -41,9 +42,9 @@ public class RedisDbWrapper extends AbstractDB {
     @Override
     protected byte[] getInternal(byte[] key) {
         try(Jedis db = pool.getResource()) {
-            String value = db.get(new String(key, RedisDBConstants.CHARSET));
+            String value = db.get(new String(key, DBConstants.CHARSET));
             if(value != null){
-                return value.getBytes(RedisDBConstants.CHARSET);
+                return value.getBytes(DBConstants.CHARSET);
             }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -94,7 +95,7 @@ public class RedisDbWrapper extends AbstractDB {
         try(Jedis db = pool.getResource()) {
             Set<String> keysAsString = db.keys("*");
             for(String key : keysAsString){
-                set.add(key.getBytes(RedisDBConstants.CHARSET));
+                set.add(key.getBytes(DBConstants.CHARSET));
             }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -108,7 +109,7 @@ public class RedisDbWrapper extends AbstractDB {
         check();
 
         try(Jedis db = pool.getResource()) {
-            db.set(new String(key, RedisDBConstants.CHARSET), new String(value, RedisDBConstants.CHARSET));
+            db.set(new String(key, DBConstants.CHARSET), new String(value, DBConstants.CHARSET));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -121,7 +122,7 @@ public class RedisDbWrapper extends AbstractDB {
         check();
 
          try(Jedis db = pool.getResource()) {
-            db.del(new String(key, RedisDBConstants.CHARSET));
+            db.del(new String(key, DBConstants.CHARSET));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -141,9 +142,9 @@ public class RedisDbWrapper extends AbstractDB {
                 byte[] value = e.getValue();
 
                 if (value == null) {
-                    tmpBatch.del(new String(key, RedisDBConstants.CHARSET));
+                    tmpBatch.del(new String(key, DBConstants.CHARSET));
                 } else {
-                    tmpBatch.set(new String(key, RedisDBConstants.CHARSET), new String(value, RedisDBConstants.CHARSET));
+                    tmpBatch.set(new String(key, DBConstants.CHARSET), new String(value, DBConstants.CHARSET));
                 }
             }
 
@@ -161,9 +162,9 @@ public class RedisDbWrapper extends AbstractDB {
 
         try(Jedis db = pool.getResource()){
             if (value == null) {
-                db.del(new String(key, RedisDBConstants.CHARSET));
+                db.del(new String(key, DBConstants.CHARSET));
             } else {
-                db.set(new String(key, RedisDBConstants.CHARSET), new String(value, RedisDBConstants.CHARSET));
+                db.set(new String(key, DBConstants.CHARSET), new String(value, DBConstants.CHARSET));
             }
 
         } catch (UnsupportedEncodingException e) {
@@ -186,7 +187,7 @@ public class RedisDbWrapper extends AbstractDB {
             Pipeline tmpBatch = db.pipelined();
 
             for(byte[] key: keys) {
-                tmpBatch.del(new String(key, RedisDBConstants.CHARSET));
+                tmpBatch.del(new String(key, DBConstants.CHARSET));
             }
 
             tmpBatch.sync();
