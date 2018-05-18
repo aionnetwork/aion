@@ -82,9 +82,7 @@ public class Aion {
         // Level
 
         /** Change INITIALIZE signature to include LOGFILE */
-        // AionLoggerFactory.init(cfg.getLog().getModules());
-        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile());
-
+        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         System.out.println(
