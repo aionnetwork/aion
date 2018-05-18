@@ -542,6 +542,7 @@ public class AionRepositoryImpl
             repo.blockStore = blockStore;
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
+            repo.stateWithArchive = this.stateWithArchive;
             repo.stateDSPrune = this.stateDSPrune;
 
             // pruning config
@@ -622,6 +623,16 @@ public class AionRepositoryImpl
                 }
             } catch (Exception e) {
                 LOGGEN.error("Exception occurred while closing the state database.", e);
+            }
+
+            try {
+                if (stateArchiveDatabase != null) {
+                    stateArchiveDatabase.close();
+                    LOGGEN.info("State archive database closed.");
+                    stateArchiveDatabase = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error("Exception occurred while closing the state archive database.", e);
             }
 
             try {

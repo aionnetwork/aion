@@ -40,6 +40,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.exception.InvalidFilePathException;
+import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
@@ -70,6 +71,7 @@ public abstract class AbstractRepository<
     protected static final String DETAILS_DB = CfgDb.Names.DETAILS;
     protected static final String STORAGE_DB = CfgDb.Names.STORAGE;
     protected static final String STATE_DB = CfgDb.Names.STATE;
+    protected static final String STATE_ARCHIVE_DB = CfgDb.Names.STATE_ARCHIVE;
     protected static final String PENDING_TX_POOL_DB = CfgDb.Names.TX_POOL;
     protected static final String PENDING_TX_CACHE_DB = CfgDb.Names.TX_CACHE;
 
@@ -88,11 +90,13 @@ public abstract class AbstractRepository<
     protected IByteArrayKeyValueDatabase indexDatabase;
     protected IByteArrayKeyValueDatabase blockDatabase;
     protected IByteArrayKeyValueDatabase stateDatabase;
+    protected IByteArrayKeyValueDatabase stateArchiveDatabase;
     protected IByteArrayKeyValueDatabase txPoolDatabase;
     protected IByteArrayKeyValueDatabase pendingTxCacheDatabase;
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
+    protected ArchivedDataSource stateWithArchive;
     protected JournalPruneDataSource stateDSPrune;
     protected DetailsDataStore<BLK, BH> detailsDS;
 
@@ -190,6 +194,11 @@ public abstract class AbstractRepository<
             this.stateDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(stateDatabase);
 
+            // using state config for state_archive
+            sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
+            this.stateArchiveDatabase = connectAndOpen(sharedProps);
+            databaseGroup.add(stateArchiveDatabase);
+
             // getting transaction specific properties
             sharedProps = cfg.getDatabaseConfig(TRANSACTION_DB);
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
@@ -248,7 +257,8 @@ public abstract class AbstractRepository<
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
-            stateDSPrune = new JournalPruneDataSource(stateDatabase);
+            stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
+            stateDSPrune = new JournalPruneDataSource(stateWithArchive);
 
             // pruning config
             pruneEnabled = this.cfg.getPruneConfig().isEnabled();

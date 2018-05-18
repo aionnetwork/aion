@@ -50,6 +50,7 @@ public class CfgDb {
         public static final String STORAGE = "storage";
 
         public static final String STATE = "state";
+        public static final String STATE_ARCHIVE = "stateArchive";
         public static final String TRANSACTION = "transaction";
 
         public static final String TX_CACHE = "pendingtxCache";
