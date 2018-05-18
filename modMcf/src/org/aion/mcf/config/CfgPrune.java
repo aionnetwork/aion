@@ -44,16 +44,19 @@ public class CfgPrune implements IPruneConfig {
     private int current;
     private int archive;
 
+    private static final int MINIMUM_CURRENT_COUNT = 128;
+    private static final int MINIMUM_ARCHIVE_RATE = 1000;
+
     public CfgPrune() {
         this.enabled = true;
-        this.current = 128;
-        this.archive = 10000;
+        this.current = MINIMUM_CURRENT_COUNT;
+        this.archive = MINIMUM_ARCHIVE_RATE;
     }
 
     public CfgPrune(boolean _enabled) {
         this.enabled = _enabled;
-        this.current = 128;
-        this.archive = 10000;
+        this.current = MINIMUM_CURRENT_COUNT;
+        this.archive = MINIMUM_ARCHIVE_RATE;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -69,16 +72,16 @@ public class CfgPrune implements IPruneConfig {
                             break;
                         case "current_count":
                             this.current = Integer.parseInt(Cfg.readValue(sr));
-                            // must be at least 128
-                            if (this.current < 128) {
-                                this.current = 128;
+                            // must be at least MINIMUM_CURRENT_COUNT
+                            if (this.current < MINIMUM_CURRENT_COUNT) {
+                                this.current = MINIMUM_CURRENT_COUNT;
                             }
                             break;
                         case "archive_rate":
                             this.archive = Integer.parseInt(Cfg.readValue(sr));
-                            // must be at least 1000
-                            if (this.current < 1000) {
-                                this.current = 1000;
+                            // must be at least MINIMUM_ARCHIVE_RATE
+                            if (this.archive < MINIMUM_ARCHIVE_RATE) {
+                                this.archive = MINIMUM_ARCHIVE_RATE;
                             }
                             break;
                         default:
