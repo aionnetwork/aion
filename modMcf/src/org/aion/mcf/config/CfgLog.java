@@ -68,10 +68,13 @@ public class CfgLog {
                         this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
                     
                     /** XML - Takes the input in config.xml and parse as T/F */
-                    String elementName = sr.getLocalName().toLowerCase();
+                    elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "log-file":
                             this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "log-path":
+                            this.logPath = Cfg.readValue(sr);
                             break;
                         default:
                             break;
