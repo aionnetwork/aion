@@ -63,7 +63,10 @@ public class CfgLog {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
-
+                    String elementName = sr.getLocalName().toUpperCase();
+                    if (LogEnum.contains(elementName))
+                        this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                    
                     /** XML - Takes the input in config.xml and parse as T/F */
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
@@ -73,11 +76,7 @@ public class CfgLog {
                         default:
                             break;
                     }
-
-                    elementName = sr.getLocalName().toUpperCase();
-                    /** String elementName = sr.getLocalName().toUpperCase(); */
-                    if (LogEnum.contains(elementName))
-                        this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                    
                     break;
                 case XMLStreamReader.END_ELEMENT:
                     break loop;
@@ -98,14 +97,6 @@ public class CfgLog {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("log");
             xmlWriter.writeCharacters("\r\n");
-
-            /** XML - Displays tag/entry in the config.xml */
-            xmlWriter.writeCharacters("\t\t");
-            xmlWriter.writeStartElement("log-file");
-            xmlWriter.writeCharacters(this.logFile);
-            xmlWriter.writeEndElement();
-            xmlWriter.writeCharacters("\r\n");
-            
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
                 xmlWriter.writeStartElement(module.getKey().toUpperCase());
@@ -113,6 +104,21 @@ public class CfgLog {
                 xmlWriter.writeEndElement();
                 xmlWriter.writeCharacters("\r\n");
             }
+            
+            /** XML - Displays toggle in the config.xml */
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeStartElement("log-file");
+            xmlWriter.writeCharacters(this.logFile + "");
+            xmlWriter.writeEndElement();
+            xmlWriter.writeCharacters("\r\n");
+
+            /** XML - Displays log-path in the config.xml */
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeStartElement("log-path");
+            xmlWriter.writeCharacters(this.logPath + "");
+            xmlWriter.writeEndElement();
+            xmlWriter.writeCharacters("\r\n");
+            
             xmlWriter.writeCharacters("\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
@@ -133,5 +139,10 @@ public class CfgLog {
     /** Method checks value of logFile as T/F */
     public boolean getLogFile() {
         return this.logFile;
+    }
+    
+    /** Method checks user input path of logFile */
+    public String getLogPath() {
+        return this.logPath;
     }
 }
