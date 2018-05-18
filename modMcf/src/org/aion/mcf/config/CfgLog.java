@@ -98,7 +98,7 @@ public class CfgLog {
             Writer strWriter = new StringWriter();
             xmlWriter = output.createXMLStreamWriter(strWriter);
             xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeStartElement("Log");
+            xmlWriter.writeStartElement("log");
             xmlWriter.writeCharacters("\r\n");
 
             /** XML - Displays tag/entry in the config.xml */
@@ -107,12 +107,7 @@ public class CfgLog {
             xmlWriter.writeCharacters(this.logFile);
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
-
-            /** Testing whether logFile retrieves boolean value */
-            /**
-             * if(logFile) { xmlWriter.writeCharacters("\t\t"); xmlWriter.writeCharacters("testing
-             * for T"); xmlWriter.writeCharacters("\r\n"); }
-             */
+            
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
                 xmlWriter.writeStartElement(module.getKey().toUpperCase());
