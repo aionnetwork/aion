@@ -1036,7 +1036,9 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn =
-                    new Thread(new TaskInbound2(this, this.showLog, this.selector, this.start), "p2p-in");
+                    new Thread(
+                            new TaskInbound2(this, this.showLog, this.selector, this.start),
+                            "p2p-in");
             //            Thread thrdIn = new Thread(new TaskInbound(), "p2p-in");
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
@@ -1061,14 +1063,24 @@ public final class P2pMgr implements IP2pMgr {
                         });
 
             for (int i = 0; i < TaskSend2.TOTAL_LANE; i++) {
-                Thread thrdOut = new Thread(new TaskSend2(this, i, this.sendMsgQue,
-                    this.start, this.showLog, this.nodeMgr, this.selector), "p2p-out-" + i);
+                Thread thrdOut =
+                        new Thread(
+                                new TaskSend2(
+                                        this,
+                                        i,
+                                        this.sendMsgQue,
+                                        this.start,
+                                        this.showLog,
+                                        this.nodeMgr,
+                                        this.selector),
+                                "p2p-out-" + i);
                 thrdOut.setPriority(Thread.NORM_PRIORITY);
                 thrdOut.start();
             }
 
             for (int i = 0, m = Runtime.getRuntime().availableProcessors(); i < m; i++) {
-                Thread t = new Thread(new TaskReceive(), "p2p-worker-" + i);
+                Thread t = new Thread(new TaskReceive2(this.start, this.receiveMsgQue,
+                    this.handlers, this.showLog), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
             }

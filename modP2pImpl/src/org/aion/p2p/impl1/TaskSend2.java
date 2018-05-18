@@ -20,8 +20,14 @@ public class TaskSend2 implements Runnable {
     private boolean showLog;
     private int lane;
 
-    public TaskSend2(P2pMgr _mgr, int _lane, LinkedBlockingQueue<MsgOut> _sendMsgQue,
-        AtomicBoolean _start, boolean _showLog, NodeMgr _nodeMgr, Selector _selector) {
+    public TaskSend2(
+            P2pMgr _mgr,
+            int _lane,
+            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            AtomicBoolean _start,
+            boolean _showLog,
+            NodeMgr _nodeMgr,
+            Selector _selector) {
 
         this.mgr = _mgr;
         this.lane = _lane;
@@ -42,11 +48,11 @@ public class TaskSend2 implements Runnable {
                 if (now - mo.timestamp > P2pConstant.WRITE_MSG_TIMEOUT) {
                     if (showLog)
                         System.out.println(
-                            "<p2p timeout-msg to-node="
-                                + mo.displayId
-                                + " timestamp="
-                                + now
-                                + ">");
+                                "<p2p timeout-msg to-node="
+                                        + mo.displayId
+                                        + " timestamp="
+                                        + now
+                                        + ">");
                     continue;
                 }
 
@@ -76,24 +82,24 @@ public class TaskSend2 implements Runnable {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
                             TaskWrite tw =
-                                new TaskWrite(
-                                    showLog,
-                                    node.getIdShort(),
-                                    node.getChannel(),
-                                    mo.msg,
-                                    (ChannelBuffer) attachment,
-                                    this.mgr);
+                                    new TaskWrite(
+                                            showLog,
+                                            node.getIdShort(),
+                                            node.getChannel(),
+                                            mo.msg,
+                                            (ChannelBuffer) attachment,
+                                            this.mgr);
                             tw.run();
                         }
                     }
                 } else {
                     if (showLog)
                         System.out.println(
-                            "<p2p msg-"
-                                + mo.dest.name()
-                                + "->"
-                                + mo.displayId
-                                + " node-not-exit");
+                                "<p2p msg-"
+                                        + mo.dest.name()
+                                        + "->"
+                                        + mo.displayId
+                                        + " node-not-exit");
                 }
             } catch (InterruptedException e) {
                 if (showLog) System.out.println("<p2p task-send-interrupted>");
