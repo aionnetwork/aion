@@ -67,6 +67,7 @@ public class Keystore {
     private static final String KEYSTORE_PATH = System.getProperty("user.dir") + "/keystore";
     private static final Path PATH = Paths.get(KEYSTORE_PATH);
     private static final FileDateTimeComparator COMPARE = new FileDateTimeComparator();
+    private static final Pattern HEX_64 = Pattern.compile("^[\\p{XDigit}]{64}$");
     private static final String ADDR_PREFIX = "0x";
     private static final String AION_PREFIX = "a0";
     private static final int IMPORT_LIMIT = 100;
@@ -230,11 +231,10 @@ public class Keystore {
         }
 
         ECKey key = null;
-        Pattern hex64 = Pattern.compile("^[\\p{XDigit}]{64}$");
         if (_address.startsWith(AION_PREFIX)) {
             List<File> files = getFiles();
             for (File file : files) {
-                if (hex64.matcher(_address).find() && file.getName().contains(_address)) {
+                if (HEX_64.matcher(_address).find() && file.getName().contains(_address)) {
                     try {
                         byte[] content = Files.readAllBytes(file.toPath());
                         key = KeystoreFormat.fromKeystore(content, _password);
@@ -261,11 +261,10 @@ public class Keystore {
         }
 
         boolean flag = false;
-        Pattern hex64 = Pattern.compile("^[\\p{XDigit}]{64}$");
         if (_address.startsWith(AION_PREFIX)) {
             List<File> files = getFiles();
             for (File file : files) {
-                if (hex64.matcher(_address).find() && file.getName().contains(_address)) {
+                if (HEX_64.matcher(_address).find() && file.getName().contains(_address)) {
                     flag = true;
                     break;
                 }
