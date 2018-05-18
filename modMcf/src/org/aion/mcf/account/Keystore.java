@@ -49,6 +49,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.aion.base.type.Address;
 import org.aion.base.util.*;
@@ -228,10 +230,11 @@ public class Keystore {
         }
 
         ECKey key = null;
+        Pattern hex64 = Pattern.compile("^[\\p{XDigit}]{64}$");
         if (_address.startsWith(AION_PREFIX)) {
             List<File> files = getFiles();
             for (File file : files) {
-                if (file.getName().split("--")[2].equals(_address)) {
+                if (hex64.matcher(_address).find() && file.getName().contains(_address)) {
                     try {
                         byte[] content = Files.readAllBytes(file.toPath());
                         key = KeystoreFormat.fromKeystore(content, _password);
@@ -246,16 +249,23 @@ public class Keystore {
         return key;
     }
 
+    /**
+     * Returns true if the address _address exists, false otherwise.
+     *
+     * @param _address the address whose existence is to be tested.
+     * @return true only if _address exists.
+     */
     public static boolean exist(String _address) {
         if (_address.startsWith(ADDR_PREFIX)) {
             _address = _address.substring(2);
         }
 
         boolean flag = false;
+        Pattern hex64 = Pattern.compile("^[\\p{XDigit}]{64}$");
         if (_address.startsWith(AION_PREFIX)) {
             List<File> files = getFiles();
             for (File file : files) {
-                if (file.getName().split("--")[2].equals(_address)) {
+                if (hex64.matcher(_address).find() && file.getName().contains(_address)) {
                     flag = true;
                     break;
                 }
