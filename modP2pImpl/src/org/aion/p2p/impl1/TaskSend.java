@@ -4,12 +4,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.p2p.Msg;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
-import org.aion.p2p.impl1.P2pMgr.MsgOut;
+import org.aion.p2p.impl1.P2pMgr.Dest;
 
-public class TaskSend2 implements Runnable {
+public class TaskSend implements Runnable {
     static final int TOTAL_LANE = (1 << 5) - 1;
 
     private final P2pMgr mgr;
@@ -17,15 +18,13 @@ public class TaskSend2 implements Runnable {
     private final LinkedBlockingQueue<MsgOut> sendMsgQue;
     private final NodeMgr nodeMgr;
     private final Selector selector;
-    private boolean showLog;
     private int lane;
 
-    public TaskSend2(
+    public TaskSend(
             P2pMgr _mgr,
             int _lane,
             LinkedBlockingQueue<MsgOut> _sendMsgQue,
             AtomicBoolean _start,
-            boolean _showLog,
             NodeMgr _nodeMgr,
             Selector _selector) {
 
@@ -33,7 +32,6 @@ public class TaskSend2 implements Runnable {
         this.lane = _lane;
         this.sendMsgQue = _sendMsgQue;
         this.start = _start;
-        this.showLog = _showLog;
         this.nodeMgr = _nodeMgr;
         this.selector = _selector;
     }
@@ -46,7 +44,7 @@ public class TaskSend2 implements Runnable {
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.timestamp > P2pConstant.WRITE_MSG_TIMEOUT) {
-                    if (showLog)
+                    if (this.mgr.isShowLog())
                         System.out.println(
                                 "<p2p timeout-msg to-node="
                                         + mo.displayId
@@ -57,7 +55,7 @@ public class TaskSend2 implements Runnable {
                 }
 
                 // if not belong to current lane, put it back.
-                int targetLane = this.mgr.hash2Lane(mo.nodeId);
+                int targetLane = hash2Lane(mo.nodeId);
                 if (targetLane != lane) {
                     sendMsgQue.offer(mo);
                     continue;
@@ -83,7 +81,7 @@ public class TaskSend2 implements Runnable {
                         if (attachment != null) {
                             TaskWrite tw =
                                     new TaskWrite(
-                                            showLog,
+                                            this.mgr.isShowLog(),
                                             node.getIdShort(),
                                             node.getChannel(),
                                             mo.msg,
@@ -93,7 +91,7 @@ public class TaskSend2 implements Runnable {
                         }
                     }
                 } else {
-                    if (showLog)
+                    if (this.mgr.isShowLog())
                         System.out.println(
                                 "<p2p msg-"
                                         + mo.dest.name()
@@ -102,11 +100,45 @@ public class TaskSend2 implements Runnable {
                                         + " node-not-exit");
                 }
             } catch (InterruptedException e) {
-                if (showLog) System.out.println("<p2p task-send-interrupted>");
+                if (this.mgr.isShowLog()) System.out.println("<p2p task-send-interrupted>");
                 return;
             } catch (Exception e) {
-                if (showLog) e.printStackTrace();
+                if (this.mgr.isShowLog()) e.printStackTrace();
             }
+        }
+    }
+
+    // hash mapping channel id to write thread.
+    private int hash2Lane(int in) {
+        in ^= in >> (32 - 5);
+        in ^= in >> (32 - 10);
+        in ^= in >> (32 - 15);
+        in ^= in >> (32 - 20);
+        in ^= in >> (32 - 25);
+        return in & 0b11111;
+    }
+
+    static class MsgOut {
+        private final int nodeId;
+        private final String displayId;
+        private final Msg msg;
+        private final Dest dest;
+        private final long timestamp;
+
+        /**
+         * Constructs an outgoing message.
+         *
+         * @param _nodeId
+         * @param _displayId
+         * @param _msg
+         * @param _dest
+         */
+        MsgOut(int _nodeId, String _displayId, Msg _msg, Dest _dest) {
+            nodeId = _nodeId;
+            displayId = _displayId;
+            msg = _msg;
+            dest = _dest;
+            timestamp = System.currentTimeMillis();
         }
     }
 }

@@ -11,15 +11,12 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.P2pConstant;
 
-public class TaskInbound2 implements Runnable {
-
+public class TaskInbound implements Runnable {
     private AtomicBoolean start;
-    private final boolean showLog;
     private final P2pMgr mgr;
     private final Selector selector;
 
-    public TaskInbound2(P2pMgr _mgr, boolean _showLog, Selector _selector, AtomicBoolean _start) {
-        this.showLog = _showLog;
+    public TaskInbound(P2pMgr _mgr, Selector _selector, AtomicBoolean _start) {
         this.mgr = _mgr;
         this.selector = _selector;
         this.start = _start;
@@ -42,7 +39,7 @@ public class TaskInbound2 implements Runnable {
             try {
                 num = this.selector.selectNow();
             } catch (IOException e) {
-                if (showLog) System.out.println("<p2p inbound-select-io-exception>");
+                if (this.mgr.isShowLog()) System.out.println("<p2p inbound-select-io-exception>");
                 continue;
             }
 
@@ -163,17 +160,18 @@ public class TaskInbound2 implements Runnable {
                                     (SocketChannel) sk.channel(),
                                     chanBuf.displayId + "-read-msg-key-cancelled-exception");
                         } catch (Exception e) {
-                            if (showLog) System.out.println("<p2p-pi global exception>");
+                            if (this.mgr.isShowLog()) System.out.println("<p2p-pi global exception>");
                         }
                     }
                 } catch (Exception ex) {
-                    if (showLog) {
+                    if (this.mgr.isShowLog()) {
                         System.out.println("<p2p-pi on-sk-exception=" + ex.getMessage() + ">");
                         ex.printStackTrace();
                     }
                 }
             }
         }
-        if (showLog) System.out.println("<p2p-pi shutdown>");
+        if (this.mgr.isShowLog()) System.out.println("<p2p-pi shutdown>");
     }
+
 }

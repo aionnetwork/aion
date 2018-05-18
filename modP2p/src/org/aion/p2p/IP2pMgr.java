@@ -56,12 +56,12 @@ public interface IP2pMgr {
     void send(int _id, String _displayId, final Msg _msg);
 
     /**
-     * Used to hook up with kernel to shutdown threads in network module
+     * Used to hook up with kernel to shutdown threads in network module.
      */
     void shutdown();
 
     /**
-     * start all p2p process
+     * Starts all p2p processes.
      */
     void run();
 

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 
-public class TaskClear2 implements Runnable {
+public class TaskClear implements Runnable {
     private static final int PERIOD_CLEAR = 20000;
     private static final int TIMEOUT_OUTBOUND_NODES = 20000;
 
@@ -13,7 +13,7 @@ public class TaskClear2 implements Runnable {
     private final NodeMgr nodeMgr;
     private AtomicBoolean start;
 
-    public TaskClear2(P2pMgr _mgr, NodeMgr _nodeMgr, AtomicBoolean _start) {
+    public TaskClear(P2pMgr _mgr, NodeMgr _nodeMgr, AtomicBoolean _start) {
         this.mgr = _mgr;
         this.nodeMgr = _nodeMgr;
         this.start = _start;
@@ -39,11 +39,9 @@ public class TaskClear2 implements Runnable {
 
                     if (node == null) continue;
 
-                    if (System.currentTimeMillis() - node.getTimestamp()
-                        > TIMEOUT_OUTBOUND_NODES) {
+                    if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
                         this.mgr.closeSocket(
-                            node.getChannel(),
-                            "outbound-timeout node=" + node.getIdShort());
+                                node.getChannel(), "outbound-timeout node=" + node.getIdShort());
                         outboundIt.remove();
                     }
                 }

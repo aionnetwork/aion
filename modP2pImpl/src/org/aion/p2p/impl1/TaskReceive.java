@@ -5,15 +5,14 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Handler;
-import org.aion.p2p.impl1.P2pMgr.MsgIn;
 
-public class TaskReceive2 implements Runnable {
+public class TaskReceive implements Runnable {
     private final AtomicBoolean start;
     private final LinkedBlockingQueue<MsgIn> receiveMsgQue;
     private final Map<Integer, List<Handler>> handlers;
     private final boolean showLog;
 
-    public TaskReceive2(
+    public TaskReceive(
             AtomicBoolean _start,
             LinkedBlockingQueue<MsgIn> _receiveMsgQue,
             Map<Integer, List<Handler>> _handlers,
@@ -47,6 +46,28 @@ public class TaskReceive2 implements Runnable {
             } catch (Exception e) {
                 if (this.showLog) e.printStackTrace();
             }
+        }
+    }
+
+    static class MsgIn {
+        private final int nid;
+        private final String nsid;
+        private final int route;
+        private final byte[] msg;
+
+        /**
+         * Constructs an incoming message.
+         *
+         * @param nid
+         * @param nsid
+         * @param route
+         * @param msg
+         */
+        MsgIn(int nid, String nsid, int route, byte[] msg) {
+            this.nid = nid;
+            this.nsid = nsid;
+            this.route = route;
+            this.msg = msg;
         }
     }
 }
