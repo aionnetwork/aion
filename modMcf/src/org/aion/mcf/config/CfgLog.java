@@ -39,8 +39,6 @@ import org.aion.log.LogLevels;
 public class CfgLog {
 
     private Map<String, String> modules;
-
-    /** Declaree logFile variable */
     private boolean logFile;
 
     public CfgLog() {
