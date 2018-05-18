@@ -34,7 +34,7 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
-import org.aion.db.impl.rocksdb.RocksDBWrapper;
+import org.aion.db.impl.redisdb.RedisWrapper;
 
 import java.util.List;
 import java.util.Map;
@@ -44,15 +44,22 @@ import java.util.concurrent.ConcurrentHashMap;
 public enum DBVendor {
 
     /** Used in correlation with implementations of {@link IDriver}. */
-    UNKNOWN("unknown", false), //
+    UNKNOWN("unknown", false),
     /** Using an instance of {@link org.aion.db.impl.leveldb.LevelDB}. */
-    LEVELDB("leveldb", true), //
-    /** Using an instance of {@link RocksDBWrapper}. */
+    LEVELDB("leveldb", true),
+    /** Using an instance of {@link org.aion.db.impl.rocksdb.RocksDBWrapper}. */
     ROCKSDB("rocksdb", true),
+    /** Using an instance of {@link RedisWrapper}*/
+    REDISDB("redisdb", true),
+    /** Using an instance of {@link org.aion.db.impl.redisdb.RedisClusterWrapper} */
+    REDIS_CLUSTER("rediscluster", true),
     /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
-    H2("h2", true), //
+    H2("h2", true),
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
-    MOCKDB("mockdb", false);
+    MOCKDB("mockdb", false),
+    /** Use a mix of db's in order to have better results */
+    HYBRID("hybrid", true);
+
 
     private static final Map<String, DBVendor> stringToTypeMap = new ConcurrentHashMap<>();
 
@@ -63,7 +70,7 @@ public enum DBVendor {
     }
 
     /* map implemented using concurrent hash map */
-    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
+    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, REDISDB, REDIS_CLUSTER, H2, MOCKDB, HYBRID);
 
     private final String value;
     private final boolean persistence;

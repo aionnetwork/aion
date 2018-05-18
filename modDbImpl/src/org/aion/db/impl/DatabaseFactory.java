@@ -37,6 +37,8 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.redisdb.RedisClusterWrapper;
+import org.aion.db.impl.redisdb.RedisWrapper;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.log.AionLoggerFactory;
@@ -181,28 +183,27 @@ public abstract class DatabaseFactory {
         // select database implementation
         switch (dbType) {
             case LEVELDB: {
-                return new LevelDB(dbName,
-                                   dbPath,
-                                   enableDbCache,
-                                   enableDbCompression,
-                                   getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
-                                   getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
-                                   getInt(info, Props.WRITE_BUFFER_SIZE, LevelDBConstants.WRITE_BUFFER_SIZE),
-                                   getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
+                return getLevelDB(info, dbName, dbPath, enableDbCache, enableDbCompression);
             }
             case ROCKSDB: {
-                return new RocksDBWrapper(dbName,
-                                          dbPath,
-                                          enableDbCache,
-                                          enableDbCompression,
-                                          getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
-                                          getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
-                                          getInt(info, Props.WRITE_BUFFER_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE),
-                                          getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
-                                          getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
+                return getRocksDBWrapper(info, dbName, dbPath, enableDbCache, enableDbCompression);
+            }
+            case REDISDB: {
+                return getRedisWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
+            }
+            case REDIS_CLUSTER: {
+                return getRedisClusterWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
             }
             case H2: {
-                return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
+                return getH2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
+            }
+            case HYBRID: {
+                switch (dbName) {
+                    case DBConstants.Names.STATE :
+                        return getRedisClusterWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
+                    default:
+                        return getRedisWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
+                }
             }
             default:
                 break;
@@ -210,6 +211,41 @@ public abstract class DatabaseFactory {
 
         LOG.error("Invalid database type provided: {}", dbType);
         return null;
+    }
+
+    private static H2MVMap getH2MVMap(String dbName, String dbPath, boolean enableDbCache, boolean enableDbCompression) {
+        return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
+    }
+
+    private static RedisWrapper getRedisWrapper(String dbName, String dbPath, boolean enableDbCache, boolean enableDbCompression) {
+        return new RedisWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
+    }
+
+    private static RedisClusterWrapper getRedisClusterWrapper(String dbName, String dbPath, boolean enableDbCache, boolean enableDbCompression) {
+        return new RedisClusterWrapper(dbName, dbPath, enableDbCache, enableDbCompression);
+    }
+
+    private static RocksDBWrapper getRocksDBWrapper(Properties info, String dbName, String dbPath, boolean enableDbCache, boolean enableDbCompression) {
+        return new RocksDBWrapper(dbName,
+                                  dbPath,
+                                  enableDbCache,
+                                  enableDbCompression,
+                                  getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
+                                  getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
+                                  getInt(info, Props.WRITE_BUFFER_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE),
+                                  getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
+                                  getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
+    }
+
+    private static LevelDB getLevelDB(Properties info, String dbName, String dbPath, boolean enableDbCache, boolean enableDbCompression) {
+        return new LevelDB(dbName,
+                           dbPath,
+                           enableDbCache,
+                           enableDbCompression,
+                           getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
+                           getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
+                           getInt(info, Props.WRITE_BUFFER_SIZE, LevelDBConstants.WRITE_BUFFER_SIZE),
+                           getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
     }
 
     /**
