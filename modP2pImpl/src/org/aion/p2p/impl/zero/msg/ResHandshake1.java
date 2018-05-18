@@ -40,9 +40,10 @@ public final class ResHandshake1 extends ResHandshake {
     public ResHandshake1(boolean _success, String _binaryVersion) {
         super(_success);
         // utf-8 - Max 4 bytes per character
-        // Since we are restricting the max byte length to 127, this should be 32
+        // Since we are restricting the max byte length to 127,
+        // we will restrict this to under 32
         this.binaryVersion =
-                _binaryVersion.length() > 32 ? _binaryVersion.substring(0, 32) : _binaryVersion;
+                _binaryVersion.length() > 31 ? _binaryVersion.substring(0, 31) : _binaryVersion;
     }
 
     public static ResHandshake1 decode(final byte[] _bytes) {
