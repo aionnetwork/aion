@@ -85,10 +85,7 @@ public class AionLoggerFactory {
     public static void init(final Map<String, String> _logModules, boolean _logToFile) {
 
         logModules = _logModules;
-
-        /** Passed in argument */
         logToFile = _logToFile;
-        // logToFile = true;
 
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
@@ -112,8 +109,8 @@ public class AionLoggerFactory {
 
             /**
              * To modify period of each rollover;
-             * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy (Currently set to
-             * PER DAY)
+             * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy 
+             * (Currently set to PER DAY)
              */
             FileNamePattern fnp =
                     new FileNamePattern(
@@ -122,8 +119,8 @@ public class AionLoggerFactory {
 
             /**
              * To modify size of each rollover file;
-             * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy (Currently
-             * set to 100MB)
+             * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy 
+             * (Currently set to 100MB)
              */
             rp.setMaxFileSize(new FileSize(100 * 1000 * 1000));
             rp.setParent(fileAppender);
