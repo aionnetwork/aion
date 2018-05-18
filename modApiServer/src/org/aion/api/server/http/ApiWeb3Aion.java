@@ -661,13 +661,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
 
-        try {
-            byte[] transactionHash = sendTransaction(rawTransaction);
-            return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
-        } catch (Exception e) {
-            LOG.error("<rpc-server - exception during response for eth_sendRawTransaction: ", e);
-            return new RpcMsg(null, RpcError.INTERNAL_ERROR, e.getMessage());
-        }
+        byte[] transactionHash = sendTransaction(rawTransaction);
+        return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
     }
 
     public RpcMsg eth_call(Object _params) {
