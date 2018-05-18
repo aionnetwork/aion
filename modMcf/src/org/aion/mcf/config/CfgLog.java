@@ -104,7 +104,7 @@ public class CfgLog {
             /** XML - Displays tag/entry in the config.xml */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeStartElement("log-file");
-            xmlWriter.writeCharacters(this.logFile + "");
+            xmlWriter.writeCharacters(this.logFile);
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
 
