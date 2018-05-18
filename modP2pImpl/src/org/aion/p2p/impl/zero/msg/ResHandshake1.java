@@ -39,9 +39,10 @@ public final class ResHandshake1 extends ResHandshake {
 
     public ResHandshake1(boolean _success, String _binaryVersion) {
         super(_success);
-        // utf-8
+        // utf-8 - Max 4 bytes per character
+        // Since we are restricting the max byte length to 127, this should be 32
         this.binaryVersion =
-                _binaryVersion.length() > 63 ? _binaryVersion.substring(0, 63) : _binaryVersion;
+                _binaryVersion.length() > 32 ? _binaryVersion.substring(0, 32) : _binaryVersion;
     }
 
     public static ResHandshake1 decode(final byte[] _bytes) {
@@ -63,7 +64,7 @@ public final class ResHandshake1 extends ResHandshake {
                     try {
                         binaryVersion = new String(binaryVersionBytes, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
-
+                        System.out.println("<p2p res-handshake-decode error=" + e.getMessage() + ">");
                     }
                 }
                 return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
@@ -86,7 +87,7 @@ public final class ResHandshake1 extends ResHandshake {
         try {
             binaryVersionBytes = this.binaryVersion.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-
+            System.out.println("<p2p res-handshake-encode error=" + e.getMessage() + ">");
         }
 
         int len = binaryVersionBytes.length;
@@ -97,7 +98,7 @@ public final class ResHandshake1 extends ResHandshake {
             try {
                 this.binaryVersion = new String(binaryVersionBytes, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                //
+                System.out.println("<p2p res-handshake-encode error=" + e.getMessage() + ">");
             }
         }
         ByteBuffer buf = ByteBuffer.allocate(superBytes.length + 1 + len);
