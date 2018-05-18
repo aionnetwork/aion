@@ -51,9 +51,8 @@ public class CfgLog {
         modules.put(LogEnum.API.name(), LogLevels.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevels.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
-
-        /** TOGGLES LOGGING TO FILE - initializes logFile as FALSE */
         this.logFile = false;
+        this.logPath = "log";
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
