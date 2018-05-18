@@ -688,7 +688,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         BigInteger totalTransactionFee = BigInteger.ZERO;
         for (AionTxExecSummary summary : preBlock.summaries) {
             totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
-            totalTransactionFee = totalTransactionFee.add(summary.getNrgUsed().multiply(summary.getFee()));
+            totalTransactionFee = totalTransactionFee.add(summary.getFee());
         }
 
         byte[] stateRoot = getRepository().getRoot();
