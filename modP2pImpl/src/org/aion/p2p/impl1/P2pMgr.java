@@ -1079,8 +1079,14 @@ public final class P2pMgr implements IP2pMgr {
             }
 
             for (int i = 0, m = Runtime.getRuntime().availableProcessors(); i < m; i++) {
-                Thread t = new Thread(new TaskReceive2(this.start, this.receiveMsgQue,
-                    this.handlers, this.showLog), "p2p-worker-" + i);
+                Thread t =
+                        new Thread(
+                                new TaskReceive2(
+                                        this.start,
+                                        this.receiveMsgQue,
+                                        this.handlers,
+                                        this.showLog),
+                                "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
             }
@@ -1094,7 +1100,9 @@ public final class P2pMgr implements IP2pMgr {
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(
-                        new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
+                    new TaskStatus2(this.nodeMgr, this.selfShortId, this.sendMsgQue,
+                        this.receiveMsgQue), 2, PERIOD_SHOW_STATUS,
+                    TimeUnit.MILLISECONDS);
 
             if (!syncSeedsOnly)
                 scheduledWorkers.scheduleWithFixedDelay(

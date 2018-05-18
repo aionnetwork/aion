@@ -13,8 +13,11 @@ public class TaskReceive2 implements Runnable {
     private final Map<Integer, List<Handler>> handlers;
     private final boolean showLog;
 
-    public TaskReceive2(AtomicBoolean _start, LinkedBlockingQueue<MsgIn> _receiveMsgQue,
-        Map<Integer, List<Handler>> _handlers, boolean _showLog) {
+    public TaskReceive2(
+            AtomicBoolean _start,
+            LinkedBlockingQueue<MsgIn> _receiveMsgQue,
+            Map<Integer, List<Handler>> _handlers,
+            boolean _showLog) {
         this.start = _start;
         this.receiveMsgQue = _receiveMsgQue;
         this.handlers = _handlers;
