@@ -74,7 +74,7 @@ public class CfgLog {
                             break;
                         /** Removes all special character from file path name */
                         case "log-path":
-                            this.logPath = Cfg.readValue(sr).replaceAll("[-+!@#$%^*:;.,]", "");
+                            this.logPath = Cfg.readValue(sr).replaceAll("[-+=!@#$%^*:;.,]", "");
                             break;
                         default:
                             break;
