@@ -25,6 +25,7 @@
 
 package org.aion.p2p.impl.zero.msg;
 
+import java.lang.annotation.Repeatable;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
@@ -41,12 +42,14 @@ import static org.junit.Assert.assertEquals;
 public class ResHandshake1Test {
 
     @Test
+
     public void test() throws UnsupportedEncodingException {
 
         // test over Byte.MAX_VALUE
         byte[] randomBytes = new byte[200];
         ThreadLocalRandom.current().nextBytes(randomBytes);
         String randomBinaryVersion = new String(randomBytes, "UTF-8");
+
         ResHandshake1 rh1 = new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
 
         // test route
@@ -59,10 +62,23 @@ public class ResHandshake1Test {
         ResHandshake1 rh2 = ResHandshake1.decode(mhBytes);
 
         assertEquals(rh1.getSuccess(), rh2.getSuccess());
-        String v1 = rh1.getBinaryVersion();
-        String v2 = rh2.getBinaryVersion();
 
+        assertEquals(rh1.getBinaryVersion().length(), rh2.getBinaryVersion().length());
         assertEquals(rh1.getBinaryVersion(), rh2.getBinaryVersion());
+
+    }
+
+    @Test
+    public void testMultiple() {
+
+        //Repeat the test multiple times to ensure validity
+        for(int i= 0; i<30; i++) {
+            try {
+                this.test();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
