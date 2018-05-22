@@ -55,6 +55,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -660,8 +661,8 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Null raw transaction provided.");
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
-        byte[] transactionHash = sendTransaction(rawTransaction);
 
+        byte[] transactionHash = sendTransaction(rawTransaction);
         return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
     }
 
@@ -2128,8 +2129,8 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "SeedNodeIsOpened");
         }
 
-        AionBlock bestBlock = getBlockTemplate();
-        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.getHeader().getMineHash());
+        BlockContext bestBlock = getBlockTemplate();
+        ByteArrayWrapper key = new ByteArrayWrapper(bestBlock.block.getHeader().getMineHash());
 
         // Read template map; if block already contained chain has not moved forward, simply return the same block.
         boolean isContained = false;
@@ -2148,28 +2149,28 @@ public class ApiWeb3Aion extends ApiAion {
                 templateMapLock.writeLock().lock();
 
                 // Deep copy best block to avoid modifying internal best blocks
-                bestBlock = new AionBlock(bestBlock);
+                bestBlock = new BlockContext(bestBlock);
 
                 if (!templateMap.keySet().isEmpty()) {
-                    if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.getNumber()) {
+                    if (templateMap.get(templateMap.keySet().iterator().next()).getNumber() < bestBlock.block.getNumber()) {
                         // Found a higher block, clear any remaining cached entries and start on new height
                         templateMap.clear();
                     }
                 }
-                templateMap.put(key, bestBlock);
+                templateMap.put(key, bestBlock.block);
 
             }finally {
                 templateMapLock.writeLock().unlock();
             }
         }
 
-        JSONObject coinbaseaux = new JSONObject();
-
         JSONObject obj = new JSONObject();
-        obj.put("previousblockhash", toHexString(bestBlock.getParentHash()));
-        obj.put("height", bestBlock.getNumber());
-        obj.put("target", toHexString(bestBlock.getHeader().getPowBoundary()));
-        obj.put("headerHash", toHexString(bestBlock.getHeader().getMineHash()));
+        obj.put("previousblockhash", toHexString(bestBlock.block.getParentHash()));
+        obj.put("height", bestBlock.block.getNumber());
+        obj.put("target", toHexString(bestBlock.block.getHeader().getPowBoundary()));
+        obj.put("headerHash", toHexString(bestBlock.block.getHeader().getMineHash()));
+        obj.put("blockBaseReward", toHexString(bestBlock.baseBlockReward.toByteArray()));
+        obj.put("blockTxFee", toHexString(bestBlock.transactionFee.toByteArray()));
 
         return new RpcMsg(obj);
     }
