@@ -81,7 +81,7 @@ public class Aion {
         // If commit this out, the config setting will be ignore. all log module been set to "INFO"
         // Level
 
-        /** Change INITIALIZE signature to include LOGFILE */
+        /** Change INITIALIZE signature to include LOGFILE and LOGPATH */
         AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
