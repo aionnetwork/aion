@@ -167,23 +167,7 @@ public class CfgLog {
 
     /** Method checks logPath for illegal inputs */
     public boolean isValidPath() {
-        if (logPath.contains("-")
-                || logPath.contains("+")
-                || logPath.contains("=")
-                || logPath.contains("?")
-                || logPath.contains("!")
-                || logPath.contains("@")
-                || logPath.contains("#")
-                || logPath.contains("$")
-                || logPath.contains("%")
-                || logPath.contains("^")
-                || logPath.contains("*")
-                || logPath.contains(":")
-                || logPath.contains(";")
-                || logPath.contains(".")
-                || logPath.contains(",")
-                || logPath.contains("'")
-                || logPath.contains("|")) {
+        if(Pattern.matches(".*[-=+,.?;:'!@#$%^&*].*", logPath)){
             return this.validPath = false;
         } else {
             return this.validPath = true;
