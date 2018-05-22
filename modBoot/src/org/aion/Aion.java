@@ -80,10 +80,17 @@ public class Aion {
 
         // If commit this out, the config setting will be ignore. all log module been set to "INFO"
         // Level
-
-        /** Change INITIALIZE signature to include LOGFILE and LOGPATH */
-        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
+        /** Changed INITIALIZE signature to include LOGFILE and LOGPATH */
+        AionLoggerFactory.init(
+                cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+
+        /** Outputs message to console depending on logPath validity */
+        if (cfg.getLog().getOriginal()) {
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
+        } else {
+            System.out.println("File path is invalid; set to default: 'log'\n");
+        }
 
         System.out.println(
                           "                     _____                  \n"
