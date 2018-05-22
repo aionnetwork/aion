@@ -18,6 +18,8 @@ Please refer to the details in the [Build Your Aion Network](https://github.com/
 
 Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for a guide on installing and configuring the kernel.
 
+Please refer to [Aion Network Configuration](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration) wiki to set up your desired network configuration for the kernel as well as how to launch the kernel. 
+
 The [Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) wiki will include further instructions and details on working with the kernel.
 
 Please refer to [Aion Network Configuration](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration) wiki to set up your desired network configuration for the kernel as well as how to launch the kernel. 
