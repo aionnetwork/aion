@@ -86,7 +86,7 @@ public class Aion {
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         /** Outputs message to console depending on logPath validity */
-        if (cfg.getLog().getOriginal()) {
+        if (cfg.getLog().isValidInput()) {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         } else {
             System.out.println("File path is invalid; set to default: 'log'\n");
