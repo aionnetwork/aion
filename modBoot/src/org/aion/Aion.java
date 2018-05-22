@@ -166,42 +166,45 @@ public class Aion {
 
         ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
 
-       
--        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
--
--            LOG.info("Starting shutdown process...");
--
--            if (holder.rpc != null) {
--                LOG.info("Shutting down RpcServer");
--                holder.rpc.shutdown();
--                LOG.info("Shutdown RpcServer ... Done!");
--            }
--
--            if (holder.pp != null) {
--                LOG.info("Shutting down zmq ProtocolProcessor");
--                try {
--                    holder.pp.shutdown();
--                    LOG.info("Shutdown zmq ProtocolProcessor... Done!");
--                } catch (InterruptedException e) {
--                    LOG.info("Shutdown zmq ProtocolProcessor failed! {}", e.getMessage());
--                    Thread.currentThread().interrupt();
--                }
--            }
--
--            if (holder.miner != null) {
--                LOG.info("Shutting down sealer");
--                holder.miner.stopMining();
--                holder.miner.shutdown();
--                LOG.info("Shutdown sealer... Done!");
--            }
--
--            LOG.info("Shutting down the AionHub...");
--            ac.getAionHub().close();
--
--            LOG.info("---------------------------------------------");
--            LOG.info("| Aion kernel graceful shutdown successful! |");
--            LOG.info("---------------------------------------------");
- 
--        }, "shutdown"));
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    LOG.info("Starting shutdown process...");
+
+                                    if (holder.rpc != null) {
+                                        LOG.info("Shutting down RpcServer");
+                                        holder.rpc.shutdown();
+                                        LOG.info("Shutdown RpcServer ... Done!");
+                                    }
+
+                                    if (holder.pp != null) {
+                                        LOG.info("Shutting down zmq ProtocolProcessor");
+                                        try {
+                                            holder.pp.shutdown();
+                                            LOG.info("Shutdown zmq ProtocolProcessor... Done!");
+                                        } catch (InterruptedException e) {
+                                            LOG.info(
+                                                    "Shutdown zmq ProtocolProcessor failed! {}",
+                                                    e.getMessage());
+                                            Thread.currentThread().interrupt();
+                                        }
+                                    }
+
+                                    if (holder.miner != null) {
+                                        LOG.info("Shutting down sealer");
+                                        holder.miner.stopMining();
+                                        holder.miner.shutdown();
+                                        LOG.info("Shutdown sealer... Done!");
+                                    }
+
+                                    LOG.info("Shutting down the AionHub...");
+                                    ac.getAionHub().close();
+
+                                    LOG.info("---------------------------------------------");
+                                    LOG.info("| Aion kernel graceful shutdown successful! |");
+                                    LOG.info("---------------------------------------------");
+                                },
+                                "shutdown"));
     }
 }
