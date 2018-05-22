@@ -75,12 +75,10 @@ public class AionLoggerFactory {
         }
     }
 
-    /** Change INITIALIZE signature to include LOGFILE */
     public static void init(final Map<String, String> _logModules) {
         init(_logModules, false, "log");
     }
 
-    // public static void init(final Map<String, String> _logModules) {
     public static void init(final Map<String, String> _logModules, boolean _logToFile, String _logToFolder) {
 
         logModules = _logModules;
@@ -91,7 +89,7 @@ public class AionLoggerFactory {
         /** Toggles file appending configurations */
         if (logToFile) {
             /** Initialize Rolling-File-Appender */
-            String fileName = "./" + logPath + "/aionCurrent.log";
+            String fileName = logPath + "/aionCurrent.log";
             fileAppender = new RollingFileAppender();
             fileAppender.setContext(loggerContext);
             fileAppender.setName("aionlogger");
