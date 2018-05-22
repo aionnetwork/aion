@@ -4,17 +4,11 @@ import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.p2p.impl.comm.Node;
-import org.junit.Test;
-
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import org.junit.Test;
 
-/**
- *
- * @author chris
- *
- */
+/** @author chris */
 public class NodeTest {
 
     private String validId = UUID.randomUUID().toString();
@@ -22,14 +16,15 @@ public class NodeTest {
     private String invalidId = UUID.randomUUID().toString().substring(0, 34);
 
     private String validIp =
-            ThreadLocalRandom.current().nextInt(0,256) + "." +
-                    ThreadLocalRandom.current().nextInt(0,256) + "." +
-                    ThreadLocalRandom.current().nextInt(0,256) + "." +
-                    ThreadLocalRandom.current().nextInt(0,256);
+            ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256);
 
     private int validPort = 12345;
-
-
 
     @Test
     public void testParseFromNode() {
@@ -51,7 +46,6 @@ public class NodeTest {
         String invalidIp = "256.0.0.0";
         n = Node.parseP2p("p2p://" + validId + "@" + invalidIp + ":" + port);
         assertNull(n);
-
     }
 
     @Test
@@ -94,7 +88,7 @@ public class NodeTest {
         validNode.setId(bId);
 
         assertEquals(bId, validNode.getId());
-        assertEquals(Arrays.hashCode(bId),validNode.getIdHash());
+        assertEquals(Arrays.hashCode(bId), validNode.getIdHash());
 
         String idShort = new String(Arrays.copyOfRange(id.getBytes(), 0, 6));
         assertEquals(idShort, validNode.getIdShort());
@@ -108,8 +102,5 @@ public class NodeTest {
         assertEquals(bestBlockNum, validNode.getBestBlockNumber());
         assertEquals(bestBlockHash, validNode.getBestBlockHash());
         assertEquals(td, validNode.getTotalDifficulty());
-
     }
-
-
 }
