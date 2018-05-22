@@ -80,7 +80,7 @@ public class AionLoggerFactory {
     }
 
     public static void init(final Map<String, String> _logModules, boolean _logToFile, String _logToFolder) {
-
+        
         logModules = _logModules;
         logToFile = _logToFile;
         logPath = _logToFolder;
@@ -111,7 +111,7 @@ public class AionLoggerFactory {
              */
             FileNamePattern fnp =
                     new FileNamePattern(
-                            "./log/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
+                            logPath + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
             rp.setFileNamePattern(fnp.getPattern());
 
             /**
