@@ -32,16 +32,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class ReqHandshake1Test {
 
     private byte[] validNodeId = UUID.randomUUID().toString().getBytes();
@@ -52,15 +49,18 @@ public class ReqHandshake1Test {
 
     private int port = ThreadLocalRandom.current().nextInt();
 
-    private String randomIp = ThreadLocalRandom.current().nextInt(0,256) + "." +
-            ThreadLocalRandom.current().nextInt(0,256) + "." +
-            ThreadLocalRandom.current().nextInt(0,256) + "." +
-            ThreadLocalRandom.current().nextInt(0,256);
+    private String randomIp =
+            ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256);
 
     private byte[] randomRevision;
 
     private List<Short> randomVersions;
-
 
     @Before
     public void ReqHandshake2Test() {
@@ -68,16 +68,22 @@ public class ReqHandshake1Test {
         randomRevision = new byte[Byte.MAX_VALUE];
         ThreadLocalRandom.current().nextBytes(randomRevision);
         randomVersions = new ArrayList<>();
-        for(byte i = 0; i < 127; i ++){
-            randomVersions.add((short)ThreadLocalRandom.current().nextInt(Short.MAX_VALUE + 1));
+        for (byte i = 0; i < 127; i++) {
+            randomVersions.add((short) ThreadLocalRandom.current().nextInt(Short.MAX_VALUE + 1));
         }
-
     }
 
     @Test
     public void testRoute() {
         System.out.println("randomRevision " + randomRevision);
-        ReqHandshake1 req = new ReqHandshake1(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
+        ReqHandshake1 req =
+                new ReqHandshake1(
+                        validNodeId,
+                        netId,
+                        Node.ipStrToBytes(randomIp),
+                        port,
+                        randomRevision,
+                        randomVersions);
         assertEquals(Ver.V0, req.getHeader().getVer());
         assertEquals(Ctrl.NET, req.getHeader().getCtrl());
         assertEquals(Act.REQ_HANDSHAKE, req.getHeader().getAction());
@@ -86,7 +92,14 @@ public class ReqHandshake1Test {
     @Test
     public void testValidEncodeDecode() {
 
-        ReqHandshake1 req1 = new ReqHandshake1(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
+        ReqHandshake1 req1 =
+                new ReqHandshake1(
+                        validNodeId,
+                        netId,
+                        Node.ipStrToBytes(randomIp),
+                        port,
+                        randomRevision,
+                        randomVersions);
         byte[] bytes = req1.encode();
 
         ReqHandshake1 req2 = ReqHandshake1.decode(bytes);
@@ -95,17 +108,20 @@ public class ReqHandshake1Test {
         assertArrayEquals(req1.getIp(), req2.getIp());
         assertEquals(req1.getNetId(), req2.getNetId());
         assertEquals(req1.getPort(), req2.getPort());
-
     }
 
     @Test
     public void testInvalidEncodeDecode() {
 
-        ReqHandshake1 req1 = new ReqHandshake1(invalidNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
+        ReqHandshake1 req1 =
+                new ReqHandshake1(
+                        invalidNodeId,
+                        netId,
+                        Node.ipStrToBytes(randomIp),
+                        port,
+                        randomRevision,
+                        randomVersions);
         byte[] bytes = req1.encode();
         assertNull(bytes);
     }
-
-
-
 }
