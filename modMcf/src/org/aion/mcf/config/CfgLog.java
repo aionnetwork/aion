@@ -41,7 +41,6 @@ public class CfgLog {
     private Map<String, String> modules;
     private boolean logFile;
     private String logPath;
-    private boolean validPath;
     private boolean original;
 
     public CfgLog() {
@@ -56,7 +55,6 @@ public class CfgLog {
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
         this.logFile = false;
         this.logPath = "log";
-        this.validPath = true;
         this.original = true;
     }
 
@@ -167,11 +165,7 @@ public class CfgLog {
 
     /** Method checks logPath for illegal inputs */
     public boolean isValidPath() {
-        if(Pattern.matches(".*[-=+,.?;:'!@#$%^&*].*", logPath)){
-            return this.validPath = false;
-        } else {
-            return this.validPath = true;
-        }
+        return !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 
     /** Method returns logPath input validity */
