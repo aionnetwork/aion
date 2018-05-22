@@ -41,7 +41,7 @@ public class CfgLog {
     private Map<String, String> modules;
     private boolean logFile;
     private String logPath;
-    private boolean original;
+    private boolean validInput;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -55,7 +55,7 @@ public class CfgLog {
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
         this.logFile = false;
         this.logPath = "log";
-        this.original = true;
+        this.validInput = true;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -75,7 +75,7 @@ public class CfgLog {
                         case "log-path":
                             this.logPath = Cfg.readValue(sr);
                             if (!isValidPath()) {
-                                this.original = false;
+                                this.validInput = false;
                             }
                             break;
                         default:
@@ -169,7 +169,7 @@ public class CfgLog {
     }
 
     /** Method returns logPath input validity */
-    public boolean getOriginal() {
-        return this.original;
+    public boolean isValidInput() {
+        return this.validInput;
     }
 }
