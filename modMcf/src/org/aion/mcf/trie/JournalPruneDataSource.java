@@ -76,6 +76,11 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
         public int getTotRefs() {
             return journalRefs + (dbRef ? 1 : 0);
         }
+
+        @Override
+        public String toString() {
+            return "refs: " + String.valueOf(journalRefs) + " db: " + String.valueOf(dbRef);
+        }
     }
 
     Map<ByteArrayWrapper, Ref> refCount = new HashMap<>();
@@ -203,7 +208,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     private void incRef(ByteArrayWrapper keyW) {
         Ref cnt = refCount.get(keyW);
         if (cnt == null) {
-            cnt = new Ref(src.get(keyW.getData()) != null);
+            cnt = new Ref(src.get(keyW.getData()).isPresent());
             refCount.put(keyW, cnt);
         }
         cnt.journalRefs++;
@@ -279,14 +284,14 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     private void rollback(ByteArrayWrapper blockHashW) {
         Updates updates = blockUpdates.remove(blockHashW);
-        Map<byte[], byte[]> batchRemove = new HashMap<>();
+        List<byte[]> batchRemove = new ArrayList<>();
         for (ByteArrayWrapper insertedKey : updates.insertedKeys) {
             Ref ref = decRef(insertedKey);
             if (ref.getTotRefs() == 0) {
-                batchRemove.put(insertedKey.getData(), null);
+                batchRemove.add(insertedKey.getData());
             }
         }
-        src.putBatch(batchRemove);
+        src.deleteBatch(batchRemove);
     }
 
     public Map<ByteArrayWrapper, Ref> getRefCount() {

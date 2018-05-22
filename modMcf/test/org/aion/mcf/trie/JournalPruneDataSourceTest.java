@@ -1430,12 +1430,12 @@ public class JournalPruneDataSourceTest {
         // also removed the updates for block b2
         assertThat(db.getBlockUpdates().size()).isEqualTo(0);
 
-        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(source_db.keys().size()).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
         assertThat(source_db.get(k4).isPresent()).isFalse();
-        assertThat(source_db.get(k5).get()).isEqualTo(v5);
+        assertThat(source_db.get(k5).isPresent()).isFalse();
         assertThat(source_db.get(k6).get()).isEqualTo(v6);
     }
 
@@ -1485,7 +1485,6 @@ public class JournalPruneDataSourceTest {
 
         // block b3
         db.put(k6, v6);
-        db.delete(k4);
         db.put(k2, v4);
         db.put(k1, v3);
         db.storeBlockChanges(b3, 2);
@@ -1507,12 +1506,11 @@ public class JournalPruneDataSourceTest {
         // prune block b2 at level 1 : (should be called for main chain block)
         db.prune(b2, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(1);
-        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(source_db.keys().size()).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).isPresent()).isFalse();
-        // note: k4 must be explicitly deleted even if it was introduced in the discarded b1 block
-        assertThat(source_db.get(k4).get()).isEqualTo(v4);
+        assertThat(source_db.get(k4).isPresent()).isFalse();
         assertThat(source_db.get(k5).get()).isEqualTo(v5);
         assertThat(source_db.get(k6).get()).isEqualTo(v6);
 
