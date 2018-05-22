@@ -76,7 +76,7 @@ public class ReqHandshake1Test {
 
     @Test
     public void testRoute() {
-        System.out.println("randomRevision " + randomRevision);
+      //  System.out.println("randomRevision " + randomRevision);
         ReqHandshake1 req = new ReqHandshake1(validNodeId, netId, Node.ipStrToBytes(randomIp), port, randomRevision, randomVersions);
         assertEquals(Ver.V0, req.getHeader().getVer());
         assertEquals(Ctrl.NET, req.getHeader().getCtrl());
@@ -106,6 +106,16 @@ public class ReqHandshake1Test {
         assertNull(bytes);
     }
 
+    @Test
+    public void testRepeatEncodeDecode() {
+
+        //Repeated Encode and Decode Units
+        for ( int i= 0 ; i< 100; i++ ) {
+            testValidEncodeDecode();
+            testInvalidEncodeDecode();
+            testRoute();
+        }
+    }
 
 
 }
