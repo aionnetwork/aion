@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,20 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
-
-package org.aion.zero.impl.tx;
+package org.aion.mcf.tx;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
 import org.aion.base.type.ITransaction;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
-import org.aion.zero.impl.sync.msg.BroadcastTx;
+import org.aion.p2p.Msg;
 
 /**
  * @author jin
@@ -41,33 +39,35 @@ import org.aion.zero.impl.sync.msg.BroadcastTx;
 // public abstract class AbstractTxTask<TX extends ITransaction, CHANMGR extends
 // AbstractChanMgr, CHAN extends AbstractChannel> implements Callable<List<TX>>
 // {
-public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMgr> implements Callable<List<TX>> {
+public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMgr>
+        implements Callable<List<TX>> {
 
     protected final List<TX> tx;
     protected final P2P p2pMgr;
+    protected final Msg msg;
 
-    public AbstractTxTask(TX _tx, P2P _p2pMgr) {
+    public AbstractTxTask(TX _tx, P2P _p2pMgr, Msg _msg) {
         this.tx = Collections.singletonList(_tx);
         this.p2pMgr = _p2pMgr;
+        this.msg = _msg;
     }
 
-    public AbstractTxTask(List<TX> _tx, P2P _p2pMgr) {
+    public AbstractTxTask(List<TX> _tx, P2P _p2pMgr, Msg _msg) {
         this.tx = _tx;
         this.p2pMgr = _p2pMgr;
+        this.msg = _msg;
     }
 
-    /**
-     * Class fails silently
-     */
+    /** Class fails silently */
     @SuppressWarnings("unchecked")
     @Override
     public List<TX> call() throws Exception {
 
         try {
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
-            if (activeNodes != null && !activeNodes.isEmpty()) {
+            if (activeNodes != null) {
                 for (Map.Entry<Integer, INode> e : activeNodes.entrySet()) {
-                    this.p2pMgr.send(e.getKey(), e.getValue().getIdShort(), new BroadcastTx((List<ITransaction>) this.tx));
+                    this.p2pMgr.send(e.getKey(), e.getValue().getIdShort(), this.msg);
                 }
             }
 
