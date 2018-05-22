@@ -38,8 +38,14 @@ import org.aion.p2p.impl.TaskUPnPManager;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.*;
-import org.aion.p2p.impl1.TaskReceive.MsgIn;
-import org.aion.p2p.impl1.TaskSend.MsgOut;
+import org.aion.p2p.impl1.tasks.TaskReceive;
+import org.aion.p2p.impl1.tasks.TaskReceive.MsgIn;
+import org.aion.p2p.impl1.tasks.TaskSend;
+import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
+import org.aion.p2p.impl1.tasks.TaskClear;
+import org.aion.p2p.impl1.tasks.TaskConnectPeers;
+import org.aion.p2p.impl1.tasks.TaskInbound;
+import org.aion.p2p.impl1.tasks.TaskStatus;
 import org.apache.commons.collections4.map.LRUMap;
 
 /** @author Chris p2p://{uuid}@{ip}:{port} */
@@ -50,7 +56,7 @@ public final class P2pMgr implements IP2pMgr {
     private static final int TIMEOUT_MSG_READ = 10000;
 
     // TODO: need refactor by passing the parameter in the later version.
-    static final int txBroadCastRoute =
+    public static final int txBroadCastRoute =
             (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
     private final int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
@@ -73,7 +79,7 @@ public final class P2pMgr implements IP2pMgr {
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
 
-    enum Dest {
+    public enum Dest {
         INBOUND,
         OUTBOUND,
         ACTIVE
@@ -289,7 +295,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _nodeIdHash int
      * @param _reason String
      */
-    void dropActive(int _nodeIdHash, String _reason) {
+    public void dropActive(int _nodeIdHash, String _reason) {
         nodeMgr.dropActive(_nodeIdHash, this, _reason);
     }
 
@@ -297,7 +303,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _node Node
      * @return boolean
      */
-    boolean validateNode(final Node _node) {
+    public boolean validateNode(final Node _node) {
         if (_node != null) {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort =
@@ -309,7 +315,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /** @param _channel SocketChannel TODO: check option */
-    void configChannel(final SocketChannel _channel) throws IOException {
+    public void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
 
@@ -357,19 +363,19 @@ public final class P2pMgr implements IP2pMgr {
         return this.nodeMgr.tempNodesSize();
     }
 
-    int getMaxActiveNodes() {
+    public int getMaxActiveNodes() {
         return this.maxActiveNodes;
     }
 
-    int getMaxTempNodes() {
+    public int getMaxTempNodes() {
         return this.maxTempNodes;
     }
 
-    int getSelfNetId() {
+    public int getSelfNetId() {
         return this.selfNetId;
     }
 
-    boolean isSyncSeedsOnly() {
+    public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
 

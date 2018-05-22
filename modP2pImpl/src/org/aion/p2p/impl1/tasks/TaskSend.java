@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -33,10 +33,11 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
+import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 
 public class TaskSend implements Runnable {
-    static final int TOTAL_LANE = (1 << 5) - 1;
+    public static final int TOTAL_LANE = (1 << 5) - 1;
 
     private final P2pMgr mgr;
     private final AtomicBoolean start;
@@ -45,7 +46,7 @@ public class TaskSend implements Runnable {
     private final Selector selector;
     private final int lane;
 
-    TaskSend(
+    public TaskSend(
             P2pMgr _mgr,
             int _lane,
             LinkedBlockingQueue<MsgOut> _sendMsgQue,
@@ -136,7 +137,7 @@ public class TaskSend implements Runnable {
     /**
      * An outgoing message.
      */
-    static class MsgOut {
+    public static class MsgOut {
         private final int nodeId;
         private final String displayId;
         private final Msg msg;
@@ -151,7 +152,7 @@ public class TaskSend implements Runnable {
          * @param _msg
          * @param _dest
          */
-        MsgOut(int _nodeId, String _displayId, Msg _msg, Dest _dest) {
+        public MsgOut(int _nodeId, String _displayId, Msg _msg, Dest _dest) {
             nodeId = _nodeId;
             displayId = _displayId;
             msg = _msg;

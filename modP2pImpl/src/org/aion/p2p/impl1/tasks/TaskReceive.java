@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class TaskReceive implements Runnable {
     private final Map<Integer, List<Handler>> handlers;
     private final boolean showLog;
 
-    TaskReceive(
+    public TaskReceive(
             AtomicBoolean _start,
             LinkedBlockingQueue<MsgIn> _receiveMsgQue,
             Map<Integer, List<Handler>> _handlers,
@@ -77,7 +77,7 @@ public class TaskReceive implements Runnable {
     /**
      * An incoming message.
      */
-    static class MsgIn {
+    public static class MsgIn {
         private final int nid;
         private final String nsid;
         private final int route;
@@ -91,7 +91,7 @@ public class TaskReceive implements Runnable {
          * @param route
          * @param msg
          */
-        MsgIn(int nid, String nsid, int route, byte[] msg) {
+        public MsgIn(int nid, String nsid, int route, byte[] msg) {
             this.nid = nid;
             this.nsid = nsid;
             this.route = route;

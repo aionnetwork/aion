@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,6 +31,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
+import org.aion.p2p.impl1.P2pMgr;
 
 /** @author chris */
 public class TaskWrite implements Runnable {

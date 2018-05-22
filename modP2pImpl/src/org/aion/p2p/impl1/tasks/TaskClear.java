@@ -23,12 +23,13 @@
  *
  */
 
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
+import org.aion.p2p.impl1.P2pMgr;
 
 public class TaskClear implements Runnable {
     private static final int PERIOD_CLEAR = 20000;
@@ -38,7 +39,7 @@ public class TaskClear implements Runnable {
     private final NodeMgr nodeMgr;
     private AtomicBoolean start;
 
-    TaskClear(P2pMgr _mgr, NodeMgr _nodeMgr, AtomicBoolean _start) {
+    public TaskClear(P2pMgr _mgr, NodeMgr _nodeMgr, AtomicBoolean _start) {
         this.mgr = _mgr;
         this.nodeMgr = _nodeMgr;
         this.start = _start;

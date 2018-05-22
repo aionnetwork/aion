@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -53,9 +53,11 @@ import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
 import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
+import org.aion.p2p.impl1.P2pException;
+import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
-import org.aion.p2p.impl1.TaskReceive.MsgIn;
-import org.aion.p2p.impl1.TaskSend.MsgOut;
+import org.aion.p2p.impl1.tasks.TaskReceive.MsgIn;
+import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
 
 public class TaskInbound implements Runnable {
     private final P2pMgr mgr;
@@ -68,7 +70,7 @@ public class TaskInbound implements Runnable {
     private ResHandshake1 cachedResHandshake1;
     private LinkedBlockingQueue<MsgIn> receiveMsgQue;
 
-    TaskInbound(
+    public TaskInbound(
             P2pMgr _mgr,
             Selector _selector,
             AtomicBoolean _start,

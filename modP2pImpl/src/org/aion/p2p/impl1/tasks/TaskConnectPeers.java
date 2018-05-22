@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -35,8 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
+import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
-import org.aion.p2p.impl1.TaskSend.MsgOut;
+import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
 
 public class TaskConnectPeers implements Runnable {
     private static final int PERIOD_CONNECT_OUTBOUND = 1000;
@@ -50,7 +51,7 @@ public class TaskConnectPeers implements Runnable {
     private Selector selector;
     private ReqHandshake1 cachedReqHandshake1;
 
-    TaskConnectPeers(
+    public TaskConnectPeers(
             P2pMgr _mgr,
             AtomicBoolean _start,
             NodeMgr _nodeMgr,
