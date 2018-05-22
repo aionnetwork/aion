@@ -27,24 +27,21 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
-
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevels;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class CfgLog {
 
     private Map<String, String> modules;
-
-    /** Declaree logFile variable */
     private boolean logFile;
+    private String logPath;
+    private boolean validPath;
+    private boolean original;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -56,10 +53,10 @@ public class CfgLog {
         modules.put(LogEnum.API.name(), LogLevels.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevels.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
-
-        /** TOGGLES LOGGING TO FILE - initializes logFile as FALSE */
         this.logFile = false;
-
+        this.logPath = "log";
+        this.validPath = true;
+        this.original = true;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -68,28 +65,33 @@ public class CfgLog {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
+                case XMLStreamReader.START_ELEMENT:
 
-                /** XML - Takes the input in config.xml and parse as T/F */
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                    case "log-file":
-                        this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                    default:
-                        break;
-                }
+                    /** XML - Takes the input in config.xml and parse as T/F */
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "log-file":
+                            this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "log-path":
+                            this.logPath = Cfg.readValue(sr);
+                            if(!isValidPath()) {
+                                this.original = false;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
 
-                elementName = sr.getLocalName().toUpperCase();
-                /** String elementName = sr.getLocalName().toUpperCase(); */
-                if (LogEnum.contains(elementName))
-                    this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
-            default:
-                //Cfg.skipElement(sr);
-                break;
+                    elementName = sr.getLocalName().toUpperCase();
+                    if (LogEnum.contains(elementName))
+                        this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
+                default:
+                    // Cfg.skipElement(sr);
+                    break;
             }
         }
     }
@@ -102,7 +104,7 @@ public class CfgLog {
             Writer strWriter = new StringWriter();
             xmlWriter = output.createXMLStreamWriter(strWriter);
             xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeStartElement("Log");
+            xmlWriter.writeStartElement("log");
             xmlWriter.writeCharacters("\r\n");
 
             /** XML - Displays tag/entry in the config.xml */
@@ -112,13 +114,17 @@ public class CfgLog {
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
 
-            /** Testing whether logFile retrieves boolean value */
-            /** if(logFile) {
-                xmlWriter.writeCharacters("\t\t");
-                xmlWriter.writeCharacters("testing for T");
-                xmlWriter.writeCharacters("\r\n");
-            } */
+            /** XML - Displays log-path in the config.xml */
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeStartElement("log-path");
+            xmlWriter.writeCharacters(this.logPath + "");
+            xmlWriter.writeEndElement();
+            xmlWriter.writeCharacters("\r\n");
 
+            /** If file path is invalid, outputs message to config */
+            if(!isValidPath()) {
+                xmlWriter.writeCharacters("\t\tInvalid file path; set to default: 'log'\r\n" );
+            }
 
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
@@ -147,6 +153,34 @@ public class CfgLog {
     /** Method checks value of logFile as T/F */
     public boolean getLogFile() {
         return this.logFile;
+    }
+
+    /** Method returns user input path of logFile */
+    public String getLogPath() {
+        if(!isValidPath()) {
+            return this.logPath = "log";
+        } else {
+            return this.logPath;
+        }
+    }
+
+    /** Method checks logPath for illegal inputs */
+    public boolean isValidPath() {
+        if(logPath.contains("-") || logPath.contains("+") || logPath.contains("=")
+            || logPath.contains("?") || logPath.contains("!") || logPath.contains("@")
+            || logPath.contains("#") || logPath.contains("$") || logPath.contains("%")
+            || logPath.contains("^") || logPath.contains("*") || logPath.contains(":")
+            || logPath.contains(";") || logPath.contains(".") || logPath.contains(",")
+            || logPath.contains("'") || logPath.contains("|")) {
+            return this.validPath = false;
+        } else {
+            return this.validPath = true;
+        }
+    }
+
+    /** Method returns logPath input validity */
+    public boolean getOriginal() {
+        return this.original;
     }
 
 }

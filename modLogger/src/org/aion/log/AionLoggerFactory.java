@@ -1,24 +1,26 @@
-/**
- * ***************************************************************************** Copyright (c)
- * 2017-2018 Aion foundation.
+/*******************************************************************************
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * <p>This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * <p>The aion network project is free software: you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software Foundation, either
- * version 3 of the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * <p>You should have received a copy of the GNU General Public License along with the aion network
- * project source files. If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * <p>Contributors: Aion foundation.
+ * Contributors:
+ *     Aion foundation.
  *
- * <p>****************************************************************************
- */
+ ******************************************************************************/
 package org.aion.log;
 
 import ch.qos.logback.classic.Level;
@@ -26,7 +28,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
-import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
@@ -62,8 +63,8 @@ public class AionLoggerFactory {
     private static final PatternLayoutEncoder encoder = new PatternLayoutEncoder();
 
     /** Static declaration of logFile */
-    private static boolean logToFile;
-
+    private static boolean logFile;
+    private static String logPath;
     private static RollingFileAppender fileAppender;
 
     static {
@@ -74,26 +75,23 @@ public class AionLoggerFactory {
         }
     }
 
-    /** Change INITIALIZE signature to include LOGFILE */
+    /** Change INITIALIZE signature to include LOGFILE and LOGPATH */
     public static void init(final Map<String, String> _logModules) {
-        init(_logModules, false);
+        init(_logModules, false, "log");
     }
 
-    // public static void init(final Map<String, String> _logModules) {
-    public static void init(final Map<String, String> _logModules, boolean _logToFile ) {
+    public static void init(final Map<String, String> _logModules, boolean _logToFile, String _logToPath) {
 
         logModules = _logModules;
-
-        /** Passed in argument */
-        logToFile = _logToFile;
-        // logToFile = true;
+        logFile = _logToFile;
+        logPath = _logToPath;
 
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         /** Toggles file appending configurations */
-        if(logToFile) {
+        if (logFile) {
             /** Initialize Rolling-File-Appender */
-            String fileName = "./log/aionCurrentLog.dat";
+            String fileName = logPath + "/aionCurrentLog.dat";
             fileAppender = new RollingFileAppender();
             fileAppender.setContext(loggerContext);
             fileAppender.setName("aionlogger");
@@ -114,8 +112,8 @@ public class AionLoggerFactory {
              * (Currently set to PER DAY)
              */
             FileNamePattern fnp =
-                new FileNamePattern(
-                    "./log/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
+                    new FileNamePattern(
+                            logPath + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
             rp.setFileNamePattern(fnp.getPattern());
 
             /**
@@ -164,15 +162,15 @@ public class AionLoggerFactory {
         if (loggerContext == null) {
             // System.out.println("If you see this line, meaning you are under
             // the unit test!!! If you are not. should report an issue.");
-            //init(new HashMap<>(), false);
+            // init(new HashMap<>(), false);
             init(new HashMap<>());
         }
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
 
-        /** Toggle file appending */
-        if(logToFile) {
+        /** Toggles file appending */
+        if (logFile) {
             newlogger.addAppender(fileAppender);
         }
 
