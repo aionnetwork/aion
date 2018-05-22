@@ -63,7 +63,7 @@ public class AionLoggerFactory {
     private static ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
     private static final PatternLayoutEncoder encoder = new PatternLayoutEncoder();
 
-    private static boolean logToFile;
+    private static boolean logFile;
     private static String logPath;
     private static RollingFileAppender fileAppender;
 
@@ -75,21 +75,24 @@ public class AionLoggerFactory {
         }
     }
 
+    /** Change INITIALIZE signature to include LOGFILE and LOGPATH */
     public static void init(final Map<String, String> _logModules) {
         init(_logModules, false, "log");
     }
 
-    public static void init(final Map<String, String> _logModules, boolean _logToFile, String _logToFolder) {
-        
+    public static void init(
+            final Map<String, String> _logModules, boolean _logToFile, String _logToPath) {
+
         logModules = _logModules;
-        logToFile = _logToFile;
-        logPath = _logToFolder;
+        logFile = _logToFile;
+        logPath = _logToPath;
+
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         /** Toggles file appending configurations */
-        if (logToFile) {
+        if (logFile) {
             /** Initialize Rolling-File-Appender */
-            String fileName = logPath + "/aionCurrent.log";
+            String fileName = logPath + "/aionCurrentLog.dat";
             fileAppender = new RollingFileAppender();
             fileAppender.setContext(loggerContext);
             fileAppender.setName("aionlogger");
@@ -106,18 +109,19 @@ public class AionLoggerFactory {
 
             /**
              * To modify period of each rollover;
-             * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy 
-             * (Currently set to PER DAY)
+             * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy (Currently set to
+             * PER DAY)
              */
             FileNamePattern fnp =
                     new FileNamePattern(
-                            logPath + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
+                            logPath + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log",
+                            loggerContext);
             rp.setFileNamePattern(fnp.getPattern());
 
             /**
              * To modify size of each rollover file;
-             * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy 
-             * (Currently set to 100MB)
+             * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy (Currently
+             * set to 100MB)
              */
             rp.setMaxFileSize(new FileSize(100 * 1000 * 1000));
             rp.setParent(fileAppender);
@@ -160,14 +164,15 @@ public class AionLoggerFactory {
         if (loggerContext == null) {
             // System.out.println("If you see this line, meaning you are under
             // the unit test!!! If you are not. should report an issue.");
+            // init(new HashMap<>(), false);
             init(new HashMap<>());
         }
 
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
 
-        /** Toggle file appending */
-        if (logToFile) {
+        /** Toggles file appending */
+        if (logFile) {
             newlogger.addAppender(fileAppender);
         }
 
@@ -208,3 +213,4 @@ public class AionLoggerFactory {
         return existLogger == null ? newlogger : existLogger;
     }
 }
+
