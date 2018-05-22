@@ -20,7 +20,7 @@ Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Inst
 
 The [Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) wiki will include further instructions and details on working with the kernel.
 
-Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for further documentation on mining, using the Web3 API, command line options, etc.
+Please refer to [Aion Network Configuration](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration) wiki to set up your desired network configuration for the kernel as well as how to launch the kernel. 
 
 ### Contact
 
