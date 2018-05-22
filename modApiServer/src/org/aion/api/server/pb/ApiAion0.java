@@ -472,6 +472,31 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
             return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
         }
+            case Message.Funcs.f_getNonce_VALUE: {
+                if (service != Message.Servs.s_chain_VALUE) {
+                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_service_call_VALUE);
+                }
+
+                byte[] data = parseMsgReq(request, msgHash);
+                BigInteger nonce;
+                try {
+                    Message.req_getNonce req = Message.req_getNonce.parseFrom(data);
+
+                    Address addr = Address.wrap(req.getAddress().toByteArray());
+
+                    nonce = this.getNonce(addr);
+                } catch (InvalidProtocolBufferException e) {
+                    LOG.error("ApiAionA0.process.getNonce exception: [{}]", e.getMessage());
+                    return ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_fail_function_exception_VALUE);
+                }
+
+                Message.rsp_getNonce rsp = Message.rsp_getNonce.newBuilder()
+                    .setNonce(ByteString.copyFrom(nonce.toByteArray())).build();
+
+                byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Message.Retcode.r_success_VALUE);
+                return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
+
+            }
         case Message.Funcs.f_compile_VALUE: {
 
             if (service != Message.Servs.s_tx_VALUE) {

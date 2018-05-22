@@ -42,6 +42,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.ImportResult;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
+import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Ignore;
@@ -291,5 +292,38 @@ public class BlockchainIntegrationTest {
 
         assertThat(newBlock.getParentHash()).isNotEqualTo(storedBlock1.getHash());
         assertThat(newBlock.getParentHash()).isEqualTo(block.getHash());
+    }
+
+
+    @Test
+    public void testBlockContextCreation() {
+        StandaloneBlockchain.Bundle bundle = (new StandaloneBlockchain.Builder())
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts()
+                .build();
+        StandaloneBlockchain bc = bundle.bc;
+
+        BlockContext context = bc.createNewBlockContext(
+                bc.getBestBlock(), Collections.emptyList(), false);
+
+        ChainConfiguration configuration = new ChainConfiguration();
+
+        // check some basic fields match first
+        assertThat(context.block).isNotNull();
+        assertThat(context.baseBlockReward).isNotNull();
+        assertThat(context.transactionFee).isNotNull();
+
+        // no transaction so fee should be zero
+        assertThat(context.transactionFee).isEqualTo(BigInteger.ZERO);
+        Address beneficiary = context.block.getCoinbase();
+
+        ImportResult result = bc.tryToConnect(context.block);
+        // check that the correct amount was stored
+        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.getRepository().getBalance(beneficiary)).isEqualTo(context.baseBlockReward);
+
+        // check that the correct amount was calculated
+        assertThat(configuration.getRewardsCalculator()
+                .calculateReward(context.block.getHeader())).isEqualTo(context.baseBlockReward);
     }
 }
