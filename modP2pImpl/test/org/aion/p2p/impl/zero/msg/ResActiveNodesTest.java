@@ -71,4 +71,32 @@ public class ResActiveNodesTest {
 
         }
     }
+
+    //Only 40 Active Nodes are returned at MAX
+    @Test
+    public void testMaxActive() {
+
+        List<Node> srcNodes = new ArrayList<>();
+        for(int i = 0; i < 50; i++){
+            srcNodes.add(randomNode());
+        }
+
+        ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
+        assertEquals(40, res.getNodes().size());
+
+        List<Node> tarNodes = res.getNodes();
+        for(int i = 0; i < 40; i++){
+
+            Node srcNode = srcNodes.get(i);
+            Node tarNode = tarNodes.get(i);
+
+            Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
+            Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
+            Assert.assertArrayEquals(srcNode.getIp(), tarNode.getIp());
+
+            Assert.assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
+            Assert.assertEquals(srcNode.getPort(), tarNode.getPort());
+
+        }
+    }
 }
