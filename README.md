@@ -16,7 +16,7 @@ This repository contains the main kernel implementation and releases for the Aio
 
 Please refer to the details in the [Build Your Aion Network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network) wiki to determine how to start setting up and building your Aion Network. 
 
-Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for a guide on installing and configuring the kernel.
+Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for the guide on installing the kernel prior to configuration and launching the kernel.
 
 Please refer to [Aion Network Configuration](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration) wiki to set up your desired network configuration for the kernel as well as how to launch the kernel. 
 
