@@ -58,11 +58,11 @@ import org.aion.p2p.impl1.TaskReceive.MsgIn;
 import org.aion.p2p.impl1.TaskSend.MsgOut;
 
 public class TaskInbound implements Runnable {
-    private AtomicBoolean start;
     private final P2pMgr mgr;
     private final Selector selector;
     private final NodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
+    private AtomicBoolean start;
     private ServerSocketChannel tcpServer;
     private LinkedBlockingQueue<MsgOut> sendMsgQue;
     private ResHandshake1 cachedResHandshake1;
@@ -174,11 +174,7 @@ public class TaskInbound implements Runnable {
                             // check if really read data.
                             if (cnt > prevCnt) {
                                 chanBuf.buffRemain = 0;
-                                throw new P2pException(
-                                        "IO read overflow!  suppose read:"
-                                                + prevCnt
-                                                + " real left:"
-                                                + cnt);
+                                throw new P2pException(getReadOverflowMsg(prevCnt, cnt));
                             }
 
                             chanBuf.buffRemain = cnt;
@@ -367,17 +363,7 @@ public class TaskInbound implements Runnable {
         if (!underRC) {
             if (this.mgr.isShowLog())
                 System.out.println(
-                        "<p2p over-called-route="
-                                + ver
-                                + "-"
-                                + ctrl
-                                + "-"
-                                + act
-                                + " calls="
-                                + rb.getRouteCount(route).count
-                                + " node="
-                                + rb.displayId
-                                + ">");
+                    getRouteMsg(ver, ctrl, act, rb.getRouteCount(route).count, rb.displayId));
             return currCnt;
         }
 
@@ -396,16 +382,7 @@ public class TaskInbound implements Runnable {
                     case Ctrl.SYNC:
                         if (!this.handlers.containsKey(route)) {
                             if (this.mgr.isShowLog())
-                                System.out.println(
-                                        "<p2p unregistered-route="
-                                                + ver
-                                                + "-"
-                                                + ctrl
-                                                + "-"
-                                                + act
-                                                + " node="
-                                                + rb.displayId
-                                                + ">");
+                                System.out.println(getUnregRouteMsg(ver, ctrl, act, rb.displayId));
                             return currCnt;
                         }
 
@@ -413,16 +390,7 @@ public class TaskInbound implements Runnable {
                         break;
                     default:
                         if (this.mgr.isShowLog())
-                            System.out.println(
-                                    "<p2p invalid-route="
-                                            + ver
-                                            + "-"
-                                            + ctrl
-                                            + "-"
-                                            + act
-                                            + " node="
-                                            + rb.displayId
-                                            + ">");
+                            System.out.println(getInvalRouteMsg(ver, ctrl, act, rb.displayId));
                         break;
                 }
                 break;
@@ -587,5 +555,22 @@ public class TaskInbound implements Runnable {
         if (netId != this.mgr.getSelfNetId()) return false;
         // check supported protocol versions
         return true;
+    }
+
+    private String getReadOverflowMsg(int prevCnt, int cnt) {
+        return "IO read overflow!  suppose read:" + prevCnt + " real left:" + cnt;
+    }
+
+    private String getRouteMsg(short ver, byte ctrl, byte act, int count, String idStr) {
+        return "<p2p over-called-route=" + ver + "-" + ctrl + "-" + act + " calls=" + count
+            + " node=" + idStr + ">";
+    }
+
+    private String getUnregRouteMsg(short ver, byte ctrl, byte act, String idStr) {
+        return "<p2p unregistered-route=" + ver + "-" + ctrl + "-" + act + " node=" + idStr + ">";
+    }
+
+    private String getInvalRouteMsg(short ver, byte ctrl, byte act, String idStr) {
+        return "<p2p invalid-route=" + ver + "-" + ctrl + "-" + act + " node=" + idStr + ">";
     }
 }

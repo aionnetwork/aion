@@ -75,12 +75,12 @@ public class TaskConnectPeers implements Runnable {
             try {
                 Thread.sleep(PERIOD_CONNECT_OUTBOUND);
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) System.out.println("<p2p-tcp interrupted>");
+                if (this.mgr.isShowLog()) System.out.println(getTcpInterruptedMsg());
             }
 
             if (this.nodeMgr.activeNodesSize() >= this.maxActiveNodes) {
                 if (this.mgr.isShowLog())
-                    System.out.println("<p2p-tcp-connect-peer pass max-active-nodes>");
+                    System.out.println(getTcpPassMaxNodesMsg());
                 continue;
             }
 
@@ -93,7 +93,7 @@ public class TaskConnectPeers implements Runnable {
                 // continue;
                 // }
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) System.out.println("<p2p-tcp-interrupted>");
+                if (this.mgr.isShowLog()) System.out.println(getTcpInterruptedMsg());
                 return;
             } catch (Exception e) {
                 if (this.mgr.isShowLog()) e.printStackTrace();
@@ -115,12 +115,7 @@ public class TaskConnectPeers implements Runnable {
                     if (channel.finishConnect() && channel.isConnected()) {
 
                         if (this.mgr.isShowLog())
-                            System.out.println(
-                                    "<p2p success-connect node-id="
-                                            + node.getIdShort()
-                                            + " ip="
-                                            + node.getIpStr()
-                                            + ">");
+                            System.out.println(getSucesCnctMsg(node.getIdShort(), node.getIpStr()));
 
                         SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
                         ChannelBuffer rb = new ChannelBuffer(this.mgr.isShowLog());
@@ -133,12 +128,7 @@ public class TaskConnectPeers implements Runnable {
                         this.nodeMgr.addOutboundNode(node);
 
                         if (this.mgr.isShowLog())
-                            System.out.println(
-                                    "<p2p prepare-request-handshake -> id="
-                                            + node.getIdShort()
-                                            + " ip="
-                                            + node.getIpStr()
-                                            + ">");
+                            System.out.println(getPrepRqstMsg(node.getIdShort(), node.getIpStr()));
                         this.sendMsgQue.offer(
                                 new MsgOut(
                                         node.getIdHash(),
@@ -149,28 +139,42 @@ public class TaskConnectPeers implements Runnable {
 
                     } else {
                         if (this.mgr.isShowLog())
-                            System.out.println(
-                                    "<p2p fail-connect node-id="
-                                            + node.getIdShort()
-                                            + " ip="
-                                            + node.getIpStr()
-                                            + ">");
+                            System.out.println(getFailCnctMsg(node.getIdShort(), node.getIpStr()));
                         channel.close();
                         // node.peerMetric.incFailedCount();
                     }
                 } catch (IOException e) {
                     if (this.mgr.isShowLog())
-                        System.out.println(
-                                "<p2p connect-outbound io-exception addr="
-                                        + node.getIpStr()
-                                        + ":"
-                                        + _port
-                                        + " result=failed>");
+                        System.out.println(getOutboundConnectMsg(node.getIpStr(), _port));
                     // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
                     if (this.mgr.isShowLog()) e.printStackTrace();
                 }
             }
         }
+    }
+
+    private String getTcpInterruptedMsg() {
+        return "<p2p-tcp- interrupted>";
+    }
+
+    private String getTcpPassMaxNodesMsg() {
+        return "<p2p-tcp-connect-peer pass max-active-nodes>";
+    }
+
+    private String getSucesCnctMsg(String idStr, String ipStr) {
+        return "<p2p success-connect node-id=" + idStr + " ip=" + ipStr + ">";
+    }
+
+    private String getOutboundConnectMsg(String ipStr, int port) {
+        return "<p2p connect-outbound io-exception addr=" + ipStr + ":" + port + " result=failed>";
+    }
+
+    private String getFailCnctMsg(String idStr, String ipStr) {
+        return "<p2p fail-connect node-id=" + idStr + " ip=" + ipStr + ">";
+    }
+
+    private String getPrepRqstMsg(String idStr, String ipStr) {
+        return "<p2p prepare-request-handshake -> id=" + idStr + " ip=" + ipStr + ">";
     }
 }

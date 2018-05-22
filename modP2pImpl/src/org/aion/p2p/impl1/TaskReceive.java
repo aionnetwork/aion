@@ -74,6 +74,9 @@ public class TaskReceive implements Runnable {
         }
     }
 
+    /**
+     * An incoming message.
+     */
     static class MsgIn {
         private final int nid;
         private final String nsid;

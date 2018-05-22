@@ -52,8 +52,9 @@ public class TaskStatus implements Runnable {
         Thread.currentThread().setName("p2p-ts");
         String status = this.nodeMgr.dumpNodeInfo(this.selfShortId);
         System.out.println(status);
-        System.out.println(
-                "--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("--------------------------------------------------------------------" +
+                "-------------------------------------------------------------------------------" +
+                "-----------------");
         System.out.println(
                 "recv queue ["
                         + this.receiveMsgQue.size()

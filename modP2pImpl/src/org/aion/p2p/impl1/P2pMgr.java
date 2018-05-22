@@ -58,7 +58,6 @@ public final class P2pMgr implements IP2pMgr {
     private final String selfRevision, selfShortId;
     private final byte[] selfNodeId, selfIp;
     private final NodeMgr nodeMgr;
-
     private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
     private final Set<Short> versions = new HashSet<>();
     private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
@@ -149,111 +148,59 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
-            Thread thrdIn =
-                new Thread(
-                    new TaskInbound(
-                        this,
-                        this.selector,
-                        this.start,
-                        this.nodeMgr,
-                        this.tcpServer,
-                        this.handlers,
-                        this.sendMsgQue,
-                        cachedResHandshake1,
-                        this.receiveMsgQue),
-                    "p2p-in");
+            Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
             //            Thread thrdIn = new Thread(new TaskInbound(), "p2p-in");
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
             if (showLog)
                 this.handlers.forEach(
-                    (route, callbacks) -> {
-                        Handler handler = callbacks.get(0);
-                        Header h = handler.getHeader();
-                        System.out.println(
-                            "<p2p-handler route="
-                                + route
-                                + " v-c-a="
-                                + h.getVer()
-                                + "-"
-                                + h.getCtrl()
-                                + "-"
-                                + h.getAction()
-                                + " name="
-                                + handler.getClass().getSimpleName()
-                                + ">");
-                    });
+                        (route, callbacks) -> {
+                            Handler handler = callbacks.get(0);
+                            Header h = handler.getHeader();
+                            System.out.println(
+                                getRouteMsg(route, h.getVer(), h.getCtrl(), h.getAction(),
+                                    handler.getClass().getSimpleName()));
+                        });
 
             for (int i = 0; i < TaskSend.TOTAL_LANE; i++) {
-                Thread thrdOut =
-                    new Thread(
-                        new TaskSend(
-                            this,
-                            i,
-                            this.sendMsgQue,
-                            this.start,
-                            this.nodeMgr,
-                            this.selector),
-                        "p2p-out-" + i);
+                Thread thrdOut = new Thread(getSendInstance(i), "p2p-out-" + i);
                 thrdOut.setPriority(Thread.NORM_PRIORITY);
                 thrdOut.start();
             }
 
             for (int i = 0, m = Runtime.getRuntime().availableProcessors(); i < m; i++) {
-                Thread t =
-                    new Thread(
-                        new TaskReceive(
-                            this.start,
-                            this.receiveMsgQue,
-                            this.handlers,
-                            this.showLog),
-                        "p2p-worker-" + i);
+                Thread t = new Thread(getReceiveInstance(), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
             }
 
             if (upnpEnable)
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskUPnPManager(selfPort),
-                    1,
-                    PERIOD_UPNP_PORT_MAPPING,
-                    TimeUnit.MILLISECONDS);
+                        new TaskUPnPManager(selfPort),
+                        1,
+                        PERIOD_UPNP_PORT_MAPPING,
+                        TimeUnit.MILLISECONDS);
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskStatus(
-                        this.nodeMgr,
-                        this.selfShortId,
-                        this.sendMsgQue,
-                        this.receiveMsgQue),
+                    getStatusInstance(),
                     2,
                     PERIOD_SHOW_STATUS,
                     TimeUnit.MILLISECONDS);
 
             if (!syncSeedsOnly)
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskRequestActiveNodes(this),
-                    5000,
-                    PERIOD_REQUEST_ACTIVE_NODES,
-                    TimeUnit.MILLISECONDS);
+                        new TaskRequestActiveNodes(this),
+                        5000,
+                        PERIOD_REQUEST_ACTIVE_NODES,
+                        TimeUnit.MILLISECONDS);
 
-            Thread thrdClear =
-                new Thread(new TaskClear(this, this.nodeMgr, this.start), "p2p-clear");
+            Thread thrdClear = new Thread(getClearInstance(), "p2p-clear");
             thrdClear.setPriority(Thread.NORM_PRIORITY);
             thrdClear.start();
 
-            Thread thrdConn =
-                new Thread(
-                    new TaskConnectPeers(
-                        this,
-                        this.start,
-                        this.nodeMgr,
-                        this.maxActiveNodes,
-                        this.selector,
-                        this.sendMsgQue,
-                        cachedReqHandshake1),
-                    "p2p-conn");
+            Thread thrdConn = new Thread(getConnectPeersInstance(), "p2p-conn");
             thrdConn.setPriority(Thread.NORM_PRIORITY);
             thrdConn.start();
 
@@ -284,14 +231,7 @@ public final class P2pMgr implements IP2pMgr {
         }
 
         List<Short> supportedVersions = new ArrayList<>(versions);
-        cachedReqHandshake1 =
-                new ReqHandshake1(
-                        selfNodeId,
-                        selfNetId,
-                        this.selfIp,
-                        this.selfPort,
-                        this.selfRevision.getBytes(),
-                        supportedVersions);
+        cachedReqHandshake1 = getReqHandshake1Instance(supportedVersions);
     }
 
     @Override
@@ -323,41 +263,11 @@ public final class P2pMgr implements IP2pMgr {
             ban(_nodeIdHash);
             errCnt.put(_nodeIdHash, 0);
             if (showLog) {
-                System.out.println(
-                        "<p2p-ban node="
-                                + (_displayId == null ? _nodeIdHash : _displayId)
-                                + " err-count="
-                                + cnt
-                                + ">");
+                System.out.println(getBanNodeMsg(_displayId, _nodeIdHash, cnt));
             }
         } else {
             errCnt.put(_nodeIdHash, cnt);
         }
-    }
-
-    @Override
-    public INode getRandom() {
-        return this.nodeMgr.getRandom();
-    }
-
-    @Override
-    public Map<Integer, INode> getActiveNodes() {
-        return new HashMap<>(this.nodeMgr.getActiveNodesMap());
-    }
-
-    @Override
-    public int chainId() {
-        return this.selfNetId;
-    }
-
-    @Override
-    public int getSelfIdHash() {
-        return this.selfNodeIdHash;
-    }
-
-    @Override
-    public boolean isShowLog() {
-        return this.showLog;
     }
 
     /** @param _sc SocketChannel */
@@ -391,7 +301,7 @@ public final class P2pMgr implements IP2pMgr {
         if (_node != null) {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort =
-                !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
+                    !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
             boolean notActive = !nodeMgr.hasActiveNode(_node.getIdHash());
             boolean notOutbound = !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
             return notSelfId && notSameIpOrPort && notActive && notOutbound;
@@ -416,23 +326,125 @@ public final class P2pMgr implements IP2pMgr {
         nodeMgr.dropActive(nodeIdHashcode, this, "ban");
     }
 
+    // <------------------------ getter methods below --------------------------->
+
+    @Override
+    public INode getRandom() {
+        return this.nodeMgr.getRandom();
+    }
+
+    @Override
+    public Map<Integer, INode> getActiveNodes() {
+        return new HashMap<>(this.nodeMgr.getActiveNodesMap());
+    }
+
+    @Override
+    public int chainId() {
+        return this.selfNetId;
+    }
+
+    @Override
+    public int getSelfIdHash() {
+        return this.selfNodeIdHash;
+    }
+
+    @Override
+    public boolean isShowLog() {
+        return this.showLog;
+    }
+
     public int getTempNodesCount() {
         return this.nodeMgr.tempNodesSize();
     }
 
-    public int getMaxActiveNodes() {
+    int getMaxActiveNodes() {
         return this.maxActiveNodes;
     }
 
-    public int getMaxTempNodes() {
+    int getMaxTempNodes() {
         return this.maxTempNodes;
     }
 
-    public int getSelfNetId() {
+    int getSelfNetId() {
         return this.selfNetId;
     }
 
-    public boolean isSyncSeedsOnly() {
+    boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
+    }
+
+    // <---------------------- message and Runnable getters below ------------------------->
+
+    private String getRouteMsg(Integer route, short ver, byte ctrl, byte act, String name) {
+        return "<p2p-handler route=" + route + " v-c-a=" + ver + "-" + ctrl + "-" + act + " name="
+            + name + ">";
+    }
+
+    private String getBanNodeMsg(String id, int hash, int cnt) {
+        return "<p2p-ban node=" + (id == null ? hash : id) + " err-count=" + cnt + ">";
+    }
+
+    private TaskInbound getInboundInstance() {
+        return new TaskInbound(
+            this,
+            this.selector,
+            this.start,
+            this.nodeMgr,
+            this.tcpServer,
+            this.handlers,
+            this.sendMsgQue,
+            cachedResHandshake1,
+            this.receiveMsgQue);
+    }
+
+    private TaskSend getSendInstance(int i) {
+        return new TaskSend(
+            this,
+            i,
+            this.sendMsgQue,
+            this.start,
+            this.nodeMgr,
+            this.selector);
+    }
+
+    private TaskReceive getReceiveInstance() {
+        return new TaskReceive(
+            this.start,
+            this.receiveMsgQue,
+            this.handlers,
+            this.showLog);
+    }
+
+    private TaskStatus getStatusInstance() {
+        return new TaskStatus(
+            this.nodeMgr,
+            this.selfShortId,
+            this.sendMsgQue,
+            this.receiveMsgQue);
+    }
+
+    private TaskClear getClearInstance() {
+        return new TaskClear(this, this.nodeMgr, this.start);
+    }
+
+    private TaskConnectPeers getConnectPeersInstance() {
+        return new TaskConnectPeers(
+            this,
+            this.start,
+            this.nodeMgr,
+            this.maxActiveNodes,
+            this.selector,
+            this.sendMsgQue,
+            cachedReqHandshake1);
+    }
+
+    private ReqHandshake1 getReqHandshake1Instance(List<Short> versions) {
+        return new ReqHandshake1(
+            selfNodeId,
+            selfNetId,
+            this.selfIp,
+            this.selfPort,
+            this.selfRevision.getBytes(),
+            versions);
     }
 }

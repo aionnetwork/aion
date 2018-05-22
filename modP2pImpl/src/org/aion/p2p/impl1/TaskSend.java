@@ -70,12 +70,7 @@ public class TaskSend implements Runnable {
                 long now = System.currentTimeMillis();
                 if (now - mo.timestamp > P2pConstant.WRITE_MSG_TIMEOUT) {
                     if (this.mgr.isShowLog())
-                        System.out.println(
-                                "<p2p timeout-msg to-node="
-                                        + mo.displayId
-                                        + " timestamp="
-                                        + now
-                                        + ">");
+                        System.out.println(getTimeoutMsg(mo.displayId, now));
                     continue;
                 }
 
@@ -117,12 +112,7 @@ public class TaskSend implements Runnable {
                     }
                 } else {
                     if (this.mgr.isShowLog())
-                        System.out.println(
-                                "<p2p msg-"
-                                        + mo.dest.name()
-                                        + "->"
-                                        + mo.displayId
-                                        + " node-not-exit");
+                        System.out.println(getNodeNotExitMsg(mo.dest.name(), mo.displayId));
                 }
             } catch (InterruptedException e) {
                 if (this.mgr.isShowLog()) System.out.println("<p2p task-send-interrupted>");
@@ -143,6 +133,9 @@ public class TaskSend implements Runnable {
         return in & 0b11111;
     }
 
+    /**
+     * An outgoing message.
+     */
     static class MsgOut {
         private final int nodeId;
         private final String displayId;
@@ -165,5 +158,13 @@ public class TaskSend implements Runnable {
             dest = _dest;
             timestamp = System.currentTimeMillis();
         }
+    }
+
+    private String getTimeoutMsg(String id, long now) {
+        return "<p2p timeout-msg to-node=" + id + " timestamp=" + now + ">";
+    }
+
+    private String getNodeNotExitMsg(String name, String id) {
+        return "<p2p msg-" + name + "->" + id + " node-not-exit";
     }
 }
