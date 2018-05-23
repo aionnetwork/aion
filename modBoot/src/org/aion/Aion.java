@@ -85,13 +85,6 @@ public class Aion {
                 cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
-        /** Outputs message to console depending on logPath validity */
-        if (cfg.getLog().isValidInput()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
-        } else {
-            System.out.println("File path is invalid; set to default: 'log'\n");
-        }
-
         System.out.println(
                           "                     _____                  \n"
                         + "      .'.       |  .~     ~.  |..          |\n"
@@ -102,6 +95,16 @@ public class Aion {
                         + KERNEL_VERSION
                         + "\n\n");
 
+        /** Outputs relevant logger configuration */
+        if (!cfg.getLog().getLogFile()) {
+            System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
+        } else if (!cfg.getLog().isValidInput() && cfg.getLog().getLogFile()) {
+            System.out.println("File path is invalid; please check log setting in config.xml\n");
+            return;
+        } else if (cfg.getLog().isValidInput() && cfg.getLog().getLogFile()) {
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
+        }
+        
         IAionChain ac = AionFactory.create();
 
         IMineRunner nm = null;
