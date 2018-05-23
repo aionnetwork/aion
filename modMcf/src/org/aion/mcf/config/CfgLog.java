@@ -17,6 +17,7 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
  *
@@ -27,21 +28,19 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
-
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevels;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class CfgLog {
 
     private Map<String, String> modules;
+    private boolean logFile;
+    private String logPath;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -53,6 +52,8 @@ public class CfgLog {
         modules.put(LogEnum.API.name(), LogLevels.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevels.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
+        this.logFile = false;
+        this.logPath = "log";
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -61,16 +62,30 @@ public class CfgLog {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toUpperCase();
-                if (LogEnum.contains(elementName))
-                    this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
-            default:
-                //Cfg.skipElement(sr);
-                break;
+                case XMLStreamReader.START_ELEMENT:
+
+                    /** XML - Takes the input in config.xml and parse as T/F */
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "log-file":
+                            this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "log-path":
+                            this.logPath = Cfg.readValue(sr);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    elementName = sr.getLocalName().toUpperCase();
+                    if (LogEnum.contains(elementName))
+                        this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
+                default:
+                    // Cfg.skipElement(sr);
+                    break;
             }
         }
     }
@@ -85,6 +100,21 @@ public class CfgLog {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("log");
             xmlWriter.writeCharacters("\r\n");
+
+            /** XML - Displays tag/entry in the config.xml */
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeStartElement("log-file");
+            xmlWriter.writeCharacters(this.logFile + "");
+            xmlWriter.writeEndElement();
+            xmlWriter.writeCharacters("\r\n");
+
+            /** XML - Displays log-path in the config.xml */
+            xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeStartElement("log-path");
+            xmlWriter.writeCharacters(this.logPath + "");
+            xmlWriter.writeEndElement();
+            xmlWriter.writeCharacters("\r\n");
+
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
                 xmlWriter.writeStartElement(module.getKey().toUpperCase());
@@ -109,4 +139,18 @@ public class CfgLog {
         return this.modules;
     }
 
+    /** Method checks value of logFile as T/F */
+    public boolean getLogFile() {
+        return this.logFile;
+    }
+
+    /** Method returns user input path of logFile */
+    public String getLogPath() {
+        return this.logPath;
+    }
+
+    /** Method checks logPath for illegal inputs */
+    public boolean isValidPath() {
+        return !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
+    }
 }
