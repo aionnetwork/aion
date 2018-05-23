@@ -39,7 +39,7 @@ public class CfgLog {
 
     private Map<String, String> modules;
     private boolean logFile;
-    private String logPath;
+    protected String logPath;
 
     public CfgLog() {
         modules = new HashMap<>();
