@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -1356,6 +1356,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;
 
+        // keeping track of the original root
+        byte[] originalRoot = repo.getRoot();
+
         Deque<AionBlock> dirtyBlocks = new ArrayDeque<>();
         // already known to be missing the state
         dirtyBlocks.push(block);
@@ -1396,6 +1399,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // update the repository
         repo.flush();
+
+        // setting the root back to its correct value
+        repo.syncToRoot(originalRoot);
 
         // return a flag indicating if the recovery worked
         return repo.isValidRoot(block.getStateRoot());
