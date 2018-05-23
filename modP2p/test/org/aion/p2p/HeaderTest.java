@@ -22,14 +22,12 @@ public class HeaderTest {
         assertEquals(action, hd.getAction());
         assertEquals(length, hd.getLen());
         assertEquals(route, hd.getRoute());
-
     }
 
     @Test
     public void testHeaderLen() {
         hd.setLen(40);
         assertEquals(40, hd.getLen());
-
     }
 
     @Test
@@ -48,7 +46,6 @@ public class HeaderTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @Test
@@ -57,5 +54,4 @@ public class HeaderTest {
             encodeDecode();
         }
     }
-
 }

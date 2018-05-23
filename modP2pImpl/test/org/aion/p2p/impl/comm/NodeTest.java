@@ -76,7 +76,6 @@ public class NodeTest {
         assertTrue("256.256.256.256".equals(ipVerify));
     }
 
-
     @Test
     public void testValidNode() {
         Node validNode = new Node(validIp, validPort);
@@ -104,5 +103,4 @@ public class NodeTest {
         assertEquals(bestBlockHash, validNode.getBestBlockHash());
         assertEquals(td, validNode.getTotalDifficulty());
     }
-
 }
