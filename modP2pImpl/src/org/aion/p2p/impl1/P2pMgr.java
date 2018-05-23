@@ -27,6 +27,7 @@ package org.aion.p2p.impl1;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -161,13 +162,13 @@ public final class P2pMgr implements IP2pMgr {
 
             if (showLog)
                 this.handlers.forEach(
-                        (route, callbacks) -> {
-                            Handler handler = callbacks.get(0);
-                            Header h = handler.getHeader();
-                            System.out.println(
-                                getRouteMsg(route, h.getVer(), h.getCtrl(), h.getAction(),
-                                    handler.getClass().getSimpleName()));
-                        });
+                    (route, callbacks) -> {
+                        Handler handler = callbacks.get(0);
+                        Header h = handler.getHeader();
+                        System.out.println(
+                            getRouteMsg(route, h.getVer(), h.getCtrl(), h.getAction(),
+                                handler.getClass().getSimpleName()));
+                    });
 
             for (int i = 0; i < TaskSend.TOTAL_LANE; i++) {
                 Thread thrdOut = new Thread(getSendInstance(i), "p2p-out-" + i);
@@ -183,10 +184,10 @@ public final class P2pMgr implements IP2pMgr {
 
             if (upnpEnable)
                 scheduledWorkers.scheduleWithFixedDelay(
-                        new TaskUPnPManager(selfPort),
-                        1,
-                        PERIOD_UPNP_PORT_MAPPING,
-                        TimeUnit.MILLISECONDS);
+                    new TaskUPnPManager(selfPort),
+                    1,
+                    PERIOD_UPNP_PORT_MAPPING,
+                    TimeUnit.MILLISECONDS);
 
             if (showStatus)
                 scheduledWorkers.scheduleWithFixedDelay(
@@ -197,10 +198,10 @@ public final class P2pMgr implements IP2pMgr {
 
             if (!syncSeedsOnly)
                 scheduledWorkers.scheduleWithFixedDelay(
-                        new TaskRequestActiveNodes(this),
-                        5000,
-                        PERIOD_REQUEST_ACTIVE_NODES,
-                        TimeUnit.MILLISECONDS);
+                    new TaskRequestActiveNodes(this),
+                    5000,
+                    PERIOD_REQUEST_ACTIVE_NODES,
+                    TimeUnit.MILLISECONDS);
 
             Thread thrdClear = new Thread(getClearInstance(), "p2p-clear");
             thrdClear.setPriority(Thread.NORM_PRIORITY);
@@ -209,7 +210,8 @@ public final class P2pMgr implements IP2pMgr {
             Thread thrdConn = new Thread(getConnectPeersInstance(), "p2p-conn");
             thrdConn.setPriority(Thread.NORM_PRIORITY);
             thrdConn.start();
-
+        } catch (SocketException e) {
+            if (showLog) System.out.println("<p2p tcp-server-socket-exception> " + e.getMessage());
         } catch (IOException e) {
             if (showLog) System.out.println("<p2p tcp-server-io-exception>");
         }
