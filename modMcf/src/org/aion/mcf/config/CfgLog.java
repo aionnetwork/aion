@@ -55,7 +55,6 @@ public class CfgLog {
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
         this.logFile = false;
         this.logPath = "log";
-        this.validInput = true;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -74,9 +73,6 @@ public class CfgLog {
                             break;
                         case "log-path":
                             this.logPath = Cfg.readValue(sr);
-                            if (!isValidPath()) {
-                                this.validInput = false;
-                            }
                             break;
                         default:
                             break;
@@ -151,20 +147,11 @@ public class CfgLog {
 
     /** Method returns user input path of logFile */
     public String getLogPath() {
-        if (!isValidPath()) {
-            return this.logPath = "log";
-        } else {
-            return this.logPath;
-        }
+        return this.logPath;
     }
 
     /** Method checks logPath for illegal inputs */
     public boolean isValidPath() {
         return !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
-    }
-
-    /** Method returns logPath input validity */
-    public boolean isValidInput() {
-        return this.validInput;
     }
 }
