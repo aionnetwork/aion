@@ -120,11 +120,6 @@ public class CfgLog {
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
 
-            /** If file path is invalid, outputs message to config */
-            if (!isValidPath()) {
-                xmlWriter.writeCharacters("\t\tInvalid file path; set to default: 'log'\r\n");
-            }
-
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
                 xmlWriter.writeStartElement(module.getKey().toUpperCase());
