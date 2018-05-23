@@ -46,7 +46,7 @@ public class LastThousands {
                 max,
                 max,
                 false,
-                false,
+                true,
                 true,
                 50);
 
@@ -54,7 +54,7 @@ public class LastThousands {
 
         for(int i = port + 1; i <= maxPort; i++){
             if(checkPort(ip, i)) {
-                System.out.println("examiner " + i);
+
                 P2pMgr examiner = new P2pMgr(0,
                         "",
                         UUID.randomUUID().toString(),
