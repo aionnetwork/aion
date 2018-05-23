@@ -40,8 +40,6 @@ public class CfgLog {
     private Map<String, String> modules;
     private boolean logFile;
     private String logPath;
-    private boolean validPath;
-    private boolean original;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -55,8 +53,6 @@ public class CfgLog {
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
         this.logFile = false;
         this.logPath = "log";
-        this.validPath = true;
-        this.original = true;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -75,9 +71,6 @@ public class CfgLog {
                             break;
                         case "log-path":
                             this.logPath = Cfg.readValue(sr);
-                            if(!isValidPath()) {
-                                this.original = false;
-                            }
                             break;
                         default:
                             break;
@@ -121,11 +114,6 @@ public class CfgLog {
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
 
-            /** If file path is invalid, outputs message to config */
-            if(!isValidPath()) {
-                xmlWriter.writeCharacters("\t\tInvalid file path; set to default: 'log'\r\n" );
-            }
-
             for (Map.Entry<String, String> module : this.modules.entrySet()) {
                 xmlWriter.writeCharacters("\t\t");
                 xmlWriter.writeStartElement(module.getKey().toUpperCase());
@@ -157,30 +145,11 @@ public class CfgLog {
 
     /** Method returns user input path of logFile */
     public String getLogPath() {
-        if(!isValidPath()) {
-            return this.logPath = "log";
-        } else {
-            return this.logPath;
-        }
+        return this.logPath;
     }
 
     /** Method checks logPath for illegal inputs */
     public boolean isValidPath() {
-        if(logPath.contains("-") || logPath.contains("+") || logPath.contains("=")
-            || logPath.contains("?") || logPath.contains("!") || logPath.contains("@")
-            || logPath.contains("#") || logPath.contains("$") || logPath.contains("%")
-            || logPath.contains("^") || logPath.contains("*") || logPath.contains(":")
-            || logPath.contains(";") || logPath.contains(".") || logPath.contains(",")
-            || logPath.contains("'") || logPath.contains("|")) {
-            return this.validPath = false;
-        } else {
-            return this.validPath = true;
-        }
+        return !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
-
-    /** Method returns logPath input validity */
-    public boolean getOriginal() {
-        return this.original;
-    }
-
 }
