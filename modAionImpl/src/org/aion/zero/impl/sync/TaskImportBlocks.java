@@ -29,6 +29,11 @@
 
 package org.aion.zero.impl.sync;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.IP2pMgr;
@@ -36,16 +41,12 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
 /**
- * @author chris
  * handle process of importing blocks to repo
- * TODO: targeted send
+ *
+ * <p>TODO: targeted send
+ *
+ * @author chris
  */
 final class TaskImportBlocks implements Runnable {
 
@@ -73,8 +74,7 @@ final class TaskImportBlocks implements Runnable {
             final BlockingQueue<BlocksWrapper> downloadedBlocks,
             final Map<ByteArrayWrapper, Object> importedBlockHashes,
             final Map<Integer, PeerState> peerStates,
-            final Logger log
-    ) {
+            final Logger log) {
         this.p2p = p2p;
         this.chain = _chain;
         this.start = _start;
@@ -103,7 +103,8 @@ final class TaskImportBlocks implements Runnable {
 
             PeerState state = peerStates.get(bw.getNodeIdHash());
             if (state == null) {
-                log.warn("This is not supposed to happen, but the peer is sending us blocks without ask");
+                log.warn(
+                        "This is not supposed to happen, but the peer is sending us blocks without ask");
             }
 
             for (AionBlock b : batch) {
@@ -113,20 +114,24 @@ final class TaskImportBlocks implements Runnable {
                     importResult = this.chain.tryToConnect(b);
                 } catch (Throwable e) {
                     log.error("<import-block throw> {}", e.toString());
-                    if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
+                    if (e.getMessage() != null
+                            && e.getMessage().contains("No space left on device")) {
                         log.error("Shutdown due to lack of disk space.");
                         System.exit(0);
                     }
                     continue;
                 }
                 long t2 = System.currentTimeMillis();
-                log.info("<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                log.info(
+                        "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                         bw.getDisplayId(),
+                        state.getMode(),
                         b.getShortHash(),
                         b.getNumber(),
                         b.getTransactionsList().size(),
                         importResult,
                         t2 - t1);
+
                 switch (importResult) {
                     case IMPORTED_BEST:
                     case IMPORTED_NOT_BEST:
@@ -154,13 +159,20 @@ final class TaskImportBlocks implements Runnable {
                                 // we found the fork point
                                 state.setMode(PeerState.Mode.FORWARD);
                                 state.setBase(lastBlock);
-
                             } else if (mode == PeerState.Mode.FORWARD) {
                                 // continue
                                 state.setBase(lastBlock);
                                 // if the imported best block, switch back to normal mode
                                 if (importResult == ImportResult.IMPORTED_BEST) {
                                     state.setMode(PeerState.Mode.NORMAL);
+                                    // switch peers to NORMAL otherwise they may never switch back
+                                    for (PeerState peerState : peerStates.values()) {
+                                        if (peerState.getMode() != PeerState.Mode.NORMAL) {
+                                            peerState.setMode(PeerState.Mode.NORMAL);
+                                            peerState.setBase(b.getNumber());
+                                            peerState.resetLastHeaderRequest();
+                                        }
+                                    }
                                 }
                             }
                             break;
@@ -175,6 +187,12 @@ final class TaskImportBlocks implements Runnable {
                             }
                             break;
                     }
+                }
+
+                // if any block results in NO_PARENT, all subsequent blocks will too
+                if (importResult == ImportResult.NO_PARENT) {
+                    log.debug("Stopped importing batch due to NO_PARENT result.");
+                    break;
                 }
             }
 
