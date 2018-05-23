@@ -98,10 +98,10 @@ public class Aion {
         /** Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
-        } else if (!cfg.getLog().isValidInput() && cfg.getLog().getLogFile()) {
+        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("File path is invalid; please check log setting in config.xml\n");
             return;
-        } else if (cfg.getLog().isValidInput() && cfg.getLog().getLogFile()) {
+        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         }
         
