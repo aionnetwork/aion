@@ -41,7 +41,6 @@ public class CfgLog {
     private Map<String, String> modules;
     private boolean logFile;
     private String logPath;
-    private boolean validInput;
 
     public CfgLog() {
         modules = new HashMap<>();
