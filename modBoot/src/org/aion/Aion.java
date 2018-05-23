@@ -78,13 +78,6 @@ public class Aion {
             throw e;
         }
 
-        // If commit this out, the config setting will be ignore. all log module been set to "INFO"
-        // Level
-        /** Changed INITIALIZE signature to include LOGFILE and LOGPATH */
-        AionLoggerFactory.init(
-                cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
-        Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
-
         System.out.println(
                           "                     _____                  \n"
                         + "      .'.       |  .~     ~.  |..          |\n"
@@ -104,6 +97,13 @@ public class Aion {
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         }
+        
+        // If commit this out, the config setting will be ignored
+        // All log module been set to "INFO" level
+        /** Changed INITIALIZE signature to include LOGFILE and LOGPATH */
+        AionLoggerFactory.init(
+                cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
+        Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
         
         IAionChain ac = AionFactory.create();
 
