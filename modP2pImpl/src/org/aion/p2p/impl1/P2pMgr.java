@@ -130,7 +130,7 @@ public final class P2pMgr implements IP2pMgr {
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
-            if (validateNode(node)) {
+            if (node != null && validateNode(node)) {
                 nodeMgr.addTempNode(node);
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
