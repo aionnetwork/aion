@@ -1,3 +1,7 @@
+## Notice
+
+It is not allowed to submit your PR to the master branch directly, please submit your PR to the master-pre-merge branch.
+
 ## Description
 
 Please include a brief summary of the change that this pull request proposes. Include any relevant motivation and context. List any dependencies required for this change.

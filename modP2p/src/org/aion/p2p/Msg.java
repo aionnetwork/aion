@@ -47,12 +47,14 @@ public abstract class Msg {
     /**
      * @return Header
      */
-    public Header getHeader(){
+    public Header getHeader() {
         return this.header;
     }
 
     /**
-     * @return byte[]
+     * Returns byte array encoding of message.
+     *
+     * @return
      */
     public abstract byte[] encode();
 

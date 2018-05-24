@@ -229,45 +229,49 @@ public class BlockchainForkingTest {
         // generate three blocks, on the third block we get flexiblity
         // for what difficulties can occur
 
-        AionBlock firstBlock = bc.createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(firstBlock, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+        BlockContext firstBlock = bc.createNewBlockInternal(
+                bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(firstBlock.block, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now connect the second block
-        AionBlock secondBlock = bc.createNewBlockInternal(firstBlock, Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(secondBlock, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
+        BlockContext secondBlock = bc.createNewBlockInternal(
+                firstBlock.block, Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(secondBlock.block, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now on the third block, we diverge with one block having higher TD than the other
-        AionBlock fasterSecondBlock = bc.createNewBlockInternal(secondBlock, Collections.emptyList(), true, time / 1000L);
-        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock);
+        BlockContext fasterSecondBlock = bc.createNewBlockInternal(
+                secondBlock.block, Collections.emptyList(), true, time / 1000L);
+        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
 
         slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
 
-        assertThat(bc.tryToConnectInternal(fasterSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100)).isEqualTo(ImportResult.IMPORTED_BEST);
         assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // represents the amount of time we would have waited for the lower TD block to come in
         long timeDelta = 1000L;
 
         // loweredDifficulty = bi - bi / 1024
-        BigInteger loweredDifficulty = BIUtil.max(secondBlock
+        BigInteger loweredDifficulty = BIUtil.max(
+                secondBlock.block
                 .getDifficultyBI()
-                .subtract(secondBlock.getDifficultyBI().divide(BigInteger.valueOf(1024L))), BigInteger.valueOf(16L));
+                .subtract(secondBlock.block.getDifficultyBI().divide(BigInteger.valueOf(1024L))), BigInteger.valueOf(16L));
 
         time += 100;
 
-        AionBlock fastBlockDescendant  = bc.createNewBlockInternal(fasterSecondBlock, Collections.emptyList(), true, time / 1000L);
-        AionBlock slowerBlockDescendant = bc.createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
+        BlockContext fastBlockDescendant  = bc.createNewBlockInternal(fasterSecondBlock.block, Collections.emptyList(), true, time / 1000L);
+        BlockContext slowerBlockDescendant = bc.createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
 
         // increment by another hundred (this is supposed to be when the slower block descendant is completed)
         time += 100;
 
-        assertThat(fastBlockDescendant.getDifficultyBI()).isGreaterThan(slowerBlockDescendant.getDifficultyBI());
-        System.out.println("faster block descendant TD: " + fastBlockDescendant.getDifficultyBI());
-        System.out.println("slower block descendant TD: " + slowerBlockDescendant.getDifficultyBI());
+        assertThat(fastBlockDescendant.block.getDifficultyBI()).isGreaterThan(slowerBlockDescendant.block.getDifficultyBI());
+        System.out.println("faster block descendant TD: " + fastBlockDescendant.block.getDifficultyBI());
+        System.out.println("slower block descendant TD: " + slowerBlockDescendant.block.getDifficultyBI());
 
-        assertThat(bc.tryToConnectInternal(slowerBlockDescendant, time)).isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.tryToConnectInternal(fastBlockDescendant, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(slowerBlockDescendant.block, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(fastBlockDescendant.block, time)).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant);
+        assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant.block);
     }
 }
