@@ -27,8 +27,6 @@ package org.aion.p2p.impl1.tasks;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.p2p.impl.comm.NodeMgr;
-import org.aion.p2p.impl1.tasks.TaskReceive.MsgIn;
-import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
 
 public class TaskStatus implements Runnable {
     private final NodeMgr nodeMgr;

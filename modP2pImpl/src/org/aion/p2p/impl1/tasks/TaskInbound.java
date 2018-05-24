@@ -56,8 +56,6 @@ import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.aion.p2p.impl1.P2pException;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
-import org.aion.p2p.impl1.tasks.TaskReceive.MsgIn;
-import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
 
 public class TaskInbound implements Runnable {
     private final P2pMgr mgr;

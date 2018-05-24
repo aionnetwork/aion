@@ -37,7 +37,6 @@ import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
-import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
 
 public class TaskConnectPeers implements Runnable {
     private static final int PERIOD_CONNECT_OUTBOUND = 1000;
