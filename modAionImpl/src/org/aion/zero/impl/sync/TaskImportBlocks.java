@@ -107,9 +107,9 @@ final class TaskImportBlocks implements Runnable {
                         "This is not supposed to happen, but the peer is sending us blocks without ask");
             }
 
+            ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;
             for (AionBlock b : batch) {
                 long t1 = System.currentTimeMillis();
-                ImportResult importResult;
                 try {
                     importResult = this.chain.tryToConnect(b);
                 } catch (Throwable e) {
@@ -159,6 +159,7 @@ final class TaskImportBlocks implements Runnable {
                                 // we found the fork point
                                 state.setMode(PeerState.Mode.FORWARD);
                                 state.setBase(lastBlock);
+                                state.resetRepeated();
                             } else if (mode == PeerState.Mode.FORWARD) {
                                 // continue
                                 state.setBase(lastBlock);
@@ -173,6 +174,14 @@ final class TaskImportBlocks implements Runnable {
                                             peerState.resetLastHeaderRequest();
                                         }
                                     }
+                                }
+                                // if the maximum number of repeats is passed
+                                // then the peer is stuck endlessly importing old blocks
+                                // otherwise it would have found an IMPORTED block already
+                                if (state.getRepeated() >= state.getMaxRepeats()) {
+                                    state.setMode(PeerState.Mode.NORMAL);
+                                    state.setBase(chain.getBestBlock().getNumber());
+                                    state.resetLastHeaderRequest();
                                 }
                             }
                             break;
@@ -194,6 +203,12 @@ final class TaskImportBlocks implements Runnable {
                     log.debug("Stopped importing batch due to NO_PARENT result.");
                     break;
                 }
+            }
+
+            if (state != null && state.getMode() == PeerState.Mode.FORWARD && importResult == ImportResult.EXIST) {
+                // increment the repeat count every time
+                // we finish a batch of imports with EXIST
+                state.incRepeated();
             }
 
             if (state != null) {
