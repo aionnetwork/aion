@@ -3,11 +3,12 @@ package org.aion.p2p;
 import static junit.framework.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.concurrent.ThreadLocalRandom;
 import org.junit.Test;
 
 public class HeaderTest {
 
-    private short version = 4;
+    private short version = (short)ThreadLocalRandom.current().nextInt();
     private byte ctl = 0;
     private byte action = 4;
     private int length = 8;

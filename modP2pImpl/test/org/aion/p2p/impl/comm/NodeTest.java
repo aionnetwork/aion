@@ -102,5 +102,40 @@ public class NodeTest {
         assertEquals(bestBlockNum, validNode.getBestBlockNumber());
         assertEquals(bestBlockHash, validNode.getBestBlockHash());
         assertEquals(td, validNode.getTotalDifficulty());
+
+        boolean bootList = ThreadLocalRandom.current().nextBoolean();
+        validNode.setFromBootList(bootList);
+        assertEquals(bootList, validNode.getIfFromBootList());
+
+        String revision = "9.9.9.abcdefgh";
+        validNode.setBinaryVersion(revision);
+        assertEquals(revision, validNode.getBinaryVersion());
+
+        validNode.setPort(12345);
+        assertEquals(12345, validNode.getPort());
+
+    }
+
+    @Test
+    public void testInValidNode() {
+        //TODO
+    }
+
+    @Test
+    public void testRefreshTimeStamp() {
+
+        Node validNode = new Node(validIp, validPort);
+        long curr_time = System.currentTimeMillis();
+
+        //Sleep for few secs
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        validNode.refreshTimestamp();
+
+        assertTrue((curr_time < validNode.getTimestamp()));
+
     }
 }
