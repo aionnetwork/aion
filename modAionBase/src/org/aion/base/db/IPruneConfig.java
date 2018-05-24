@@ -15,6 +15,13 @@ public interface IPruneConfig {
     boolean isEnabled();
 
     /**
+     * Indicates if archiving should be enabled or disabled.
+     *
+     * @return {@code true} when archiving enabled, {@code false} when archiving disabled.
+     */
+    boolean isArchived();
+
+    /**
      * @return the number of topmost blocks for which the full data should be maintained on disk.
      */
     int getCurrentCount();

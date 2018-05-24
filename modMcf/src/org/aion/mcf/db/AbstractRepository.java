@@ -194,11 +194,6 @@ public abstract class AbstractRepository<
             this.stateDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(stateDatabase);
 
-            // using state config for state_archive
-            sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
-            this.stateArchiveDatabase = connectAndOpen(sharedProps);
-            databaseGroup.add(stateArchiveDatabase);
-
             // getting transaction specific properties
             sharedProps = cfg.getDatabaseConfig(TRANSACTION_DB);
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
@@ -257,22 +252,39 @@ public abstract class AbstractRepository<
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
-            stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
-            stateDSPrune = new JournalPruneDataSource(stateWithArchive);
 
             // pruning config
             pruneEnabled = this.cfg.getPruneConfig().isEnabled();
             pruneBlockCount = this.cfg.getPruneConfig().getCurrentCount();
             archiveRate = this.cfg.getPruneConfig().getArchiveRate();
 
-            if (pruneEnabled) {
+            if (pruneEnabled && this.cfg.getPruneConfig().isArchived()) {
+                // using state config for state_archive
+                sharedProps = cfg.getDatabaseConfig(STATE_DB);
+                sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
+                sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
+                sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
+                this.stateArchiveDatabase = connectAndOpen(sharedProps);
+                databaseGroup.add(stateArchiveDatabase);
+
+                stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
+                stateDSPrune = new JournalPruneDataSource(stateWithArchive);
+
                 LOGGEN.info(
-                        "Pruning ENABLED. Block count set to {} and archive rate set to {}.",
+                        "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
                         pruneBlockCount,
                         archiveRate);
             } else {
-                stateDSPrune.setPruneEnabled(false);
+                stateArchiveDatabase = null;
+                stateWithArchive = null;
+                stateDSPrune = new JournalPruneDataSource(stateDatabase);
+
+                if (pruneEnabled) {
+                    LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
+                }
             }
+
+            stateDSPrune.setPruneEnabled(pruneEnabled);
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;
         }

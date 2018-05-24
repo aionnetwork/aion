@@ -1351,7 +1351,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         long blockNumber = block.getNumber();
-        LOG.info("Corrupt world state at block hash: {}, number: {}."
+        LOG.info("Pruned or corrupt world state at block hash: {}, number: {}."
                          + " Looking for ancestor block with valid world state ...", block.getShortHash(), blockNumber);
 
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;

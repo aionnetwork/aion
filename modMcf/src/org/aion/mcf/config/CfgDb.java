@@ -62,6 +62,7 @@ public class CfgDb {
     private boolean compression;
     private boolean check_integrity;
     private CfgPrune prune;
+    private String prune_option;
 
     /**
      * Enabling expert mode allows more detailed database configurations.
@@ -78,7 +79,8 @@ public class CfgDb {
         this.vendor = DBVendor.LEVELDB.toValue();
         this.compression = false;
         this.check_integrity = true;
-        this.prune = new CfgPrune();
+        this.prune = new CfgPrune(false);
+        this.prune_option = "full";
 
         if (expert) {
             this.specificConfig = new HashMap<>();
@@ -100,8 +102,30 @@ public class CfgDb {
                         case "check_integrity":
                             this.check_integrity = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
-                        case "prune":
-                            this.prune.fromXML(sr);
+                        case "state-storage":
+                            prune_option = Cfg.readValue(sr).toLowerCase();
+                            switch (prune_option) {
+                                    // journal prune only
+                                case "top":
+                                    {
+                                        this.prune = new CfgPrune(128);
+                                        break;
+                                    }
+                                    // journal prune with archived states
+                                case "spread":
+                                    {
+                                        this.prune = new CfgPrune(128, 10000);
+                                        break;
+                                    }
+                                    // the default is no pruning
+                                case "full":
+                                default:
+                                    {
+                                        this.prune = new CfgPrune(false);
+                                        this.prune_option = "full";
+                                        break;
+                                    }
+                            }
                             break;
                             // parameter considered only when expert==false
                         case "vendor":
@@ -220,8 +244,20 @@ public class CfgDb {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeComment("Configuration for data pruning behavior.");
-            this.prune.toXML(xmlWriter);
+            xmlWriter.writeComment(
+                    "Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("FULL: the state is not pruned");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment(
+                    "TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment(
+                    "SPREAD: the state is kept for the top K blocks and at regular block intervals");
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("state-storage");
+            xmlWriter.writeCharacters(this.prune_option.toUpperCase());
+            xmlWriter.writeEndElement();
 
             if (!expert) {
                 xmlWriter.writeCharacters("\r\n\t\t");

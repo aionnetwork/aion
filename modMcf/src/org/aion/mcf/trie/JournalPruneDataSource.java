@@ -90,7 +90,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     // block hash => updates
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
-    private AtomicBoolean enabled = new AtomicBoolean(true);
+    private AtomicBoolean enabled = new AtomicBoolean(false);
     private final boolean hasArchive;
 
     public JournalPruneDataSource(IByteArrayKeyValueStore src) {
