@@ -25,19 +25,16 @@
 
 package org.aion.p2p.impl.zero.msg;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static org.junit.Assert.assertEquals;
-
-/**
- * @author chris
- */
+/** @author chris */
 public class ResHandshake1Test {
 
     @Test
@@ -47,7 +44,9 @@ public class ResHandshake1Test {
         byte[] randomBytes = new byte[200];
         ThreadLocalRandom.current().nextBytes(randomBytes);
         String randomBinaryVersion = new String(randomBytes, "UTF-8");
-        ResHandshake1 rh1 = new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
+
+        ResHandshake1 rh1 =
+                new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
 
         // test route
         assertEquals(Ver.V0, rh1.getHeader().getVer());
@@ -57,12 +56,23 @@ public class ResHandshake1Test {
         // test encode / decode
         byte[] mhBytes = rh1.encode();
         ResHandshake1 rh2 = ResHandshake1.decode(mhBytes);
+
         assertEquals(rh1.getSuccess(), rh2.getSuccess());
-        String v1 = rh1.getBinaryVersion();
-        String v2 = rh2.getBinaryVersion();
 
+        assertEquals(rh1.getBinaryVersion().length(), rh2.getBinaryVersion().length());
         assertEquals(rh1.getBinaryVersion(), rh2.getBinaryVersion());
-
     }
 
+    @Test
+    public void testMultiple() {
+
+        // Repeat the test multiple times to ensure validity
+        for (int i = 0; i < 30; i++) {
+            try {
+                this.test();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

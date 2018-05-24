@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -44,6 +44,7 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -90,7 +91,7 @@ public abstract class ApiAion extends Api {
     protected final String clientVersion = computeClientVersion();
 
     private ReentrantLock blockTemplateLock;
-    private volatile AionBlock currentTemplate;
+    private volatile BlockContext currentTemplate;
     private byte[] currentBestBlockHash;
 
     protected EventExecuteService ees;
@@ -158,7 +159,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getBlockchain().getBestBlock();
     }
 
-    protected AionBlock getBlockTemplate() {
+    protected BlockContext getBlockTemplate() {
 
         blockTemplateLock.lock();
         try {
@@ -174,9 +175,8 @@ public abstract class ApiAion extends Api {
                 AionPendingStateImpl.TransactionSortedSet ret = new AionPendingStateImpl.TransactionSortedSet();
                 ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
 
-                currentTemplate = ac.getAionHub().getBlockchain().createNewBlock(bestBlock, new ArrayList<>(ret), false);
+                currentTemplate = ac.getAionHub().getBlockchain().createNewBlockContext(bestBlock, new ArrayList<>(ret), false);
             }
-
         } finally {
             blockTemplateLock.unlock();
         }
@@ -476,6 +476,14 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getBalance(_address);
     }
 
+    public BigInteger getNonce(String _address) {
+        return this.ac.getRepository().getNonce(Address.wrap(_address));
+    }
+
+    public BigInteger getNonce(Address _address) {
+        return this.ac.getRepository().getNonce(_address);
+    }
+
     // TODO: refactor these ad-hoc transaction creations - violates DRY and is messy
 
     protected long estimateNrg(ArgTxCall _params) {
@@ -549,15 +557,9 @@ public abstract class ApiAion extends Api {
             throw new NullPointerException();
         }
 
-        try {
-            AionTransaction tx = new AionTransaction(signedTx);
-
-            pendingState.addPendingTransaction(tx);
-
-            return tx.getHash();
-        } catch (Exception ex) {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
-        }
+        AionTransaction tx = new AionTransaction(signedTx);
+        pendingState.addPendingTransaction(tx);
+        return tx.getHash();
     }
 
     // --Commented out by Inspection START (02/02/18 6:58 PM):
