@@ -92,7 +92,7 @@ public class RocksDBWrapper extends AbstractDB {
         } catch (RocksDBException e) {
             if (e.getMessage().contains("lock")) {
                 LOG.error("Failed to open the database " + this.toString()
-                    + "\nCheck that you do not have two instances running on the same database."
+                    + "\nCheck if you have two instances running on the same database."
                     + "\nFailure due to: ", e);
             } else {
                 LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
