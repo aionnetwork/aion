@@ -38,8 +38,8 @@ import org.aion.log.LogLevels;
 public class CfgLog {
 
     private Map<String, String> modules;
-    private boolean logFile;
-    protected String logPath;
+    boolean logFile;
+    String logPath;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -150,6 +150,6 @@ public class CfgLog {
 
     /** Method checks logPath for illegal inputs */
     public boolean isValidPath() {
-        return !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
+        return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 }
