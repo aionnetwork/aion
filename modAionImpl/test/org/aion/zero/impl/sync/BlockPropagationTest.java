@@ -97,10 +97,10 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void shutdown() {}
+        public void shutdown() { }
 
         @Override
-        public void run() {}
+        public void run() { }
 
         @Override
         public List<Short> versions() {
@@ -113,10 +113,10 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void errCheck(int nodeIdHashcode, String _displayId) {}
+        public void errCheck(int nodeIdHashcode, String _displayId) { }
 
         @Override
-        public void register(List<Handler> _hs) {}
+        public void register(List<Handler> _hs) { }
 
         @Override
         public INode getRandom() {
@@ -124,7 +124,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void send(int _id, String s, Msg _msg) {}
+        public void send(int _id, Msg _msg) { }
 
         @Override
         public boolean isShowLog() {
@@ -132,12 +132,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void closeSocket(SocketChannel _sc, String _reason) {}
-
-        @Override
-        public int getSelfIdHash() {
-            return 0;
-        }
+        public void closeSocket(final SocketChannel _sc, String _reason) { }
     }
 
     private static List<ECKey> generateDefaultAccounts() {
