@@ -54,7 +54,7 @@ public class CfgLogTest extends CfgLog {
         testRoot.mkdirs();
     }
 
-    //@After
+    @After
     public void shutdown() {
         if (testRoot.exists()) {
             FileUtils.deleteRecursively(testRoot);
