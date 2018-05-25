@@ -4,12 +4,21 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.p2p.*;
+import org.aion.p2p.Handler;
+import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.IPeerMetric;
+import org.aion.p2p.Msg;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
@@ -81,6 +90,42 @@ public class BlockPropagationTest {
         public String getBinaryVersion() {
             return "";
         }
+
+        @Override
+        public void setPort(int _port) { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public void setConnection(String _connection) { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public IPeerMetric getPeerMetric() { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public void refreshTimestamp() { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public void setChannel(SocketChannel _channel) { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public void setId(byte[] _id) { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public void setBinaryVersion(String _revision) { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public boolean getIfFromBootList() { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public byte[] getBestBlockHash() { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public String getConnection() { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public SocketChannel getChannel() { throw new IllegalStateException("not implemented"); }
+
+        @Override
+        public void setFromBootList(boolean _ifBoot) { throw new IllegalStateException("not implemented"); }
     }
 
     private static class P2pMock implements IP2pMgr {
@@ -97,10 +142,10 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void shutdown() {}
+        public void shutdown() { }
 
         @Override
-        public void run() {}
+        public void run() { }
 
         @Override
         public List<Short> versions() {
@@ -113,10 +158,10 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void errCheck(int nodeIdHashcode, String _displayId) {}
+        public void errCheck(int nodeIdHashcode, String _displayId) { }
 
         @Override
-        public void register(List<Handler> _hs) {}
+        public void register(List<Handler> _hs) { }
 
         @Override
         public INode getRandom() {
@@ -124,7 +169,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void send(int _id, String s, Msg _msg) {}
+        public void send(int _id, String _displayId, Msg _msg) { }
 
         @Override
         public boolean isShowLog() {
@@ -138,6 +183,33 @@ public class BlockPropagationTest {
         public int getSelfIdHash() {
             return 0;
         }
+
+        @Override
+        public void dropActive(int _nodeIdHash, String _reason) { throw new IllegalStateException("not implemented."); }
+
+        @Override
+        public void configChannel(SocketChannel _channel) {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public int getMaxActiveNodes() { throw new IllegalStateException("not implemented."); }
+
+        @Override
+        public boolean isSyncSeedsOnly() { throw new IllegalStateException("not implemented."); }
+
+        @Override
+        public int getTxBroadCastRoute() { throw new IllegalStateException("not implemented."); }
+
+        @Override
+        public int getMaxTempNodes() { throw new IllegalStateException("not implemented."); }
+
+        @Override
+        public boolean validateNode(INode _node) { throw new IllegalStateException("not implemented."); }
+
+        @Override
+        public int getSelfNetId() { throw new IllegalStateException("not implemented."); }
+
     }
 
     private static List<ECKey> generateDefaultAccounts() {

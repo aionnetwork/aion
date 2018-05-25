@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
+import org.aion.p2p.INode;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
@@ -44,18 +45,18 @@ public class ResActiveNodesTest {
     public void testEncodeDecode() {
 
         int m = ThreadLocalRandom.current().nextInt(0, 20);
-        List<Node> srcNodes = new ArrayList<>();
-        for (int i = 0; i < m; i++) {
+        List<INode> srcNodes = new ArrayList<>();
+        for(int i = 0; i < m; i++){
             srcNodes.add(randomNode());
         }
 
         ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
         assertEquals(res.getNodes().size(), m);
-        List<Node> tarNodes = res.getNodes();
-        for (int i = 0; i < m; i++) {
+        List<INode> tarNodes = res.getNodes();
+        for(int i = 0; i < m; i++){
 
-            Node srcNode = srcNodes.get(i);
-            Node tarNode = tarNodes.get(i);
+            INode srcNode = srcNodes.get(i);
+            INode tarNode = tarNodes.get(i);
 
             Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
             Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());

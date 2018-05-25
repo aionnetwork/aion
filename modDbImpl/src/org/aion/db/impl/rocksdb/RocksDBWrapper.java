@@ -90,7 +90,13 @@ public class RocksDBWrapper extends AbstractDB {
         try {
             db = RocksDB.open(options, f.getAbsolutePath());
         } catch (RocksDBException e) {
-            LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
+            if (e.getMessage().contains("lock")) {
+                LOG.error("Failed to open the database " + this.toString()
+                    + "\nCheck if you have two instances running on the same database."
+                    + "\nFailure due to: ", e);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
+            }
 
             // close the connection and cleanup if needed
             close();
