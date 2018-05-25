@@ -27,19 +27,19 @@ package org.aion.p2p.impl1.tasks;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Handler;
 
 public class TaskReceive implements Runnable {
     private final AtomicBoolean start;
-    private final LinkedBlockingQueue<MsgIn> receiveMsgQue;
+    private final BlockingQueue<MsgIn> receiveMsgQue;
     private final Map<Integer, List<Handler>> handlers;
     private final boolean showLog;
 
     public TaskReceive(
             AtomicBoolean _start,
-            LinkedBlockingQueue<MsgIn> _receiveMsgQue,
+            BlockingQueue<MsgIn> _receiveMsgQue,
             Map<Integer, List<Handler>> _handlers,
             boolean _showLog) {
         this.start = _start;

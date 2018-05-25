@@ -31,6 +31,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.aion.p2p.INode;
+import org.aion.p2p.IPeerMetric;
 
 /*
  *
@@ -88,7 +89,12 @@ public final class Node implements INode {
 	 */
 	private String connection = "";
 
-	public PeerMetric peerMetric = new PeerMetric();
+	public IPeerMetric peerMetric = new PeerMetric();
+
+	@Override
+	public IPeerMetric getPeerMetric() {
+		return this.peerMetric;
+	}
 
 	/**
 	 * constructor for initial stage of connections from network
@@ -182,6 +188,7 @@ public final class Node implements INode {
 		return new Node(true, _id, _ip, _port);
 	}
 
+	@Override
 	public void setFromBootList(boolean _ifBoot) {
 		this.fromBootList = _ifBoot;
 	}
@@ -190,6 +197,7 @@ public final class Node implements INode {
 	 * @param _id
 	 *            byte[]
 	 */
+	@Override
 	public void setId(final byte[] _id) {
 		this.id = _id;
 		if (_id != null && _id.length == 36) {
@@ -202,10 +210,12 @@ public final class Node implements INode {
 	 * @param _port
 	 *            int
 	 */
+	@Override
 	public void setPort(final int _port) {
 		this.port = _port;
 	}
 
+	@Override
 	public void setBinaryVersion(String _revision) {
 		this.binaryVersion = _revision;
 	}
@@ -214,6 +224,7 @@ public final class Node implements INode {
 	 * this method used to keep current node stage on either pending list or active
 	 * list
 	 */
+	@Override
 	public void refreshTimestamp() {
 		this.timestamp = System.currentTimeMillis();
 	}
@@ -222,6 +233,7 @@ public final class Node implements INode {
 	 * @param _channel
 	 *            SocketChannel
 	 */
+	@Override
 	public void setChannel(final SocketChannel _channel) {
 		this.channel = _channel;
 	}
@@ -230,13 +242,15 @@ public final class Node implements INode {
 	 * @param _connection
 	 *            String
 	 */
-	void setConnection(String _connection) {
+	@Override
+	public void setConnection(String _connection) {
 		this.connection = _connection;
 	}
 
 	/**
 	 * @return boolean
 	 */
+	@Override
 	public boolean getIfFromBootList() {
 		return this.fromBootList;
 	}
@@ -270,6 +284,7 @@ public final class Node implements INode {
 	/**
 	 * @return SocketChannel
 	 */
+	@Override
 	public SocketChannel getChannel() {
 		return this.channel;
 	}
@@ -287,7 +302,8 @@ public final class Node implements INode {
 	/**
 	 * @return String
 	 */
-	String getConnection() {
+	@Override
+	public String getConnection() {
 		return this.connection;
 	}
 
@@ -301,7 +317,8 @@ public final class Node implements INode {
 		return this.bestBlockNumber;
 	}
 
-	byte[] getBestBlockHash() {
+	@Override
+	public byte[] getBestBlockHash() {
 		return this.bestBlockHash;
 	}
 

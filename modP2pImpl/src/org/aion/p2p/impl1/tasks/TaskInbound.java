@@ -38,46 +38,46 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
-import org.aion.p2p.impl.comm.Node;
-import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl.zero.msg.ResActiveNodes;
 import org.aion.p2p.impl.zero.msg.ResHandshake;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.aion.p2p.impl1.P2pException;
-import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 
 public class TaskInbound implements Runnable {
-    private final P2pMgr mgr;
+    private final IP2pMgr mgr;
     private final Selector selector;
-    private final NodeMgr nodeMgr;
+    private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
     private AtomicBoolean start;
     private ServerSocketChannel tcpServer;
-    private LinkedBlockingQueue<MsgOut> sendMsgQue;
+    private BlockingQueue<MsgOut> sendMsgQue;
     private ResHandshake1 cachedResHandshake1;
-    private LinkedBlockingQueue<MsgIn> receiveMsgQue;
+    private BlockingQueue<MsgIn> receiveMsgQue;
 
     public TaskInbound(
-            P2pMgr _mgr,
+            IP2pMgr _mgr,
             Selector _selector,
             AtomicBoolean _start,
-            NodeMgr _nodeMgr,
+            INodeMgr _nodeMgr,
             ServerSocketChannel _tcpServer,
             Map<Integer, List<Handler>> _handlers,
-            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            BlockingQueue<MsgOut> _sendMsgQue,
             ResHandshake1 _cachedResHandshake1,
-            LinkedBlockingQueue<MsgIn> _receiveMsgQue) {
+            BlockingQueue<MsgIn> _receiveMsgQue) {
 
         this.mgr = _mgr;
         this.selector = _selector;
@@ -259,7 +259,7 @@ public class TaskInbound implements Runnable {
                 return;
             }
 
-            Node node = this.nodeMgr.allocNode(ip, 0);
+            INode node = this.nodeMgr.allocNode(ip, 0);
             node.setChannel(channel);
             this.nodeMgr.addInboundNode(node);
 
@@ -356,7 +356,7 @@ public class TaskInbound implements Runnable {
         boolean underRC =
                 rb.shouldRoute(
                         route,
-                        ((route == P2pMgr.txBroadCastRoute)
+                        ((route == this.mgr.getTxBroadCastRoute())
                                 ? P2pConstant.READ_MAX_RATE_TXBC
                                 : P2pConstant.READ_MAX_RATE));
 
@@ -440,7 +440,7 @@ public class TaskInbound implements Runnable {
 
             case Act.REQ_ACTIVE_NODES:
                 if (rb.nodeIdHash != 0) {
-                    Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
+                    INode node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null)
                         this.sendMsgQue.offer(
                                 new MsgOut(
@@ -455,13 +455,13 @@ public class TaskInbound implements Runnable {
                 if (this.mgr.isSyncSeedsOnly()) break;
 
                 if (rb.nodeIdHash != 0) {
-                    Node node = nodeMgr.getActiveNode(rb.nodeIdHash);
+                    INode node = nodeMgr.getActiveNode(rb.nodeIdHash);
                     if (node != null) {
                         node.refreshTimestamp();
                         ResActiveNodes resActiveNodes = ResActiveNodes.decode(_msgBytes);
                         if (resActiveNodes != null) {
-                            List<Node> incomingNodes = resActiveNodes.getNodes();
-                            for (Node incomingNode : incomingNodes) {
+                            List<INode> incomingNodes = resActiveNodes.getNodes();
+                            for (INode incomingNode : incomingNodes) {
                                 if (nodeMgr.tempNodesSize() >= this.mgr.getMaxTempNodes()) return;
                                 if (this.mgr.validateNode(incomingNode))
                                     nodeMgr.addTempNode(incomingNode);
@@ -493,8 +493,8 @@ public class TaskInbound implements Runnable {
             int _netId,
             int _port,
             final byte[] _revision) {
-        Node node = nodeMgr.getInboundNode(_channelHash);
-        if (node != null && node.peerMetric.notBan()) {
+        INode node = nodeMgr.getInboundNode(_channelHash);
+        if (node != null && node.getPeerMetric().notBan()) {
             if (handshakeRuleCheck(_netId)) {
                 _buffer.nodeIdHash = Arrays.hashCode(_nodeId);
                 _buffer.displayId = new String(Arrays.copyOfRange(_nodeId, 0, 6));
@@ -526,8 +526,8 @@ public class TaskInbound implements Runnable {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        Node node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
-        if (node != null && node.peerMetric.notBan()) {
+        INode node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
+        if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
             node.setBinaryVersion(_binaryVersion);
             nodeMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort(), this.mgr);
@@ -540,7 +540,7 @@ public class TaskInbound implements Runnable {
      * @param _msgBytes byte[]
      */
     private void handleKernelMsg(int _nodeIdHash, int _route, final byte[] _msgBytes) {
-        Node node = nodeMgr.getActiveNode(_nodeIdHash);
+        INode node = nodeMgr.getActiveNode(_nodeIdHash);
         if (node != null) {
             int nodeIdHash = node.getIdHash();
             String nodeDisplayId = node.getIdShort();

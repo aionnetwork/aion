@@ -30,33 +30,33 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.impl.comm.Node;
-import org.aion.p2p.impl.comm.NodeMgr;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
-import org.aion.p2p.impl1.P2pMgr;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 
 public class TaskConnectPeers implements Runnable {
     private static final int PERIOD_CONNECT_OUTBOUND = 1000;
     private static final int TIMEOUT_OUTBOUND_CONNECT = 10000;
 
-    private final NodeMgr nodeMgr;
+    private final INodeMgr nodeMgr;
     private final int maxActiveNodes;
-    private final P2pMgr mgr;
+    private final IP2pMgr mgr;
     private AtomicBoolean start;
-    private LinkedBlockingQueue<MsgOut> sendMsgQue;
+    private BlockingQueue<MsgOut> sendMsgQue;
     private Selector selector;
     private ReqHandshake1 cachedReqHandshake1;
 
     public TaskConnectPeers(
-            P2pMgr _mgr,
+            IP2pMgr _mgr,
             AtomicBoolean _start,
-            NodeMgr _nodeMgr,
+            INodeMgr _nodeMgr,
             int _maxActiveNodes,
             Selector _selector,
-            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            BlockingQueue<MsgOut> _sendMsgQue,
             ReqHandshake1 _cachedReqHandshake1) {
 
         this.start = _start;
@@ -84,7 +84,7 @@ public class TaskConnectPeers implements Runnable {
                 continue;
             }
 
-            Node node;
+            INode node;
             try {
                 node = this.nodeMgr.tempNodesTake();
                 if (this.nodeMgr.isSeedIp(node.getIpStr())) node.setFromBootList(true);

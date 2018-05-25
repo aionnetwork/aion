@@ -25,6 +25,7 @@
 
 package org.aion.p2p;
 
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
@@ -64,4 +65,20 @@ public interface IP2pMgr {
     boolean isShowLog();
 
     void errCheck(int nodeIdHashcode, String _displayId);
+
+    void dropActive(int _nodeIdHash, String _reason);
+
+    void configChannel(SocketChannel _channel) throws IOException;
+
+    int getMaxActiveNodes();
+
+    boolean isSyncSeedsOnly();
+
+    int getTxBroadCastRoute();
+
+    int getMaxTempNodes();
+
+    boolean validateNode(INode _node);
+
+    int getSelfNetId();
 }

@@ -27,31 +27,29 @@ package org.aion.p2p.impl1.tasks;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.Msg;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
-import org.aion.p2p.impl.comm.Node;
-import org.aion.p2p.impl.comm.NodeMgr;
-import org.aion.p2p.impl1.P2pMgr;
-import org.aion.p2p.impl1.P2pMgr.Dest;
 
 public class TaskSend implements Runnable {
     public static final int TOTAL_LANE = (1 << 5) - 1;
 
-    private final P2pMgr mgr;
+    private final IP2pMgr mgr;
     private final AtomicBoolean start;
-    private final LinkedBlockingQueue<MsgOut> sendMsgQue;
-    private final NodeMgr nodeMgr;
+    private final BlockingQueue<MsgOut> sendMsgQue;
+    private final INodeMgr nodeMgr;
     private final Selector selector;
     private final int lane;
 
     public TaskSend(
-            P2pMgr _mgr,
+            IP2pMgr _mgr,
             int _lane,
-            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            BlockingQueue<MsgOut> _sendMsgQue,
             AtomicBoolean _start,
-            NodeMgr _nodeMgr,
+            INodeMgr _nodeMgr,
             Selector _selector) {
 
         this.mgr = _mgr;
@@ -82,7 +80,7 @@ public class TaskSend implements Runnable {
                     continue;
                 }
 
-                Node node = null;
+                INode node = null;
                 switch (mo.getDest()) {
                     case ACTIVE:
                         node = nodeMgr.getActiveNode(mo.getNodeId());

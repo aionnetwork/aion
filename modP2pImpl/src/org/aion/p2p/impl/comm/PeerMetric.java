@@ -25,34 +25,40 @@
 
 package org.aion.p2p.impl.comm;
 
+import org.aion.p2p.IPeerMetric;
 import org.aion.p2p.P2pConstant;
 
-public final class PeerMetric {
+public final class PeerMetric implements IPeerMetric {
 
     private int metricFailedConn;
     private long metricFailedConnTs;
     private long metricBanConnTs;
 
+    @Override
     public boolean shouldNotConn() {
         return (metricFailedConn > P2pConstant.STOP_CONN_AFTER_FAILED_CONN
                 && ((System.currentTimeMillis() - metricFailedConnTs) > P2pConstant.FAILED_CONN_RETRY_INTERVAL))
                 || ((System.currentTimeMillis() - metricBanConnTs) < P2pConstant.BAN_CONN_RETRY_INTERVAL);
     }
 
+    @Override
     public void incFailedCount() {
         metricFailedConn++;
         metricFailedConnTs = System.currentTimeMillis();
     }
 
+    @Override
     public void decFailedCount() {
         if (metricFailedConn > 0)
             metricFailedConn--;
     }
 
-    void ban() {
+    @Override
+    public void ban() {
         metricBanConnTs = System.currentTimeMillis();
     }
 
+    @Override
     public boolean notBan() {
         return ((System.currentTimeMillis() - metricBanConnTs) > P2pConstant.BAN_CONN_RETRY_INTERVAL);
     }
