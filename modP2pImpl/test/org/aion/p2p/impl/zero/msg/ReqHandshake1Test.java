@@ -108,6 +108,7 @@ public class ReqHandshake1Test {
         assertArrayEquals(req1.getIp(), req2.getIp());
         assertEquals(req1.getNetId(), req2.getNetId());
         assertEquals(req1.getPort(), req2.getPort());
+        assertArrayEquals(req1.getRevision(),req2.getRevision());
     }
 
     @Test
@@ -123,6 +124,9 @@ public class ReqHandshake1Test {
                         randomVersions);
         byte[] bytes = req1.encode();
         assertNull(bytes);
+
+        ReqHandshake1 req2 = ReqHandshake1.decode(bytes);
+        assertNull(req2);
     }
 
     @Test
