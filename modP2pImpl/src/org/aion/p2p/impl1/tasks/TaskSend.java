@@ -27,31 +27,29 @@ package org.aion.p2p.impl1.tasks;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.Msg;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
-import org.aion.p2p.impl.comm.Node;
-import org.aion.p2p.impl.comm.NodeMgr;
-import org.aion.p2p.impl1.P2pMgr;
-import org.aion.p2p.impl1.P2pMgr.Dest;
 
 public class TaskSend implements Runnable {
     public static final int TOTAL_LANE = (1 << 5) - 1;
 
-    private final P2pMgr mgr;
+    private final IP2pMgr mgr;
     private final AtomicBoolean start;
-    private final LinkedBlockingQueue<MsgOut> sendMsgQue;
-    private final NodeMgr nodeMgr;
+    private final BlockingQueue<MsgOut> sendMsgQue;
+    private final INodeMgr nodeMgr;
     private final Selector selector;
     private final int lane;
 
     public TaskSend(
-            P2pMgr _mgr,
+            IP2pMgr _mgr,
             int _lane,
-            LinkedBlockingQueue<MsgOut> _sendMsgQue,
+            BlockingQueue<MsgOut> _sendMsgQue,
             AtomicBoolean _start,
-            NodeMgr _nodeMgr,
+            INodeMgr _nodeMgr,
             Selector _selector) {
 
         this.mgr = _mgr;
@@ -69,29 +67,29 @@ public class TaskSend implements Runnable {
                 MsgOut mo = sendMsgQue.take();
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
-                if (now - mo.timestamp > P2pConstant.WRITE_MSG_TIMEOUT) {
+                if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
                     if (this.mgr.isShowLog())
-                        System.out.println(getTimeoutMsg(mo.displayId, now));
+                        System.out.println(getTimeoutMsg(mo.getDisplayId(), now));
                     continue;
                 }
 
                 // if not belong to current lane, put it back.
-                int targetLane = hash2Lane(mo.nodeId);
+                int targetLane = hash2Lane(mo.getNodeId());
                 if (targetLane != lane) {
                     sendMsgQue.offer(mo);
                     continue;
                 }
 
-                Node node = null;
-                switch (mo.dest) {
+                INode node = null;
+                switch (mo.getDest()) {
                     case ACTIVE:
-                        node = nodeMgr.getActiveNode(mo.nodeId);
+                        node = nodeMgr.getActiveNode(mo.getNodeId());
                         break;
                     case INBOUND:
-                        node = nodeMgr.getInboundNode(mo.nodeId);
+                        node = nodeMgr.getInboundNode(mo.getNodeId());
                         break;
                     case OUTBOUND:
-                        node = nodeMgr.getOutboundNode(mo.nodeId);
+                        node = nodeMgr.getOutboundNode(mo.getNodeId());
                         break;
                 }
 
@@ -105,7 +103,7 @@ public class TaskSend implements Runnable {
                                             this.mgr.isShowLog(),
                                             node.getIdShort(),
                                             node.getChannel(),
-                                            mo.msg,
+                                            mo.getMsg(),
                                             (ChannelBuffer) attachment,
                                             this.mgr);
                             tw.run();
@@ -113,7 +111,7 @@ public class TaskSend implements Runnable {
                     }
                 } else {
                     if (this.mgr.isShowLog())
-                        System.out.println(getNodeNotExitMsg(mo.dest.name(), mo.displayId));
+                        System.out.println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
                 }
             } catch (InterruptedException e) {
                 if (this.mgr.isShowLog()) System.out.println("<p2p task-send-interrupted>");
@@ -132,33 +130,6 @@ public class TaskSend implements Runnable {
         in ^= in >> (32 - 20);
         in ^= in >> (32 - 25);
         return in & 0b11111;
-    }
-
-    /**
-     * An outgoing message.
-     */
-    public static class MsgOut {
-        private final int nodeId;
-        private final String displayId;
-        private final Msg msg;
-        private final Dest dest;
-        private final long timestamp;
-
-        /**
-         * Constructs an outgoing message.
-         *
-         * @param _nodeId
-         * @param _displayId
-         * @param _msg
-         * @param _dest
-         */
-        public MsgOut(int _nodeId, String _displayId, Msg _msg, Dest _dest) {
-            nodeId = _nodeId;
-            displayId = _displayId;
-            msg = _msg;
-            dest = _dest;
-            timestamp = System.currentTimeMillis();
-        }
     }
 
     private String getTimeoutMsg(String id, long now) {

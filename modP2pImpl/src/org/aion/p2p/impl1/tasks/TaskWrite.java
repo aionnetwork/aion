@@ -30,8 +30,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import org.aion.p2p.Header;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
-import org.aion.p2p.impl1.P2pMgr;
 
 /** @author chris */
 public class TaskWrite implements Runnable {
@@ -41,7 +41,7 @@ public class TaskWrite implements Runnable {
     private SocketChannel sc;
     private Msg msg;
     private ChannelBuffer channelBuffer;
-    private P2pMgr p2pMgr;
+    private IP2pMgr p2pMgr;
 
     TaskWrite(
             boolean _showLog,
@@ -49,7 +49,7 @@ public class TaskWrite implements Runnable {
             final SocketChannel _sc,
             final Msg _msg,
             final ChannelBuffer _cb,
-            final P2pMgr _p2pMgr) {
+            final IP2pMgr _p2pMgr) {
         this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;

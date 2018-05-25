@@ -26,6 +26,7 @@
 package org.aion.p2p;
 
 import java.math.BigInteger;
+import java.nio.channels.SocketChannel;
 
 /**
  *
@@ -84,4 +85,29 @@ public interface INode {
     void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty);
 
     String getBinaryVersion();
+
+    boolean getIfFromBootList();
+
+    byte[] getBestBlockHash();
+
+    String getConnection();
+
+    SocketChannel getChannel();
+
+    void setFromBootList(boolean _ifBoot);
+
+    void setConnection(String _connection);
+
+    IPeerMetric getPeerMetric();
+
+    void refreshTimestamp();
+
+    void setChannel(SocketChannel _channel);
+
+    void setId(byte[] _id);
+
+    void setPort(int _port);
+
+    void setBinaryVersion(String _revision);
+
 }

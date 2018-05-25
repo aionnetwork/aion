@@ -25,22 +25,20 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import org.aion.p2p.impl.comm.NodeMgr;
-import org.aion.p2p.impl1.tasks.TaskReceive.MsgIn;
-import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
+import java.util.concurrent.BlockingQueue;
+import org.aion.p2p.INodeMgr;
 
 public class TaskStatus implements Runnable {
-    private final NodeMgr nodeMgr;
+    private final INodeMgr nodeMgr;
     private final String selfShortId;
-    private LinkedBlockingQueue<MsgOut> sendMsgQue;
-    private LinkedBlockingQueue<MsgIn> receiveMsgQue;
+    private BlockingQueue<MsgOut> sendMsgQue;
+    private BlockingQueue<MsgIn> receiveMsgQue;
 
     public TaskStatus(
-            NodeMgr _nodeMgr,
+            INodeMgr _nodeMgr,
             String _selfShortId,
-            LinkedBlockingQueue<MsgOut> _sendMsgQue,
-            LinkedBlockingQueue<MsgIn> _receiveMsgQue) {
+            BlockingQueue<MsgOut> _sendMsgQue,
+            BlockingQueue<MsgIn> _receiveMsgQue) {
         this.nodeMgr = _nodeMgr;
         this.selfShortId = _selfShortId;
         this.sendMsgQue = _sendMsgQue;

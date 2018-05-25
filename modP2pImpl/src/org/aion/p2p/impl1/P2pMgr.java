@@ -39,10 +39,10 @@ import org.aion.p2p.impl.TaskUPnPManager;
 import org.aion.p2p.impl.comm.Node;
 import org.aion.p2p.impl.comm.NodeMgr;
 import org.aion.p2p.impl.zero.msg.*;
+import org.aion.p2p.impl1.tasks.MsgIn;
+import org.aion.p2p.impl1.tasks.MsgOut;
 import org.aion.p2p.impl1.tasks.TaskReceive;
-import org.aion.p2p.impl1.tasks.TaskReceive.MsgIn;
 import org.aion.p2p.impl1.tasks.TaskSend;
-import org.aion.p2p.impl1.tasks.TaskSend.MsgOut;
 import org.aion.p2p.impl1.tasks.TaskClear;
 import org.aion.p2p.impl1.tasks.TaskConnectPeers;
 import org.aion.p2p.impl1.tasks.TaskInbound;
@@ -57,24 +57,24 @@ public final class P2pMgr implements IP2pMgr {
     private static final int TIMEOUT_MSG_READ = 10000;
 
     // TODO: need refactor by passing the parameter in the later version.
-    public static final int txBroadCastRoute =
+    private static final int txBroadCastRoute =
             (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
     private final int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
     private final boolean syncSeedsOnly, showStatus, showLog, upnpEnable;
     private final String selfRevision, selfShortId;
     private final byte[] selfNodeId, selfIp;
-    private final NodeMgr nodeMgr;
+    private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
     private final Set<Short> versions = new HashSet<>();
     private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
 
     private ServerSocketChannel tcpServer;
     private Selector selector;
-    private ScheduledThreadPoolExecutor scheduledWorkers;
+    private ScheduledExecutorService scheduledWorkers;
     private int errTolerance;
-    private LinkedBlockingQueue<MsgOut> sendMsgQue = new LinkedBlockingQueue<>();
-    private LinkedBlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>();
+    private BlockingQueue<MsgOut> sendMsgQue = new LinkedBlockingQueue<>();
+    private BlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>();
     private AtomicBoolean start = new AtomicBoolean(true);
 
     private static ReqHandshake1 cachedReqHandshake1;
@@ -297,6 +297,7 @@ public final class P2pMgr implements IP2pMgr {
      * @param _nodeIdHash int
      * @param _reason String
      */
+    @Override
     public void dropActive(int _nodeIdHash, String _reason) {
         nodeMgr.dropActive(_nodeIdHash, this, _reason);
     }
@@ -305,7 +306,8 @@ public final class P2pMgr implements IP2pMgr {
      * @param _node Node
      * @return boolean
      */
-    public boolean validateNode(final Node _node) {
+    @Override
+    public boolean validateNode(final INode _node) {
         if (_node != null) {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort =
@@ -317,6 +319,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     /** @param _channel SocketChannel TODO: check option */
+    @Override
     public void configChannel(final SocketChannel _channel) throws IOException {
         _channel.configureBlocking(false);
         _channel.socket().setSoTimeout(TIMEOUT_MSG_READ);
@@ -365,21 +368,28 @@ public final class P2pMgr implements IP2pMgr {
         return this.nodeMgr.tempNodesSize();
     }
 
+    @Override
     public int getMaxActiveNodes() {
         return this.maxActiveNodes;
     }
 
+    @Override
     public int getMaxTempNodes() {
         return this.maxTempNodes;
     }
 
+    @Override
     public int getSelfNetId() {
         return this.selfNetId;
     }
 
+    @Override
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
+
+    @Override
+    public int getTxBroadCastRoute() { return this.txBroadCastRoute; }
 
     // <---------------------- message and Runnable getters below ------------------------->
 

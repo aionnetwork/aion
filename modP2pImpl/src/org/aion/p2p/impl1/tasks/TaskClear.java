@@ -27,19 +27,19 @@ package org.aion.p2p.impl1.tasks;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.impl.comm.Node;
-import org.aion.p2p.impl.comm.NodeMgr;
-import org.aion.p2p.impl1.P2pMgr;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.IP2pMgr;
 
 public class TaskClear implements Runnable {
     private static final int PERIOD_CLEAR = 20000;
     private static final int TIMEOUT_OUTBOUND_NODES = 20000;
 
-    private final P2pMgr mgr;
-    private final NodeMgr nodeMgr;
+    private final IP2pMgr mgr;
+    private final INodeMgr nodeMgr;
     private AtomicBoolean start;
 
-    public TaskClear(P2pMgr _mgr, NodeMgr _nodeMgr, AtomicBoolean _start) {
+    public TaskClear(IP2pMgr _mgr, INodeMgr _nodeMgr, AtomicBoolean _start) {
         this.mgr = _mgr;
         this.nodeMgr = _nodeMgr;
         this.start = _start;
@@ -61,7 +61,7 @@ public class TaskClear implements Runnable {
                     if (obj == null) continue;
 
                     int nodeIdHash = (int) obj;
-                    Node node = nodeMgr.getOutboundNodes().get(nodeIdHash);
+                    INode node = nodeMgr.getOutboundNodes().get(nodeIdHash);
 
                     if (node == null) continue;
 
