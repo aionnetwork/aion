@@ -151,10 +151,11 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     }
 
     public void delete(byte[] key) {
+        checkNotNull(key);
         if (!enabled.get()) {
+            check();
             return;
         }
-        checkNotNull(key);
 
         lock.writeLock().lock();
 
@@ -376,10 +377,11 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
+        checkNotNull(keys);
         if (!enabled.get()) {
+            check();
             return;
         }
-        checkNotNull(keys);
 
         lock.writeLock().lock();
 

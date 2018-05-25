@@ -475,6 +475,8 @@ public class JournalPruneDataSourceTest {
 
     @Test
     public void testDeleteBatch_wPrune() {
+        db.setPruneEnabled(true);
+
         // ensure existence
         Map<byte[], byte[]> map = new HashMap<>();
         map.put(k1, v1);
@@ -612,6 +614,7 @@ public class JournalPruneDataSourceTest {
 
     @Test(expected = RuntimeException.class)
     public void testIsEmpty_wClosedDatabase_wInsertedKeys() {
+        db.setPruneEnabled(true);
         db.put(randomBytes(32), randomBytes(32));
 
         source_db.close();
@@ -659,7 +662,18 @@ public class JournalPruneDataSourceTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testDelete_wClosedDatabase() {
+    public void testDelete_wClosedDatabase_wPrune() {
+        db.setPruneEnabled(true);
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        // attempt delete on closed db
+        db.delete(randomBytes(32));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testDelete_wClosedDatabase_woPrune() {
+        db.setPruneEnabled(false);
         source_db.close();
         assertThat(source_db.isOpen()).isFalse();
 
@@ -682,7 +696,23 @@ public class JournalPruneDataSourceTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testDeleteBatch_wClosedDatabase() {
+    public void testDeleteBatch_wClosedDatabase_wPrune() {
+        db.setPruneEnabled(true);
+        source_db.close();
+        assertThat(source_db.isOpen()).isFalse();
+
+        List<byte[]> list = new ArrayList<>();
+        list.add(randomBytes(32));
+        list.add(randomBytes(32));
+        list.add(randomBytes(32));
+
+        // attempt deleteBatch on closed db
+        db.deleteBatch(list);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testDeleteBatch_wClosedDatabase_woPrune() {
+        db.setPruneEnabled(false);
         source_db.close();
         assertThat(source_db.isOpen()).isFalse();
 
@@ -1297,6 +1327,7 @@ public class JournalPruneDataSourceTest {
 
     @Test
     public void pruningTest_woStoredLevel() {
+        db.setPruneEnabled(true);
 
         source_db.put(k2, v2);
         source_db.put(k3, v3);
