@@ -2,15 +2,23 @@ package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.p2p.*;
+import org.aion.p2p.Handler;
+import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.IPeerMetric;
+import org.aion.p2p.Msg;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
@@ -161,7 +169,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void send(int _id, Msg _msg) { }
+        public void send(int _id, String _displayId, Msg _msg) { }
 
         @Override
         public boolean isShowLog() {
