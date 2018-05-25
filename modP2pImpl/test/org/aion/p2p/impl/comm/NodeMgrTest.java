@@ -12,6 +12,7 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.UUID;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.INode;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Test;
@@ -120,7 +121,7 @@ public class NodeMgrTest {
         }
         assertEquals(2, mgr.tempNodesSize());
 
-        Node node = null;
+        INode node = null;
         while (mgr.tempNodesSize() != 0) {
             try {
                 node = mgr.tempNodesTake();
@@ -174,7 +175,7 @@ public class NodeMgrTest {
     @Test
     public void test_addInOutBoundNode() {
 
-        Node node = nMgr.allocNode(ip1, 0);
+        INode node = nMgr.allocNode(ip1, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
@@ -189,11 +190,11 @@ public class NodeMgrTest {
         }
 
         nMgr.addInboundNode(node);
-        Node iNode = nMgr.getInboundNode(channel.hashCode());
+        INode iNode = nMgr.getInboundNode(channel.hashCode());
         assertEquals(ip1, iNode.getIpStr());
 
         nMgr.addOutboundNode(node);
-        Node oNode = nMgr.getOutboundNode(node.getIdHash());
+        INode oNode = nMgr.getOutboundNode(node.getIdHash());
         assertEquals(ip1, oNode.getIpStr());
 
         try {
@@ -206,7 +207,7 @@ public class NodeMgrTest {
 
     @Test
     public void test_moveInboundToActive() {
-        Node node = nMgr.allocNode(ip2, 0);
+        INode node = nMgr.allocNode(ip2, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
@@ -229,7 +230,7 @@ public class NodeMgrTest {
 
     @Test
     public void test_moveOutboundToActive() {
-        Node node = nMgr.allocNode(ip2, 0);
+        INode node = nMgr.allocNode(ip2, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
@@ -252,7 +253,7 @@ public class NodeMgrTest {
 
     @Test
     public void test_getActiveNodesList() {
-        Node node = nMgr.allocNode(ip2, 0);
+        INode node = nMgr.allocNode(ip2, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
@@ -273,9 +274,9 @@ public class NodeMgrTest {
 
         assertEquals(1, nMgr.activeNodesSize());
 
-        List<Node> active = nMgr.getActiveNodesList();
+        List<INode> active = nMgr.getActiveNodesList();
 
-        for (Node activeN : active) {
+        for (INode activeN : active) {
             assertEquals(ip2, activeN.getIpStr());
         }
 
@@ -283,7 +284,7 @@ public class NodeMgrTest {
 
     @Test
     public void test_dropActive() {
-        Node node = nMgr.allocNode(ip2, 0);
+        INode node = nMgr.allocNode(ip2, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
@@ -310,7 +311,7 @@ public class NodeMgrTest {
 
     @Test
     public void test_ban() {
-        Node node = nMgr.allocNode(ip2, 0);
+        INode node = nMgr.allocNode(ip2, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
@@ -330,16 +331,16 @@ public class NodeMgrTest {
         nMgr.moveInboundToActive(channel.hashCode(), p2p);
         assertEquals(1, nMgr.activeNodesSize());
 
-        assertTrue(node.peerMetric.notBan());
+        assertTrue(node.getPeerMetric().notBan());
         nMgr.ban(node.getIdHash());
-        assertFalse(node.peerMetric.notBan());
+        assertFalse(node.getPeerMetric().notBan());
 
     }
 
     @Test
     public void test_timeoutInbound() {
 
-        Node node = nMgr.allocNode(ip2, 0);
+        INode node = nMgr.allocNode(ip2, 0);
         SocketChannel channel = null;
         try {
             channel = mock_connection();
