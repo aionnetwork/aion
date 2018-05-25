@@ -22,7 +22,7 @@
  * Aion foundation.
  *
  */
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import org.aion.p2p.Header;
 

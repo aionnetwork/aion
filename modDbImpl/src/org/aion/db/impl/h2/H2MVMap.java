@@ -148,7 +148,8 @@ public class H2MVMap extends AbstractDB {
         } catch (Exception e) {
             if (e instanceof NullPointerException) {
                 LOG.error("Failed to open the database " + this.toString()
-                        + ". A probable cause is that the H2 database cannot access the file path.", e);
+                    + ". A probable cause is that the H2 database cannot access the file path. "
+                    + "Check if you have two instances running on the same database.", e);
             } else {
                 LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
             }
