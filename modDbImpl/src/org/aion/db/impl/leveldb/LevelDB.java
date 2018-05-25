@@ -142,7 +142,14 @@ public class LevelDB extends AbstractDB {
         try {
             db = JniDBFactory.factory.open(f, options);
         } catch (Exception e1) {
-            LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
+            if (e1.getMessage().contains("lock")) {
+                LOG.error("Failed to open the database " + this.toString() +
+                    "\nCheck if you have two instances running on the same database." +
+                    "\nFailure due to: ", e1);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
+            }
+
             if (e1.getMessage() != null && e1.getMessage().contains("No space left on device")) {
                 LOG.error("Shutdown due to lack of disk space.");
                 System.exit(0);
