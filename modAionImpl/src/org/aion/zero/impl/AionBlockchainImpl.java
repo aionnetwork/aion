@@ -122,7 +122,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private A0BCConfig config;
     private long exitOn = Long.MAX_VALUE;
 
-    private IRepository repository;
+    private AionRepositoryImpl repository;
     private IRepositoryCache track;
     private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo> transactionStore;
     private AionBlock bestBlock;
@@ -221,7 +221,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     protected AionBlockchainImpl(final A0BCConfig config,
-                                 final IRepository repository,
+                                 final AionRepositoryImpl repository,
                                  final ChainConfiguration chainConfig) {
         this.config = config;
         this.repository = repository;
@@ -237,7 +237,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
         this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
 
-        this.transactionStore = ((AionRepositoryImpl) this.repository).getTransactionStore();
+        this.transactionStore = this.repository.getTransactionStore();
 
         this.minerCoinbase = this.config.getMinerCoinbase();
 
@@ -283,7 +283,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public AionBlockStore getBlockStore() {
-        return (AionBlockStore) repository.getBlockStore();
+        return repository.getBlockStore();
     }
 
     /**
@@ -422,7 +422,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return txsState.getRootHash();
     }
 
-    public IRepository getRepository() {
+    public AionRepositoryImpl getRepository() {
         return repository;
     }
 
@@ -430,7 +430,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         State push = stateStack.push(new State());
         this.bestBlock = getBlockStore().getBlockByHash(bestBlockHash);
         this.totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
-        this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
+        this.repository = (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
     }
 
@@ -509,6 +509,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public boolean skipTryToConnect(long blockNumber) {
         long current = bestBlockNumber.get();
         return blockNumber > current + 32 || blockNumber < current - 32;
+    }
+
+    /**
+     * Heuristic for skipping the call to tryToConnect with block number that was already pruned.
+     */
+    public boolean isPruneRestricted(long blockNumber) {
+        // no restriction when not in TOP pruning mode
+        if (!repository.usesTopPruning()) {
+            return false;
+        }
+        return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
@@ -758,7 +769,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 track.rollback();
                 // block is bad so 'rollback' the state root to the original
                 // state
-                ((AionRepositoryImpl) repository).setRoot(origRoot);
+                repository.setRoot(origRoot);
             }
         }
 
@@ -771,7 +782,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
             transactionStore.flushBatch();
 
-            ((AionRepositoryImpl) repository).commitBlock(block.getHeader());
+            repository.commitBlock(block.getHeader());
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Block rebuilt: number: {}, hash: {}, TD: {}", block.getNumber(), block.getShortHash(),
@@ -1066,7 +1077,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         transactionStore.flushBatch();
 
-        ((AionRepositoryImpl) repository).commitBlock(block.getHeader());
+        repository.commitBlock(block.getHeader());
 
         if (LOG.isDebugEnabled())
             LOG.debug("Block saved: number: {}, hash: {}, TD: {}", block.getNumber(), block.getShortHash(),
@@ -1131,7 +1142,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.totalDifficulty = totalDifficulty;
     }
 
-    public void setRepository(IRepository repository) {
+    public void setRepository(AionRepositoryImpl repository) {
         this.repository = repository;
     }
 
@@ -1320,7 +1331,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private class State {
 
-        IRepository savedRepo = repository;
+        AionRepositoryImpl savedRepo = repository;
         AionBlock savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
     }

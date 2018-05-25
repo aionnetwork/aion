@@ -485,13 +485,8 @@ public class AionRepositoryImpl
         }
     }
 
-    public void setPruneBlockCount(long pruneBlockCount) {
-        rwLock.writeLock().lock();
-        try {
-            this.pruneBlockCount = pruneBlockCount;
-        } finally {
-            rwLock.writeLock().unlock();
-        }
+    public long getPruneBlockCount() {
+        return this.pruneBlockCount;
     }
 
     public void commitBlock(A0BlockHeader blockHeader) {
@@ -532,6 +527,14 @@ public class AionRepositoryImpl
             }
         }
         bestBlockNumber = curBlock.getNumber();
+    }
+
+    /**
+     * @return {@code true} when pruning is enabled and archiving is disabled, {@code false}
+     *     otherwise
+     */
+    public boolean usesTopPruning() {
+        return pruneEnabled && !stateDSPrune.isArchiveEnabled();
     }
 
     public Trie getWorldState() {

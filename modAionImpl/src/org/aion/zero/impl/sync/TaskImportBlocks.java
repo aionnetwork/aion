@@ -107,6 +107,19 @@ final class TaskImportBlocks implements Runnable {
                         "This is not supposed to happen, but the peer is sending us blocks without ask");
             }
 
+            // checking if there are restrictions due to pruning
+            if (batch.size() > 0 && chain.isPruneRestricted(batch.get(0).getNumber())) {
+                // reset status if possible
+                if (state != null) {
+                    state.setMode(PeerState.Mode.NORMAL);
+                    state.setBase(chain.getBestBlock().getNumber());
+                    state.resetLastHeaderRequest();
+                }
+                // will not import this batch because it will fail due to TOP mode pruning
+                batch.clear();
+                continue;
+            }
+
             ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;
 
             // importing last block in batch to see if we can skip batch
