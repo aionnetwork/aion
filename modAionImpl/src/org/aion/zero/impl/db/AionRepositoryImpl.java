@@ -698,6 +698,10 @@ public class AionRepositoryImpl
         return this.stateDatabase;
     }
 
+    public IByteArrayKeyValueDatabase getStateArchiveDatabase() {
+        return this.stateArchiveDatabase;
+    }
+
     /**
      * Retrieves the underlying details database that sits below all caches. This is usually
      * provided by {@link org.aion.db.impl.mockdb.MockDB} or {@link org.aion.db.impl.mockdb.MockDB}.

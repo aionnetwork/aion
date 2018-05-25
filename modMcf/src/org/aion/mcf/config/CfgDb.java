@@ -62,7 +62,7 @@ public class CfgDb {
     private boolean compression;
     private boolean check_integrity;
     private CfgPrune prune;
-    private String prune_option;
+    private PruneOption prune_option;
 
     /**
      * Enabling expert mode allows more detailed database configurations.
@@ -80,7 +80,7 @@ public class CfgDb {
         this.compression = false;
         this.check_integrity = true;
         this.prune = new CfgPrune(false);
-        this.prune_option = "full";
+        this.prune_option = PruneOption.FULL;
 
         if (expert) {
             this.specificConfig = new HashMap<>();
@@ -103,29 +103,7 @@ public class CfgDb {
                             this.check_integrity = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         case "state-storage":
-                            prune_option = Cfg.readValue(sr).toLowerCase();
-                            switch (prune_option) {
-                                    // journal prune only
-                                case "top":
-                                    {
-                                        this.prune = new CfgPrune(128);
-                                        break;
-                                    }
-                                    // journal prune with archived states
-                                case "spread":
-                                    {
-                                        this.prune = new CfgPrune(128, 10000);
-                                        break;
-                                    }
-                                    // the default is no pruning
-                                case "full":
-                                default:
-                                    {
-                                        this.prune = new CfgPrune(false);
-                                        this.prune_option = "full";
-                                        break;
-                                    }
-                            }
+                            setPrune(Cfg.readValue(sr));
                             break;
                             // parameter considered only when expert==false
                         case "vendor":
@@ -256,7 +234,7 @@ public class CfgDb {
                     "SPREAD: the state is kept for the top K blocks and at regular block intervals");
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("state-storage");
-            xmlWriter.writeCharacters(this.prune_option.toUpperCase());
+            xmlWriter.writeCharacters(this.prune_option.toString());
             xmlWriter.writeEndElement();
 
             if (!expert) {
@@ -304,6 +282,56 @@ public class CfgDb {
 
     public CfgPrune getPrune() {
         return this.prune;
+    }
+
+    public enum PruneOption {
+        FULL,
+        TOP,
+        SPREAD;
+
+        @Override
+        public String toString() {
+            return this.name();
+        }
+
+        public static PruneOption fromValue(String value) {
+            value = value.toUpperCase();
+
+            if (value != null) {
+                for (PruneOption color : values()) {
+                    if (color.toString().equals(value)) {
+                        return color;
+                    }
+                }
+            }
+
+            // return default value
+            return getDefault();
+        }
+
+        public static PruneOption getDefault() {
+            return FULL;
+        }
+    }
+
+    public void setPrune(String _prune_option) {
+        this.prune_option = PruneOption.fromValue(_prune_option);
+
+        switch (prune_option) {
+            case TOP:
+                // journal prune only
+                this.prune = new CfgPrune(128);
+                break;
+            case SPREAD:
+                // journal prune with archived states
+                this.prune = new CfgPrune(128, 10000);
+                break;
+            case FULL:
+            default:
+                // the default is no pruning
+                this.prune = new CfgPrune(false);
+                break;
+        }
     }
 
     public Map<String, Properties> asProperties() {

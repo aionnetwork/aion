@@ -129,6 +129,20 @@ public class Cli {
                         }
                     }
                     break;
+                case "--state": {
+                    String pruning_type = "full";
+                    if (args.length >= 2) {
+                        pruning_type = args[1];
+                    }
+                    try {
+                        RecoveryUtils.pruneOrRecoverState(pruning_type);
+                    } catch (Throwable t) {
+                        System.out.println("Reorganizing the state storage FAILED due to:");
+                        t.printStackTrace();
+                        return 1;
+                    }
+                    break;
+                }
                 case "--dump-state-size":
                     long block_count = 2L;
 

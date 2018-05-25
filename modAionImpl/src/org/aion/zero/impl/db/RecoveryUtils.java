@@ -27,8 +27,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.type.IBlock;
 import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.AionHubUtils;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -323,5 +326,51 @@ public class RecoveryUtils {
                         + repository.getWorldState().getTrieDump(stateRoot));
 
         repository.close();
+    }
+
+    public static void pruneOrRecoverState(String pruning_type) {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.fromXML();
+        cfg.getConsensus().setMining(false);
+
+        // setting pruning to the version requested
+        CfgDb.PruneOption option = CfgDb.PruneOption.fromValue(pruning_type);
+        cfg.getDb().setPrune(option.toString());
+
+        System.out.println("Reorganizing the state storage to " + option + " mode ...");
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "ERROR");
+        cfgLog.put("CONS", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
+        AionBlockchainImpl chain = AionBlockchainImpl.inst();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionBlockStore store = repo.getBlockStore();
+
+        // dropping old state database
+        System.out.println("Deleting old data ...");
+        repo.getStateDatabase().drop();
+        if (pruning_type.equals("spread")) {
+            repo.getStateArchiveDatabase().drop();
+        }
+
+        // recover genesis
+        System.out.println("Rebuilding genesis block ...");
+        AionGenesis genesis = cfg.getGenesis();
+        AionHubUtils.buildGenesis(genesis, repo);
+
+        // recover all blocks
+        AionBlock block = store.getBestBlock();
+        System.out.println(
+                "Rebuilding the main chain "
+                        + block.getNumber()
+                        + " blocks (may take a while) ...");
+        chain.recoverWorldState(repo, block);
+
+        repo.close();
+        System.out.println("Reorganizing the state storage COMPLETE.");
     }
 }
