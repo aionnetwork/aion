@@ -340,9 +340,9 @@ public class AionHub {
             track.flush();
 
             repository.commitBlock(genesis.getHeader());
-            this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+            this.repository.getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
             if (this.eventMgr != null) {
                 List<IEvent> evts = new ArrayList<>();

@@ -231,9 +231,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
 
     public BigInteger getCumulativeDifficulty() {
         if (td == null) {
-            // TODO: currently returning incorrect total difficulty
-            parseRLP();
-            return new BigInteger(1, this.header.getDifficulty());
+            return BigInteger.ZERO;
         } else {
             return td;
         }

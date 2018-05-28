@@ -320,10 +320,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             // TODO: violates abstraction, consider adding to interface after
             // stable
             ((AionRepositoryImpl) bc.getRepository()).commitBlock(genesis.getHeader());
-            ((AionBlockStore) bc.getRepository().getBlockStore()).saveBlock(genesis, genesis.getCumulativeDifficulty(),
+            ((AionBlockStore) bc.getRepository().getBlockStore()).saveBlock(genesis, genesis.getDifficultyBI(),
                     true);
             bc.setBestBlock(genesis);
-            bc.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            bc.setTotalDifficulty(genesis.getDifficultyBI());
 
             return new Bundle(this.defaultKeys, bc);
         }
