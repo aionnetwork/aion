@@ -599,11 +599,38 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return ret;
     }
 
+    /**
+     * Creates a new block, if you require more context refer to the blockContext creation method,
+     * which allows us to add metadata not usually associated with the block itself.
+     *
+     * @param parent block
+     * @param txs to be added into the block
+     * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new block
+     * @see #createNewBlock(AionBlock, List, boolean)
+     *
+     * @return new block
+     */
     public synchronized AionBlock createNewBlock(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
+        return createNewBlockInternal(
+                parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS).block;
+    }
+
+    /**
+     * Creates a new block, adding in context/metadata about the block
+     *
+     * @param parent block
+     * @param txs to be added into the block
+     * @param waitUntilBlockTime if we should wait until the specified blockTime before create a new block
+     * @see #createNewBlock(AionBlock, List, boolean)
+     *
+     * @return new block
+     */
+    public synchronized BlockContext createNewBlockContext(
+            AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime) {
         return createNewBlockInternal(parent, txs, waitUntilBlockTime, System.currentTimeMillis() / THOUSAND_MS);
     }
 
-    AionBlock createNewBlockInternal(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime,
+    BlockContext createNewBlockInternal(AionBlock parent, List<AionTransaction> txs, boolean waitUntilBlockTime,
             long currTimeSeconds) {
         long time = currTimeSeconds;
 
@@ -655,8 +682,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * Calculate the gas used for the included transactions
          */
         long totalEnergyUsed = 0;
+        BigInteger totalTransactionFee = BigInteger.ZERO;
         for (AionTxExecSummary summary : preBlock.summaries) {
             totalEnergyUsed = totalEnergyUsed + summary.getNrgUsed().longValueExact();
+            totalTransactionFee = totalTransactionFee.add(summary.getFee());
         }
 
         byte[] stateRoot = getRepository().getRoot();
@@ -673,7 +702,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         block.seal(preBlock.txs, calcTxTrie(preBlock.txs), stateRoot, logBloom.getData(),
                 calcReceiptsTrie(preBlock.receipts), totalEnergyUsed);
 
-        return block;
+        // derive base block reward
+        BigInteger baseBlockReward = this.chainConfiguration
+                .getRewardsCalculator()
+                .calculateReward(block.getHeader());
+        return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
     @Override

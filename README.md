@@ -4,7 +4,7 @@ Mainstream adoption of blockchains has been limited because of scalability, priv
 
 Core to our hypothesis is the idea that many blockchains will be created to solve unique business challenges within unique industries. As such, the Aion network is designed to support custom blockchain architectures while providing a trustless mechanism for cross-chain interoperability. 
 
-The [Aion White Papers](https://aion.network/whitepapers.html) provides more details regarding our design and project roadmap. 
+The [Aion White Papers](https://aion.network/developers/#whitepapers) provides more details regarding our design and project roadmap. 
 
 This repository contains the main kernel implementation and releases for the Aion network.
 
@@ -16,9 +16,7 @@ This repository contains the main kernel implementation and releases for the Aio
 
 Please refer to the details in the [Build Your Aion Network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network) wiki to determine how to start setting up and building your Aion Network. 
 
-Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for the guide on installing the kernel prior to configuration and launching the kernel.
-
-Please refer to [Aion Network Configuration](https://github.com/aionnetwork/aion/wiki/Aion-Network-Configuration) wiki to set up your desired network configuration for the kernel as well as how to launch the kernel. 
+Please refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for a guide on installing and configuring the kernel.
 
 The [Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) wiki will include further instructions and details on working with the kernel.
 
