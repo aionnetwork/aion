@@ -99,25 +99,13 @@ final class TaskImportBlocks implements Runnable {
 
             List<AionBlock> batch = bw.getBlocks().stream()
                     .filter(b -> importedBlockHashes.get(ByteArrayWrapper.wrap(b.getHash())) == null)
+                    .filter(b -> chain.isPruneRestricted(b.getNumber()) == false)
                     .collect(Collectors.toList());
 
             PeerState state = peerStates.get(bw.getNodeIdHash());
             if (state == null) {
                 log.warn(
                         "This is not supposed to happen, but the peer is sending us blocks without ask");
-            }
-
-            // checking if there are restrictions due to pruning
-            if (batch.size() > 0 && chain.isPruneRestricted(batch.get(0).getNumber())) {
-                // reset status if possible
-                if (state != null) {
-                    state.setMode(PeerState.Mode.NORMAL);
-                    state.setBase(chain.getBestBlock().getNumber());
-                    state.resetLastHeaderRequest();
-                }
-                // will not import this batch because it will fail due to TOP mode pruning
-                batch.clear();
-                continue;
             }
 
             ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;
