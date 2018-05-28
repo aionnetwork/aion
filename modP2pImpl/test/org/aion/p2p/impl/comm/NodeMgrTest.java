@@ -8,13 +8,18 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.UUID;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl1.P2pMgr;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 
@@ -32,9 +37,10 @@ public class NodeMgrTest {
     private String nodeId2 = UUID.randomUUID().toString();
     private String ip1 = "127.0.0.1";
     private String ip2 = "192.168.0.11";
-    private int port1 = 30303;
-    private int port2 = 30304;
-
+    private int port1 = 30304;
+    private int port2 = 30305;
+    ServerSocketChannel tcpServer;
+    SocketChannel channel;
 
     private String[] nodes = new String[]{
         "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
@@ -55,9 +61,19 @@ public class NodeMgrTest {
         false,
         50);
 
-    private SocketChannel mock_connection() throws IOException {
+    @Before
+    public void mock_connection() throws IOException {
 
-        SocketChannel channel = SocketChannel.open();
+        tcpServer = ServerSocketChannel.open();
+        Selector selector = Selector.open();
+        tcpServer = ServerSocketChannel.open();
+        tcpServer.configureBlocking(false);
+        tcpServer.socket().setReuseAddress(true);
+        tcpServer.socket().bind(new InetSocketAddress(ip1, port1));
+        tcpServer.register(selector, SelectionKey.OP_ACCEPT);
+
+
+        channel = SocketChannel.open();
         channel.socket().connect(new InetSocketAddress(ip1, port1), 10000);
         channel.configureBlocking(false);
         channel.socket().setSoTimeout(10000);
@@ -66,10 +82,14 @@ public class NodeMgrTest {
         channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
         channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
 
-        return channel;
-
     }
 
+    @After
+    public void close() throws IOException {
+
+        tcpServer.close();
+        channel.socket().close();
+    }
 
     @Test
     public void test_tempNode() {
@@ -144,7 +164,6 @@ public class NodeMgrTest {
         String[] nodes_max = new String[512];
 
         int ip = 0;
-
         int port = 10000;
         for (int i = 0; i < 256; i++) {
             nodes_max[i] =
@@ -176,12 +195,6 @@ public class NodeMgrTest {
     public void test_addInOutBoundNode() {
 
         INode node = nMgr.allocNode(ip1, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         node.setChannel(channel);
         try {
             node.setId(nodeId1.getBytes("UTF-8"));
@@ -196,25 +209,14 @@ public class NodeMgrTest {
         nMgr.addOutboundNode(node);
         INode oNode = nMgr.getOutboundNode(node.getIdHash());
         assertEquals(ip1, oNode.getIpStr());
-
-        try {
-            channel.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     @Test
     public void test_moveInboundToActive() {
+
         INode node = nMgr.allocNode(ip2, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         node.setChannel(channel);
+
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -231,12 +233,7 @@ public class NodeMgrTest {
     @Test
     public void test_moveOutboundToActive() {
         INode node = nMgr.allocNode(ip2, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         node.setChannel(channel);
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
@@ -249,17 +246,15 @@ public class NodeMgrTest {
 
         nMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort(), p2p);
         assertEquals(1, nMgr.activeNodesSize());
+
     }
 
     @Test
     public void test_getActiveNodesList() {
+
+        NodeMgr nMgr = new NodeMgr(MAX_ACTIVE_NODES, MAX_TEMP_NODES);
         INode node = nMgr.allocNode(ip2, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         node.setChannel(channel);
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
@@ -285,12 +280,7 @@ public class NodeMgrTest {
     @Test
     public void test_dropActive() {
         INode node = nMgr.allocNode(ip2, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         node.setChannel(channel);
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
@@ -312,12 +302,7 @@ public class NodeMgrTest {
     @Test
     public void test_ban() {
         INode node = nMgr.allocNode(ip2, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         node.setChannel(channel);
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
@@ -341,12 +326,7 @@ public class NodeMgrTest {
     public void test_timeoutInbound() {
 
         INode node = nMgr.allocNode(ip2, 0);
-        SocketChannel channel = null;
-        try {
-            channel = mock_connection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
         node.setChannel(channel);
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
