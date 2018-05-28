@@ -104,8 +104,9 @@ final class TaskImportBlocks implements Runnable {
 
             PeerState state = peerStates.get(bw.getNodeIdHash());
             if (state == null) {
-                log.warn(
-                        "This is not supposed to happen, but the peer is sending us blocks without ask");
+                log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
+                // ignoring these blocks
+                continue;
             }
 
             ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;
