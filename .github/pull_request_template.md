@@ -16,6 +16,7 @@ Insert **x** into the following checkboxes to confirm (eg. [x]):
 - [ ] Bug fix.
 - [ ] New feature.
 - [ ] Enhancement.
+- [ ] Unit test.
 - [ ] Breaking change (a fix or feature that causes existing functionality to not work as expected).
 - [ ] Requires documentation update.
 
