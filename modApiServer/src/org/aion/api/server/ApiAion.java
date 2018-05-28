@@ -49,6 +49,7 @@ import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -656,6 +657,19 @@ public abstract class ApiAion extends Api {
         }
 
         return false;
+    }
+
+    // Returns a fully initialized NrgOracle object.
+    protected NrgOracle getNrgOracle(IAionChain _ac) {
+        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
+
+        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
+            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+
+        return new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
     }
 
     protected long getRecommendedNrgPrice() {

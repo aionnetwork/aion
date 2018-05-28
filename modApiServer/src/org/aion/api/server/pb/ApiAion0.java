@@ -637,13 +637,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_service_call_VALUE);
                     }
 
-                    // instantiate nrg price oracle
-                    IAionBlockchain bc = (IAionBlockchain) AionImpl.inst().getBlockchain();
-                    long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
-                    long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
-                    NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
-
-                    this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
+                    this.nrgOracle = getNrgOracle(AionImpl.inst());
                     long nrg = this.getRecommendedNrgPrice();
 
                     try {
