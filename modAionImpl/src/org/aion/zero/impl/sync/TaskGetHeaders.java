@@ -40,6 +40,8 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
 
+import static org.aion.p2p.P2pConstant.BACKWARD_SYNC_STEP;
+
 /** @author chris */
 final class TaskGetHeaders implements Runnable {
 
@@ -99,7 +101,7 @@ final class TaskGetHeaders implements Runnable {
         int size = 24;
 
         // depends on the number of blocks going BACKWARD
-        state.setMaxRepeats(128 / size + 1);
+        state.setMaxRepeats(BACKWARD_SYNC_STEP / size + 1);
 
         switch (state.getMode()) {
             case NORMAL:
@@ -109,9 +111,9 @@ final class TaskGetHeaders implements Runnable {
 
                     // normal mode
                     long nodeNumber = node.getBestBlockNumber();
-                    if (nodeNumber >= selfNumber + 128) {
+                    if (nodeNumber >= selfNumber + BACKWARD_SYNC_STEP) {
                         from = Math.max(1, selfNumber + 1 - 4);
-                    } else if (nodeNumber >= selfNumber - 128) {
+                    } else if (nodeNumber >= selfNumber - BACKWARD_SYNC_STEP) {
                         from = Math.max(1, selfNumber + 1 - 16);
                     } else {
                         // no need to request from this node. His TD is probably corrupted.
@@ -123,7 +125,7 @@ final class TaskGetHeaders implements Runnable {
             case BACKWARD:
                 {
                     // step back by 128 blocks
-                    from = Math.max(1, state.getBase() - 128);
+                    from = Math.max(1, state.getBase() - BACKWARD_SYNC_STEP);
                     break;
                 }
             case FORWARD:
