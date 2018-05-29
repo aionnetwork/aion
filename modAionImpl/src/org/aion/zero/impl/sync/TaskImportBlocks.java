@@ -99,7 +99,7 @@ final class TaskImportBlocks implements Runnable {
 
             List<AionBlock> batch = bw.getBlocks().stream()
                     .filter(b -> importedBlockHashes.get(ByteArrayWrapper.wrap(b.getHash())) == null)
-                    .filter(b -> chain.isPruneRestricted(b.getNumber()) == false)
+                    .filter(b -> !chain.isPruneRestricted(b.getNumber()))
                     .collect(Collectors.toList());
 
             PeerState state = peerStates.get(bw.getNodeIdHash());
@@ -111,31 +111,19 @@ final class TaskImportBlocks implements Runnable {
             ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;
 
             // importing last block in batch to see if we can skip batch
-            if (state != null && state.getMode() == PeerState.Mode.FORWARD && batch.size() > 0) {
+            if (state != null && state.getMode() == PeerState.Mode.FORWARD && !batch.isEmpty()) {
                 AionBlock b = batch.get(batch.size() - 1);
 
-                long t1 = System.currentTimeMillis();
                 try {
-                    importResult = this.chain.tryToConnect(b);
+                    importResult = importBlock(b, bw.getDisplayId(), state);
                 } catch (Throwable e) {
                     log.error("<import-block throw> {}", e.toString());
-                    if (e.getMessage() != null
-                            && e.getMessage().contains("No space left on device")) {
+                    if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
                         log.error("Shutdown due to lack of disk space.");
                         System.exit(0);
                     }
                     continue;
                 }
-                long t2 = System.currentTimeMillis();
-                log.info(
-                        "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                        bw.getDisplayId(),
-                        state.getMode(),
-                        b.getShortHash(),
-                        b.getNumber(),
-                        b.getTransactionsList().size(),
-                        importResult,
-                        t2 - t1);
 
                 switch (importResult) {
                     case IMPORTED_BEST:
@@ -146,28 +134,7 @@ final class TaskImportBlocks implements Runnable {
 
                             long lastBlock = batch.get(batch.size() - 1).getNumber();
 
-                            // continue
-                            state.setBase(lastBlock);
-                            // if the imported best block, switch back to normal mode
-                            if (importResult == ImportResult.IMPORTED_BEST) {
-                                state.setMode(PeerState.Mode.NORMAL);
-                                // switch peers to NORMAL otherwise they may never switch back
-                                for (PeerState peerState : peerStates.values()) {
-                                    if (peerState.getMode() != PeerState.Mode.NORMAL) {
-                                        peerState.setMode(PeerState.Mode.NORMAL);
-                                        peerState.setBase(b.getNumber());
-                                        peerState.resetLastHeaderRequest();
-                                    }
-                                }
-                            }
-                            // if the maximum number of repeats is passed
-                            // then the peer is stuck endlessly importing old blocks
-                            // otherwise it would have found an IMPORTED block already
-                            if (state.getRepeated() >= state.getMaxRepeats()) {
-                                state.setMode(PeerState.Mode.NORMAL);
-                                state.setBase(chain.getBestBlock().getNumber());
-                                state.resetLastHeaderRequest();
-                            }
+                            forwardModeUpdate(state, lastBlock, importResult, b.getNumber());
 
                             // since last import worked skipping the batch
                             batch.clear();
@@ -180,28 +147,16 @@ final class TaskImportBlocks implements Runnable {
             }
 
             for (AionBlock b : batch) {
-                long t1 = System.currentTimeMillis();
                 try {
-                    importResult = this.chain.tryToConnect(b);
+                    importResult = importBlock(b, bw.getDisplayId(), state);
                 } catch (Throwable e) {
                     log.error("<import-block throw> {}", e.toString());
-                    if (e.getMessage() != null
-                            && e.getMessage().contains("No space left on device")) {
+                    if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
                         log.error("Shutdown due to lack of disk space.");
                         System.exit(0);
                     }
                     continue;
                 }
-                long t2 = System.currentTimeMillis();
-                log.info(
-                        "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                        bw.getDisplayId(),
-                        state.getMode(),
-                        b.getShortHash(),
-                        b.getNumber(),
-                        b.getTransactionsList().size(),
-                        importResult,
-                        t2 - t1);
 
                 switch (importResult) {
                     case IMPORTED_BEST:
@@ -232,28 +187,7 @@ final class TaskImportBlocks implements Runnable {
                                 state.setBase(lastBlock);
                                 state.resetRepeated();
                             } else if (mode == PeerState.Mode.FORWARD) {
-                                // continue
-                                state.setBase(lastBlock);
-                                // if the imported best block, switch back to normal mode
-                                if (importResult == ImportResult.IMPORTED_BEST) {
-                                    state.setMode(PeerState.Mode.NORMAL);
-                                    // switch peers to NORMAL otherwise they may never switch back
-                                    for (PeerState peerState : peerStates.values()) {
-                                        if (peerState.getMode() != PeerState.Mode.NORMAL) {
-                                            peerState.setMode(PeerState.Mode.NORMAL);
-                                            peerState.setBase(b.getNumber());
-                                            peerState.resetLastHeaderRequest();
-                                        }
-                                    }
-                                }
-                                // if the maximum number of repeats is passed
-                                // then the peer is stuck endlessly importing old blocks
-                                // otherwise it would have found an IMPORTED block already
-                                if (state.getRepeated() >= state.getMaxRepeats()) {
-                                    state.setMode(PeerState.Mode.NORMAL);
-                                    state.setBase(chain.getBestBlock().getNumber());
-                                    state.resetLastHeaderRequest();
-                                }
+                                forwardModeUpdate(state, lastBlock, importResult, b.getNumber());
                             }
                             break;
                         case NO_PARENT:
@@ -289,6 +223,48 @@ final class TaskImportBlocks implements Runnable {
             }
 
             this.statis.update(this.chain.getBestBlock().getNumber());
+        }
+    }
+
+    private ImportResult importBlock(AionBlock b, String displayId, PeerState state) {
+        ImportResult importResult;
+        long t1 = System.currentTimeMillis();
+        importResult = this.chain.tryToConnect(b);
+        long t2 = System.currentTimeMillis();
+        log.info(
+                "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                displayId,
+                (state != null ? state.getMode() : PeerState.Mode.NORMAL),
+                b.getShortHash(),
+                b.getNumber(),
+                b.getTransactionsList().size(),
+                importResult,
+                t2 - t1);
+        return importResult;
+    }
+
+    private void forwardModeUpdate(PeerState state, long lastBlock, ImportResult importResult, long blockNumber) {
+        // continue
+        state.setBase(lastBlock);
+        // if the imported best block, switch back to normal mode
+        if (importResult == ImportResult.IMPORTED_BEST) {
+            state.setMode(PeerState.Mode.NORMAL);
+            // switch peers to NORMAL otherwise they may never switch back
+            for (PeerState peerState : peerStates.values()) {
+                if (peerState.getMode() != PeerState.Mode.NORMAL) {
+                    peerState.setMode(PeerState.Mode.NORMAL);
+                    peerState.setBase(blockNumber);
+                    peerState.resetLastHeaderRequest();
+                }
+            }
+        }
+        // if the maximum number of repeats is passed
+        // then the peer is stuck endlessly importing old blocks
+        // otherwise it would have found an IMPORTED block already
+        if (state.getRepeated() >= state.getMaxRepeats()) {
+            state.setMode(PeerState.Mode.NORMAL);
+            state.setBase(chain.getBestBlock().getNumber());
+            state.resetLastHeaderRequest();
         }
     }
 }
