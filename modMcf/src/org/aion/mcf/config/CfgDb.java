@@ -284,6 +284,19 @@ public class CfgDb {
         return this.prune;
     }
 
+    /**
+     * Number of topmost blocks present in the database in TOP pruning mode. Information about these
+     * blocks is also kept in memory for later pruning.
+     */
+    public static final int TOP_PRUNE_BLOCK_COUNT = 256;
+    /**
+     * Number of topmost blocks present in the database in SPREAD pruning mode. Information about
+     * these blocks is also kept in memory for later pruning.
+     */
+    public static final int SPREAD_PRUNE_BLOCK_COUNT = 128;
+    /** At what frequency block states are being archived. */
+    public static final int SPREAD_PRUNE_ARCHIVE_RATE = 10000;
+
     public enum PruneOption {
         FULL,
         TOP,
@@ -320,11 +333,11 @@ public class CfgDb {
         switch (prune_option) {
             case TOP:
                 // journal prune only
-                this.prune = new CfgPrune(128);
+                this.prune = new CfgPrune(TOP_PRUNE_BLOCK_COUNT);
                 break;
             case SPREAD:
                 // journal prune with archived states
-                this.prune = new CfgPrune(128, 10000);
+                this.prune = new CfgPrune(SPREAD_PRUNE_BLOCK_COUNT, SPREAD_PRUNE_ARCHIVE_RATE);
                 break;
             case FULL:
             default:
