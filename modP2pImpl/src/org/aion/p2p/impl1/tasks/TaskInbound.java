@@ -25,6 +25,8 @@
 
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -171,11 +173,11 @@ public class TaskInbound implements Runnable {
 
                             } while (cnt > 0);
 
-                            // check if really read data.
-                            if (cnt > prevCnt) {
-                                chanBuf.buffRemain = 0;
-                                throw new P2pException(getReadOverflowMsg(prevCnt, cnt));
-                            }
+//                            // check if really read data.
+//                            if (cnt > prevCnt) {  <---  always false
+//                                chanBuf.buffRemain = 0;
+//                                throw new P2pException(getReadOverflowMsg(prevCnt, cnt));
+//                            }
 
                             chanBuf.buffRemain = cnt;
 
@@ -356,7 +358,7 @@ public class TaskInbound implements Runnable {
         boolean underRC =
                 rb.shouldRoute(
                         route,
-                        ((route == this.mgr.getTxBroadCastRoute())
+                        ((route == txBroadCastRoute)
                                 ? P2pConstant.READ_MAX_RATE_TXBC
                                 : P2pConstant.READ_MAX_RATE));
 

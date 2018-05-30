@@ -57,7 +57,7 @@ public final class P2pMgr implements IP2pMgr {
     private static final int TIMEOUT_MSG_READ = 10000;
 
     // TODO: need refactor by passing the parameter in the later version.
-    private static final int txBroadCastRoute =
+    public static final int txBroadCastRoute =
             (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
     private final int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
@@ -131,7 +131,7 @@ public final class P2pMgr implements IP2pMgr {
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
-            if (node != null && validateNode(node)) {
+            if (validateNode(node)) {
                 nodeMgr.addTempNode(node);
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
@@ -156,7 +156,6 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
-            //            Thread thrdIn = new Thread(new TaskInbound(), "p2p-in");
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
@@ -387,9 +386,6 @@ public final class P2pMgr implements IP2pMgr {
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
-
-    @Override
-    public int getTxBroadCastRoute() { return this.txBroadCastRoute; }
 
     // <---------------------- message and Runnable getters below ------------------------->
 

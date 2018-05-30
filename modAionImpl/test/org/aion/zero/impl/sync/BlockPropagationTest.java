@@ -199,9 +199,6 @@ public class BlockPropagationTest {
         public boolean isSyncSeedsOnly() { throw new IllegalStateException("not implemented."); }
 
         @Override
-        public int getTxBroadCastRoute() { throw new IllegalStateException("not implemented."); }
-
-        @Override
         public int getMaxTempNodes() { throw new IllegalStateException("not implemented."); }
 
         @Override

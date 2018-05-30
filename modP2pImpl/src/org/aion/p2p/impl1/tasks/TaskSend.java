@@ -29,13 +29,27 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 
 public class TaskSend implements Runnable {
-    public static final int TOTAL_LANE = (1 << 5) - 1;
+    public static final int TOTAL_LANE = (1 << 5);
+
+    public static AtomicInteger count = new AtomicInteger(0);
+    public static AtomicLong taskStart = new AtomicLong(0L);
+    public static AtomicInteger maxCount = new AtomicInteger(0);
+    public static AtomicLong queueing = new AtomicLong(0);
+    public static AtomicLong maxQueueing = new AtomicLong(0);
+    public static AtomicBoolean print = new AtomicBoolean();
+
+    public static AtomicInteger countq = new AtomicInteger(0);
+    public static AtomicInteger countqP = new AtomicInteger(0);
+
+
 
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
@@ -58,6 +72,10 @@ public class TaskSend implements Runnable {
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.selector = _selector;
+
+        if (taskStart.get() == 0) {
+            taskStart.set(System.currentTimeMillis());
+        }
     }
 
     @Override
@@ -65,6 +83,7 @@ public class TaskSend implements Runnable {
         while (start.get()) {
             try {
                 MsgOut mo = sendMsgQue.take();
+
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
@@ -73,13 +92,18 @@ public class TaskSend implements Runnable {
                     continue;
                 }
 
+                long t1 = System.nanoTime();
+
                 // if not belong to current lane, put it back.
                 int targetLane = hash2Lane(mo.getNodeId());
                 if (targetLane != lane) {
                     sendMsgQue.offer(mo);
+                    queueing.addAndGet(System.nanoTime()-t1);
+                    countq.incrementAndGet();
                     continue;
                 }
 
+                long t2 = System.nanoTime();
                 INode node = null;
                 switch (mo.getDest()) {
                     case ACTIVE:
@@ -93,25 +117,46 @@ public class TaskSend implements Runnable {
                         break;
                 }
 
+                long t3 = System.nanoTime();
+
+                long t4 = 0L;
                 if (node != null) {
                     SelectionKey sk = node.getChannel().keyFor(selector);
                     if (sk != null) {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
-                            TaskWrite tw =
-                                    new TaskWrite(
-                                            this.mgr.isShowLog(),
-                                            node.getIdShort(),
-                                            node.getChannel(),
-                                            mo.getMsg(),
-                                            (ChannelBuffer) attachment,
-                                            this.mgr);
-                            tw.run();
+                            new TaskWrite(
+                                this.mgr.isShowLog(),
+                                node.getIdShort(),
+                                node.getChannel(),
+                                mo.getMsg(),
+                                (ChannelBuffer) attachment,
+                                this.mgr).run();
+
+                            count.incrementAndGet();
+
+                            t4 = System.nanoTime();
+                            long tt = System.currentTimeMillis();
+                            if ((tt - taskStart.get()) > 999) {
+                                taskStart.set(tt);
+                                maxCount.set(Math.max(maxCount.get(), count.get()));
+                                maxQueueing.set(queueing.get());
+                                count.set(0);
+                                queueing.set(0);
+                                countqP.set(countq.get());
+                                countq.set(0);
+                                print.set(true);
+                            }
                         }
                     }
                 } else {
                     if (this.mgr.isShowLog())
                         System.out.println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
+                }
+
+                if (print.get()) {
+                    System.out.println(Thread.currentThread().getName() + " t12:" + (t2-t1) + " t23:" + (t3-t2) + " t34:"+ (t4-t3) + " qc:" + countqP.get() + " max msgOut/ms: " + maxCount.get() + " Queueing/ms: " + (maxQueueing.get()/1000000L));
+                    print.set(false);
                 }
             } catch (InterruptedException e) {
                 if (this.mgr.isShowLog()) System.out.println("<p2p task-send-interrupted>");
@@ -123,7 +168,8 @@ public class TaskSend implements Runnable {
     }
 
     // hash mapping channel id to write thread.
-    private int hash2Lane(int in) {
+    private static
+    int hash2Lane(int in) {
         in ^= in >> (32 - 5);
         in ^= in >> (32 - 10);
         in ^= in >> (32 - 15);

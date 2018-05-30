@@ -74,8 +74,6 @@ public interface IP2pMgr {
 
     boolean isSyncSeedsOnly();
 
-    int getTxBroadCastRoute();
-
     int getMaxTempNodes();
 
     boolean validateNode(INode _node);
