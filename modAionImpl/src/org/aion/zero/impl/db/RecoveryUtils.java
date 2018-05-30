@@ -368,6 +368,19 @@ public class RecoveryUtils {
                 "Rebuilding the main chain "
                         + block.getNumber()
                         + " blocks (may take a while) ...");
+
+        long topBlockNumber = block.getNumber();
+        long blockNumber = 1000;
+
+        // recover in increments of 1k blocks
+        while (blockNumber < topBlockNumber) {
+            block = store.getChainBlockByNumber(blockNumber);
+            chain.recoverWorldState(repo, block);
+            System.out.println("Finished with blocks up to " + blockNumber + ".");
+            blockNumber += 1000;
+        }
+
+        block = store.getBestBlock();
         chain.recoverWorldState(repo, block);
 
         repo.close();
