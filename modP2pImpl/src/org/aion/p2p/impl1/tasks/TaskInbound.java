@@ -356,7 +356,7 @@ public class TaskInbound implements Runnable {
         boolean underRC =
                 rb.shouldRoute(
                         route,
-                        ((route == this.mgr.getTxBroadCastRoute())
+                        ((route == this.mgr.txBroadCastRoute)
                                 ? P2pConstant.READ_MAX_RATE_TXBC
                                 : P2pConstant.READ_MAX_RATE));
 

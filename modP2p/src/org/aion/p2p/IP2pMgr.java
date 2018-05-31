@@ -32,6 +32,8 @@ import java.util.Map;
 
 /** @author chris */
 public interface IP2pMgr {
+    // TODO: need refactor by passing the parameter in the later version to P2pMgr.
+    int txBroadCastRoute = (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
     /** @return Map */
     Map<Integer, INode> getActiveNodes();
@@ -73,8 +75,6 @@ public interface IP2pMgr {
     int getMaxActiveNodes();
 
     boolean isSyncSeedsOnly();
-
-    int getTxBroadCastRoute();
 
     int getMaxTempNodes();
 
