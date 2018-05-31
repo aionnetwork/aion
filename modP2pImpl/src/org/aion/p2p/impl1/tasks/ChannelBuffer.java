@@ -37,58 +37,6 @@ import java.util.concurrent.locks.Lock;
  */
 class ChannelBuffer {
 
-    class RouteStatus {
-        long timestamp;
-        int count;
-        RouteStatus(){
-            this.timestamp = System.currentTimeMillis();
-            count = 0;
-        }
-    }
-
-    private boolean showLog;
-
-    private Map<Integer, RouteStatus> routes = new HashMap<>();
-
-    ChannelBuffer(boolean _showLog){
-        this.showLog = _showLog;
-    }
-
-    /**
-     * @param _route          int
-     * @param _maxReqsPerSec  int requests within 1 s
-     * @return                boolean flag if under route control
-     */
-    synchronized boolean shouldRoute(int _route, int _maxReqsPerSec) {
-        long now = System.currentTimeMillis();
-        RouteStatus prev = routes.putIfAbsent(_route, new RouteStatus());
-        if (prev != null) {
-            if ((now - prev.timestamp) > 1000) {
-                prev.count = 0;
-                prev.timestamp = now;
-                return true;
-            }
-            boolean shouldRoute = prev.count < _maxReqsPerSec;
-            if(shouldRoute)
-                prev.count++;
-
-            if(showLog) {
-                if(!shouldRoute)
-                    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");
-                // too many msgs
-                //else
-                //    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");
-            }
-            return shouldRoute;
-        } else
-            return true;
-    }
-
-
-    RouteStatus getRouteCount(int _route){
-        return routes.get(_route);
-    }
-
     // buffer for buffer remaining after NIO select read.
     byte[] remainBuffer;
 
@@ -110,6 +58,63 @@ class ChannelBuffer {
      * Indicates whether this channel is closed.
      */
     AtomicBoolean isClosed = new AtomicBoolean(false);
+
+    private boolean showLog;
+
+    private Map<Integer, RouteStatus> routes = new HashMap<>();
+
+    class RouteStatus {
+
+        long timestamp;
+        int count;
+
+        RouteStatus() {
+            this.timestamp = System.currentTimeMillis();
+            count = 0;
+        }
+    }
+
+
+    ChannelBuffer(boolean _showLog) {
+        this.showLog = _showLog;
+    }
+
+    /**
+     * @param _route int
+     * @param _maxReqsPerSec int requests within 1 s
+     * @return boolean flag if under route control
+     */
+    synchronized boolean shouldRoute(int _route, int _maxReqsPerSec) {
+        long now = System.currentTimeMillis();
+        RouteStatus prev = routes.putIfAbsent(_route, new RouteStatus());
+        if (prev != null) {
+            if ((now - prev.timestamp) > 1000) {
+                prev.count = 0;
+                prev.timestamp = now;
+                return true;
+            }
+            boolean shouldRoute = prev.count < _maxReqsPerSec;
+            if (shouldRoute) {
+                prev.count++;
+            }
+
+            if (showLog) {
+                if (!shouldRoute) {
+                    System.out.println(
+                        "<p2p route-cooldown=" + _route + " node=" + this.displayId + " count="
+                            + prev.count + ">");
+                }
+            }
+            return shouldRoute;
+        } else {
+            return true;
+        }
+    }
+
+
+    RouteStatus getRouteCount(int _route) {
+        return routes.get(_route);
+    }
 
     void readHead(ByteBuffer buf) {
         buf.get(bsHead);
@@ -136,15 +141,15 @@ class ChannelBuffer {
     /**
      * @return boolean
      */
-    boolean isHeaderCompleted() {
-        return header != null;
+    boolean isHeaderNotCompleted() {
+        return header == null;
     }
 
     /**
      * @return boolean
      */
-    boolean isBodyCompleted() {
-        return this.header != null && this.body != null && body.length == header.getLen();
+    boolean isBodyNotCompleted() {
+        return this.header == null || this.body == null || body.length != header.getLen();
     }
 
 }

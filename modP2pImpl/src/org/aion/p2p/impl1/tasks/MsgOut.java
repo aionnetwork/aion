@@ -9,6 +9,7 @@ import org.aion.p2p.impl1.P2pMgr.Dest;
 public class MsgOut {
     private final int nodeId;
     private final String displayId;
+    private final int lane;
     private final Msg msg;
     private final Dest dest;
     private final long timestamp;
@@ -26,6 +27,7 @@ public class MsgOut {
         this.displayId = displayId;
         this.msg = msg;
         this.dest = dest;
+        this.lane = TaskSend.hash2Lane(nodeId);
         timestamp = System.currentTimeMillis();
     }
 
@@ -47,5 +49,9 @@ public class MsgOut {
 
     public long getTimestamp() {
         return this.timestamp;
+    }
+
+    public int getLane() {
+        return lane;
     }
 }

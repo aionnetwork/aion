@@ -67,7 +67,7 @@ public class TaskClear implements Runnable {
 
                     if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
                         this.mgr.closeSocket(
-                                node.getChannel(), "outbound-timeout node=" + node.getIdShort());
+                                node.getChannel(), "outbound-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
                         outboundIt.remove();
                     }
                 }
