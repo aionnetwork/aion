@@ -10,6 +10,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 public class CfgApiRpcSsl {
+    public static final String SSL_KEYSTORE_DIR = "./sslKeystore";
     private static final String ENABLED_TAG = "enabled";
     private static final String CERTIFICATE_TAG = "certificate";
     private static final String PASSWORD_TAG = "password";

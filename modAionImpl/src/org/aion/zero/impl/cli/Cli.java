@@ -32,6 +32,7 @@
 package org.aion.zero.impl.cli;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import org.aion.base.util.Hex;
@@ -39,6 +40,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgApiRpcSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 
@@ -112,6 +114,14 @@ public class Cli {
                         System.out.println("boot nodes list: 0");
                     }
                     System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    break;
+                case "-s":
+                    File store = new File(CfgApiRpcSsl.SSL_KEYSTORE_DIR);
+                    if (store.mkdir()) {
+                        System.out.println("\nCreated sslKeystore directory.");
+                    } else {
+                        System.out.println("\nThe sslKeystore directory already exists.");
+                    }
                     break;
                 case "-r":
                     if (args.length < 2) {
@@ -189,6 +199,8 @@ public class Cli {
         System.out.println("  -c                           create config with default values");
         System.out.println();
         System.out.println("  -i                           show information");
+        System.out.println();
+        System.out.println("  -s                           create ssl keystore directory");
         System.out.println();
         System.out.println("  -r                           remove blocks on side chains and correct block info");
         System.out.println("  -r [block_number]            revert db up to specific block number");

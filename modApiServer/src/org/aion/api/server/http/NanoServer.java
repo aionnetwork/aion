@@ -1,15 +1,15 @@
 package org.aion.api.server.http;
 
 import fi.iki.elonen.NanoHTTPD;
+import java.io.File;
 import org.aion.api.server.nanohttpd.NanoHttpd;
 import org.aion.api.server.nanohttpd.BoundRunner;
-import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.api.server.rpc.RpcThreadFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.CfgApiRpcSsl;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -60,9 +60,26 @@ public class NanoServer {
         try {
             server = new NanoHttpd(hostname, port, corsEnabled, enabledEndpoints);
             server.setAsyncRunner(new BoundRunner(workers));
+
+            if (this.sslEnabled) {
+                if (!(new File(CfgApiRpcSsl.SSL_KEYSTORE_DIR)).isDirectory()) {
+                    LOG.error("<rpc-server - no sslKeystore directory found>");
+                    System.exit(1);
+                }
+                System.setProperty("javax.net.ssl.trustStore", new File(this.sslCert).getAbsolutePath());
+                server.makeSecure(NanoHTTPD.makeSSLSocketFactory(
+                    "/" + this.sslCert, this.sslPass.toCharArray()), null);
+            }
+
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         } catch (Throwable t) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostname, port);
+            if (t.getMessage().contains("password")) {
+                LOG.error("<rpc-server - incorrect password provided for ssl certificate>");
+            } else if (t.getMessage().contains("Unable to load")) {
+                LOG.error("<rpc-server - unable to find the ssl certificate named " +
+                    this.sslCert + " in the sslKeystore directory>");
+            }
             System.exit(1);
         }
 
