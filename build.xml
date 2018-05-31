@@ -198,11 +198,6 @@
                 <mkdir dir="${dir.modfile}" />
 		<echo message="compile debug is ${compile.debug}" />
 
-		<echo message="building modPrecompiled" />
-		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
-			<property name="compile.debug" value="${compile.debug}" />
-		</ant>
-
 		<echo message="building modAionBase" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
@@ -265,6 +260,11 @@
 
 		<echo message="building modAion" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAion/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modPrecompiled" />
+		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,17 +19,32 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-package org.aion.base.vm;
+ */
+package org.aion.precompiled.type;
+
+import org.aion.base.db.IRepositoryCache;
+import org.aion.base.vm.IDataWord;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.IBlockStoreBase;
 
 /**
- * @author jay
+ * A pre-compiled contract that is capable of modifying state.
  *
+ * StatefulPrecompiledContract objects should be instance-based with an immutable reference to a
+ * particular state, this is what distinguishes them from ordinary pre-compiled contracts.
  */
-public interface IDataWord {
+public abstract class StatefulPrecompiledContract implements IPrecompiledContract {
+    protected final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
 
-    // Returns the data.
-    byte[] getData();
+    /**
+     * Constructs a new StatefulPrecompiledContract.
+     *
+     * @param track
+     */
+    public StatefulPrecompiledContract(
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+
+        this.track = track;
+    }
 
 }

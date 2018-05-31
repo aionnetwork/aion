@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,17 +19,24 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-package org.aion.base.vm;
+ */
+package org.aion.precompiled.type;
+
+import org.aion.precompiled.ContractExecutionResult;
 
 /**
- * @author jay
- *
+ * A pre-compiled contract.
  */
-public interface IDataWord {
+public interface IPrecompiledContract {
 
-    // Returns the data.
-    byte[] getData();
+    /**
+     * Returns the result of executing the pre-compiled contract. The contract will be executed
+     * using the input arguments input and the energy limit nrgLimit.
+     *
+     * @param input The input arguments for the contract.
+     * @param nrgLimit The energy limit.
+     * @return the contract execution result.
+     */
+    ContractExecutionResult execute(byte[] input, long nrgLimit);
 
 }
