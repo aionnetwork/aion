@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="mod-precompiled-contracts">
+    <property name="dir.lib" value="../lib" />
+    <property name="dir.mod" value="../mod" />
+    <property name="dir.dest" value="./build/main" />
+    <property name="dir.test" value="./build/test" />
+    <property name="src.test" value="./test" />
+
+    <path id="classpath.test">
+    </path>
+
+    <target name="clean_build" depends="clean">
+        <antcall target="build">
+            <param name="compile.debug" value="${compile.debug}" />
+        </antcall>
+    </target>
+
+    <target name="clean">
+        <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
+        <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/" />
+        <delete file="${dir.mod}/modPrecompiled.jar" />
+    </target>
+
+    <target name="test_build" depends="build">
+        <mkdir dir="${dir.test}" />
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+            <classpath>
+                <path refid="classpath.test" />
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="test" depends="test_build">
+        <junit printsummary="on" haltonfailure="yes" fork="true">
+            <classpath>
+                <path refid="classpath.test" />
+                <pathelement location="${dir.test}" />
+            </classpath>
+            <formatter type="brief" usefile="false" />
+            <batchtest>
+                <fileset dir="${src.test}" includes="**/*Test.java" />
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="build">
+        <echo message="compiling with debug=${compile.debug}" />
+        <mkdir dir="${dir.dest}" />
+        <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/" />
+        <javac debug="${compile.debug}" debuglevel="source,lines,vars" includeAntRuntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
+            <modulepath>
+            </modulepath>
+        </javac>
+        <jar destfile="modPrecompiled.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
+        <move includeemptydirs="false" todir="${dir.mod}">
+            <file file="modPrecompiled.jar" />
+        </move>
+    </target>
+</project>
