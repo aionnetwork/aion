@@ -1575,12 +1575,16 @@ public class ApiWeb3Aion extends ApiAion {
 
         // base.api.rpc
         CfgApiRpc rpcConfig = config.getRpc();
+        CfgApiRpcSsl sslConfig = rpcConfig.getSsl();
         JSONObject rpc = new JSONObject();
         rpc.put("ip", rpcConfig.getIp());
         rpc.put("port", rpcConfig.getPort());
         rpc.put("corsEnabled", rpcConfig.getCorsEnabled());
         rpc.put("active", rpcConfig.getActive());
         rpc.put("maxThread", rpcConfig.getMaxthread());
+        rpc.put("sslEnabled", sslConfig.getEnabled());
+        rpc.put("sslCert", sslConfig.getCert());
+        rpc.put("sslPass", sslConfig.getPass());
 
         // end
         obj.put("rpc", rpc);

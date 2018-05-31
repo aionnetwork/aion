@@ -17,26 +17,27 @@ public class NanoServer {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     private NanoHttpd server;
-
-
     private String hostname;
     private int port;
     private boolean corsEnabled;
     private List<String> enabledEndpoints;
-
     private ExecutorService workers;
+    private boolean sslEnabled;
+    private String sslCert;
+    private String sslPass;
 
-    public NanoServer(String hostname,
-                      int port,
-                      boolean corsEnabled,
-                      List<String> enabledEndpoints,
-                      int tpoolSize) {
+    public NanoServer(String hostname, int port, boolean corsEnabled, List<String> enabledEndpoints,
+        int tpoolSize, boolean sslEnabled, String sslCert, String sslPass) {
 
         this.corsEnabled = corsEnabled;
         this.enabledEndpoints = enabledEndpoints;
 
         this.hostname = hostname;
         this.port = port;
+
+        this.sslEnabled = sslEnabled;
+        this.sslCert = sslCert;
+        this.sslPass = sslPass;
 
         // do not protect user from over-allocating resources to api.
         // int fixedPoolSize = Math.min(Runtime.getRuntime().availableProcessors()-1, tpoolSize);

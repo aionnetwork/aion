@@ -32,7 +32,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +49,7 @@ public final class CfgApiRpc {
         this.corsEnabled = false;
         this.maxthread = 1;
         this.filtersEnabled = true;
+        this.ssl = new CfgApiRpcSsl();
     }
 
     private boolean active;
@@ -59,6 +59,7 @@ public final class CfgApiRpc {
     private boolean corsEnabled;
     private int maxthread;
     private boolean filtersEnabled;
+    private CfgApiRpcSsl ssl;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         // get the attributes
@@ -108,6 +109,9 @@ public final class CfgApiRpc {
                                 System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
                                 e.printStackTrace();
                             }
+                            break;
+                        case "ssl":
+                            this.ssl.fromXML(sr);
                             break;
                         default:
                             Cfg.skipElement(sr);
@@ -160,6 +164,8 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(this.maxthread + "");
             xmlWriter.writeEndElement();
 
+            xmlWriter.writeCharacters(this.ssl.toXML());
+
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
@@ -193,4 +199,5 @@ public final class CfgApiRpc {
     public boolean isFiltersEnabled() {
         return filtersEnabled;
     }
+    public CfgApiRpcSsl getSsl() { return this.ssl; }
 }
