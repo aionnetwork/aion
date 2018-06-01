@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
@@ -38,6 +36,7 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.PrecompiledContracts;
@@ -48,6 +47,7 @@ import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
@@ -299,7 +299,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
             }
 
-            if (this.repoConfig == null) this.repoConfig = generateRepositoryConfig();
+            if (this.repoConfig == null) {
+                this.repoConfig = generateRepositoryConfig();
+            }
 
             StandaloneBlockchain bc =
                     new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
@@ -339,9 +341,38 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             ((AionBlockStore) bc.getRepository().getBlockStore())
                     .saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
             bc.setBestBlock(genesis);
-            bc.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            bc.setTotalDifficulty(genesis.getDifficultyBI());
 
             return new Bundle(this.defaultKeys, bc);
         }
+    }
+
+    /** for testing */
+    public BigInteger getCachedTotalDifficulty() {
+        return getCacheTD();
+    }
+
+    public void assertEqualTotalDifficulty() {
+        BigInteger tdForHash, tdCached, tdPublic;
+
+        synchronized (this) {
+            tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
+            tdCached = getCacheTD();
+            tdPublic = getTotalDifficulty();
+        }
+
+        assert (tdPublic.equals(tdForHash));
+        assert (tdPublic.equals(tdCached));
+    }
+
+    public synchronized ImportResult tryToConnect(final AionBlock block) {
+        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
+
+        if (result == ImportResult.IMPORTED_BEST) {
+            BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
+            assert (getTotalDifficulty().equals(tdForHash));
+            assert (getCacheTD().equals(tdForHash));
+        }
+        return result;
     }
 }

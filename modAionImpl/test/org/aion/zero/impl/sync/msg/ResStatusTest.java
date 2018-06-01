@@ -60,6 +60,7 @@ public class ResStatusTest {
         assertEquals(bestBlockNumber, rs2.getBestBlockNumber());
         assertTrue(Arrays.equals(totalDifficulty, rs2.getTotalDifficulty()));
         assertTrue(Arrays.equals(bestBlockHash, rs2.getBestHash()));
+        assertTrue(Arrays.equals(genesisHash, rs2.getGenesisHash()));
     }
 
 }
