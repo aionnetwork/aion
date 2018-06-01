@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,21 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -98,7 +86,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         // delete some world state root entries from the database
@@ -149,7 +137,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
         // System.out.println(Hex.toHexString(chain.getRepository().getRoot()));
 
@@ -202,7 +190,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         // delete some world state root entries from the database
@@ -262,7 +250,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         // delete index entries from the database
@@ -372,7 +360,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
         assertThat(bestBlock.getHash()).isEqualTo(mainChainBlock.getHash());
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         // delete index entries from the database
@@ -450,7 +438,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         // delete index entries from the database
@@ -521,7 +509,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
@@ -568,7 +556,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         repo.flush();
 
         // delete index entries from the database
