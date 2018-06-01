@@ -1,35 +1,33 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
-
-package org.aion.p2p.impl1;
+package org.aion.p2p.impl1.tasks;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import org.aion.p2p.Header;
+import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 
 /** @author chris */
@@ -40,7 +38,7 @@ public class TaskWrite implements Runnable {
     private SocketChannel sc;
     private Msg msg;
     private ChannelBuffer channelBuffer;
-    private P2pMgr p2pMgr;
+    private IP2pMgr p2pMgr;
 
     TaskWrite(
             boolean _showLog,
@@ -48,7 +46,7 @@ public class TaskWrite implements Runnable {
             final SocketChannel _sc,
             final Msg _msg,
             final ChannelBuffer _cb,
-            final P2pMgr _p2pMgr) {
+            final IP2pMgr _p2pMgr) {
         this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
@@ -83,7 +81,7 @@ public class TaskWrite implements Runnable {
             // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
-            if (bodyBytes != null) buf.put(bodyBytes);
+            if (bodyBytes != null) { buf.put(bodyBytes); }
             buf.flip();
 
             try {
