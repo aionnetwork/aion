@@ -259,7 +259,10 @@ public class AionHub {
         this.repository.getBlockStore().load();
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
-        bestBlock.setCumulativeDifficulty(repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
+        if (bestBlock != null) {
+            bestBlock
+                    .setCumulativeDifficulty(repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
+        }
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -307,8 +310,10 @@ public class AionHub {
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
-                bestBlock.setCumulativeDifficulty(repository.getBlockStore()
-                                                          .getTotalDifficultyForHash(bestBlock.getHash()));
+                if (bestBlock != null) {
+                    bestBlock.setCumulativeDifficulty(repository.getBlockStore()
+                                                              .getTotalDifficultyForHash(bestBlock.getHash()));
+                }
 
                 // checking is the best block has changed since attempting recovery
                 if (bestBlock == null) {
