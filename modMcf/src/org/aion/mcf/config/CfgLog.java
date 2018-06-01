@@ -104,6 +104,8 @@ public class CfgLog {
              * Boolean value to allow logger to be toggled ON and OFF
              */
             xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeComment("Enable/Disable logback service; if disabled, output will not be logged.");
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("log-file");
             xmlWriter.writeCharacters(this.logFile + "");
             xmlWriter.writeEndElement();
@@ -114,6 +116,8 @@ public class CfgLog {
              * String value to determine the folder path for log files
              */
             xmlWriter.writeCharacters("\t\t");
+            xmlWriter.writeComment("Sets the physical location on disk where log files will be stored.");
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("log-path");
             xmlWriter.writeCharacters(this.logPath + "");
             xmlWriter.writeEndElement();
@@ -143,17 +147,17 @@ public class CfgLog {
         return this.modules;
     }
 
-    /* Method checks whether logger is enabled/disabled */
+    /** Method checks whether logger is enabled/disabled */
     public boolean getLogFile() {
         return this.logFile;
     }
 
-    /* Method returns user input folder path of logger */
+    /** Method returns user input folder path of logger */
     public String getLogPath() {
         return this.logPath;
     }
 
-    /* Method checks folder path for illegal inputs */
+    /** Method checks folder path for illegal inputs */
     public boolean isValidPath() {
         return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }

@@ -74,9 +74,6 @@ public class AionLoggerFactory {
         }
     }
 
-    /*
-     * Added INITIALIZE signature to include LOGFILE and LOGPATH
-     */
     public static void init(final Map<String, String> _logModules) {
         init(_logModules, false, "log");
     }
