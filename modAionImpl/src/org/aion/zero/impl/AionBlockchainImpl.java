@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl;
 
 import static java.lang.Math.max;
@@ -138,8 +137,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * all forking/appending behaviour is completed.
      */
     private volatile AionBlock pubBestBlock;
-
-    private volatile BigInteger pubBestTD = ZERO;
 
     private volatile BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
@@ -572,7 +569,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update best block reference
         if (ret == IMPORTED_BEST) {
             pubBestBlock = bestBlock;
-            pubBestTD = summary.getTotalDifficulty();
         }
 
         // fire block events
@@ -721,7 +717,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             List<AionTxReceipt> receipts = summary.getReceipts();
 
             updateTotalDifficulty(block);
-            summary.setTotalDifficulty(getInternalTD());
+            summary.setTotalDifficulty(block.getCumulativeDifficulty());
 
             storeBlock(block, receipts);
 
@@ -1139,7 +1135,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public BigInteger getTotalDifficulty() {
-        return pubBestTD;
+        return getBestBlock().getCumulativeDifficulty();
     }
 
     // this method is for the testing purpose
@@ -1153,6 +1149,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void updateTotalDifficulty(AionBlock block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
+        block.setCumulativeDifficulty(totalDifficulty);
         if (LOG.isDebugEnabled()) {
             LOG.debug("TD: updated to {}", totalDifficulty);
         }
@@ -1160,7 +1157,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public void setTotalDifficulty(BigInteger totalDifficulty) {
-        this.pubBestTD = totalDifficulty;
         this.totalDifficulty = totalDifficulty;
     }
 

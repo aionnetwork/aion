@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
@@ -336,10 +336,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             // TODO: violates abstraction, consider adding to interface after
             // stable
             ((AionRepositoryImpl) bc.getRepository()).commitBlock(genesis.getHeader());
-            ((AionBlockStore) bc.getRepository().getBlockStore())
-                    .saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+            ((AionBlockStore) bc.getRepository().getBlockStore()).saveBlock(genesis, genesis.getDifficultyBI(),
+                    true);
             bc.setBestBlock(genesis);
-            bc.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            bc.setTotalDifficulty(genesis.getDifficultyBI());
 
             return new Bundle(this.defaultKeys, bc);
         }

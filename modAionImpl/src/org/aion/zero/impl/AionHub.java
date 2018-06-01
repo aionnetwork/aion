@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl;
 
 import org.aion.base.db.IRepository;
@@ -261,6 +259,7 @@ public class AionHub {
         this.repository.getBlockStore().load();
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
+        bestBlock.setCumulativeDifficulty(repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -290,6 +289,8 @@ public class AionHub {
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
+                bestBlock.setCumulativeDifficulty(repository.getBlockStore()
+                                                          .getTotalDifficultyForHash(bestBlock.getHash()));
 
                 // checking is the best block has changed since attempting recovery
                 if (bestBlock == null) {
@@ -340,9 +341,9 @@ public class AionHub {
             track.flush();
 
             repository.commitBlock(genesis.getHeader());
-            this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+            this.repository.getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
             if (this.eventMgr != null) {
                 List<IEvent> evts = new ArrayList<>();
