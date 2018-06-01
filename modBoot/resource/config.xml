@@ -76,6 +76,10 @@
 		<enable_db_compression>false</enable_db_compression>
 	</db>
 	<log>
+		<!--Enable/Disable logback service; if disabled, output will not be logged -->
+		<log-file>true</log-file>
+		<!--Sets the physical location on disk where log files will be stored.-->
+		<log-path>log</log-path>
 		<GEN>INFO</GEN>
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>
