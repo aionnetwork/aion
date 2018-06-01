@@ -2,7 +2,6 @@ package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
 import java.util.*;
