@@ -1,28 +1,25 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
-
 package org.aion.p2p.impl.zero.msg;
 
 import java.nio.ByteBuffer;
@@ -61,10 +58,11 @@ public final class ResActiveNodes extends Msg {
     public ResActiveNodes(final List<INode> _nodes) {
         super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
         this.count = Math.min(MAX_NODES, _nodes.size());
-        if (this.count > 0)
+        if (this.count > 0) {
             this.nodes = _nodes.subList(0, this.count);
-        else
+        } else {
             this.nodes = new ArrayList<>();
+        }
     }
 
     /**
@@ -80,9 +78,9 @@ public final class ResActiveNodes extends Msg {
      * @return ResActiveNodes
      */
     public static ResActiveNodes decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0)
+        if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0) {
             return null;
-        else {
+        } else {
 
             try{
 
@@ -90,8 +88,9 @@ public final class ResActiveNodes extends Msg {
                 int count = buf.get();
 
                 // fix bug: https://github.com/aionnetwork/aion/issues/390
-                if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
+                if (_bytes.length != count * NODE_BYTES_LENGTH + 1) {
                     return null;
+                }
 
                 ArrayList<INode> activeNodes = new ArrayList<>();
                 for (int i = 0; i < count; i++) {

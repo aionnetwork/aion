@@ -25,31 +25,27 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.base.db;
+package org.aion.mcf.trie.scan;
 
-import java.util.Properties;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.rlp.Value;
 
-/**
- * Represents a configuration interface accepted that should be accepted by the repository to
- * implement necessary configs
- *
- * @author yao
- */
-public interface IRepositoryConfig {
+/** @author Alexandra Roatis */
+public class ExtractToDatabase implements ScanAction {
 
-    /** @return absolute path to the DB folder containing files */
-    String getDbPath();
+    // only the keys are relevant so the value will be this constant
+    byte[] dummy_value = new byte[] {0};
+    IByteArrayKeyValueDatabase db;
+    public long count = 0;
 
-    IPruneConfig getPruneConfig();
+    public ExtractToDatabase(IByteArrayKeyValueDatabase _db) {
+        this.db = _db;
+    }
 
-    IContractDetails contractDetailsImpl();
-
-    Properties getDatabaseConfig(String db_name);
+    @Override
+    public void doOnNode(byte[] hash, Value node) {
+        db.put(hash, dummy_value);
+        count++;
+    }
 }

@@ -233,14 +233,7 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public boolean isSyncSeedsOnly() {
-            throw new IllegalStateException("not implemented.");
-        }
-
-        @Override
-        public int getMaxTempNodes() {
-            throw new IllegalStateException("not implemented.");
-        }
+        public int getMaxTempNodes() { throw new IllegalStateException("not implemented."); }
 
         @Override
         public boolean validateNode(INode _node) {

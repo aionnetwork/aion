@@ -132,11 +132,66 @@ public class Cli {
                         }
                     }
                     break;
+                case "--state": {
+                    String pruning_type = "full";
+                    if (args.length >= 2) {
+                        pruning_type = args[1];
+                    }
+                    try {
+                        RecoveryUtils.pruneOrRecoverState(pruning_type);
+                    } catch (Throwable t) {
+                        System.out.println("Reorganizing the state storage FAILED due to:");
+                        t.printStackTrace();
+                        return 1;
+                    }
+                    break;
+                }
+                case "--dump-state-size":
+                    long block_count = 2L;
+
+                    if (args.length < 2) {
+                        System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                        RecoveryUtils.printStateTrieSize(block_count);
+                    } else {
+                        try {
+                            block_count = Long.parseLong(args[1]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                        }
+                        if (block_count < 1) {
+                            System.out.println("The given argument <" + args[1] + "> is not valid.");
+                            block_count = 2L;
+                        }
+
+                        System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                        RecoveryUtils.printStateTrieSize(block_count);
+                    }
+                    break;
+                case "--dump-state":
+                    long level = -1L;
+
+                    if (args.length < 2) {
+                        System.out.println("Retrieving state for top main chain block...");
+                        RecoveryUtils.printStateTrieDump(level);
+                    } else {
+                        try {
+                            level = Long.parseLong(args[1]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                        }
+                        if (level == -1L) {
+                            System.out.println("Retrieving state for top main chain block...");
+                        } else {
+                            System.out.println("Retrieving state for main chain block at level " + level + "...");
+                        }
+                        RecoveryUtils.printStateTrieDump(level);
+                    }
+                    break;
                 case "--db-compact":
                     RecoveryUtils.dbCompact();
                     break;
                 case "--dump-blocks":
-                    long count = 100L;
+                    long count = 10L;
 
                     if (args.length < 2) {
                         System.out.println("Printing top " + count + " blocks from database.");
@@ -147,10 +202,14 @@ public class Cli {
                         } catch (NumberFormatException e) {
                             System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
                         }
+                        if (count < 1) {
+                            System.out.println("The given argument <" + args[1] + "> is not valid.");
+                            count = 10L;
+                        }
+
                         System.out.println("Printing top " + count + " blocks from database.");
                         RecoveryUtils.dumpBlocks(count);
                     }
-                    System.out.println("Finished printing blocks.");
                     break;
                 case "-v":
                     System.out.println("\nVersion");

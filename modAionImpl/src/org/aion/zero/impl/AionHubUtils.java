@@ -25,31 +25,41 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.base.db;
+package org.aion.zero.impl;
 
-import java.util.Properties;
+import java.math.BigInteger;
+import java.util.Map;
+import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.Address;
+import org.aion.mcf.vm.types.DataWord;
+import org.aion.vm.PrecompiledContracts;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 
-/**
- * Represents a configuration interface accepted that should be accepted by the repository to
- * implement necessary configs
- *
- * @author yao
- */
-public interface IRepositoryConfig {
+/** {@link AionHub} functionality where a full instantiation of the class is not desirable. */
+public class AionHubUtils {
 
-    /** @return absolute path to the DB folder containing files */
-    String getDbPath();
+    public static void buildGenesis(AionGenesis genesis, AionRepositoryImpl repository) {
+        // initialization section for network balance contract
+        IRepositoryCache track = repository.startTracking();
 
-    IPruneConfig getPruneConfig();
+        Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
+        track.createAccount(networkBalanceAddress);
 
-    IContractDetails contractDetailsImpl();
+        for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
+            track.addStorageRow(
+                    networkBalanceAddress,
+                    new DataWord(addr.getKey()),
+                    new DataWord(addr.getValue()));
+        }
 
-    Properties getDatabaseConfig(String db_name);
+        for (Address addr : genesis.getPremine().keySet()) {
+            track.createAccount(addr);
+            track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
+        }
+        track.flush();
+
+        repository.commitBlock(genesis.getHeader());
+        repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+    }
 }

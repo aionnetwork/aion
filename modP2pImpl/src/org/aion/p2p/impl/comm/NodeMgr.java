@@ -1,28 +1,25 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
-
 package org.aion.p2p.impl.comm;
 
 import org.aion.p2p.INode;
@@ -146,8 +143,9 @@ public class NodeMgr implements INodeMgr {
      */
     @Override
     public synchronized void addTempNode(final INode _n) {
-        if(tempNodes.size() < maxTempNodes)
+        if(tempNodes.size() < maxTempNodes) {
             tempNodes.add(_n);
+        }
     }
 
     @Override
@@ -198,8 +196,9 @@ public class NodeMgr implements INodeMgr {
     @Override
     public INode allocNode(String ip, int p0) {
         INode n = new Node(ip, p0);
-        if (seedIps.contains(ip))
+        if (seedIps.contains(ip)) {
             n.setFromBootList(true);
+        }
         return n;
     }
 
@@ -276,13 +275,18 @@ public class NodeMgr implements INodeMgr {
             node.setConnection("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
-            if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel(), "inbound -> active, node " + previous.getIdShort() + " exits");
-            else if(!activeIpAllow(node.getIpStr()))
-                _p2pMgr.closeSocket(node.getChannel(), "inbound -> active, ip " + node.getIpStr() + " exits");
-            else {
-                if (_p2pMgr.isShowLog())
-                    System.out.println("<p2p inbound -> active node-id=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
+            if (previous != null) {
+                _p2pMgr.closeSocket(node.getChannel(),
+                    "inbound -> active, node " + previous.getIdShort() + " exits");
+            } else if (!activeIpAllow(node.getIpStr())) {
+                _p2pMgr.closeSocket(node.getChannel(),
+                    "inbound -> active, ip " + node.getIpStr() + " exits");
+            } else {
+                if (_p2pMgr.isShowLog()) {
+                    System.out.println(
+                        "<p2p inbound -> active node-id=" + node.getIdShort() + " ip=" + node
+                            .getIpStr() + ">");
+                }
             }
         }
     }
@@ -313,8 +317,11 @@ public class NodeMgr implements INodeMgr {
             if (previous != null)
                 _p2pMgr.closeSocket(node.getChannel(), "outbound -> active, node " + previous.getIdShort() + " exits");
             else {
-                if (_p2pMgr.isShowLog())
-                    System.out.println("<p2p outbound -> active node-id=" + _shortId + " ip=" + node.getIpStr() + ">");
+                if (_p2pMgr.isShowLog()) {
+                    System.out.println(
+                        "<p2p outbound -> active node-id=" + _shortId + " ip=" + node.getIpStr()
+                            + ">");
+                }
             }
         }
     }
@@ -360,8 +367,9 @@ public class NodeMgr implements INodeMgr {
 
     public void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr, String _reason) {
         INode node = activeNodes.remove(nodeIdHash);
-        if (node == null)
+        if (node == null) {
             return;
+        }
         _p2pMgr.closeSocket(node.getChannel(), _reason);
     }
 

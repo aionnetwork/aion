@@ -1,28 +1,25 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
-
 package org.aion.p2p.impl1.tasks;
 
 import java.nio.channels.SelectionKey;
@@ -100,8 +97,9 @@ public class TaskSend implements Runnable {
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
-                    if (this.mgr.isShowLog())
+                    if (this.mgr.isShowLog()) {
                         System.out.println(getTimeoutMsg(mo.getDisplayId(), now));
+                    }
                     continue;
                 }
 
@@ -158,8 +156,10 @@ public class TaskSend implements Runnable {
                         }
                     }
                 } else {
-                    if (this.mgr.isShowLog())
-                        System.out.println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
+                    if (this.mgr.isShowLog()) {
+                        System.out
+                            .println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
+                    }
                 }
 
                 if (print.get()) {
@@ -167,10 +167,10 @@ public class TaskSend implements Runnable {
                     print.set(false);
                 }
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) System.out.println("<p2p task-send-interrupted>");
+                if (this.mgr.isShowLog()) { System.out.println("<p2p task-send-interrupted>"); }
                 return;
             } catch (Exception e) {
-                if (this.mgr.isShowLog()) e.printStackTrace();
+                if (this.mgr.isShowLog()) { e.printStackTrace(); }
             }
         }
     }
