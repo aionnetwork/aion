@@ -152,7 +152,7 @@ public final class P2pMgr implements IP2pMgr {
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
-            if (showLog)
+            if (showLog) {
                 this.handlers.forEach(
                     (route, callbacks) -> {
                         Handler handler = callbacks.get(0);
@@ -161,6 +161,7 @@ public final class P2pMgr implements IP2pMgr {
                             getRouteMsg(route, h.getVer(), h.getCtrl(), h.getAction(),
                                 handler.getClass().getSimpleName()));
                     });
+            }
 
             for (int i = 0; i < TaskSend.TOTAL_LANE; i++) {
                 Thread thrdOut = new Thread(getSendInstance(i), "p2p-out-" + i);
@@ -174,27 +175,27 @@ public final class P2pMgr implements IP2pMgr {
                 t.start();
             }
 
-            if (upnpEnable)
+            if (upnpEnable) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     new TaskUPnPManager(selfPort),
                     1,
                     PERIOD_UPNP_PORT_MAPPING,
                     TimeUnit.MILLISECONDS);
-
-            if (showStatus)
+            }
+            if (showStatus) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     getStatusInstance(),
                     2,
                     PERIOD_SHOW_STATUS,
                     TimeUnit.MILLISECONDS);
-
-            if (!syncSeedsOnly)
+            }
+            if (!syncSeedsOnly) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     new TaskRequestActiveNodes(this),
                     5000,
                     PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
-
+            }
             Thread thrdClear = new Thread(getClearInstance(), "p2p-clear");
             thrdClear.setPriority(Thread.NORM_PRIORITY);
             thrdClear.start();
@@ -203,9 +204,9 @@ public final class P2pMgr implements IP2pMgr {
             thrdConn.setPriority(Thread.NORM_PRIORITY);
             thrdConn.start();
         } catch (SocketException e) {
-            if (showLog) System.out.println("<p2p tcp-server-socket-exception> " + e.getMessage());
+            if (showLog) { System.out.println("<p2p tcp-server-socket-exception> " + e.getMessage()); }
         } catch (IOException e) {
-            if (showLog) System.out.println("<p2p tcp-server-io-exception>");
+            if (showLog) { System.out.println("<p2p tcp-server-io-exception>"); }
         }
     }
 
@@ -272,14 +273,14 @@ public final class P2pMgr implements IP2pMgr {
 
     /** @param _sc SocketChannel */
     public void closeSocket(final SocketChannel _sc, String _reason) {
-        if (showLog) System.out.println("<p2p close-socket reason=" + _reason + ">");
+        if (showLog) { System.out.println("<p2p close-socket reason=" + _reason + ">"); }
 
         try {
             SelectionKey sk = _sc.keyFor(selector);
             _sc.close();
-            if (sk != null) sk.cancel();
+            if (sk != null) { sk.cancel(); }
         } catch (IOException e) {
-            if (showLog) System.out.println("<p2p close-socket-io-exception>");
+            if (showLog) { System.out.println("<p2p close-socket-io-exception>"); }
         }
     }
 

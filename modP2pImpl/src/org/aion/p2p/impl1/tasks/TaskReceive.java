@@ -28,8 +28,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Handler;
 
-public class
-TaskReceive implements Runnable {
+public class TaskReceive implements Runnable {
     private final AtomicBoolean start;
     private final BlockingQueue<MsgIn> receiveMsgQue;
     private final Map<Integer, List<Handler>> handlers;
@@ -53,21 +52,21 @@ TaskReceive implements Runnable {
                 MsgIn mi = this.receiveMsgQue.take();
 
                 List<Handler> hs = this.handlers.get(mi.getRoute());
-                if (hs == null) continue;
+                if (hs == null) { continue; }
                 for (Handler hlr : hs) {
-                    if (hlr == null) continue;
+                    if (hlr == null) { continue; }
 
                     try {
                         hlr.receive(mi.getNodeId(), mi.getDisplayId(), mi.getMsg());
                     } catch (Exception e) {
-                        if (this.showLog) e.printStackTrace();
+                        if (this.showLog) { e.printStackTrace(); }
                     }
                 }
             } catch (InterruptedException e) {
-                if (this.showLog) System.out.println("<p2p task-receive-interrupted>");
+                if (this.showLog) { System.out.println("<p2p task-receive-interrupted>"); }
                 return;
             } catch (Exception e) {
-                if (this.showLog) e.printStackTrace();
+                if (this.showLog) { e.printStackTrace(); }
             }
         }
     }

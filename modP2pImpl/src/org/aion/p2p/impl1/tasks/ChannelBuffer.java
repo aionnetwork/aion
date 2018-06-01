@@ -67,12 +67,16 @@ class ChannelBuffer {
                 return true;
             }
             boolean shouldRoute = prev.count < _maxReqsPerSec;
-            if(shouldRoute)
+            if(shouldRoute) {
                 prev.count++;
+            }
 
             if(showLog) {
-                if(!shouldRoute)
-                    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");
+                if(!shouldRoute) {
+                    System.out.println(
+                        "<p2p route-cooldown=" + _route + " node=" + this.displayId + " count="
+                            + prev.count + ">");
+                }
                 // too many msgs
                 //else
                 //    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");

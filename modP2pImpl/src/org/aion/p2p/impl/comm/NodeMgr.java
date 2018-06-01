@@ -143,8 +143,9 @@ public class NodeMgr implements INodeMgr {
      */
     @Override
     public synchronized void addTempNode(final INode _n) {
-        if(tempNodes.size() < maxTempNodes)
+        if(tempNodes.size() < maxTempNodes) {
             tempNodes.add(_n);
+        }
     }
 
     @Override
@@ -195,8 +196,9 @@ public class NodeMgr implements INodeMgr {
     @Override
     public INode allocNode(String ip, int p0) {
         INode n = new Node(ip, p0);
-        if (seedIps.contains(ip))
+        if (seedIps.contains(ip)) {
             n.setFromBootList(true);
+        }
         return n;
     }
 
@@ -273,13 +275,18 @@ public class NodeMgr implements INodeMgr {
             node.setConnection("inbound");
             node.setFromBootList(seedIps.contains(node.getIpStr()));
             INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
-            if (previous != null)
-                _p2pMgr.closeSocket(node.getChannel(), "inbound -> active, node " + previous.getIdShort() + " exits");
-            else if(!activeIpAllow(node.getIpStr()))
-                _p2pMgr.closeSocket(node.getChannel(), "inbound -> active, ip " + node.getIpStr() + " exits");
-            else {
-                if (_p2pMgr.isShowLog())
-                    System.out.println("<p2p inbound -> active node-id=" + node.getIdShort() + " ip=" + node.getIpStr() + ">");
+            if (previous != null) {
+                _p2pMgr.closeSocket(node.getChannel(),
+                    "inbound -> active, node " + previous.getIdShort() + " exits");
+            } else if (!activeIpAllow(node.getIpStr())) {
+                _p2pMgr.closeSocket(node.getChannel(),
+                    "inbound -> active, ip " + node.getIpStr() + " exits");
+            } else {
+                if (_p2pMgr.isShowLog()) {
+                    System.out.println(
+                        "<p2p inbound -> active node-id=" + node.getIdShort() + " ip=" + node
+                            .getIpStr() + ">");
+                }
             }
         }
     }
@@ -310,8 +317,11 @@ public class NodeMgr implements INodeMgr {
             if (previous != null)
                 _p2pMgr.closeSocket(node.getChannel(), "outbound -> active, node " + previous.getIdShort() + " exits");
             else {
-                if (_p2pMgr.isShowLog())
-                    System.out.println("<p2p outbound -> active node-id=" + _shortId + " ip=" + node.getIpStr() + ">");
+                if (_p2pMgr.isShowLog()) {
+                    System.out.println(
+                        "<p2p outbound -> active node-id=" + _shortId + " ip=" + node.getIpStr()
+                            + ">");
+                }
             }
         }
     }
@@ -357,8 +367,9 @@ public class NodeMgr implements INodeMgr {
 
     public void dropActive(int nodeIdHash, final IP2pMgr _p2pMgr, String _reason) {
         INode node = activeNodes.remove(nodeIdHash);
-        if (node == null)
+        if (node == null) {
             return;
+        }
         _p2pMgr.closeSocket(node.getChannel(), _reason);
     }
 

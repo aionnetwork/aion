@@ -58,10 +58,11 @@ public final class ResActiveNodes extends Msg {
     public ResActiveNodes(final List<INode> _nodes) {
         super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
         this.count = Math.min(MAX_NODES, _nodes.size());
-        if (this.count > 0)
+        if (this.count > 0) {
             this.nodes = _nodes.subList(0, this.count);
-        else
+        } else {
             this.nodes = new ArrayList<>();
+        }
     }
 
     /**
@@ -77,9 +78,9 @@ public final class ResActiveNodes extends Msg {
      * @return ResActiveNodes
      */
     public static ResActiveNodes decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0)
+        if (_bytes == null || _bytes.length == 0 || (_bytes.length - 1) % NODE_BYTES_LENGTH != 0) {
             return null;
-        else {
+        } else {
 
             try{
 
@@ -87,8 +88,9 @@ public final class ResActiveNodes extends Msg {
                 int count = buf.get();
 
                 // fix bug: https://github.com/aionnetwork/aion/issues/390
-                if (_bytes.length != count * NODE_BYTES_LENGTH + 1)
+                if (_bytes.length != count * NODE_BYTES_LENGTH + 1) {
                     return null;
+                }
 
                 ArrayList<INode> activeNodes = new ArrayList<>();
                 for (int i = 0; i < count; i++) {

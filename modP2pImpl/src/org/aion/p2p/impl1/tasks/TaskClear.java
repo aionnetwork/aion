@@ -55,12 +55,12 @@ public class TaskClear implements Runnable {
 
                     Object obj = outboundIt.next();
 
-                    if (obj == null) continue;
+                    if (obj == null) { continue; }
 
                     int nodeIdHash = (int) obj;
                     INode node = nodeMgr.getOutboundNodes().get(nodeIdHash);
 
-                    if (node == null) continue;
+                    if (node == null) { continue; }
 
                     if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
                         this.mgr.closeSocket(

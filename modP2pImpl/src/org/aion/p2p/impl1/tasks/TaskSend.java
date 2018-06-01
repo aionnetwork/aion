@@ -65,8 +65,9 @@ public class TaskSend implements Runnable {
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
-                    if (this.mgr.isShowLog())
+                    if (this.mgr.isShowLog()) {
                         System.out.println(getTimeoutMsg(mo.getDisplayId(), now));
+                    }
                     continue;
                 }
 
@@ -107,14 +108,16 @@ public class TaskSend implements Runnable {
                         }
                     }
                 } else {
-                    if (this.mgr.isShowLog())
-                        System.out.println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
+                    if (this.mgr.isShowLog()) {
+                        System.out
+                            .println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
+                    }
                 }
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) System.out.println("<p2p task-send-interrupted>");
+                if (this.mgr.isShowLog()) { System.out.println("<p2p task-send-interrupted>"); }
                 return;
             } catch (Exception e) {
-                if (this.mgr.isShowLog()) e.printStackTrace();
+                if (this.mgr.isShowLog()) { e.printStackTrace(); }
             }
         }
     }
