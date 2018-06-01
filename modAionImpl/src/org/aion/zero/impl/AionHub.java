@@ -1,25 +1,25 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
 import org.aion.base.db.IRepository;
@@ -259,6 +259,7 @@ public class AionHub {
         this.repository.getBlockStore().load();
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
+        bestBlock.setCumulativeDifficulty(repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -302,6 +303,8 @@ public class AionHub {
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
+                bestBlock.setCumulativeDifficulty(repository.getBlockStore()
+                                                          .getTotalDifficultyForHash(bestBlock.getHash()));
 
                 // checking is the best block has changed since attempting recovery
                 if (bestBlock == null) {
@@ -338,7 +341,7 @@ public class AionHub {
             buildGenesis(genesis);
 
             blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
             if (this.eventMgr != null) {
                 List<IEvent> evts = new ArrayList<>();

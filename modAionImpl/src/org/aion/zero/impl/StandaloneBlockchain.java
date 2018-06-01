@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,22 +19,24 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl;
 
+import java.math.BigInteger;
+import java.util.*;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.core.AccountState;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -43,54 +45,54 @@ import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.mcf.vm.types.DataWord;
-
-import java.math.BigInteger;
-import java.util.*;
 
 /**
- * Used mainly for debugging and testing purposes, provides codepaths for easy
- * setup, into standard configurations that a user might expected, and handles
- * any non-intuitive setup that the blockchain may require.
+ * Used mainly for debugging and testing purposes, provides codepaths for easy setup, into standard
+ * configurations that a user might expected, and handles any non-intuitive setup that the
+ * blockchain may require.
  */
 public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public AionGenesis genesis;
 
-    private static IRepositoryConfig repoConfig = new IRepositoryConfig() {
-        @Override
-        public String getDbPath() {
-            return "";
-        }
+    private static IRepositoryConfig repoConfig =
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
 
-        @Override
-        public int getPrune() {
-            return -1;
-        }
+                @Override
+                public int getPrune() {
+                    return -1;
+                }
 
-        @Override
-        public IContractDetails contractDetailsImpl() {
-            return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-        }
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
 
-        @Override
-        public Properties getDatabaseConfig(String db_name) {
-            Properties props = new Properties();
-            props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-            props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-            return props;
-        }
-    };
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
 
     protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig) {
         super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
     }
 
-    protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig,
+    protected StandaloneBlockchain(
+            final A0BCConfig config,
+            final ChainConfiguration chainConfig,
             IRepositoryConfig repoConfig) {
         super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
     }
@@ -103,9 +105,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         return this.genesis;
     }
 
-    public void loadJSON(String json) {
-
-    }
+    public void loadJSON(String json) {}
 
     public BlockHeaderValidator getBlockHeaderValidator() {
         return this.chainConfiguration.createBlockHeaderValidator();
@@ -133,15 +133,15 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         private IRepositoryConfig repoConfig;
 
         public static final int INITIAL_ACC_LEN = 10;
-        public static final BigInteger DEFAULT_BALANCE = new BigInteger("1000000000000000000000000");
+        public static final BigInteger DEFAULT_BALANCE =
+                new BigInteger("1000000000000000000000000");
 
         /**
-         * The type of validator selected for the blockchain, a "full" validator
-         * validates blocks as if they were broadcasted from the network.
-         * Therefore the header validator will require a valid equiHash
-         * solution.
+         * The type of validator selected for the blockchain, a "full" validator validates blocks as
+         * if they were broadcasted from the network. Therefore the header validator will require a
+         * valid equiHash solution.
          *
-         * {@code validatorType -> (full|simple)}
+         * <p>{@code validatorType -> (full|simple)}
          */
         String validatorType;
 
@@ -154,7 +154,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             for (int i = 0; i < INITIAL_ACC_LEN; i++) {
                 ECKey pk = ECKeyFac.inst().create();
                 this.defaultKeys.add(pk);
-                initialState.put(new ByteArrayWrapper(pk.getAddress()),
+                initialState.put(
+                        new ByteArrayWrapper(pk.getAddress()),
                         new AccountState(BigInteger.ZERO, DEFAULT_BALANCE));
             }
             return this;
@@ -162,8 +163,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         public Builder withDefaultAccounts(List<ECKey> defaultAccounts) {
             this.defaultKeys.addAll(defaultAccounts);
-            this.defaultKeys.forEach(k -> initialState.put(new ByteArrayWrapper(k.getAddress()),
-                    new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
+            this.defaultKeys.forEach(
+                    k ->
+                            initialState.put(
+                                    new ByteArrayWrapper(k.getAddress()),
+                                    new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
             return this;
         }
 
@@ -219,41 +223,45 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         }
 
         public Bundle build() {
-            this.a0Config = this.a0Config == null ? new A0BCConfig() {
-                @Override
-                public Address getCoinbase() {
-                    return Address.ZERO_ADDRESS();
-                }
+            this.a0Config =
+                    this.a0Config == null
+                            ? new A0BCConfig() {
+                                @Override
+                                public Address getCoinbase() {
+                                    return Address.ZERO_ADDRESS();
+                                }
 
-                @Override
-                public byte[] getExtraData() {
-                    return new byte[32];
-                }
+                                @Override
+                                public byte[] getExtraData() {
+                                    return new byte[32];
+                                }
 
-                @Override
-                public boolean getExitOnBlockConflict() {
-                    return false;
-                }
+                                @Override
+                                public boolean getExitOnBlockConflict() {
+                                    return false;
+                                }
 
-                @Override
-                public Address getMinerCoinbase() {
-                    return Address.ZERO_ADDRESS();
-                }
+                                @Override
+                                public Address getMinerCoinbase() {
+                                    return Address.ZERO_ADDRESS();
+                                }
 
-                @Override
-                public int getFlushInterval() {
-                    return 1;
-                }
+                                @Override
+                                public int getFlushInterval() {
+                                    return 1;
+                                }
 
-                @Override
-                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
-                    return new TargetStrategy(
-                            configuration.getConstants().getEnergyLowerBoundLong(),
-                            configuration.getConstants().getEnergyDivisorLimitLong(),
-                            10_000_000L);
-                }
-
-            } : this.a0Config;
+                                @Override
+                                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
+                                    return new TargetStrategy(
+                                            configuration.getConstants().getEnergyLowerBoundLong(),
+                                            configuration
+                                                    .getConstants()
+                                                    .getEnergyDivisorLimitLong(),
+                                            10_000_000L);
+                                }
+                            }
+                            : this.a0Config;
 
             if (this.configuration == null) {
                 if (this.validatorType == null) {
@@ -261,34 +269,40 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 } else if (this.validatorType.equals("full")) {
                     this.configuration = new ChainConfiguration();
                 } else if (this.validatorType.equals("simple")) {
-                    this.configuration = new ChainConfiguration() {
-                        /*
-                         * Remove the equiHash solution for the simplified
-                         * validator this gives us the ability to connect new
-                         * blocks without validating the solution and POW.
-                         *
-                         * This is good for transaction testing, but another set
-                         * of tests need to ensure that the equihash and POW
-                         * generated are valid.
-                         */
-                        @Override
-                        public BlockHeaderValidator<A0BlockHeader> createBlockHeaderValidator() {
-                            return new BlockHeaderValidator<A0BlockHeader>(
-                                    Arrays.asList(
-                                            new AionExtraDataRule(this.constants.getMaximumExtraDataSize()),
-                                            new EnergyConsumedRule(),
-                                            new AionHeaderVersionRule()));
-                        }
-                    };
+                    this.configuration =
+                            new ChainConfiguration() {
+                                /*
+                                 * Remove the equiHash solution for the simplified
+                                 * validator this gives us the ability to connect new
+                                 * blocks without validating the solution and POW.
+                                 *
+                                 * This is good for transaction testing, but another set
+                                 * of tests need to ensure that the equihash and POW
+                                 * generated are valid.
+                                 */
+                                @Override
+                                public BlockHeaderValidator<A0BlockHeader>
+                                        createBlockHeaderValidator() {
+                                    return new BlockHeaderValidator<A0BlockHeader>(
+                                            Arrays.asList(
+                                                    new AionExtraDataRule(
+                                                            this.constants
+                                                                    .getMaximumExtraDataSize()),
+                                                    new EnergyConsumedRule(),
+                                                    new AionHeaderVersionRule()));
+                                }
+                            };
                 } else {
                     throw new IllegalArgumentException("validatorType != (full|simple)");
                 }
             }
 
-            if (this.repoConfig == null)
+            if (this.repoConfig == null) {
                 this.repoConfig = generateRepositoryConfig();
+            }
 
-            StandaloneBlockchain bc = new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
+            StandaloneBlockchain bc =
+                    new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
@@ -307,7 +321,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             track.createAccount(PrecompiledContracts.totalCurrencyAddress);
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
-                track.addStorageRow(PrecompiledContracts.totalCurrencyAddress, new DataWord(key.getKey()),
+                track.addStorageRow(
+                        PrecompiledContracts.totalCurrencyAddress,
+                        new DataWord(key.getKey()),
                         new DataWord(key.getValue()));
             }
 
@@ -320,12 +336,41 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             // TODO: violates abstraction, consider adding to interface after
             // stable
             ((AionRepositoryImpl) bc.getRepository()).commitBlock(genesis.getHeader());
-            ((AionBlockStore) bc.getRepository().getBlockStore()).saveBlock(genesis, genesis.getCumulativeDifficulty(),
+            ((AionBlockStore) bc.getRepository().getBlockStore()).saveBlock(genesis, genesis.getDifficultyBI(),
                     true);
             bc.setBestBlock(genesis);
-            bc.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            bc.setTotalDifficulty(genesis.getDifficultyBI());
 
             return new Bundle(this.defaultKeys, bc);
         }
+    }
+
+    /** for testing */
+    public BigInteger getCachedTotalDifficulty() {
+        return getCacheTD();
+    }
+
+    public void assertEqualTotalDifficulty() {
+        BigInteger tdForHash, tdCached, tdPublic;
+
+        synchronized (this) {
+            tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
+            tdCached = getCacheTD();
+            tdPublic = getTotalDifficulty();
+        }
+
+        assert (tdPublic.equals(tdForHash));
+        assert (tdPublic.equals(tdCached));
+    }
+
+    public synchronized ImportResult tryToConnect(final AionBlock block) {
+        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
+
+        if (result == ImportResult.IMPORTED_BEST) {
+            BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
+            assert (getTotalDifficulty().equals(tdForHash));
+            assert (getCacheTD().equals(tdForHash));
+        }
+        return result;
     }
 }
