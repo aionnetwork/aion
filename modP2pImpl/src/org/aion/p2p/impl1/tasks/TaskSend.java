@@ -38,7 +38,8 @@ import org.aion.p2p.P2pConstant;
 
 public class TaskSend implements Runnable {
 
-    private static final int TOTAL_LANE = Math.min(Runtime.getRuntime().availableProcessors() << 1, 32);
+    private static final int TOTAL_LANE = Math
+        .min(Runtime.getRuntime().availableProcessors() << 1, 32);
     private static final int threadQlimit = 20000;
 
     private final IP2pMgr mgr;
@@ -51,12 +52,12 @@ public class TaskSend implements Runnable {
     private static ThreadPoolExecutor tpe;
 
     public TaskSend(
-            IP2pMgr _mgr,
-            int _lane,
-            BlockingQueue<MsgOut> _sendMsgQue,
-            AtomicBoolean _start,
-            INodeMgr _nodeMgr,
-            Selector _selector) {
+        IP2pMgr _mgr,
+        int _lane,
+        BlockingQueue<MsgOut> _sendMsgQue,
+        AtomicBoolean _start,
+        INodeMgr _nodeMgr,
+        Selector _selector) {
 
         this.mgr = _mgr;
         this.lane = _lane;
@@ -97,7 +98,6 @@ public class TaskSend implements Runnable {
                     continue;
                 }
 
-                long t2 = System.nanoTime();
                 INode node = null;
                 switch (mo.getDest()) {
                     case ACTIVE:
@@ -111,9 +111,6 @@ public class TaskSend implements Runnable {
                         break;
                 }
 
-                long t3 = System.nanoTime();
-
-                long t4 = 0L;
                 if (node != null) {
                     SelectionKey sk = node.getChannel().keyFor(selector);
                     if (sk != null) {
@@ -135,19 +132,24 @@ public class TaskSend implements Runnable {
                     }
                 }
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) { System.out.println("<p2p task-send-interrupted>"); }
+                if (this.mgr.isShowLog()) {
+                    System.out.println("<p2p task-send-interrupted>");
+                }
                 return;
             } catch (RejectedExecutionException e) {
-                if (this.mgr.isShowLog()) { System.out.println("<p2p task-send-reached thread queue limit>"); }
+                if (this.mgr.isShowLog()) {
+                    System.out.println("<p2p task-send-reached thread queue limit>");
+                }
             } catch (Exception e) {
-                if (this.mgr.isShowLog()) { e.printStackTrace(); }
+                if (this.mgr.isShowLog()) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     // hash mapping channel id to write thread.
-    public static
-    int hash2Lane(int in) {
+    static int hash2Lane(int in) {
         in ^= in >> (32 - 5);
         in ^= in >> (32 - 10);
         in ^= in >> (32 - 15);
