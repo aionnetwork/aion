@@ -27,26 +27,19 @@ import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 
 public class TaskSend implements Runnable {
-    public static AtomicInteger count = new AtomicInteger(0);
-    public static AtomicLong taskStart = new AtomicLong(0L);
-    public static AtomicInteger maxCount = new AtomicInteger(0);
-    public static AtomicLong queueing = new AtomicLong(0);
-    public static AtomicLong maxQueueing = new AtomicLong(0);
-    public static AtomicBoolean print = new AtomicBoolean();
 
-    public static final int TOTAL_LANE = Math.min(Runtime.getRuntime().availableProcessors() << 1, 32);
+    private static final int TOTAL_LANE = Math.min(Runtime.getRuntime().availableProcessors() << 1, 32);
+    private static final int threadQlimit = 20000;
 
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
@@ -72,19 +65,13 @@ public class TaskSend implements Runnable {
         this.nodeMgr = _nodeMgr;
         this.selector = _selector;
 
-        if (taskStart.get() == 0) {
-            taskStart.set(System.currentTimeMillis());
-        }
-        ThreadFactory threadFactory = Executors.defaultThreadFactory();
-
-        int pNum = Runtime.getRuntime().availableProcessors();
         if (tpe == null) {
-            tpe = new ThreadPoolExecutor(pNum
-                , pNum << 1
+            tpe = new ThreadPoolExecutor(TOTAL_LANE
+                , TOTAL_LANE
                 , 0
                 , TimeUnit.MILLISECONDS
-                , new LinkedBlockingQueue<>()
-                , threadFactory);
+                , new LinkedBlockingQueue<>(threadQlimit)
+                , Executors.defaultThreadFactory());
         }
     }
 
@@ -107,7 +94,6 @@ public class TaskSend implements Runnable {
                 long t1 = System.nanoTime();
                 if (mo.getLane() != lane) {
                     sendMsgQue.offer(mo);
-                    queueing.addAndGet(System.nanoTime()-t1);
                     continue;
                 }
 
@@ -140,19 +126,6 @@ public class TaskSend implements Runnable {
                                 mo.getMsg(),
                                 (ChannelBuffer) attachment,
                                 this.mgr));
-
-                            count.incrementAndGet();
-
-                            t4 = System.nanoTime();
-                            long tt = System.currentTimeMillis();
-                            if ((tt - taskStart.get()) > 999) {
-                                taskStart.set(tt);
-                                maxCount.set(Math.max(maxCount.get(), count.get()));
-                                maxQueueing.set(queueing.get());
-                                count.set(0);
-                                queueing.set(0);
-                                print.set(true);
-                            }
                         }
                     }
                 } else {
@@ -161,14 +134,11 @@ public class TaskSend implements Runnable {
                             .println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
                     }
                 }
-
-                if (print.get()) {
-                    System.out.println(Thread.currentThread().getName() + " t12:" + (t2-t1) + " t23:" + (t3-t2) + " t34:"+ (t4-t3) + " max msgOut/ms: " + maxCount.get() + " Queueing/ms: " + (maxQueueing.get()/1000000L));
-                    print.set(false);
-                }
             } catch (InterruptedException e) {
                 if (this.mgr.isShowLog()) { System.out.println("<p2p task-send-interrupted>"); }
                 return;
+            } catch (RejectedExecutionException e) {
+                if (this.mgr.isShowLog()) { System.out.println("<p2p task-send-reached thread queue limit>"); }
             } catch (Exception e) {
                 if (this.mgr.isShowLog()) { e.printStackTrace(); }
             }
