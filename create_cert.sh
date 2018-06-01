@@ -26,6 +26,6 @@ then
         cd ..
     fi
 else
-    echo "Usage: ./gen_ssl_cert.sh [cert_name] [password] [opt [host] [ip]]"
+    echo "Usage: ./create_cert.sh [cert_name] [password] [opt [host] [ip]]"
     exit 1
 fi
