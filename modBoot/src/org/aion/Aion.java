@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,12 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
+ * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion;
 
 import org.aion.api.server.http.NanoServer;
@@ -92,7 +89,7 @@ public class Aion {
                         "\n\n"
         );
 
-        /** Outputs relevant logger configuration */
+        /* Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
@@ -102,8 +99,9 @@ public class Aion {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         }
 
-        // If commit this out, the config setting will be ignore. all log module been set to "INFO" Level
-        /** Changed INITIALIZE signature to include LOGFILE and LOGPATH*/
+        /*
+         * Logger initialize with LOGFILE and LOGPATH (user config inputs)
+         */
         AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 

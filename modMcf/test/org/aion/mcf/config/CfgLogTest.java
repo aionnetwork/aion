@@ -1,6 +1,27 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.mcf.config;
 
-import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
 
 import org.junit.After;
@@ -8,6 +29,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -17,27 +43,27 @@ import static org.junit.Assert.*;
  */
 public class CfgLogTest extends CfgLog {
 
-    /**
+    /*
      * User input toggle under "log-file" in config.xml
      */
     private final static String[] toggle = {
-            "true",                             // valid configuration
-            "tRuE",                             // capitalized entry
-            "maybe?",                           // invalid config entry
-            ""                                  // null config entry
+            "true",                             // valid entry
+            "maybe?",                           // invalid entry
+            "tRuE",                             // special entry
+            ""                                  // null entry
     };
 
-    /**
+    /*
      * User input file path under "log-path" in config.xml
      */
     private final static String[] path = {
-            "logger",                           // valid file path
-            "l!@#*g",                           // invalid file path
-            "log/logging/logger",               // folder hierarchy path
-            ""                                  // null file path
+            "logger",                           // valid entry
+            "l!@#*g",                           // invalid entry
+            "log/logging/logger",               // special entry
+            ""                                  // null entry
     };
 
-    /**
+    /*
      * Before: Creates folder to create test log files in
      * After: Remove the created folder after testing
      */
@@ -48,21 +74,21 @@ public class CfgLogTest extends CfgLog {
     public void setup() {
         testRoot = new File("testLog");
         if (testRoot.exists()) {
-            FileUtils.deleteRecursively(testRoot);
+            deleteRecursively(testRoot);
             testRoot.delete();
         }
         testRoot.mkdirs();
     }
 
-    //@After
+    @After
     public void shutdown() {
         if (testRoot.exists()) {
-            FileUtils.deleteRecursively(testRoot);
+            deleteRecursively(testRoot);
             testRoot.delete();
         }
     }
 
-    /**
+    /*
      * Test for:
      *  - if parseBoolean() correctly parses user input
      *  - if getLogFile() returns the correct configuration
@@ -72,32 +98,27 @@ public class CfgLogTest extends CfgLog {
 
         // Test for default log configuration
         CfgLog config = new CfgLog();
-        assertEquals(false, config.logFile);
         assertFalse(config.getLogFile());
 
         // Test for valid configuration
         config.logFile = Boolean.parseBoolean(toggle[0]);
-        assertEquals(true, config.logFile);
         assertTrue(config.getLogFile());
 
         // Test for capitalized entry
         config.logFile = Boolean.parseBoolean(toggle[1]);
-        assertEquals(true, config.logFile);
-        assertTrue(config.getLogFile());
+        assertFalse(config.getLogFile());
 
         // Test for invalid configuration
         config.logFile = Boolean.parseBoolean(toggle[2]);
-        assertEquals(false, config.logFile);
-        assertFalse(config.getLogFile());
+        assertTrue(config.getLogFile());
 
         // Test for null entry
         config.logFile = Boolean.parseBoolean(toggle[3]);
-        assertEquals(false, config.logFile);
         assertFalse(config.getLogFile());
 
     }
 
-    /**
+    /*
      * Test for:
      *  - if isValidPath() validates user input log path
      *  - if getLogPath() returns the correct log path
@@ -126,18 +147,16 @@ public class CfgLogTest extends CfgLog {
 
         // Test for null path
         config.logPath = path[3];
-        assertTrue(config.isValidPath());
-        assertEquals("", config.getLogPath());
+        assertFalse(config.isValidPath());
 
     }
 
-    /**
+    /*
      * Test for:
      *  - if archives are stored under correct file name
-     *  - if log rollover conditions are correct
-     *      - size roughly equal to 100MB
      */
     File generatedPath;
+    String accumulatedPath;
     Map<String, String> _logModules;
 
     @Test
@@ -145,66 +164,75 @@ public class CfgLogTest extends CfgLog {
 
         // Test Case Default
         CfgLog config = new CfgLog();
-
         assertFalse(config.logFile && config.isValidPath());
+
         if(config.logFile && config.isValidPath()) {
             AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
             generatedPath = testRoot.listFiles()[0];
             assertEquals("log", generatedPath.getName());
-            //reset();
-        }
-
-        // Test Case 1: Enabled + Valid
-        config.logFile = true;
-        config.logPath = "log1";
-
-        assertTrue(config.logFile && config.isValidPath());
-        if(config.logFile && config.isValidPath()) {
-            AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
-            generatedPath = testRoot.listFiles()[0];
-            assertEquals("log1", generatedPath.getName());
             reset();
         }
 
-        // Test Case 2: Enabled + Invalid
-        config.logFile = true;
-        config.logPath = "*log2*";
+        // All Test Case
+        for(int a = 0; a < 4; a++){
+            for(int b = 0; b < 4; b++){
+                config.logFile = Boolean.parseBoolean(toggle[a]);
+                config.logPath = path[b];
 
-        assertFalse(config.logFile && config.isValidPath());
-        if(config.logFile && config.isValidPath()) {
-            AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
-            generatedPath = testRoot.listFiles()[0];
-            assertEquals("log2*", generatedPath.getName());
-            reset();
-        }
+                if(config.logFile && config.isValidPath()) {
+                    AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
+                    generatedPath = testRoot.listFiles()[0];
 
-        // Test Case 3: Disabled + Valid
-        config.logFile = false;
-        config.logPath = "log3";
-
-        assertFalse(config.logFile && config.isValidPath());
-        if(config.logFile && config.isValidPath()) {
-            AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
-            generatedPath = testRoot.listFiles()[0];
-            assertEquals("log3", generatedPath.getName());
-            reset();
-        }
-
-        // Test Case 4: Disabled + Invalid
-        config.logFile = false;
-        config.logPath = "*log4*";
-
-        assertFalse(config.logFile && config.isValidPath());
-        if(config.logFile && config.isValidPath()) {
-            AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
-            generatedPath = testRoot.listFiles()[0];
-            assertEquals("*log4*", generatedPath.getName());
-            reset();
+                    accumulatedPath = generatedPath.getName();
+                    while(generatedPath.listFiles()[0].isDirectory()) {
+                        generatedPath = generatedPath.listFiles()[0];
+                        accumulatedPath = accumulatedPath + "/" + generatedPath.getName();
+                    }
+                    assertEquals(path[b], accumulatedPath);
+                    reset();
+                }
+            }
         }
     }
 
     public void reset() {
-        FileUtils.deleteRecursively(generatedPath);
-        generatedPath.delete();
+        deleteRecursively(testRoot);
+        testRoot.mkdirs();
+    }
+
+    public static boolean deleteRecursively(File file) {
+        Path path = file.toPath();
+        try {
+            java.nio.file.Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                    java.nio.file.Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(final Path file, final IOException e) {
+                    return handleException(e);
+                }
+
+                private FileVisitResult handleException(final IOException e) {
+                    // e.printStackTrace();
+                    return FileVisitResult.TERMINATE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
+                    if (e != null)
+                        return handleException(e);
+                    java.nio.file.Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }

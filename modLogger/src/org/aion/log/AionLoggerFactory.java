@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.log;
 
 import ch.qos.logback.classic.Level;
@@ -45,10 +44,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Used to override SimpleLogger current log level
  *
- * <p>final public int TRACE_INT = 00; final public int DEBUG_INT = 10; finalConcurrentHashMap
+ * final public int TRACE_INT = 00; final public int DEBUG_INT = 10; finalConcurrentHashMap
  * public int INFO_INT = 20; final public int WARN_INT = 30; final public int ERROR_INT = 40;
  *
- * <p>Default set to 50 which ignore output
+ * Default set to 50 which ignore output
  */
 public class AionLoggerFactory {
 
@@ -75,7 +74,9 @@ public class AionLoggerFactory {
         }
     }
 
-    /** Change INITIALIZE signature to include LOGFILE and LOGPATH */
+    /*
+     * Added INITIALIZE signature to include LOGFILE and LOGPATH
+     */
     public static void init(final Map<String, String> _logModules) {
         init(_logModules, false, "log");
     }
@@ -88,25 +89,26 @@ public class AionLoggerFactory {
 
         loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        /** Toggles file appending configurations */
+        /* Toggles file appending configurations */
         if (logFile) {
-            /** Initialize Rolling-File-Appender */
+
+            /* Initialize Rolling-File-Appender */
             String fileName = logPath + "/aionCurrentLog.dat";
             fileAppender = new RollingFileAppender();
             fileAppender.setContext(loggerContext);
             fileAppender.setName("aionlogger");
             fileAppender.setFile(fileName);
 
-            /** Initialize Triggering-Policy (CONDITION) */
+            /* Initialize Triggering-Policy (CONDITION) */
             SizeBasedTriggeringPolicy tp = new SizeBasedTriggeringPolicy();
             tp.setContext(loggerContext);
             tp.start();
 
-            /** Initialize Rolling-Policy (BEHAVIOUR) */
+            /* Initialize Rolling-Policy (BEHAVIOUR) */
             SizeAndTimeBasedRollingPolicy rp = new SizeAndTimeBasedRollingPolicy();
             rp.setContext(loggerContext);
 
-            /**
+            /*
              * To modify period of each rollover;
              * https://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy
              * (Currently set to PER DAY)
@@ -116,7 +118,7 @@ public class AionLoggerFactory {
                             logPath + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", loggerContext);
             rp.setFileNamePattern(fnp.getPattern());
 
-            /**
+            /*
              * To modify size of each rollover file;
              * https://logback.qos.ch/manual/appenders.html#SizeAndTimeBasedRollingPolicy
              * (Currently set to 100MB)
@@ -125,11 +127,11 @@ public class AionLoggerFactory {
             rp.setParent(fileAppender);
             rp.start();
 
-            /** Sets TRIGGER & ROLLING policy */
+            /* Sets TRIGGER & ROLLING policy */
             fileAppender.setTriggeringPolicy(tp);
             fileAppender.setRollingPolicy(rp);
 
-            /** Set fileAppender configurations */
+            /* Set fileAppender configurations */
             fileAppender.setContext(loggerContext);
             fileAppender.setEncoder(encoder);
             fileAppender.setAppend(true);
@@ -169,7 +171,7 @@ public class AionLoggerFactory {
         ch.qos.logback.classic.Logger newlogger = loggerContext.getLogger(label);
         newlogger.addAppender(appender);
 
-        /** Toggles file appending */
+        /* Toggles file appending */
         if (logFile) {
             newlogger.addAppender(fileAppender);
         }

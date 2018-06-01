@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import java.io.IOException;
@@ -38,8 +37,8 @@ import org.aion.log.LogLevels;
 public class CfgLog {
 
     private Map<String, String> modules;
-    private boolean logFile;
-    protected String logPath;
+    boolean logFile;
+    String logPath;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -63,7 +62,7 @@ public class CfgLog {
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
 
-                    /** XML - Takes the input in config.xml and parse as T/F */
+                    /* XML - Takes the input in config.xml and parse as T/F */
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
                         case "log-file":
@@ -100,14 +99,20 @@ public class CfgLog {
             xmlWriter.writeStartElement("log");
             xmlWriter.writeCharacters("\r\n");
 
-            /** XML - Displays tag/entry in the config.xml */
+            /*
+             * XML - Displays tag/entry in the config.xml
+             * Boolean value to allow logger to be toggled ON and OFF
+             */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeStartElement("log-file");
             xmlWriter.writeCharacters(this.logFile + "");
             xmlWriter.writeEndElement();
             xmlWriter.writeCharacters("\r\n");
 
-            /** XML - Displays log-path in the config.xml */
+            /*
+             * XML - Displays log-path in the config.xml
+             * String value to determine the folder path for log files
+             */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeStartElement("log-path");
             xmlWriter.writeCharacters(this.logPath + "");
@@ -138,18 +143,18 @@ public class CfgLog {
         return this.modules;
     }
 
-    /** Method checks value of logFile as T/F */
+    /* Method checks whether logger is enabled/disabled */
     public boolean getLogFile() {
         return this.logFile;
     }
 
-    /** Method returns user input path of logFile */
+    /* Method returns user input folder path of logger */
     public String getLogPath() {
         return this.logPath;
     }
 
-    /** Method checks logPath for illegal inputs */
+    /* Method checks folder path for illegal inputs */
     public boolean isValidPath() {
-        return !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
+        return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 }
