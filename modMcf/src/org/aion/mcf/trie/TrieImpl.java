@@ -758,6 +758,13 @@ public class TrieImpl implements Trie {
         }
     }
 
+    @Override
+    public String getTrieDump(byte[] stateRoot) {
+        TraceAllNodes traceAction = new TraceAllNodes();
+        traceTrie(stateRoot, traceAction);
+        return "root: " + Hex.toHexString(stateRoot) + "\n" + traceAction.getOutput();
+    }
+
     public Set<ByteArrayWrapper> getTrieKeys(byte[] stateRoot) {
         CollectFullSetOfNodes traceAction = new CollectFullSetOfNodes();
         traceTrie(stateRoot, traceAction);

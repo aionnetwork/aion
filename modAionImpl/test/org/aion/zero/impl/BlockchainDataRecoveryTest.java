@@ -98,11 +98,12 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
 
         // delete some world state root entries from the database
-        TrieImpl trie = (TrieImpl) ((AionRepositoryImpl) chain.getRepository()).getWorldState();
-        IByteArrayKeyValueDatabase database = (IByteArrayKeyValueDatabase) trie.getCache().getDb();
+        TrieImpl trie = (TrieImpl) repo.getWorldState();
+        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         for (byte[] key : statesToDelete) {
             database.delete(key);
@@ -113,7 +114,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverWorldState(repo, bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -148,12 +149,13 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
         // System.out.println(Hex.toHexString(chain.getRepository().getRoot()));
 
         // delete some world state root entries from the database
-        TrieImpl trie = (TrieImpl) ((AionRepositoryImpl) chain.getRepository()).getWorldState();
-        IByteArrayKeyValueDatabase database = (IByteArrayKeyValueDatabase) trie.getCache().getDb();
+        TrieImpl trie = (TrieImpl) repo.getWorldState();
+        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         for (byte[] key : statesToDelete) {
             database.delete(key);
@@ -165,7 +167,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverWorldState(repo, bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -200,11 +202,12 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
 
         // delete some world state root entries from the database
-        TrieImpl trie = (TrieImpl) ((AionRepositoryImpl) chain.getRepository()).getWorldState();
-        IByteArrayKeyValueDatabase database = (IByteArrayKeyValueDatabase) trie.getCache().getDb();
+        TrieImpl trie = (TrieImpl) repo.getWorldState();
+        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         List<byte[]> statesToDelete = new ArrayList<>();
         statesToDelete.addAll(database.keys());
@@ -218,7 +221,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverWorldState(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverWorldState(repo, bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -259,10 +262,10 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
 
         // delete index entries from the database
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         Map<Long, byte[]> deletedInfo = new HashMap<>();
@@ -281,7 +284,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverIndexEntry(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverIndexEntry(repo, bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -369,10 +372,10 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
         assertThat(bestBlock.getHash()).isEqualTo(mainChainBlock.getHash());
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
 
         // delete index entries from the database
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         Map<Long, byte[]> deletedInfo = new HashMap<>();
@@ -388,8 +391,7 @@ public class BlockchainDataRecoveryTest {
         }
 
         // call the recovery functionality for the main chain subsection
-        boolean worked = chain
-                .recoverIndexEntry(chain.getRepository(), chain.getBlockByHash(mainChainBlock.getParentHash()));
+        boolean worked = chain.recoverIndexEntry(repo, chain.getBlockByHash(mainChainBlock.getParentHash()));
 
         // ensure that the index was corrupted only for the side chain
         assertThat(repo.isIndexed(sideChainBlock.getHash(), sideChainBlock.getNumber())).isFalse();
@@ -397,7 +399,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(worked).isTrue();
 
         // call the recovery functionality
-        worked = chain.recoverIndexEntry(chain.getRepository(), sideChainBlock);
+        worked = chain.recoverIndexEntry(repo, sideChainBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -448,10 +450,10 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
 
         // delete index entries from the database
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         Map<Long, byte[]> deletedInfo = new HashMap<>();
@@ -470,7 +472,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverIndexEntry(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverIndexEntry(repo, bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -519,9 +521,9 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
-
         AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
+
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // deleting the entire index database
@@ -531,7 +533,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverIndexEntry(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverIndexEntry(repo, bestBlock);
 
         // ensure that the best block is unchanged
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
@@ -566,10 +568,10 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        chain.getRepository().flush();
+        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        repo.flush();
 
         // delete index entries from the database
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         Map<Long, byte[]> deletedInfo = new HashMap<>();
@@ -592,7 +594,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
 
         // call the recovery functionality
-        boolean worked = chain.recoverIndexEntry(chain.getRepository(), bestBlock);
+        boolean worked = chain.recoverIndexEntry(repo, bestBlock);
 
         // ensure that the blockchain is ok
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());

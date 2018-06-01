@@ -28,8 +28,8 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.types.AionBlock;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,8 +138,8 @@ public class RecoveryUtils {
         cfg.getDb().setHeapCacheEnabled(false);
 
         Map<String, String> cfgLog = new HashMap<>();
-        cfgLog.put("DB", "INFO");
-        cfgLog.put("GEN", "INFO");
+        cfgLog.put("DB", "ERROR");
+        cfgLog.put("GEN", "ERROR");
 
         AionLoggerFactory.init(cfgLog);
 
@@ -148,7 +148,12 @@ public class RecoveryUtils {
 
         AionBlockStore store = repository.getBlockStore();
         try {
-            store.dumpPastBlocks(count, cfg.getBasePath());
+            String file = store.dumpPastBlocks(count, cfg.getBasePath());
+            if (file == null) {
+                System.out.println("The database is empty. Cannot print block information.");
+            } else {
+                System.out.println("Block information stored in " + file);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -202,5 +207,98 @@ public class RecoveryUtils {
 
         // ok if we managed to get down to the expected block
         return (nbBestBlock == nbBlock) ? Status.SUCCESS : Status.FAILURE;
+    }
+
+    public static void printStateTrieSize(long blockNumber) {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+        AionBlockStore store = repository.getBlockStore();
+
+        long topBlock = store.getMaxNumber();
+        if (topBlock < 0) {
+            System.out.println("The database is empty. Cannot print block information.");
+            return;
+        }
+
+        long targetBlock = topBlock - blockNumber + 1;
+        if (targetBlock < 0) {
+            targetBlock = 0;
+        }
+
+        AionBlock block;
+        byte[] stateRoot;
+
+        while (targetBlock <= topBlock) {
+            block = store.getChainBlockByNumber(targetBlock);
+            if (block != null) {
+                stateRoot = block.getStateRoot();
+                try {
+                    System.out.println(
+                            "Block hash: " + block.getShortHash() + ", number: " + block.getNumber() + ", tx count: "
+                                    + block.getTransactionsList().size() + ", state trie kv count = " + repository
+                                    .getWorldState().getTrieSize(stateRoot));
+                } catch (RuntimeException e) {
+                    System.out.println(
+                            "Block hash: " + block.getShortHash() + ", number: " + block.getNumber() + ", tx count: "
+                                    + block.getTransactionsList().size() + ", state trie kv count threw exception: " + e
+                                    .getMessage());
+                }
+            } else {
+                System.out.println("Null block found at level " + targetBlock + ".");
+            }
+            targetBlock++;
+        }
+
+        repository.close();
+    }
+
+    public static void printStateTrieDump(long blockNumber) {
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("DB", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
+        // get the current blockchain
+        AionRepositoryImpl repository = AionRepositoryImpl.inst();
+
+        AionBlockStore store = repository.getBlockStore();
+
+        AionBlock block;
+
+        if (blockNumber == -1L) {
+            block = store.getBestBlock();
+            if (block == null) {
+                System.out.println("The requested block does not exist in the database.");
+                return;
+            }
+            blockNumber = block.getNumber();
+        } else {
+            block = store.getChainBlockByNumber(blockNumber);
+            if (block == null) {
+                System.out.println("The requested block does not exist in the database.");
+                return;
+            }
+        }
+
+        byte[] stateRoot = block.getStateRoot();
+        System.out.println("\nBlock hash: " + block.getShortHash() + ", number: " + blockNumber + ", tx count: " + block
+                .getTransactionsList().size() + "\n\n" + repository.getWorldState().getTrieDump(stateRoot));
+
+        repository.close();
     }
 }

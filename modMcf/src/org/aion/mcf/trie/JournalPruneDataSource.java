@@ -1,41 +1,52 @@
-/*******************************************************************************
+/* ******************************************************************************
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *******************************************************************************/
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
+ ******************************************************************************/
 package org.aion.mcf.trie;
 
+import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.util.ByteArrayWrapper;
 
-import java.util.*;
-
 /**
- * The DataSource which doesn't immediately forward delete updates (unlike
- * inserts) but collects them tied to the block where these changes were made
- * (the changes are mapped to a block upon [storeBlockChanges] call). When the
- * [prune] is called for a block the deletes for this block are submitted to the
- * underlying DataSource with respect to following inserts. E.g. if the key was
- * deleted at block N and then inserted at block N + 10 this delete is not
- * passed.
+ * The DataSource which doesn't immediately forward delete updates (unlike inserts) but collects
+ * them tied to the block where these changes were made (the changes are mapped to a block upon
+ * [storeBlockChanges] call). When the [prune] is called for a block the deletes for this block are
+ * submitted to the underlying DataSource with respect to following inserts. E.g. if the key was
+ * deleted at block N and then inserted at block N + 10 this delete is not passed.
  */
 public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockHeader>
         implements IByteArrayKeyValueStore {
@@ -77,9 +88,6 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
         enabled = e;
     }
 
-    /**
-     * ***** updates ******
-     */
     public synchronized void put(byte[] key, byte[] value) {
         ByteArrayWrapper keyW = new ByteArrayWrapper(key);
 
@@ -92,7 +100,7 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
                 incRef(keyW);
             }
 
-            // Insert into the database.
+            // put to source database.
             src.put(key, value);
 
         } else {
@@ -100,12 +108,14 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
             if (enabled) {
                 currentUpdates.deletedKeys.add(keyW);
             }
-            // TODO: Do we delete the key?
+            // delete is not sent to source db
         }
     }
 
     public synchronized void delete(byte[] key) {
-        if (!enabled) { return; }
+        if (!enabled) {
+            return;
+        }
         currentUpdates.deletedKeys.add(new ByteArrayWrapper(key));
         // delete is delayed
     }
@@ -129,10 +139,6 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
         src.putBatch(insertsOnly);
     }
 
-    public synchronized void updateBatch(Map<ByteArrayWrapper, byte[]> rows, boolean erasure) {
-        throw new UnsupportedOperationException();
-    }
-
     private void incRef(ByteArrayWrapper keyW) {
         Ref cnt = refCount.get(keyW);
         if (cnt == null) {
@@ -152,14 +158,18 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
     }
 
     public synchronized void storeBlockChanges(BH header) {
-        if (!enabled) { return; }
+        if (!enabled) {
+            return;
+        }
         currentUpdates.blockHeader = header;
         blockUpdates.put(new ByteArrayWrapper(header.getHash()), currentUpdates);
         currentUpdates = new Updates();
     }
 
     public synchronized void prune(BH header) {
-        if (!enabled) { return; }
+        if (!enabled) {
+            return;
+        }
         ByteArrayWrapper blockHashW = new ByteArrayWrapper(header.getHash());
         Updates updates = blockUpdates.remove(blockHashW);
         if (updates != null) {
@@ -167,16 +177,16 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
                 decRef(insertedKey).dbRef = true;
             }
 
-            Map<byte[], byte[]> batchRemove = new HashMap<>();
+            List<byte[]> batchRemove = new ArrayList<>();
             for (ByteArrayWrapper key : updates.deletedKeys) {
                 Ref ref = refCount.get(key);
                 if (ref == null || ref.journalRefs == 0) {
-                    batchRemove.put(key.getData(), null);
+                    batchRemove.add(key.getData());
                 } else if (ref != null) {
                     ref.dbRef = false;
                 }
             }
-            src.putBatch(batchRemove);
+            src.deleteBatch(batchRemove);
 
             rollbackForkBlocks(header.getNumber());
         }
@@ -211,9 +221,14 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
         return blockUpdates;
     }
 
-    /**
-     * *** other ****
-     */
+    public int getDeletedKeysCount() {
+        return currentUpdates.deletedKeys.size();
+    }
+
+    public int getInsertedKeysCount() {
+        return currentUpdates.insertedKeys.size();
+    }
+
     public Optional<byte[]> get(byte[] key) {
         return src.get(key);
     }
@@ -244,12 +259,21 @@ public class JournalPruneDataSource<BLK extends IBlock<?, ?>, BH extends IBlockH
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
-        throw new UnsupportedOperationException();
+        if (!enabled) {
+            return;
+        }
+        // deletes are delayed
+        keys.forEach(key -> currentUpdates.deletedKeys.add(new ByteArrayWrapper(key)));
     }
 
     @Override
     public boolean isEmpty() {
-        throw new UnsupportedOperationException();
+        // the delayed deletes are not considered by this check until applied to the db
+        if (!currentUpdates.insertedKeys.isEmpty()) {
+            return false;
+        } else {
+            return src.isEmpty();
+        }
     }
 
     public IByteArrayKeyValueDatabase getSrc() {

@@ -750,11 +750,14 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         }
     }
 
-    public void dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
+    public String dumpPastBlocks(long numberOfBlocks, String reportsFolder) throws IOException {
         lock.readLock().lock();
 
         try {
             long firstBlock = getMaxNumber();
+            if (firstBlock < 0) {
+                return null;
+            }
             long lastBlock = firstBlock - numberOfBlocks;
 
             File file = new File(reportsFolder, System.currentTimeMillis() + "-blocks-report.out");
@@ -787,6 +790,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             }
 
             writer.close();
+            return file.getName();
         } finally {
             lock.readLock().unlock();
         }
