@@ -23,8 +23,8 @@ then
     if [ $? -eq 0 ]
     then
         echo "Certificate created!"
-        cd ..
     fi
+    cd ..
 else
     echo "Usage: ./create_cert.sh [cert_name] [password] [opt [host] [ip]]"
     exit 1
