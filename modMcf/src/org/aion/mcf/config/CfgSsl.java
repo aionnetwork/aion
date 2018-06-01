@@ -31,7 +31,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-public class CfgApiRpcSsl {
+public class CfgSsl {
     public static final String SSL_KEYSTORE_DIR = "./sslKeystore";
     private static final String ENABLED_TAG = "enabled";
     private static final String CERTIFICATE_TAG = "certificate";
@@ -40,7 +40,7 @@ public class CfgApiRpcSsl {
     private String cert;
     private String pass;
 
-    CfgApiRpcSsl() {
+    CfgSsl() {
         this.enabled = false;
         this.cert = "identity.jks";
         this.pass = "password";

@@ -1574,7 +1574,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         // base.api.rpc
         CfgApiRpc rpcConfig = config.getRpc();
-        CfgApiRpcSsl sslConfig = rpcConfig.getSsl();
+        CfgSsl sslConfig = rpcConfig.getSsl();
         JSONObject rpc = new JSONObject();
         rpc.put("ip", rpcConfig.getIp());
         rpc.put("port", rpcConfig.getPort());

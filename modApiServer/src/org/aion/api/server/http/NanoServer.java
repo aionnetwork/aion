@@ -29,7 +29,7 @@ import org.aion.api.server.nanohttpd.BoundRunner;
 import org.aion.api.server.rpc.RpcThreadFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.CfgApiRpcSsl;
+import org.aion.mcf.config.CfgSsl;
 import org.slf4j.Logger;
 
 import java.util.*;
@@ -84,7 +84,7 @@ public class NanoServer {
             server.setAsyncRunner(new BoundRunner(workers));
 
             if (this.sslEnabled) {
-                if (!(new File(CfgApiRpcSsl.SSL_KEYSTORE_DIR)).isDirectory()) {
+                if (!(new File(CfgSsl.SSL_KEYSTORE_DIR)).isDirectory()) {
                     LOG.error("<rpc-server - no sslKeystore directory found>");
                     System.exit(1);
                 }

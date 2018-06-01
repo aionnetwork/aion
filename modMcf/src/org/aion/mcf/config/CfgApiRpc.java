@@ -48,7 +48,7 @@ public final class CfgApiRpc {
         this.corsEnabled = false;
         this.maxthread = 1;
         this.filtersEnabled = true;
-        this.ssl = new CfgApiRpcSsl();
+        this.ssl = new CfgSsl();
     }
 
     private boolean active;
@@ -58,7 +58,7 @@ public final class CfgApiRpc {
     private boolean corsEnabled;
     private int maxthread;
     private boolean filtersEnabled;
-    private CfgApiRpcSsl ssl;
+    private CfgSsl ssl;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         // get the attributes
@@ -198,5 +198,5 @@ public final class CfgApiRpc {
     public boolean isFiltersEnabled() {
         return filtersEnabled;
     }
-    public CfgApiRpcSsl getSsl() { return this.ssl; }
+    public CfgSsl getSsl() { return this.ssl; }
 }
