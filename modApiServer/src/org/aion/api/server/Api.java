@@ -109,6 +109,14 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
             Compiler.Result res = solc.compile(_contract.getBytes(), Compiler.Options.ABI, Compiler.Options.BIN);
             if (res.isFailed()) {
                 LOG.info("contract compile error: [{}]", res.errors);
+
+                /**
+                 * Enhance performance by separating the log threads and kernel
+                 * TODO: Implement a queue for strings
+                 * TODO: Put every LOG message onto the queue
+                 * TODO: Use a thread service to process these message
+                 */
+
                 CompiledContr ret = new CompiledContr();
                 ret.error = res.errors;
                 compiledContracts.put("compile-error", ret);
