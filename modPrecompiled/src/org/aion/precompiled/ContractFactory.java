@@ -55,7 +55,7 @@ public class ContractFactory {
             case TOTAL_CURRENCY:
                 return new TotalCurrencyContract(track, address, Address.wrap(TOTAL_CURRENCY_OWNER));
             case ANS:
-                return new AionNameServiceContract(track, address, Address.wrap(ANS_OWNER), null);
+                return new AionNameServiceContract(track, address, Address.wrap(ANS_OWNER));
             default:
                 return null;
         }

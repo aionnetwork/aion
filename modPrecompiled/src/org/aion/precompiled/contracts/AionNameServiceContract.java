@@ -25,6 +25,10 @@ package org.aion.precompiled.contracts;
 
 import static org.aion.crypto.HashUtil.blake128;
 
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.db.IRepositoryCache;
@@ -38,6 +42,7 @@ import org.aion.base.vm.IDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -72,8 +77,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     public AionNameServiceContract(
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
             Address address,
-            Address ownerAddress,
-            String domainName) { //byte
+            Address ownerAddress) { //byte
         super(track);
         this.address = address;
         setUpKeys();
@@ -87,42 +91,43 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         }
         if (!(getOwnerAddress().equals(ownerAddress))
                 && !(getOwnerAddress()
-                        .equals(
-                                Address.wrap(
-                                        "0000000000000000000000000000000000000000000000000000000000000000")))) {
+                .equals(
+                        Address.wrap(
+                                "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
                     "The owner address of this domain from repository is different than the given"
                             + "owner address from the input\n");
         }
-        if (!isValidDomainName(domainName)) {
-            throw new IllegalArgumentException(
-                    "An ANS contract with domain name: \"" + domainName + "\" already exists");
-        }
-        domains.put(domainName, address);
+
+
+        //if (!isValidDomainName(domainName)) {
+        //    throw new IllegalArgumentException(
+        //            "An ANS contract with domain name: \"" + domainName + "\" already exists");
+        //}
+        //domains.put(domainName, address);
         this.ownerAddress = ownerAddress;
-        this.domainName = domainName;
+        //this.domainName = domainName;
     }
 
     /**
-     * input is defined as: [ <1b chainID> |<1b operation> | <32b address> | <96b signature>] total:
-     * 1 + 1 + 32 + 96 = 130
+     * input[] is defined as:
+     *      [1b chainID]
+     *      [1b operation]
+     *      [32b new address]
+     *      [96b signature]
+     *      1 + 1 + 32 + 96 = 130
      *
-     * <p>input for operation on subdomain [ <1b chainID> |<1b operation> | <32b address> | <96b
-     * signature> | <32b subdomain address] total: 1 + 1 + 32 + 96 + 32 = 162
-     *
-     * <p>Where the chainId is intended to be our current chainId, in the case of the first AION
-     * network this should be set to 1. operation checks for which contract operation the user
-     * wishes to execute. The address represent the new address to be used, and lastly the signature
-     * for security.
+     *      optional -for operation on subdomain
+     *      [32b subdomain address]
+     *      [32b domain name in bytes]
+     *      [32b subdomain name in bytes]
+     *      130 + 32 + 32 + 32 = 226
      */
-    public ContractExecutionResult execute(byte[] input, long nrg) {
-        return execute(input, nrg, "");
-    }
 
-    public ContractExecutionResult execute(byte[] input, long nrg, String subdomain) {
+    public ContractExecutionResult execute(byte[] input, long nrg) {
 
         // check for correct input format
-        if (input.length != 130 && input.length != 162)
+        if (input.length != 130 && input.length != 226)
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
 
         // process input data
@@ -136,6 +141,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] addressSecondPart = new byte[16];
         byte[] sign = new byte[96];
         byte[] subdomainAddress = new byte[32];
+        byte[] domainNameInBytes = new byte[32];
+        byte[] subdomainNameInBytes = new byte[32];
+
+        String subdomainName = "";
 
         System.arraycopy(input, offset, addressFirstPart, 0, 16);
         offset += 16;
@@ -143,6 +152,26 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         offset += 16;
         System.arraycopy(input, offset, sign, 0, 96);
         offset += 96;
+
+        if (input.length == 226) {
+            System.arraycopy(input, offset, subdomainAddress, 0, 32);
+            offset += 32;
+            System.arraycopy(input, offset, domainNameInBytes, 0, 32);
+            offset += 32;
+            System.arraycopy(input, offset, subdomainNameInBytes, 0, 32);
+            offset += 32;
+
+            try{ // using explicit encoding for converting byte to string
+                byte[] trimmedDomainNameInBytes = trimTrailingZeros(domainNameInBytes);
+                byte[] trimmedSubdomainNameInBytes = trimTrailingZeros(subdomainNameInBytes);
+
+                this.domainName = new String(trimmedDomainNameInBytes, "UTF-8");
+                subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
+            }
+            catch(UnsupportedEncodingException a){
+                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            }
+        }
 
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
@@ -182,7 +211,6 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             case 4:
                 byte[] subownerHash1 = blake128(OWNER_HASH.getBytes());
                 byte[] subownerHash2 = blake128(subownerHash1);
-                System.arraycopy(input, offset, subdomainAddress, 0, 32);
                 return transferSubdomainOwnership(
                         subdomainAddress,
                         nrg,
@@ -190,7 +218,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         subownerHash2,
                         addressFirstPart,
                         addressSecondPart,
-                        subdomain);
+                        subdomainName);
             default:
                 return new ContractExecutionResult(
                         ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
@@ -324,6 +352,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     private boolean isSubdomain(String subdomainName) {
+
         String[] domainPartitioned = this.domainName.split("\\.");
         String[] subdomainPartitioned = subdomainName.split("\\.");
 
@@ -350,6 +379,23 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private boolean isValidDomainName(String domainName) {
         if (domains.containsKey(domainName)) return false;
         return true;
+    }
+
+    private byte[] trimTrailingZeros(byte[] b){
+        if(b == null)
+            return null;
+
+        int counter = 0;
+
+        for (int i = 0; i < 32; i++){
+            if (b[i] == 0)
+                break;
+            counter ++;
+        }
+
+        byte[] ret = new byte[counter];
+        System.arraycopy(b, 0, ret, 0, counter);
+        return ret;
     }
 
     /** getter functions */
