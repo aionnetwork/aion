@@ -22,21 +22,19 @@
  */
 package org.aion.p2p.impl1.tasks;
 
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 
 public class TaskClear implements Runnable {
+
     private static final int PERIOD_CLEAR = 20000;
-    private static final int TIMEOUT_OUTBOUND_NODES = 20000;
 
     private final IP2pMgr mgr;
     private final INodeMgr nodeMgr;
-    private AtomicBoolean start;
+    private final AtomicBoolean start;
 
-    public TaskClear(IP2pMgr _mgr, INodeMgr _nodeMgr, AtomicBoolean _start) {
+    public TaskClear(final IP2pMgr _mgr, final INodeMgr _nodeMgr, final AtomicBoolean _start) {
         this.mgr = _mgr;
         this.nodeMgr = _nodeMgr;
         this.start = _start;
@@ -47,31 +45,9 @@ public class TaskClear implements Runnable {
         while (start.get()) {
             try {
                 Thread.sleep(PERIOD_CLEAR);
-
-                nodeMgr.timeoutInbound(this.mgr);
-
-                Iterator outboundIt = nodeMgr.getOutboundNodes().keySet().iterator();
-                while (outboundIt.hasNext()) {
-
-                    Object obj = outboundIt.next();
-
-                    if (obj == null) { continue; }
-
-                    int nodeIdHash = (int) obj;
-                    INode node = nodeMgr.getOutboundNodes().get(nodeIdHash);
-
-                    if (node == null) { continue; }
-
-                    if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_OUTBOUND_NODES) {
-                        this.mgr.closeSocket(
-                                node.getChannel(), "outbound-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
-                        outboundIt.remove();
-                    }
-                }
-
-                nodeMgr.timeoutActive(this.mgr);
-
+                nodeMgr.timeoutCheck(this.mgr);
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

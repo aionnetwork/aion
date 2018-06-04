@@ -29,6 +29,7 @@ import org.aion.p2p.impl1.P2pMgr.Dest;
  * An outgoing message.
  */
 public class MsgOut {
+
     private final int nodeId;
     private final String displayId;
     private final int lane;
@@ -44,20 +45,20 @@ public class MsgOut {
      * @param msg The message.
      * @param dest The destination.
      */
-    public MsgOut(int nodeId, String displayId, Msg msg, Dest dest) {
+    public MsgOut(final int nodeId, final String displayId, final Msg msg, final Dest dest) {
         this.nodeId = nodeId;
         this.displayId = displayId;
         this.msg = msg;
         this.dest = dest;
         this.lane = TaskSend.hash2Lane(nodeId);
-        timestamp = System.currentTimeMillis();
+        this.timestamp = System.currentTimeMillis();
     }
 
     public int getNodeId() {
         return this.nodeId;
     }
 
-    public String getDisplayId() {
+    String getDisplayId() {
         return this.displayId;
     }
 
@@ -65,7 +66,7 @@ public class MsgOut {
         return this.msg;
     }
 
-    public Dest getDest() {
+    Dest getDest() {
         return this.dest;
     }
 
@@ -73,7 +74,7 @@ public class MsgOut {
         return this.timestamp;
     }
 
-    public int getLane() {
-        return lane;
+    int getLane() {
+        return this.lane;
     }
 }

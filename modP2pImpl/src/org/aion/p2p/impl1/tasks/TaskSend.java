@@ -52,12 +52,12 @@ public class TaskSend implements Runnable {
     private static ThreadPoolExecutor tpe;
 
     public TaskSend(
-        IP2pMgr _mgr,
-        int _lane,
-        BlockingQueue<MsgOut> _sendMsgQue,
-        AtomicBoolean _start,
-        INodeMgr _nodeMgr,
-        Selector _selector) {
+        final IP2pMgr _mgr,
+        final int _lane,
+        final BlockingQueue<MsgOut> _sendMsgQue,
+        final AtomicBoolean _start,
+        final INodeMgr _nodeMgr,
+        final Selector _selector) {
 
         this.mgr = _mgr;
         this.lane = _lane;

@@ -62,22 +62,22 @@ public class TaskInbound implements Runnable {
     private final Selector selector;
     private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
-    private AtomicBoolean start;
-    private ServerSocketChannel tcpServer;
-    private BlockingQueue<MsgOut> sendMsgQue;
-    private ResHandshake1 cachedResHandshake1;
-    private BlockingQueue<MsgIn> receiveMsgQue;
+    private final AtomicBoolean start;
+    private final ServerSocketChannel tcpServer;
+    private final BlockingQueue<MsgOut> sendMsgQue;
+    private final ResHandshake1 cachedResHandshake1;
+    private final BlockingQueue<MsgIn> receiveMsgQue;
 
     public TaskInbound(
-        IP2pMgr _mgr,
-        Selector _selector,
-        AtomicBoolean _start,
-        INodeMgr _nodeMgr,
-        ServerSocketChannel _tcpServer,
-        Map<Integer, List<Handler>> _handlers,
-        BlockingQueue<MsgOut> _sendMsgQue,
-        ResHandshake1 _cachedResHandshake1,
-        BlockingQueue<MsgIn> _receiveMsgQue) {
+        final IP2pMgr _mgr,
+        final Selector _selector,
+        final AtomicBoolean _start,
+        final INodeMgr _nodeMgr,
+        final ServerSocketChannel _tcpServer,
+        final Map<Integer, List<Handler>> _handlers,
+        final BlockingQueue<MsgOut> _sendMsgQue,
+        final ResHandshake1 _cachedResHandshake1,
+        final BlockingQueue<MsgIn> _receiveMsgQue) {
 
         this.mgr = _mgr;
         this.selector = _selector;

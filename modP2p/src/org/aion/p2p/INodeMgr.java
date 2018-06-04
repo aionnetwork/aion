@@ -27,15 +27,11 @@ import java.util.Map;
 
 public interface INodeMgr {
 
-	void timeoutActive(final IP2pMgr _p2pMgr);
-
 	void moveInboundToActive(int _channelHashCode, final IP2pMgr _p2pMgr);
 
 	void moveOutboundToActive(int _nodeIdHash, String _shortId, final IP2pMgr _p2pMgr);
 
 	void dropActive(int _nodeIdHash, final IP2pMgr _p2pMgr, String _reason);
-
-	void timeoutInbound(IP2pMgr _p2pMgr);
 
 	Map<Integer, INode> getOutboundNodes();
 
@@ -47,7 +43,7 @@ public interface INodeMgr {
 
 	void addTempNode(INode _n);
 
-	boolean hasActiveNode(int k);
+	boolean notActiveNode(int k);
 
 	void addOutboundNode(INode _n);
 
@@ -77,4 +73,5 @@ public interface INodeMgr {
 
 	Map<Integer, INode> getActiveNodesMap();
 
+	void timeoutCheck(IP2pMgr mgr);
 }

@@ -32,7 +32,6 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +86,7 @@ public final class P2pMgr implements IP2pMgr {
     private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
     private final Set<Short> versions = new HashSet<>();
     private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
+    private final AtomicBoolean start = new AtomicBoolean(true);
 
     private ServerSocketChannel tcpServer;
     private Selector selector;
@@ -94,7 +94,6 @@ public final class P2pMgr implements IP2pMgr {
     private int errTolerance;
     private BlockingQueue<MsgOut> sendMsgQue = new LinkedBlockingQueue<>();
     private BlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>();
-    private AtomicBoolean start = new AtomicBoolean(true);
 
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
@@ -197,7 +196,7 @@ public final class P2pMgr implements IP2pMgr {
                 thrdOut.start();
             }
 
-            for (int i = 0, m = Runtime.getRuntime().availableProcessors(); i < m; i++) {
+            for (int i = 0; i < pNum; i++) {
                 Thread t = new Thread(getReceiveInstance(), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
@@ -350,7 +349,7 @@ public final class P2pMgr implements IP2pMgr {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort =
                 !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
-            boolean notActive = !nodeMgr.hasActiveNode(_node.getIdHash());
+            boolean notActive = nodeMgr.notActiveNode(_node.getIdHash());
             boolean notOutbound = !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
             return notSelfId && notSameIpOrPort && notActive && notOutbound;
         } else {
@@ -383,7 +382,7 @@ public final class P2pMgr implements IP2pMgr {
 
     @Override
     public Map<Integer, INode> getActiveNodes() {
-        return new HashMap<>(this.nodeMgr.getActiveNodesMap());
+        return this.nodeMgr.getActiveNodesMap();
     }
 
     @Override
