@@ -49,13 +49,11 @@ public class ContractFactory {
      * @return the specified pre-compiled address.
      */
     public static IPrecompiledContract getPrecompiledContract(Address address, IRepositoryCache track) {
-
-        //TODO: need better solution to make method call easy yet flexible for diff signatures
         switch (address.toString()) {
             case TOTAL_CURRENCY:
                 return new TotalCurrencyContract(track, address, Address.wrap(TOTAL_CURRENCY_OWNER));
             case ANS:
-                return new AionNameServiceContract(track, address, Address.wrap(ANS_OWNER), null);
+                return new AionNameServiceContract(track, address, Address.wrap(ANS_OWNER));
             default:
                 return null;
         }
