@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -78,7 +78,7 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getNrgLimit()).isEqualTo(AionGenesis.GENESIS_ENERGY_LIMIT);
         assertThat(genesis.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
         assertThat(genesis.getReceiptsRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
-        assertThat(genesis.getCumulativeDifficulty()).isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
+        assertThat(genesis.getDifficultyBI()).isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
 
         Map<Address, AccountState> premined = genesis.getPremine();
@@ -128,7 +128,7 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getNrgLimit()).isEqualTo(overrideValue.longValue());
         assertThat(genesis.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
         assertThat(genesis.getReceiptsRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
-        assertThat(genesis.getCumulativeDifficulty()).isEqualTo(overrideValue);
+        assertThat(genesis.getDifficultyBI()).isEqualTo(overrideValue);
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
         
         assertThat(genesis.getPremine().keySet()).isEqualTo(accountStateSet);

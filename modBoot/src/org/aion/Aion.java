@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion;
 
 import org.aion.api.server.http.NanoServer;
@@ -73,7 +72,7 @@ public class Aion {
         if(cfg.fromXML())
             cfg.toXML(new String[]{ "--id=" + cfg.getId() });
 
-        
+
         try {
             ServiceLoader.load(AionLoggerFactory.class);
         } catch (Exception e) {
@@ -81,23 +80,34 @@ public class Aion {
             throw e;
         }
 
-
-        // If commit this out, the config setting will be ignore. all log module been set to "INFO" Level
-        AionLoggerFactory.init(cfg.getLog().getModules());
-        Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
-
-        System.out.println(                
-                        "                     _____                  \n" +
+        System.out.println(
+                "                     _____                  \n" +
                         "      .'.       |  .~     ~.  |..          |\n" +
                         "    .'   `.     | |         | |  ``..      |\n" +
                         "  .''''''''`.   | |         | |      ``..  |\n" +
                         ".'           `. |  `._____.'  |          ``|\n\n" +
                         "                    NETWORK  v" + KERNEL_VERSION +
-                                "\n\n"
-                );
+                        "\n\n"
+        );
+
+        /* Outputs relevant logger configuration */
+        if (!cfg.getLog().getLogFile()) {
+            System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
+        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("File path is invalid; please check log setting in config.xml\n");
+            return;
+        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
+        }
+
+        /*
+         * Logger initialize with LOGFILE and LOGPATH (user config inputs)
+         */
+        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
+        Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
         IAionChain ac = AionFactory.create();
-                
+
         IMineRunner nm = null;
 
         if (!cfg.getConsensus().isSeed()) {
@@ -148,7 +158,7 @@ public class Aion {
             final IMineRunner miner;
             final ProtocolProcessor pp;
             final NanoServer rpc;
-            
+
             private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, NanoServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
@@ -158,7 +168,7 @@ public class Aion {
         }
 
         ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
-        
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 
             LOG.info("Starting shutdown process...");
