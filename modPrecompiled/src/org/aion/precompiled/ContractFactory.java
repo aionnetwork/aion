@@ -24,6 +24,7 @@ package org.aion.precompiled;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.precompiled.type.IPrecompiledContract;
 
@@ -32,8 +33,10 @@ import org.aion.precompiled.type.IPrecompiledContract;
  */
 public class ContractFactory {
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
+    private static final String ANS = "0000000000000000000000000000000000000000000000000000000000000200";
     //TODO: move owner addr
     private static final String TOTAL_CURRENCY_OWNER = "0xa0229b51b4e4a023b9a5e68e0a047c74f947be6cb84e564bf5f752a8fec000f9";
+    private static final String ANS_OWNER = "0xa0229b51b4e4a023b9a5e68e0a047c74f947be6cb84e564bf5f752a8fec000f9";
 
     private ContractFactory(){}
 
@@ -46,10 +49,16 @@ public class ContractFactory {
      * @return the specified pre-compiled address.
      */
     public static IPrecompiledContract getPrecompiledContract(Address address, IRepositoryCache track) {
-        if (TOTAL_CURRENCY.equals(address.toString())) {
-            return new TotalCurrencyContract(track, address, Address.wrap(TOTAL_CURRENCY_OWNER));
+
+        //TODO: need better solution to make method call easy yet flexible for diff signatures
+        switch (address.toString()) {
+            case TOTAL_CURRENCY:
+                return new TotalCurrencyContract(track, address, Address.wrap(TOTAL_CURRENCY_OWNER));
+            case ANS:
+                return new AionNameServiceContract(track, address, Address.wrap(ANS_OWNER), null);
+            default:
+                return null;
         }
-        return null;
     }
 
     /**
@@ -59,18 +68,29 @@ public class ContractFactory {
      * @return true iff address is address of a pre-compiled contract.
      */
     public static boolean isPrecompiledContract(Address address) {
-        if (TOTAL_CURRENCY.equals(address.toString())) {
-            return true;
+        switch (address.toString()) {
+            case TOTAL_CURRENCY:
+            case ANS: return true;
+            default: return false;
         }
-        return false;
     }
 
     /**
      * Returns the address of the TotalCurrencyContract contract.
      *
-     * @return The contract address.
+     * @return the contract address.
      */
     public static Address getTotalCurrencyContractAddress() {
         return Address.wrap(TOTAL_CURRENCY);
     }
+
+    /**
+     * Returns the address of the AionNameServiceConract contract.
+     *
+     * @return the contract address.
+     */
+    public static Address getAionNameServiceContractAddress() {
+        return Address.wrap(ANS);
+    }
+
 }

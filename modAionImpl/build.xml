@@ -42,6 +42,7 @@
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
         <pathelement location="${dir.mod}/modP2p.jar"/>
         <pathelement location="${dir.mod}/modFastVM.jar"/>
+        <pathelement location="${dir.mod}/modPrecompiled.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
@@ -156,6 +157,7 @@
                 <pathelement location="${dir.mod}/modAion.jar"/>
                 <pathelement location="${dir.mod}/modTxPool.jar"/>
                 <pathelement location="${dir.mod}/modFastVM.jar"/>
+                <pathelement location="${dir.mod}/modPrecompiled.jar"/>
                 <pathelement location="${dir.lib}/libJson.jar"/>
                 <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
                 <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>

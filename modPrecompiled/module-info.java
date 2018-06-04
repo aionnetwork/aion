@@ -4,4 +4,6 @@ module aion.precompiled {
     requires aion.base;
     requires aion.crypto;
     requires slf4j.api;
+
+    exports org.aion.precompiled;
 }

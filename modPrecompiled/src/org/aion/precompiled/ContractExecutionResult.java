@@ -27,6 +27,7 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
 
 /**
  * The result of executing a pre-compiled contract.
@@ -36,6 +37,9 @@ public class ContractExecutionResult {
     private long nrgLeft;
     private byte[] output;
 
+    /**
+     * A result code specifying the behaviour of the contract's execution.
+     */
     public enum ResultCode {
         SUCCESS(0),
         FAILURE(1),
@@ -44,6 +48,7 @@ public class ContractExecutionResult {
         INVALID_NONCE(4),
         INVALID_NRG_LIMIT(5),
         INSUFFICIENT_BALANCE(6),
+        INVALID_CONTRACT_ADDR(7),
         INTERNAL_ERROR(-1);
 
         private int val;
@@ -104,6 +109,52 @@ public class ContractExecutionResult {
         return new ContractExecutionResult(code, nrgLeft, output);
     }
 
-    //TODO
+    /**
+     * Sets this ContractExecutionResult's code to code and its energy left to nrgLeft.
+     *
+     * @param code The new code.
+     * @param nrgLeft The new nrgLeft.
+     */
+    public void setCodeAndNrgLeft(ResultCode code, long nrgLeft) {
+        this.code = code;
+        this.nrgLeft = nrgLeft;
+    }
+
+    /**
+     * Returns this ContractExecutionResult's result code.
+     *
+     * @return the result code.
+     */
+    public ResultCode getCode() {
+        return this.code;
+    }
+
+    /**
+     * Returns this ContractExecutionResult's output.
+     *
+     * @return the result output.
+     */
+    public byte[] getOutput() {
+        return this.output;
+    }
+
+    /**
+     * Returns this ContractExecutionResult's energy left.
+     *
+     * @return the energy left.
+     */
+    public long getNrgLeft() {
+        return this.nrgLeft;
+    }
+
+    @Override
+    public String toString() {
+        if (output == null) {
+            return "[code = " + this.code + ", nrgLeft = " + this.nrgLeft + "]";
+        } else {
+            return "[code = " + this.code + ", nrgLeft = " + this.nrgLeft + ", output = " + Hex
+                .toHexString(this.output) + "]";
+        }
+    }
 
 }
