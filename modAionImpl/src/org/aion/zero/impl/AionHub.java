@@ -22,9 +22,16 @@
  */
 package org.aion.zero.impl;
 
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
@@ -37,12 +44,10 @@ import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.tx.ITransactionExecThread;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.utils.TaskDumpHeap;
-import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -51,28 +56,30 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.RecoveryUtils;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.sync.SyncMgr;
-import org.aion.zero.impl.sync.handler.*;
+import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
+import org.aion.zero.impl.sync.handler.BroadcastNewBlockHandler;
+import org.aion.zero.impl.sync.handler.BroadcastTxHandler;
+import org.aion.zero.impl.sync.handler.ReqBlocksBodiesHandler;
+import org.aion.zero.impl.sync.handler.ReqBlocksHeadersHandler;
+import org.aion.zero.impl.sync.handler.ReqStatusHandler;
+import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
+import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
+import org.aion.zero.impl.sync.handler.ResStatusHandler;
 import org.aion.zero.impl.tx.AionTransactionExecThread;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 public class AionHub {
 
-	private static final Logger LOG = LoggerFactory.getLogger(LogEnum.GEN.name());
+	private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
 	private static final Logger syncLog = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
-	private IP2pMgr p2pMgr;
+    private static final Logger p2pLog = AionLoggerFactory.getLogger(LogEnum.P2P.name());
+
+    private IP2pMgr p2pMgr;
 
 	private CfgAion cfg;
 
@@ -160,8 +167,8 @@ public class AionHub {
 		// there two p2p impletation , now just point to impl1.
 		this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION, this.cfg.getId(), cfgNetP2p.getIp(),
 				cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(), cfgNetP2p.getMaxTempNodes(),
-				cfgNetP2p.getMaxActiveNodes(), cfgNetP2p.getShowStatus(), cfgNetP2p.getShowLog(),
-				cfgNetP2p.getBootlistSyncOnly(), cfgNetP2p.getErrorTolerance());
+				cfgNetP2p.getMaxActiveNodes(),
+				cfgNetP2p.getBootlistSyncOnly(), cfgNetP2p.getErrorTolerance(), p2pLog);
 
 		this.syncMgr = SyncMgr.inst();
 		this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksQueueMax(),

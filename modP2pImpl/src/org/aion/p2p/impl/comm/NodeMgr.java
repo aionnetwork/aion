@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.aion.p2p.impl1.P2pMgr;
 
 public class NodeMgr implements INodeMgr {
 
@@ -43,6 +44,8 @@ public class NodeMgr implements INodeMgr {
 
     private final int maxTempNodes;
 
+    private final IP2pMgr p2pMgr;
+
     private static final Random random = new SecureRandom(ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array());
 
     private final Set<String> seedIps = new HashSet<>();
@@ -52,9 +55,10 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
 
-    public NodeMgr(int _maxActiveNodes, int _maxTempNodes) {
+    public NodeMgr(P2pMgr _p2pMgr, int _maxActiveNodes, int _maxTempNodes) {
         this.maxActiveNodes = _maxActiveNodes;
         this.maxTempNodes = _maxTempNodes;
+        this.p2pMgr = _p2pMgr;
     }
 
     public Map<Integer, INode> getOutboundNodes() {
@@ -124,6 +128,7 @@ public class NodeMgr implements INodeMgr {
                     );
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                    p2pMgr.getLogger().error("NodeMgr dumpNodeInfo exception {}", ex.getMessage());
                 }
             }
         }
@@ -305,10 +310,9 @@ public class NodeMgr implements INodeMgr {
                 _p2pMgr.closeSocket(node.getChannel(),
                     "inbound -> active, ip " + node.getIpStr() + " exits");
             } else {
-                if (_p2pMgr.isShowLog()) {
-                    System.out.println(
-                        "<p2p inbound -> active node-id=" + node.getIdShort() + " ip=" + node
-                            .getIpStr() + ">");
+                if (p2pMgr.getLogger().isDebugEnabled()) {
+                    p2pMgr.getLogger().debug("inbound -> active node-id={} ip={}", node.getIdShort(), node
+                        .getIpStr());
                 }
             }
         }
@@ -342,10 +346,8 @@ public class NodeMgr implements INodeMgr {
                 _p2pMgr.closeSocket(node.getChannel(),
                     "outbound -> active, node " + previous.getIdShort() + " exits");
             } else {
-                if (_p2pMgr.isShowLog()) {
-                    System.out.println(
-                        "<p2p outbound -> active node-id=" + _shortId + " ip=" + node.getIpStr()
-                            + ">");
+                if (p2pMgr.getLogger().isDebugEnabled()) {
+                    p2pMgr.getLogger().debug("outbound -> active node-id={} ip={}", _shortId, node.getIpStr());
                 }
             }
         }
@@ -370,8 +372,8 @@ public class NodeMgr implements INodeMgr {
             .mapToLong(n -> now - n.getTimestamp()).average();
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
-        if (_p2pMgr.isShowLog()) {
-            System.out.printf("<p2p average-delay=%.0fms>\n", average.orElse(0));
+        if (p2pMgr.getLogger().isDebugEnabled()) {
+            p2pMgr.getLogger().debug("average-delay={}ms", (long)average.orElse(0));
         }
 
         Iterator<Integer> activeIt = activeNodes.keySet().iterator();

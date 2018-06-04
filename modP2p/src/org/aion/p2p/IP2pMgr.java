@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
 
 /** @author chris */
 public interface IP2pMgr {
@@ -59,8 +60,6 @@ public interface IP2pMgr {
 
     void closeSocket(final SocketChannel _sc, String _reason);
 
-    boolean isShowLog();
-
     void errCheck(int nodeIdHashcode, String _displayId);
 
     void dropActive(int _nodeIdHash, String _reason);
@@ -76,4 +75,6 @@ public interface IP2pMgr {
     boolean validateNode(INode _node);
 
     int getSelfNetId();
+
+    Logger getLogger();
 }

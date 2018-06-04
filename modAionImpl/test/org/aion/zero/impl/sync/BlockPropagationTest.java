@@ -226,11 +226,6 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public boolean isShowLog() {
-            return false;
-        }
-
-        @Override
         public void closeSocket(SocketChannel _sc, String _reason) {
         }
 

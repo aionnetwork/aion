@@ -24,6 +24,7 @@ package org.aion.p2p.impl1.tasks;
 
 import java.util.concurrent.BlockingQueue;
 import org.aion.p2p.INodeMgr;
+import org.slf4j.Logger;
 
 public class TaskStatus implements Runnable {
 
@@ -31,9 +32,10 @@ public class TaskStatus implements Runnable {
     private final String selfShortId;
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final BlockingQueue<MsgIn> receiveMsgQue;
+    private final Logger logger;
 
     public TaskStatus(
-        final INodeMgr _nodeMgr,
+        Logger _logger, final INodeMgr _nodeMgr,
         final String _selfShortId,
         final BlockingQueue<MsgOut> _sendMsgQue,
         final BlockingQueue<MsgIn> _receiveMsgQue) {
@@ -41,21 +43,23 @@ public class TaskStatus implements Runnable {
         this.selfShortId = _selfShortId;
         this.sendMsgQue = _sendMsgQue;
         this.receiveMsgQue = _receiveMsgQue;
+        this.logger = _logger;
     }
 
     @Override
     public void run() {
         Thread.currentThread().setName("p2p-ts");
         String status = this.nodeMgr.dumpNodeInfo(this.selfShortId);
-        System.out.println(status);
-        System.out.println("--------------------------------------------------------------------" +
-            "-------------------------------------------------------------------------------" +
-            "-----------------");
-        System.out.println(
-            "recv queue ["
-                + this.receiveMsgQue.size()
-                + "] send queue ["
-                + this.sendMsgQue.size()
-                + "]\n");
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(status);
+            logger.debug(
+                "--------------------------------------------------------------------"
+                    + "-------------------------------------------------------------------------------"
+                    + "-----------------");
+
+            logger.debug("recv queue[{}] send queue[{}]", this.receiveMsgQue.size(),
+                this.sendMsgQue.size());
+        }
     }
 }

@@ -48,6 +48,7 @@ public class TaskClear implements Runnable {
                 nodeMgr.timeoutCheck(this.mgr);
             } catch (Exception e) {
                 e.printStackTrace();
+                mgr.getLogger().error("TaskClear exception {}", e.getMessage());
             }
         }
     }

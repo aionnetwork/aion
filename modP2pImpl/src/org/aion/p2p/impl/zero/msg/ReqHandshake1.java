@@ -28,6 +28,7 @@ package org.aion.p2p.impl.zero.msg;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
 
 /**
  *
@@ -49,19 +50,23 @@ public final class ReqHandshake1 extends ReqHandshake {
     // super LEN + revision len (byte) + versions len (byte)
     private static final int MIN_LEN = LEN + 2;
 
+    private static Logger p2pLOG;
+
     /**
-     *
-     * @param _nodeId byte[36]
+     *  @param _nodeId byte[36]
      * @param _netId int
      * @param _ip byte[8]
      * @param _port int
      * @param _revision String
      * @param _versions List<byte[2]> header contains 2 byte version
+     * @param p2pLOG log for p2pModule
      */
-    public ReqHandshake1(final byte[] _nodeId, int _netId, final byte[] _ip, int _port, final byte[] _revision, final List<Short> _versions) {
+    public ReqHandshake1(final byte[] _nodeId, int _netId, final byte[] _ip, int _port,
+        final byte[] _revision, final List<Short> _versions, final Logger p2pLOG) {
         super(_nodeId, _netId, _ip, _port);
         this.revision = _revision;
         this.versions = _versions.subList(0, Math.min(MAX_VERSIONS_LEN, _versions.size()));
+        ReqHandshake1.p2pLOG = p2pLOG;
     }
 
     public byte[] getRevision(){
@@ -77,7 +82,6 @@ public final class ReqHandshake1 extends ReqHandshake {
         if (_bytes == null || _bytes.length < MIN_LEN)
             return null;
         else {
-
             try{
                 ByteBuffer buf = ByteBuffer.wrap(_bytes);
 
@@ -108,9 +112,11 @@ public final class ReqHandshake1 extends ReqHandshake {
                     versions.add(version);
                 }
 
-                return new ReqHandshake1(nodeId, netId, ip, port, revision, versions);
+                return new ReqHandshake1(nodeId, netId, ip, port, revision, versions, p2pLOG);
             } catch (Exception e) {
-                System.out.println("<p2p req-handshake-decode error=" + e.getMessage() + ">");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("req-handshake-decode error={}", e.getMessage());
+                }
                 return null;
             }
         }

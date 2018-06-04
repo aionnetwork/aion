@@ -67,6 +67,7 @@ import org.aion.p2p.impl1.tasks.TaskReceive;
 import org.aion.p2p.impl1.tasks.TaskSend;
 import org.aion.p2p.impl1.tasks.TaskStatus;
 import org.apache.commons.collections4.map.LRUMap;
+import org.slf4j.Logger;
 
 /**
  * @author Chris p2p://{uuid}@{ip}:{port}
@@ -79,13 +80,16 @@ public final class P2pMgr implements IP2pMgr {
     private static final int TIMEOUT_MSG_READ = 10000;
 
     // TODO: need refactor by passing the parameter in the later version to P2pMgr.
-    public static int txBroadCastRoute = (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
+    public static int txBroadCastRoute =
+        (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
-    private final int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
-    private final boolean syncSeedsOnly, showStatus, showLog, upnpEnable;
-    private final String selfRevision, selfShortId;
-    private final byte[] selfNodeId, selfIp;
-    private final INodeMgr nodeMgr;
+    private final Logger p2pLOG;
+
+    private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
+    private boolean syncSeedsOnly, upnpEnable;
+    private String selfRevision, selfShortId;
+    private byte[] selfNodeId, selfIp;
+    private INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
     private final Set<Short> versions = new HashSet<>();
     private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
@@ -101,6 +105,10 @@ public final class P2pMgr implements IP2pMgr {
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
 
+    public Logger getLogger() {
+        return p2pLOG;
+    }
+
     public enum Dest {
         INBOUND,
         OUTBOUND,
@@ -115,23 +123,20 @@ public final class P2pMgr implements IP2pMgr {
      * @param _upnpEnable boolean
      * @param _maxTempNodes int
      * @param _maxActiveNodes int
-     * @param _showStatus boolean
-     * @param _showLog boolean
      */
     public P2pMgr(
-        int _netId,
-        String _revision,
-        String _nodeId,
-        String _ip,
-        int _port,
+        final int _netId,
+        final String _revision,
+        final String _nodeId,
+        final String _ip,
+        final int _port,
         final String[] _bootNodes,
-        boolean _upnpEnable,
-        int _maxTempNodes,
-        int _maxActiveNodes,
-        boolean _showStatus,
-        boolean _showLog,
-        boolean _bootlistSyncOnly,
-        int _errorTolerance) {
+        final boolean _upnpEnable,
+        final int _maxTempNodes,
+        final int _maxActiveNodes,
+        final boolean _bootlistSyncOnly,
+        final int _errorTolerance,
+        final Logger _log) {
 
         this.selfNetId = _netId;
         this.selfRevision = _revision;
@@ -143,12 +148,11 @@ public final class P2pMgr implements IP2pMgr {
         this.upnpEnable = _upnpEnable;
         this.maxTempNodes = _maxTempNodes;
         this.maxActiveNodes = _maxActiveNodes;
-        this.showStatus = _showStatus;
-        this.showLog = _showLog;
         this.syncSeedsOnly = _bootlistSyncOnly;
         this.errTolerance = _errorTolerance;
+        this.p2pLOG = _log;
 
-        nodeMgr = new NodeMgr(_maxActiveNodes, _maxTempNodes);
+        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes);
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -180,14 +184,13 @@ public final class P2pMgr implements IP2pMgr {
             thrdIn.setPriority(Thread.NORM_PRIORITY);
             thrdIn.start();
 
-            if (showLog) {
+            if (p2pLOG.isDebugEnabled()) {
                 this.handlers.forEach(
                     (route, callbacks) -> {
                         Handler handler = callbacks.get(0);
                         Header h = handler.getHeader();
-                        System.out.println(
-                            getRouteMsg(route, h.getVer(), h.getCtrl(), h.getAction(),
-                                handler.getClass().getSimpleName()));
+                        p2pLOG.debug("handler route={} v-c-a={}-{}-{} name={}", route, h.getVer(),
+                            h.getCtrl(), h.getAction(), handler.getClass().getSimpleName());
                     });
             }
 
@@ -213,7 +216,7 @@ public final class P2pMgr implements IP2pMgr {
                     TimeUnit.MILLISECONDS);
             }
 
-            if (showStatus) {
+            if (p2pLOG.isDebugEnabled()) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     getStatusInstance(),
                     2,
@@ -237,13 +240,9 @@ public final class P2pMgr implements IP2pMgr {
             thrdConn.setPriority(Thread.NORM_PRIORITY);
             thrdConn.start();
         } catch (SocketException e) {
-            if (showLog) {
-                System.out.println("<p2p tcp-server-socket-exception> " + e.getMessage());
-            }
+            p2pLOG.error("tcp-server-socket-exception {}", e.getMessage());
         } catch (IOException e) {
-            if (showLog) {
-                System.out.println("<p2p tcp-server-io-exception>");
-            }
+            p2pLOG.error("tcp-server-io-exception {}", e.getMessage());
         }
     }
 
@@ -299,8 +298,10 @@ public final class P2pMgr implements IP2pMgr {
         if (cnt > this.errTolerance) {
             ban(_nodeIdHash);
             errCnt.put(_nodeIdHash, 0);
-            if (showLog) {
-                System.out.println(getBanNodeMsg(_displayId, _nodeIdHash, cnt));
+
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG.debug("ban node={} err-count={}",
+                    (_displayId == null ? _nodeIdHash : _displayId), cnt);
             }
         } else {
             errCnt.put(_nodeIdHash, cnt);
@@ -311,8 +312,9 @@ public final class P2pMgr implements IP2pMgr {
      * @param _sc SocketChannel
      */
     public void closeSocket(final SocketChannel _sc, String _reason) {
-        if (showLog) {
-            System.out.println("<p2p close-socket reason=" + _reason + ">");
+
+        if (p2pLOG.isDebugEnabled()) {
+            p2pLOG.debug("close-socket reason={}", _reason);
         }
 
         if (_sc != null) {
@@ -324,9 +326,7 @@ public final class P2pMgr implements IP2pMgr {
             try {
                 _sc.close();
             } catch (IOException e) {
-                if (showLog) {
-                    System.out.println("<p2p close-socket-io-exception>");
-                }
+                p2pLOG.info("close-socket-io-exception, {}", e.getMessage());
             }
         }
     }
@@ -398,11 +398,6 @@ public final class P2pMgr implements IP2pMgr {
         return this.selfNodeIdHash;
     }
 
-    @Override
-    public boolean isShowLog() {
-        return this.showLog;
-    }
-
     public int getTempNodesCount() {
         return this.nodeMgr.tempNodesSize();
     }
@@ -427,16 +422,6 @@ public final class P2pMgr implements IP2pMgr {
         return this.syncSeedsOnly;
     }
 
-    // <---------------------- message and Runnable getters below ------------------------->
-
-    private String getRouteMsg(Integer route, short ver, byte ctrl, byte act, String name) {
-        return "<p2p-handler route=" + route + " v-c-a=" + ver + "-" + ctrl + "-" + act + " name="
-            + name + ">";
-    }
-
-    private String getBanNodeMsg(String id, int hash, int cnt) {
-        return "<p2p-ban node=" + (id == null ? hash : id) + " err-count=" + cnt + ">";
-    }
 
     private TaskInbound getInboundInstance() {
         return new TaskInbound(
@@ -462,15 +447,15 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskReceive getReceiveInstance() {
-        return new TaskReceive(
+        return new TaskReceive(p2pLOG,
             this.start,
             this.receiveMsgQue,
-            this.handlers,
-            this.showLog);
+            this.handlers);
     }
 
     private TaskStatus getStatusInstance() {
         return new TaskStatus(
+            p2pLOG,
             this.nodeMgr,
             this.selfShortId,
             this.sendMsgQue,
@@ -499,7 +484,7 @@ public final class P2pMgr implements IP2pMgr {
             this.selfIp,
             this.selfPort,
             this.selfRevision.getBytes(),
-            versions);
+            versions,
+            p2pLOG);
     }
-
 }

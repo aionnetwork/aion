@@ -27,23 +27,23 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.Handler;
+import org.slf4j.Logger;
 
 public class TaskReceive implements Runnable {
 
     private final AtomicBoolean start;
     private final BlockingQueue<MsgIn> receiveMsgQue;
     private final Map<Integer, List<Handler>> handlers;
-    private final boolean showLog;
+    private final Logger logger;
 
     public TaskReceive(
-        final AtomicBoolean _start,
+        Logger _logger, final AtomicBoolean _start,
         final BlockingQueue<MsgIn> _receiveMsgQue,
-        final Map<Integer, List<Handler>> _handlers,
-        final boolean _showLog) {
+        final Map<Integer, List<Handler>> _handlers) {
         this.start = _start;
         this.receiveMsgQue = _receiveMsgQue;
         this.handlers = _handlers;
-        this.showLog = _showLog;
+        this.logger = _logger;
     }
 
     @Override
@@ -64,22 +64,22 @@ public class TaskReceive implements Runnable {
                     try {
                         hlr.receive(mi.getNodeId(), mi.getDisplayId(), mi.getMsg());
                     } catch (Exception e) {
-                        if (this.showLog) {
+                        if (logger.isDebugEnabled()) {
                             e.printStackTrace();
+                            logger.debug("TaskReceive exception {}", e.getMessage());
                         }
                     }
                 }
             } catch (InterruptedException e) {
-                if (this.showLog) {
-                    System.out.println("<p2p task-receive-interrupted>");
-                }
+                logger.error("TaskReceive interrupted {}", e.getMessage());
+
                 return;
             } catch (Exception e) {
-                if (this.showLog) {
+                if (logger.isDebugEnabled()) {
                     e.printStackTrace();
+                    logger.debug("TaskReceive exception {}", e.getMessage());
                 }
             }
         }
     }
-
 }

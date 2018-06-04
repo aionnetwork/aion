@@ -22,13 +22,13 @@
  */
 package org.aion.p2p.impl1.tasks;
 
-import org.aion.p2p.Header;
-
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
+import org.aion.p2p.Header;
+import org.aion.p2p.IP2pMgr;
 
 /**
  * @author chris
@@ -40,11 +40,13 @@ class ChannelBuffer {
 
     int buffRemain = 0;
 
-    int nodeIdHash = 0;
+    private int nodeIdHash;
 
-    String displayId = "";
+    private String displayId;
 
     Header header = null;
+
+    private final IP2pMgr p2pMgr;
 
     private byte[] bsHead = new byte[Header.LEN];
 
@@ -57,9 +59,23 @@ class ChannelBuffer {
      */
     AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    private boolean showLog;
-
     private Map<Integer, RouteStatus> routes = new HashMap<>();
+
+    public String getDisplayId() {
+        return displayId;
+    }
+
+    public void setNodeIdHash(int nodeIdHash) {
+        this.nodeIdHash = nodeIdHash;
+    }
+
+    public void setDisplayId(String displayId) {
+        this.displayId = displayId;
+    }
+
+    public int getNodeIdHash() {
+        return nodeIdHash;
+    }
 
     class RouteStatus {
 
@@ -73,8 +89,8 @@ class ChannelBuffer {
     }
 
 
-    ChannelBuffer(boolean _showLog) {
-        this.showLog = _showLog;
+    ChannelBuffer(IP2pMgr mgr) {
+        p2pMgr = mgr;
     }
 
     /**
@@ -94,15 +110,14 @@ class ChannelBuffer {
             boolean shouldRoute = prev.count < _maxReqsPerSec;
             if (shouldRoute) {
                 prev.count++;
-            }
-
-            if (showLog) {
-                if (!shouldRoute) {
-                    System.out.println(
-                        "<p2p route-cooldown=" + _route + " node=" + this.displayId + " count="
-                            + prev.count + ">");
+            } else {
+                if (p2pMgr.getLogger().isDebugEnabled()) {
+                    p2pMgr.getLogger()
+                        .debug("route-cooldown={} node={} count={}", _route, this.getDisplayId(),
+                            prev.count);
                 }
             }
+
             return shouldRoute;
         } else {
             return true;
