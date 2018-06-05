@@ -517,7 +517,7 @@ public class TaskInbound implements Runnable {
                         }
                     }
                     node.setBinaryVersion(binaryVersion);
-                    nodeMgr.moveInboundToActive(_channelHash, this.mgr);
+                    nodeMgr.moveInboundToActive(_channelHash);
                     this.sendMsgQue.offer(
                         new MsgOut(
                             node.getIdHash(),
@@ -539,7 +539,7 @@ public class TaskInbound implements Runnable {
         if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
             node.setBinaryVersion(_binaryVersion);
-            nodeMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort(), this.mgr);
+            nodeMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort());
         }
     }
 

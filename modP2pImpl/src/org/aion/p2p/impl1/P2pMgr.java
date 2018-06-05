@@ -280,7 +280,7 @@ public final class P2pMgr implements IP2pMgr {
         for (List<Handler> hdrs : handlers.values()) {
             hdrs.forEach(Handler::shutDown);
         }
-        nodeMgr.shutdown(this);
+        nodeMgr.shutdown();
     }
 
     @Override
@@ -335,7 +335,7 @@ public final class P2pMgr implements IP2pMgr {
      */
     @Override
     public void dropActive(int _nodeIdHash, String _reason) {
-        nodeMgr.dropActive(_nodeIdHash, this, _reason);
+        nodeMgr.dropActive(_nodeIdHash, _reason);
     }
 
     /**
@@ -369,7 +369,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private void ban(int nodeIdHashcode) {
         nodeMgr.ban(nodeIdHashcode);
-        nodeMgr.dropActive(nodeIdHashcode, this, "ban");
+        nodeMgr.dropActive(nodeIdHashcode, "ban");
     }
 
     // <------------------------ getter methods below --------------------------->

@@ -42,7 +42,7 @@ public class TaskSend implements Runnable {
 
     private static final int TOTAL_LANE = Math
         .min(Runtime.getRuntime().availableProcessors() << 1, 32);
-    private static final int threadQlimit = 20000;
+    private static final int THREAD_Q_LIMIT = 20000;
 
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
@@ -73,7 +73,7 @@ public class TaskSend implements Runnable {
                 , TOTAL_LANE
                 , 0
                 , TimeUnit.MILLISECONDS
-                , new LinkedBlockingQueue<>(threadQlimit)
+                , new LinkedBlockingQueue<>(THREAD_Q_LIMIT)
                 , Executors.defaultThreadFactory());
         }
     }
