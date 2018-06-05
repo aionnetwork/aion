@@ -32,11 +32,9 @@ import org.aion.precompiled.type.IPrecompiledContract;
  * A factory class that produces pre-compiled contract instances.
  */
 public class ContractFactory {
+    private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
     private static final String ANS = "0000000000000000000000000000000000000000000000000000000000000200";
-    //TODO: move owner addr
-    private static final String TOTAL_CURRENCY_OWNER = "0xa0eab2362d342b9440e126102f6dde8bc6ce01e44d13ae8a42fa8881344b83fe";
-    private static final String ANS_OWNER = "0xa0229b51b4e4a023b9a5e68e0a047c74f947be6cb84e564bf5f752a8fec000f9";
 
     private ContractFactory(){}
 
@@ -51,9 +49,9 @@ public class ContractFactory {
     static IPrecompiledContract getPrecompiledContract(Address address, IRepositoryCache track) {
         switch (address.toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, address, Address.wrap(TOTAL_CURRENCY_OWNER));
+                return new TotalCurrencyContract(track, address, Address.wrap(OWNER));
             case ANS:
-                return new AionNameServiceContract(track, address, Address.wrap(ANS_OWNER));
+                return new AionNameServiceContract(track, address, Address.wrap(OWNER));
             default:
                 return null;
         }
