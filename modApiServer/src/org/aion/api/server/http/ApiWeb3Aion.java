@@ -172,17 +172,7 @@ public class ApiWeb3Aion extends ApiAion {
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
         isSeedMode = CfgAion.inst().getConsensus().isSeed();
 
-
-        // instantiate nrg price oracle
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
-        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
-        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
-
-        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
-        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
-            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
-
-        this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
+        this.nrgOracle = getNrgOracle(_ac);
 
         if (isFilterEnabled) {
             evtMgr = this.ac.getAionHub().getEventMgr();
