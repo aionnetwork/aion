@@ -67,6 +67,7 @@ public class AionNameServiceContractTest {
     private Address domainAddress3 = Address.wrap("a033333333333333333333333333333303030303030303030303030303030303");
     private Address domainAddress4 = Address.wrap("a044444444444444444444444444444404040404040404040404040404040404");
     private Address domainAddress5 = Address.wrap("a055555555555555555555555555555505050505050050505050505050505050");
+    private Address domainAddress6 = Address.wrap("a066666666666666666666666666666606060606060606060606060606060060");
     private Address invalidDomainAddress = Address.wrap("b066666666666666666666666666666606060606060606060606060606060606");
 
     private Address newAddress1 = Address.wrap("1000000000000000000000000000000000000000000000000000000000000001");
@@ -88,8 +89,8 @@ public class AionNameServiceContractTest {
         AionNameServiceContract.clearDomainList();
     }
 
-    // try to create errors
-    @Test
+
+    @Test // try to create errors
     public void testInvalidValues(){
         final long inputEnergy = 5000L;
         ECKey k = ECKeyFac.inst().create();
@@ -97,8 +98,10 @@ public class AionNameServiceContractTest {
         ECKey k3 = ECKeyFac.inst().create();
         ECKey k4 = ECKeyFac.inst().create();
         ECKey k5 = ECKeyFac.inst().create();
+        ECKey k6 = ECKeyFac.inst().create();
+
         DummyRepo repo = new DummyRepo();
-        createAccounts(repo, new ECKey[] {k, k2, k3, k4, k5});
+        createAccounts(repo, new ECKey[] {k, k2, k3, k4, k5, k6});
         repo.createAccount(newAddress2);
         repo = populateRepo(repo, new ECKey[] {k, k2, k3, k4, k5});
 
@@ -125,6 +128,16 @@ public class AionNameServiceContractTest {
         assertEquals(ResultCode.INTERNAL_ERROR, res3.getCode());
         Address addr = ansc2.getOwnerAddress();
         assertEquals(Address.wrap(k2.getAddress()), addr);
+
+        // try to break UFT-8 encoding through using weird domain names
+        AionNameServiceContract ansc6 =
+                new AionNameServiceContract(
+                        (IRepositoryCache) repo, domainAddress6, Address.wrap(k6.getAddress()));
+
+        byte[] combined6 = setupInputs(newAddress2, (byte) 0x0, (byte) 0x4, k6, newAddress6, "aion.$^%%&VF%$#*&^*(^", "aion2.$^%%&VF%$#*&^*(^.aion");
+        ContractExecutionResult res6 = ansc6.execute(combined6, inputEnergy);
+        assertEquals(ResultCode.INTERNAL_ERROR, res6.getCode());
+
     }
 
     @Test (expected = IllegalArgumentException.class)
@@ -134,6 +147,7 @@ public class AionNameServiceContractTest {
         createAccounts(repo, new ECKey[] {k});
         repo.addContract(newAddress1, new byte[100]);
 
+        //  domain addresses must have aion prefix: 0xa0(66char) or a0(64char)
         AionNameServiceContract ansc = new AionNameServiceContract((IRepositoryCache) repo, invalidDomainAddress, Address.wrap(k.getAddress()));
         assertNull(ansc);
     }
@@ -144,6 +158,7 @@ public class AionNameServiceContractTest {
         DummyRepo repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
 
+        //The owner address need to exist in the given repoistory, as an account or smart contract
         AionNameServiceContract ansc = new AionNameServiceContract((IRepositoryCache) repo, domainAddress2, newAddress1);
         assertNull(ansc);
     }
@@ -154,25 +169,35 @@ public class AionNameServiceContractTest {
         DummyRepo repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
 
+        // check that the given owner address is the same as the owner address in the repository.
         AionNameServiceContract ansc = new AionNameServiceContract((IRepositoryCache) repo, domainAddress2, Address.wrap(k.getAddress()));
         assertNull(ansc);
     }
 
-    /**
-     * Based of multiple domains under Aion, mass testing of the AionNameService Contract
-     *
-     * domains:
-     *      aion:                                   aion.aion:
-     *          owner:                                  owner:
-     *          resolver:                               resolver:
-     *          ttl:                                    ttl:
-     *
-     *      aion.aion.bion:                         aion.aion.cion:
-     *          owner:                                  owner:
-     *          resolver:                               resolver:
-     *          ttl:                                    ttl:
-     *
-     */
+    //    @Test
+//    public void testInvalidDomainName(){
+//        final long inputEnergy = 5000L;
+//        ECKey k = ECKeyFac.inst().create();
+//        ECKey k2 = ECKeyFac.inst().create();
+//        ECKey k3 = ECKeyFac.inst().create();
+//        ECKey k4 = ECKeyFac.inst().create();
+//        ECKey k5 = ECKeyFac.inst().create();
+//
+//        DummyRepo repo = populateRepo();
+//        createAccounts(repo, new ECKey[]{k, k2, k3, k4, k5});
+//        repo = populateRepo(repo, new ECKey[] {k, k2, k3, k4, k5});
+//
+//        AionNameServiceContract ansc =
+//                new AionNameServiceContract(
+//                        (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+//
+//        byte[] combined = setupInputs(newAddress1, (byte)0x0, (byte)0x4, k, newAddress2, domainName1, domainName2);
+//        byte[] combined2 = setupInputs(newAddress2, (byte)0x0, (byte)0x4, k, Address.wrap(k2.getAddress()), domainName1, domainName3);
+//        ContractExecutionResult res = ansc.execute(combined, inputEnergy);
+//        ContractExecutionResult res2 = ansc.execute(combined2, inputEnergy);
+//        assertEquals(ResultCode.INTERNAL_ERROR ,res2.getCode());
+//    }
+
     @Test
     public void bigTest2(){
         final long inputEnergy = 5000L;
@@ -212,35 +237,15 @@ public class AionNameServiceContractTest {
         assertEquals(4000L, res4.getNrgLeft());
 
         AionNameServiceContract ansc4 = new AionNameServiceContract((IRepositoryCache) repo, domainAddress4, Address.wrap(k4.getAddress()));
-        ///AionNameServiceContract ansc5 = new AionNameServiceContract(repo, domainAddress5, Address.wrap(k5.getAddress()), domainName5);
-
         // storage checks
         assertEquals(Address.wrap(k4.getAddress()), ansc4.getOwnerAddress());
-        //assertEquals(newAddress8, ansc5.getOwnerAddress());
 
         byte[] combined = setupInputs(newAddress6, (byte)0x0, (byte)0x4, k, domainAddress5, domainName1, domainName5);
         ContractExecutionResult res = ansc1.execute(combined, inputEnergy);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(3000L, res.getNrgLeft());
-        //assertEquals(newAddress6, ansc5.getOwnerAddress());
     }
 
-    /**
-     * Test functions of ANS with multiple instances of ans in the database
-     *
-     * Test the transfer of ownership
-     *
-     * Initial set up:
-     * Storage:    contract1: domainAddress1
-     *                      resolver - newAddress1
-     *                      ttl - newAddress2
-     *                      owner - newAddress3
-     *             contract2: domainAddress2
-     *                      resolver - newAddress4
-     *                      ttl -
-     *                      owner -
-     *
-     */
     @Test
     public void bigTest(){
         // initialize input parameters
@@ -331,25 +336,17 @@ public class AionNameServiceContractTest {
         createAccounts(repo, new ECKey[] {k});
         repo.createAccount(newAddress5);
 
-        byte[] resolverHash1 = blake128(RESOLVER_HASH.getBytes());
-        byte[] resolverHash2 = blake128(resolverHash1);
-
-        byte[] TTLHash1 = blake128(TTL_HASH.getBytes());
-        byte[] TTLHash2 = blake128(TTLHash1);
-
         byte[] ownerHash1 = blake128(OWNER_HASH.getBytes());
         byte[] ownerHash2 = blake128(ownerHash1);
 
         AionNameServiceContract ansc = new AionNameServiceContract((IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
         AionNameServiceContract ansc2 = new AionNameServiceContract((IRepositoryCache) repo, domainAddress2, Address.wrap(k.getAddress()));
 
-        storeValueToRepo(repo, domainAddress1, resolverHash1, resolverHash2, newAddress1);
-        storeValueToRepo(repo, domainAddress1, TTLHash1, TTLHash2, newAddress2);
-        storeValueToRepo(repo, domainAddress1, ownerHash1, ownerHash1, newAddress3);
+        // put original owner address
         storeValueToRepo(repo, domainAddress2, ownerHash1, ownerHash2, newAddress4);
 
         byte[] combined = setupInputs(newAddress5, (byte)0x0,(byte)0x4, k, domainAddress2, domainName1, domainName2);
-
+        // change subdomain owner address
         ContractExecutionResult res = ansc.execute(combined, inputEnergy);
         Address actualReturnedAddress = ansc2.getOwnerAddress(Address.wrap(combineTwoBytes(ownerHash1,ownerHash2)));
 
@@ -357,9 +354,6 @@ public class AionNameServiceContractTest {
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(newAddress5, actualReturnedAddress);
-
-        // check for invalid new subdomain address
-
     }
 
     @Test

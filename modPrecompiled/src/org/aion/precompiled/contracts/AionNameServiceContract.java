@@ -67,7 +67,6 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private Address resolverAddressKey;
     private Address TTLKey;
     private String domainName;
-    private Address contractKey;
 
     /** Construct a new ANS Contract */
     public AionNameServiceContract(
@@ -94,21 +93,17 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 "The owner address of this domain from repository is different than the given"
                     + "owner address from the input\n");
         }
-
-
-        //if (!isValidDomainName(domainName)) {
-        //    throw new IllegalArgumentException(
-        //            "An ANS contract with domain name: \"" + domainName + "\" already exists");
-        //}
-        //domains.put(domainName, address);
         this.ownerAddress = ownerAddress;
-        //this.domainName = domainName;
     }
 
     /**
+     * Execute the ANS contract
+     *
      * input[] is defined as:
-     *      [1b chainID]
-     *      [1b operation]
+     *      [1b chainID] - chainId is intended to be our current chainId, in the case of the first AION network this
+     *                     should be set to 1
+     *      [1b operation] - <1: set resolver, 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain
+     *                       ownership>
      *      [32b new address]
      *      [96b signature]
      *      1 + 1 + 32 + 96 = 130
@@ -119,29 +114,25 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
      *      [32b subdomain name in bytes]
      *      130 + 32 + 32 + 32 = 226
      */
-
     public ContractExecutionResult execute(byte[] input, long nrg) {
-
-        // check for correct input format
+        // check for correct input length
         if (input.length != 130 && input.length != 226)
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
 
-        // process input data
-        int offset = 0;
-        // DataWord chainId = new DataWord(input[0]);
-        offset++;
-        byte operation = input[1];
-        offset++;
-
+        // declare variables for parsing the byte[] input and storing each value
         byte[] addressFirstPart = new byte[16];
         byte[] addressSecondPart = new byte[16];
         byte[] sign = new byte[96];
         byte[] subdomainAddress = new byte[32];
         byte[] domainNameInBytes = new byte[32];
         byte[] subdomainNameInBytes = new byte[32];
-
         String subdomainName = "";
 
+        // process input data and store values, currently ignoring the chainID
+        int offset = 0;
+        offset++;
+        byte operation = input[1];
+        offset++;
         System.arraycopy(input, offset, addressFirstPart, 0, 16);
         offset += 16;
         System.arraycopy(input, offset, addressSecondPart, 0, 16);
@@ -155,14 +146,16 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             System.arraycopy(input, offset, domainNameInBytes, 0, 32);
             offset += 32;
             System.arraycopy(input, offset, subdomainNameInBytes, 0, 32);
-            offset += 32;
 
             try{ // using explicit encoding for converting byte to string
                 byte[] trimmedDomainNameInBytes = trimTrailingZeros(domainNameInBytes);
                 byte[] trimmedSubdomainNameInBytes = trimTrailingZeros(subdomainNameInBytes);
 
+                // store domain and subdomain name
                 this.domainName = new String(trimmedDomainNameInBytes, "UTF-8");
                 subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
+
+                domains.put(this.domainName, this.address);
             }
             catch(UnsupportedEncodingException a){
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -171,14 +164,9 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
-        // if (sig == null){
-        //    return  new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
-        // }
-
         byte[] payload = new byte[34];
         System.arraycopy(input, 0, payload, 0, 34);
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
-
         if (!b) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -268,14 +256,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     /** Transfer the ownership of subdomain */
-    private ContractExecutionResult transferSubdomainOwnership(
-        byte[] subdomainAddress,
-        long nrg,
-        byte[] hash1,
-        byte[] hash2,
-        byte[] addr1,
-        byte[] addr2,
-        String subdomain) {
+    private ContractExecutionResult transferSubdomainOwnership(byte[] subdomainAddress, long nrg, byte[] hash1,
+             byte[] hash2, byte[] addr1, byte[] addr2, String subdomain) {
         if (nrg < TRANSFER_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
@@ -359,29 +341,27 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return true;
     }
 
-    // checks if the given domain address is valid under the aion domain
     private boolean isValidDomainAddress(Address domainAddress) {
+        // checks if the given domain address is valid under the aion domain
         String rawAddress = domainAddress.toString();
         return rawAddress.charAt(0) == 'a' && rawAddress.charAt(1) == '0';
     }
 
-    // checks if the owner address is registered in the repository
     private boolean isValidOwnerAddress(Address ownerAddress) {
+        // checks if the owner address is registered in the repository
         if (this.track.hasAccountState(ownerAddress)) return true;
         return (this.track.hasContractDetails(ownerAddress));
     }
 
-    private boolean isValidDomainName(String domainName) {
-        if (domains.containsKey(domainName)) return false;
-        return true;
-    }
+    //private boolean isValidDomainName(String domainName) {
+    //    if (domains.containsKey(domainName)) return false;
+    //    return true;
+    //}
 
     private byte[] trimTrailingZeros(byte[] b){
-        if(b == null)
-            return null;
+        if(b == null) return null;
 
         int counter = 0;
-
         for (int i = 0; i < 32; i++){
             if (b[i] == 0)
                 break;
