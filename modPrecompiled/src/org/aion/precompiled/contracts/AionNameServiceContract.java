@@ -30,16 +30,15 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.base.vm.IDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-
 
 /**
  * Aion Name Service Contract
@@ -72,26 +71,26 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     public AionNameServiceContract(
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
             Address address,
-            Address ownerAddress) { //byte
+            Address ownerAddress) { // byte
         super(track);
         this.address = address;
         setUpKeys();
         if (!isValidDomainAddress(address)) {
             throw new IllegalArgumentException(
-                "Invalid domain address, check for aion prefix: 0xa0(66char) or a0(64char)\n");
+                    "Invalid domain address, check for aion prefix: 0xa0(66char) or a0(64char)\n");
         }
         if (!isValidOwnerAddress(ownerAddress)) {
             throw new IllegalArgumentException(
-                "The owner address does not exist in the given repository\n");
+                    "The owner address does not exist in the given repository\n");
         }
         if (!(getOwnerAddress().equals(ownerAddress))
                 && !(getOwnerAddress()
-                .equals(
-                        Address.wrap(
-                                "0000000000000000000000000000000000000000000000000000000000000000")))) {
+                        .equals(
+                                Address.wrap(
+                                        "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
-                "The owner address of this domain from repository is different than the given"
-                    + "owner address from the input\n");
+                    "The owner address of this domain from repository is different than the given"
+                            + "owner address from the input\n");
         }
         this.ownerAddress = ownerAddress;
     }
@@ -99,20 +98,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     /**
      * Execute the ANS contract
      *
-     * input[] is defined as:
-     *      [1b chainID] - chainId is intended to be our current chainId, in the case of the first AION network this
-     *                     should be set to 1
-     *      [1b operation] - <1: set resolver, 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain
-     *                       ownership>
-     *      [32b new address]
-     *      [96b signature]
-     *      1 + 1 + 32 + 96 = 130
+     * <p>input[] is defined as: [1b chainID] - chainId is intended to be our current chainId, in
+     * the case of the first AION network this should be set to 1 [1b operation] - <1: set resolver,
+     * 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain ownership> [32b new
+     * address] [96b signature] 1 + 1 + 32 + 96 = 130
      *
-     *      optional -for operation on subdomain
-     *      [32b subdomain address]
-     *      [32b domain name in bytes]
-     *      [32b subdomain name in bytes]
-     *      130 + 32 + 32 + 32 = 226
+     * <p>optional -for operation on subdomain [32b subdomain address] [32b domain name in bytes]
+     * [32b subdomain name in bytes] 130 + 32 + 32 + 32 = 226
      */
     public ContractExecutionResult execute(byte[] input, long nrg) {
         // check for correct input length
@@ -147,7 +139,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             offset += 32;
             System.arraycopy(input, offset, subdomainNameInBytes, 0, 32);
 
-            try{ // using explicit encoding for converting byte to string
+            try { // using explicit encoding for converting byte to string
                 byte[] trimmedDomainNameInBytes = trimTrailingZeros(domainNameInBytes);
                 byte[] trimmedSubdomainNameInBytes = trimTrailingZeros(subdomainNameInBytes);
 
@@ -155,9 +147,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 this.domainName = new String(trimmedDomainNameInBytes, "UTF-8");
                 subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
 
+                if(!isValidDomainName(this.domainName)){
+                    return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                }
+
                 domains.put(this.domainName, this.address);
-            }
-            catch(UnsupportedEncodingException a){
+            } catch (UnsupportedEncodingException a) {
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
         }
@@ -182,7 +177,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 byte[] resolverHash1 = blake128(RESOLVER_HASH.getBytes());
                 byte[] resolverHash2 = blake128(resolverHash1);
                 return setResolver(
-                    resolverHash1, resolverHash2, addressFirstPart, addressSecondPart, nrg);
+                        resolverHash1, resolverHash2, addressFirstPart, addressSecondPart, nrg);
             case 2:
                 byte[] TTLHash1 = blake128(TTL_HASH.getBytes());
                 byte[] TTLHash2 = blake128(TTLHash1);
@@ -191,7 +186,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 byte[] ownerHash1 = blake128(OWNER_HASH.getBytes());
                 byte[] ownerHash2 = blake128(ownerHash1);
                 return transferOwnership(
-                    ownerHash1, ownerHash2, addressFirstPart, addressSecondPart, nrg);
+                        ownerHash1, ownerHash2, addressFirstPart, addressSecondPart, nrg);
             case 4:
                 byte[] subownerHash1 = blake128(OWNER_HASH.getBytes());
                 byte[] subownerHash2 = blake128(subownerHash1);
@@ -205,13 +200,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         subdomainName);
             default:
                 return new ContractExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
+                        ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
         }
     }
 
     /** Set Resolver for this domain */
     private ContractExecutionResult setResolver(
-        byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
+            byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
         if (nrg < SET_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
@@ -225,7 +220,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     /** Set Time to Live for this domain */
     private ContractExecutionResult setTTL(
-        byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
+            byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
         if (nrg < SET_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
@@ -239,7 +234,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     /** Transfer the ownership of this domain */
     private ContractExecutionResult transferOwnership(
-        byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
+            byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
         if (nrg < TRANSFER_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
@@ -256,8 +251,14 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     /** Transfer the ownership of subdomain */
-    private ContractExecutionResult transferSubdomainOwnership(byte[] subdomainAddress, long nrg, byte[] hash1,
-             byte[] hash2, byte[] addr1, byte[] addr2, String subdomain) {
+    private ContractExecutionResult transferSubdomainOwnership(
+            byte[] subdomainAddress,
+            long nrg,
+            byte[] hash1,
+            byte[] hash2,
+            byte[] addr1,
+            byte[] addr2,
+            String subdomain) {
         if (nrg < TRANSFER_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
@@ -353,19 +354,21 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return (this.track.hasContractDetails(ownerAddress));
     }
 
-    //private boolean isValidDomainName(String domainName) {
-    //    if (domains.containsKey(domainName)) return false;
-    //    return true;
-    //}
+    private boolean isValidDomainName(String domainName) {
+        if (domains.containsKey(domainName)){
+            if (domains.get(domainName).equals(this.address))
+                return true;
+            return false;
+        }
+        return true; }
 
-    private byte[] trimTrailingZeros(byte[] b){
-        if(b == null) return null;
+    private byte[] trimTrailingZeros(byte[] b) {
+        if (b == null) return null;
 
         int counter = 0;
-        for (int i = 0; i < 32; i++){
-            if (b[i] == 0)
-                break;
-            counter ++;
+        for (int i = 0; i < 32; i++) {
+            if (b[i] == 0) break;
+            counter++;
         }
 
         byte[] ret = new byte[counter];
