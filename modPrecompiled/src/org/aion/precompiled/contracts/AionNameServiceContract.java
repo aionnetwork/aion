@@ -26,7 +26,6 @@ package org.aion.precompiled.contracts;
 import static org.aion.crypto.HashUtil.blake128;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.db.IRepositoryCache;
@@ -72,9 +71,9 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     /** Construct a new ANS Contract */
     public AionNameServiceContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-        Address address,
-        Address ownerAddress) { //byte
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            Address address,
+            Address ownerAddress) { //byte
         super(track);
         this.address = address;
         setUpKeys();
@@ -87,10 +86,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 "The owner address does not exist in the given repository\n");
         }
         if (!(getOwnerAddress().equals(ownerAddress))
-            && !(getOwnerAddress()
-            .equals(
-                Address.wrap(
-                    "0000000000000000000000000000000000000000000000000000000000000000")))) {
+                && !(getOwnerAddress()
+                .equals(
+                        Address.wrap(
+                                "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
                 "The owner address of this domain from repository is different than the given"
                     + "owner address from the input\n");
@@ -159,8 +158,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             offset += 32;
 
             try{ // using explicit encoding for converting byte to string
-                this.domainName = new String(domainNameInBytes, "UTF-8");
-                subdomainName = new String(subdomainNameInBytes, "UTF-8");
+                byte[] trimmedDomainNameInBytes = trimTrailingZeros(domainNameInBytes);
+                byte[] trimmedSubdomainNameInBytes = trimTrailingZeros(subdomainNameInBytes);
+
+                this.domainName = new String(trimmedDomainNameInBytes, "UTF-8");
+                subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
             }
             catch(UnsupportedEncodingException a){
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -206,13 +208,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 byte[] subownerHash1 = blake128(OWNER_HASH.getBytes());
                 byte[] subownerHash2 = blake128(subownerHash1);
                 return transferSubdomainOwnership(
-                    subdomainAddress,
-                    nrg,
-                    subownerHash1,
-                    subownerHash2,
-                    addressFirstPart,
-                    addressSecondPart,
-                    subdomainName);
+                        subdomainAddress,
+                        nrg,
+                        subownerHash1,
+                        subownerHash2,
+                        addressFirstPart,
+                        addressSecondPart,
+                        subdomainName);
             default:
                 return new ContractExecutionResult(
                     ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
@@ -346,12 +348,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     private boolean isSubdomain(String subdomainName) {
-
-        String domain1 = trimTrailingZeros(this.domainName);
-        String domain2  = trimTrailingZeros(subdomainName);
-
-        String[] domainPartitioned = domain1.split("\\.");
-        String[] subdomainPartitioned = domain2.split("\\.");
+        String[] domainPartitioned = this.domainName.split("\\.");
+        String[] subdomainPartitioned = subdomainName.split("\\.");
 
         if (domainPartitioned.length >= subdomainPartitioned.length) return false;
 
@@ -378,25 +376,21 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return true;
     }
 
-    private String trimTrailingZeros(String str){
-        if(str == null)
+    private byte[] trimTrailingZeros(byte[] b){
+        if(b == null)
             return null;
-
-        char[] chars = str.toCharArray();
 
         int counter = 0;
 
-        for(int i = str.length() - 1; i > 0; i = i - 1){
-            if (str.charAt(i) != '\u0000') {
-                counter = i;
+        for (int i = 0; i < 32; i++){
+            if (b[i] == 0)
                 break;
-            }
+            counter ++;
         }
 
-        char[] trimed;
-        trimed = Arrays.copyOfRange(chars, 0, counter+1);
-        //System.arraycopy(chars, 0, trimed, 0, counter+1);
-        return trimed.toString();
+        byte[] ret = new byte[counter];
+        System.arraycopy(b, 0, ret, 0, counter);
+        return ret;
     }
 
     /** getter functions */
