@@ -77,7 +77,7 @@ public class Keystore {
         if (storageDir == null || storageDir.equalsIgnoreCase("")) {
             storageDir = System.getProperty("user.dir");
         }
-        KEYSTORE_PATH = storageDir + "/keytstore";
+        KEYSTORE_PATH = storageDir + "/keystore";
         PATH = Paths.get(KEYSTORE_PATH);
     }
 
