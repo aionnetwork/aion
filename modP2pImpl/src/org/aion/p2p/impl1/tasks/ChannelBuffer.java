@@ -22,13 +22,14 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import org.aion.p2p.Header;
-import org.aion.p2p.IP2pMgr;
 
 /**
  * @author chris
@@ -45,8 +46,6 @@ class ChannelBuffer {
     private String displayId;
 
     Header header = null;
-
-    private final IP2pMgr p2pMgr;
 
     private byte[] bsHead = new byte[Header.LEN];
 
@@ -65,15 +64,15 @@ class ChannelBuffer {
         return displayId;
     }
 
-    public void setNodeIdHash(int nodeIdHash) {
+    void setNodeIdHash(int nodeIdHash) {
         this.nodeIdHash = nodeIdHash;
     }
 
-    public void setDisplayId(String displayId) {
+    void setDisplayId(String displayId) {
         this.displayId = displayId;
     }
 
-    public int getNodeIdHash() {
+    int getNodeIdHash() {
         return nodeIdHash;
     }
 
@@ -89,8 +88,7 @@ class ChannelBuffer {
     }
 
 
-    ChannelBuffer(IP2pMgr mgr) {
-        p2pMgr = mgr;
+    ChannelBuffer() {
     }
 
     /**
@@ -111,8 +109,8 @@ class ChannelBuffer {
             if (shouldRoute) {
                 prev.count++;
             } else {
-                if (p2pMgr.getLogger().isDebugEnabled()) {
-                    p2pMgr.getLogger()
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG
                         .debug("route-cooldown={} node={} count={}", _route, this.getDisplayId(),
                             prev.count);
                 }

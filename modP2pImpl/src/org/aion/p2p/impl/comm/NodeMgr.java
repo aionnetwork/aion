@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl.comm;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import org.aion.p2p.INode;
@@ -128,7 +130,7 @@ public class NodeMgr implements INodeMgr {
                     );
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    p2pMgr.getLogger().error("NodeMgr dumpNodeInfo exception {}", ex.getMessage());
+                    p2pLOG.error("NodeMgr dumpNodeInfo exception {}", ex.getMessage());
                 }
             }
         }
@@ -310,8 +312,8 @@ public class NodeMgr implements INodeMgr {
                 _p2pMgr.closeSocket(node.getChannel(),
                     "inbound -> active, ip " + node.getIpStr() + " exits");
             } else {
-                if (p2pMgr.getLogger().isDebugEnabled()) {
-                    p2pMgr.getLogger().debug("inbound -> active node-id={} ip={}", node.getIdShort(), node
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("inbound -> active node-id={} ip={}", node.getIdShort(), node
                         .getIpStr());
                 }
             }
@@ -346,8 +348,8 @@ public class NodeMgr implements INodeMgr {
                 _p2pMgr.closeSocket(node.getChannel(),
                     "outbound -> active, node " + previous.getIdShort() + " exits");
             } else {
-                if (p2pMgr.getLogger().isDebugEnabled()) {
-                    p2pMgr.getLogger().debug("outbound -> active node-id={} ip={}", _shortId, node.getIpStr());
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("outbound -> active node-id={} ip={}", _shortId, node.getIpStr());
                 }
             }
         }
@@ -372,8 +374,8 @@ public class NodeMgr implements INodeMgr {
             .mapToLong(n -> now - n.getTimestamp()).average();
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
-        if (p2pMgr.getLogger().isDebugEnabled()) {
-            p2pMgr.getLogger().debug("average-delay={}ms", (long)average.orElse(0));
+        if (p2pLOG.isDebugEnabled()) {
+            p2pLOG.debug("average-delay={}ms", (long)average.orElse(0));
         }
 
         Iterator<Integer> activeIt = activeNodes.keySet().iterator();

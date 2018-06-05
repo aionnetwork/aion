@@ -47,8 +47,7 @@ public class LastThousands {
             max,
             max,
             false,
-            50,
-            p2pLOG);
+            50);
 
         List<P2pMgr> examiners = new ArrayList<>();
 
@@ -65,8 +64,7 @@ public class LastThousands {
                     max,
                     max,
                     false,
-                    50,
-                    p2pLOG);
+                    50);
                 examiners.add(examiner);
             }
         }

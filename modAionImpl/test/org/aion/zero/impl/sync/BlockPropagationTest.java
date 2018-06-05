@@ -45,7 +45,6 @@ import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
-import org.slf4j.Logger;
 
 /**
  * Unit tests for block propagation
@@ -268,10 +267,6 @@ public class BlockPropagationTest {
             throw new IllegalStateException("not implemented.");
         }
 
-        @Override
-        public Logger getLogger() {
-            return null;
-        }
     }
 
     private static List<ECKey> generateDefaultAccounts() {

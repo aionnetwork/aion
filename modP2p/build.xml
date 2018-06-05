@@ -7,7 +7,6 @@
 	<property name="src.test" value="./test" />
 
 	<path id="classpath.test">
-                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 		<pathelement location="${dir.lib}/junit_4/junit-4.12.jar" />
 		<pathelement location="${dir.lib}/hamcrest/hamcrest-core-1.3.jar" />
 		<pathelement location="${dir.mod}/modP2p.jar" />
@@ -27,7 +26,7 @@
 
 	<target name="test_build" depends="build">
 		<mkdir dir="${dir.test}" />
-		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
 			<classpath>
 				<path refid="classpath.test" />
 			</classpath>
@@ -51,9 +50,8 @@
 		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}" />
 		<delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/" />
-		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeAntRuntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
+		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeAntRuntime="false" release="10" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
 			<modulepath>
-                                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />				
 				<pathelement location="${dir.mod}/modAionBase.jar" />
 			</modulepath>
 		</javac>

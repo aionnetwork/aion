@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author chris
@@ -45,8 +43,6 @@ public class P2pMgrTest {
     private String ip2 = "192.168.0.11";
     private int port1 = 30303;
     private int port2 = 30304;
-
-    private static Logger p2pLOG = LoggerFactory.getLogger("P2P");
 
     public Map.Entry<P2pMgr, P2pMgr> newTwoNodeSetup() {
         String ip = "127.0.0.1";
@@ -75,8 +71,7 @@ public class P2pMgrTest {
             128,
             128,
             false,
-            50,
-            p2pLOG);
+            50);
 
         System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
         P2pMgr receiver = new P2pMgr(0,
@@ -89,7 +84,7 @@ public class P2pMgrTest {
             128,
             128,
             false,
-            50, p2pLOG);
+            50);
 
         return Map.entry(connector, receiver);
     }
@@ -112,7 +107,7 @@ public class P2pMgrTest {
             128,
             false,
 
-            50, p2pLOG);
+            50);
         assertEquals(p2p.getTempNodesCount(), 0);
 
     }
@@ -134,7 +129,7 @@ public class P2pMgrTest {
             128,
             128,
             false,
-            50, p2pLOG);
+            50);
         assertEquals(0, p2p.getTempNodesCount());
 
     }
@@ -158,7 +153,7 @@ public class P2pMgrTest {
             128,
             128,
             false,
-            50, p2pLOG);
+            50);
         assertEquals(p2p.getTempNodesCount(), 3);
     }
 }

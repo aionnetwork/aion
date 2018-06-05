@@ -22,6 +22,7 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
 
 import java.io.IOException;
@@ -104,16 +105,16 @@ public class TaskInbound implements Runnable {
                 }
 
             } catch (IOException e) {
-                mgr.getLogger().warn("inbound-select-io-exception");
+                p2pLOG.warn("inbound-select-io-exception");
                 continue;
             } catch (ClosedSelectorException e) {
-                if (mgr.getLogger().isDebugEnabled()) {
-                    mgr.getLogger().debug("inbound-select-close-exception");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("inbound-select-close-exception");
                 }
                 continue;
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                mgr.getLogger().error("taskInbound exception {}", e.toString());
+                p2pLOG.error("taskInbound exception {}", e.toString());
                 return;
             }
 
@@ -160,7 +161,7 @@ public class TaskInbound implements Runnable {
                 }
 
             } catch (Exception ex) {
-                mgr.getLogger().error("inbound exception={}", ex.getMessage());
+                p2pLOG.error("inbound exception={}", ex.getMessage());
             } finally {
                 if (keys != null) {
                     keys.remove();
@@ -168,7 +169,7 @@ public class TaskInbound implements Runnable {
             }
         }
 
-        mgr.getLogger().info("p2p-pi shutdown");
+        p2pLOG.info("p2p-pi shutdown");
     }
 
     private void accept() {
@@ -195,18 +196,18 @@ public class TaskInbound implements Runnable {
                 node.setChannel(channel);
 
                 SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
-                sk.attach(new ChannelBuffer(mgr));
+                sk.attach(new ChannelBuffer());
                 this.nodeMgr.addInboundNode(node);
 
-                mgr.getLogger().info("new-connection {}:{}", ip, port);
+                p2pLOG.info("new-connection {}:{}", ip, port);
             }
         } catch (IOException e) {
-            if (mgr.getLogger().isDebugEnabled()) {
-                mgr.getLogger().debug("inbound-accept-io-exception");
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG.debug("inbound-accept-io-exception");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            mgr.getLogger().error("TaskInbound exception {}", e.getMessage());
+            p2pLOG.error("TaskInbound exception {}", e.getMessage());
         }
     }
 
@@ -339,8 +340,8 @@ public class TaskInbound implements Runnable {
                 : P2pConstant.READ_MAX_RATE));
 
         if (!underRC) {
-            if (mgr.getLogger().isDebugEnabled()) {
-                mgr.getLogger().debug("over-called-route={}-{}-{} calls={} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getRouteCount(h.getRoute()).count, _cb.getDisplayId());
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG.debug("over-called-route={}-{}-{} calls={} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getRouteCount(h.getRoute()).count, _cb.getDisplayId());
             }
             return;
         }
@@ -352,15 +353,15 @@ public class TaskInbound implements Runnable {
                         try {
                             handleP2pMsg(_sk, h.getAction(), bodyBytes);
                         } catch (Exception ex) {
-                            if (mgr.getLogger().isDebugEnabled()) {
-                                mgr.getLogger().debug("handle-p2p-msg error={}", ex.getMessage());
+                            if (p2pLOG.isDebugEnabled()) {
+                                p2pLOG.debug("handle-p2p-msg error={}", ex.getMessage());
                             }
                         }
                         break;
                     case Ctrl.SYNC:
                         if (!handlers.containsKey(h.getRoute())) {
-                            if (mgr.getLogger().isDebugEnabled()) {
-                                mgr.getLogger().debug("unregistered-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getDisplayId());
+                            if (p2pLOG.isDebugEnabled()) {
+                                p2pLOG.debug("unregistered-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getDisplayId());
                             }
                             return;
                         }
@@ -368,15 +369,15 @@ public class TaskInbound implements Runnable {
                         handleKernelMsg(_cb.getNodeIdHash(), h.getRoute(), bodyBytes);
                         break;
                     default:
-                        if (mgr.getLogger().isDebugEnabled()) {
-                            mgr.getLogger().debug("invalid-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getDisplayId());
+                        if (p2pLOG.isDebugEnabled()) {
+                            p2pLOG.debug("invalid-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getDisplayId());
                         }
                         break;
                 }
                 break;
             default:
-                if (mgr.getLogger().isDebugEnabled()) {
-                    mgr.getLogger().debug("unhandled-ver={} node={}", h.getVer(), _cb.getDisplayId());
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("unhandled-ver={} node={}", h.getVer(), _cb.getDisplayId());
                 }
 
                 break;
@@ -473,8 +474,8 @@ public class TaskInbound implements Runnable {
                 }
                 break;
             default:
-                if (mgr.getLogger().isDebugEnabled()) {
-                    mgr.getLogger().debug("unknown-route act={}", _act);
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("unknown-route act={}", _act);
                 }
                 break;
         }
@@ -511,8 +512,8 @@ public class TaskInbound implements Runnable {
                         binaryVersion = new String(_revision, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
                         binaryVersion = "decode-fail";
-                        if (mgr.getLogger().isDebugEnabled()) {
-                            mgr.getLogger().debug("handleReqHandshake decode-fail");
+                        if (p2pLOG.isDebugEnabled()) {
+                            p2pLOG.debug("handleReqHandshake decode-fail");
                         }
                     }
                     node.setBinaryVersion(binaryVersion);
@@ -526,8 +527,8 @@ public class TaskInbound implements Runnable {
                 }
 
             } else {
-                if (mgr.getLogger().isDebugEnabled()) {
-                    mgr.getLogger().debug("handshake-rule-fail");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("handshake-rule-fail");
                 }
             }
         }

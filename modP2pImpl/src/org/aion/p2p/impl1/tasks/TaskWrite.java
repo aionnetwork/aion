@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -76,8 +78,8 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
-            if (p2pMgr.getLogger().isTraceEnabled()) {
-                p2pMgr.getLogger().trace("write {}-{}-{}", h.getVer(), h.getCtrl(), h.getAction());
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("write {}-{}-{}", h.getVer(), h.getCtrl(), h.getAction());
             }
 
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
@@ -95,14 +97,14 @@ public class TaskWrite implements Runnable {
                     sc.write(buf);
                 }
             } catch (ClosedChannelException ex1) {
-                if (p2pMgr.getLogger().isDebugEnabled()) {
-                    p2pMgr.getLogger().debug("closed-channel-exception node={}", this.nodeShortId);
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("closed-channel-exception node={}", this.nodeShortId);
                 }
 
                 channelBuffer.isClosed.set(true);
             } catch (IOException ex2) {
-                if (p2pMgr.getLogger().isDebugEnabled()) {
-                    p2pMgr.getLogger().debug("write-msg-io-exception node={} err={}", this.nodeShortId,
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("write-msg-io-exception node={} err={}", this.nodeShortId,
                         ex2.getMessage());
                 }
 
@@ -112,7 +114,7 @@ public class TaskWrite implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            p2pMgr.getLogger().error("TaskWrite exception {}", e.getMessage());
+            p2pLOG.error("TaskWrite exception {}", e.getMessage());
         } finally {
             channelBuffer.lock.unlock();
         }

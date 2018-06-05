@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
@@ -85,8 +87,8 @@ public class TaskSend implements Runnable {
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
-                    if (mgr.getLogger().isDebugEnabled()) {
-                        mgr.getLogger().debug("timeout-msg to-node={} timestamp={}", mo.getDisplayId(), now);
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG.debug("timeout-msg to-node={} timestamp={}", mo.getDisplayId(), now);
                     }
                     continue;
                 }
@@ -124,19 +126,19 @@ public class TaskSend implements Runnable {
                         }
                     }
                 } else {
-                    if (mgr.getLogger().isDebugEnabled()) {
-                        mgr.getLogger().debug("msg-{} ->{} node-not-exit", mo.getDest().name(), mo.getDisplayId());
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG.debug("msg-{} ->{} node-not-exit", mo.getDest().name(), mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {
-                mgr.getLogger().error("task-send-interrupted");
+                p2pLOG.error("task-send-interrupted");
                 return;
             } catch (RejectedExecutionException e) {
-                mgr.getLogger().warn("task-send-reached thread queue limit");
+                p2pLOG.warn("task-send-reached thread queue limit");
             } catch (Exception e) {
                 e.printStackTrace();
-                if (mgr.getLogger().isDebugEnabled()) {
-                    mgr.getLogger().debug("TaskSend exception {}", e.getMessage());
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("TaskSend exception {}", e.getMessage());
                 }
             }
         }

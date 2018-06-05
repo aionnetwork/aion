@@ -26,9 +26,10 @@
         <pathelement location="${dir.lib}/byte-buddy-agent-1.7.9.jar"/>
         <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+        <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
+        <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
         <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
         <pathelement location="${dir.lib}/libJson.jar"/>
-
         <pathelement location="${dir.mod}/modAionImpl.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
@@ -40,6 +41,7 @@
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
         <pathelement location="${dir.mod}/modP2p.jar"/>
         <pathelement location="${dir.mod}/modFastVM.jar"/>
+        <pathelement location="${dir.mod}/modP2pImpl.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
@@ -54,7 +56,7 @@
 
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test"
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test"
                destdir="${dir.test}" includes="**/*Test.java">
             <classpath>
                 <path refid="classpath.test"/>
@@ -65,7 +67,7 @@
 
     <target name="ci_test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test"
+        <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test"
                destdir="${dir.test}" includes="**/*Test.java">
             <classpath>
                 <path refid="classpath.test"/>
@@ -137,10 +139,11 @@
         <mkdir dir="${dir.dest}"/>
         <mkdir dir="${dir.native}"/>
         <antcall target="pre_build"/>
-        <javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./"
+        <javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./"
                destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
             <modulepath>
+		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
                 <pathelement location="${dir.mod}/modRlp.jar"/>
                 <pathelement location="${dir.mod}/modAionBase.jar"/>
                 <pathelement location="${dir.mod}/modCrypto.jar"/>
@@ -155,9 +158,6 @@
                 <pathelement location="${dir.mod}/modTxPool.jar"/>
                 <pathelement location="${dir.mod}/modFastVM.jar"/>
                 <pathelement location="${dir.lib}/libJson.jar"/>
-                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
-                <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
-		<pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
                 <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
                 <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
                 <pathelement location="${dir.lib}/guava-19.0.jar"/>
@@ -185,31 +185,5 @@
         <exec executable="/bin/bash">
             <arg value="../script/postbuild.sh"/>
         </exec>
-    </target>
-
-    <target name="build_v8">
-        <mkdir dir="${dir.dest}"/>
-        <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" srcdir="./src"
-               destdir="${dir.dest}" includes="**/*.java">
-            <classpath>
-                <pathelement location="${dir.lib}/libnsc.jar"/>
-                <pathelement location="${dir.javaAPIlib}/libAionBase.jar"/>
-            </classpath>
-        </javac>
-
-        <jar destfile="libRlp.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}"/>
-        <move includeemptydirs="false" todir="${dir.javaAPIlib}">
-            <file file="libRlp.jar"/>
-        </move>
-    </target>
-
-    <target name="clean_build_v8" depends="clean_v8, build_v8"/>
-
-    <target name="clean_v8">
-        <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/"/>
-        <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
-        <delete dir="${test.report.dir}"/>
-        <delete file="Rlp.jar"/>
-        <delete file="${dir.javaAPIlib}/libRlp.jar"/>
     </target>
 </project>

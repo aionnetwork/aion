@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
 
 /** @author chris */
 public interface IP2pMgr {
@@ -75,6 +74,4 @@ public interface IP2pMgr {
     boolean validateNode(INode _node);
 
     int getSelfNetId();
-
-    Logger getLogger();
 }

@@ -43,6 +43,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.Header;
@@ -83,7 +85,7 @@ public final class P2pMgr implements IP2pMgr {
     public static int txBroadCastRoute =
         (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
 
-    private final Logger p2pLOG;
+    public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
     private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
     private boolean syncSeedsOnly, upnpEnable;
@@ -104,10 +106,6 @@ public final class P2pMgr implements IP2pMgr {
 
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
-
-    public Logger getLogger() {
-        return p2pLOG;
-    }
 
     public enum Dest {
         INBOUND,
@@ -135,8 +133,7 @@ public final class P2pMgr implements IP2pMgr {
         final int _maxTempNodes,
         final int _maxActiveNodes,
         final boolean _bootlistSyncOnly,
-        final int _errorTolerance,
-        final Logger _log) {
+        final int _errorTolerance) {
 
         this.selfNetId = _netId;
         this.selfRevision = _revision;
@@ -150,7 +147,6 @@ public final class P2pMgr implements IP2pMgr {
         this.maxActiveNodes = _maxActiveNodes;
         this.syncSeedsOnly = _bootlistSyncOnly;
         this.errTolerance = _errorTolerance;
-        this.p2pLOG = _log;
 
         nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes);
 
@@ -447,7 +443,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskReceive getReceiveInstance() {
-        return new TaskReceive(p2pLOG,
+        return new TaskReceive(
             this.start,
             this.receiveMsgQue,
             this.handlers);
@@ -455,7 +451,6 @@ public final class P2pMgr implements IP2pMgr {
 
     private TaskStatus getStatusInstance() {
         return new TaskStatus(
-            p2pLOG,
             this.nodeMgr,
             this.selfShortId,
             this.sendMsgQue,
@@ -484,7 +479,6 @@ public final class P2pMgr implements IP2pMgr {
             this.selfIp,
             this.selfPort,
             this.selfRevision.getBytes(),
-            versions,
-            p2pLOG);
+            versions);
     }
 }
