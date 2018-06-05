@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  * <p>This file is part of the aion network project.
@@ -20,6 +20,8 @@
  * <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
  * <p>Contributors to the aion source files in decreasing order of code volume: Aion foundation.
+ * Contributors:
+ *     Aion foundation.
  */
 package org.aion.precompiled;
 
