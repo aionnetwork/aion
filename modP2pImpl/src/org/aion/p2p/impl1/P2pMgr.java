@@ -117,7 +117,7 @@ public final class P2pMgr implements IP2pMgr {
         this.maxActiveNodes = _maxActiveNodes;
         this.showStatus = _showStatus;
         this.showLog = _showLog;
-        this.clusterNodeMode = _clusterMode;
+        this.syncSeedsOnly = _bootlistSyncOnly;
         this.errTolerance = _errorTolerance;
 
         nodeMgr = new NodeMgr(_maxActiveNodes, _maxTempNodes);
