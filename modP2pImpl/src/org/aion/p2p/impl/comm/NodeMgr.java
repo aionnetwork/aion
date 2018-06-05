@@ -22,16 +22,22 @@
  */
 package org.aion.p2p.impl.comm;
 
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import org.aion.p2p.INode;
-import org.aion.p2p.INodeMgr;
-import org.aion.p2p.IP2pMgr;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.aion.p2p.INode;
+import org.aion.p2p.INodeMgr;
+import org.aion.p2p.IP2pMgr;
 
 public class NodeMgr implements INodeMgr {
 
@@ -43,7 +49,7 @@ public class NodeMgr implements INodeMgr {
 
     private final int maxTempNodes;
 
-    private static final Random random = new SecureRandom(ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array());
+    private static final Random random = new SecureRandom();
 
     private final Set<String> seedIps = new HashSet<>();
 
@@ -229,7 +235,7 @@ public class NodeMgr implements INodeMgr {
     private void timeoutOutBound(IP2pMgr mgr) {
         Iterator<Integer> outboundIt = getOutboundNodes().keySet().iterator();
         while (outboundIt.hasNext()) {
-            int  outBound = outboundIt.next();
+            int outBound = outboundIt.next();
             INode node = getOutboundNodes().get(outBound);
             if (System.currentTimeMillis() - node.getTimestamp()
                 > TIMEOUT_OUTBOUND_NODES) {
