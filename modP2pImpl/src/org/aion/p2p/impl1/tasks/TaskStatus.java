@@ -53,11 +53,6 @@ public class TaskStatus implements Runnable {
 
         if (logger.isDebugEnabled()) {
             logger.debug(status);
-            logger.debug(
-                "--------------------------------------------------------------------"
-                    + "-------------------------------------------------------------------------------"
-                    + "-----------------");
-
             logger.debug("recv queue[{}] send queue[{}]", this.receiveMsgQue.size(),
                 this.sendMsgQue.size());
         }
