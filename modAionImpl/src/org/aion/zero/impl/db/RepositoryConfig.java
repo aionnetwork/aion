@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,23 +19,21 @@
  *
  * Contributors:
  *     Aion foundation.
- *
  ******************************************************************************/
-
 package org.aion.zero.impl.db;
-
-import org.aion.base.db.DetailsProvider;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.mcf.config.CfgDb;
 
 import java.util.Map;
 import java.util.Properties;
+import org.aion.base.db.DetailsProvider;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
+import org.aion.base.db.IRepositoryConfig;
+import org.aion.mcf.config.CfgDb;
 
 public class RepositoryConfig implements IRepositoryConfig {
 
     private final String dbPath;
-    private final int prune;
+    private final IPruneConfig cfgPrune;
     private final DetailsProvider detailsProvider;
     private final Map<String, Properties> cfg;
 
@@ -45,8 +43,8 @@ public class RepositoryConfig implements IRepositoryConfig {
     }
 
     @Override
-    public int getPrune() {
-        return prune;
+    public IPruneConfig getPruneConfig() {
+        return cfgPrune;
     }
 
     @Override
@@ -63,13 +61,11 @@ public class RepositoryConfig implements IRepositoryConfig {
         return new Properties(prop);
     }
 
-    public RepositoryConfig(final String dbPath,
-                            final int prune,
-                            final DetailsProvider detailsProvider,
-                            final CfgDb cfgDb) {
+    public RepositoryConfig(
+            final String dbPath, final DetailsProvider detailsProvider, final CfgDb cfgDb) {
         this.dbPath = dbPath;
-        this.prune = prune;
         this.detailsProvider = detailsProvider;
         this.cfg = cfgDb.asProperties();
+        this.cfgPrune = cfgDb.getPrune();
     }
 }

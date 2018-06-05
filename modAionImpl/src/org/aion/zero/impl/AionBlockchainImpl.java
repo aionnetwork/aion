@@ -1,5 +1,5 @@
-/**
- * *****************************************************************************
+/*
+>>>>>>> master-pre-merge
  * Copyright (c) 2017-2018 Aion foundation.
  *
  * This file is part of the aion network project.
@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License along with the aion network
  * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors: Aion foundation.
- * ****************************************************************************
+ * Contributors:
+ *     Aion foundation.
  */
 package org.aion.zero.impl;
 
@@ -118,7 +118,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private A0BCConfig config;
     private long exitOn = Long.MAX_VALUE;
 
-    private IRepository repository;
+    private AionRepositoryImpl repository;
     private IRepositoryCache track;
     private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo>
             transactionStore;
@@ -134,8 +134,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * a volatile block that is only published when all forking/appending behaviour is completed.
      */
     private volatile AionBlock pubBestBlock;
-
-    private volatile BigInteger pubBestTD = ZERO;
 
     private volatile BigInteger totalDifficulty = ZERO;
     private ChainStatistics chainStats;
@@ -214,10 +212,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration());
     }
 
-    protected AionBlockchainImpl(
-            final A0BCConfig config,
-            final IRepository repository,
-            final ChainConfiguration chainConfig) {
+    protected AionBlockchainImpl(final A0BCConfig config,
+                                 final AionRepositoryImpl repository,
+                                 final ChainConfiguration chainConfig) {
         this.config = config;
         this.repository = repository;
         this.chainStats = new ChainStatistics();
@@ -233,7 +230,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
         this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
 
-        this.transactionStore = ((AionRepositoryImpl) this.repository).getTransactionStore();
+        this.transactionStore = this.repository.getTransactionStore();
 
         this.minerCoinbase = this.config.getMinerCoinbase();
 
@@ -282,7 +279,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     public AionBlockStore getBlockStore() {
-        return (AionBlockStore) repository.getBlockStore();
+        return repository.getBlockStore();
     }
 
     /**
@@ -421,7 +418,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return txsState.getRootHash();
     }
 
-    public IRepository getRepository() {
+    public AionRepositoryImpl getRepository() {
         return repository;
     }
 
@@ -429,7 +426,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         State push = stateStack.push(new State());
         this.bestBlock = getBlockStore().getBlockByHash(bestBlockHash);
         this.totalDifficulty = getBlockStore().getTotalDifficultyForHash(bestBlockHash);
-        this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
+        this.repository = (AionRepositoryImpl) this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
         return push;
     }
 
@@ -511,6 +508,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return blockNumber > current + 32 || blockNumber < current - 32;
     }
 
+    /**
+     * Heuristic for skipping the call to tryToConnect with block number that was already pruned.
+     */
+    public boolean isPruneRestricted(long blockNumber) {
+        // no restriction when not in TOP pruning mode
+        if (!repository.usesTopPruning()) {
+            return false;
+        }
+        return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
+    }
+
     public synchronized ImportResult tryToConnect(final AionBlock block) {
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
     }
@@ -585,7 +593,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // update best block reference
         if (ret == IMPORTED_BEST) {
             pubBestBlock = bestBlock;
-            pubBestTD = summary.getTotalDifficulty();
         }
 
         // fire block events
@@ -750,7 +757,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             List<AionTxReceipt> receipts = summary.getReceipts();
 
             updateTotalDifficulty(block);
-            summary.setTotalDifficulty(getInternalTD());
+            summary.setTotalDifficulty(block.getCumulativeDifficulty());
 
             storeBlock(block, receipts);
 
@@ -827,7 +834,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 track.rollback();
                 // block is bad so 'rollback' the state root to the original
                 // state
-                ((AionRepositoryImpl) repository).setRoot(origRoot);
+                repository.setRoot(origRoot);
             }
         }
 
@@ -840,7 +847,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
             transactionStore.flushBatch();
 
-            ((AionRepositoryImpl) repository).commitBlock(block.getHeader());
+            repository.commitBlock(block.getHeader());
 
             if (LOG.isDebugEnabled())
                 LOG.debug(
@@ -1155,7 +1162,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
         transactionStore.flushBatch();
 
-        ((AionRepositoryImpl) repository).commitBlock(block.getHeader());
+        repository.commitBlock(block.getHeader());
 
         if (LOG.isDebugEnabled())
             LOG.debug(
@@ -1198,7 +1205,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public BigInteger getTotalDifficulty() {
-        return pubBestTD;
+        return getBestBlock().getCumulativeDifficulty();
     }
 
     // this method is for the testing purpose
@@ -1212,6 +1219,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void updateTotalDifficulty(AionBlock block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
+        block.setCumulativeDifficulty(totalDifficulty);
         if (LOG.isDebugEnabled()) {
             LOG.debug("TD: updated to {}", totalDifficulty);
         }
@@ -1219,11 +1227,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public void setTotalDifficulty(BigInteger totalDifficulty) {
-        this.pubBestTD = totalDifficulty;
         this.totalDifficulty = totalDifficulty;
     }
 
-    public void setRepository(IRepository repository) {
+    public void setRepository(AionRepositoryImpl repository) {
         this.repository = repository;
     }
 
@@ -1402,7 +1409,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private class State {
 
-        IRepository savedRepo = repository;
+        AionRepositoryImpl savedRepo = repository;
         AionBlock savedBest = bestBlock;
         BigInteger savedTD = totalDifficulty;
     }
@@ -1433,13 +1440,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         long blockNumber = block.getNumber();
-        LOG.info(
-                "Corrupt world state at block hash: {}, number: {}."
-                        + " Looking for ancestor block with valid world state ...",
-                block.getShortHash(),
-                blockNumber);
+        LOG.info("Pruned or corrupt world state at block hash: {}, number: {}."
+                         + " Looking for ancestor block with valid world state ...", block.getShortHash(), blockNumber);
 
         AionRepositoryImpl repo = (AionRepositoryImpl) repository;
+
+        // keeping track of the original root
+        byte[] originalRoot = repo.getRoot();
 
         Deque<AionBlock> dirtyBlocks = new ArrayDeque<>();
         // already known to be missing the state
@@ -1487,6 +1494,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // update the repository
         repo.flush();
+
+        // setting the root back to its correct value
+        repo.syncToRoot(originalRoot);
 
         // return a flag indicating if the recovery worked
         return repo.isValidRoot(block.getStateRoot());

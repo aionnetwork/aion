@@ -1,27 +1,25 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl;
 
 import org.aion.base.db.IRepository;
@@ -261,6 +259,10 @@ public class AionHub {
         this.repository.getBlockStore().load();
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
+        if (bestBlock != null) {
+            bestBlock
+                    .setCumulativeDifficulty(repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
+        }
 
         boolean recovered = true;
         boolean bestBlockShifted = true;
@@ -272,8 +274,26 @@ public class AionHub {
                 bestBlock != null && // recover only for non-null blocks
                 !this.repository.isValidRoot(bestBlock.getStateRoot())) {
 
+            LOG.info("Recovery initiated due to corrupt world state at block " + bestBlock.getNumber() + ".");
+
             long bestBlockNumber = bestBlock.getNumber();
             byte[] bestBlockRoot = bestBlock.getStateRoot();
+
+            // ensure that the genesis state exists before attempting recovery
+            AionGenesis genesis = cfg.getGenesis();
+            if (!this.repository.isValidRoot(genesis.getStateRoot())) {
+                LOG.info(
+                        "Corrupt world state for genesis block hash: " + genesis.getShortHash() + ", number: " + genesis
+                                .getNumber() + ".");
+
+                AionHubUtils.buildGenesis(genesis, repository);
+
+                if (repository.isValidRoot(genesis.getStateRoot())) {
+                    LOG.info("Rebuilding genesis block SUCCEEDED.");
+                } else {
+                    LOG.info("Rebuilding genesis block FAILED.");
+                }
+            }
 
             recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
 
@@ -290,6 +310,10 @@ public class AionHub {
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
+                if (bestBlock != null) {
+                    bestBlock.setCumulativeDifficulty(repository.getBlockStore()
+                                                              .getTotalDifficultyForHash(bestBlock.getHash()));
+                }
 
                 // checking is the best block has changed since attempting recovery
                 if (bestBlock == null) {
@@ -323,26 +347,10 @@ public class AionHub {
 
             AionGenesis genesis = cfg.getGenesis();
 
-            // initialization section for network balance contract
-            IRepositoryCache track = repository.startTracking();
+            AionHubUtils.buildGenesis(genesis, repository);
 
-            Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
-            track.createAccount(networkBalanceAddress);
-
-            for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
-                track.addStorageRow(networkBalanceAddress, new DataWord(addr.getKey()), new DataWord(addr.getValue()));
-            }
-
-            for (Address addr : genesis.getPremine().keySet()) {
-                track.createAccount(addr);
-                track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
-            }
-            track.flush();
-
-            repository.commitBlock(genesis.getHeader());
-            this.repository.getBlockStore().saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
             blockchain.setBestBlock(genesis);
-            blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            blockchain.setTotalDifficulty(genesis.getDifficultyBI());
 
             if (this.eventMgr != null) {
                 List<IEvent> evts = new ArrayList<>();
