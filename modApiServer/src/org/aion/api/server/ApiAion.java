@@ -24,6 +24,21 @@
 
 package org.aion.api.server;
 
+import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
@@ -42,29 +57,19 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
 
@@ -74,7 +79,7 @@ public abstract class ApiAion extends Api {
     // 2. underlying datastructure provides concurrency guarntees
 
     // delegate concurrency to underlying object
-    protected NrgOracle nrgOracle;
+    protected static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
@@ -658,16 +663,33 @@ public abstract class ApiAion extends Api {
         return false;
     }
 
+    // Returns a fully initialized NrgOracle object.
+    protected void initNrgOracle(IAionChain _ac) {
+        if (NRG_ORACLE != null) {
+            return;
+        }
+
+        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
+
+        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
+            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+
+        NRG_ORACLE = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
+    }
+
     protected long getRecommendedNrgPrice() {
-        if (this.nrgOracle != null)
-            return this.nrgOracle.getNrgPrice();
+        if (NRG_ORACLE != null)
+            return NRG_ORACLE.getNrgPrice();
         else
             return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
     }
 
     // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design
     protected NrgOracle getNrgOracle() {
-        return this.nrgOracle;
+        return NRG_ORACLE;
     }
 
     protected long getDefaultNrgLimit() {
