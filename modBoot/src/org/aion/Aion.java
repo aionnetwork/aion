@@ -78,16 +78,6 @@ public class Aion {
             throw e;
         }
 
-        System.out.println(
-            "                     _____                  \n" +
-                "      .'.       |  .~     ~.  |..          |\n" +
-                "    .'   `.     | |         | |  ``..      |\n" +
-                "  .''''''''`.   | |         | |      ``..  |\n" +
-                ".'           `. |  `._____.'  |          ``|\n\n" +
-                "                    NETWORK  v" + KERNEL_VERSION +
-                "\n\n"
-        );
-
         /* Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out
@@ -105,6 +95,16 @@ public class Aion {
         AionLoggerFactory
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+        String logo ="\n                     _____                  \n" +
+                "      .'.       |  .~     ~.  |..          |\n" +
+                "    .'   `.     | |         | |  ``..      |\n" +
+                "  .''''''''`.   | |         | |      ``..  |\n" +
+                ".'           `. |  `._____.'  |          ``|\n\n" +
+                "                    NETWORK  v" + KERNEL_VERSION +
+                "\n\n";
+
+        genLog.info(logo);
 
         IAionChain ac = AionFactory.create();
 
