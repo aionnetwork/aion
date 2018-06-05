@@ -13,7 +13,10 @@
 		<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.mod}/modP2p.jar" />
 		<pathelement location="${dir.mod}/modP2pImpl.jar" />
+                <pathelement location="${dir.mod}/modLogger.jar" />
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
+		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
+                <pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
 	</path>
 
 	<path id="cp">
