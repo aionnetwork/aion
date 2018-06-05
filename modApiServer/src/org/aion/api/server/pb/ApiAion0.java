@@ -102,7 +102,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     private static final int TX_HASH_LEN = 32;
     private static final int ACCOUNT_CREATE_LIMIT = 100;
 
-    private BlockingQueue pendingStatus;
+    private BlockingQueue<TxPendingStatus> pendingStatus;
     private BlockingQueue<TxWaitingMappingUpdate> txWait;
     private Map<ByteArrayWrapper, Map.Entry<ByteArrayWrapper, ByteArrayWrapper>> msgIdMapping;
 
