@@ -67,7 +67,7 @@
 
     <target name="ci_test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="true" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test"
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test"
                destdir="${dir.test}" includes="**/*Test.java">
             <classpath>
                 <path refid="classpath.test"/>
@@ -143,7 +143,6 @@
                destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
             <modulepath>
-		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
                 <pathelement location="${dir.mod}/modRlp.jar"/>
                 <pathelement location="${dir.mod}/modAionBase.jar"/>
                 <pathelement location="${dir.mod}/modCrypto.jar"/>
@@ -162,6 +161,7 @@
                 <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
                 <pathelement location="${dir.lib}/guava-19.0.jar"/>
                 <pathelement location="${dir.lib}/libnsc.jar"/>
+                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
             </modulepath>
         </javac>
 
