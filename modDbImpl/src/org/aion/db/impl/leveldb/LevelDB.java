@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl.leveldb;
 
 import org.aion.base.util.ByteArrayWrapper;
@@ -142,7 +142,14 @@ public class LevelDB extends AbstractDB {
         try {
             db = JniDBFactory.factory.open(f, options);
         } catch (Exception e1) {
-            LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
+            if (e1.getMessage().contains("lock")) {
+                LOG.error("Failed to open the database " + this.toString() +
+                    "\nCheck if you have two instances running on the same database." +
+                    "\nFailure due to: ", e1);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
+            }
+
             if (e1.getMessage() != null && e1.getMessage().contains("No space left on device")) {
                 LOG.error("Shutdown due to lack of disk space.");
                 System.exit(0);

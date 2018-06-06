@@ -1,12 +1,13 @@
 package org.aion.zero.impl;
 
+import java.util.Properties;
 import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.zero.impl.db.ContractDetailsAion;
-
-import java.util.Properties;
 
 public class MockRepositoryConfig implements IRepositoryConfig {
     private DBVendor vendor = DBVendor.MOCKDB;
@@ -17,8 +18,8 @@ public class MockRepositoryConfig implements IRepositoryConfig {
     }
 
     @Override
-    public int getPrune() {
-        return 0;
+    public IPruneConfig getPruneConfig() {
+        return new CfgPrune(false);
     }
 
     @Override

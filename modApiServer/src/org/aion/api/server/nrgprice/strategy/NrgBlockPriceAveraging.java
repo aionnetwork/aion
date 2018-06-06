@@ -27,6 +27,8 @@ import java.util.concurrent.ArrayBlockingQueue;
  * This class is NOT thread-safe
  * Policy: holder class (NrgOracle) should provide any concurrency guarantees it needs to
  *
+ * NOT TESTED. DON'T USE.
+ *
  * @author ali sharif
  */
 public class NrgBlockPriceAveraging extends NrgPriceAdvisor<AionBlock, AionTransaction> {

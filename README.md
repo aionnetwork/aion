@@ -34,5 +34,7 @@ Please refer to the [wiki pages](https://github.com/aionnetwork/aion/wiki) for f
 
 Aion is released under the [GPL-V3 license](https://github.com/aionnetwork/aion/blob/dev/LICENSE)
 
+### WE ARE HIRING!
 
+If you are interested in being part of the Aion project, check out our available positions and apply [here](http://aion.humi.ca/job-board/it/697)! 
 <!--For additional Aion **command line options** run:```./aion.sh -h```-->

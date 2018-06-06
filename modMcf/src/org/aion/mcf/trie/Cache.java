@@ -164,9 +164,9 @@ public class Cache {
                 // batchMemorySize += length(key, value);
             }
         }
-        /* for (ByteArrayWrapper removedNode : removedNodes) {
+        for (ByteArrayWrapper removedNode : removedNodes) {
             batch.put(removedNode.getData(), null);
-        } */
+        }
 
         this.dataSource.putBatch(batch);
         this.isDirty = false;

@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,12 +19,13 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
 import java.util.*;
 import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
@@ -33,6 +34,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
@@ -68,8 +70,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
 
                 @Override
-                public int getPrune() {
-                    return -1;
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
                 }
 
                 @Override
@@ -203,8 +205,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 }
 
                 @Override
-                public int getPrune() {
-                    return -1;
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
                 }
 
                 @Override
@@ -333,13 +335,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
             track.flush();
 
-            // TODO: violates abstraction, consider adding to interface after
-            // stable
-            ((AionRepositoryImpl) bc.getRepository()).commitBlock(genesis.getHeader());
-            ((AionBlockStore) bc.getRepository().getBlockStore())
-                    .saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
+            bc.getRepository().commitBlock(genesis.getHeader());
+            bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             bc.setBestBlock(genesis);
-            bc.setTotalDifficulty(genesis.getCumulativeDifficulty());
+            bc.setTotalDifficulty(genesis.getDifficultyBI());
 
             return new Bundle(this.defaultKeys, bc);
         }
