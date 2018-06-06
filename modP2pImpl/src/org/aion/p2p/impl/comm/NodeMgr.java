@@ -431,7 +431,7 @@ public class NodeMgr implements INodeMgr {
 
         } catch (Exception e) {
             e.printStackTrace();
-            p2pLOG.debug("p2p-shutdown exception {}", e.getMessage());
+            p2pLOG.error("p2p-shutdown exception {}", e.getMessage());
         }
     }
 
