@@ -39,16 +39,18 @@ public class ContractExecutionResult {
 
     /**
      * A result code specifying the behaviour of the contract's execution.
+     *
+     * NOTE: ensure the int representations of each code correspond to the equivalent code in the
+     * ExecutionResult.Code class so that translation between the two (needed in VM) is seamless.
      */
     public enum ResultCode {
         SUCCESS(0),
         FAILURE(1),
         OUT_OF_NRG(2),
-        REVERT(3),
-        INVALID_NONCE(4),
-        INVALID_NRG_LIMIT(5),
-        INSUFFICIENT_BALANCE(6),
-        INVALID_CONTRACT_ADDR(7),
+        REVERT(7),
+        INVALID_NONCE(8),
+        INVALID_NRG_LIMIT(9),
+        INSUFFICIENT_BALANCE(10),
         INTERNAL_ERROR(-1);
 
         private int val;

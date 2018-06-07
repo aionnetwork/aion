@@ -6,4 +6,5 @@ module aion.precompiled {
     requires slf4j.api;
 
     exports org.aion.precompiled;
+    exports org.aion.precompiled.type;
 }
