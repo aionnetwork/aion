@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -163,14 +163,8 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
         return this.loadingCache.stats();
     }
 
-    /**
-     * Checks that the database connection is open.
-     * Throws a {@link RuntimeException} if the database connection is closed.
-     *
-     * @implNote Always do this check after acquiring a lock on the class/data.
-     *         Otherwise it might produce inconsistent results due to lack of synchronization.
-     */
-    private void check() {
+    @Override
+    public void check() {
         if (!database.isOpen()) {
             throw new RuntimeException("Database is not opened: " + this);
         }

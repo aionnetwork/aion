@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl.h2;
 
 import org.aion.base.util.ByteArrayWrapper;
@@ -148,7 +148,8 @@ public class H2MVMap extends AbstractDB {
         } catch (Exception e) {
             if (e instanceof NullPointerException) {
                 LOG.error("Failed to open the database " + this.toString()
-                        + ". A probable cause is that the H2 database cannot access the file path.", e);
+                    + ". A probable cause is that the H2 database cannot access the file path. "
+                    + "Check if you have two instances running on the same database.", e);
             } else {
                 LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
             }

@@ -23,5 +23,7 @@ public class P2pConstant {
     READ_MAX_RATE_TXBC = 20,
 
     // write queue timeout
-    WRITE_MSG_TIMEOUT = 5000;
+    WRITE_MSG_TIMEOUT = 5000,
+
+    BACKWARD_SYNC_STEP = 128;
 }
