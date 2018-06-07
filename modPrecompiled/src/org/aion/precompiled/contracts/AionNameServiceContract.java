@@ -97,14 +97,21 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     /**
      * Execute the ANS contract
      *
-     * <p>input[] is defined as: [1b chainID] - chainId is intended to be our current chainId, in
-     * the case of the first AION network this should be set to 1 [1b operation] - <1: set resolver,
-     * 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain ownership> [32b new
-     * address] [96b signature] 1 + 1 + 32 + 96 = 130
+     * input[] is defined as:
+     *      [1b chainID] - chainId is intended to be our current chainId, in the case of the first AION network this
+     *                     should be set to 1
+     *      [1b operation] - <1: set resolver, 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain
+     *                       ownership>
+     *      [32 new address]
+     *      [96 signature]
+     *      1 + 1 + 32 + 96 = 130
      *
-     * <p>optional -for operation on subdomain [32b subdomain address] [32b domain name in bytes]
-     * [32b subdomain name in bytes] 130 + 32 + 32 + 32 = 226
+     *      [32b new address] - optional
+     *      [96b signature] - optional
+     *      [32b subdomain name in bytes] - optional
+     *      130 + 32 + 32 + 32 = 226
      */
+    @Override
     public ContractExecutionResult execute(byte[] input, long nrg) {
         // check for correct input length
         if (input.length != 130 && input.length != 226)
