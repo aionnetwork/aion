@@ -201,7 +201,7 @@ public class ContractExecutor {
             repoTrack.addBalance(tx.getFrom(), txValue.negate());
             repoTrack.addBalance(tx.getTo(), txValue);
         } else {
-            exeResult.setCodeAndNrgLeft(ResultCode.INVALID_CONTRACT_ADDR, 0);
+            exeResult.setCodeAndNrgLeft(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
@@ -231,7 +231,6 @@ public class ContractExecutor {
             case OUT_OF_NRG:
             case REVERT:
             case INTERNAL_ERROR:
-            case INVALID_CONTRACT_ADDR:
                 builder.markAsFailed();
                 break;
             default:

@@ -46,7 +46,7 @@ public class ContractFactory {
      * @param track The repo.
      * @return the specified pre-compiled address.
      */
-    static IPrecompiledContract getPrecompiledContract(Address address, IRepositoryCache track) {
+    public static IPrecompiledContract getPrecompiledContract(Address address, IRepositoryCache track) {
         switch (address.toString()) {
             case TOTAL_CURRENCY:
                 return new TotalCurrencyContract(track, address, Address.wrap(OWNER));
