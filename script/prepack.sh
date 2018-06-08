@@ -42,7 +42,6 @@ fi
 if [ ! -d "$DOCS_PATH" ]; then
   mkdir $DOCS_PATH
   cp -r ./docs/** $DOCS_PATH
-  cp aion_api/pack/Java-API-*.doc.zip $DOCS_PATH
 fi
 
 # copy the client API files if can't find the client API env
