@@ -24,16 +24,11 @@
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
-import java.time.Duration;
 import java.util.*;
 
-import ch.qos.logback.core.subst.Token;
-import javafx.util.Pair;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractExecutionResult;
@@ -57,6 +52,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     private Timer timer = new Timer();
     private TimerTask task = new finishAuction();
+
+    private Timer timer2 = new Timer();
+    private TimerTask task2 = new removeActiveDomain();
 
     // Map<domain address, time left>
     // domainAddresses are hashes of the domain names
@@ -122,7 +120,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // the domainAddress is not in auction process, begin it
         else{
-            addAuctionDomain(domainAddress);
+            addToAuctionDomain(domainAddress);
             // put the bid in
             Map<Address, BigInteger> emptyMap = new HashMap<>();
             AionAuctionContract.bids.put(domainAddress, emptyMap);
@@ -135,7 +133,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * Helper Functions
      */
 
-    private void addAuctionDomain(Address domainAddress){
+    private void addToAuctionDomain(Address domainAddress){
         Date currentDate = new Date();
         Date finishDate = new Date(currentDate.getTime() + 5 * 1000L); // 1 day later, 5s
 
@@ -143,45 +141,161 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         timer.schedule(task, 5000L);
     }
 
-    private void addToActiveDomains(Address domainAddress){
+    private void addToActiveDomains(Address domainAddress, Address ownerAddress){
         Date currentDate = new Date();
-        Date finishDate = new Date(currentDate.getTime() + 60 * 1000L); // 1 year later, 60s
+        Date finishDate = new Date(currentDate.getTime() + 20 * 1000L); // 1 year later, 20s
 
         AionAuctionContract.activeDomains.put(domainAddress, finishDate);
-
-        Timer timer = new Timer();
-        TimerTask task = new removeActiveDomain();
-        timer.schedule(task, finishDate);
-    }
-
-    private void domainTimeUp(Address domainAddress){
-        AionAuctionContract.activeDomains.remove(domainAddress);
-    }
-
-    private void getHighestBidder(){
-
-
+        AionAuctionContract.activeDomainsOwners.put(domainAddress, ownerAddress);
+        timer2.schedule(task2, finishDate);
     }
 
     private void removeActiveDomain(){
+        Address domainAddress = findEarliestActiveDomain();
+        processActiveDomain(domainAddress);
     }
+
+    // go through the activeDomains, and find the one that is finished, return the domain address
+    private Address findEarliestActiveDomain(){
+        Address domainAddress = null;
+        Date earliestDate = null;
+        for (Map.Entry<Address, Date> domainName : AionAuctionContract.activeDomains.entrySet()) {
+            Address addr = domainName.getKey();
+            Date date = domainName.getValue();
+
+            // first iteration
+            if (Objects.equals(earliestDate, null)) {
+                earliestDate = date;
+                domainAddress = addr;
+            }
+
+            else if (date.getTime() < earliestDate.getTime()) {
+                earliestDate = date;
+                domainAddress = addr;
+            }
+        }
+        return domainAddress;
+    }
+
+    private void processActiveDomain(Address domainAddress){
+        AionAuctionContract.activeDomains.remove(domainAddress);
+        AionAuctionContract.activeDomainsOwners.remove(domainAddress);
+
+        //display result
+        System.out.println("Removed domain: " + domainAddress + " from active domains\n");
+    }
+
+
+
+
+    private void finishAuction (){
+        Address domainAddress = findEarliestAuctionDomain();
+        processAuctionWinner(domainAddress);
+    }
+
+    // go through the auctionDomains, and find the one that is finished, return the domain address
+    private Address findEarliestAuctionDomain(){
+        Address domainAddress = null;
+        Date earliestDate = null;
+        for (Map.Entry<Address, Date> domainName : AionAuctionContract.auctionDomains.entrySet()) {
+            Address addr = domainName.getKey();
+            Date date = domainName.getValue();
+
+            // first iteration
+            if (Objects.equals(earliestDate, null)) {
+                earliestDate = date;
+                domainAddress = addr;
+            }
+
+            else if (date.getTime() < earliestDate.getTime()) {
+                earliestDate = date;
+                domainAddress = addr;
+            }
+        }
+        return domainAddress;
+    }
+
+    // find the highest bid (address) and second highest bid (value)
+    private void processAuctionWinner(Address domainAddress) {
+        Address winnerAddress = null;
+        BigInteger highestBid = new BigInteger("0");
+        BigInteger secondHighestBid = new BigInteger("0");
+
+        // iterate through the bids
+        for (Map.Entry<Address, BigInteger> bidder : AionAuctionContract.bids.get(domainAddress).entrySet()) {
+            Address addr = bidder.getKey();
+            BigInteger amount = bidder.getValue();
+
+            if(amount.compareTo(highestBid) > 0){
+                secondHighestBid = highestBid;
+                highestBid = amount;
+                winnerAddress = addr;
+            }
+
+            else if(amount.compareTo(secondHighestBid) > 0){
+                secondHighestBid = amount;
+            }
+        }
+
+        // display result
+        printWinner(domainAddress, winnerAddress, secondHighestBid);
+
+        // clean up other maps
+        AionAuctionContract.auctionDomains.remove(domainAddress);
+        AionAuctionContract.bids.remove(domainAddress);
+
+        // put into active domains
+        addToActiveDomains(domainAddress, winnerAddress);
+    }
+
+    private void printWinner (Address domainAddress, Address winnerAddress, BigInteger value){
+        System.out.println("Auction result for domain at: '" + domainAddress + "'");
+        System.out.println("    New domain owner: " + winnerAddress);
+        System.out.println("    Value: " + value.toString());
+        System.out.println();
+    }
+
+
 
 
     class finishAuction extends TimerTask {
         @Override
         public void run() {
-            System.out.println("performing task: finishAuction");
-            getHighestBidder();
+            System.out.println("                                PERFORMING TASK: finishAuction");
+            finishAuction();
         }
     }
 
     class removeActiveDomain extends TimerTask{
         @Override
         public void run() {
-            System.out.println("performing task: removeActiveDomain");
+            System.out.println("                                PERFORMING TASK: removeActiveDomain");
             removeActiveDomain();
         }
     }
 
+    public static void printAuctions(){
+        System.out.println("                                CURRENT DOMAINS REPOSITORY ");
+        System.out.println("Active domains:");
+        for (Map.Entry<Address, Date> domainName : AionAuctionContract.activeDomains.entrySet()) {
+            System.out.println("    domainAddress: " + domainName.getKey() + "      timeToLive: "
+                    + domainName.getValue() + "    domainOwner: " + AionAuctionContract.activeDomainsOwners.get(domainName.getKey()));
+        }
+
+        System.out.println("Domains in auction:");
+        for (Map.Entry<Address, Date> domainName : AionAuctionContract.auctionDomains.entrySet()) {
+            System.out.println("    domainAddress: " + domainName.getKey() + "      timeToLive: " + domainName.getValue());
+        }
+
+        System.out.println("Auction domains bids:");
+        for (Map.Entry<Address, Map<Address, BigInteger>> domainName : AionAuctionContract.bids.entrySet()) {
+            System.out.println("    domainAddress: " + domainName.getKey());
+            for (Map.Entry<Address, BigInteger> dName : AionAuctionContract.bids.get(domainName.getKey()).entrySet()) {
+                System.out.println("        bidderAddress: " + dName.getKey() + "      amount: " + dName.getValue());
+            }
+        }
+
+        System.out.println();
+    }
 
 }
