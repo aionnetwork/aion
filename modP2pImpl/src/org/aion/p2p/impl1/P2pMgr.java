@@ -294,7 +294,7 @@ public final class P2pMgr implements IP2pMgr {
 
     private final class TaskSend implements Runnable {
 
-        static final int TOTAL_LANE = (1 << 5) - 1;
+        static final int TOTAL_LANE = 32;
         int lane;
 
         TaskSend(int _lane) {
