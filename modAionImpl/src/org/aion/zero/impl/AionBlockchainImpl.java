@@ -451,26 +451,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     private AionBlockSummary tryConnectAndFork(final AionBlock block) {
         State savedState = pushState(block.getParentHash());
-        this.fork = true;
 
-        final AionBlockSummary summary;
+        AionBlockSummary summary = null;
         try {
-            // LOG.info("block " + block.toString());
-
             // FIXME: adding block with no option for flush
             summary = add(block);
-            if (summary == null) {
-                return null;
-            }
         } catch (Throwable th) {
             LOG.error("Unexpected error: ", th);
-            return null;
-        } finally {
-            this.fork = false;
         }
 
-        if (isMoreThan(this.totalDifficulty, savedState.savedTD)) {
+        this.fork = (summary == null);
 
+        if (summary != null && isMoreThan(this.totalDifficulty, savedState.savedTD)) {
             if (LOG.isInfoEnabled())
                 LOG.info("branching: from = {}/{}, to = {}/{}",
                         savedState.savedBest.getNumber(),
@@ -563,6 +555,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // to connect to the main chain
         final AionBlockSummary summary;
         if (bestBlock.isParentOf(block)) {
+            //reset the repository to sync with the stateroot of the best block
+            repository.syncToRoot(bestBlock.getStateRoot());
             summary = add(block);
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
         } else {
