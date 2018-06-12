@@ -1,4 +1,4 @@
-#Dockerization
+# Dockerization
 
 The kernel can be deployed as a container using the Dockerfile present in the root of the repo.
 Currently there is no automated way to build it but it provides an argument to pick the release you want to use to build the image.
