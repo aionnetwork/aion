@@ -48,10 +48,10 @@ public class AionNameServiceContractTest {
 
     private String domainName1 = "aion";
     private String domainName2 = "aion.aion"; // subdomain of domainName1
-    private String domainName3 = "aion.bion"; // subdomain of domainName1
-    private String domainName4 = "aion.bion.cion"; // subdomain of domainName1 and domainName3
-    private String domainName5 = "aion.bion.dion"; // subdomain of domainName1 and domainName3
-    private String notSubdomain = "bion.aion"; // not a subdomain of domainName1
+    private String domainName3 = "bion.aion"; // subdomain of domainName1
+    private String domainName4 = "cion.bion.aion"; // subdomain of domainName1 and domainName3
+    private String domainName5 = "dion.bion.aion"; // subdomain of domainName1 and domainName3
+    private String notSubdomain = "aion.bion"; // not a subdomain of domainName1
 
     // private Address domainAddress = Address.wrap();
     private Address emptyAddress =
