@@ -9,12 +9,9 @@ import java.util.List;
 import java.util.Set;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.AddressSpecs;
-import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.ISignature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
@@ -39,7 +36,9 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
-    private static final int CAP = 10;
+    private static final int MAX_OWNERS = 10;
+    private static final int MIN_OWNERS = 2;
+    private static final int MIN_THRESH = 1;
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
@@ -88,9 +87,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     @Override
     public ContractExecutionResult execute(byte[] input, long nrg) {
-        if (nrg < COST) {
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        }
+        if (nrg < COST) { return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0); }
 
         int operation = input[0];
 
@@ -110,17 +107,17 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     private ContractExecutionResult createWallet(byte[] input, long nrg) {
         ByteBuffer thresh = ByteBuffer.allocate(Long.BYTES);
-        thresh.put(Arrays.copyOfRange(input, 2, 2 + THRESH_LEN));
+        thresh.put(Arrays.copyOfRange(input, 1, 1 + THRESH_LEN));
         long threshold = thresh.getLong();
-        Set<Address> owners = extractAddresses(Arrays.copyOfRange(input, 2 + THRESH_LEN, input.length));
+        Set<Address> owners = extractAddresses(Arrays.copyOfRange(input, 1 + THRESH_LEN, input.length));
 
         if (owners == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
-        if ((owners.size() < 2) || (owners.size() > CAP)) {
+        if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
-        if ((threshold < 1) || (threshold > owners.size())) {
+        if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -137,11 +134,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     private ContractExecutionResult sendTransaction(byte[] input, long nrg) {
         int length = input.length;
-        if (length > 1 + ADDR_LEN + (SIG_LEN * CAP) + AMOUNT_LEN + ADDR_LEN) {
+        if (length > 1 + ADDR_LEN + (SIG_LEN * MAX_OWNERS) + AMOUNT_LEN + ADDR_LEN) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        int walletStart = 2;
+        int walletStart = 1;
         int sigsStart = walletStart + ADDR_LEN - 1;
         int recipientStart = length - ADDR_LEN;
         int amountStart = recipientStart - AMOUNT_LEN;
@@ -155,7 +152,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         BigInteger amount = new BigInteger(Arrays.copyOfRange(input, amountStart, recipientStart));
         Address recipient = new Address(Arrays.copyOfRange(input, recipientStart, length));
 
-        if (!isOwner(wallet)) {
+        if (!isMultiSigWallet(wallet)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (sigs == null) {
@@ -163,7 +160,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         }
 
         if (isValidAmount(wallet, amount) && areValidSignatures(wallet, sigs)) {
-            // send transaction to recipient & update track
+            //TODO: send transaction to recipient
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
         } else {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -177,7 +174,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * Returns null if:
      *   1. addresses is an empty array.
      *   2. The length of addresses is incorrect (not a multiple of ADDR_LEN).
-     *   3. The length of addresses is too long (more than ADDR_LEN * CAP).
+     *   3. The length of addresses is too long (more than ADDR_LEN * MAX_OWNERS).
      *   4. An address appears more than once in addresses.
      *   5. The address of the account that called execute is not in addresses.
      *
@@ -188,7 +185,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         int length = addresses.length;
         int numAddrs = length / ADDR_LEN;
 
-        if ((length == 0) || (length % ADDR_LEN != 0) || (length > (ADDR_LEN * CAP))) {
+        if ((length == 0) || (length % ADDR_LEN != 0) || (length > (ADDR_LEN * MAX_OWNERS))) {
             return null;
         }
 
@@ -197,12 +194,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         boolean callerIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
             addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
-            if (result.contains(addr)) {
-                return null;
-            }
-            if (addr.equals(this.address)) {
-                callerIsOwner = true;
-            }
+            if (result.contains(addr)) { return null; }
+            if (addr.equals(this.address)) { callerIsOwner = true; }
             result.add(addr);
         }
         return (callerIsOwner) ? result : null;
@@ -215,7 +208,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * Returns null if:
      *   1. signatures is an empty array.
      *   2. The length of signatures is incorrect (not a multiple of SIG_LEN).
-     *   3. The length of signatures is too long (more than SIG_LEN * CAP).
+     *   3. The length of signatures is too long (more than SIG_LEN * MAX_OWNERS).
      *
      * @param signatures A byte array of consecutive signatures.
      * @return The signatures extracted from the byte array.
@@ -224,7 +217,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         int length = signatures.length;
         int numSigs = length / SIG_LEN;
 
-        if ((length == 0) || (length % SIG_LEN != 0) || (length > (SIG_LEN * CAP))) {
+        if ((length == 0) || (length % SIG_LEN != 0) || (length > (SIG_LEN * MAX_OWNERS))) {
             return null;
         }
 
@@ -241,7 +234,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * Returns the address of the newly created wallet.
      *
-     * This method assumes the follow condition holds: 1 <= threshold <= |owners| <= CAP
+     * This method assumes the follow condition holds: 1 <= threshold <= |owners| <= MAX_OWNERS
      *
      * @param owners The owners of the wallet.
      * @param threshold The minimum number of signatures required per transaction.
@@ -271,16 +264,16 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param numOwners The number of owners for this wallet.
      */
     private void saveWalletMetaData(Address walletId, long threshold, long numOwners) {
-        byte[] metaKey = new byte[DataWord.BYTES];
-        metaKey[0] = (byte) 0x80;   // set bit 127
-
+        byte[] metaKey = getMetaDataKey();
         byte[] metaValue = new byte[DataWord.BYTES];
+
         ByteBuffer data = ByteBuffer.allocate(Long.BYTES);
         data.putLong(threshold);
-        System.arraycopy(data.array(), 0, metaValue, 0, DataWord.BYTES);
+        System.arraycopy(data.array(), 0, metaValue, 0, Long.BYTES);
+
         data.clear();
         data.putLong(numOwners);
-        System.arraycopy(data.array(), 0, metaValue, DataWord.BYTES, DataWord.BYTES);
+        System.arraycopy(data.array(), 0, metaValue, Long.BYTES, Long.BYTES);
 
         track.addStorageRow(walletId, new DataWord(metaKey), new DataWord(metaValue));
     }
@@ -301,29 +294,21 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param owners The owners of the multi-sig wallet.
      */
     private void saveWalletOwners(Address walletId, Set<Address> owners) {
-        ByteBuffer data = ByteBuffer.allocate(Long.BYTES);
         byte[] firstKey, firstValue, secondKey, secondValue;
         long count = 0;
 
         for (Address owner : owners) {
-            firstKey = new byte[DataWord.BYTES];
-            firstValue = new byte[DataWord.BYTES];
-            secondKey = new byte[DataWord.BYTES];
-            secondValue = new byte[DataWord.BYTES];
-
-            // set the two keys for this owner.
-            secondKey[0] = (byte) 0x40; // set bit 126
-            data.putLong(count);
-            System.arraycopy(data.array(), 0, firstKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
-            System.arraycopy(data.array(), 0, secondKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
+            firstKey = getOwnerDataKey(true, count);
+            secondKey = getOwnerDataKey(false, count);
 
             // set the two values for this owner.
+            firstValue = new byte[DataWord.BYTES];
+            secondValue = new byte[DataWord.BYTES];
             System.arraycopy(owner.toBytes(), 0, firstValue, 0, DataWord.BYTES);
             System.arraycopy(owner.toBytes(), DataWord.BYTES, secondValue, 0, DataWord.BYTES);
 
             track.addStorageRow(walletId, new DataWord(firstKey), new DataWord(firstValue));
             track.addStorageRow(walletId, new DataWord(secondKey), new DataWord(secondValue));
-            data.clear();
             count++;
         }
     }
@@ -352,6 +337,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *   2. ALL signers are owners of the multi-sig wallet whose address is wallet.
      *   3. ALL signatures are valid signatures that sign the current transaction.
      *   4. The number of signatures is at least the threshold value of the multi-sig wallet wallet.
+     *   5. The account that called execute is one of the owners of the wallet.
      *
      * Returns false otherwise.
      *
@@ -360,24 +346,144 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return true only if the signatures are valid for this wallet.
      */
     private boolean areValidSignatures(Address wallet, List<byte[]> signatures) {
-        // check the three conditions.
+        Set<Address> owners = getOwners(wallet);
+        if (!owners.contains(this.address)) { return false; }
+
+        Set<Address> txSigners = new HashSet<>();
+        Address signer;
+        for (byte[] sig : signatures) {
+            if (!signatureIsCorrect(sig)) { return false; }
+            signer = new Address(AddressSpecs.computeA0Address(sig));
+            if (txSigners.contains(signer)) { return false; }
+            if (!owners.contains(signer)) { return false; }
+            txSigners.add(signer);
+        }
+
+        return signatures.size() >= getThreshold(wallet);
+    }
+
+    /**
+     * Returns true only if the current transaction for the multi-sig wallet has been signed
+     * correctly by some account and that signature is signature. Returns false otherwise.
+     *
+     * @param signature The signature to verify.
+     * @return true only if signature is valid.
+     */
+    private boolean signatureIsCorrect(byte[] signature) {
+        //TODO
         return true;
     }
 
     /**
-     * Returns true only if the following condition is met:
-     *   1. The address of the account that called execute is one of the owners of the multi-sig
-     *      wallet whose address is wallet.
+     * Returns a set of all of the addresses that own the multi-sig wallet whose address is walletId.
      *
-     * Returns false otherwise.
+     * This method assumes that walletId is a valid multi-sig wallet.
      *
-     * @param wallet The address of the multi-sig wallet.
-     * @return true only if the caller is one of the owners of this wallet.
+     * @param walletId The address of the multi-sig wallet.
+     * @return the set of owners.
      */
-    private boolean isOwner(Address wallet) {
-        // check the caller is one of the owners.
-        // might be more efficient to move this into areValidSignatures method.
-        return true;
+    private Set<Address> getOwners(Address walletId) {
+        Set<Address> owners = new HashSet<>();
+        long numOwners = getNumOwners(walletId);
+
+        for (long i = 0; i < numOwners; i++) {
+            owners.add(getOwner(walletId, i));
+        }
+        return owners;
+    }
+
+    /**
+     * Returns the address of the owner whose owner id is ownerId for the multi-sig wallet whose
+     * address is walletId.
+     *
+     * This method assumes that walletId is a valid multi-sig wallet and that ownerId is a valid
+     * owner id.
+     *
+     * @param walletId The address of the multi-sig wallet.
+     * @param ownerId The owner id.
+     * @return the address of the owner.
+     */
+    private Address getOwner(Address walletId, long ownerId) {
+        byte[] address = new byte[ADDR_LEN];
+
+        byte[] ownerDataKey1 = getOwnerDataKey(true, ownerId);
+        IDataWord addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey1));
+        System.arraycopy(addrPortion.getData(), 0, address, 0, DataWord.BYTES);
+
+        byte[] ownerDataKey2 = getOwnerDataKey(false, ownerId);
+        addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey2));
+        System.arraycopy(addrPortion.getData(), 0, address, DataWord.BYTES, DataWord.BYTES);
+
+        return new Address(address);
+    }
+
+    /**
+     * Returns the threshold value associated with the multi-sig wallet whose address is walletId.
+     *
+     * This method assumes walletId is a valid multi-sig wallet.
+     *
+     * @param walletId The wallet to query.
+     * @return the threshold of the wallet.
+     */
+    private long getThreshold(Address walletId) {
+        IDataWord metaValue = track.getStorageValue(walletId, new DataWord(getMetaDataKey()));
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(Arrays.copyOfRange(metaValue.getData(), 0, Long.BYTES));
+        return buffer.getLong();
+    }
+
+    /**
+     * Returns the number of owners associated with the multi-sig wallet whose address is walletId.
+     *
+     * This method assumes walletId is a valid multi-sig wallet.
+     *
+     * @param walletId The wallet to query.
+     * @return the number of owners for the wallet.
+     */
+    private long getNumOwners(Address walletId) {
+        IDataWord metaValue = track.getStorageValue(walletId, new DataWord(getMetaDataKey()));
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(Arrays.copyOfRange(metaValue.getData(), Long.BYTES, DataWord.BYTES));
+        return buffer.getLong();
+    }
+
+    /**
+     * Returns true only if the address walletId is a multi-sig wallet. Returns false otherwise.
+     *
+     * @param walletId The address to verify.
+     * @return true if walletId is a multi-sig wallet.
+     */
+    private boolean isMultiSigWallet(Address walletId) {
+        return track.getStorageValue(walletId, new DataWord(getMetaDataKey())) == null;
+    }
+
+    /**
+     * Returns the key to query a multi-sig wallet for its meta data value.
+     *
+     * @return the meta data query key.
+     */
+    private static byte[] getMetaDataKey() {
+        byte[] metaKey = new byte[DataWord.BYTES];
+        metaKey[0] = (byte) 0x80;
+        return metaKey;
+    }
+
+    /**
+     * Returns the key to query a multi-sig wallet for its owner data value.
+     *
+     * @param isFirstHalf True if querying first half of address.
+     * @param ownerId The owner id.
+     * @return the owner data query key.
+     */
+    private static byte[] getOwnerDataKey(boolean isFirstHalf, long ownerId) {
+        byte[] ownerKey = new byte[DataWord.BYTES];
+        if (!isFirstHalf) {
+            ownerKey[0] = (byte) 0x40;
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(ownerId);
+        System.arraycopy(buffer.array(), 0, ownerKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
+        return ownerKey;
     }
 
 }
