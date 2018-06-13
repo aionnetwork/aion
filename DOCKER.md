@@ -14,7 +14,7 @@ if you intend to push it to the `centrys` docker registry.
 ```bash
 docker build -t \
 centrys/aion-docker:<version_tag> . \
---build-arg kernel_version=https://github.com/aionnetwork/aion/releases/download/<version>/<archive>
+--build-arg kernel_archive=https://github.com/aionnetwork/aion/releases/download/<version>/<archive>
 ```
 
 Eg:
@@ -22,7 +22,7 @@ Eg:
 ```bash
 docker build -t \
 centrys/aion-docker:v0.2.7 . \
---build-arg kernel_version=https://github.com/aionnetwork/aion/releases/download/v0.2.7/aion-v0.2.7.1bbeec1-2018-05-24.tar.bz2
+--build-arg kernel_archive=https://github.com/aionnetwork/aion/releases/download/v0.2.7/aion-v0.2.7.1bbeec1-2018-05-24.tar.bz2
 ```
 
 ## Running
