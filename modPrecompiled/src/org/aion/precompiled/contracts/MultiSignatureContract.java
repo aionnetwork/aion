@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
@@ -9,15 +31,21 @@ import java.util.List;
 import java.util.Set;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.AddressSpecs;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.zero.types.AionTransaction;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -84,9 +112,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * The account address that calls this execute method must be one of the owners of the wallet
      * for all supported operations.
+     *
+     *
+     * The signatures must all sign the exact same message that must obey the following format:
+     *
+     *   | nonce | recipientAddr | amount | nrgLimit | nrgPrice |
+     *
+     * where nonce is the nonce of the multi-sig wallet.
+     * Use the regular BigInteger toByteArray method and convert a long to a byte array using
+     * ByteBuffer, then concatenate all the separate arrays into one and sign that.
      */
     @Override
     public ContractExecutionResult execute(byte[] input, long nrg) {
+        //TODO: need user to pass into input: nrgPrice for sendTx
         if (nrg < COST) { return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0); }
 
         int operation = input[0];
@@ -159,8 +197,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        if (isValidAmount(wallet, amount) && areValidSignatures(wallet, sigs)) {
-            //TODO: send transaction to recipient
+        if (isValidAmount(wallet, amount) && areValidSignatures(wallet, sigs, reconstructMsg())) {
+            //TODO: use AionPendingStateImpl.executeTx on our constructed tx and handle the result.
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
         } else {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -325,9 +363,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return true only if this is a valid amount to transfer from wallet.
      */
     private boolean isValidAmount(Address wallet, BigInteger amount) {
-        if (amount.compareTo(BigInteger.ONE) < 0) {
-            return false;
-        }
+        if (amount.compareTo(BigInteger.ONE) < 0) { return false; }
         return track.getBalance(wallet).compareTo(amount) >= 0;
     }
 
@@ -343,16 +379,17 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * @param wallet The address of the multi-sig wallet.
      * @param signatures The signatures on the transaction.
+     * @param tx The byte array form of the transaction that each signee had to sign.
      * @return true only if the signatures are valid for this wallet.
      */
-    private boolean areValidSignatures(Address wallet, List<byte[]> signatures) {
+    private boolean areValidSignatures(Address wallet, List<byte[]> signatures, byte[] tx) {
         Set<Address> owners = getOwners(wallet);
         if (!owners.contains(this.address)) { return false; }
 
         Set<Address> txSigners = new HashSet<>();
         Address signer;
         for (byte[] sig : signatures) {
-            if (!signatureIsCorrect(sig)) { return false; }
+            if (!signatureIsCorrect(sig, tx)) { return false; }
             signer = new Address(AddressSpecs.computeA0Address(sig));
             if (txSigners.contains(signer)) { return false; }
             if (!owners.contains(signer)) { return false; }
@@ -369,9 +406,37 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param signature The signature to verify.
      * @return true only if signature is valid.
      */
-    private boolean signatureIsCorrect(byte[] signature) {
+    private boolean signatureIsCorrect(byte[] signature, byte[] tx) {
+        ISignature sig = Ed25519Signature.fromBytes(signature);
+        return ECKeyEd25519.verify(tx, sig.getSignature(), sig.getPubkey(null));
+    }
+
+    /**
+     * Re-constructs and returns this transaction as a byte array message.
+     * The format of the transaction as a message is defined as:
+     *
+     *   | nonce | recipientAddr | amount | nrgLimit | nrgPrice |
+     *
+     * If the transaction is not signed as a byte array obeying the above format it will not be
+     * approved.
+     *
+     * @return the transaction message that was signed.
+     */
+    private static byte[] reconstructMsg() {
         //TODO
-        return true;
+        return null;
+    }
+
+    /**
+     * Constructs and returns the transaction that was requested by the execute method.
+     *
+     * This method assumes that the fields the transaction will be initialized with are all valid.
+     *
+     * @return the requested transaction.
+     */
+    private AionTransaction constructTx() {
+        //TODO
+        return null;
     }
 
     /**
