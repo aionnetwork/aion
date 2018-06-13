@@ -155,6 +155,12 @@ public class BlockchainForkingTest {
 
         // the object reference here is intentional
         assertThat(bc.getBestBlock() == standardBlock).isTrue();
+
+        // check for correct state rollback
+        assertThat(bc.getRepository().getRoot()).isEqualTo(standardBlock.getStateRoot());
+        assertThat(bc.getTotalDifficulty())
+                .isEqualTo(bc.getRepository().getBlockStore().getTotalDifficultyForHash(standardBlock.getHash()));
+
     }
 
     /*-
@@ -337,5 +343,31 @@ public class BlockchainForkingTest {
         assertThat(bc.getTotalDifficulty()).isEqualTo(bc.getRepository().getBlockStore()
                                                               .getTotalDifficultyForHash(slowerBlockDescendant.block
                                                                                                  .getHash()));
+    }
+
+    @Test
+    public void testRollbackWithAddInvalidBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain bc = b.bc;
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+
+        assertThat(bc.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the returned block is the first block
+        assertThat(bc.getBestBlock() == block).isTrue();
+
+        AionBlock invalidBlock = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        invalidBlock.getHeader().setDifficulty(BigInteger.ONE.toByteArray());
+
+        // attempting to add invalid block
+        assertThat(bc.tryToConnect(invalidBlock)).isEqualTo(ImportResult.INVALID_BLOCK);
+
+        // check for correct state rollback
+        assertThat(bc.getBestBlock()).isEqualTo(block);
+        assertThat(bc.getRepository().getRoot()).isEqualTo(block.getStateRoot());
+        assertThat(bc.getTotalDifficulty())
+                .isEqualTo(bc.getRepository().getBlockStore().getTotalDifficultyForHash(block.getHash()));
     }
 }
