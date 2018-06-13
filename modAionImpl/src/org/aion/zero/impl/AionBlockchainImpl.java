@@ -452,15 +452,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private AionBlockSummary tryConnectAndFork(final AionBlock block) {
         State savedState = pushState(block.getParentHash());
 
+        this.fork = true;
+
         AionBlockSummary summary = null;
         try {
             // FIXME: adding block with no option for flush
             summary = add(block);
         } catch (Throwable th) {
             LOG.error("Unexpected error: ", th);
+        } finally {
+            this.fork = false;
         }
-
-        this.fork = (summary == null);
 
         if (summary != null && isMoreThan(this.totalDifficulty, savedState.savedTD)) {
             if (LOG.isInfoEnabled())
@@ -982,8 +984,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (!block.isGenesis()) {
             return applyBlock(block);
         } else {
-            return new AionBlockSummary(block, new HashMap<Address, BigInteger>(), new ArrayList<AionTxReceipt>(),
-                    new ArrayList<AionTxExecSummary>());
+            return new AionBlockSummary(block, new HashMap<>(), new ArrayList<>(),
+                new ArrayList<>());
         }
     }
 
@@ -1042,8 +1044,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             TransactionExecutor executor = new TransactionExecutor(tx, block, track);
             AionTxExecSummary summary = executor.execute();
 
-            //comment it for testing
-            //track.flush();
+            track.flush();
             AionTxReceipt receipt = summary.getReceipt();
             receipt.setPostTxState(repository.getRoot());
             receipts.add(receipt);
