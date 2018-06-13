@@ -5,6 +5,7 @@ JDK_RT="${PACK_PATH}/rt"
 WEB3JS_PATH="${PACK_PATH}/web3"
 CONFIG_PATH="${PACK_PATH}/config"
 DOCS_PATH="${PACK_PATH}/docs"
+API_PATH="${PACK_PATH}/clientAPI"
 
 if [ ! -d "$PACK_PATH" ]; then
   mkdir $PACK_PATH
@@ -42,3 +43,11 @@ if [ ! -d "$DOCS_PATH" ]; then
   mkdir $DOCS_PATH
   cp -r ./docs/** $DOCS_PATH
 fi
+
+# copy the client API files if can't find the client API env
+if [ ! -d "$API_PATH" ]; then
+  mkdir $API_PATH
+  cp aion_api/pack/libAionApi-*.tar.gz $API_PATH
+fi
+
+

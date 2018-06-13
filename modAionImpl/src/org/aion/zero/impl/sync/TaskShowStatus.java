@@ -22,15 +22,14 @@
  */
 package org.aion.zero.impl.sync;
 
-import org.aion.base.util.Hex;
-import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.types.AionBlock;
-import org.slf4j.Logger;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.base.util.Hex;
+import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.types.AionBlock;
+import org.slf4j.Logger;
 
 /**
  * The thread print out sync status
@@ -49,22 +48,22 @@ final class TaskShowStatus implements Runnable {
 
     private final SyncStatics statics;
 
-    private final Logger log;
-
     private final boolean printReport;
     private final String reportFolder;
 
+    private final Logger p2pLOG;
+
     TaskShowStatus(final AtomicBoolean _start, int _interval, final AionBlockchainImpl _chain,
-            final NetworkStatus _networkStatus, final SyncStatics _statics, final Logger _log,
-            final boolean _printReport, final String _reportFolder) {
+        final NetworkStatus _networkStatus, final SyncStatics _statics,
+        final boolean _printReport, final String _reportFolder, final Logger _log) {
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
         this.networkStatus = _networkStatus;
         this.statics = _statics;
-        this.log = _log;
         this.printReport = _printReport;
         this.reportFolder = _reportFolder;
+        this.p2pLOG = _log;
     }
 
     @Override
@@ -74,22 +73,24 @@ final class TaskShowStatus implements Runnable {
             AionBlock selfBest = this.chain.getBestBlock();
             String selfTd = selfBest.getCumulativeDifficulty().toString(10);
 
-            String status = "<sync-status avg-import=" + String.format("%.2f", this.statics.getAvgBlocksPerSec()) //
+            String status =
+                "sync-status avg-import=" + String.format("%.2f", this.statics.getAvgBlocksPerSec())
+                    //
                     + " b/s" //
                     + " td=" + selfTd + "/" + networkStatus.getTargetTotalDiff().toString(10) //
-                    + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus.getTargetBestBlockNumber() //
+                    + " b-num=" + selfBest.getNumber() + "/" + this.networkStatus
+                    .getTargetBestBlockNumber() //
                     + " b-hash=" + Hex.toHexString(this.chain.getBestBlockHash()) //
-                    + "/" + this.networkStatus.getTargetBestBlockHash() + ">";
+                    + "/" + this.networkStatus.getTargetBestBlockHash() + "";
 
-            // print to std output
-            // thread to dump sync status enabled by sync mgr
-            System.out.println(status);
+            p2pLOG.info(status);
 
             // print to report file
             if (printReport) {
                 try {
-                    Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-sync-report.out"),
-                            status.getBytes());
+                    Files.write(
+                        Paths.get(reportFolder, System.currentTimeMillis() + "-sync-report.out"),
+                        status.getBytes());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -98,10 +99,14 @@ final class TaskShowStatus implements Runnable {
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                if (log.isDebugEnabled()) { log.debug("<sync-ss shutdown>"); }
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("sync-ss shutdown");
+                }
                 return;
             }
         }
-        if (log.isDebugEnabled()) { log.debug("<sync-ss shutdown>"); }
+        if (p2pLOG.isDebugEnabled()) {
+            p2pLOG.debug("sync-ss shutdown");
+        }
     }
 }
