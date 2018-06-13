@@ -563,6 +563,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // to connect to the main chain
         final AionBlockSummary summary;
         if (bestBlock.isParentOf(block)) {
+            repository.syncToRoot(bestBlock.getStateRoot());
             summary = add(block);
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
         } else {

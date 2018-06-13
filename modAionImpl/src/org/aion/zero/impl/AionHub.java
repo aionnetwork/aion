@@ -25,6 +25,7 @@ package org.aion.zero.impl;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -395,7 +396,7 @@ public class AionHub {
                 bestBlock.setCumulativeDifficulty(this.repository.getBlockStore().getTotalDifficulty());
             }
 
-            LOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
+            genLOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
                     LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
         }
 
