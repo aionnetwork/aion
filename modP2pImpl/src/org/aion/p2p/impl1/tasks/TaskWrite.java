@@ -30,23 +30,25 @@ import org.aion.p2p.Header;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public class TaskWrite implements Runnable {
 
-    private boolean showLog;
-    private String nodeShortId;
-    private SocketChannel sc;
-    private Msg msg;
-    private ChannelBuffer channelBuffer;
-    private IP2pMgr p2pMgr;
+    private final boolean showLog;
+    private final String nodeShortId;
+    private final SocketChannel sc;
+    private final Msg msg;
+    private final ChannelBuffer channelBuffer;
+    private final IP2pMgr p2pMgr;
 
     TaskWrite(
-            boolean _showLog,
-            String _nodeShortId,
-            final SocketChannel _sc,
-            final Msg _msg,
-            final ChannelBuffer _cb,
-            final IP2pMgr _p2pMgr) {
+        final boolean _showLog,
+        final String _nodeShortId,
+        final SocketChannel _sc,
+        final Msg _msg,
+        final ChannelBuffer _cb,
+        final IP2pMgr _p2pMgr) {
         this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
@@ -81,7 +83,9 @@ public class TaskWrite implements Runnable {
             // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
-            if (bodyBytes != null) { buf.put(bodyBytes); }
+            if (bodyBytes != null) {
+                buf.put(bodyBytes);
+            }
             buf.flip();
 
             try {
@@ -94,18 +98,18 @@ public class TaskWrite implements Runnable {
             } catch (ClosedChannelException ex1) {
                 if (showLog) {
                     System.out.println(
-                            "<p2p closed-channel-exception node=" + this.nodeShortId + ">");
+                        "<p2p closed-channel-exception node=" + this.nodeShortId + ">");
                 }
                 channelBuffer.isClosed.set(true);
             } catch (IOException ex2) {
                 String reason = ex2.getMessage();
                 if (showLog) {
                     System.out.println(
-                            "<p2p write-msg-io-exception node="
-                                    + this.nodeShortId
-                                    + " err="
-                                    + ex2.getMessage()
-                                    + ">");
+                        "<p2p write-msg-io-exception node="
+                            + this.nodeShortId
+                            + " err="
+                            + ex2.getMessage()
+                            + ">");
                 }
                 if (reason.equals("Broken pipe")) {
                     channelBuffer.isClosed.set(true);

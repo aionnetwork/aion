@@ -36,25 +36,26 @@ import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 
 public class TaskConnectPeers implements Runnable {
+
     private static final int PERIOD_CONNECT_OUTBOUND = 1000;
     private static final int TIMEOUT_OUTBOUND_CONNECT = 10000;
 
     private final INodeMgr nodeMgr;
     private final int maxActiveNodes;
     private final IP2pMgr mgr;
-    private AtomicBoolean start;
-    private BlockingQueue<MsgOut> sendMsgQue;
-    private Selector selector;
-    private ReqHandshake1 cachedReqHandshake1;
+    private final AtomicBoolean start;
+    private final BlockingQueue<MsgOut> sendMsgQue;
+    private final Selector selector;
+    private final ReqHandshake1 cachedReqHS;
 
     public TaskConnectPeers(
-            IP2pMgr _mgr,
-            AtomicBoolean _start,
-            INodeMgr _nodeMgr,
-            int _maxActiveNodes,
-            Selector _selector,
-            BlockingQueue<MsgOut> _sendMsgQue,
-            ReqHandshake1 _cachedReqHandshake1) {
+        final IP2pMgr _mgr,
+        final AtomicBoolean _start,
+        final INodeMgr _nodeMgr,
+        final int _maxActiveNodes,
+        final Selector _selector,
+        final BlockingQueue<MsgOut> _sendMsgQue,
+        final ReqHandshake1 _cachedReqHS) {
 
         this.start = _start;
         this.nodeMgr = _nodeMgr;
@@ -62,7 +63,7 @@ public class TaskConnectPeers implements Runnable {
         this.mgr = _mgr;
         this.selector = _selector;
         this.sendMsgQue = _sendMsgQue;
-        this.cachedReqHandshake1 = _cachedReqHandshake1;
+        this.cachedReqHS = _cachedReqHS;
     }
 
     @Override
@@ -72,7 +73,9 @@ public class TaskConnectPeers implements Runnable {
             try {
                 Thread.sleep(PERIOD_CONNECT_OUTBOUND);
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) { System.out.println(getTcpInterruptedMsg()); }
+                if (this.mgr.isShowLog()) {
+                    System.out.println(getTcpInterruptedMsg());
+                }
             }
 
             if (this.nodeMgr.activeNodesSize() >= this.maxActiveNodes) {
@@ -85,29 +88,37 @@ public class TaskConnectPeers implements Runnable {
             INode node;
             try {
                 node = this.nodeMgr.tempNodesTake();
-                if (this.nodeMgr.isSeedIp(node.getIpStr())) { node.setFromBootList(true); }
-                if (node.getIfFromBootList()) { this.nodeMgr.addTempNode(node); }
+                if (this.nodeMgr.isSeedIp(node.getIpStr())) {
+                    node.setFromBootList(true);
+                }
+                if (node.getIfFromBootList()) {
+                    this.nodeMgr.addTempNode(node);
+                }
                 // if (node.peerMetric.shouldNotConn()) {
                 // continue;
                 // }
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) { System.out.println(getTcpInterruptedMsg()); }
+                if (this.mgr.isShowLog()) {
+                    System.out.println(getTcpInterruptedMsg());
+                }
                 return;
             } catch (Exception e) {
-                if (this.mgr.isShowLog()) { e.printStackTrace(); }
+                if (this.mgr.isShowLog()) {
+                    e.printStackTrace();
+                }
                 continue;
             }
             int nodeIdHash = node.getIdHash();
             if (!this.nodeMgr.getOutboundNodes().containsKey(nodeIdHash)
-                    && !this.nodeMgr.hasActiveNode(nodeIdHash)) {
+                && this.nodeMgr.notActiveNode(nodeIdHash)) {
                 int _port = node.getPort();
                 try {
                     SocketChannel channel = SocketChannel.open();
 
                     channel.socket()
-                            .connect(
-                                    new InetSocketAddress(node.getIpStr(), _port),
-                                    TIMEOUT_OUTBOUND_CONNECT);
+                        .connect(
+                            new InetSocketAddress(node.getIpStr(), _port),
+                            TIMEOUT_OUTBOUND_CONNECT);
                     this.mgr.configChannel(channel);
 
                     if (channel.finishConnect() && channel.isConnected()) {
@@ -129,11 +140,11 @@ public class TaskConnectPeers implements Runnable {
                             System.out.println(getPrepRqstMsg(node.getIdShort(), node.getIpStr()));
                         }
                         this.sendMsgQue.offer(
-                                new MsgOut(
-                                        node.getIdHash(),
-                                        node.getIdShort(),
-                                        this.cachedReqHandshake1,
-                                        Dest.OUTBOUND));
+                            new MsgOut(
+                                node.getIdHash(),
+                                node.getIdShort(),
+                                this.cachedReqHS,
+                                Dest.OUTBOUND));
                         // node.peerMetric.decFailedCount();
 
                     } else {
@@ -149,7 +160,9 @@ public class TaskConnectPeers implements Runnable {
                     }
                     // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
-                    if (this.mgr.isShowLog()) e.printStackTrace();
+                    if (this.mgr.isShowLog()) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
