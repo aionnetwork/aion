@@ -557,10 +557,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // to connect to the main chain
         final AionBlockSummary summary;
         if (bestBlock.isParentOf(block)) {
-            //reset the repository to sync with the stateroot of the best block
-            repository.syncToRoot(bestBlock.getStateRoot());
+            // reset the repository to sync with the stateroot of the best block
+            // TODO: uncomment on mainnet
+            // repository.syncToRoot(bestBlock.getStateRoot());
             summary = add(block);
             ret = summary == null ? INVALID_BLOCK : IMPORTED_BEST;
+            if (summary == null) {
+                repository.syncToRoot(bestBlock.getStateRoot());
+            }
         } else {
             if (getBlockStore().isBlockExist(block.getParentHash())) {
                 BigInteger oldTotalDiff = getInternalTD();
