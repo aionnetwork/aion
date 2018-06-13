@@ -342,8 +342,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         if (domainPartitioned.length >= subdomainPartitioned.length) return false;
 
-        for (int i = 0; i < domainPartitioned.length; i++) {
-            if (!domainPartitioned[i].equals(subdomainPartitioned[i])) return false;
+        for (int i = domainPartitioned.length-1, j = subdomainPartitioned.length-1; j >= subdomainPartitioned.length - domainPartitioned.length; i--, j--) {
+            if (!domainPartitioned[i].equals(subdomainPartitioned[j])) return false;
         }
         return true;
     }
