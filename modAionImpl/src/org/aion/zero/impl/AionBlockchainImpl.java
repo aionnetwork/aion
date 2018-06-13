@@ -765,6 +765,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
                 LOG.warn("Calculated receipts: " + receipts);
             }
+            track.rollback();
             return null;
         }
 
@@ -1041,7 +1042,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             TransactionExecutor executor = new TransactionExecutor(tx, block, track);
             AionTxExecSummary summary = executor.execute();
 
-            track.flush();
+            //comment it for testing
+            //track.flush();
             AionTxReceipt receipt = summary.getReceipt();
             receipt.setPostTxState(repository.getRoot());
             receipts.add(receipt);
