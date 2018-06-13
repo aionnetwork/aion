@@ -38,8 +38,6 @@ public final class CfgNetP2p {
         this.ip = "127.0.0.1";
         this.port = 30303;
         this.discover = false;
-        this.showStatus = false;
-        this.showLog = false;
         this.bootlistSyncOnly = false;
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
@@ -52,10 +50,6 @@ public final class CfgNetP2p {
     private int port;
 
     private boolean discover;
-
-    private boolean showStatus;
-
-    private boolean showLog;
 
     private boolean bootlistSyncOnly;
 
@@ -83,12 +77,6 @@ public final class CfgNetP2p {
                     break;
                 case "discover":
                     this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "show-status":
-                    this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "show-log":
-                    this.showLog = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
@@ -142,11 +130,6 @@ public final class CfgNetP2p {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("show-status");
-            xmlWriter.writeCharacters(this.showStatus + "");
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("max-temp-nodes");
             xmlWriter.writeCharacters(this.maxTempNodes + "");
             xmlWriter.writeEndElement();
@@ -187,14 +170,6 @@ public final class CfgNetP2p {
 
     public boolean getDiscover() {
         return this.discover;
-    }
-
-    public boolean getShowStatus() {
-        return this.showStatus;
-    }
-
-    public boolean getShowLog() {
-        return this.showLog;
     }
 
     public boolean getBootlistSyncOnly() { return bootlistSyncOnly; }

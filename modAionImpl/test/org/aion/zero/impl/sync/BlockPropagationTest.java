@@ -226,11 +226,6 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public boolean isShowLog() {
-            return false;
-        }
-
-        @Override
         public void closeSocket(SocketChannel _sc, String _reason) {
         }
 
@@ -271,6 +266,7 @@ public class BlockPropagationTest {
         public int getSelfNetId() {
             throw new IllegalStateException("not implemented.");
         }
+
     }
 
     private static List<ECKey> generateDefaultAccounts() {

@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
@@ -45,9 +47,10 @@ public class TaskClear implements Runnable {
         while (start.get()) {
             try {
                 Thread.sleep(PERIOD_CLEAR);
-                nodeMgr.timeoutCheck(this.mgr);
+                nodeMgr.timeoutCheck();
             } catch (Exception e) {
                 e.printStackTrace();
+                p2pLOG.error("TaskClear exception {}", e.getMessage());
             }
         }
     }

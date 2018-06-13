@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
@@ -85,14 +87,13 @@ public class TaskSend implements Runnable {
                 // if timeout , throw away this msg.
                 long now = System.currentTimeMillis();
                 if (now - mo.getTimestamp() > P2pConstant.WRITE_MSG_TIMEOUT) {
-                    if (this.mgr.isShowLog()) {
-                        System.out.println(getTimeoutMsg(mo.getDisplayId(), now));
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG.debug("timeout-msg to-node={} timestamp={}", mo.getDisplayId(), now);
                     }
                     continue;
                 }
 
                 // if not belong to current lane, put it back.
-                long t1 = System.nanoTime();
                 if (mo.getLane() != lane) {
                     sendMsgQue.offer(mo);
                     continue;
@@ -117,7 +118,6 @@ public class TaskSend implements Runnable {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
                             tpe.execute(new TaskWrite(
-                                this.mgr.isShowLog(),
                                 node.getIdShort(),
                                 node.getChannel(),
                                 mo.getMsg(),
@@ -126,23 +126,19 @@ public class TaskSend implements Runnable {
                         }
                     }
                 } else {
-                    if (this.mgr.isShowLog()) {
-                        System.out
-                            .println(getNodeNotExitMsg(mo.getDest().name(), mo.getDisplayId()));
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG.debug("msg-{} ->{} node-not-exit", mo.getDest().name(), mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {
-                if (this.mgr.isShowLog()) {
-                    System.out.println("<p2p task-send-interrupted>");
-                }
+                p2pLOG.error("task-send-interrupted");
                 return;
             } catch (RejectedExecutionException e) {
-                if (this.mgr.isShowLog()) {
-                    System.out.println("<p2p task-send-reached thread queue limit>");
-                }
+                p2pLOG.warn("task-send-reached thread queue limit");
             } catch (Exception e) {
-                if (this.mgr.isShowLog()) {
-                    e.printStackTrace();
+                e.printStackTrace();
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("TaskSend exception {}", e.getMessage());
                 }
             }
         }
@@ -156,13 +152,5 @@ public class TaskSend implements Runnable {
         in ^= in >> (32 - 20);
         in ^= in >> (32 - 25);
         return (in & 0b11111) * TOTAL_LANE / 32;
-    }
-
-    private String getTimeoutMsg(String id, long now) {
-        return "<p2p timeout-msg to-node=" + id + " timestamp=" + now + ">";
-    }
-
-    private String getNodeNotExitMsg(String name, String id) {
-        return "<p2p msg-" + name + "->" + id + " node-not-exit";
     }
 }

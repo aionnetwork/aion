@@ -59,8 +59,6 @@ public interface IP2pMgr {
 
     void closeSocket(final SocketChannel _sc, String _reason);
 
-    boolean isShowLog();
-
     void errCheck(int nodeIdHashcode, String _displayId);
 
     void dropActive(int _nodeIdHash, String _reason);

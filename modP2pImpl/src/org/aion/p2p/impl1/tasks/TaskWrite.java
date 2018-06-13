@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl1.tasks;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -35,7 +37,6 @@ import org.aion.p2p.Msg;
  */
 public class TaskWrite implements Runnable {
 
-    private final boolean showLog;
     private final String nodeShortId;
     private final SocketChannel sc;
     private final Msg msg;
@@ -43,13 +44,11 @@ public class TaskWrite implements Runnable {
     private final IP2pMgr p2pMgr;
 
     TaskWrite(
-        final boolean _showLog,
         final String _nodeShortId,
         final SocketChannel _sc,
         final Msg _msg,
         final ChannelBuffer _cb,
         final IP2pMgr _p2pMgr) {
-        this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
         this.msg = _msg;
@@ -63,7 +62,7 @@ public class TaskWrite implements Runnable {
         if (channelBuffer.isClosed.get()) {
             channelBuffer.refreshHeader();
             channelBuffer.refreshBody();
-            p2pMgr.dropActive(channelBuffer.nodeIdHash, "close-already");
+            p2pMgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
             return;
         }
 
@@ -79,8 +78,10 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
-            // print route
-            // System.out.println("write " + h.getVer() + "-" + h.getCtrl() + "-" + h.getAction());
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("write {}-{}-{}", h.getVer(), h.getCtrl(), h.getAction());
+            }
+
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
             if (bodyBytes != null) {
@@ -96,27 +97,24 @@ public class TaskWrite implements Runnable {
                     sc.write(buf);
                 }
             } catch (ClosedChannelException ex1) {
-                if (showLog) {
-                    System.out.println(
-                        "<p2p closed-channel-exception node=" + this.nodeShortId + ">");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("closed-channel-exception node={}", this.nodeShortId);
                 }
+
                 channelBuffer.isClosed.set(true);
             } catch (IOException ex2) {
-                String reason = ex2.getMessage();
-                if (showLog) {
-                    System.out.println(
-                        "<p2p write-msg-io-exception node="
-                            + this.nodeShortId
-                            + " err="
-                            + ex2.getMessage()
-                            + ">");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("write-msg-io-exception node={} err={}", this.nodeShortId,
+                        ex2.getMessage());
                 }
-                if (reason.equals("Broken pipe")) {
+
+                if (ex2.getMessage().equals("Broken pipe")) {
                     channelBuffer.isClosed.set(true);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            p2pLOG.error("TaskWrite exception {}", e.getMessage());
         } finally {
             channelBuffer.lock.unlock();
         }
