@@ -392,4 +392,17 @@
 			<arg value="${dir.workspace}/script/postpack.sh" />
 		</exec>
 	</target>
+
+	<target name="pack_docker">
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/pack_docker.sh" />
+		</exec>
+	</target>
+
+	<target name="push_docker">
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/push_docker.sh" />
+		</exec>
+	</target>
+
 </project>

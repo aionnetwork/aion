@@ -1,28 +1,22 @@
 # Dockerization
 
-The kernel can be deployed as a container using the Dockerfile present in the root of the repo.
-Currently there is no automated way to build it but it provides an argument to pick the release you want to use to build the image.
+The kernel can be deployed as a container using the Dockerfile present in the root of the repo. 
+The docker image can be built and pushed using the `pack_docker` and `push_docker` ant targets.
 
 ## Building
 
-Building is done by specifying the `kernel_archive` argument which is a full URL to the github kernel release.
-Make sure you tag the image correctly by specifying the `version_tag`.
-
-Note: You can use your own registry or build locally, but you need to specify the repository of the image
-if you intend to push it to the `centrys` docker registry.
-
 ```bash
-docker build -t \
-centrys/aion-docker:<version_tag> . \
---build-arg kernel_archive=https://github.com/aionnetwork/aion/releases/download/<version>/<archive>
+ant pack_docker
 ```
 
-Eg:
+This command will create 2 docker images
+- centrys/aion-core:<kernelversionshortcommit>
+- centrys/aion-core:latest
+
+In order to have the image available for deployments you need to push it to the registry using the `push_docker` target
 
 ```bash
-docker build -t \
-centrys/aion-docker:v0.2.7 . \
---build-arg kernel_archive=https://github.com/aionnetwork/aion/releases/download/v0.2.7/aion-v0.2.7.1bbeec1-2018-05-24.tar.bz2
+ant push_docker
 ```
 
 ## Running
@@ -36,7 +30,7 @@ Eg:
 docker run -it \
 -e java_api_listen_address=0.0.0.0 \
 -e rpc_listen_address=0.0.0.0 \
-aion-docker:v0.2.7
+aion-core:v0.2.7b1677af
 ```
 
 List of environment variables than can override xml properties:
