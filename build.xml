@@ -373,6 +373,7 @@
 			</tarfileset>
 			<tarfileset dir="${dir.workspace}" filemode="755" prefix="${project.name}">
 				<include name="aion.sh" />
+				<include name="aion-docker.py" />
 			</tarfileset>
 			<tarfileset dir="${dir.pack}/config" filemode="755" prefix="${project.name}/config">
 				<include name="**" />
