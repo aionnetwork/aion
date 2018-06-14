@@ -456,7 +456,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         AionBlockSummary summary = null;
         try {
-            // FIXME: adding block with no option for flush
             summary = add(block);
         } catch (Throwable th) {
             LOG.error("Unexpected error: ", th);
