@@ -453,23 +453,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
         State savedState = pushState(block.getParentHash());
         this.fork = true;
 
-        final AionBlockSummary summary;
+        AionBlockSummary summary = null;
         try {
-            // LOG.info("block " + block.toString());
-
-            // FIXME: adding block with no option for flush
             summary = add(block);
-            if (summary == null) {
-                return null;
-            }
         } catch (Throwable th) {
             LOG.error("Unexpected error: ", th);
-            return null;
         } finally {
             this.fork = false;
         }
 
-        if (isMoreThan(this.totalDifficulty, savedState.savedTD)) {
+        if (summary != null && isMoreThan(this.totalDifficulty, savedState.savedTD)) {
 
             if (LOG.isInfoEnabled())
                 LOG.info("branching: from = {}/{}, to = {}/{}",
@@ -772,6 +765,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.warn("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
                 LOG.warn("Calculated receipts: " + receipts);
             }
+            track.rollback();
             return null;
         }
 
