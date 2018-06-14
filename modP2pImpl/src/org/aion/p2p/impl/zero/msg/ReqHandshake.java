@@ -48,7 +48,7 @@ public class ReqHandshake extends Msg {
 
     public final static int LEN = 36 + 4 + 8 + 4;
 
-    public ReqHandshake(final byte[] _nodeId, int _netId, final byte[] _ip, int _port) {
+    ReqHandshake(final byte[] _nodeId, int _netId, final byte[] _ip, int _port) {
         super(Ver.V0, Ctrl.NET, Act.REQ_HANDSHAKE);
         this.nodeId = _nodeId;
         this.netId = _netId;

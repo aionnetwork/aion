@@ -33,8 +33,6 @@
 			<ip>0.0.0.0</ip>
 			<port>30303</port>
 			<discover>false</discover>
-			<show-status>false</show-status>
-			<show-log>false</show-log>
 			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
@@ -83,5 +81,6 @@
 		<CONS>INFO</CONS>
 		<DB>ERROR</DB>
 		<API>INFO</API>
+		<P2P>INFO</P2P>
 	</log>
 </aion>
