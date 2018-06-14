@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.p2p.impl.comm;
 
 import static org.junit.Assert.assertEquals;
@@ -15,7 +38,6 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.UUID;
 import org.aion.p2p.INode;
-import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.After;
@@ -31,16 +53,14 @@ public class NodeMgrTest {
     private final int MAX_TEMP_NODES = 128;
     private final int MAX_ACTIVE_NODES = 128;
 
-    private NodeMgr nMgr = new NodeMgr(MAX_ACTIVE_NODES, MAX_TEMP_NODES);
-
     private String nodeId1 = UUID.randomUUID().toString();
     private String nodeId2 = UUID.randomUUID().toString();
     private String ip1 = "127.0.0.1";
     private String ip2 = "192.168.0.11";
     private int port1 = 30304;
     private int port2 = 30305;
-    ServerSocketChannel tcpServer;
-    SocketChannel channel;
+    private ServerSocketChannel tcpServer;
+    private SocketChannel channel;
 
     private String[] nodes = new String[]{
         "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
@@ -57,9 +77,10 @@ public class NodeMgrTest {
         128,
         128,
         false,
-        false,
-        false,
         50);
+
+    private NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES);
+
 
     @Before
     public void mock_connection() throws IOException {
@@ -71,7 +92,6 @@ public class NodeMgrTest {
         tcpServer.socket().setReuseAddress(true);
         tcpServer.socket().bind(new InetSocketAddress(ip1, port1));
         tcpServer.register(selector, SelectionKey.OP_ACCEPT);
-
 
         channel = SocketChannel.open();
         channel.socket().connect(new InetSocketAddress(ip1, port1), 10000);
@@ -97,6 +117,7 @@ public class NodeMgrTest {
         for (String nodeL : nodes) {
             Node node = Node.parseP2p(nodeL);
             nMgr.addTempNode(node);
+            assert node != null;
             nMgr.seedIpAdd(node.getIpStr());
         }
         assertEquals(2, nMgr.tempNodesSize());
@@ -132,7 +153,7 @@ public class NodeMgrTest {
             "p2p://" + nodeId2 + "@" + ip1 + ":" + port1,
         };
 
-        NodeMgr mgr = new NodeMgr(MAX_ACTIVE_NODES, MAX_TEMP_NODES);
+        NodeMgr mgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES);
 
         for (String nodeL : nodes) {
             Node node = Node.parseP2p(nodeL);
@@ -141,7 +162,7 @@ public class NodeMgrTest {
         }
         assertEquals(2, mgr.tempNodesSize());
 
-        INode node = null;
+        INode node;
         while (mgr.tempNodesSize() != 0) {
             try {
                 node = mgr.tempNodesTake();
@@ -160,7 +181,7 @@ public class NodeMgrTest {
     @Test
     public void test_tempNodeMax_Any() {
 
-        NodeMgr mgr = new NodeMgr(512, 512);
+        NodeMgr mgr = new NodeMgr(p2p, 512, 512);
         String[] nodes_max = new String[512];
 
         int ip = 0;
@@ -184,6 +205,7 @@ public class NodeMgrTest {
                 System.out.println("node is null");
             }
             mgr.addTempNode(node);
+            assert node != null;
             mgr.seedIpAdd(node.getIpStr());
 
         }
@@ -226,7 +248,7 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode(), p2p);
+        nMgr.moveInboundToActive(channel.hashCode());
         assertEquals(1, nMgr.activeNodesSize());
     }
 
@@ -244,7 +266,7 @@ public class NodeMgrTest {
         nMgr.addOutboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort(), p2p);
+        nMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort());
         assertEquals(1, nMgr.activeNodesSize());
 
     }
@@ -252,7 +274,7 @@ public class NodeMgrTest {
     @Test
     public void test_getActiveNodesList() {
 
-        NodeMgr nMgr = new NodeMgr(MAX_ACTIVE_NODES, MAX_TEMP_NODES);
+        NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES);
         INode node = nMgr.allocNode(ip2, 0);
 
         node.setChannel(channel);
@@ -265,7 +287,7 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode(), p2p);
+        nMgr.moveInboundToActive(channel.hashCode());
 
         assertEquals(1, nMgr.activeNodesSize());
 
@@ -291,10 +313,10 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode(), p2p);
+        nMgr.moveInboundToActive(channel.hashCode());
         assertEquals(1, nMgr.activeNodesSize());
 
-        nMgr.dropActive(node.getIdHash(), p2p, "close");
+        nMgr.dropActive(node.getIdHash(), "close");
         assertEquals(0, nMgr.activeNodesSize());
 
     }
@@ -313,7 +335,7 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode(), p2p);
+        nMgr.moveInboundToActive(channel.hashCode());
         assertEquals(1, nMgr.activeNodesSize());
 
         assertTrue(node.getPeerMetric().notBan());
@@ -343,7 +365,7 @@ public class NodeMgrTest {
             e.printStackTrace();
         }
 
-        nMgr.timeoutInbound((IP2pMgr) p2p);
+        nMgr.timeoutInbound();
         assertNull(nMgr.getInboundNode(channel.hashCode()));
 
     }

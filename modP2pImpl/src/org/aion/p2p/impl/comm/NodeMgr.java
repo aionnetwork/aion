@@ -357,7 +357,7 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    private void timeoutInbound() {
+    void timeoutInbound() {
         Iterator<Integer> inboundIt = inboundNodes.keySet().iterator();
         while (inboundIt.hasNext()) {
             int key = inboundIt.next();
