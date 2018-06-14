@@ -43,9 +43,14 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.List;
+
+import static com.google.common.truth.Truth.assertThat;
 
 public class BlockchainForkingTest {
 
@@ -128,10 +133,8 @@ public class BlockchainForkingTest {
         assertThat(difficulty).isGreaterThan(standardBlock.getDifficultyBI());
         higherDifficultyBlock.getHeader().setDifficulty(difficulty.toByteArray());
 
-        System.out.println(
-                "before any processing: " + new ByteArrayWrapper(bc.getRepository().getRoot()));
-        System.out.println(
-                "trie: " + ((AionRepositoryImpl) bc.getRepository()).getWorldState().getTrieDump());
+        System.out.println("before any processing: " + new ByteArrayWrapper(bc.getRepository().getRoot()));
+        System.out.println("trie: " + bc.getRepository().getWorldState().getTrieDump());
 
         ImportResult result = bc.tryToConnect(standardBlock);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
@@ -151,6 +154,12 @@ public class BlockchainForkingTest {
 
         // the object reference here is intentional
         assertThat(bc.getBestBlock() == standardBlock).isTrue();
+
+        // check for correct state rollback
+        assertThat(bc.getRepository().getRoot()).isEqualTo(standardBlock.getStateRoot());
+        assertThat(bc.getTotalDifficulty())
+                .isEqualTo(bc.getRepository().getBlockStore().getTotalDifficultyForHash(standardBlock.getHash()));
+
     }
 
     /*-
@@ -218,7 +227,7 @@ public class BlockchainForkingTest {
         StandaloneBlockchain bc = bundle.bc;
         List<ECKey> accs = bundle.privateKeys;
 
-        // generate three blocks, on the third block we get flexiblity
+        // generate three blocks, on the third block we get flexibility
         // for what difficulties can occur
 
         BlockContext firstBlock =
@@ -289,5 +298,97 @@ public class BlockchainForkingTest {
                 .isEqualTo(ImportResult.IMPORTED_BEST);
 
         assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant.block);
+    }
+
+    /**
+     * Test fork with exception.
+     */
+    @Test
+    public void testSecondBlockHigherDifficultyFork_wExceptionOnFasterBlockAdd() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").withDefaultAccounts().build();
+
+        long time = System.currentTimeMillis();
+
+        StandaloneBlockchain bc = bundle.bc;
+
+        // generate three blocks, on the third block we get flexibility
+        // for what difficulties can occur
+
+        BlockContext firstBlock = bc
+                .createNewBlockInternal(bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(firstBlock.block, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // now connect the second block
+        BlockContext secondBlock = bc
+                .createNewBlockInternal(firstBlock.block, Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(secondBlock.block, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // now on the third block, we diverge with one block having higher TD than the other
+        BlockContext fasterSecondBlock = bc
+                .createNewBlockInternal(secondBlock.block, Collections.emptyList(), true, time / 1000L);
+        AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
+
+        slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
+
+        assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+
+        time += 100;
+
+        BlockContext fastBlockDescendant = bc
+                .createNewBlockInternal(fasterSecondBlock.block, Collections.emptyList(), true, time / 1000L);
+        BlockContext slowerBlockDescendant = bc
+                .createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
+
+        // increment by another hundred (this is supposed to be when the slower block descendant is completed)
+        time += 100;
+
+        assertThat(fastBlockDescendant.block.getDifficultyBI())
+                .isGreaterThan(slowerBlockDescendant.block.getDifficultyBI());
+        System.out.println("faster block descendant TD: " + fastBlockDescendant.block.getDifficultyBI());
+        System.out.println("slower block descendant TD: " + slowerBlockDescendant.block.getDifficultyBI());
+
+        assertThat(bc.tryToConnectInternal(slowerBlockDescendant.block, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // corrupt the parent for the fast block descendant
+        bc.getRepository().getStateDatabase().delete(fasterSecondBlock.block.getStateRoot());
+        assertThat(bc.getRepository().isValidRoot(fasterSecondBlock.block.getStateRoot())).isFalse();
+
+        // attempt adding the fastBlockDescendant
+        assertThat(bc.tryToConnectInternal(fastBlockDescendant.block, time)).isEqualTo(ImportResult.INVALID_BLOCK);
+
+        // check for correct state rollback
+        assertThat(bc.getBestBlock()).isEqualTo(slowerBlockDescendant.block);
+        assertThat(bc.getRepository().getRoot()).isEqualTo(slowerBlockDescendant.block.getStateRoot());
+        assertThat(bc.getTotalDifficulty()).isEqualTo(bc.getRepository().getBlockStore()
+                                                              .getTotalDifficultyForHash(slowerBlockDescendant.block
+                                                                                                 .getHash()));
+    }
+
+    @Test
+    public void testRollbackWithAddInvalidBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain bc = b.bc;
+        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+
+        assertThat(bc.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // check that the returned block is the first block
+        assertThat(bc.getBestBlock() == block).isTrue();
+
+        AionBlock invalidBlock = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        invalidBlock.getHeader().setDifficulty(BigInteger.ONE.toByteArray());
+
+        // attempting to add invalid block
+        assertThat(bc.tryToConnect(invalidBlock)).isEqualTo(ImportResult.INVALID_BLOCK);
+
+        // check for correct state rollback
+        assertThat(bc.getBestBlock()).isEqualTo(block);
+        assertThat(bc.getRepository().getRoot()).isEqualTo(block.getStateRoot());
+        assertThat(bc.getTotalDifficulty())
+                .isEqualTo(bc.getRepository().getBlockStore().getTotalDifficultyForHash(block.getHash()));
     }
 }
