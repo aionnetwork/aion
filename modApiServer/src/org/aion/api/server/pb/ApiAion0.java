@@ -596,41 +596,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     return ApiUtil.toReturnHeader(
                         getApiVersion(), Message.Retcode.r_fail_service_call_VALUE);
                 }
-            case Message.Funcs.f_sendTransaction_VALUE:
-                {
-                    if (service != Message.Servs.s_tx_VALUE) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_service_call_VALUE, msgHash);
-                    }
 
-                    byte[] data = parseMsgReq(request, msgHash);
-                    Message.req_sendTransaction req;
-                    byte[] result;
-                    try {
-                        req = Message.req_sendTransaction.parseFrom(data);
+                byte[] data = parseMsgReq(request, msgHash);
+                BigInteger nonce;
+                try {
+                    Message.req_getNonce req = Message.req_getNonce.parseFrom(data);
 
-                        ArgTxCall params =
-                                new ArgTxCall(
-                                        Address.wrap(req.getFrom().toByteArray()),
-                                        Address.wrap(req.getTo().toByteArray()),
-                                        req.getData().toByteArray(),
-                                        new BigInteger(req.getNonce().toByteArray()),
-                                        new BigInteger(req.getValue().toByteArray()),
-                                        req.getNrg(),
-                                        req.getNrgPrice());
-
-                        result = this.sendTransaction(params);
-                    } catch (InvalidProtocolBufferException e) {
-                        LOG.error(
-                                "ApiAion0.process.sendTransaction exception: [{}]", e.getMessage());
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
-                    }
-
-                    if (result == null) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
-                    }
+                    Address addr = Address.wrap(req.getAddress().toByteArray());
 
                     nonce = this.getNonce(addr);
                 } catch (InvalidProtocolBufferException e) {
@@ -1016,12 +988,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     return ApiUtil.toReturnHeader(
                         getApiVersion(), Retcode.r_fail_service_call_VALUE);
                 }
-            case Message.Funcs.f_accountCreate_VALUE:
-                {
-                    if (service != Message.Servs.s_account_VALUE) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_service_call_VALUE);
-                    }
 
                 byte[] data = parseMsgReq(request, msgHash);
                 Message.req_getTransactionByBlockHashAndIndex req;
@@ -1098,12 +1064,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     return ApiUtil.toReturnHeader(
                         getApiVersion(), Retcode.r_fail_service_call_VALUE);
                 }
-            case Message.Funcs.f_mining_VALUE:
-                {
-                    if (service != Message.Servs.s_mine_VALUE) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_service_call_VALUE);
-                    }
 
                 byte[] data = parseMsgReq(request, msgHash);
                 Message.req_getBlockTransactionCountByNumber req;
@@ -1608,12 +1568,6 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     return ApiUtil.toReturnHeader(
                         getApiVersion(), Retcode.r_fail_service_call_VALUE);
                 }
-            case Message.Funcs.f_eventRegister_VALUE:
-                {
-                    if (service != Message.Servs.s_tx_VALUE) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_service_call_VALUE);
-                    }
 
                 byte[] data = parseMsgReq(request, msgHash);
                 Message.req_importAccounts req;
