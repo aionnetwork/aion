@@ -1,28 +1,25 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
-
 package org.aion.p2p.impl.comm;
 
 import java.math.BigInteger;
@@ -31,8 +28,9 @@ import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.aion.p2p.INode;
+import org.aion.p2p.IPeerMetric;
 
-/*
+/**
  *
  * @author Chris
  * p2p://{node-id}@{ip}:{port}
@@ -88,7 +86,12 @@ public final class Node implements INode {
 	 */
 	private String connection = "";
 
-	public PeerMetric peerMetric = new PeerMetric();
+	public IPeerMetric peerMetric = new PeerMetric();
+
+	@Override
+	public IPeerMetric getPeerMetric() {
+		return this.peerMetric;
+	}
 
 	/**
 	 * constructor for initial stage of connections from network
@@ -182,6 +185,7 @@ public final class Node implements INode {
 		return new Node(true, _id, _ip, _port);
 	}
 
+	@Override
 	public void setFromBootList(boolean _ifBoot) {
 		this.fromBootList = _ifBoot;
 	}
@@ -190,6 +194,7 @@ public final class Node implements INode {
 	 * @param _id
 	 *            byte[]
 	 */
+	@Override
 	public void setId(final byte[] _id) {
 		this.id = _id;
 		if (_id != null && _id.length == 36) {
@@ -202,10 +207,12 @@ public final class Node implements INode {
 	 * @param _port
 	 *            int
 	 */
+	@Override
 	public void setPort(final int _port) {
 		this.port = _port;
 	}
 
+	@Override
 	public void setBinaryVersion(String _revision) {
 		this.binaryVersion = _revision;
 	}
@@ -214,6 +221,7 @@ public final class Node implements INode {
 	 * this method used to keep current node stage on either pending list or active
 	 * list
 	 */
+	@Override
 	public void refreshTimestamp() {
 		this.timestamp = System.currentTimeMillis();
 	}
@@ -222,6 +230,7 @@ public final class Node implements INode {
 	 * @param _channel
 	 *            SocketChannel
 	 */
+	@Override
 	public void setChannel(final SocketChannel _channel) {
 		this.channel = _channel;
 	}
@@ -230,13 +239,15 @@ public final class Node implements INode {
 	 * @param _connection
 	 *            String
 	 */
-	void setConnection(String _connection) {
+	@Override
+	public void setConnection(String _connection) {
 		this.connection = _connection;
 	}
 
 	/**
 	 * @return boolean
 	 */
+	@Override
 	public boolean getIfFromBootList() {
 		return this.fromBootList;
 	}
@@ -270,6 +281,7 @@ public final class Node implements INode {
 	/**
 	 * @return SocketChannel
 	 */
+	@Override
 	public SocketChannel getChannel() {
 		return this.channel;
 	}
@@ -287,7 +299,8 @@ public final class Node implements INode {
 	/**
 	 * @return String
 	 */
-	String getConnection() {
+	@Override
+	public String getConnection() {
 		return this.connection;
 	}
 
@@ -301,7 +314,8 @@ public final class Node implements INode {
 		return this.bestBlockNumber;
 	}
 
-	byte[] getBestBlockHash() {
+	@Override
+	public byte[] getBestBlockHash() {
 		return this.bestBlockHash;
 	}
 

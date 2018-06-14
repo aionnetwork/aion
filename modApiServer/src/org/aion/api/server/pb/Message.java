@@ -417,6 +417,10 @@ public final class Message {
      * <code>f_getNonce = 56;</code>
      */
     f_getNonce(56),
+    /**
+     * <code>f_getNrgPrice = 57;</code>
+     */
+    f_getNrgPrice(57),
     UNRECOGNIZED(-1),
     ;
 
@@ -648,6 +652,10 @@ public final class Message {
      * <code>f_getNonce = 56;</code>
      */
     public static final int f_getNonce_VALUE = 56;
+    /**
+     * <code>f_getNrgPrice = 57;</code>
+     */
+    public static final int f_getNrgPrice_VALUE = 57;
 
 
     public final int getNumber() {
@@ -725,6 +733,7 @@ public final class Message {
         case 54: return f_getBlockSqlByRange;
         case 55: return f_getBlockDetailsByRange;
         case 56: return f_getNonce;
+        case 57: return f_getNrgPrice;
         default: return null;
       }
     }
@@ -70730,6 +70739,458 @@ public final class Message {
 
   }
 
+  public interface rsp_getNrgPriceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getNrgPrice)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>uint64 nrgPrice = 1;</code>
+     */
+    long getNrgPrice();
+  }
+  /**
+   * Protobuf type {@code org.aion.api.server.pb.rsp_getNrgPrice}
+   */
+  public  static final class rsp_getNrgPrice extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.aion.api.server.pb.rsp_getNrgPrice)
+      rsp_getNrgPriceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use rsp_getNrgPrice.newBuilder() to construct.
+    private rsp_getNrgPrice(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private rsp_getNrgPrice() {
+      nrgPrice_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private rsp_getNrgPrice(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownFieldProto3(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+
+              nrgPrice_ = input.readUInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getNrgPrice_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getNrgPrice_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.aion.api.server.pb.Message.rsp_getNrgPrice.class, org.aion.api.server.pb.Message.rsp_getNrgPrice.Builder.class);
+    }
+
+    public static final int NRGPRICE_FIELD_NUMBER = 1;
+    private long nrgPrice_;
+    /**
+     * <code>uint64 nrgPrice = 1;</code>
+     */
+    public long getNrgPrice() {
+      return nrgPrice_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (nrgPrice_ != 0L) {
+        output.writeUInt64(1, nrgPrice_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (nrgPrice_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, nrgPrice_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.aion.api.server.pb.Message.rsp_getNrgPrice)) {
+        return super.equals(obj);
+      }
+      org.aion.api.server.pb.Message.rsp_getNrgPrice other = (org.aion.api.server.pb.Message.rsp_getNrgPrice) obj;
+
+      boolean result = true;
+      result = result && (getNrgPrice()
+          == other.getNrgPrice());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + NRGPRICE_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getNrgPrice());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.aion.api.server.pb.Message.rsp_getNrgPrice prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.aion.api.server.pb.rsp_getNrgPrice}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.aion.api.server.pb.rsp_getNrgPrice)
+        org.aion.api.server.pb.Message.rsp_getNrgPriceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getNrgPrice_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getNrgPrice_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.aion.api.server.pb.Message.rsp_getNrgPrice.class, org.aion.api.server.pb.Message.rsp_getNrgPrice.Builder.class);
+      }
+
+      // Construct using org.aion.api.server.pb.Message.rsp_getNrgPrice.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        nrgPrice_ = 0L;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.aion.api.server.pb.Message.internal_static_org_aion_api_server_pb_rsp_getNrgPrice_descriptor;
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getNrgPrice getDefaultInstanceForType() {
+        return org.aion.api.server.pb.Message.rsp_getNrgPrice.getDefaultInstance();
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getNrgPrice build() {
+        org.aion.api.server.pb.Message.rsp_getNrgPrice result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.aion.api.server.pb.Message.rsp_getNrgPrice buildPartial() {
+        org.aion.api.server.pb.Message.rsp_getNrgPrice result = new org.aion.api.server.pb.Message.rsp_getNrgPrice(this);
+        result.nrgPrice_ = nrgPrice_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.aion.api.server.pb.Message.rsp_getNrgPrice) {
+          return mergeFrom((org.aion.api.server.pb.Message.rsp_getNrgPrice)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.aion.api.server.pb.Message.rsp_getNrgPrice other) {
+        if (other == org.aion.api.server.pb.Message.rsp_getNrgPrice.getDefaultInstance()) return this;
+        if (other.getNrgPrice() != 0L) {
+          setNrgPrice(other.getNrgPrice());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.aion.api.server.pb.Message.rsp_getNrgPrice parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.aion.api.server.pb.Message.rsp_getNrgPrice) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private long nrgPrice_ ;
+      /**
+       * <code>uint64 nrgPrice = 1;</code>
+       */
+      public long getNrgPrice() {
+        return nrgPrice_;
+      }
+      /**
+       * <code>uint64 nrgPrice = 1;</code>
+       */
+      public Builder setNrgPrice(long value) {
+        
+        nrgPrice_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>uint64 nrgPrice = 1;</code>
+       */
+      public Builder clearNrgPrice() {
+        
+        nrgPrice_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFieldsProto3(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.aion.api.server.pb.rsp_getNrgPrice)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.aion.api.server.pb.rsp_getNrgPrice)
+    private static final org.aion.api.server.pb.Message.rsp_getNrgPrice DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.aion.api.server.pb.Message.rsp_getNrgPrice();
+    }
+
+    public static org.aion.api.server.pb.Message.rsp_getNrgPrice getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<rsp_getNrgPrice>
+        PARSER = new com.google.protobuf.AbstractParser<rsp_getNrgPrice>() {
+      public rsp_getNrgPrice parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new rsp_getNrgPrice(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<rsp_getNrgPrice> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<rsp_getNrgPrice> getParserForType() {
+      return PARSER;
+    }
+
+    public org.aion.api.server.pb.Message.rsp_getNrgPrice getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_aion_api_server_pb_t_Contract_descriptor;
   private static final 
@@ -71250,6 +71711,11 @@ public final class Message {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_aion_api_server_pb_rsp_getNonce_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_aion_api_server_pb_rsp_getNrgPrice_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_aion_api_server_pb_rsp_getNrgPrice_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -71468,67 +71934,69 @@ public final class Message {
       "tBlockDetailsByRange\0229\n\nblkDetails\030\001 \003(\013" +
       "2%.org.aion.api.server.pb.t_BlockDetail\"" +
       "\037\n\014req_getNonce\022\017\n\007address\030\001 \001(\014\"\035\n\014rsp_" +
-      "getNonce\022\r\n\005nonce\030\001 \001(\014*\204\001\n\005Servs\022\010\n\004s_h" +
-      "b\020\000\022\013\n\007s_admin\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_accou" +
-      "nt\020\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n" +
-      "\013s_privilege\020\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\265" +
-      "\n\n\005Funcs\022\025\n\021f_protocolVersion\020\000\022\022\n\016f_min" +
-      "erAddress\020\001\022\016\n\nf_accounts\020\002\022\021\n\rf_blockNu" +
-      "mber\020\003\022\020\n\014f_getBalance\020\004\022\022\n\016f_getStorage" +
-      "At\020\005\022\023\n\017f_unlockAccount\020\006\022\025\n\021f_sendTrans" +
-      "action\020\007\022\032\n\026f_getTransactionByHash\020\010\022\r\n\t" +
-      "f_compile\020\t\022\024\n\020f_contractDeploy\020\n\022\031\n\025f_g" +
-      "etTransactionCount\020\013\022$\n f_getBlockTransa" +
-      "ctionCountByHash\020\014\022&\n\"f_getBlockTransact" +
-      "ionCountByNumber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_c" +
-      "all\020\017\022\024\n\020f_getBlockByHash\020\020\022\026\n\022f_getBloc" +
-      "kByNumber\020\021\022\'\n#f_getTransactionByBlockHa" +
-      "shAndIndex\020\022\022)\n%f_getTransactionByBlockN" +
-      "umberAndIndex\020\023\022\033\n\027f_getTransactionRecei" +
-      "pt\020\024\022\022\n\016f_getCompilers\020\025\022\025\n\021f_compileSol" +
-      "idity\020\026\022\r\n\tf_getWork\020\027\022\020\n\014f_submitWork\020\030" +
-      "\022\035\n\031f_fetchQueuedTransactions\020\031\022\027\n\023f_sig" +
-      "nedTransaction\020\032\022\024\n\020f_rawTransaction\020\033\022\021" +
-      "\n\rf_estimateNrg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_has" +
-      "hrate\020\036\022\024\n\020f_getActiveNodes\020\037\022\024\n\020f_getSo" +
-      "lcVersion\020 \022\017\n\013f_isSyncing\020!\022\016\n\nf_syncIn" +
-      "fo\020\"\022\023\n\017f_getSystemInfo\020#\022\023\n\017f_eventRegi" +
-      "ster\020$\022\025\n\021f_eventDeregister\020%\022\023\n\017f_accou" +
-      "ntCreate\020&\022\021\n\rf_accountLock\020\'\022\023\n\017f_userP" +
-      "rivilege\020(\022\020\n\014f_eventQuery\020)\022\024\n\020f_import" +
-      "Accounts\020*\022\024\n\020f_exportAccounts\020+\022\034\n\030f_ge" +
-      "tBlockHeaderByNumber\020,\022\032\n\026f_getBlockHead" +
-      "erByHash\020-\022\037\n\033f_getCurrentTotalDifficult" +
-      "y\020.\022\024\n\020f_getStaticNodes\020/\022\035\n\031f_getBlockD" +
-      "etailsByNumber\0200\022\035\n\031f_getBlockDetailsByL" +
-      "atest\0201\022\027\n\023f_getBlocksByLatest\0202\022$\n f_ge" +
-      "tAccountDetailsByAddressList\0203\022\024\n\020f_back" +
-      "upAccounts\0204\022\010\n\004f_NA\0205\022\030\n\024f_getBlockSqlB" +
-      "yRange\0206\022\034\n\030f_getBlockDetailsByRange\0207\022\016" +
-      "\n\nf_getNonce\0208*\241\007\n\007Retcode\022\n\n\006r_fail\020\000\022\r" +
-      "\n\tr_success\020\001\022\023\n\017r_wallet_nullcb\020\002\022\025\n\021r_" +
-      "heartbeatReturn\020\003\022\025\n\021r_privilegeReturn\020\004" +
-      "\022\r\n\tr_tx_Init\020d\022\017\n\013r_tx_Recved\020e\022\020\n\014r_tx" +
-      "_Dropped\020f\022\023\n\017r_tx_NewPending\020g\022\020\n\014r_tx_" +
-      "Pending\020h\022\021\n\rr_tx_Included\020i\022\020\n\014r_tx_eve" +
-      "ntCb\020j\022\010\n\004r_NA\020k\022\036\n\021r_fail_header_len\020\377\377" +
-      "\377\377\377\377\377\377\377\001\022 \n\023r_fail_service_call\020\376\377\377\377\377\377\377\377" +
-      "\377\001\022!\n\024r_fail_function_call\020\375\377\377\377\377\377\377\377\377\001\022&\n" +
-      "\031r_fail_function_exception\020\374\377\377\377\377\377\377\377\377\001\022\037\n" +
-      "\022r_fail_api_version\020\373\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail" +
-      "_ct_bytecode\020\372\377\377\377\377\377\377\377\377\001\022\034\n\017r_fail_null_r" +
-      "sp\020\371\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_invalid_addr\020\370\377\377" +
-      "\377\377\377\377\377\377\001\022\'\n\032r_fail_null_compile_source\020\367\377" +
-      "\377\377\377\377\377\377\377\001\022$\n\027r_fail_compile_contract\020\366\377\377\377" +
-      "\377\377\377\377\377\001\022#\n\026r_fail_sendTx_null_rep\020\365\377\377\377\377\377\377" +
-      "\377\377\001\022\036\n\021r_fail_getcode_to\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r" +
-      "_fail_getTxReceipt_null_recp\020\363\377\377\377\377\377\377\377\377\001\022" +
-      "(\n\033r_fail_zmqHandler_exception\020\362\377\377\377\377\377\377\377\377" +
-      "\001\022(\n\033r_fail_hit_pending_tx_limit\020\361\377\377\377\377\377\377" +
-      "\377\377\001\022%\n\030r_fail_txqueue_exception\020\360\377\377\377\377\377\377\377" +
-      "\377\001\022&\n\031r_fail_function_arguments\020\357\377\377\377\377\377\377\377" +
-      "\377\001\022!\n\024r_fail_unsupport_api\020\356\377\377\377\377\377\377\377\377\001\022\033\n" +
-      "\016r_fail_unknown\020\355\377\377\377\377\377\377\377\377\001b\006proto3"
+      "getNonce\022\r\n\005nonce\030\001 \001(\014\"#\n\017rsp_getNrgPri" +
+      "ce\022\020\n\010nrgPrice\030\001 \001(\004*\204\001\n\005Servs\022\010\n\004s_hb\020\000" +
+      "\022\013\n\007s_admin\020\001\022\013\n\007s_chain\020\002\022\r\n\ts_account\020" +
+      "\003\022\010\n\004s_tx\020\004\022\t\n\005s_net\020\005\022\n\n\006s_mine\020\006\022\017\n\013s_" +
+      "privilege\020\007\022\014\n\010s_wallet\020\010\022\010\n\004s_NA\020\t*\310\n\n\005" +
+      "Funcs\022\025\n\021f_protocolVersion\020\000\022\022\n\016f_minerA" +
+      "ddress\020\001\022\016\n\nf_accounts\020\002\022\021\n\rf_blockNumbe" +
+      "r\020\003\022\020\n\014f_getBalance\020\004\022\022\n\016f_getStorageAt\020" +
+      "\005\022\023\n\017f_unlockAccount\020\006\022\025\n\021f_sendTransact" +
+      "ion\020\007\022\032\n\026f_getTransactionByHash\020\010\022\r\n\tf_c" +
+      "ompile\020\t\022\024\n\020f_contractDeploy\020\n\022\031\n\025f_getT" +
+      "ransactionCount\020\013\022$\n f_getBlockTransacti" +
+      "onCountByHash\020\014\022&\n\"f_getBlockTransaction" +
+      "CountByNumber\020\r\022\r\n\tf_getCode\020\016\022\n\n\006f_call" +
+      "\020\017\022\024\n\020f_getBlockByHash\020\020\022\026\n\022f_getBlockBy" +
+      "Number\020\021\022\'\n#f_getTransactionByBlockHashA" +
+      "ndIndex\020\022\022)\n%f_getTransactionByBlockNumb" +
+      "erAndIndex\020\023\022\033\n\027f_getTransactionReceipt\020" +
+      "\024\022\022\n\016f_getCompilers\020\025\022\025\n\021f_compileSolidi" +
+      "ty\020\026\022\r\n\tf_getWork\020\027\022\020\n\014f_submitWork\020\030\022\035\n" +
+      "\031f_fetchQueuedTransactions\020\031\022\027\n\023f_signed" +
+      "Transaction\020\032\022\024\n\020f_rawTransaction\020\033\022\021\n\rf" +
+      "_estimateNrg\020\034\022\014\n\010f_mining\020\035\022\016\n\nf_hashra" +
+      "te\020\036\022\024\n\020f_getActiveNodes\020\037\022\024\n\020f_getSolcV" +
+      "ersion\020 \022\017\n\013f_isSyncing\020!\022\016\n\nf_syncInfo\020" +
+      "\"\022\023\n\017f_getSystemInfo\020#\022\023\n\017f_eventRegiste" +
+      "r\020$\022\025\n\021f_eventDeregister\020%\022\023\n\017f_accountC" +
+      "reate\020&\022\021\n\rf_accountLock\020\'\022\023\n\017f_userPriv" +
+      "ilege\020(\022\020\n\014f_eventQuery\020)\022\024\n\020f_importAcc" +
+      "ounts\020*\022\024\n\020f_exportAccounts\020+\022\034\n\030f_getBl" +
+      "ockHeaderByNumber\020,\022\032\n\026f_getBlockHeaderB" +
+      "yHash\020-\022\037\n\033f_getCurrentTotalDifficulty\020." +
+      "\022\024\n\020f_getStaticNodes\020/\022\035\n\031f_getBlockDeta" +
+      "ilsByNumber\0200\022\035\n\031f_getBlockDetailsByLate" +
+      "st\0201\022\027\n\023f_getBlocksByLatest\0202\022$\n f_getAc" +
+      "countDetailsByAddressList\0203\022\024\n\020f_backupA" +
+      "ccounts\0204\022\010\n\004f_NA\0205\022\030\n\024f_getBlockSqlByRa" +
+      "nge\0206\022\034\n\030f_getBlockDetailsByRange\0207\022\016\n\nf" +
+      "_getNonce\0208\022\021\n\rf_getNrgPrice\0209*\241\007\n\007Retco" +
+      "de\022\n\n\006r_fail\020\000\022\r\n\tr_success\020\001\022\023\n\017r_walle" +
+      "t_nullcb\020\002\022\025\n\021r_heartbeatReturn\020\003\022\025\n\021r_p" +
+      "rivilegeReturn\020\004\022\r\n\tr_tx_Init\020d\022\017\n\013r_tx_" +
+      "Recved\020e\022\020\n\014r_tx_Dropped\020f\022\023\n\017r_tx_NewPe" +
+      "nding\020g\022\020\n\014r_tx_Pending\020h\022\021\n\rr_tx_Includ" +
+      "ed\020i\022\020\n\014r_tx_eventCb\020j\022\010\n\004r_NA\020k\022\036\n\021r_fa" +
+      "il_header_len\020\377\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_servi" +
+      "ce_call\020\376\377\377\377\377\377\377\377\377\001\022!\n\024r_fail_function_ca" +
+      "ll\020\375\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_function_excepti" +
+      "on\020\374\377\377\377\377\377\377\377\377\001\022\037\n\022r_fail_api_version\020\373\377\377\377" +
+      "\377\377\377\377\377\001\022\037\n\022r_fail_ct_bytecode\020\372\377\377\377\377\377\377\377\377\001\022" +
+      "\034\n\017r_fail_null_rsp\020\371\377\377\377\377\377\377\377\377\001\022 \n\023r_fail_" +
+      "invalid_addr\020\370\377\377\377\377\377\377\377\377\001\022\'\n\032r_fail_null_c" +
+      "ompile_source\020\367\377\377\377\377\377\377\377\377\001\022$\n\027r_fail_compi" +
+      "le_contract\020\366\377\377\377\377\377\377\377\377\001\022#\n\026r_fail_sendTx_" +
+      "null_rep\020\365\377\377\377\377\377\377\377\377\001\022\036\n\021r_fail_getcode_to" +
+      "\020\364\377\377\377\377\377\377\377\377\001\022*\n\035r_fail_getTxReceipt_null_" +
+      "recp\020\363\377\377\377\377\377\377\377\377\001\022(\n\033r_fail_zmqHandler_exc" +
+      "eption\020\362\377\377\377\377\377\377\377\377\001\022(\n\033r_fail_hit_pending_" +
+      "tx_limit\020\361\377\377\377\377\377\377\377\377\001\022%\n\030r_fail_txqueue_ex" +
+      "ception\020\360\377\377\377\377\377\377\377\377\001\022&\n\031r_fail_function_ar" +
+      "guments\020\357\377\377\377\377\377\377\377\377\001\022!\n\024r_fail_unsupport_a" +
+      "pi\020\356\377\377\377\377\377\377\377\377\001\022\033\n\016r_fail_unknown\020\355\377\377\377\377\377\377\377" +
+      "\377\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -72166,6 +72634,12 @@ public final class Message {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getNonce_descriptor,
         new java.lang.String[] { "Nonce", });
+    internal_static_org_aion_api_server_pb_rsp_getNrgPrice_descriptor =
+      getDescriptor().getMessageTypes().get(103);
+    internal_static_org_aion_api_server_pb_rsp_getNrgPrice_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_aion_api_server_pb_rsp_getNrgPrice_descriptor,
+        new java.lang.String[] { "NrgPrice", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

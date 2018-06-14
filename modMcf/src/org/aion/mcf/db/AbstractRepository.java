@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  *
  * Copyright (c) 2017, 2018 Aion foundation.
  *
@@ -18,9 +18,17 @@
  * Contributors:
  *     Aion foundation.
  *******************************************************************************/
-
 package org.aion.mcf.db;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryConfig;
@@ -32,28 +40,20 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.exception.InvalidFilePathException;
+import org.aion.mcf.ds.ArchivedDataSource;
+import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.mcf.vm.types.DataWord;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+// import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 
-import static org.aion.db.impl.DatabaseFactory.Props;
-
-//import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
-// import org.aion.mcf.trie.JournalPruneDataSource;
-
-/**
- * Abstract Repository class.
- */
-public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends ITransaction>, BH extends IBlockHeader, BSB extends IBlockStoreBase<?, ?>>
+/** Abstract Repository class. */
+public abstract class AbstractRepository<
+                BLK extends AbstractBlock<BH, ? extends ITransaction>,
+                BH extends IBlockHeader,
+                BSB extends IBlockStoreBase<?, ?>>
         implements IRepository<AccountState, DataWord, BSB> {
 
     // Logger
@@ -63,14 +63,15 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     // Configuration parameter
     protected IRepositoryConfig cfg;
 
-    /*********** Database Name Constants ***********/
-
+    /** ********* Database Name Constants ********** */
     protected static final String TRANSACTION_DB = CfgDb.Names.TRANSACTION;
+
     protected static final String INDEX_DB = CfgDb.Names.INDEX;
     protected static final String BLOCK_DB = CfgDb.Names.BLOCK;
     protected static final String DETAILS_DB = CfgDb.Names.DETAILS;
     protected static final String STORAGE_DB = CfgDb.Names.STORAGE;
     protected static final String STATE_DB = CfgDb.Names.STATE;
+    protected static final String STATE_ARCHIVE_DB = CfgDb.Names.STATE_ARCHIVE;
     protected static final String PENDING_TX_POOL_DB = CfgDb.Names.TX_POOL;
     protected static final String PENDING_TX_CACHE_DB = CfgDb.Names.TX_CACHE;
 
@@ -81,20 +82,22 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     // protected final static String DB_PATH = new
     // File(System.getProperty("user.dir"), "database").getAbsolutePath();
 
-    /********** Database and Cache parameters **************/
-
+    /** ******** Database and Cache parameters ************* */
     protected IByteArrayKeyValueDatabase transactionDatabase;
+
     protected IByteArrayKeyValueDatabase detailsDatabase;
     protected IByteArrayKeyValueDatabase storageDatabase;
     protected IByteArrayKeyValueDatabase indexDatabase;
     protected IByteArrayKeyValueDatabase blockDatabase;
     protected IByteArrayKeyValueDatabase stateDatabase;
+    protected IByteArrayKeyValueDatabase stateArchiveDatabase;
     protected IByteArrayKeyValueDatabase txPoolDatabase;
     protected IByteArrayKeyValueDatabase pendingTxCacheDatabase;
 
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
 
-    // protected JournalPruneDataSource<BLK, BH> stateDSPrune;
+    protected ArchivedDataSource stateWithArchive;
+    protected JournalPruneDataSource stateDSPrune;
     protected DetailsDataStore<BLK, BH> detailsDS;
 
     // Read Write Lock
@@ -103,6 +106,7 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
     // Block related parameters.
     protected long bestBlockNumber = 0;
     protected long pruneBlockCount;
+    protected long archiveRate;
     protected boolean pruneEnabled = true;
 
     // Current blockstore.
@@ -125,18 +129,18 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
          * on startup, enforce conditions here for safety
          */
         Objects.requireNonNull(this.cfg);
-//        Objects.requireNonNull(this.cfg.getVendorList());
-//        Objects.requireNonNull(this.cfg.getActiveVendor());
+        //        Objects.requireNonNull(this.cfg.getVendorList());
+        //        Objects.requireNonNull(this.cfg.getActiveVendor());
 
-//        /**
-//         * TODO: this is hack There should be some information on the
-//         * persistence of the DB so that we do not have to manually check.
-//         * Currently this information exists within
-//         * {@link DBVendor#getPersistence()}, but is not utilized.
-//         */
-//        if (this.cfg.getActiveVendor().equals(DBVendor.MOCKDB.toValue())) {
-//            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
-//        } else {
+        //        /**
+        //         * TODO: this is hack There should be some information on the
+        //         * persistence of the DB so that we do not have to manually check.
+        //         * Currently this information exists within
+        //         * {@link DBVendor#getPersistence()}, but is not utilized.
+        //         */
+        //        if (this.cfg.getActiveVendor().equals(DBVendor.MOCKDB.toValue())) {
+        //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
+        //        } else {
         // verify user-provided path
         File f = new File(this.cfg.getDbPath());
         try {
@@ -148,22 +152,27 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
                 f.mkdirs();
             }
         } catch (Exception e) {
-            throw new InvalidFilePathException("Resolved file path \"" + this.cfg.getDbPath()
-                                                       + "\" not valid as reported by the OS or a read/write permissions error occurred. Please provide an alternative DB file path in /config/config.xml.");
+            throw new InvalidFilePathException(
+                    "Resolved file path \""
+                            + this.cfg.getDbPath()
+                            + "\" not valid as reported by the OS or a read/write permissions error occurred. Please provide an alternative DB file path in /config/config.xml.");
         }
-//        }
-//
-//        if (!Arrays.asList(this.cfg.getVendorList()).contains(this.cfg.getActiveVendor())) {
-//
-//            ArrayList<String> vendorListString = new ArrayList<>();
-//            for (String v : this.cfg.getVendorList()) {
-//                vendorListString.add("\"" + v + "\"");
-//            }
-//            throw new DriverManagerNoSuitableDriverRegisteredException(
-//                    "Please check the vendor name field in /config/config.xml.\n"
-//                            + "No suitable driver found with name \"" + this.cfg.getActiveVendor()
-//                            + "\".\nPlease select a driver from the following vendor list: " + vendorListString);
-//        }
+        //        }
+        //
+        //        if (!Arrays.asList(this.cfg.getVendorList()).contains(this.cfg.getActiveVendor()))
+        // {
+        //
+        //            ArrayList<String> vendorListString = new ArrayList<>();
+        //            for (String v : this.cfg.getVendorList()) {
+        //                vendorListString.add("\"" + v + "\"");
+        //            }
+        //            throw new DriverManagerNoSuitableDriverRegisteredException(
+        //                    "Please check the vendor name field in /config/config.xml.\n"
+        //                            + "No suitable driver found with name \"" +
+        // this.cfg.getActiveVendor()
+        //                            + "\".\nPlease select a driver from the following vendor list:
+        // " + vendorListString);
+        //        }
 
         Properties sharedProps;
 
@@ -171,13 +180,15 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
         try {
             databaseGroup = new ArrayList<>();
 
-            checkIntegrity = Boolean
-                    .valueOf(cfg.getDatabaseConfig(CfgDb.Names.DEFAULT).getProperty(Props.CHECK_INTEGRITY));
+            checkIntegrity =
+                    Boolean.valueOf(
+                            cfg.getDatabaseConfig(CfgDb.Names.DEFAULT)
+                                    .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
             sharedProps = cfg.getDatabaseConfig(STATE_DB);
-            // locking enabled for state
-            sharedProps.setProperty(Props.ENABLE_LOCKING, "true");
+            // locking enabled for state when JournalPrune not used
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STATE_DB);
             this.stateDatabase = connectAndOpen(sharedProps);
@@ -241,10 +252,39 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
-            // disabling use of JournalPruneDataSource until functionality properly tested
-            // TODO-AR: enable pruning with the JournalPruneDataSource
-            // stateDSPrune = new JournalPruneDataSource<>(stateDatabase);
-            pruneBlockCount = pruneEnabled ? this.cfg.getPrune() : -1;
+
+            // pruning config
+            pruneEnabled = this.cfg.getPruneConfig().isEnabled();
+            pruneBlockCount = this.cfg.getPruneConfig().getCurrentCount();
+            archiveRate = this.cfg.getPruneConfig().getArchiveRate();
+
+            if (pruneEnabled && this.cfg.getPruneConfig().isArchived()) {
+                // using state config for state_archive
+                sharedProps = cfg.getDatabaseConfig(STATE_DB);
+                sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
+                sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
+                sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
+                this.stateArchiveDatabase = connectAndOpen(sharedProps);
+                databaseGroup.add(stateArchiveDatabase);
+
+                stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
+                stateDSPrune = new JournalPruneDataSource(stateWithArchive);
+
+                LOGGEN.info(
+                        "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
+                        pruneBlockCount,
+                        archiveRate);
+            } else {
+                stateArchiveDatabase = null;
+                stateWithArchive = null;
+                stateDSPrune = new JournalPruneDataSource(stateDatabase);
+
+                if (pruneEnabled) {
+                    LOGGEN.info("Pruning ENABLED. Top block count set to {}.", pruneBlockCount);
+                }
+            }
+
+            stateDSPrune.setPruneEnabled(pruneEnabled);
         } catch (Exception e) { // Setting up databases and caches went wrong.
             throw e;
         }
@@ -269,16 +309,18 @@ public abstract class AbstractRepository<BLK extends AbstractBlock<BH, ? extends
 
         // check object status
         if (db == null) {
-            LOG.error("Database <{}> connection could not be established for <{}>.",
-                      info.getProperty(Props.DB_TYPE),
-                      info.getProperty(Props.DB_NAME));
+            LOG.error(
+                    "Database <{}> connection could not be established for <{}>.",
+                    info.getProperty(Props.DB_TYPE),
+                    info.getProperty(Props.DB_NAME));
         }
 
         // check persistence status
         if (!db.isCreatedOnDisk()) {
-            LOG.error("Database <{}> cannot be saved to disk for <{}>.",
-                      info.getProperty(Props.DB_TYPE),
-                      info.getProperty(Props.DB_NAME));
+            LOG.error(
+                    "Database <{}> cannot be saved to disk for <{}>.",
+                    info.getProperty(Props.DB_TYPE),
+                    info.getProperty(Props.DB_NAME));
         }
 
         return db;

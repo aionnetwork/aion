@@ -105,7 +105,7 @@ public class Proxy {
                 }
             }
 
-            LOG.info("zmq-proxy thread was interrupted.");
+            LOG.debug("zmq-proxy thread was interrupted.");
         } catch (Exception e) {
             LOG.error("aion.api.server.zmq.Proxy exception" + e.getMessage());
         }
@@ -173,10 +173,10 @@ public class Proxy {
     }
 
     public static void shutdown() throws InterruptedException {
-        LOG.info("zmq-proxy thread shuting down...");
+        LOG.debug("zmq-proxy thread shutting down...");
         shutDown.set(true);
 
-        LOG.info("waiting zmq-proxy thread shutdown");
+        LOG.debug("waiting zmq-proxy thread shutdown");
         Thread.sleep(3000);
     }
 }

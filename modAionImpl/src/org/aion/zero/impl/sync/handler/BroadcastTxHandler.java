@@ -181,7 +181,7 @@ public final class BroadcastTxHandler extends Handler {
 
     @Override
     public void shutDown() {
-        log.info("BroadcastTxHandler shutdown!");
+        log.info("BroadcastTxHandler shutting down!");
         if (ex != null) {
             ex.shutdown();
         }

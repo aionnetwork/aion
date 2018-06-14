@@ -367,6 +367,19 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
+    public void check() {
+        // acquire read lock
+        lock.readLock().lock();
+
+        try {
+            database.check();
+        } finally {
+            // releasing read lock
+            lock.readLock().unlock();
+        }
+    }
+
+    @Override
     public void drop() {
         // acquire write lock
         lock.writeLock().lock();
