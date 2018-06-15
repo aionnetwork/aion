@@ -26,24 +26,29 @@
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
  ******************************************************************************/
-package org.aion.zero.impl.db;
+package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
+import static org.aion.zero.impl.BlockchainTestUtils.generateTransactions;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.AionTransaction;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** @author Alexandra Roatis */
-public class AionBlockchainImplConcurrencyTest {
+public class BlockchainConcurrentImportTest {
 
     private static final int CONCURRENT_THREADS_PER_TYPE = 30;
     private static final int MAIN_CHAIN_FREQUENCY = 5;
@@ -54,6 +59,9 @@ public class AionBlockchainImplConcurrencyTest {
     private static StandaloneBlockchain sourceChain;
     private static List<AionBlock> knownBlocks = new ArrayList<>();
 
+    private static final List<ECKey> accounts = generateAccounts(10);
+    private static final int MAX_TX_PER_BLOCK = 60;
+
     @BeforeClass
     public static void setup() {
         Map<String, String> cfg = new HashMap<>();
@@ -63,12 +71,17 @@ public class AionBlockchainImplConcurrencyTest {
 
         // build a blockchain with CONCURRENT_THREADS_PER_TYPE blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         testChain = bundle.bc;
 
         builder = new StandaloneBlockchain.Builder();
-        sourceChain = builder.withValidatorConfiguration("simple").build().bc;
+        sourceChain =
+                builder.withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build()
+                        .bc;
 
         generateBlocks();
     }
@@ -81,6 +94,10 @@ public class AionBlockchainImplConcurrencyTest {
         mainChain = sourceChain.getGenesis();
         knownBlocks.add(mainChain);
 
+        List<AionTransaction> txs;
+        AionRepositoryImpl sourceRepo = sourceChain.getRepository();
+        long time = System.currentTimeMillis();
+
         for (int i = 0; i < CONCURRENT_THREADS_PER_TYPE; i++) {
 
             // ensuring that we add to the main chain at least every MAIN_CHAIN_FREQUENCY block
@@ -92,10 +109,16 @@ public class AionBlockchainImplConcurrencyTest {
                 parent = knownBlocks.get(rand.nextInt(knownBlocks.size()));
             }
 
-            block = sourceChain.createNewBlock(parent, Collections.emptyList(), true);
+            // generate transactions for correct root
+            byte[] originalRoot = sourceRepo.getRoot();
+            sourceRepo.syncToRoot(parent.getStateRoot());
+            txs = generateTransactions(MAX_TX_PER_BLOCK, accounts, sourceRepo);
+            sourceRepo.syncToRoot(originalRoot);
+
+            block = sourceChain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
             block.setExtraData(String.valueOf(i).getBytes());
 
-            ImportResult result = sourceChain.tryToConnect(block);
+            ImportResult result = sourceChain.tryToConnectInternal(block, (time += 10));
             knownBlocks.add(block);
             if (result == ImportResult.IMPORTED_BEST) {
                 mainChain = block;
@@ -103,10 +126,11 @@ public class AionBlockchainImplConcurrencyTest {
 
             if (DISPLAY_MESSAGES) {
                 System.out.format(
-                        "Created block with hash: %s, number: %6d, extra data: %6s, import status: %20s %n",
+                        "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
                         block.getShortHash(),
                         block.getNumber(),
                         new String(block.getExtraData()),
+                        block.getTransactionsList().size(),
                         result.toString());
             }
         }
@@ -139,10 +163,11 @@ public class AionBlockchainImplConcurrencyTest {
 
                     if (DISPLAY_MESSAGES) {
                         System.out.format(
-                                "Import block with hash: %s, number: %6d, extra data: %6s, status: %20s in thread: %20s %n",
+                                "Import block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s in thread: %20s %n",
                                 _block.getShortHash(),
                                 _block.getNumber(),
                                 new String(_block.getExtraData()),
+                                _block.getTransactionsList().size(),
                                 result.toString(),
                                 Thread.currentThread().getName());
                     }
@@ -197,10 +222,11 @@ public class AionBlockchainImplConcurrencyTest {
 
                         if (DISPLAY_MESSAGES) {
                             System.out.format(
-                                    "Import block with hash: %s, number: %6d, extra data: %6s, status: %20s in thread: %20s (from queue)%n",
+                                    "Import block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s in thread: %20s (from queue)%n",
                                     _block.getShortHash(),
                                     _block.getNumber(),
                                     new String(_block.getExtraData()),
+                                    _block.getTransactionsList().size(),
                                     result.toString(),
                                     Thread.currentThread().getName());
                         }
@@ -259,8 +285,14 @@ public class AionBlockchainImplConcurrencyTest {
                     if (_chain.isBlockExist(_parent.getHash())) {
 
                         testChain.assertEqualTotalDifficulty();
-                        AionBlock block =
-                                _chain.createNewBlock(_parent, Collections.emptyList(), true);
+
+                        // only some of these txs may be valid
+                        // cannot syncToRoot due to concurrency issues
+                        AionRepositoryImpl repo = _chain.getRepository();
+                        List<AionTransaction> txs =
+                                generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+
+                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
                         block.setExtraData(String.valueOf(_id).getBytes());
                         testChain.assertEqualTotalDifficulty();
 
@@ -271,10 +303,11 @@ public class AionBlockchainImplConcurrencyTest {
 
                             if (DISPLAY_MESSAGES) {
                                 System.out.format(
-                                        "Create block with hash: %s, number: %6d, extra data: %6s, parent: %20s in thread: %20s %n",
+                                        "Create block with hash: %s, number: %6d, extra data: %6s, txs: %3d, parent: %20s in thread: %20s %n",
                                         block.getShortHash(),
                                         block.getNumber(),
                                         new String(block.getExtraData()),
+                                        block.getTransactionsList().size(),
                                         _parent.getShortHash(),
                                         Thread.currentThread().getName());
                             }
@@ -319,8 +352,14 @@ public class AionBlockchainImplConcurrencyTest {
                     if (_parent.getNumber() >= _startHeight) {
 
                         testChain.assertEqualTotalDifficulty();
-                        AionBlock block =
-                                _chain.createNewBlock(_parent, Collections.emptyList(), true);
+
+                        // only some of these txs may be valid
+                        // cannot syncToRoot due to concurrency issues
+                        AionRepositoryImpl repo = _chain.getRepository();
+                        List<AionTransaction> txs =
+                                generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+
+                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
                         block.setExtraData(String.valueOf(_id).getBytes());
                         testChain.assertEqualTotalDifficulty();
 
@@ -329,10 +368,11 @@ public class AionBlockchainImplConcurrencyTest {
 
                         if (DISPLAY_MESSAGES) {
                             System.out.format(
-                                    "Create block with hash: %s, number: %6d, extra data: %6s, parent: %20s in thread: %20s (using getBestBlock) %n",
+                                    "Create block with hash: %s, number: %6d, extra data: %6s, txs: %3d, parent: %20s in thread: %20s (using getBestBlock) %n",
                                     block.getShortHash(),
                                     block.getNumber(),
                                     new String(block.getExtraData()),
+                                    block.getTransactionsList().size(),
                                     _parent.getShortHash(),
                                     Thread.currentThread().getName());
                         }
@@ -396,10 +436,11 @@ public class AionBlockchainImplConcurrencyTest {
 
             if (DISPLAY_MESSAGES) {
                 System.out.format(
-                        "Importing block with hash: %s, number: %6d, extra data: %6s, status: %20s%n",
+                        "Importing block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s%n",
                         block.getShortHash(),
                         block.getNumber(),
                         new String(block.getExtraData()),
+                        block.getTransactionsList().size(),
                         result.toString());
             }
             block = imported.poll();
