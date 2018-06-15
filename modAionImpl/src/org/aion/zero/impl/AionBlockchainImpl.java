@@ -684,7 +684,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         pushState(parent.getHash());
 
         track = repository.startTracking();
-        track.rollback();
+
         RetValidPreBlock preBlock = generatePreBlock(block);
 
         /*
@@ -739,13 +739,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public synchronized AionBlockSummary add(AionBlock block, boolean rebuild) {
 
-        if (block == null) {
-            LOG.error("Attempting to add NULL block.");
-            return null;
-        }
-
         if (!isValid(block)) {
-            LOG.error("Attempting to add INVALID block.");
+            LOG.error("Attempting to add {} block.", (block == null ? "NULL" : "INVALID"));
             return null;
         }
 
@@ -1173,14 +1168,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     public void setRepository(AionRepositoryImpl repository) {
         this.repository = repository;
-    }
-
-    public void startTracking() {
-        track = repository.startTracking();
-    }
-
-    public void commitTracking() {
-        track.flush();
     }
 
     public void setExitOn(long exitOn) {

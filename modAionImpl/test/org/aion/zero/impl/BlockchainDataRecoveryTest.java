@@ -22,6 +22,9 @@
  */
 package org.aion.zero.impl;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -33,16 +36,10 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.*;
-
-import static com.google.common.truth.Truth.assertThat;
-
-// import org.aion.mcf.trie.JournalPruneDataSource;
-
-/**
- * @author Alexandra Roatis
- */
+/** @author Alexandra Roatis */
 public class BlockchainDataRecoveryTest {
+
+    public static final List txs = Collections.emptyList();
 
     @BeforeClass
     public static void setup() {
@@ -54,45 +51,49 @@ public class BlockchainDataRecoveryTest {
         AionLoggerFactory.init(cfg);
     }
 
-    /**
-     * Test the recovery of the world state with start from the state of an ancestor block.
-     */
+    /** Test the recovery of the world state with start from the state of an ancestor block. */
     @Test
     public void testRecoverWorldStateWithPartialWorldState() {
-        final int NUMBER_OF_BLOCKS = 6;
+        final int NUMBER_OF_BLOCKS = 20;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // first half of blocks will be correct
-        ImportResult result;
+        long time = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
-            result = chain.tryToConnect(chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true));
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the state root
         List<byte[]> statesToDelete = new ArrayList<>();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-            statesToDelete.add(next.getStateRoot());
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            statesToDelete.add(context.block.getStateRoot());
+            blocksToImport.add(context.block);
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
         IByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
+        // 1: direct recovery call
+
+        repo.flush();
         for (byte[] key : statesToDelete) {
             database.delete(key);
             assertThat(trie.isValidRoot(key)).isFalse();
@@ -109,47 +110,73 @@ public class BlockchainDataRecoveryTest {
         // ensure that the world state is ok
         assertThat(worked).isTrue();
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isTrue();
+
+        // 2: recovery at import
+
+        repo.flush();
+        for (byte[] key : statesToDelete) {
+            database.delete(key);
+            assertThat(trie.isValidRoot(key)).isFalse();
+        }
+
+        // ensure that the world state was corrupted
+        assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // state missing before import
+            assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // state present after import
+            assertThat(trie.isValidRoot(block.getStateRoot())).isTrue();
+        }
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the world state is ok
+        assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isTrue();
     }
 
-    /**
-     * Test the recovery of the world state with start from the state of the genesis block.
-     */
+    /** Test the recovery of the world state with start from the state of the genesis block. */
     @Test
     public void testRecoverWorldStateWithStartFromGenesis() {
-        final int NUMBER_OF_BLOCKS = 10;
+        final int NUMBER_OF_BLOCKS = 20;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // all blocks will be incorrect
-        ImportResult result;
+        long time = System.currentTimeMillis();
         List<byte[]> statesToDelete = new ArrayList<>();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-            statesToDelete.add(next.getStateRoot());
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            statesToDelete.add(context.block.getStateRoot());
+            blocksToImport.add(context.block);
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
-        // System.out.println(Hex.toHexString(chain.getRepository().getRoot()));
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
         IByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
+        // 1: direct recovery call
+
+        repo.flush();
         for (byte[] key : statesToDelete) {
             database.delete(key);
             assertThat(trie.isValidRoot(key)).isFalse();
         }
-        // System.out.println(Hex.toHexString(chain.getRepository().getRoot()));
 
         // ensure that the world state was corrupted
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
@@ -161,6 +188,31 @@ public class BlockchainDataRecoveryTest {
         assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
         // ensure that the world state is ok
         assertThat(worked).isTrue();
+        assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isTrue();
+
+        // 2: recovery at import
+
+        repo.flush();
+        for (byte[] key : statesToDelete) {
+            database.delete(key);
+            assertThat(trie.isValidRoot(key)).isFalse();
+        }
+
+        // ensure that the world state was corrupted
+        assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // state missing before import
+            assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // state present after import
+            assertThat(trie.isValidRoot(block.getStateRoot())).isTrue();
+        }
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the world state is ok
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isTrue();
     }
 
@@ -171,32 +223,37 @@ public class BlockchainDataRecoveryTest {
      */
     @Test
     public void testRecoverWorldStateWithoutGenesis() {
-        final int NUMBER_OF_BLOCKS = 3;
+        final int NUMBER_OF_BLOCKS = 10;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // all blocks will be incorrect
-        ImportResult result;
+        long time = System.currentTimeMillis();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            blocksToImport.add(context.block);
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
         IByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
+        // 1: direct recovery call
+
+        repo.flush();
         List<byte[]> statesToDelete = new ArrayList<>();
         statesToDelete.addAll(database.keys());
 
@@ -216,11 +273,34 @@ public class BlockchainDataRecoveryTest {
         // ensure that the world state was not recovered
         assertThat(worked).isFalse();
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
+
+        // 2: recovery at import
+
+        repo.flush();
+        for (byte[] key : statesToDelete) {
+            database.delete(key);
+            assertThat(trie.isValidRoot(key)).isFalse();
+        }
+
+        // ensure that the world state was corrupted
+        assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // state missing before import
+            assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // state missing after import (because there is not genesis to recover from)
+            assertThat(trie.isValidRoot(block.getStateRoot())).isFalse();
+        }
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the world state is ok
+        assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isFalse();
     }
 
-    /**
-     * Test the recovery of the index with start from the index of an ancestor block.
-     */
+    /** Test the recovery of the index with start from the index of an ancestor block. */
     @Test
     public void testRecoverIndexWithPartialIndex_MainChain() {
         final int NUMBER_OF_BLOCKS = 6;
@@ -230,34 +310,39 @@ public class BlockchainDataRecoveryTest {
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // first half of blocks will be correct
-        ImportResult result;
+        long time = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
-            result = chain.tryToConnect(chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true));
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the index
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-            blocksToDelete.put(next.getNumber(), next.getHash());
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            blocksToImport.add(context.block);
+            blocksToDelete.put(context.block.getNumber(), context.block.getHash());
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         // delete index entries from the database
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
-        Map<Long, byte[]> deletedInfo = new HashMap<>();
+        // 1: direct recovery call
 
+        repo.flush();
+        Map<Long, byte[]> deletedInfo = new HashMap<>();
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // saving the data for checking recovery
@@ -294,27 +379,65 @@ public class BlockchainDataRecoveryTest {
         // ensure the size key is correct
         byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
         assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
+
+        // 2: recovery at import
+
+        repo.flush();
+        for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
+            byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
+            // deleting the block info
+            indexDatabase.delete(indexKey);
+            // ensure that the index was corrupted
+            assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
+        }
+
+        // ensure that the index was corrupted
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // index missing before import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // index present after import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isTrue();
+        }
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the index was recovered
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isTrue();
+
+        // check that the index information is correct at database level
+        for (Long key : blocksToDelete.keySet()) {
+            // checking at database level
+            byte[] indexKey = ByteUtil.intToBytes(key.intValue());
+            assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
+        }
+
+        // ensure the size key is correct
+        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
-    /**
-     * Test the recovery of the index with start from the index of an ancestor block.
-     */
+    /** Test the recovery of the index with start from the index of an ancestor block. */
     @Test
     public void testRecoverIndexWithPartialIndex_ShorterSideChain() {
         // should be even number
-        final int NUMBER_OF_BLOCKS = 8;
+        final int NUMBER_OF_BLOCKS = 20;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // adding common blocks
-        ImportResult result;
+        long time = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2 - 1; i++) {
-            result = chain.tryToConnect(chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true));
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // splitting chains
@@ -322,52 +445,57 @@ public class BlockchainDataRecoveryTest {
         mainChainBlock = chain.getBestBlock();
         sideChainBlock = mainChainBlock;
 
-        AionBlock next = chain.createNewBlock(mainChainBlock, Collections.emptyList(), true);
-        result = chain.tryToConnect(next);
-        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-        mainChainBlock = next;
+        context = chain.createNewBlockInternal(mainChainBlock, txs, true, time / 10000L);
+        assertThat(chain.tryToConnectInternal(context.block, (time + 10)))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+        mainChainBlock = context.block;
 
         // starting side chain
-        next = chain.createNewBlock(sideChainBlock, Collections.emptyList(), true);
-        next.setExtraData("other".getBytes());
-        result = chain.tryToConnect(next);
-        assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
-        sideChainBlock = next;
+        context = chain.createNewBlockInternal(sideChainBlock, txs, true, time / 10000L);
+        context.block.setExtraData("other".getBytes());
+        assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        sideChainBlock = context.block;
 
         // building chains; sidechain will have missing index
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
+        List<AionBlock> blocksToImportMainChain = new ArrayList<>();
+        List<AionBlock> blocksToImportSideChain = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2 - 1; i++) {
-            next = chain.createNewBlock(mainChainBlock, Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-            mainChainBlock = next;
+            context = chain.createNewBlockInternal(mainChainBlock, txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time + 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            mainChainBlock = context.block;
+            blocksToImportMainChain.add(context.block);
 
             // adding side chain
-            next = chain.createNewBlock(sideChainBlock, Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
-            sideChainBlock = next;
-            blocksToDelete.put(next.getNumber(), next.getHash());
+            context = chain.createNewBlockInternal(sideChainBlock, txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+            sideChainBlock = context.block;
+            blocksToDelete.put(sideChainBlock.getNumber(), sideChainBlock.getHash());
+            blocksToImportSideChain.add(context.block);
         }
 
         // making the main chain longer
-        next = chain.createNewBlock(mainChainBlock, Collections.emptyList(), true);
-        result = chain.tryToConnect(next);
-        assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-        mainChainBlock = next;
+        context = chain.createNewBlockInternal(mainChainBlock, txs, true, time / 10000L);
+        assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+        mainChainBlock = context.block;
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
         assertThat(bestBlock.getHash()).isEqualTo(mainChainBlock.getHash());
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         // delete index entries from the database
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
-        Map<Long, byte[]> deletedInfo = new HashMap<>();
+        // 1: direct recovery call
 
+        repo.flush();
+        Map<Long, byte[]> deletedInfo = new HashMap<>();
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // saving the data for checking recovery
@@ -379,7 +507,8 @@ public class BlockchainDataRecoveryTest {
         }
 
         // call the recovery functionality for the main chain subsection
-        boolean worked = chain.recoverIndexEntry(repo, chain.getBlockByHash(mainChainBlock.getParentHash()));
+        boolean worked =
+                chain.recoverIndexEntry(repo, chain.getBlockByHash(mainChainBlock.getParentHash()));
 
         // ensure that the index was corrupted only for the side chain
         assertThat(repo.isIndexed(sideChainBlock.getHash(), sideChainBlock.getNumber())).isFalse();
@@ -410,42 +539,95 @@ public class BlockchainDataRecoveryTest {
         // ensure the size key is correct
         byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
         assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
+
+        // 2: recovery at import
+
+        repo.flush();
+        for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
+            byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
+            // deleting the block info
+            indexDatabase.delete(indexKey);
+            // ensure that the index was corrupted
+            assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
+        }
+
+        // call the recovery functionality indirectly for main chain
+        for (AionBlock block : blocksToImportMainChain) {
+            // index missing before import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // index present after import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isTrue();
+        }
+
+        // ensure that the index was corrupted only for the side chain
+        assertThat(repo.isIndexed(sideChainBlock.getHash(), sideChainBlock.getNumber())).isFalse();
+        assertThat(repo.isIndexed(mainChainBlock.getHash(), mainChainBlock.getNumber())).isTrue();
+
+        // call the recovery functionality indirectly for side chain
+        for (AionBlock block : blocksToImportSideChain) {
+            // index missing before import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // index present after import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isTrue();
+        }
+
+        // ensure that the index was corrupted only for the side chain
+        assertThat(repo.isIndexed(sideChainBlock.getHash(), sideChainBlock.getNumber())).isTrue();
+        assertThat(repo.isIndexed(mainChainBlock.getHash(), mainChainBlock.getNumber())).isTrue();
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+
+        // check that the index information is correct at database level
+        for (Long key : blocksToDelete.keySet()) {
+            // checking at database level
+            byte[] indexKey = ByteUtil.intToBytes(key.intValue());
+            // NOTE: this checks the correction of both main chain and side chain recovery
+            assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
+        }
+
+        // ensure the size key is correct
+        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
-    /**
-     * Test the index recovery when the index database contains only the size and genesis index.
-     */
+    /** Test the index recovery when the index database contains only the size and genesis index. */
     @Test
     public void testRecoverIndexWithStartFromGenesis() {
-        final int NUMBER_OF_BLOCKS = 3;
+        final int NUMBER_OF_BLOCKS = 10;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // all blocks will be incorrect
-        ImportResult result;
+        long time = System.currentTimeMillis();
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-            blocksToDelete.put(next.getNumber(), next.getHash());
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            blocksToDelete.put(context.block.getNumber(), context.block.getHash());
+            blocksToImport.add(context.block);
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         // delete index entries from the database
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
-        Map<Long, byte[]> deletedInfo = new HashMap<>();
+        // 1: direct recovery call
 
+        repo.flush();
+        Map<Long, byte[]> deletedInfo = new HashMap<>();
         for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             // saving the data for checking recovery
@@ -482,6 +664,44 @@ public class BlockchainDataRecoveryTest {
         // ensure the size key is correct
         byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
         assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
+
+        // 2: recovery at import
+
+        repo.flush();
+        for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
+            byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
+            // deleting the block info
+            indexDatabase.delete(indexKey);
+            // ensure that the index was corrupted
+            assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
+        }
+
+        // ensure that the index was corrupted
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // index missing before import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // index present after import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isTrue();
+        }
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the index was recovered
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isTrue();
+
+        // check that the index information is correct at database level
+        for (Long key : blocksToDelete.keySet()) {
+            // checking at database level
+            byte[] indexKey = ByteUtil.intToBytes(key.intValue());
+            assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
+        }
+
+        // ensure the size key is correct
+        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
     /**
@@ -491,29 +711,34 @@ public class BlockchainDataRecoveryTest {
      */
     @Test
     public void testRecoverIndexWithoutGenesis() {
-        final int NUMBER_OF_BLOCKS = 3;
+        final int NUMBER_OF_BLOCKS = 10;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
-        ImportResult result;
+        long time = System.currentTimeMillis();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            blocksToImport.add(context.block);
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
+        // 1: direct recovery call
+
+        repo.flush();
         // deleting the entire index database
         indexDatabase.drop();
 
@@ -528,40 +753,69 @@ public class BlockchainDataRecoveryTest {
         // check that the index recovery failed
         assertThat(worked).isFalse();
         assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+
+        // 2: recovery at import
+
+        repo.flush();
+        // deleting the entire index database
+        indexDatabase.drop();
+
+        // ensure that the index was corrupted
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // index missing before import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // index missing after import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+        }
+
+        // ensure that the best block is unchanged
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // check that the index recovery failed
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
     }
 
     /**
-     * Test the index recovery when the index database contains only the genesis index and is missing the size key.
+     * Test the index recovery when the index database contains only the genesis index and is
+     * missing the size key.
      */
     @Test
     public void testRecoverIndexWithStartFromGenesisWithoutSize() {
-        final int NUMBER_OF_BLOCKS = 3;
+        final int NUMBER_OF_BLOCKS = 10;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
+        BlockContext context;
 
         // all blocks will be incorrect
-        ImportResult result;
+        long time = System.currentTimeMillis();
         Map<Long, byte[]> blocksToDelete = new HashMap<>();
+        List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
-            result = chain.tryToConnect(next);
-            assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
-            blocksToDelete.put(next.getNumber(), next.getHash());
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
+            assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
+            blocksToDelete.put(context.block.getNumber(), context.block.getHash());
+            blocksToImport.add(context.block);
         }
 
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         AionRepositoryImpl repo = chain.getRepository();
-        repo.flush();
 
         // delete index entries from the database
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
+        // 1: direct recovery call
+
+        repo.flush();
         Map<Long, byte[]> deletedInfo = new HashMap<>();
 
         byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
@@ -604,6 +858,49 @@ public class BlockchainDataRecoveryTest {
             // checking at database level
             byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
             assertThat(deletedInfo.get(level)).isEqualTo(indexDatabase.get(indexKey).get());
+        }
+
+        // 2: recovery at import
+
+        repo.flush();
+        deletedInfo.put(-1L, indexDatabase.get(sizeKey).get());
+        indexDatabase.delete(sizeKey);
+
+        for (Map.Entry<Long, byte[]> entry : blocksToDelete.entrySet()) {
+            byte[] indexKey = ByteUtil.intToBytes(entry.getKey().intValue());
+            // deleting the block info
+            indexDatabase.delete(indexKey);
+            // ensure that the index was corrupted
+            assertThat(repo.isIndexed(entry.getValue(), entry.getKey())).isFalse();
+        }
+
+        // ensure that the index was corrupted
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isFalse();
+
+        // call the recovery functionality indirectly
+        for (AionBlock block : blocksToImport) {
+            // index missing before import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isFalse();
+            assertThat(chain.tryToConnect(block)).isEqualTo(ImportResult.EXIST);
+            // index present after import
+            assertThat(repo.isIndexed(block.getHash(), block.getNumber())).isTrue();
+        }
+
+        // ensure that the blockchain is ok
+        assertThat(chain.getBestBlockHash()).isEqualTo(bestBlock.getHash());
+        // ensure that the index was recovered
+        assertThat(repo.isIndexed(bestBlock.getHash(), bestBlock.getNumber())).isTrue();
+
+        // ensure the size key was recovered
+        assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
+        assertThat(indexDatabase.get(sizeKey).get()).isEqualTo(deletedInfo.get(-1L));
+        deletedInfo.remove(-1L);
+
+        // check that the index information is correct at database level
+        for (Long key : blocksToDelete.keySet()) {
+            // checking at database level
+            byte[] indexKey = ByteUtil.intToBytes(key.intValue());
+            assertThat(deletedInfo.get(key)).isEqualTo(indexDatabase.get(indexKey).get());
         }
     }
 }
