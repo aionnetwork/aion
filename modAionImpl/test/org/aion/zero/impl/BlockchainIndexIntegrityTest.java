@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,17 +17,19 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.log.AionLoggerFactory;
@@ -40,25 +42,18 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
-
 /**
  * @author Alexandra Roatis
  */
 public class BlockchainIndexIntegrityTest {
 
+
+
     @BeforeClass
     public static void setup() {
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
-        cfg.put("CONS", "INFO");
+        cfg.put("CONS", "DEBUG");
 
         AionLoggerFactory.init(cfg);
     }

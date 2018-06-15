@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -13,10 +13,6 @@
  *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
  *     The aion network project leverages useful source code from other
  *     open source projects. We greatly appreciate the effort that was
  *     invested in these projects and we thank the individual contributors
@@ -24,6 +20,7 @@
  *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
  *     <ether.camp> team through the ethereumJ library.
  *     Ether.Camp Inc. (US) team through Ethereum Harmony.
@@ -31,24 +28,37 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl;
 
-import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
-import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
-import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
+import java.util.Map;
+import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
+import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.AionTransaction;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class BlockchainEnergyTest {
+
+    @BeforeClass
+    public static void setup() {
+        // logging to see errors
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("DB", "ERROR");
+        cfg.put("CONS", "DEBUG");
+
+        AionLoggerFactory.init(cfg);
+    }
 
     @Test
     public void testConsistentEnergyUsage() {

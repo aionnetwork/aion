@@ -39,14 +39,14 @@ import org.junit.Test;
 /** @author Alexandra Roatis */
 public class BlockchainDataRecoveryTest {
 
-    public static final List txs = Collections.emptyList();
+    private static final List txs = Collections.emptyList();
 
     @BeforeClass
     public static void setup() {
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
         cfg.put("DB", "ERROR");
-        cfg.put("CONS", "INFO");
+        cfg.put("CONS", "DEBUG");
 
         AionLoggerFactory.init(cfg);
     }

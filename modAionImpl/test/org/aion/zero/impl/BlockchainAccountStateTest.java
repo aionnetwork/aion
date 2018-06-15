@@ -1,23 +1,56 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.zero.impl;
-
-import org.aion.base.type.Address;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
-import org.aion.crypto.jce.ECKeyFactory;
-import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.aion.base.type.Address;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.HashUtil;
+import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.AionTransaction;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+
 public class BlockchainAccountStateTest {
+
+    @BeforeClass
+    public static void setup() {
+        // logging to see errors
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("DB", "ERROR");
+        cfg.put("CONS", "DEBUG");
+
+        AionLoggerFactory.init(cfg);
+    }
 
     /**
      * Test the effects of growing state of a single account
