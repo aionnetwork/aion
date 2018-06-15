@@ -32,18 +32,18 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 public class CfgSsl {
-    public static final String SSL_KEYSTORE_DIR = "./sslKeystore";
+    public static final String SSL_KEYSTORE_DIR = "ssl_keystore";
     private static final String ENABLED_TAG = "enabled";
-    private static final String CERTIFICATE_TAG = "certificate";
-    private static final String PASSWORD_TAG = "password";
+    private static final String CERTIFICATE_TAG = "cert";
+    private static final String PASSWORD_TAG = "unsecured-pass";
     private boolean enabled;
     private String cert;
-    private String pass;
+    private char[] pass;
 
     CfgSsl() {
         this.enabled = false;
         this.cert = "identity.jks";
-        this.pass = "password";
+        this.pass = null;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -59,7 +59,7 @@ public class CfgSsl {
                                 this.enabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl.enabled; using preset: " + this.enabled);
+                                    "aion.api.rpc.ssl."+ENABLED_TAG+". Using default value: " + this.enabled);
                                 e.printStackTrace();
                             }
                             break;
@@ -68,16 +68,16 @@ public class CfgSsl {
                                 this.cert = String.valueOf(Cfg.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl.enabled; using preset: " + this.enabled);
+                                    "aion.api.rpc.ssl"+CERTIFICATE_TAG+"; Using default value: " + this.cert);
                                 e.printStackTrace();
                             }
                             break;
                         case PASSWORD_TAG:
                             try {
-                                this.pass = String.valueOf(Cfg.readValue(sr));
+                                this.pass = String.valueOf(Cfg.readValue(sr)).toCharArray();
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl.password; using preset: " + this.pass);
+                                    "aion.api.rpc.ssl."+PASSWORD_TAG+".");
                                 e.printStackTrace();
                             }
                             break;
@@ -106,24 +106,17 @@ public class CfgSsl {
 
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
             xmlWriter.writeComment("toggle ssl on-off " +
-                "(if on you cannot access json-rpc over plain http)");
+                "(if you to access json-rpc over https)");
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
             xmlWriter.writeStartElement(ENABLED_TAG);
             xmlWriter.writeCharacters(this.enabled ? "true" : "false");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
-            xmlWriter.writeComment("file name of certificate to use (eg. identity.jks)");
+            xmlWriter.writeComment("file name of jks-format certificate (eg. identity.jks)");
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
             xmlWriter.writeStartElement(CERTIFICATE_TAG);
             xmlWriter.writeCharacters(this.cert);
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t\t");
-            xmlWriter.writeComment("password for ssl certificate");
-            xmlWriter.writeCharacters("\r\n\t\t\t\t");
-            xmlWriter.writeStartElement(PASSWORD_TAG);
-            xmlWriter.writeCharacters(this.pass);
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
@@ -142,5 +135,5 @@ public class CfgSsl {
 
     public boolean getEnabled() { return this.enabled; }
     public String getCert() { return this.cert; }
-    public String getPass() { return this.pass; }
+    public char[] getPass() { return this.pass; }
 }

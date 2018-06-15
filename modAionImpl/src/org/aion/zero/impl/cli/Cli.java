@@ -39,6 +39,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
@@ -113,38 +114,50 @@ public class Cli {
                     System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
                     break;
                 case "-s":
-                    if ((args.length == 2) && (args[1].equals("store"))) {
-                        File store = new File(CfgSsl.SSL_KEYSTORE_DIR);
-                        if (store.mkdir()) {
-                            System.out.println("\nCreated sslKeystore directory.");
-                        } else {
-                            System.out.println("\nThe sslKeystore directory already exists.");
-                        }
-                    } else if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
-                        List<String> scriptArgs = new ArrayList<>();
-                        scriptArgs.add("/bin/bash");
-                        scriptArgs.add("create_cert.sh");
+                    if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
 
-                        Console console = System.console();
-                        if (console == null) {
-                            System.out.println("No console found. " +
-                                "For increased security run ./aion.sh from a console.");
-                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-                                System.out.println("Enter the name of the certificate to create:");
-                                scriptArgs.add(reader.readLine());
-                                System.out.println("Enter the password for the certificate:");
-                                scriptArgs.add(reader.readLine());
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                        // create directory if not exists
+                        File keystoreDir = new File(System.getProperty("user.dir") + File.separator +  CfgSsl.SSL_KEYSTORE_DIR);
+                        if (!keystoreDir.isDirectory()) {
+                            System.out.println("No "+keystoreDir.getPath()+" directory found. Creating directory ...");
+
+                            if (keystoreDir.mkdir()) {
+                                System.out.println("Created "+keystoreDir.getPath()+" directory.");
+                            } else {
+                                System.out.println("Directory: "+keystoreDir.getPath()+" could not be created. " +
+                                        "Please check user permissions or create directory manually.");
                                 System.exit(1);
                             }
-                        } else {
-                            console.printf("Enter the name of the certificate to create:\n");
-                            scriptArgs.add(console.readLine());
-                            scriptArgs.add(String.valueOf(
-                                console.readPassword("Enter the password for the certificate:\n")));
+                            System.out.println();
                         }
 
+                        String certName = null;
+                        String certPass = null;
+                        Console console = System.console();
+                        // https://docs.oracle.com/javase/10/docs/api/java/io/Console.html
+                        // if the console does not exist, then either:
+                        // 1) jvm's underlying platform does not provide console
+                        // 2) process started in non-interactive mode (background scheduler, redirected output, etc.)
+                        // don't wan't to compromise security in these scenarios
+                        if (console == null) {
+                            System.out.println("No console found. This command can only be run interactively.");
+                            return 1;
+                        } else {
+                            console.printf("Enter name for certificate:\n");
+                            certName = console.readLine();
+                            certPass = String.valueOf(
+                                console.readPassword("Enter password for certificate (>6 characters):\n"));
+                        }
+
+                        if (certName == null || certPass == null) throw new IllegalStateException("Received " +
+                                "null values for ssl certificate name and password.");
+
+                        List<String> scriptArgs = new ArrayList<>();
+                        scriptArgs.add("/bin/bash");
+                        scriptArgs.add("script/create_cert.sh");
+                        scriptArgs.add(certName);
+                        scriptArgs.add(certPass);
+                        // add the hostname and ip optionally passed in as cli args
                         scriptArgs.addAll(Arrays.asList(Arrays.copyOfRange(args, 2, args.length)));
 
                         new ProcessBuilder(scriptArgs)
@@ -294,9 +307,8 @@ public class Cli {
         System.out.println();
         System.out.println("  -i                                            show information");
         System.out.println();
-        System.out.println("  -s store                                      create the ssl keystore directory");
-        System.out.println("  -s create                                     create an ssl certificate for localhost and ip");
-        System.out.println("  -s create [host] [ip]                         create an ssl certificate for a custom host and ip");
+        System.out.println("  -s create                                     create an ssl certificate for localhost");
+        System.out.println("  -s create [hostname] [ip]                     create an ssl certificate for a custom hostname and ip");
         System.out.println();
         System.out.println("  -r                                            remove blocks on side chains and correct block info");
         System.out.println("  -r [block_number]                             revert db up to specific block number");

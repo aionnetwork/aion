@@ -5,7 +5,7 @@
 /pack/
 /reports/
 /cache/
-/sslKeystore/
+/ssl_keystore/
 
 # ide
 /.idea/

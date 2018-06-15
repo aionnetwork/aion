@@ -29,9 +29,12 @@ import org.aion.api.server.nanohttpd.BoundRunner;
 import org.aion.api.server.rpc.RpcThreadFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
+import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -46,10 +49,10 @@ public class NanoServer {
     private ExecutorService workers;
     private boolean sslEnabled;
     private String sslCert;
-    private String sslPass;
+    private char[] sslPass;
 
     public NanoServer(String hostname, int port, boolean corsEnabled, List<String> enabledEndpoints,
-        int tpoolSize, boolean sslEnabled, String sslCert, String sslPass) {
+        int tpoolSize, boolean sslEnabled, String sslCert, char[] sslPass) {
 
         this.corsEnabled = corsEnabled;
         this.enabledEndpoints = enabledEndpoints;
@@ -84,24 +87,33 @@ public class NanoServer {
             server.setAsyncRunner(new BoundRunner(workers));
 
             if (this.sslEnabled) {
-                if (!(new File(CfgSsl.SSL_KEYSTORE_DIR)).isDirectory()) {
-                    LOG.error("<rpc-server - no sslKeystore directory found>");
+                File keystoreDir = new File(CfgAion.inst().getBasePath() + File.separator +  CfgSsl.SSL_KEYSTORE_DIR);
+                if (!(keystoreDir).isDirectory()) {
+                    LOG.error("<rpc-server - no "+keystoreDir.getPath()+" directory found (SSL Keystore)>");
                     System.exit(1);
                 }
-                System.setProperty("javax.net.ssl.trustStore", new File(this.sslCert).getAbsolutePath());
-                server.makeSecure(NanoHTTPD.makeSSLSocketFactory(
-                    "/" + this.sslCert, this.sslPass.toCharArray()), null);
+                /* Location of the Java keystore file containing the collection of CA certificates
+                   trusted by this application process (trust store).
+
+                   https://docs.ora`cle.com/javase/9/security/java-secure-socket-extension-jsse-reference-guide.htm#GUID-A41282C3-19A3-400A-A40F-86F4DA22ABA9__SYSTEMPROPERTIESANDCUSTOMIZEITEMSIN-DCEEB591
+                 */
+                // chrome://flags/#allow-insecure-localhost
+
+                System.setProperty("javax.net.ssl.trustStore", keystoreDir.getAbsolutePath() + File.separator + this.sslCert);
+
+                server.makeSecure(NanoHTTPD.makeSSLSocketFactory(File.separator + this.sslCert, this.sslPass), null);
+
+                // if the keystore object got loaded, go ahead and clear out the password
+                for (char c : this.sslPass) {
+                    c = '\0'; // NUL
+                }
             }
 
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         } catch (Throwable t) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostname, port);
-            if (t.getMessage().contains("password")) {
-                LOG.error("<rpc-server - incorrect password provided for ssl certificate>");
-            } else if (t.getMessage().contains("Unable to load")) {
-                LOG.error("<rpc-server - unable to find the ssl certificate named " +
-                    this.sslCert + " in the sslKeystore directory>");
-            }
+            // error messages out of nanohttpd seem to be pretty clean. transparently show them to user.
+            LOG.error("<rpc-server - " + t.getMessage() + ">");
             System.exit(1);
         }
 
@@ -115,6 +127,4 @@ public class NanoServer {
         // NOTE: ok to call workers.*() from some shutdown thread since sun's implementation of ExecutorService is threadsafe
         workers.shutdownNow();
     }
-
-
 }

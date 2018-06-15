@@ -38,4 +38,4 @@ ARG=$@
 chmod +x ./rt/bin/*
 
 env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-        -cp "./lib/*:./lib/libminiupnp/*:./mod/*:./sslKeystore/" org.aion.Aion "$@"
+        -cp "./lib/*:./lib/libminiupnp/*:./mod/*:./ssl_keystore/" org.aion.Aion "$@"

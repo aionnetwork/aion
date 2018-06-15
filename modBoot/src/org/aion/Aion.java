@@ -26,6 +26,7 @@ import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
+import java.io.Console;
 import java.util.ServiceLoader;
 import org.aion.api.server.http.NanoServer;
 import org.aion.api.server.pb.ApiAion0;
@@ -97,15 +98,39 @@ public class Aion {
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
-        String logo ="\n                     _____                  \n" +
+        String logo =
+              "\n                     _____                  \n" +
                 "      .'.       |  .~     ~.  |..          |\n" +
                 "    .'   `.     | |         | |  ``..      |\n" +
                 "  .''''''''`.   | |         | |      ``..  |\n" +
                 ".'           `. |  `._____.'  |          ``|\n\n" +
-                "                    NETWORK  v" + KERNEL_VERSION +
+                "                 v" + KERNEL_VERSION +
                 "\n\n";
 
         genLog.info(logo);
+
+        CfgSsl sslCfg = cfg.getApi().getRpc().getSsl();
+        char[] sslPass = sslCfg.getPass();
+        // interactively ask for a password for the ssl file if they did not set on in the config file
+        if (sslCfg.getEnabled() && sslPass == null) {
+            Console console = System.console();
+            // https://docs.oracle.com/javase/10/docs/api/java/io/Console.html
+            // if the console does not exist, then either:
+            // 1) jvm's underlying platform does not provide console
+            // 2) process started in non-interactive mode (background scheduler, redirected output, etc.)
+            // don't wan't to compromise security in these scenarios
+            if (console == null) {
+                System.out.println("SSL-certificate-use requested with RPC server and no console found. " +
+                        "Please set the ssl password in the config file (insecure) to run kernel non-interactively with this option.");
+                System.exit(1);
+            } else {
+                console.printf("---------------------------------------------\n");
+                console.printf("----------- INTERACTION REQUIRED ------------\n");
+                console.printf("---------------------------------------------\n");
+                sslPass = console.readPassword("Password for SSL keystore file ["
+                        +sslCfg.getCert()+"]\n");
+            }
+        }
 
         IAionChain ac = AionFactory.create();
 
@@ -134,7 +159,7 @@ public class Aion {
         NanoServer rpcServer = null;
         if(cfg.getApi().getRpc().getActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
-            CfgSsl sslCfg = rpcCfg.getSsl();
+
             rpcServer = new NanoServer(
                     rpcCfg.getIp(),
                     rpcCfg.getPort(),
@@ -143,7 +168,7 @@ public class Aion {
                     rpcCfg.getMaxthread(),
                     sslCfg.getEnabled(),
                     sslCfg.getCert(),
-                    sslCfg.getPass());
+                    sslPass);
             rpcServer.start();
         }
 
