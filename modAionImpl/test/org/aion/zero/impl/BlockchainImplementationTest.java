@@ -2,10 +2,12 @@ package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.util.Collections;
+import java.util.List;
+import org.aion.crypto.ECKey;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.types.AionTransaction;
 import org.junit.Test;
 
 /**
@@ -15,6 +17,9 @@ import org.junit.Test;
  * @author Alexandra Roatis
  */
 public class BlockchainImplementationTest {
+
+    private static final List<ECKey> accounts = BlockchainTestUtils.generateAccounts(10);
+    private static final int MAX_TX_PER_BLOCK = 60;
 
     /**
      * In TOP mode only the top K blocks have a stored state. Blocks older than the top K are have
@@ -31,17 +36,19 @@ public class BlockchainImplementationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withRepoConfig(new MockRepositoryConfig(new CfgPrune(stored)))
+                        .withDefaultAccounts(accounts)
                         .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
+        BlockContext context;
+        List<AionTransaction> txs;
 
         // creating (height) blocks
         long time = System.currentTimeMillis();
         for (int i = 0; i < height; i++) {
-            BlockContext context =
-                    chain.createNewBlockInternal(
-                            chain.getBestBlock(), Collections.emptyList(), true, time / 10000L);
+            txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
                     .isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -78,17 +85,19 @@ public class BlockchainImplementationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withRepoConfig(new MockRepositoryConfig(new CfgPrune(false)))
+                        .withDefaultAccounts(accounts)
                         .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
+        BlockContext context;
+        List<AionTransaction> txs;
 
         // creating (height) blocks
         long time = System.currentTimeMillis();
         for (int i = 0; i < height; i++) {
-            BlockContext context =
-                    chain.createNewBlockInternal(
-                            chain.getBestBlock(), Collections.emptyList(), true, time / 10000L);
+            txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
                     .isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -118,17 +127,19 @@ public class BlockchainImplementationTest {
                 new StandaloneBlockchain.Builder()
                         .withValidatorConfiguration("simple")
                         .withRepoConfig(new MockRepositoryConfig(new CfgPrune(stored, index)))
+                        .withDefaultAccounts(accounts)
                         .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
+        BlockContext context;
+        List<AionTransaction> txs;
 
         // creating (height) blocks
         long time = System.currentTimeMillis();
         for (int i = 0; i < height; i++) {
-            BlockContext context =
-                    chain.createNewBlockInternal(
-                            chain.getBestBlock(), Collections.emptyList(), true, time / 100000L);
+            txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+            context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 100000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
                     .isEqualTo(ImportResult.IMPORTED_BEST);
         }

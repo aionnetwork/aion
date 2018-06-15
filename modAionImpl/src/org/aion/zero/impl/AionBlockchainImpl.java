@@ -1415,7 +1415,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
             other = dirtyBlocks.pop();
-            LOG.info("Rebuilding block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
+            LOG.info("Rebuilding block hash: {}, number: {}, txs: {}.",
+                     other.getShortHash(),
+                     other.getNumber(),
+                     other.getTransactionsList().size());
             this.add(other, true);
         }
 
@@ -1487,7 +1490,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
             other = dirtyBlocks.pop();
-            LOG.info("Rebuilding index for block hash: {}, number: {}.", other.getShortHash(), other.getNumber());
+            LOG.info("Rebuilding index for block hash: {}, number: {}, txs: {}.",
+                     other.getShortHash(),
+                     other.getNumber(),
+                     other.getTransactionsList().size());
             totalDiff = repo.getBlockStore().correctIndexEntry(other, totalDiff);
         }
 
