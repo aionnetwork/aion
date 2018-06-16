@@ -410,7 +410,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -448,7 +448,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         DataWord key;
@@ -497,7 +497,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -584,7 +584,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -695,7 +695,7 @@ public class ApiWeb3Aion extends ApiAion {
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
@@ -1149,7 +1149,7 @@ public class ApiWeb3Aion extends ApiAion {
 
 
         int duration = 300;
-        if (_duration != null)
+        if (_duration != null && !_duration.equals(JSONObject.NULL))
             duration = new BigInteger(_duration + "").intValueExact();
 
         return new RpcMsg(unlockAccount(_account, _password, duration));
@@ -2249,7 +2249,7 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject obj = new JSONObject();
 
         if (nce != null && soln != null && hdrHash != null &&
-                !nce.equals(null) && !soln.equals(null) && !hdrHash.equals(null)) {
+                !nce.equals(JSONObject.NULL) && !soln.equals(JSONObject.NULL) && !hdrHash.equals(JSONObject.NULL)) {
 
             try {
                 templateMapLock.writeLock().lock();
@@ -2300,7 +2300,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (_blockNum != null) {
+        if (_blockNum != null && !_blockNum.equals(JSONObject.NULL)) {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);
