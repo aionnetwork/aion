@@ -44,6 +44,7 @@ public abstract class StatefulPrecompiledContract implements IPrecompiledContrac
     public StatefulPrecompiledContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
+        if (track == null) { throw new IllegalArgumentException("Null track."); }
         this.track = track;
     }
 

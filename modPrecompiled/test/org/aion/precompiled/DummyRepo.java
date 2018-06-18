@@ -42,6 +42,10 @@ public class DummyRepo implements IRepositoryCache<AccountState, DataWord, IBloc
     private Map<Address, byte[]> contracts = new HashMap<>();
     private Map<Address, Map<String, byte[]>> storage = new HashMap<>();
 
+    // Made this alterable for testing since this default value is not always what real implementations
+    // do ... and don't want to break tests that rely on this value.
+    public DataWord storageErrorReturn = DataWord.ZERO;
+
     DummyRepo() {}
 
     DummyRepo(DummyRepo parent) {
@@ -141,7 +145,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, DataWord, IBloc
         if (map != null && map.containsKey(key.toString())) {
             return new DataWord(map.get(key.toString()));
         } else {
-            return DataWord.ZERO;
+            return storageErrorReturn;
         }
     }
 

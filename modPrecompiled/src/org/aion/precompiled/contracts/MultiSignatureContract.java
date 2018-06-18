@@ -66,10 +66,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
+    private final Address address;
+
     public static final int MAX_OWNERS = 10;
     public static final int MIN_OWNERS = 2;
     public static final int MIN_THRESH = 1;
-    private final Address address;
 
     /**
      * Constructs a new MultiSignatureContract object. This is not a multi-sig wallet itself, simply
@@ -77,11 +78,13 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * @param track The repository.
      * @param address The address of the calling account.
+     * @throws IllegalArgumentException if track or address are null.
      */
     public MultiSignatureContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address) {
 
         super(track);
+        if (address == null) { throw new IllegalArgumentException("Null address."); }
         this.address = address;
     }
 
@@ -165,6 +168,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         }
 
         Address wallet = initNewWallet(owners, threshold);
+        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, wallet.toBytes());
     }
 
@@ -211,6 +215,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         if (isValidAmount(wallet, amount) && areValidSignatures(wallet, sigs, msg)) {
             AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
             AionHub.inst().getPendingState().addPendingTransaction(tx);
+            track.flush();
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
         } else {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -227,6 +232,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *   3. The length of addresses is too long (more than ADDR_LEN * MAX_OWNERS).
      *   4. An address appears more than once in addresses.
      *   5. The address of the account that called execute is not in addresses.
+     *   6. An address does not exist in the repository.
+     *   7. An address is the address of a multi-sig wallet.
      *
      * @param addresses A byte array of consecutive addresses.
      * @return The addresses extracted from the byte array.
@@ -244,7 +251,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         boolean callerIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
             addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
+            if (!track.hasAccountState(addr)) { return null; }
             if (result.contains(addr)) { return null; }
+            if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) { return null; }
             if (addr.equals(this.address)) { callerIsOwner = true; }
             result.add(addr);
         }
