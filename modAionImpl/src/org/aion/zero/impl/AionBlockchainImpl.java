@@ -377,12 +377,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
-        return getBlockStore().getListHashesEndWith(hash, qty);
+    public List<byte[]> getListOfHashesEndWith(byte[] hash, int qty) {
+        return getBlockStore().getListHashesEndWith(hash, qty < 1 ? 1 : qty);
     }
 
     @Override
     public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
+        // avoiding errors due to negative qty
+        qty = qty < 1 ? 1 : qty;
+
         long bestNumber = bestBlock.getNumber();
 
         if (blockNumber > bestNumber) {
@@ -1194,6 +1197,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit,
             boolean reverse) {
+
+        // null identifier check
+        if (identifier == null){
+            return emptyList();
+        }
 
         // Identifying block we'll move from
         IAionBlock startBlock;

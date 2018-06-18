@@ -36,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+import org.aion.base.type.Hash256;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
@@ -183,6 +184,10 @@ public class BlockchainConcurrentImportTest {
                                         .add(_block.getDifficultyBI());
 
                         assertThat(tdFromStore).isEqualTo(tdCalculated);
+                        assertThat(tdCalculated)
+                                .isEqualTo(
+                                        _chain.getTotalDifficultyByHash(
+                                                new Hash256(_block.getHash())));
 
                         if (result == ImportResult.IMPORTED_BEST) {
                             // can't check for equality since other blocks may have already been
@@ -243,6 +248,10 @@ public class BlockchainConcurrentImportTest {
                                             .add(_block.getDifficultyBI());
 
                             assertThat(tdFromStore).isEqualTo(tdCalculated);
+                            assertThat(tdCalculated)
+                                    .isEqualTo(
+                                            _chain.getTotalDifficultyByHash(
+                                                    new Hash256(_block.getHash())));
 
                             if (result == ImportResult.IMPORTED_BEST) {
                                 // can't check for equality since other blocks may have already been
@@ -458,6 +467,9 @@ public class BlockchainConcurrentImportTest {
         for (AionBlock blk : knownBlocks) {
             assertThat(testChain.getBlockStore().getTotalDifficultyForHash(blk.getHash()))
                     .isEqualTo(sourceStore.getTotalDifficultyForHash(blk.getHash()));
+            Hash256 hash = new Hash256(blk.getHash());
+            assertThat(testChain.getTotalDifficultyByHash(hash))
+                    .isEqualTo(sourceChain.getTotalDifficultyByHash(hash));
         }
     }
 
