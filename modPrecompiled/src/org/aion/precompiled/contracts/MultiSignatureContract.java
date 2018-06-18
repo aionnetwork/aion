@@ -186,22 +186,23 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         }
 
         int walletStart = 1;
-        int sigsStart = walletStart + ADDR_LEN - 1;
-        int recipientStart = length - ADDR_LEN - 1;
-        int nrgStart = recipientStart - Long.BYTES - 1;
-        int amountStart = nrgStart - AMOUNT_LEN - 1;
+        int sigsStart = walletStart + ADDR_LEN;
+        int recipientStart = length - ADDR_LEN;
+        int nrgStart = recipientStart - Long.BYTES;
+        int amountStart = nrgStart - AMOUNT_LEN;
 
         if (sigsStart > amountStart) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        Address wallet = new Address(Arrays.copyOfRange(input,walletStart, sigsStart));
+        Address wallet = new Address(Arrays.copyOfRange(input, walletStart, sigsStart));
         List<byte[]> sigs = extractSignatures(Arrays.copyOfRange(input, sigsStart, amountStart));
-        BigInteger amount = new BigInteger(Arrays.copyOfRange(input, amountStart, recipientStart));
+        BigInteger amount = new BigInteger(Arrays.copyOfRange(input, amountStart, nrgStart));
         Address recipient = new Address(Arrays.copyOfRange(input, recipientStart, length));
 
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(input, nrgStart, recipientStart));
+        buffer.flip();
         Long nrgPrice = buffer.getLong();
 
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
@@ -211,7 +212,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] msg = reconstructMsg(wallet, Arrays.copyOfRange(input, amountStart, input.length), nrg);
+        byte[] msg = reconstructMsg(track, wallet, recipient, amount, nrgPrice, nrg);
         if (isValidAmount(wallet, amount) && areValidSignatures(wallet, sigs, msg)) {
             AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
             AionHub.inst().getPendingState().addPendingTransaction(tx);
@@ -446,19 +447,31 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * If the transaction is not signed as a byte array obeying the above format it will not be
      * approved.
      *
-     * @param amountPriceTo A byte array representing: | amount | nrgPrice | recipient |
+     * @param walletId The address of the multi-sig wallet.
+     * @param to The address of the recipient.
+     * @param amount The amount to transfer.
+     * @param nrgPrice The energy price.
      * @param nrgLimit The energy limit.
      * @return the transaction message that was signed.
      */
-    private byte[] reconstructMsg(Address walletId, byte[] amountPriceTo, long nrgLimit) {
-        BigInteger nonceBI = track.getNonce(walletId);
-        byte[] nonce = nonceBI.toByteArray();
-        byte[] msg = new byte[nonce.length + amountPriceTo.length + Long.BYTES];
+    public static byte[] reconstructMsg(
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address walletId,
+        Address to, BigInteger amount, long nrgPrice, long nrgLimit) {
 
-        ByteBuffer buffer = ByteBuffer.allocate(nonce.length + amountPriceTo.length + Long.BYTES);
+        BigInteger nonceBI = repo.getNonce(walletId);
+        byte[] nonce = nonceBI.toByteArray();
+        byte[] toBytes = to.toBytes();
+        byte[] amountBytes = amount.toByteArray();
+        int len = nonce.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
+
+        byte[] msg = new byte[len];
+        ByteBuffer buffer = ByteBuffer.allocate(len);
         buffer.put(nonce);
-        buffer.put(amountPriceTo);
+        buffer.put(toBytes);
+        buffer.put(amountBytes);
         buffer.putLong(nrgLimit);
+        buffer.putLong(nrgPrice);
+        buffer.flip();
         buffer.get(msg);
         return msg;
     }
@@ -497,6 +510,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         IDataWord metaValue = track.getStorageValue(walletId, new DataWord(getMetaDataKey()));
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(metaValue.getData(), Long.BYTES, DataWord.BYTES));
+        buffer.flip();
         long numOwners = buffer.getLong();
 
         for (long i = 0; i < numOwners; i++) {

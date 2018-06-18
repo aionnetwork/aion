@@ -16,6 +16,9 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.MultiSignatureContract;
@@ -28,7 +31,9 @@ import org.junit.Test;
  */
 public class MultiSignatureContractTest {
     private static final long COST = 21000L; // must be equal to valid used in contract.
-
+    private static final int SIG_SIZE = 96;
+    private static final int AMT_SIZE = 128;
+    private static final BigInteger defaultBalance = new BigInteger("100000");
     private IRepositoryCache repo;
     private List<Address> addrsToClean;
 
@@ -48,6 +53,8 @@ public class MultiSignatureContractTest {
         addrsToClean = null;
     }
 
+    // <--------------------------------------HELPER METHODS--------------------------------------->
+
     // Creates a new account with initial balance balance that will be deleted at test end.
     private Address getExistentAddress(BigInteger balance) {
         Address addr = Address.wrap(ECKeyFac.inst().create().getAddress());
@@ -58,7 +65,7 @@ public class MultiSignatureContractTest {
     }
 
     // Returns a list of existent accounts of size numOwners, each of which has initial balance.
-    private List<Address> getExistentAddresses(int numOwners, BigInteger balance) {
+    private List<Address> getExistentAddresses(long numOwners, BigInteger balance) {
         List<Address> accounts = new ArrayList<>();
         for (int i = 0; i < numOwners; i++) {
             accounts.add(getExistentAddress(balance));
@@ -68,7 +75,7 @@ public class MultiSignatureContractTest {
 
     // Returns a list of existent accounts of size umOtherOwners + 1 that contains owner and then
     // numOtherOwners other owners each with initial balance balance.
-    private List<Address> getExistentAddresses(int numOtherOwners, Address owner, BigInteger balance) {
+    private List<Address> getExistentAddresses(long numOtherOwners, Address owner, BigInteger balance) {
         List<Address> accounts = new ArrayList<>();
         for (int i = 0; i < numOtherOwners; i++) {
             accounts.add(getExistentAddress(balance));
@@ -91,6 +98,43 @@ public class MultiSignatureContractTest {
 
         buffer.flip();
         buffer.get(input);
+        return input;
+    }
+
+    // Returns a properly formatted byte array for these input params for send-tx logic.
+    private byte[] toValidSendInput(Address wallet, List<ISignature> signatures, BigInteger amount,
+        long nrgPrice, Address to) {
+
+        int len = 1 + (Address.ADDRESS_LEN * 2) + (signatures.size() * SIG_SIZE) + AMT_SIZE + Long.BYTES;
+        byte[] input = new byte[len];
+
+        int index = 0;
+        input[index] = (byte) 0x1;
+        index++;
+        System.arraycopy(wallet.toBytes(), 0, input, index, Address.ADDRESS_LEN);
+        index += Address.ADDRESS_LEN;
+
+        for (ISignature sig : signatures) {
+            byte[] sigBytes = sig.toBytes();
+            System.arraycopy(sigBytes, 0, input, index, sigBytes.length);
+            index += sigBytes.length;
+        }
+
+        byte[] amt = new byte[AMT_SIZE];
+        byte[] amtBytes = amount.toByteArray();
+        System.arraycopy(amtBytes, 0, amt, AMT_SIZE - amtBytes.length, amtBytes.length);
+        System.arraycopy(amt, 0, input, index, AMT_SIZE);
+        index += AMT_SIZE;
+
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(nrgPrice);
+        buffer.flip();
+        byte[] nrg = new byte[Long.BYTES];
+        buffer.get(nrg);
+        System.arraycopy(nrg, 0, input, index, Long.BYTES);
+        index += Long.BYTES;
+
+        System.arraycopy(to.toBytes(), 0, input, index, Address.ADDRESS_LEN);
         return input;
     }
 
@@ -145,6 +189,61 @@ public class MultiSignatureContractTest {
         return owners;
     }
 
+    // Returns a list of numKeys keys.
+    private List<ECKeyEd25519> produceKeys(long numKeys) {
+        List<ECKeyEd25519> keys = new ArrayList<>();
+        for (long i = 0; i < numKeys; i++) {
+            keys.add(new ECKeyEd25519());
+        }
+        return keys;
+    }
+
+    // Returns the address of the new multi-sig wallet that uses the addresses in the keys of owners
+    // as the owners, requires at least threshold signatures and has initial balance balance.
+    private Address createMultiSigWallet(List<ECKeyEd25519> owners, long threshold, BigInteger balance) {
+        if (owners.isEmpty()) { fail(); }
+        List<Address> ownerAddrs = new ArrayList<>();
+        Address addr;
+        for (ECKeyEd25519 key : owners) {
+            addr = new Address(key.getAddress());
+            repo.createAccount(addr);
+            addrsToClean.add(addr);
+            ownerAddrs.add(addr);
+        }
+
+        byte[] input = toValidCreateInput(threshold, ownerAddrs);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
+        ContractExecutionResult res = msc.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        Address wallet = new Address(res.getOutput());
+        repo.addBalance(wallet, balance);
+        addrsToClean.add(wallet);
+        return wallet;
+    }
+
+    // Returns a properly formatted byte array message to sign representing these tx components.
+    /*
+    private byte[] produceTxMessage(BigInteger nonce, Address to, BigInteger amount, long nrgLimit,
+        long nrgPrice) {
+
+        byte[] nonceBytes = nonce.toByteArray();
+        byte[] toBytes = to.toBytes();
+        byte[] amountBytes = amount.toByteArray();
+
+        int len = nonceBytes.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
+        byte[] msg = new byte[len];
+        ByteBuffer buffer = ByteBuffer.allocate(len);
+        buffer.put(nonceBytes);
+        buffer.put(toBytes);
+        buffer.put(amountBytes);
+        buffer.putLong(nrgLimit);
+        buffer.putLong(nrgPrice);
+        buffer.flip();
+        buffer.get(msg);
+        return msg;
+    }
+    */
+
     // <------------------------------------MISCELLANEOUS TESTS------------------------------------>
 
     @Test(expected=IllegalArgumentException.class)
@@ -197,12 +296,15 @@ public class MultiSignatureContractTest {
     public void testInputWithOperationOnly() {
         Address caller = getExistentAddress(BigInteger.ZERO);
         MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
-        ContractExecutionResult res = msc.execute(new byte[] { (byte) 0x0 }, COST);
+        ContractExecutionResult res = msc.execute(new byte[]{ (byte) 0x0 }, COST);
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+
+        res = msc.execute(new byte[]{ (byte) 0x1 }, COST);
         assertEquals(0, res.getNrgLeft());
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
     }
 
-    // improve?
     @Test
     public void testInputWithUnsupportedOperation() {
         Address caller = getExistentAddress(BigInteger.ZERO);
@@ -609,6 +711,218 @@ public class MultiSignatureContractTest {
         for (Address own : owners) {
             assertTrue(walletOwners.contains(own));
         }
+    }
+
+    // <----------------------------------SEND TRANSACTION TESTS----------------------------------->
+
+    @Test
+    public void testSendTxWithZeroSignatures() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWithMoreThanMaxOwnersSignatures() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxNegativeAmount() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxFromRegularAddress() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxNoSender() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxNoRecipient() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxNoAmount() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxNoNrgPrice() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWithSignatureSignedByNonOwner() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWithSignatureUsingPreviousNonce() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWhereSignedMessagesDifferInNonce() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWhereSignedMessagesDifferInRecipient() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWhereSignedMessagesDifferInAmount() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWhereSignedMessagesDifferInNrgLimit() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxWhereSignedMessagesDifferInNrgPrice() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxAllSignWrongRecipient() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxAllSignWrongAmount() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxAllSignWrongNonce() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxAllSignWrongNrgLimit() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxAllSignWrongNrgPrice() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxRecipientDoesNotExist() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxInsufficientBalance() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxToSelf() {
+        //TODO
+    }
+
+    @Test
+    public void testAbleToSendTxToWallet() {
+        //TODO
+    }
+
+    @Test
+    public void testWalletAbleToSendTxToDiffWallet() {
+        //TODO
+    }
+
+    @Test
+    public void testWalletAbleToSendTxToRegularAccount() {
+        //TODO
+    }
+
+    @Test
+    public void testWalletNonceWithTxSendings() {
+        //TODO
+    }
+
+    @Test
+    public void testWalletBalanceWithTxSendings() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxLessSignaturesThanThreshold() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxSameSignaturesAsThresholdMinOwners() {
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger nonce = repo.getNonce(wallet);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Have each owner sign the tx msg.
+        byte[] txMsg = MultiSignatureContract.reconstructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+    }
+
+    @Test
+    public void testSendTxSameSignaturesAsThresholdMaxOwners() {
+
+    }
+
+    @Test
+    public void testSendTxMoreSignaturesThanThreshold() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxDuplicateSignees() {
+        //TODO
+    }
+
+    @Test
+    public void testPartialSignature() {
+        //TODO
+    }
+
+    @Test
+    public void testPartialAddresses() {
+        //TODO
+    }
+
+    @Test
+    public void testPartialAmount() {
+        //TODO
+    }
+
+    @Test
+    public void testPartialNrgPrice() {
+        //TODO
+    }
+
+    @Test
+    public void testSendTxSignatureSignedByPhony() {
+        //TODO
     }
 
 }
