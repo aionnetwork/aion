@@ -11,6 +11,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Test;
 
@@ -432,6 +433,132 @@ public class BlockchainImplementationTest {
         List<ByteArrayWrapper> hashes = new ArrayList<>();
         chain.getListOfHashesStartFromBlock(number, qty)
                 .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h)));
+        assertThat(hashes.size()).isEqualTo(expected.size());
+        assertThat(hashes).isEqualTo(expected);
+    }
+
+    @Test
+    public void testGetListOfHeadersStartFrom_wNullBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChain(chain, 6, 2, accounts, MAX_TX_PER_BLOCK);
+
+        assertThat(chain.getListOfHeadersStartFrom(chain.getBestBlock().getNumber() + 1, 1))
+                .isEmpty();
+        assertThat(chain.getListOfHeadersStartFrom(chain.getBestBlock().getNumber() + 10, 1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetListOfHeadersStartFrom_wGenesisBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChain(chain, 12, 2, accounts, MAX_TX_PER_BLOCK);
+
+        AionBlock genesis = chain.getGenesis();
+        AionBlock best = chain.getBestBlock();
+
+        assertThat(best.getNumber()).isGreaterThan(0L);
+        byte[] genesisHash = genesis.getHash();
+
+        // expected result with qty >= chain height
+        List<ByteArrayWrapper> expectedAll = new ArrayList<>();
+        AionBlock block = chain.getBlockByHash(best.getParentHash());
+        while (block.getNumber() > 0) {
+            expectedAll.add(0, ByteArrayWrapper.wrap(block.getHash()));
+            block = chain.getBlockByHash(block.getParentHash());
+        }
+        expectedAll.add(0, ByteArrayWrapper.wrap(genesis.getHash()));
+
+        int qty;
+        // get one block
+        qty = 1;
+        assertStartFrom_expectedOne(chain, genesisHash, 0, qty);
+
+        // get list of chain height from genesis block
+        qty = (int) best.getNumber(); // chain height
+        assertStartFrom(chain, 0, qty, expectedAll);
+
+        // get list of half from genesis block
+        qty = (int) (best.getNumber() / 2);
+
+        List<ByteArrayWrapper> expectedHalf = new ArrayList<>();
+        block = chain.getBlockByNumber(qty - 1);
+        for (int i = 0; i < qty; i++) {
+            expectedHalf.add(0, ByteArrayWrapper.wrap(block.getHash()));
+            block = chain.getBlockByHash(block.getParentHash());
+        }
+        assertStartFrom(chain, 0, qty, expectedHalf);
+
+        // get list of 20 from genesis
+        qty = 24; // larger than block height
+        expectedAll.add(ByteArrayWrapper.wrap(best.getHash()));
+        assertStartFrom(chain, 0, qty, expectedAll);
+
+        // get list of -10 from genesis block
+        qty = -10; // negative value
+        assertThat(chain.getListOfHeadersStartFrom(0, qty)).isEmpty();
+
+        // get list of 0 from genesis block
+        qty = 0; // zero blocks requested
+        assertThat(chain.getListOfHeadersStartFrom(0, qty)).isEmpty();
+    }
+
+    @Test
+    public void testGetListOfHeadersStartFrom_wBestBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChain(chain, 6, 2, accounts, MAX_TX_PER_BLOCK);
+
+        AionBlock best = chain.getBestBlock();
+        byte[] bestHash = best.getHash();
+        long bestNumber = best.getNumber();
+
+        int qty;
+        // get one block
+        qty = 1;
+        assertStartFrom_expectedOne(chain, bestHash, bestNumber, qty);
+
+        // get list of 10 from genesis
+        qty = 10; // larger than block height
+        assertStartFrom_expectedOne(chain, bestHash, bestNumber, qty);
+
+        // get list of -10 from genesis
+        qty = -10; // negative value
+        assertThat(chain.getListOfHeadersStartFrom(bestNumber, qty)).isEmpty();
+
+        // get list of 0 from genesis
+        qty = 0; // zero blocks requested
+        assertThat(chain.getListOfHeadersStartFrom(bestNumber, qty)).isEmpty();
+    }
+
+    public static void assertStartFrom_expectedOne(
+            StandaloneBlockchain chain, byte[] hash, long number, int qty) {
+        List<A0BlockHeader> hashes = chain.getListOfHeadersStartFrom(number, qty);
+        assertThat(hashes.size()).isEqualTo(1);
+        assertThat(hashes.get(0).getHash()).isEqualTo(hash);
+    }
+
+    public static void assertStartFrom(
+            StandaloneBlockchain chain, long number, int qty, List<ByteArrayWrapper> expected) {
+        List<ByteArrayWrapper> hashes = new ArrayList<>();
+        chain.getListOfHeadersStartFrom(number, qty)
+                .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h.getHash())));
         assertThat(hashes.size()).isEqualTo(expected.size());
         assertThat(hashes).isEqualTo(expected);
     }

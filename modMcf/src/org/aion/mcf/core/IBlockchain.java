@@ -31,7 +31,6 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.mcf.types.BlockIdentifier;
 
 /**
  * Blockchain interface.
@@ -83,11 +82,13 @@ public interface IBlockchain<
 
     boolean isBlockExist(byte[] hash);
 
-    /**
-     * Returns the list of headers for the main chain. Returns emptyList() for side chain blocks.
-     */
-    List<BH> getListOfHeadersStartFrom(
-            BlockIdentifier identifier, int skip, int limit, boolean reverse);
+    List<BH> getListOfHeadersStartFrom(long number, int limit);
+
+    // /** Returns the list of headers for the main chain.
+    //  *  Returns emptyList() for side chain blocks.
+    //  */
+    // List<BH> getListOfHeadersStartFrom(
+    //         BlockIdentifier identifier, int skip, int limit, boolean reverse);
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 }
