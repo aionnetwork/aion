@@ -1112,7 +1112,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                                   "NOT OK");
                 } else {
                     time = System.currentTimeMillis();
-                    if ((time - round) / 1000 >= 5) {
+                    if (time - round > 4999) {
                         long remaining = block.getNumber();
                         long checked = bestBlockNumber - block.getNumber() + 1;
                         double duration = (time - start) / 1000;
@@ -1142,8 +1142,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                                   block.getNumber(),
                                   "NOT OK");
                 } else {
-                    time = ((System.currentTimeMillis() - start) / 1000);
-                    LOG_CONS.info("{} blocks checked in {} sec.", bestBlockNumber + 1, time >= 1 ? time : 1);
+                    time = ((System.currentTimeMillis() - start) / 1000) + 1;
+                    LOG_CONS.info("{} blocks checked in under {} sec.", bestBlockNumber + 1, time);
                 }
             }
 
