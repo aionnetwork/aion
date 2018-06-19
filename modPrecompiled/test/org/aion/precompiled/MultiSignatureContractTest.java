@@ -85,6 +85,27 @@ public class MultiSignatureContractTest {
         return accounts;
     }
 
+    // This is the constructMsg method provided by MSC class but here you can specify your nonce.
+    public static byte[] customMsg(IRepositoryCache repo, BigInteger nonce, Address walletId,
+        Address to, BigInteger amount, long nrgPrice, long nrgLimit) {
+
+        byte[] nonceBytes = nonce.toByteArray();
+        byte[] toBytes = to.toBytes();
+        byte[] amountBytes = amount.toByteArray();
+        int len = nonceBytes.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
+
+        byte[] msg = new byte[len];
+        ByteBuffer buffer = ByteBuffer.allocate(len);
+        buffer.put(nonceBytes);
+        buffer.put(toBytes);
+        buffer.put(amountBytes);
+        buffer.putLong(nrgLimit);
+        buffer.putLong(nrgPrice);
+        buffer.flip();
+        buffer.get(msg);
+        return msg;
+    }
+
     // Returns a properly formatted byte array for these input params for create-wallet logic.
     private byte[] toValidCreateInput(long threshold, List<Address> owners) {
         int len = 1 + Long.BYTES + (owners.size() * 32);
@@ -237,28 +258,13 @@ public class MultiSignatureContractTest {
         return wallet;
     }
 
-    // Returns a properly formatted byte array message to sign representing these tx components.
-    /*
-    private byte[] produceTxMessage(BigInteger nonce, Address to, BigInteger amount, long nrgLimit,
-        long nrgPrice) {
-
-        byte[] nonceBytes = nonce.toByteArray();
-        byte[] toBytes = to.toBytes();
-        byte[] amountBytes = amount.toByteArray();
-
-        int len = nonceBytes.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
-        byte[] msg = new byte[len];
-        ByteBuffer buffer = ByteBuffer.allocate(len);
-        buffer.put(nonceBytes);
-        buffer.put(toBytes);
-        buffer.put(amountBytes);
-        buffer.putLong(nrgLimit);
-        buffer.putLong(nrgPrice);
-        buffer.flip();
-        buffer.get(msg);
-        return msg;
+    // Shifts all bytes at index and to the right of index left by 1 position, losing a single byte.
+    private byte[] shiftLeftAtIndex(byte[] original, int index) {
+        byte[] shifted = new byte[original.length - 1];
+        System.arraycopy(original, 0, shifted, 0, index - 1);
+        System.arraycopy(original, index, shifted, index - 1, original.length - index);
+        return shifted;
     }
-    */
 
     // <------------------------------------MISCELLANEOUS TESTS------------------------------------>
 
@@ -987,73 +993,344 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testSendTxWithSignatureUsingPreviousNonce() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // We sign a tx msg that uses the previous nonce.
+        BigInteger nonce = repo.getNonce(wallet);
+        byte[] txMsg = customMsg(repo, nonce.subtract(BigInteger.ONE), wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxWhereSignedMessagesDifferInNonce() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // One signee signs tx with a different nonce than the others. The others sign correct tx.
+        BigInteger nonce = repo.getNonce(wallet);
+        byte[] correctTx = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        byte[] badNonceTx = customMsg(repo, nonce.subtract(BigInteger.ONE), wallet, to, amount, nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_OWNERS - 1; i++) {
+            signatures.add(owners.get(i).sign(correctTx));
+        }
+        signatures.add(owners.get(MultiSignatureContract.MIN_OWNERS - 1).sign(badNonceTx));
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxWhereSignedMessagesDifferInRecipient() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // One signee signs tx with a different recipient than the others. The others sign correct tx.
+        byte[] correctTx = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        byte[] badToTx = MultiSignatureContract.constructMsg(repo, wallet, caller, amount, nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_OWNERS - 1; i++) {
+            signatures.add(owners.get(i).sign(correctTx));
+        }
+        signatures.add(owners.get(MultiSignatureContract.MIN_OWNERS - 1).sign(badToTx));
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxWhereSignedMessagesDifferInAmount() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // One signee signs tx with a different amount than the others. The others sign correct tx.
+        byte[] correctTx = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        byte[] badAmtTx = MultiSignatureContract.constructMsg(repo, wallet, caller,
+            amount.subtract(BigInteger.ONE), nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_OWNERS - 1; i++) {
+            signatures.add(owners.get(i).sign(correctTx));
+        }
+        signatures.add(owners.get(MultiSignatureContract.MIN_OWNERS - 1).sign(badAmtTx));
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxWhereSignedMessagesDifferInNrgLimit() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // One signee signs tx with a different nrg limit than the others. The others sign correct tx.
+        byte[] correctTx = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        byte[] badLimTx = MultiSignatureContract.constructMsg(repo, wallet, caller, amount, nrgPrice, nrgLimit - 1);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_OWNERS - 1; i++) {
+            signatures.add(owners.get(i).sign(correctTx));
+        }
+        signatures.add(owners.get(MultiSignatureContract.MIN_OWNERS - 1).sign(badLimTx));
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxWhereSignedMessagesDifferInNrgPrice() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // One signee signs tx with a different nrg price than the others. The others sign correct tx.
+        byte[] correctTx = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        byte[] badNrgTx = MultiSignatureContract.constructMsg(repo, wallet, caller, amount, nrgPrice - 1, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_OWNERS - 1; i++) {
+            signatures.add(owners.get(i).sign(correctTx));
+        }
+        signatures.add(owners.get(MultiSignatureContract.MIN_OWNERS - 1).sign(badNrgTx));
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxAllSignWrongRecipient() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        Address stranger = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Everyone signs a valid recipient and whole tx is fine but the recipient stated in input differs.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        // The recipient in input differs from all the signatures.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, stranger);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxAllSignWrongAmount() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Everyone signs a valid amount and whole tx is fine but the amount stated in input differs.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        // The recipient in input differs from all the signatures.
+        byte[] input = toValidSendInput(wallet, signatures, amount.subtract(BigInteger.ONE), nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxAllSignWrongNonce() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        Address stranger = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Everyone signs a different nonce than the wallet's current one.
+        BigInteger nonce = repo.getNonce(wallet);
+        byte[] txMsg = customMsg(repo, nonce.add(BigInteger.ONE), wallet, to, amount, nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        // The recipient in input differs from all the signatures.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, stranger);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxAllSignWrongNrgLimit() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Everyone signs a valid nrgLimit and whole tx is fine but the limit stated in execute differs.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        // The nrgLimit given to execute method differs from all the signatures.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit - 1);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxAllSignWrongNrgPrice() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Everyone signs a valid nrgPrice and whole tx is fine but the nrgPrice stated in input differs.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice + 1, nrgLimit);
+
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        // The recipient in input differs from all the signatures.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxRecipientDoesNotExist() {
-        //TODO: how do we handle these matters?
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, defaultBalance);
+
+        // Recipient is not in db.
+        Address to = Address.wrap(ECKeyFac.inst().create().getAddress());
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (ECKeyEd25519 owner : owners) {
+            signatures.add(owner.sign(txMsg));
+        }
+
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(input, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testSendTxInsufficientBalance() {
-        // Create a wallet with zero balance.
+        // Create account with zero balance.
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
         Address caller = new Address(owners.get(0).getAddress());
         Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, BigInteger.ZERO);
 
         Address to = getExistentAddress(BigInteger.ZERO);
-        BigInteger amount = BigInteger.ONE;
+        BigInteger amount = BigInteger.TEN;
         long nrgLimit = 100000L;
         long nrgPrice = 10000000000L;
 
@@ -1068,11 +1345,6 @@ public class MultiSignatureContractTest {
         ContractExecutionResult res = msc.execute(input, nrgLimit);
         assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getCode());
         assertEquals(0, res.getNrgLeft());
-    }
-
-    @Test
-    public void testSendTxToSelf() {
-        //TODO: should be taken care of by existing code
     }
 
     @Test
@@ -1362,22 +1634,147 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testPartialSignature() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Signed adequately.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_THRESH; i++) {
+            signatures.add(owners.get(i).sign(txMsg));
+        }
+
+        // Input gets shifted to lose 1 byte of the last signature.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        int amtStart = input.length - Address.ADDRESS_LEN - Long.BYTES - AMT_SIZE;
+        byte[] shiftedInput = shiftLeftAtIndex(input, amtStart);
+
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(shiftedInput, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
-    public void testPartialAddresses() {
-        //TODO
+    public void testPartialWalletAddress() {
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Signed adequately.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_THRESH; i++) {
+            signatures.add(owners.get(i).sign(txMsg));
+        }
+
+        // Input gets shifted to lose 1 byte of the wallet address.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        int sigsStart = 1 + Address.ADDRESS_LEN;
+        byte[] shiftedInput = shiftLeftAtIndex(input, sigsStart);
+
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(shiftedInput, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testPartialRecipientAddress() {
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Signed adequately.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_THRESH; i++) {
+            signatures.add(owners.get(i).sign(txMsg));
+        }
+
+        // Input gets shifted to lose 1 byte of the recipient address.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        int end = input.length;
+        byte[] shiftedInput = shiftLeftAtIndex(input, end);
+
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(shiftedInput, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testPartialAmount() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Signed adequately.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_THRESH; i++) {
+            signatures.add(owners.get(i).sign(txMsg));
+        }
+
+        // Input gets shifted to lose 1 byte of the amount.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        int nrgStart = input.length - Address.ADDRESS_LEN - Long.BYTES;
+        byte[] shiftedInput = shiftLeftAtIndex(input, nrgStart);
+
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(shiftedInput, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testPartialNrgPrice() {
-        //TODO
+        List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address caller = new Address(owners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, defaultBalance);
+
+        Address to = getExistentAddress(BigInteger.ZERO);
+        BigInteger amount = BigInteger.TEN;
+        long nrgLimit = 100000L;
+        long nrgPrice = 10000000000L;
+
+        // Signed adequately.
+        byte[] txMsg = MultiSignatureContract.constructMsg(repo, wallet, to, amount, nrgPrice, nrgLimit);
+        List<ISignature> signatures = new ArrayList<>();
+        for (int i = 0; i < MultiSignatureContract.MIN_THRESH; i++) {
+            signatures.add(owners.get(i).sign(txMsg));
+        }
+
+        // Input gets shifted to lose 1 byte of the energy price.
+        byte[] input = toValidSendInput(wallet, signatures, amount, nrgPrice, to);
+        int toStart = input.length - Address.ADDRESS_LEN;
+        byte[] shiftedInput = shiftLeftAtIndex(input, toStart);
+
+        MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
+        ContractExecutionResult res = msc.execute(shiftedInput, nrgLimit);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
 }

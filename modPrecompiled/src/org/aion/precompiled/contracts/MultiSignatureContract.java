@@ -249,6 +249,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             // Then wallet is not the address of a multi-sig wallet.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
+        if (!track.hasAccountState(recipient)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
         if (sigs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
