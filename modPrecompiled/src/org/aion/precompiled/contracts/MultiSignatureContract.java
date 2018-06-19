@@ -91,13 +91,86 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Constructs and returns this transaction as a byte array message.
-     * The format of the transaction as a message is defined as:
+     * Returns a properly formatted byte array to be provided as the input parameter of the
+     * contract's execute method when the desired operation to be performed is to create a new
+     * multi-sig wallet.
      *
-     *   | nonce | amount | nrgPrice | recipient | nrgLimit |
+     * @param threshold The proposed threshold of the new multi-sig wallet.
+     * @param owners The proposed owners of the new multi-sig wallet.
+     * @return a byte array for executing a create-wallet operation.
+     */
+    public static byte[] constructCreateWalletInput(long threshold, List<Address> owners) {
+        int len = 1 + Long.BYTES + (owners.size() * Address.ADDRESS_LEN);
+        byte[] input = new byte[len];
+
+        ByteBuffer buffer = ByteBuffer.allocate(len);
+        buffer.put(new byte[]{ (byte) 0x0 });
+        buffer.putLong(threshold);
+        for (Address addr : owners) {
+            buffer.put(addr.toBytes());
+        }
+
+        buffer.flip();
+        buffer.get(input);
+        return input;
+    }
+
+    /**
+     * Returns a properly formatted byte array to be provided as the input parameter of the
+     * contract's execute method when the desired operation to be performed is to send a transaction
+     * from a multi-sig wallet.
      *
-     * If the transaction is not signed as a byte array obeying the above format it will not be
-     * approved.
+     * @param wallet The address of the multi-sig wallet.
+     * @param signatures The signatures for the proposed transaction.
+     * @param amount The proposed amount to transfer from the wallet.
+     * @param nrgPrice The proposed energy price for the transaction.
+     * @param to The proposed recipient for the transaction.
+     * @return a byte array for executing a send-transaction operation.
+     */
+    public static byte[] constructSendTxInput(Address wallet, List<ISignature> signatures,
+        BigInteger amount, long nrgPrice, Address to) {
+
+        int len = 1 + (Address.ADDRESS_LEN * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
+        byte[] input = new byte[len];
+
+        int index = 0;
+        input[index] = (byte) 0x1;
+        index++;
+        System.arraycopy(wallet.toBytes(), 0, input, index, Address.ADDRESS_LEN);
+        index += Address.ADDRESS_LEN;
+
+        for (ISignature sig : signatures) {
+            byte[] sigBytes = sig.toBytes();
+            System.arraycopy(sigBytes, 0, input, index, sigBytes.length);
+            index += sigBytes.length;
+        }
+
+        byte[] amt = new byte[AMOUNT_LEN];
+        byte[] amtBytes = amount.toByteArray();
+        if (amtBytes.length > AMOUNT_LEN) { throw new IllegalArgumentException("Amount too large."); }
+        System.arraycopy(amtBytes, 0, amt, AMOUNT_LEN - amtBytes.length, amtBytes.length);
+        System.arraycopy(amt, 0, input, index, AMOUNT_LEN);
+        index += AMOUNT_LEN;
+
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(nrgPrice);
+        buffer.flip();
+        byte[] nrg = new byte[Long.BYTES];
+        buffer.get(nrg);
+        System.arraycopy(nrg, 0, input, index, Long.BYTES);
+        index += Long.BYTES;
+
+        System.arraycopy(to.toBytes(), 0, input, index, Address.ADDRESS_LEN);
+        return input;
+    }
+
+    /**
+     * This method should be called by the owners of a multi-sig wallet in order to produce a byte
+     * array of a transaction to be signed. Each owner should call this method with identical
+     * parameters to ensure they are each signing the same transaction. If a byte array with a
+     * different format is signed the transaction will be rejected.
+     *
+     * This method constructs and returns this transaction as a byte array message.
      *
      * @param walletId The address of the multi-sig wallet.
      * @param to The address of the recipient.
@@ -142,8 +215,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *   total: 66-322 bytes
      *
      * operation 0x1 - send a transaction (minimum 1 signature):
-     *   arguments: [<32b - walletId> | <96b to 960b - signatures> | <128b - amount> |
-     *       <8b - nrgPrice> | <32b - to>]
+     *   arguments:
+     * [<32b - walletId> | <96b to 960b - signatures> | <128b - amount> | <8b - nrgPrice> | <32b - to>]
      *   total: 297-1161 bytes
      *
      *
@@ -231,6 +304,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         int nrgStart = recipientStart - Long.BYTES;
         int amountStart = nrgStart - AMOUNT_LEN;
 
+        // Ensures the starting indices are non-decreasing
         if (sigsStart > amountStart) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
