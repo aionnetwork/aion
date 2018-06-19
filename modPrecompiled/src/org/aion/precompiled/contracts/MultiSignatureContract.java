@@ -33,6 +33,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.AddressSpecs;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
@@ -62,6 +63,7 @@ import org.aion.zero.types.AionTransaction;
  * @author nick nadeau
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
+    private static final ECKey KEY = ECKeyFac.inst().create();
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
@@ -86,6 +88,44 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         super(track);
         if (address == null) { throw new IllegalArgumentException("Null address."); }
         this.address = address;
+    }
+
+    /**
+     * Constructs and returns this transaction as a byte array message.
+     * The format of the transaction as a message is defined as:
+     *
+     *   | nonce | amount | nrgPrice | recipient | nrgLimit |
+     *
+     * If the transaction is not signed as a byte array obeying the above format it will not be
+     * approved.
+     *
+     * @param walletId The address of the multi-sig wallet.
+     * @param to The address of the recipient.
+     * @param amount The amount to transfer.
+     * @param nrgPrice The energy price.
+     * @param nrgLimit The energy limit.
+     * @return the transaction message that was signed.
+     */
+    public static byte[] constructMsg(
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address walletId,
+        Address to, BigInteger amount, long nrgPrice, long nrgLimit) {
+
+        BigInteger nonceBI = repo.getNonce(walletId);
+        byte[] nonce = nonceBI.toByteArray();
+        byte[] toBytes = to.toBytes();
+        byte[] amountBytes = amount.toByteArray();
+        int len = nonce.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
+
+        byte[] msg = new byte[len];
+        ByteBuffer buffer = ByteBuffer.allocate(len);
+        buffer.put(nonce);
+        buffer.put(toBytes);
+        buffer.put(amountBytes);
+        buffer.putLong(nrgLimit);
+        buffer.putLong(nrgPrice);
+        buffer.flip();
+        buffer.get(msg);
+        return msg;
     }
 
     /**
@@ -206,21 +246,31 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Long nrgPrice = buffer.getLong();
 
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
+            // Then wallet is not the address of a multi-sig wallet.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (sigs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] msg = reconstructMsg(track, wallet, recipient, amount, nrgPrice, nrg);
-        if (isValidAmount(wallet, amount) && areValidSignatures(wallet, sigs, msg)) {
-            AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
-            AionHub.inst().getPendingState().addPendingTransaction(tx);
-            track.flush();
-            return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
-        } else {
+        byte[] msg = constructMsg(track, wallet, recipient, amount, nrgPrice, nrg);
+        if (amount.compareTo(BigInteger.ZERO) < 0) {
+            // Attempt to transfer negative amount.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
+        if (!areValidSignatures(wallet, sigs, msg)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+        if (track.getBalance(wallet).compareTo(amount) < 0) {
+            // Attempt to transfer more than available balance.
+            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+        }
+
+        AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
+        tx.sign(KEY);
+        AionHub.inst().getPendingState().addPendingTransaction(tx);
+        track.flush();
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
     }
 
     /**
@@ -375,22 +425,6 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
     /**
      * Returns true only if the following conditions are met:
-     *   1. amount is greater than zero.
-     *   2. The multi-sig wallet whose address is wallet has a balance at least equal to amount.
-     *
-     * Returns false otherwise.
-     *
-     * @param wallet The address of the multi-sig wallet.
-     * @param amount The amount to transfer from wallet.
-     * @return true only if this is a valid amount to transfer from wallet.
-     */
-    private boolean isValidAmount(Address wallet, BigInteger amount) {
-        if (amount.compareTo(BigInteger.ONE) < 0) { return false; }
-        return track.getBalance(wallet).compareTo(amount) >= 0;
-    }
-
-    /**
-     * Returns true only if the following conditions are met:
      *   1. ALL signatures have been signed by unique signers.
      *   2. ALL signers are owners of the multi-sig wallet whose address is wallet.
      *   3. ALL signatures are valid signatures that sign the current transaction.
@@ -412,7 +446,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Address signer;
         for (byte[] sig : signatures) {
             if (!signatureIsCorrect(sig, msg)) { return false; }
-            signer = new Address(AddressSpecs.computeA0Address(sig));
+            signer = new Address(AddressSpecs.computeA0Address(Arrays.copyOfRange(sig, 0, 32)));
             if (txSigners.contains(signer)) { return false; }
             if (!owners.contains(signer)) { return false; }
             txSigners.add(signer);
@@ -421,6 +455,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         IDataWord metaValue = track.getStorageValue(wallet, new DataWord(getMetaDataKey()));
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(metaValue.getData(), 0, Long.BYTES));
+        buffer.flip();
         long threshold = buffer.getLong();
         return signatures.size() >= threshold;
     }
@@ -436,44 +471,6 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private boolean signatureIsCorrect(byte[] signature, byte[] msg) {
         ISignature sig = Ed25519Signature.fromBytes(signature);
         return ECKeyEd25519.verify(msg, sig.getSignature(), sig.getPubkey(null));
-    }
-
-    /**
-     * Re-constructs and returns this transaction as a byte array message.
-     * The format of the transaction as a message is defined as:
-     *
-     *   | nonce | amount | nrgPrice | recipient | nrgLimit |
-     *
-     * If the transaction is not signed as a byte array obeying the above format it will not be
-     * approved.
-     *
-     * @param walletId The address of the multi-sig wallet.
-     * @param to The address of the recipient.
-     * @param amount The amount to transfer.
-     * @param nrgPrice The energy price.
-     * @param nrgLimit The energy limit.
-     * @return the transaction message that was signed.
-     */
-    public static byte[] reconstructMsg(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address walletId,
-        Address to, BigInteger amount, long nrgPrice, long nrgLimit) {
-
-        BigInteger nonceBI = repo.getNonce(walletId);
-        byte[] nonce = nonceBI.toByteArray();
-        byte[] toBytes = to.toBytes();
-        byte[] amountBytes = amount.toByteArray();
-        int len = nonce.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
-
-        byte[] msg = new byte[len];
-        ByteBuffer buffer = ByteBuffer.allocate(len);
-        buffer.put(nonce);
-        buffer.put(toBytes);
-        buffer.put(amountBytes);
-        buffer.putLong(nrgLimit);
-        buffer.putLong(nrgPrice);
-        buffer.flip();
-        buffer.get(msg);
-        return msg;
     }
 
     /**
