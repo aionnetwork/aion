@@ -2,8 +2,6 @@ module aion.zero.impl {
     requires aion.base;
     requires aion.mcf;
     requires aion.log;
-    requires java.xml;
-    requires slf4j.api;
     requires aion.p2p;
     requires aion.p2p.impl;
     requires aion.rlp;
@@ -16,6 +14,8 @@ module aion.zero.impl {
     requires aion.fastvm;
     requires aion.precompiled;
     requires jdk.management;
+    requires java.xml;
+    requires slf4j.api;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;

@@ -1518,8 +1518,6 @@ public class ApiWeb3Aion extends ApiAion {
         p2p.put("errorTolerance", configP2p.getErrorTolerance());
         p2p.put("maxActiveNodes", configP2p.getMaxActiveNodes());
         p2p.put("maxTempNodes", configP2p.getMaxTempNodes());
-        p2p.put("showLog", configP2p.getShowLog());
-        p2p.put("showStatus", configP2p.getShowStatus());
         p2p.put("clusterNodeMode", configP2p.inClusterNodeMode());
         p2p.put("syncOnlyMode", configP2p.inSyncOnlyMode());
 

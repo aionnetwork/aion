@@ -44,7 +44,6 @@ import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -339,6 +338,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             bc.setBestBlock(genesis);
             bc.setTotalDifficulty(genesis.getDifficultyBI());
+            if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
+                // setting the object runtime value
+                genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
+            }
 
             return new Bundle(this.defaultKeys, bc);
         }
