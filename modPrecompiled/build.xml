@@ -115,6 +115,7 @@
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
             <modulepath>
                 <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+                <pathelement location="${dir.lib}/guava-19.0.jar"/>
                 <pathelement location="${dir.mod}/modMcf.jar"/>
                 <pathelement location="${dir.mod}/modAionBase.jar"/>
                 <pathelement location="${dir.mod}/modCrypto.jar"/>
