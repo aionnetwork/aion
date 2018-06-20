@@ -22,83 +22,28 @@
  */
 package org.aion.p2p.impl1.tasks;
 
-import org.aion.p2p.Header;
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
+import org.aion.p2p.Header;
 
 /**
  * @author chris
  */
 class ChannelBuffer {
 
-    class RouteStatus {
-        long timestamp;
-        int count;
-        RouteStatus(){
-            this.timestamp = System.currentTimeMillis();
-            count = 0;
-        }
-    }
-
-    private boolean showLog;
-
-    private Map<Integer, RouteStatus> routes = new HashMap<>();
-
-    ChannelBuffer(boolean _showLog){
-        this.showLog = _showLog;
-    }
-
-    /**
-     * @param _route          int
-     * @param _maxReqsPerSec  int requests within 1 s
-     * @return                boolean flag if under route control
-     */
-    synchronized boolean shouldRoute(int _route, int _maxReqsPerSec) {
-        long now = System.currentTimeMillis();
-        RouteStatus prev = routes.putIfAbsent(_route, new RouteStatus());
-        if (prev != null) {
-            if ((now - prev.timestamp) > 1000) {
-                prev.count = 0;
-                prev.timestamp = now;
-                return true;
-            }
-            boolean shouldRoute = prev.count < _maxReqsPerSec;
-            if(shouldRoute) {
-                prev.count++;
-            }
-
-            if(showLog) {
-                if(!shouldRoute) {
-                    System.out.println(
-                        "<p2p route-cooldown=" + _route + " node=" + this.displayId + " count="
-                            + prev.count + ">");
-                }
-                // too many msgs
-                //else
-                //    System.out.println("<p2p route-cooldown=" + _route + " node=" + this.displayId + " count=" + prev.count + ">");
-            }
-            return shouldRoute;
-        } else
-            return true;
-    }
-
-
-    RouteStatus getRouteCount(int _route){
-        return routes.get(_route);
-    }
-
     // buffer for buffer remaining after NIO select read.
     byte[] remainBuffer;
 
     int buffRemain = 0;
 
-    int nodeIdHash = 0;
+    private int nodeIdHash;
 
-    String displayId = "";
+    private String displayId;
 
     Header header = null;
 
@@ -112,6 +57,75 @@ class ChannelBuffer {
      * Indicates whether this channel is closed.
      */
     AtomicBoolean isClosed = new AtomicBoolean(false);
+
+    private Map<Integer, RouteStatus> routes = new HashMap<>();
+
+    public String getDisplayId() {
+        return displayId;
+    }
+
+    void setNodeIdHash(int nodeIdHash) {
+        this.nodeIdHash = nodeIdHash;
+    }
+
+    void setDisplayId(String displayId) {
+        this.displayId = displayId;
+    }
+
+    int getNodeIdHash() {
+        return nodeIdHash;
+    }
+
+    class RouteStatus {
+
+        long timestamp;
+        int count;
+
+        RouteStatus() {
+            this.timestamp = System.currentTimeMillis();
+            count = 0;
+        }
+    }
+
+
+    ChannelBuffer() {
+    }
+
+    /**
+     * @param _route int
+     * @param _maxReqsPerSec int requests within 1 s
+     * @return boolean flag if under route control
+     */
+    synchronized boolean shouldRoute(int _route, int _maxReqsPerSec) {
+        long now = System.currentTimeMillis();
+        RouteStatus prev = routes.putIfAbsent(_route, new RouteStatus());
+        if (prev != null) {
+            if ((now - prev.timestamp) > 1000) {
+                prev.count = 0;
+                prev.timestamp = now;
+                return true;
+            }
+            boolean shouldRoute = prev.count < _maxReqsPerSec;
+            if (shouldRoute) {
+                prev.count++;
+            } else {
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG
+                        .debug("route-cooldown={} node={} count={}", _route, this.getDisplayId(),
+                            prev.count);
+                }
+            }
+
+            return shouldRoute;
+        } else {
+            return true;
+        }
+    }
+
+
+    RouteStatus getRouteCount(int _route) {
+        return routes.get(_route);
+    }
 
     void readHead(ByteBuffer buf) {
         buf.get(bsHead);
@@ -138,15 +152,15 @@ class ChannelBuffer {
     /**
      * @return boolean
      */
-    boolean isHeaderCompleted() {
-        return header != null;
+    boolean isHeaderNotCompleted() {
+        return header == null;
     }
 
     /**
      * @return boolean
      */
-    boolean isBodyCompleted() {
-        return this.header != null && this.body != null && body.length == header.getLen();
+    boolean isBodyNotCompleted() {
+        return this.header == null || this.body == null || body.length != header.getLen();
     }
 
 }

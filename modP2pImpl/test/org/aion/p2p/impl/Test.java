@@ -1,10 +1,10 @@
 package org.aion.p2p.impl;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class Test {
 

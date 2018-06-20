@@ -58,7 +58,6 @@ public class ResHandshake1Test {
         ResHandshake1 rh2 = ResHandshake1.decode(mhBytes);
 
         assertEquals(rh1.getSuccess(), rh2.getSuccess());
-
         assertEquals(rh1.getBinaryVersion().length(), rh2.getBinaryVersion().length());
         assertEquals(rh1.getBinaryVersion(), rh2.getBinaryVersion());
     }
