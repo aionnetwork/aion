@@ -33,7 +33,6 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.AddressSpecs;
-import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
@@ -44,8 +43,6 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.zero.impl.AionHub;
-import org.aion.zero.types.AionTransaction;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -63,7 +60,6 @@ import org.aion.zero.types.AionTransaction;
  * @author nick nadeau
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
-//    private static final ECKey KEY = ECKeyFac.inst().create();
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
@@ -203,7 +199,12 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
     /**
      * The input parameter of this method is a byte array whose bytes should be supplied in the
-     * following expected format(s):
+     * below formats depending on the desired operation.
+     * It is <b>highly recommended</b> that the constructCreateWalletInput method be used to create
+     * the input for creating a wallet and the constructSendTxInput method be used for sending a
+     * transaction.
+     *
+     * The format of the input byte array is as follows:
      *
      * [<1b - operation> | <arguments>]
      *
@@ -233,9 +234,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      *   | nonce | recipientAddr | amount | nrgLimit | nrgPrice |
      *
-     * where nonce is the nonce of the multi-sig wallet.
-     * Use the regular BigInteger toByteArray method and convert a long to a byte array using
-     * ByteBuffer, then concatenate all the separate arrays into one and sign that.
+     * It is <b>highly recommended</b> that the constructMsg method be used to produce this message
+     * so that all parties can be sure they are signing identical transactions.
      */
     @Override
     public ContractExecutionResult execute(byte[] input, long nrg) {
@@ -319,6 +319,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         buffer.flip();
         Long nrgPrice = buffer.getLong();
 
+        if (!isValidTxNrg(nrg)) {
+            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+        }
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
             // Then wallet is not the address of a multi-sig wallet.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -343,11 +346,6 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        //TODO: do nrg checks
-
-//        AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
-//        tx.sign(KEY);
-//        AionHub.inst().getPendingState().addPendingTransaction(tx);
         track.incrementNonce(wallet);
         track.addBalance(wallet, amount.negate());
         track.addBalance(recipient, amount);
@@ -552,26 +550,6 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private boolean signatureIsCorrect(byte[] signature, byte[] msg) {
         ISignature sig = Ed25519Signature.fromBytes(signature);
         return ECKeyEd25519.verify(msg, sig.getSignature(), sig.getPubkey(null));
-    }
-
-    /**
-     * Constructs and returns the transaction that was requested by the execute method.
-     *
-     * This method assumes that the fields the transaction will be initialized with are all valid.
-     *
-     * @param walletId The ID of the multi-sig wallet sending the tx.
-     * @param to The recipient of the tx.
-     * @param amt The amount to transfer.
-     * @param nrg The energy limit.
-     * @param nrgPrice The energy price.
-     * @return the requested transaction.
-     */
-    private AionTransaction constructTx(Address walletId, Address to, byte[] amt, long nrg,
-        long nrgPrice) {
-
-        BigInteger nonceBI = track.getNonce(walletId);
-        byte[] data = new byte[]{ 0 };
-        return new AionTransaction(nonceBI.toByteArray(), walletId, to, amt, data, nrg, nrgPrice);
     }
 
     /**

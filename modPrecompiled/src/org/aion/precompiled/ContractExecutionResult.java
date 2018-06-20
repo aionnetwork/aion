@@ -39,11 +39,11 @@ public class ContractExecutionResult {
 
     /**
      * A result code specifying the behaviour of the contract's execution.
-     *
-     * NOTE: ensure the int representations of each code correspond to the equivalent code in the
-     * ExecutionResult.Code class so that translation between the two (needed in VM) is seamless.
      */
     public enum ResultCode {
+        // Note: the VM converts these codes into its own, its important that any new codes added
+        // here have a corresponding int strictly larger than the largest code in the VM (which
+        // is currently 11). Any codes 11 or below should match their corresponding code in the VM.
         SUCCESS(0),
         FAILURE(1),
         OUT_OF_NRG(2),

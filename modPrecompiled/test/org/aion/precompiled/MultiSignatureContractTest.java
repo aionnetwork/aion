@@ -18,7 +18,6 @@ import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.mcf.account.Account;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.MultiSignatureContract;
@@ -617,7 +616,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -636,7 +640,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -655,7 +664,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -671,7 +685,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, amt,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -688,7 +707,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, amt,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -696,6 +720,7 @@ public class MultiSignatureContractTest {
         // Our wallet is not a wallet...
         List<ECKeyEd25519> phonies = produceKeys(MultiSignatureContract.MIN_OWNERS);
         Address phonyWallet = new Address(phonies.get(0).getAddress());
+        repo.addBalance(phonyWallet, DEFAULT_BALANCE);
         BigInteger amt = BigInteger.ONE;
 
         byte[] txMsg = MultiSignatureContract.constructMsg(repo, phonyWallet, to, amt, NRG_PRICE,
@@ -704,7 +729,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(phonyWallet, signatures, amt,
             NRG_PRICE, to);
+
+        checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(phonyWallet, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -720,7 +750,12 @@ public class MultiSignatureContractTest {
 
         // input does not contain the sender info.
         byte[] input = toValidSendInput(null, signatures, AMOUNT, NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -736,7 +771,12 @@ public class MultiSignatureContractTest {
 
         // input does not contain the recipient info.
         byte[] input = toValidSendInput(wallet, signatures, AMOUNT, NRG_PRICE, null);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -752,7 +792,12 @@ public class MultiSignatureContractTest {
 
         // input does not contain the amount info.
         byte[] input = toValidSendInput(wallet, signatures, null, NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -775,7 +820,11 @@ public class MultiSignatureContractTest {
         System.arraycopy(input, input.length - Address.ADDRESS_LEN, noNrgInput,
             input.length - Address.ADDRESS_LEN - Long.BYTES, Address.ADDRESS_LEN);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, noNrgInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -794,7 +843,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -816,7 +870,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -837,7 +896,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -857,7 +921,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -878,7 +947,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -898,7 +972,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -918,7 +997,12 @@ public class MultiSignatureContractTest {
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE,
             stranger);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -936,7 +1020,12 @@ public class MultiSignatureContractTest {
         // The recipient in input differs from all the signatures.
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures,
             AMOUNT.subtract(BigInteger.ONE), NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -957,7 +1046,12 @@ public class MultiSignatureContractTest {
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE,
             stranger);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -975,7 +1069,12 @@ public class MultiSignatureContractTest {
         // The NRG_LIMIT given to execute method differs from all the signatures.
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT - 1, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -993,7 +1092,12 @@ public class MultiSignatureContractTest {
         // The recipient in input differs from all the signatures.
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1012,7 +1116,10 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, rec);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
     }
 
     @Test
@@ -1028,7 +1135,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INSUFFICIENT_BALANCE, 0);
+        checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1050,7 +1162,12 @@ public class MultiSignatureContractTest {
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet1, signatures, AMOUNT,
             NRG_PRICE,
             wallet2);
+
+        checkAccountState(wallet1, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE);
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        checkAccountState(wallet1, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
+        checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE.add(AMOUNT));
     }
 
     @Test
@@ -1067,7 +1184,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1084,7 +1206,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1102,7 +1229,11 @@ public class MultiSignatureContractTest {
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
+        checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
 
     @Test
@@ -1119,7 +1250,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
+        checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
 
     @Test
@@ -1136,7 +1272,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
+        checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
 
     @Test
@@ -1153,7 +1294,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
+        checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
 
     @Test
@@ -1171,7 +1317,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1190,7 +1341,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     // This is ok: caller is owner and so their absent sig does not matter if all sigs are ok.
@@ -1208,7 +1364,12 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
+        checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
 
     // This is bad: only want transactions triggered by a calling owner, even if caller doesn't sign.
@@ -1227,7 +1388,12 @@ public class MultiSignatureContractTest {
         // The phony is the one who calls the contract though.
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(new Address(phony.getAddress()), input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1248,7 +1414,11 @@ public class MultiSignatureContractTest {
         int amtStart = input.length - Address.ADDRESS_LEN - Long.BYTES - AMT_SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, amtStart);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1269,7 +1439,11 @@ public class MultiSignatureContractTest {
         int sigsStart = 1 + Address.ADDRESS_LEN;
         byte[] shiftedInput = shiftLeftAtIndex(input, sigsStart);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1290,7 +1464,11 @@ public class MultiSignatureContractTest {
         int end = input.length;
         byte[] shiftedInput = shiftLeftAtIndex(input, end);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1311,7 +1489,11 @@ public class MultiSignatureContractTest {
         int nrgStart = input.length - Address.ADDRESS_LEN - Long.BYTES;
         byte[] shiftedInput = shiftLeftAtIndex(input, nrgStart);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -1332,7 +1514,11 @@ public class MultiSignatureContractTest {
         int toStart = input.length - Address.ADDRESS_LEN;
         byte[] shiftedInput = shiftLeftAtIndex(input, toStart);
 
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
         execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
 }
