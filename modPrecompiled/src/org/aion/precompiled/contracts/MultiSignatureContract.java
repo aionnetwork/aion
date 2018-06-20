@@ -304,7 +304,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         int nrgStart = recipientStart - Long.BYTES;
         int amountStart = nrgStart - AMOUNT_LEN;
 
-        // Ensures the starting indices are non-decreasing
+        // Ensures input is min expected size except possibly signatures, which is checked below.
         if (sigsStart > amountStart) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }

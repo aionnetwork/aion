@@ -21,7 +21,6 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.MultiSignatureContract;
-import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +42,6 @@ public class MultiSignatureContractTest {
 
     @Before
     public void setup() {
-        CfgAion.inst();
         repo = new DummyRepo();
         ((DummyRepo) repo).storageErrorReturn = null;
         addrsToClean = new ArrayList<>();
