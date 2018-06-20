@@ -191,15 +191,18 @@ public class ContractExecutor {
      * Performs the contract call.
      */
     private void call() {
-        IPrecompiledContract pc = ContractFactory.getPrecompiledContract(tx.getTo(), this.repoTrack);
+        IPrecompiledContract pc = ContractFactory.getPrecompiledContract(tx.getTo(), tx.getFrom(),
+            this.repoTrack);
 
         if (pc != null) {
             exeResult = pc.execute(tx.getData(), this.nrgLimit);
 
             // transfer value
+            /*
             BigInteger txValue = new BigInteger(1, tx.getValue());
             repoTrack.addBalance(tx.getFrom(), txValue.negate());
             repoTrack.addBalance(tx.getTo(), txValue);
+            */
         } else {
             exeResult.setCodeAndNrgLeft(ResultCode.INTERNAL_ERROR, 0);
         }

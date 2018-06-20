@@ -18,6 +18,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.mcf.account.Account;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.MultiSignatureContract;
@@ -295,6 +296,12 @@ public class MultiSignatureContractTest {
         }
     }
 
+    // Verifies that account has a nonce equal to nonce and a balance equal to balance.
+    private void checkAccountState(Address account, BigInteger nonce, BigInteger balance) {
+        assertEquals(nonce, repo.getNonce(account));
+        assertEquals(balance, repo.getBalance(account));
+    }
+
     // <------------------------------------MISCELLANEOUS TESTS------------------------------------>
 
     @Test(expected=IllegalArgumentException.class)
@@ -463,52 +470,6 @@ public class MultiSignatureContractTest {
         execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
     }
 
-    // Caller is not in repo <-- that is meaning of 'non-existent'
-    @Test
-    public void testCreateWalletWithNonExistentCaller() {
-        // Test using min legal number of owners.
-        Address caller = Address.wrap(ECKeyFac.inst().create().getAddress());
-        List<Address> owners = getExistentAddresses(
-            MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
-        byte[] input = MultiSignatureContract.constructCreateWalletInput(
-            MultiSignatureContract.MIN_THRESH, owners);
-
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
-
-        // Test using max legal number of owners.
-        owners = getExistentAddresses(
-            MultiSignatureContract.MAX_OWNERS - 1, caller, BigInteger.ZERO);
-        input = MultiSignatureContract.constructCreateWalletInput(MultiSignatureContract.MIN_THRESH,
-            owners);
-
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
-    }
-
-    @Test
-    public void testCreateWalletWithNonExistentOwnerThatIsNotCaller() {
-        // Test using min legal number of owners.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners = new ArrayList<>();
-        owners.add(caller);
-        owners.add(Address.wrap(ECKeyFac.inst().create().getAddress()));
-        for (int i = 0; i < (MultiSignatureContract.MIN_OWNERS - 2); i++) {
-            owners.add(getExistentAddress(BigInteger.ZERO));
-        }
-        byte[] input = MultiSignatureContract.constructCreateWalletInput(
-            MultiSignatureContract.MIN_THRESH, owners);
-
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
-
-        // Test using max legal number of owners.
-        for (int i = MultiSignatureContract.MIN_OWNERS; i < MultiSignatureContract.MAX_OWNERS; i++) {
-            owners.add(getExistentAddress(BigInteger.ZERO));
-        }
-        input = MultiSignatureContract.constructCreateWalletInput(MultiSignatureContract.MIN_THRESH,
-            owners);
-
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
-    }
-
     @Test
     public void testCreateWalletWithPartiallyCompleteAddress() {
         // Test on nearly min legal number of owners.
@@ -549,13 +510,13 @@ public class MultiSignatureContractTest {
             MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
-        long nrg = COST * 2;
 
         ContractExecutionResult res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT
             - COST);
 
         Address walletCaller = new Address(res.getOutput());
         addrsToClean.add(walletCaller);
+        checkAccountState(walletCaller, BigInteger.ZERO, BigInteger.ZERO);
 
         // Now try to create a wallet using this wallet as the caller and an owner.
         owners = getExistentAddresses(
@@ -563,7 +524,7 @@ public class MultiSignatureContractTest {
         input = MultiSignatureContract.constructCreateWalletInput(
             MultiSignatureContract.MIN_THRESH, owners);
 
-        res = execute(walletCaller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(walletCaller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
     }
 
     @Test
@@ -574,13 +535,13 @@ public class MultiSignatureContractTest {
             MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
-        long nrg = COST * 2;
 
         ContractExecutionResult res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT
             - COST);
 
         Address wallet = new Address(res.getOutput());
         addrsToClean.add(wallet);
+        checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
 
         // Now try to create a wallet using this wallet as one of the owners.
         Address newCaller = getExistentAddress(BigInteger.ZERO);
@@ -589,7 +550,7 @@ public class MultiSignatureContractTest {
         owners.add(newCaller);
         input = MultiSignatureContract.constructCreateWalletInput(MultiSignatureContract.MIN_THRESH, owners);
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
     }
 
     @Test
@@ -600,11 +561,11 @@ public class MultiSignatureContractTest {
             MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
-        long nrg = COST * 2;
 
         ContractExecutionResult res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT
             - COST);
         checkCreateResult(res, threshold, owners);
+        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners = getExistentAddresses(
@@ -614,6 +575,7 @@ public class MultiSignatureContractTest {
 
         res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
+        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -628,6 +590,7 @@ public class MultiSignatureContractTest {
         ContractExecutionResult res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT
             - COST);
         checkCreateResult(res, threshold, owners);
+        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners = getExistentAddresses(
@@ -637,6 +600,7 @@ public class MultiSignatureContractTest {
 
         res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
+        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     // <----------------------------------SEND TRANSACTION TESTS----------------------------------->
@@ -1137,6 +1101,7 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
+
         execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
     }
 

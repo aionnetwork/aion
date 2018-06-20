@@ -25,6 +25,7 @@ package org.aion.precompiled;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.precompiled.contracts.AionNameServiceContract;
+import org.aion.precompiled.contracts.MultiSignatureContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.precompiled.type.IPrecompiledContract;
 
@@ -35,6 +36,7 @@ public class ContractFactory {
     private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
     private static final String ANS = "0000000000000000000000000000000000000000000000000000000000000200";
+    private static final String MSC = "0000000000000000000000000000000000000000000000000000000000000400";
 
     private ContractFactory(){}
 
@@ -46,12 +48,16 @@ public class ContractFactory {
      * @param track The repo.
      * @return the specified pre-compiled address.
      */
-    public static IPrecompiledContract getPrecompiledContract(Address address, IRepositoryCache track) {
+    public static IPrecompiledContract getPrecompiledContract(Address address, Address from,
+        IRepositoryCache track) {
+
         switch (address.toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, address, Address.wrap(OWNER));
+                return new TotalCurrencyContract(track, from, Address.wrap(OWNER));
             case ANS:
-                return new AionNameServiceContract(track, address, Address.wrap(OWNER));
+                return new AionNameServiceContract(track, from, Address.wrap(OWNER));
+            case MSC:
+                return new MultiSignatureContract(track, from);
             default:
                 return null;
         }
@@ -66,7 +72,8 @@ public class ContractFactory {
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
             case TOTAL_CURRENCY:
-            case ANS: return true;
+            case ANS:
+            case MSC: return true;
             default: return false;
         }
     }
@@ -81,12 +88,19 @@ public class ContractFactory {
     }
 
     /**
-     * Returns the address of the AionNameServiceConract contract.
+     * Returns the address of the AionNameServiceContract contract.
      *
      * @return the contract address.
      */
     public static Address getAionNameServiceContractAddress() {
         return Address.wrap(ANS);
     }
+
+    /**
+     * Returns the address of the MultiSignatureContract contract.
+     *
+     * @return the contract address.
+     */
+    public static Address getMultiSignatureContractAddress() { return Address.wrap(MSC); }
 
 }

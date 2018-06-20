@@ -63,7 +63,7 @@ import org.aion.zero.types.AionTransaction;
  * @author nick nadeau
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
-    private static final ECKey KEY = ECKeyFac.inst().create();
+//    private static final ECKey KEY = ECKeyFac.inst().create();
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
@@ -343,9 +343,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
-        tx.sign(KEY);
-        AionHub.inst().getPendingState().addPendingTransaction(tx);
+        //TODO: do nrg checks
+
+//        AionTransaction tx = constructTx(wallet, recipient, amount.toByteArray(), nrg, nrgPrice);
+//        tx.sign(KEY);
+//        AionHub.inst().getPendingState().addPendingTransaction(tx);
+        track.incrementNonce(wallet);
+        track.addBalance(wallet, amount.negate());
+        track.addBalance(recipient, amount);
         track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
     }
@@ -379,7 +384,6 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         boolean callerIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
             addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
-            if (!track.hasAccountState(addr)) { return null; }
             if (result.contains(addr)) { return null; }
             if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) { return null; }
             if (addr.equals(this.address)) { callerIsOwner = true; }
