@@ -1093,12 +1093,12 @@ public class MultiSignatureContractTest {
             DEFAULT_BALANCE);
 
         // Sign tx to send from wallet1 to wallet2.
-        byte[] txMsg = MultiSignatureContract.constructMsg(wallet1, repo.getNonce(wallet1), wallet2, AMOUNT, NRG_PRICE);
+        byte[] txMsg = MultiSignatureContract.constructMsg(wallet1, repo.getNonce(wallet1), wallet2,
+            AMOUNT, NRG_PRICE);
         List<ISignature> signatures = produceSignatures(owners1, MultiSignatureContract.MIN_THRESH, txMsg);
 
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet1, signatures, AMOUNT,
-            NRG_PRICE,
-            wallet2);
+            NRG_PRICE, wallet2);
 
         checkAccountState(wallet1, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE);

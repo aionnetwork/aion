@@ -192,7 +192,6 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         buffer.put(nonceBytes);
         buffer.put(toBytes);
         buffer.put(amountBytes);
-//        buffer.putLong(nrgLimit);
         buffer.putLong(nrgPrice);
         buffer.flip();
         buffer.get(msg);
@@ -430,14 +429,28 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return the address of the newly created wallet.
      */
     private Address initNewWallet(Set<Address> owners, long threshold) {
-        //TODO: try to use owner nonces so same group can create a new wallet at another time.
-        byte[] content = new byte[(owners.size() * ADDR_LEN) + Long.BYTES];
-        int index = 0;
-        for (Address owner : owners) {
-            System.arraycopy(owner.toBytes(), 0, content, index, ADDR_LEN);
-            index += ADDR_LEN;
+        List<byte[]> ownerAddrs = new ArrayList<>();
+        List<byte[]> ownerNonces = new ArrayList<>();
+        for (Address owner: owners) {
+            ownerAddrs.add(owner.toBytes());
+            ownerNonces.add(track.getNonce(owner).toByteArray());
         }
-        System.arraycopy(Longs.toByteArray(threshold), 0, content, index, Long.BYTES);
+
+        int numOwners = ownerAddrs.size();
+        int len = Long.BYTES + (owners.size() * ADDR_LEN);
+        for (byte[] ownN : ownerNonces) {
+            len += ownN.length;
+        }
+
+        byte[] content = new byte[len];
+        ByteBuffer buffer = ByteBuffer.allocate(len);
+        buffer.putLong(threshold);
+        for (int i = 0; i < numOwners; i++) {
+            buffer.put(ownerAddrs.get(i));
+            buffer.put(ownerNonces.get(i));
+        }
+        buffer.flip();
+        buffer.get(content);
 
         byte[] hash = HashUtil.keccak256(content);
         hash[0] = AION_PREFIX;
