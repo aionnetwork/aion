@@ -121,6 +121,10 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         Address bidderAddress = Address.wrap(bidderAddressInByte);
         BigInteger bidValue = new BigInteger(balance);
 
+        // check if bidValue is valid (greater than 0)
+        if (bidValue.compareTo(new BigInteger("0")) < 0)
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST);
+
         // user should have the signature signed with its address
         byte[] data = new byte[ADDR_LEN];
         System.arraycopy(bidderAddressInByte, 0, data, 0, ADDR_LEN);
@@ -142,19 +146,22 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // if this domain is already in auction state
         else if (isAuctionDomain(domainAddress)){
-            storeBid(domainAddress, bidderAddress, bidValue);
+            processBid(domainAddress, bidderAddress, bidValue);
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
         }
 
         // start the auction for the given domain
         else{
-            storeBid(domainAddress, bidderAddress, bidValue);
             addToAuctionDomain(domainAddress);
+            processBid(domainAddress, bidderAddress, bidValue);
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
         }
     }
 
     /**
+     * Store the given domain address in the collection of domains in auction
+     * process. Set a new task, scheduling the auction to run for 3 days and
+     * then completed.
      *
      * @param domainAddress address of the domain bid for
      */
@@ -169,6 +176,14 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         timer.schedule(auctionTask, finishDate);
     }
 
+
+    /**
+     * Store the given domain address in the collection of active domains. Set
+     * a new task, scheduling the domain to be active for a period of 1 year.
+     *
+     * @param domainAddress address of the domain to be added
+     * @param ownerAddress new owner of the given domain
+     */
     private void addToActiveDomains(Address domainAddress, Address ownerAddress){
         Date currentDate = new Date();
         Date finishDate = new Date(currentDate.getTime() + ACTIVE_TIME); // 1 year later, 10s
@@ -182,10 +197,31 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     }
 
     /**
+     * Process the given bid. Increment the number of bids counter of the
+     * domain and call function to store.
+     *
+     * @param domainAddress domain to bid for
+     * @param bidderAddress address of the bidder
+     * @param value the bid value
+     */
+    private void processBid(Address domainAddress, Address bidderAddress, BigInteger value){
+
+        byte[] counterHash = blake128(BID_KEY_COUNTER.getBytes());
+
+        IDataWord numberOfBidsData = this.track.getStorageValue(domainAddress, new DataWord(counterHash));
+        BigInteger numberOfBids = new BigInteger(numberOfBidsData.getData());
+
+        addBidToRepo(domainAddress, numberOfBids.intValue(), bidderAddress, value);
+
+        numberOfBids = numberOfBids.add(BigInteger.valueOf(1));
+        this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(numberOfBids));
+    }
+
+    /**
      * Process the auction at the given domain address and find:
      *      - bidder with the highest big (Address)
      *      - second highest bid value (BigInteger)
-     * Record information in repository and clean up auction values in repo
+     * Record information in repository and clean up auction values in repo.
      *
      * @param domainAddress The domain address of the auction to be processed
      */
@@ -193,7 +229,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         byte[] counterHash = blake128(BID_KEY_COUNTER.getBytes());
         IDataWord numberOfBidsData = this.track.getStorageValue(domainAddress, new DataWord(counterHash));
         BigInteger numberOfBids = new BigInteger(numberOfBidsData.getData());
-        //int numberOfBids = Integer.parseInt(Arrays.toString(numberOfBidsData.getData()));
+
+        // if there are no bids, cancel the auction, no one wins, this should never happen
+        // since a first bid is needed to begin an auction
+        if (numberOfBids.intValue() < 1)
+            return;
 
         Address winnerAddress = null;
         BigInteger highestBid = new BigInteger("0");
@@ -216,23 +256,40 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             IDataWord data1 = this.track.getStorageValue(domainAddress, new DataWord(bidderKeyVal));
             tempAmount = new BigInteger(data1.getData());
 
-            if(tempAmount.compareTo(highestBid) > 0){
-                secondHighestBid = highestBid;
-                highestBid = tempAmount;
-                winnerAddress = tempAddress;
+            // if current winner and temp are same person, only update the highest bid
+            if (winnerAddress != null && Arrays.equals(tempAddress.toBytes(), winnerAddress.toBytes())){
+                if (tempAmount.compareTo(highestBid) > 0)
+                    highestBid = tempAmount;
             }
 
-            else if (tempAmount.compareTo(secondHighestBid) > 0){
-                secondHighestBid = tempAmount;
+            // if temp address is different from winner address
+            else{
+                if (tempAmount.compareTo(highestBid) > 0){
+                    secondHighestBid = highestBid;
+                    highestBid = tempAmount;
+                    winnerAddress = tempAddress;
+                }
+                else if (tempAmount.compareTo(secondHighestBid) > 0){
+                    secondHighestBid = tempAmount;
+                }
             }
-
+            // erase it after
             this.track.addStorageRow(domainAddress, new DataWord(bidderKeyVal), new DataWord(new BigInteger("0")));
         }
         this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(new BigInteger("0")));
+        // remove from auction domains
+        this.track.addStorageRow(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), new DataWord(0));
         addToActiveDomains(domainAddress, winnerAddress);
-        printWinner(domainAddress, winnerAddress, highestBid);
+        printWinner(domainAddress, winnerAddress, secondHighestBid);
     }
 
+    /**
+     * insert (16 - length of input) 0s to the beginning of the byte, used to
+     * store into Dataword.
+     *
+     * @param inputBytes the byte[] to be filled to 16 length
+     * @return
+     */
     private byte[] fillByteArray(byte[] inputBytes){
         byte[] ret = new byte[16];
         int length = inputBytes.length;
@@ -240,38 +297,38 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return ret;
     }
 
+    /**
+     * Checks if the domain given is an active domain.
+     *
+     * @param domainAddress a domain address
+     * @return
+     */
     private boolean isActiveDomain(Address domainAddress){
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
         return !(this.track.getStorageValue(activeDomainsAddress,key).equals(DataWord.ZERO));
     }
 
+    /**
+     * Checks if the given domain is in auction process
+     *
+     * @param domainAddress a domain address
+     * @return
+     */
     private boolean isAuctionDomain(Address domainAddress){
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
         IDataWord ret = this.track.getStorageValue(auctionDomainsAddress, key);
-        boolean a = !ret.equals(DataWord.ZERO);
-        return a;
+        return !ret.equals(DataWord.ZERO);
     }
 
-    private void storeBid(Address domainAddress, Address bidderAddress, BigInteger value){
-
-        byte[] counterHash = blake128(BID_KEY_COUNTER.getBytes());
-        BigInteger counter;
-
-        IDataWord numberOfBidsData = this.track.getStorageValue(domainAddress, new DataWord(counterHash));
-        BigInteger numberOfBids = new BigInteger(numberOfBidsData.getData());
-
-        // if this is the first bid, add the counter to database
-        if(numberOfBids.intValue() == 0){
-            counter = new BigInteger("1");
-            this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(counter));
-        }
-
-        numberOfBids = numberOfBids.add(BigInteger.valueOf(1));
-        this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(numberOfBids));
-
-        addBidToRepo(domainAddress, numberOfBids.intValue(), bidderAddress, value);
-    }
-
+    /**
+     * Store the given bid in the repository under the given domain address.
+     * Stores bidder address and the bid value with corresponding hash key.
+     *
+     * @param domainAddress domain of the bid
+     * @param offset index for storage key
+     * @param bidderAddress address of the bidder
+     * @param value the bid value
+     */
     private void addBidToRepo(Address domainAddress, int offset, Address bidderAddress, BigInteger value) {
         byte[] bidderKey1 = blake128((BID_KEY_ADDR_F + offset).getBytes());
         byte[] bidderKey2 = blake128((BID_KEY_ADDR_S + offset).getBytes());
@@ -288,6 +345,13 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         this.track.addStorageRow(domainAddress, new DataWord(bidderKeyVal), new DataWord(value));
     }
 
+    /**
+     * Prints out information for the auction of the given domain.
+     *
+     * @param domainAddress address of the domain
+     * @param winnerAddress address of the auction winner (new owner of domain)
+     * @param value the value (second highest) to deposit
+     */
     private void printWinner (Address domainAddress, Address winnerAddress, BigInteger value){
         System.out.println("Auction result for domain at: '" + domainAddress + "'");
         System.out.println("    New domain owner: " + winnerAddress);
@@ -297,6 +361,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         System.out.println();
     }
 
+    /**
+     * Print out information for removing an active domain
+     *
+     * @param domainAddress address of the domain
+     */
     private void printRemoveActiveDomain(Address domainAddress){
         System.out.println("Removing active domain at: " + domainAddress);
         Date terminateDate = new Date();
@@ -304,11 +373,24 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         System.out.println();
     }
 
+    /**
+     * Removes the given domain from the collection of active domains in repo.
+     *
+     * @param domainAddress address of the domain
+     */
     private void removeActiveDomain(Address domainAddress){
         printRemoveActiveDomain(domainAddress);
         this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DataWord.ZERO);
     }
 
+    /**
+     * Combines two length 16 byte[] (usually retrieved from repo as a
+     * DataWord(length 16) into a length 32 byte[].
+     *
+     * @param byte1 input1
+     * @param byte2 input2
+     * @return the combined length 32 byte[]
+     */
     private byte[] combineTwoBytes(byte[] byte1, byte[] byte2) {
         byte[] combined = new byte[32];
         System.arraycopy(byte1, 0, combined, 0, 16);
@@ -319,7 +401,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     /**
      * tasks
      */
-    public class finishAuction extends TimerTask {
+    class finishAuction extends TimerTask {
         Address domainAddress;
 
         public finishAuction(Address input){
