@@ -22,7 +22,6 @@
  */
 package org.aion.precompiled.contracts;
 
-import com.google.common.primitives.Longs;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -143,10 +142,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             index += sigBytes.length;
         }
 
-        byte[] amt = new byte[AMOUNT_LEN];
-        byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > AMOUNT_LEN) { throw new IllegalArgumentException("Amount too large."); }
-        System.arraycopy(amtBytes, 0, amt, AMOUNT_LEN - amtBytes.length, amtBytes.length);
+        byte[] amt;
+        if (amount.compareTo(BigInteger.ZERO) < 0) {
+            amt = handleNegativeBigInt(amount.toByteArray());
+        } else {
+            amt = new byte[AMOUNT_LEN];
+            byte[] amtBytes = amount.toByteArray();
+            System.arraycopy(amtBytes, 0, amt, AMOUNT_LEN - amtBytes.length,
+                amtBytes.length);
+        }
         System.arraycopy(amt, 0, input, index, AMOUNT_LEN);
         index += AMOUNT_LEN;
 
@@ -271,16 +275,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         long threshold = thresh.getLong();
         Set<Address> owners = extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
+        if (!isValidTxNrg(nrg)) {
+            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+        }
         if (owners == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
+            // sanity check... owners should be null in both these cases really
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
-
 
         Address wallet = initNewWallet(owners, threshold);
         track.flush();
@@ -652,6 +659,26 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         buffer.putLong(ownerId);
         System.arraycopy(buffer.array(), 0, ownerKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
         return ownerKey;
+    }
+
+    /**
+     * Copies a byte array representing a negative BigInteger, bigIntBytes, into a byte array of
+     * appropriate length and sign-extends the array. This method returns the resulting array.
+     *
+     * @param bigIntBytes A negative BigInteger as bytes.
+     * @return a properly-sized and sign-extended byte array of the same BigInteger.
+     */
+    private static byte[] handleNegativeBigInt(byte[] bigIntBytes) {
+        byte[] result = new byte[AMOUNT_LEN];
+        int pushback = AMOUNT_LEN - bigIntBytes.length;
+        for (int i = 0; i < AMOUNT_LEN; i++) {
+            if ((i < pushback) || (bigIntBytes[i - pushback] == 0)) {
+                result[i] = (byte) 0xFF;
+            } else {
+                result[i] = bigIntBytes[i - pushback];
+            }
+        }
+        return result;
     }
 
 }

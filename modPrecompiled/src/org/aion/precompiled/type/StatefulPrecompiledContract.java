@@ -34,8 +34,8 @@ import org.aion.mcf.db.IBlockStoreBase;
  * particular state, this is what distinguishes them from ordinary pre-compiled contracts.
  */
 public abstract class StatefulPrecompiledContract implements IPrecompiledContract {
-    private static final long TX_NRG_MIN = 20_999;
-    private static final long TX_NRG_MAX = 2_000_001;
+    public static final long TX_NRG_MIN = 20_999;
+    public static final long TX_NRG_MAX = 2_000_001;
     protected final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
 
     /**

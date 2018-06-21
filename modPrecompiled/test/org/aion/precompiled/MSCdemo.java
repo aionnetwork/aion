@@ -15,6 +15,7 @@ import org.aion.api.type.MsgRsp;
 import org.aion.api.type.TxArgs;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
 import org.aion.mcf.account.Keystore;
 import org.aion.precompiled.contracts.MultiSignatureContract;
@@ -24,7 +25,36 @@ public class MSCdemo {
     private static final String URL = IAionAPI.LOCALHOST_URL;
     private static final String PW = "test";
 
+    private static void t() {
+        BigInteger bi = new BigInteger("129");
+        byte[] a = bi.toByteArray();
+        byte[] b = bi.negate().toByteArray();
+        System.out.println(a.length);
+        System.out.println(b.length);
+        System.out.println(ByteUtil.toHexString(a));
+        System.out.println(ByteUtil.toHexString(b));
+
+        byte[] d = grabNegBI(b);
+        System.out.println(new BigInteger(d));
+    }
+
+    private static byte[] grabNegBI(byte[] a) {
+        byte[] res = new byte[128];
+        int U = 128 - a.length;
+
+        for (int i = 0; i < 128; i++) {
+            if ((i < U) || (a[i - U] == 0)) {
+                res[i] = (byte) 0xFF;
+            } else {
+                res[i] = a[i - U];
+            }
+        }
+        return res;
+    }
+
     public static void main(String[] args) {
+        t();
+        /*
         IAionAPI api = IAionAPI.init();
 
         ApiMsg apiMsg = api.connect(URL);
@@ -157,6 +187,7 @@ public class MSCdemo {
         System.out.println("[4] Current recipient balance: " + recAmount);
 
         api.destroyApi();
+        */
     }
 
 }

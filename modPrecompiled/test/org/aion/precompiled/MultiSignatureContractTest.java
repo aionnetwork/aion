@@ -21,6 +21,7 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.MultiSignatureContract;
+import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -312,7 +313,8 @@ public class MultiSignatureContractTest {
     }
 
     @Test
-    public void testNrgLessThanCost() {
+    public void testNrgBelowLegalLimit() {
+        // First test create-wallet logic.
         // Test with min illegal cost.
         Address caller = getExistentAddress(BigInteger.ZERO);
         List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
@@ -323,6 +325,73 @@ public class MultiSignatureContractTest {
 
         // Test with max illegal cost.
         execute(caller, input, COST - 1, ResultCode.OUT_OF_NRG, 0);
+
+        // Second test send-tx logic.
+        // Test with min illegal cost.
+        List<ECKeyEd25519> sendOwners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address sendCaller = new Address(sendOwners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(sendOwners, MultiSignatureContract.MIN_OWNERS - 1,
+            DEFAULT_BALANCE);
+        byte[] txMsg = MultiSignatureContract.constructMsg(wallet, repo.getNonce(wallet), to, AMOUNT, NRG_PRICE);
+        List<ISignature> signatures = produceSignatures(sendOwners, sendOwners.size(), txMsg);
+
+        input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT, COST - 1, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+        execute(sendCaller, input, Long.MIN_VALUE, ResultCode.OUT_OF_NRG, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+
+        // Test with max illegal cost.
+        input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT, COST - 1, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+        execute(sendCaller, input, COST - 1, ResultCode.OUT_OF_NRG, 0);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+    }
+
+    @Test
+    public void testNrgAboveThanCost() {
+        long nrgLimit = StatefulPrecompiledContract.TX_NRG_MAX + 1;
+
+        // First test create-wallet logic.
+        // Test with min illegal cost.
+        Address caller = getExistentAddress(BigInteger.ZERO);
+        List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
+        byte[] input = MultiSignatureContract.constructCreateWalletInput(
+            MultiSignatureContract.MIN_THRESH, owners);
+
+        execute(caller, input, nrgLimit, ResultCode.INVALID_NRG_LIMIT, nrgLimit);
+
+        // Test with max illegal cost.
+        execute(caller, input, Long.MAX_VALUE, ResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+
+        // Second test send-tx logic.
+        // Test with min illegal cost.
+        List<ECKeyEd25519> sendOwners = produceKeys(MultiSignatureContract.MIN_OWNERS);
+        Address sendCaller = new Address(sendOwners.get(0).getAddress());
+        Address wallet = createMultiSigWallet(sendOwners, MultiSignatureContract.MIN_OWNERS - 1,
+            DEFAULT_BALANCE);
+        byte[] txMsg = MultiSignatureContract.constructMsg(wallet, repo.getNonce(wallet), to, AMOUNT, NRG_PRICE);
+        List<ISignature> signatures = produceSignatures(sendOwners, sendOwners.size(), txMsg);
+
+        input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT, COST - 1, to);
+
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+        execute(sendCaller, input, nrgLimit, ResultCode.INVALID_NRG_LIMIT, nrgLimit);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+
+        // Test with max illegal cost.
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
+        execute(sendCaller, input, Long.MAX_VALUE, ResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+        checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
+        checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -351,15 +420,10 @@ public class MultiSignatureContractTest {
         byte[] input = MultiSignatureContract.constructCreateWalletInput(
             MultiSignatureContract.MIN_THRESH, owners);
 
-        int len = Byte.MAX_VALUE + Math.abs(Byte.MIN_VALUE) + 1;
-        byte[] allVals = new byte[len];
-        for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
-            allVals[i + Math.abs(Byte.MIN_VALUE)] = (byte) i;
-        }
-
         // Test all possible invalid operations.
-        for (int i = 0; i < len; i++) {
-            if ((allVals[i] != (byte) 0x0) && (allVals[i] != (byte) 0x1)) {
+        for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
+            if ((i != 0) && (i != 1)) {
+                input[0] = (byte) i;
                 execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
             }
         }
@@ -370,8 +434,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletThresholdBelowLegalLimit() {
         // Test with min illegal value.
-        Address caller = getExistentAddress(BigInteger.ZERO);
         List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
+        Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MIN_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
@@ -385,8 +449,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithThresholdLargerThanNumOwners() {
         // Test with max illegal value.
-        Address caller = getExistentAddress(BigInteger.ZERO);
         List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
+        Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
@@ -417,9 +481,9 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testCreateWalletWithMoreOwnersThanLegalLimit() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
         List<Address> owners = getExistentAddresses(MultiSignatureContract.MAX_OWNERS + 1,
             BigInteger.ZERO);
+        Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
