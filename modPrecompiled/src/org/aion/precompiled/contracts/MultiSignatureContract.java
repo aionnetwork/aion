@@ -22,6 +22,7 @@
  */
 package org.aion.precompiled.contracts;
 
+import com.google.common.primitives.Longs;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.AddressSpecs;
-import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
@@ -61,6 +62,7 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
+    private static final byte AION_PREFIX = (byte) 0xa0;
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
@@ -169,28 +171,28 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * This method constructs and returns this transaction as a byte array message.
      *
      * @param walletId The address of the multi-sig wallet.
+     * @param nonce The nonce of the multi-sig wallet.
      * @param to The address of the recipient.
      * @param amount The amount to transfer.
      * @param nrgPrice The energy price.
-     * @param nrgLimit The energy limit.
      * @return the transaction message that was signed.
      */
-    public static byte[] constructMsg(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address walletId,
-        Address to, BigInteger amount, long nrgPrice, long nrgLimit) {
+    public static byte[] constructMsg(Address walletId, BigInteger nonce, Address to,
+        BigInteger amount, long nrgPrice) {
 
-        BigInteger nonceBI = repo.getNonce(walletId);
-        byte[] nonce = nonceBI.toByteArray();
+        byte[] nonceBytes = nonce.toByteArray();
         byte[] toBytes = to.toBytes();
         byte[] amountBytes = amount.toByteArray();
-        int len = nonce.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
+        int len = Address.ADDRESS_LEN + nonceBytes.length + toBytes.length + amountBytes.length +
+            Long.BYTES;
 
         byte[] msg = new byte[len];
         ByteBuffer buffer = ByteBuffer.allocate(len);
-        buffer.put(nonce);
+        buffer.put(walletId.toBytes());
+        buffer.put(nonceBytes);
         buffer.put(toBytes);
         buffer.put(amountBytes);
-        buffer.putLong(nrgLimit);
+//        buffer.putLong(nrgLimit);
         buffer.putLong(nrgPrice);
         buffer.flip();
         buffer.get(msg);
@@ -280,6 +282,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
+
         Address wallet = initNewWallet(owners, threshold);
         track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, wallet.toBytes());
@@ -326,14 +329,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             // Then wallet is not the address of a multi-sig wallet.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
-        if (!track.hasAccountState(recipient)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-        }
         if (sigs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] msg = constructMsg(track, wallet, recipient, amount, nrgPrice, nrg);
+        byte[] msg = constructMsg(wallet, track.getNonce(wallet), recipient, amount, nrgPrice);
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             // Attempt to transfer negative amount.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -430,7 +430,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return the address of the newly created wallet.
      */
     private Address initNewWallet(Set<Address> owners, long threshold) {
-        Address walletId = new Address(ECKeyFac.inst().create().getAddress());
+        //TODO: try to use owner nonces so same group can create a new wallet at another time.
+        byte[] content = new byte[(owners.size() * ADDR_LEN) + Long.BYTES];
+        int index = 0;
+        for (Address owner : owners) {
+            System.arraycopy(owner.toBytes(), 0, content, index, ADDR_LEN);
+            index += ADDR_LEN;
+        }
+        System.arraycopy(Longs.toByteArray(threshold), 0, content, index, Long.BYTES);
+
+        byte[] hash = HashUtil.keccak256(content);
+        hash[0] = AION_PREFIX;
+
+        Address walletId = new Address(hash);
         track.createAccount(walletId);
         saveWalletMetaData(walletId, threshold, owners.size());
         saveWalletOwners(walletId, owners);
