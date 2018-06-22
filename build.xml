@@ -52,6 +52,7 @@
 		<pathelement location="${dir.modfile}/modFastVM.jar" />
 		<pathelement location="${dir.modfile}/modMcf.jar" />
 		<pathelement location="${dir.modfile}/modBoot.jar" />
+		<pathelement location="${dir.modfile}/modPrecompiled.jar" />
 	</path>
 
 	<path id="test.lib">
@@ -79,6 +80,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
 	</target>
 
 	<target name="ci_test_modules">
@@ -93,6 +95,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
@@ -174,6 +177,7 @@
 		<macro_collect_reports src="modDbImpl/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modPrecompiled/report" dest="${test.report.dir}" />
 	</target>
 
 	<target name="ci_test_modules_collect_reports" depends="ci_test_modules">
@@ -186,6 +190,7 @@
 		<macro_collect_reports src="modDbImpl/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modPrecompiled/report" dest="${test.report.dir}" />
 	</target>
 
 	<target name="clean_build" depends="logenv, clean, mod_build, build" />
@@ -257,6 +262,11 @@
 
 		<echo message="building modAion" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAion/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+		</ant>
+
+		<echo message="building modPrecompiled" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 

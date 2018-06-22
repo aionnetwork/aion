@@ -12,6 +12,7 @@ module aion.zero.impl {
     requires aion.db.impl;
     requires aion.zero;
     requires aion.fastvm;
+    requires aion.precompiled;
     requires jdk.management;
     requires java.xml;
     requires slf4j.api;

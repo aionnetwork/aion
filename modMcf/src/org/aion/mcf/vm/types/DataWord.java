@@ -86,6 +86,7 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         this(wrapper.getData());
     }
 
+    @Override
     public byte[] getData() {
         return data;
     }

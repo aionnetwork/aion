@@ -45,6 +45,8 @@ import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
+import org.aion.precompiled.ContractExecutor;
+import org.aion.precompiled.ContractFactory;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
 import org.aion.vm.TransactionExecutor;
@@ -937,13 +939,25 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             LOG.trace("executeTx: {}", Hex.toHexString(tx.getHash()));
         }
 
-        TransactionExecutor executor = new TransactionExecutor(tx, bestBlk, pendingState);
+        Logger logger = AionLoggerFactory.getLogger(LogEnum.VM.name());
 
-        if (inPool) {
-            executor.setBypassNonce(true);
+        if (ContractFactory.isPrecompiledContract(tx.getTo())) {
+            ContractExecutor conExe = new ContractExecutor(tx, bestBlk, pendingState, logger);
+
+            if (inPool) {
+                conExe.setBypassNonce();
+            }
+
+            return conExe.execute();
+        } else {
+            TransactionExecutor txExe = new TransactionExecutor(tx, bestBlk, pendingState);
+
+            if (inPool) {
+                txExe.setBypassNonce(true);
+            }
+
+            return txExe.execute();
         }
-
-        return executor.execute();
     }
 
     @Override public synchronized BigInteger bestPendingStateNonce(Address addr) {
