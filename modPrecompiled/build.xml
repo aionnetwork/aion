@@ -4,7 +4,7 @@
     <property name="dir.mod" value="../mod" />
     <property name="dir.dest" value="./build/main" />
     <property name="dir.test" value="./build/test" />
-    <property name="dir.native" value="./build/native"/>
+    <property name="dir.native" value="./native"/>
     <property name="src.test" value="./test" />
     <property name="test.report.dir" value="report"/>
 
@@ -52,13 +52,13 @@
 
     <target name="test" depends="test_build">
         <mkdir dir="${test.report.dir}" />
-        <copy includeemptydirs="false" todir="./native/linux/sodium">
+        <copy includeemptydirs="false" todir="${dir.native}/linux/sodium">
             <fileset dir="../native/linux/sodium"/>
         </copy>
-        <copy includeemptydirs="false" todir="./native/linux/blake2b">
+        <copy includeemptydirs="false" todir="${dir.native}/linux/blake2b">
             <fileset dir="../native/linux/blake2b"/>
         </copy>
-        <copy includeemptydirs="false" todir="./native/linux/equihash">
+        <copy includeemptydirs="false" todir="${dir.native}/linux/equihash">
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
@@ -79,13 +79,13 @@
 
     <target name="ci_build" depends="test_build">
         <mkdir dir="${test.report.dir}" />
-        <copy includeemptydirs="false" todir="./native/linux/sodium">
+        <copy includeemptydirs="false" todir="${dir.native}/linux/sodium">
             <fileset dir="../native/linux/sodium"/>
         </copy>
-        <copy includeemptydirs="false" todir="./native/linux/blake2b">
+        <copy includeemptydirs="false" todir="${dir.native}/linux/blake2b">
             <fileset dir="../native/linux/blake2b"/>
         </copy>
-        <copy includeemptydirs="false" todir="./native/linux/equihash">
+        <copy includeemptydirs="false" todir="${dir.native}/linux/equihash">
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
