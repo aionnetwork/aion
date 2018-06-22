@@ -15,6 +15,7 @@
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
         <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
         <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
+        <pathelement location="${dir.lib}/guava-19.0.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
@@ -36,7 +37,7 @@
 
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}" />
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/MSCdemoTest.java">
             <classpath>
                 <path refid="classpath.test" />
             </classpath>
@@ -45,7 +46,7 @@
 
     <target name="ci_test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/MSCdemoTest.java">
             <classpath>
                 <path refid="classpath.test"/>
             </classpath>
@@ -73,7 +74,7 @@
             <formatter type="xml" />
             <batchtest todir="${test.report.dir}">
                 <fileset dir="${src.test}">
-                    <include name="**/*Test.java"/>
+                    <include name="**/MSCdemoTest.java"/>
                 </fileset>
             </batchtest>
         </junit>
