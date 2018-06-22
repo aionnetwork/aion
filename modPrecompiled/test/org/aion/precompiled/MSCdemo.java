@@ -13,11 +13,15 @@ import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.api.type.MsgRsp;
 import org.aion.api.type.TxArgs;
+import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ISignature;
+import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.MultiSignatureContract;
 
 public class MSCdemo {
@@ -25,36 +29,7 @@ public class MSCdemo {
     private static final String URL = IAionAPI.LOCALHOST_URL;
     private static final String PW = "test";
 
-    private static void t() {
-        BigInteger bi = new BigInteger("129");
-        byte[] a = bi.toByteArray();
-        byte[] b = bi.negate().toByteArray();
-        System.out.println(a.length);
-        System.out.println(b.length);
-        System.out.println(ByteUtil.toHexString(a));
-        System.out.println(ByteUtil.toHexString(b));
-
-        byte[] d = grabNegBI(b);
-        System.out.println(new BigInteger(d));
-    }
-
-    private static byte[] grabNegBI(byte[] a) {
-        byte[] res = new byte[128];
-        int U = 128 - a.length;
-
-        for (int i = 0; i < 128; i++) {
-            if ((i < U) || (a[i - U] == 0)) {
-                res[i] = (byte) 0xFF;
-            } else {
-                res[i] = a[i - U];
-            }
-        }
-        return res;
-    }
-
-    public static void main(String[] args) {
-        t();
-        /*
+    private static void withApi() {
         IAionAPI api = IAionAPI.init();
 
         ApiMsg apiMsg = api.connect(URL);
@@ -187,7 +162,98 @@ public class MSCdemo {
         System.out.println("[4] Current recipient balance: " + recAmount);
 
         api.destroyApi();
-        */
+    }
+
+    private static void noApi() {
+        IRepositoryCache repo = (IRepositoryCache) new DummyRepo();
+        ((DummyRepo) repo).storageErrorReturn = null;
+
+        // Step 1. Create a new multi-sig wallet with 3 owners, requiring 2 signatures.
+        ECKeyEd25519 acct1 = new ECKeyEd25519();
+        ECKeyEd25519 acct2 = new ECKeyEd25519();
+        ECKeyEd25519 acct3 = new ECKeyEd25519();
+
+        Address member1 = new Address(acct1.getAddress());
+        Address member2 = new Address(acct2.getAddress());
+        Address member3 = new Address(acct3.getAddress());
+        repo.createAccount(member1);
+        repo.addBalance(member1, BigInteger.ONE);
+        repo.createAccount(member2);
+        repo.addBalance(member1, BigInteger.ONE);
+        repo.createAccount(member3);
+        repo.addBalance(member1, BigInteger.ONE);
+        repo.flush();
+
+        assertNotEquals(member1, member2);
+        List<Address> owners = new ArrayList<>();
+        owners.add(member1);
+        owners.add(member2);
+        owners.add(member3);
+
+        System.out.println("Creating the new multi-sig wallet...");
+        byte[] input = MultiSignatureContract.constructCreateWalletInput(2, owners);
+        MultiSignatureContract msc = new MultiSignatureContract(repo, member1);
+        ContractExecutionResult res = msc.execute(input, 21000);
+        Address wallet = new Address(res.getOutput());
+        System.out.println("Created a new multi-sig wallet with address: " + wallet);
+
+        BigInteger walletBalance = repo.getBalance(wallet);
+        BigInteger walletNonce = repo.getNonce(wallet);
+        System.out.println("Current wallet balance: " + walletBalance);
+        System.out.println("Current wallet nonce: " + walletNonce);
+
+        // Step 2. Transfer balance to the new wallet.
+        System.out.println("Transferring 10 units to wallet.");
+        repo.addBalance(wallet, BigInteger.TEN);
+        repo.flush();
+        walletBalance = repo.getBalance(wallet);
+        System.out.println("Current wallet balance: " + walletBalance);
+
+        // Step 3. Attempt to transfer balance from wallet with 1 signature.
+        BigInteger recAmount = repo.getBalance(member3);
+        System.out.println("Transferring balance from wallet to recipient with 1 signature...");
+        System.out.println("Transferring 2 units...");
+        System.out.println("Current recipient balance: " + recAmount);
+        BigInteger amount = BigInteger.TWO;
+
+        byte[] msg = MultiSignatureContract.constructMsg(wallet, repo.getNonce(wallet), member3, amount, 10000000000L);
+        List<ISignature> sigs = new ArrayList<>();
+        sigs.add(acct1.sign(msg));
+        input = MultiSignatureContract.constructSendTxInput(wallet, sigs, amount, 10000000000L, member3);
+        res = msc.execute(input, 21000);
+
+        System.out.println("Transfer attempt complete.");
+        System.out.println("Transfer error: " + res.getCode());
+
+        walletBalance = repo.getBalance(wallet);
+        walletNonce = repo.getNonce(wallet);
+        System.out.println("Current wallet balance: " + walletBalance);
+        System.out.println("Current wallet nonce: " + walletNonce);
+
+        // Step 4. Attempt to transfer balance from wallet with 2 signatures.
+        System.out.println("Transferring balance from wallet to recipient with 2 signatures...");
+        System.out.println("Transferring 2 units...");
+
+        sigs.add(acct2.sign(msg));
+        input = MultiSignatureContract.constructSendTxInput(wallet, sigs, amount, 10000000000L, member3);
+        msc.execute(input, 21000);
+
+        System.out.println("Transfer complete.");
+
+        walletBalance = repo.getBalance(wallet);
+        walletNonce = repo.getNonce(wallet);
+        recAmount = repo.getBalance(member3);
+        System.out.println("Current wallet balance: " + walletBalance);
+        System.out.println("Current wallet nonce: " + walletNonce);
+        System.out.println("Current recipient balance: " + recAmount);
+    }
+
+    public static void main(String[] args) {
+        if (false) {
+            withApi();
+        } else {
+            noApi();
+        }
     }
 
 }
