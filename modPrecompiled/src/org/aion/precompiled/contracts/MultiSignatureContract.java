@@ -65,7 +65,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
-    private final Address address;
+    private final Address caller;
 
     public static final int MAX_OWNERS = 10;
     public static final int MIN_OWNERS = 2;
@@ -76,15 +76,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * an instance of the class that facilitates interaction with the wallet.
      *
      * @param track The repository.
-     * @param address The address of the calling account.
-     * @throws IllegalArgumentException if track or address are null.
+     * @param caller The address of the calling account.
+     * @throws IllegalArgumentException if track or caller are null.
      */
     public MultiSignatureContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
         super(track);
-        if (address == null) { throw new IllegalArgumentException("Null address."); }
-        this.address = address;
+        if (caller == null) { throw new IllegalArgumentException("Null caller."); }
+        this.caller = caller;
     }
 
     /**
@@ -385,15 +385,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
         Set<Address> result = new HashSet<>(numAddrs);
         Address addr;
-        boolean callerIsOwner = false;
+        boolean addressIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
             addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
             if (result.contains(addr)) { return null; }
             if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) { return null; }
-            if (addr.equals(this.address)) { callerIsOwner = true; }
+            if (addr.equals(this.caller)) { addressIsOwner = true; }
             result.add(addr);
         }
-        return (callerIsOwner) ? result : null;
+        return (addressIsOwner) ? result : null;
     }
 
     /**
@@ -551,7 +551,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     private boolean areValidSignatures(Address wallet, List<byte[]> signatures, byte[] msg) {
         Set<Address> owners = getOwners(wallet);
-        if (!owners.contains(this.address)) { return false; }
+        if (!owners.contains(this.caller)) { return false; }
 
         Set<Address> txSigners = new HashSet<>();
         Address signer;
