@@ -1,6 +1,10 @@
 import os
 import xml.etree.ElementTree
 import subprocess
+from xml.dom import minidom
+
+config_file = 'config/config.xml'
+indentation = '\t'
 
 def override_attrib(element, attrib,  name, value):
     if name != None and value != None:
@@ -12,7 +16,47 @@ def override_child_text(element, child, name, value):
         print('Overriding kernel property ' + name + ' with value ' + value)
         element.find(child).text = value
 
-et = xml.etree.ElementTree.parse('config/config.xml')
+def add_child_text(element, child, name, value):
+    if name != None and value != None:
+        print('Overriding kernel property ' + name + ' with value ' + value)
+        new_child = xml.etree.ElementTree.SubElement(element, child)
+        new_child.text = value
+
+def add_peers(element, override_peers, peer_list):
+    if peer_list != None:
+        peers = peer_list.split(",")
+        if override_peers != None and override_peers == 'true':
+            print('override_peer_list=true; overriding current peer list')
+            old_nodes = element.findall('node')
+            for old_node in list(old_nodes):
+                print('Removing peer ' + old_node.text)
+                element.remove(old_node)
+            for peer in peers:
+                add_child_text(element, 'node', 'node', peer)
+        else:
+            print('override_peer_list not specified or false; new peers are going to be appended to the current list')
+            for peer in peers:
+                add_child_text(element, 'node', 'node', peer)
+
+# pretty printing does not work with ElementTree
+# use this function after inserting new elements in the xml file
+def indent(elem, level=0):
+    i = "\n" + level*indentation
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + indentation
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for elem in elem:
+            indent(elem, level+1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
+
+
+et = xml.etree.ElementTree.parse(config_file)
 root = et.getroot()
 
 api = root.find('api')
@@ -26,15 +70,20 @@ new_java = api.find('java')
 override_attrib(new_java, 'ip', 'java_api_listen_address', os.environ.get('java_api_listen_address'))
 override_attrib(new_java, 'port', 'java_api_listen_port', os.environ.get('java_api_listen_port'))
 
-new_net = root.find('p2p')
-override_child_text(new_net, 'ip', 'p2p_listen_address', os.environ.get('p2p_listen_address'))
-override_child_text(new_net, 'port', 'p2p_listen_port', os.environ.get('p2p_listen_port'))
-override_child_text(new_net, 'discover', 'discover', os.environ.get('discover'))
+net = root.find('net')
+new_p2p = net.find('p2p')
+override_child_text(new_p2p, 'ip', 'p2p_listen_address', os.environ.get('p2p_listen_address'))
+override_child_text(new_p2p, 'port', 'p2p_listen_port', os.environ.get('p2p_listen_port'))
+override_child_text(new_p2p, 'discover', 'discover', os.environ.get('discover'))
+
+new_nodes = net.find('nodes')
+add_peers(new_nodes, os.environ.get('override_peer_list'), os.environ.get('peer_list'))
 
 new_consensus = root.find('consensus')
 override_child_text(new_consensus, 'mining', 'mining', os.environ.get('mining'))
 override_child_text(new_consensus, 'miner-address', 'miner_address', os.environ.get('miner_address'))
 
-et.write('config/config.xml')
+indent(root)
+et.write(config_file, encoding='utf-8', xml_declaration=True)
 
 subprocess.call(['/bin/bash', '-c', './aion.sh'])

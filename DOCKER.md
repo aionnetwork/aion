@@ -28,8 +28,10 @@ Eg:
 
 ```bash
 docker run -it \
--e java_api_listen_address=0.0.0.0 \
--e rpc_listen_address=0.0.0.0 \
+-e java_api_listen_address="0.0.0.0" \
+-e rpc_listen_address="0.0.0.0" \
+-e peer_list="p2p://peer-id-1@10.10.10.10:3333,p2p://peer-id-2@12.12.12.12:4444" \
+-e override_peer_list="true"
 aion-core:v0.2.7b1677af
 ```
 
@@ -47,6 +49,8 @@ List of environment variables than can override xml properties:
 - discover
 - mining
 - miner_address
+- peer_list
+- override_peer_list
 ```
 
 If you need to override more properties update `aion-docker.py` to support those properties.
