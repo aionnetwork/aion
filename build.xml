@@ -52,6 +52,7 @@
 		<pathelement location="${dir.modfile}/modFastVM.jar" />
 		<pathelement location="${dir.modfile}/modMcf.jar" />
 		<pathelement location="${dir.modfile}/modBoot.jar" />
+		<pathelement location="${dir.modfile}/modGui.jar" />
 	</path>
 
 	<path id="test.lib">
@@ -78,11 +79,12 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 	</target>
 
 	<target name="ci_test_modules">
-		 
+        <echo message="${dir.workspace}"/>
 		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="ci_build" />
@@ -93,6 +95,8 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
+        <ant inheritAll="false" dir="${dir.workspace}/modGui" antfile="build.xml" target="integtest" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
@@ -277,6 +281,16 @@
 
 		<echo message="building modBoot" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modBoot/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+        </ant>
+
+        <echo message="building aion_api" />
+		<ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
+			<property name="compile.debug" value="${compile.debug}" />
+        </ant>
+
+        <echo message="building modGui" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 

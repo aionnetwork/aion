@@ -37,5 +37,20 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
+trap "exit" INT TERM
+trap "exit_kernel" EXIT
+
+exit_kernel() { 
+    echo "TRAP: kernel_pid = $kernel_pid" >> /tmp/junk
+    if [ ! -z "$kernel_pid" ]; then
+        echo "killing..." >> /tmp/junk
+        kill "$kernel_pid" 
+    fi
+    exit 0
+}
+
+
 env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-        -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
+        -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
+kernel_pid=$!
+wait

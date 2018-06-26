@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.162" xmlns:fx="http://javafx.com/fxml/1"
+            maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            prefHeight="570.0" prefWidth="850.0" styleClass="main-stage">
+
+    <stylesheets>
+        <URL value="@style.css"/>
+    </stylesheets>
+
+    <fx:include source="components/HeaderPane.fxml"/>
+
+    <fx:include source="components/ContentPane.fxml"/>
+
+    <fx:include source="components/FooterPane.fxml"/>
+
+</AnchorPane>
