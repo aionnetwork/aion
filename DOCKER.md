@@ -51,6 +51,14 @@ List of environment variables than can override xml properties:
 - miner_address
 - peer_list
 - override_peer_list
+- log_level_db
+- log_level_vm
+- log_level_gen
+- log_level_api
+- log_level_sync
+- log_level_cons
+- log_file
+- log_path
 ```
 
 If you need to override more properties update `aion-docker.py` to support those properties.

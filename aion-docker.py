@@ -83,6 +83,16 @@ new_consensus = root.find('consensus')
 override_child_text(new_consensus, 'mining', 'mining', os.environ.get('mining'))
 override_child_text(new_consensus, 'miner-address', 'miner_address', os.environ.get('miner_address'))
 
+new_log = root.find('log')
+override_child_text(new_log, 'log-file', 'log_file', os.environ.get('log_file'))
+override_child_text(new_log, 'log-path', 'log_path', os.environ.get('log_path'))
+override_child_text(new_log, 'GEN', 'log_level_gen', os.environ.get('log_level_gen'))
+override_child_text(new_log, 'VM', 'log_level_vm', os.environ.get('log_level_vm'))
+override_child_text(new_log, 'API', 'log_level_api', os.environ.get('log_level_api'))
+override_child_text(new_log, 'SYNC', 'log_level_sync', os.environ.get('log_level_sync'))
+override_child_text(new_log, 'CONS', 'log_level_cons', os.environ.get('log_level_cons'))
+override_child_text(new_log, 'DB', 'log_level_db', os.environ.get('log_level_db'))
+
 indent(root)
 et.write(config_file, encoding='utf-8', xml_declaration=True)
 
