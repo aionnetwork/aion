@@ -84,7 +84,7 @@
 
             <!-- hack to make KernelLauncher use the correct path regardless of 
                  whether ant invoked from aion dir or aion/modGui.  The proper
-                 fix is to make KernelLauncher work regardless of what pwd is.  -->
+                 fix is to make KernelLauncher work regardless of pwd value.  -->
             <jvmarg value="-Duser.dir=${basedir}" />
 
             <sysproperty key="testfx.robot" value="glass" />
