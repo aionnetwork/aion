@@ -37,7 +37,7 @@
 
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}" />
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/MSCdemoTest.java">
             <classpath>
                 <path refid="classpath.test" />
             </classpath>
@@ -46,7 +46,7 @@
 
     <target name="ci_test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/MSCdemoTest.java">
             <classpath>
                 <path refid="classpath.test"/>
             </classpath>
@@ -74,7 +74,7 @@
             <formatter type="xml" />
             <batchtest todir="${test.report.dir}">
                 <fileset dir="${src.test}">
-                    <include name="**/*Test.java"/>
+                    <include name="**/MSCdemoTest.java"/>
                 </fileset>
             </batchtest>
         </junit>

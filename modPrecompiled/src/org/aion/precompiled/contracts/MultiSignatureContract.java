@@ -33,7 +33,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.AddressSpecs;
-import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
@@ -61,10 +61,11 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
+    private static final byte AION_PREFIX = (byte) 0xa0;
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
-    private final Address address;
+    private final Address caller;
 
     public static final int MAX_OWNERS = 10;
     public static final int MIN_OWNERS = 2;
@@ -75,15 +76,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * an instance of the class that facilitates interaction with the wallet.
      *
      * @param track The repository.
-     * @param address The address of the calling account.
-     * @throws IllegalArgumentException if track or address are null.
+     * @param caller The address of the calling account.
+     * @throws IllegalArgumentException if track or caller are null.
      */
     public MultiSignatureContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
         super(track);
-        if (address == null) { throw new IllegalArgumentException("Null address."); }
-        this.address = address;
+        if (caller == null) { throw new IllegalArgumentException("Null caller."); }
+        this.caller = caller;
     }
 
     /**
@@ -141,10 +142,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             index += sigBytes.length;
         }
 
-        byte[] amt = new byte[AMOUNT_LEN];
-        byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > AMOUNT_LEN) { throw new IllegalArgumentException("Amount too large."); }
-        System.arraycopy(amtBytes, 0, amt, AMOUNT_LEN - amtBytes.length, amtBytes.length);
+        byte[] amt;
+        if (amount.compareTo(BigInteger.ZERO) < 0) {
+            amt = handleNegativeBigInt(amount.toByteArray());
+        } else {
+            amt = new byte[AMOUNT_LEN];
+            byte[] amtBytes = amount.toByteArray();
+            System.arraycopy(amtBytes, 0, amt, AMOUNT_LEN - amtBytes.length,
+                amtBytes.length);
+        }
         System.arraycopy(amt, 0, input, index, AMOUNT_LEN);
         index += AMOUNT_LEN;
 
@@ -169,28 +175,27 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * This method constructs and returns this transaction as a byte array message.
      *
      * @param walletId The address of the multi-sig wallet.
+     * @param nonce The nonce of the multi-sig wallet.
      * @param to The address of the recipient.
      * @param amount The amount to transfer.
      * @param nrgPrice The energy price.
-     * @param nrgLimit The energy limit.
      * @return the transaction message that was signed.
      */
-    public static byte[] constructMsg(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address walletId,
-        Address to, BigInteger amount, long nrgPrice, long nrgLimit) {
+    public static byte[] constructMsg(Address walletId, BigInteger nonce, Address to,
+        BigInteger amount, long nrgPrice) {
 
-        BigInteger nonceBI = repo.getNonce(walletId);
-        byte[] nonce = nonceBI.toByteArray();
+        byte[] nonceBytes = nonce.toByteArray();
         byte[] toBytes = to.toBytes();
         byte[] amountBytes = amount.toByteArray();
-        int len = nonce.length + toBytes.length + amountBytes.length + (Long.BYTES * 2);
+        int len = Address.ADDRESS_LEN + nonceBytes.length + toBytes.length + amountBytes.length +
+            Long.BYTES;
 
         byte[] msg = new byte[len];
         ByteBuffer buffer = ByteBuffer.allocate(len);
-        buffer.put(nonce);
+        buffer.put(walletId.toBytes());
+        buffer.put(nonceBytes);
         buffer.put(toBytes);
         buffer.put(amountBytes);
-        buffer.putLong(nrgLimit);
         buffer.putLong(nrgPrice);
         buffer.flip();
         buffer.get(msg);
@@ -270,10 +275,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         long threshold = thresh.getLong();
         Set<Address> owners = extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
+        if (!isValidTxNrg(nrg)) {
+            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+        }
         if (owners == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
+            // sanity check... owners should be null in both these cases really
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
@@ -326,14 +335,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             // Then wallet is not the address of a multi-sig wallet.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
-        if (!track.hasAccountState(recipient)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-        }
         if (sigs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] msg = constructMsg(track, wallet, recipient, amount, nrgPrice, nrg);
+        byte[] msg = constructMsg(wallet, track.getNonce(wallet), recipient, amount, nrgPrice);
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             // Attempt to transfer negative amount.
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -379,15 +385,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
         Set<Address> result = new HashSet<>(numAddrs);
         Address addr;
-        boolean callerIsOwner = false;
+        boolean addressIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
             addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
             if (result.contains(addr)) { return null; }
             if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) { return null; }
-            if (addr.equals(this.address)) { callerIsOwner = true; }
+            if (addr.equals(this.caller)) { addressIsOwner = true; }
             result.add(addr);
         }
-        return (callerIsOwner) ? result : null;
+        return (addressIsOwner) ? result : null;
     }
 
     /**
@@ -430,7 +436,33 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return the address of the newly created wallet.
      */
     private Address initNewWallet(Set<Address> owners, long threshold) {
-        Address walletId = new Address(ECKeyFac.inst().create().getAddress());
+        List<byte[]> ownerAddrs = new ArrayList<>();
+        List<byte[]> ownerNonces = new ArrayList<>();
+        for (Address owner: owners) {
+            ownerAddrs.add(owner.toBytes());
+            ownerNonces.add(track.getNonce(owner).toByteArray());
+        }
+
+        int numOwners = ownerAddrs.size();
+        int len = Long.BYTES + (owners.size() * ADDR_LEN);
+        for (byte[] ownN : ownerNonces) {
+            len += ownN.length;
+        }
+
+        byte[] content = new byte[len];
+        ByteBuffer buffer = ByteBuffer.allocate(len);
+        buffer.putLong(threshold);
+        for (int i = 0; i < numOwners; i++) {
+            buffer.put(ownerAddrs.get(i));
+            buffer.put(ownerNonces.get(i));
+        }
+        buffer.flip();
+        buffer.get(content);
+
+        byte[] hash = HashUtil.keccak256(content);
+        hash[0] = AION_PREFIX;
+
+        Address walletId = new Address(hash);
         track.createAccount(walletId);
         saveWalletMetaData(walletId, threshold, owners.size());
         saveWalletOwners(walletId, owners);
@@ -519,7 +551,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     private boolean areValidSignatures(Address wallet, List<byte[]> signatures, byte[] msg) {
         Set<Address> owners = getOwners(wallet);
-        if (!owners.contains(this.address)) { return false; }
+        if (!owners.contains(this.caller)) { return false; }
 
         Set<Address> txSigners = new HashSet<>();
         Address signer;
@@ -627,6 +659,26 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         buffer.putLong(ownerId);
         System.arraycopy(buffer.array(), 0, ownerKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
         return ownerKey;
+    }
+
+    /**
+     * Copies a byte array representing a negative BigInteger, bigIntBytes, into a byte array of
+     * appropriate length and sign-extends the array. This method returns the resulting array.
+     *
+     * @param bigIntBytes A negative BigInteger as bytes.
+     * @return a properly-sized and sign-extended byte array of the same BigInteger.
+     */
+    private static byte[] handleNegativeBigInt(byte[] bigIntBytes) {
+        byte[] result = new byte[AMOUNT_LEN];
+        int pushback = AMOUNT_LEN - bigIntBytes.length;
+        for (int i = 0; i < AMOUNT_LEN; i++) {
+            if ((i < pushback) || (bigIntBytes[i - pushback] == 0)) {
+                result[i] = (byte) 0xFF;
+            } else {
+                result[i] = bigIntBytes[i - pushback];
+            }
+        }
+        return result;
     }
 
 }
