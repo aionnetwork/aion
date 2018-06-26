@@ -74,11 +74,15 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *
      * @param track The database cache.
      * @param caller The calling address.
+     * @throws NullPointerException if track or caller are null.
      */
     public TRSownerContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
         super(track);
+        if (caller == null) {
+            throw new NullPointerException("Construct TRSownerContract with null caller.");
+        }
         this.caller = caller;
     }
 
@@ -92,7 +96,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *
      *   <b>operation 0x0</b> - creates a new public-facing TRS contract.
      *     [<1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
-     *     total = 26 bytes
+     *     total = 14 bytes
      *   where:
      *     isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
      *     isDirectDeposit is 0x1 if direct depositing is enabled for this TRS
@@ -141,7 +145,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *
      * The input byte array format is defined as follows:
      *   [<1b - 0x0> | <1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
-     *   total = 26 bytes
+     *   total = 14 bytes
      * where:
      *   isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
      *   isDirectDeposit is 0x1 if direct depositing is enabled for this TRS
@@ -186,8 +190,9 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         boolean isDirectDeposit = (deposit == 1 || deposit == 3);
 
         // Grab the requested number of periods for this contract and verify range.
-        int periods = input[2] << Byte.SIZE;
-        periods |= input[3];
+        int periods = input[2];
+        periods <<= Byte.SIZE;
+        periods |= (input[3] & 0xFF);
         if (periods < 1 || periods > 1200) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -237,9 +242,8 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *
      * where ... means all unmentioned bits replaced by this ellipsis are 0.
      *
-     * The 16-byte value for the contract specs is formatted as follows [b == bit(s)]:
-     *   | b128 - isTest | b127 - isDirectDeposit | b126-115 - periods | ...
-     *   | b76-72 - precision | b71-0 - percentage |
+     * The 16-byte value for the contract specs is formatted as follows:
+     *   | 9b - percentage | 1b - isTest | 1b - isDirectDeposit | 1b - precision | 2b - periods |
      *
      * @param contract The address of the new TRS contract.
      * @param isTest True only if this new TRS contract is a test contract.
@@ -253,14 +257,16 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         byte[] specKey = new byte[DataWord.BYTES];
         specKey[0] = (byte) 0xC0;
+
         byte[] specValue = new byte[DataWord.BYTES];
-        specValue[0] |= (isTest) ? (byte) 0x80 : (byte) 0x00;
-        specValue[0] |= (isDirectDeposit) ? (byte) 0x40 : (byte) 0x00;
-        specValue[0] |= (periods >> 5);
-        specValue[1] |= ((periods & 0x1F) << 3);
-        System.arraycopy(percent.toByteArray(), 0, specValue,
-            specValue.length - PERCENT_LEN, PERCENT_LEN);
-        specValue[specValue.length - PERCENT_LEN - 1] |= precision;
+        byte[] percentBytes = percent.toByteArray();
+        System.arraycopy(percentBytes, 0, specValue,
+            PERCENT_LEN - percentBytes.length, percentBytes.length);
+        specValue[PERCENT_LEN] = (isTest) ? (byte) 0x1 : (byte) 0x0;
+        specValue[PERCENT_LEN + 1] = (isDirectDeposit) ? (byte) 0x1 : (byte) 0x0;
+        specValue[PERCENT_LEN + 2] = (byte) precision;
+        specValue[PERCENT_LEN + 3] = (byte) ((periods >> Byte.SIZE) & 0xFF);
+        specValue[PERCENT_LEN + 4] = (byte) (periods & 0xFF);
 
         track.createAccount(contract);
         saveContractOwner(contract);
@@ -281,16 +287,17 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      * @param contract The contract to save the owner address to.
      */
     private void saveContractOwner(Address contract) {
-        Address addr1 = new Address(Arrays.copyOfRange(caller.toBytes(), 0, DataWord.BYTES));
-        Address addr2 = new Address(Arrays.copyOfRange(caller.toBytes(), DataWord.BYTES, Address.ADDRESS_LEN));
+        byte[] addr1 = Arrays.copyOfRange(caller.toBytes(), 0, DataWord.BYTES);
+        byte[] addr2 = Arrays.copyOfRange(caller.toBytes(), DataWord.BYTES, Address.ADDRESS_LEN);
 
         byte[] key1 = new byte[DataWord.BYTES];
         key1[0] = (byte) 0x80;
-        track.addStorageRow(contract, new DataWord(key1), new DataWord(addr1.toBytes()));
+        track.addStorageRow(contract, new DataWord(key1), new DataWord(addr1));
 
         byte[] key2 = new byte[DataWord.BYTES];
         key2[0] = (byte) 0x80;
         key2[DataWord.BYTES - 1] = (byte) 0x01;
-        track.addStorageRow(contract, new DataWord(key2), new DataWord(addr2.toBytes()));
+        track.addStorageRow(contract, new DataWord(key2), new DataWord(addr2));
     }
+
 }
