@@ -37,6 +37,11 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
+JAVA_CMD=java
+if [ -d "$JAVA_HOME" ]; then
+        JAVA_CMD="$JAVA_HOME/bin/java"
+fi
+
 trap "exit" INT TERM
 trap "exit_kernel" EXIT
 
@@ -49,7 +54,7 @@ exit_kernel() {
 }
 
 
-env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
+env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
         -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
 kernel_pid=$!
 wait
