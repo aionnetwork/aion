@@ -41,9 +41,6 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  *
  * The PrivateTRScontract may be thought of as a parent class for the public-facing TRS contract in
  * that the latter calls this contract to perform any supported operations it needs.
- *
- * A number of 'hidden' operations are actually supported by this contract. They exist for testing
- * convenience.
  */
 public class PrivateTRScontract extends StatefulPrecompiledContract {
     private final Address caller;

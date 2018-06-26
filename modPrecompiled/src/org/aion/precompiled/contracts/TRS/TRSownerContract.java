@@ -22,12 +22,18 @@
  */
 package org.aion.precompiled.contracts.TRS;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
+import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 
 /**
@@ -47,30 +53,62 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  *
  * The following operations are supported:
  *      create -- creates a new public TRS contract.
- *      init -- initializes a non-initialized but created public TRS contract.
  *      lock -- locks the TRS contract so that no more deposits may be made.
  *      start -- starts the distribution of the savings in the TRS contract.
  *      mint -- informs the TRS contract about tokens that were minted to it on behalf of a depositor.
  *      nullify -- disables the TRS contract.
  */
 public class TRSownerContract extends StatefulPrecompiledContract {
+    // move Aion address or grab it from somewhere reliable.
+    private static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    private static final long COST = 21000L;    // temporary.
+    private static final byte TRS_PREFIX = (byte) 0xC0;
+    private static final int PERIODS_LEN = 2;
+    private static final int PERCENT_LEN = 9;
+    private static final int PRECISION_LEN = 1;
     private final Address caller;
 
     /**
-     * Constructs a new TRSownerContract that will use repo as the database cache to update its
+     * Constructs a new TRSownerContract that will use track as the database cache to update its
      * state with and is called by caller.
      *
-     * @param repo The database cache.
+     * @param track The database cache.
      * @param caller The calling address.
      */
     public TRSownerContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
-        super(repo);
+        super(track);
         this.caller = caller;
     }
 
     /**
+     * The input byte array provided to this method must have the following format:
+     *
+     * [<1b - operation> | <arguments>]
+     *
+     * where arguments is defined differently for different operations. The supported operations
+     * along with their expected arguments are outlined as follows:
+     *
+     *   <b>operation 0x0</b> - creates a new public-facing TRS contract.
+     *     [<1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
+     *     total = 26 bytes
+     *   where:
+     *     isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
+     *     isDirectDeposit is 0x1 if direct depositing is enabled for this TRS
+     *     all other values of isDirectDeposit are invalid.
+     *     periods is the number of 30-day withdrawal periods for this TRS (unsigned).
+     *     percent is the percentage of the total savings that are withdrawable during the one-off
+     *       special withdraw event.
+     *     precision is the number of decimal places to left-shift percent in order to achieve
+     *       greater precision.
+     *
+     *     conditions: precision must be in the range [0, 18] and after the shifts have been applied
+     *       to percent the resulting percentage must be in the range [0, 1]. periods must be in the
+     *       range [1, 1200].
+     *
+     *     returns: the address of the newly created TRS contract in the output field of the
+     *       ContractExecutionResult.
      *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
@@ -78,7 +116,181 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      */
     @Override
     public ContractExecutionResult execute(byte[] input, long nrgLimit) {
-        //TODO
-        return null;
+        if (input == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+        if (input.length == 0) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+        if (nrgLimit < COST) {
+            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+        }
+        if (!isValidTxNrg(nrgLimit)) {
+            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, 0);
+        }
+
+        int operation = input[0];
+        switch (operation) {
+            case 0: return create(input, nrgLimit);
+            default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+    }
+
+    /**
+     * Logic to create a new public-facing TRS contract where caller is the owner of the contract.
+     *
+     * The input byte array format is defined as follows:
+     *   [<1b - 0x0> | <1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
+     *   total = 26 bytes
+     * where:
+     *   isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
+     *   isDirectDeposit is 0x1 if direct depositing is enabled for this TRS
+     *   isDirectDeposit is 0x2 to create a public-facing TRS contract for testing with direct
+     *     depositing disabled. (Aion-only).
+     *   isDirectDeposit is 0x3 to create a public-facing TRS contract for testing with direct
+     *     depositing enabled. (Aion-only).
+     *   all other values of isDirectDeposit are invalid.
+     *   periods is the number of 30-day withdrawal periods for this TRS (unsigned).
+     *   percent is the percentage of the total savings that are withdrawable during the one-off
+     *     special withdraw event.
+     *   precision is the number of decimal places to left-shift percent in order to achieve
+     *     greater precision.
+     *
+     *   conditions: precision must be in the range [0, 18] and after the shifts have been applied
+     *     to percent the resulting percentage must be in the range [0, 1]. periods must be in the
+     *     range [1, 1200].
+     *
+     *   Note: a TRS contract created for testing will set its period duration to 30 SECONDS instead
+     *   of days. Nothing else about the contract will be different.
+     *
+     * @param input The input to the create public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult create(byte[] input, long nrgLimit) {
+        if (input.length != 2 + PERIODS_LEN + PERCENT_LEN + PRECISION_LEN) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        int deposit = input[1];
+        if (deposit < 0 || deposit > 3) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // If request for a test contract, verify caller is Aion.
+        boolean isTestContract = (deposit == 2 || deposit == 3);
+        if (isTestContract && !this.caller.equals(AION)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        boolean isDirectDeposit = (deposit == 1 || deposit == 3);
+
+        // Grab the requested number of periods for this contract and verify range.
+        int periods = input[2] << Byte.SIZE;
+        periods |= input[3];
+        if (periods < 1 || periods > 1200) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Grab the precision and percentage and perform the shiftings and verify the range.
+        int precision = input[input.length - 1];
+        if (precision < 0 || precision > 18) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        BigInteger percent = new BigInteger(Arrays.copyOfRange(input, 2 + PERIODS_LEN,
+            2 + PERIODS_LEN + PERCENT_LEN));
+        BigDecimal realPercent = new BigDecimal(percent).movePointLeft(precision);
+        if (realPercent.compareTo(BigDecimal.ZERO) < 0) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        } else if (realPercent.compareTo(new BigDecimal("100")) > 0) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Everything is fine. Generate a contract address, save the new contract and return to caller.
+        byte[] ownerNonce = this.caller.toBytes();
+        byte[] hashInfo = new byte[ownerNonce.length + Address.ADDRESS_LEN];
+        System.arraycopy(ownerNonce, 0, hashInfo, 0, ownerNonce.length);
+        System.arraycopy(this.caller.toBytes(), 0, hashInfo, ownerNonce.length, Address.ADDRESS_LEN);
+        byte[] trsAddr = HashUtil.h256(hashInfo);
+        trsAddr[0] = TRS_PREFIX;
+        Address contract = new Address(trsAddr);
+
+        saveNewContract(contract, isTestContract, isDirectDeposit, periods, percent, precision);
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST, contract.toBytes());
+    }
+
+    /**
+     * Saves a new public-facing TRS contract whose contract address is contract and whose direct
+     * deposit option is isDirectDeposit. The new contract will have periods number of withdrawable
+     * periods and the percentage that is derived from percent and precision as outlined in create()
+     * is the percentage of total funds withdrawable in the one-off special event. The isTest
+     * parameter tells this method whether to save the new contract as a test contract (using 30
+     * second periods) or not (using 30 day periods). The owner of the contract is caller.
+     *
+     * All preconditions on the parameters are assumed already verified.
+     *
+     * The meta-data for the contract is stored in the database using 16-byte words as follows:
+     *   key for first half of owner address: 80 ...
+     *   key for second half of owner address: 80 ... 01
+     *   key for contract specs: C0 ...
+     *
+     * where ... means all unmentioned bits replaced by this ellipsis are 0.
+     *
+     * The 16-byte value for the contract specs is formatted as follows [b == bit(s)]:
+     *   | b128 - isTest | b127 - isDirectDeposit | b126-115 - periods | ...
+     *   | b76-72 - precision | b71-0 - percentage |
+     *
+     * @param contract The address of the new TRS contract.
+     * @param isTest True only if this new TRS contract is a test contract.
+     * @param isDirectDeposit True only if direct depositing is enabled for this TRS contract.
+     * @param periods The number of withdrawable periods this TRS contract is live for.
+     * @param percent The percent of total funds withdrawable in the one-off event.
+     * @param precision The number of decimal places to put the decimal point in percent.
+     */
+    private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
+        int periods, BigInteger percent, int precision) {
+
+        byte[] specKey = new byte[DataWord.BYTES];
+        specKey[0] = (byte) 0xC0;
+        byte[] specValue = new byte[DataWord.BYTES];
+        specValue[0] |= (isTest) ? (byte) 0x80 : (byte) 0x00;
+        specValue[0] |= (isDirectDeposit) ? (byte) 0x40 : (byte) 0x00;
+        specValue[0] |= (periods >> 5);
+        specValue[1] |= ((periods & 0x1F) << 3);
+        System.arraycopy(percent.toByteArray(), 0, specValue,
+            specValue.length - PERCENT_LEN, PERCENT_LEN);
+        specValue[specValue.length - PERCENT_LEN - 1] |= precision;
+
+        track.createAccount(contract);
+        saveContractOwner(contract);
+        track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+        track.flush();
+    }
+
+    /**
+     * Saves the owner of the contract into the contract address. Since our key-value pairs in the
+     * database are 16 byte words we must store the owner address in two key-value pairs.
+     *
+     * The key for the first half of the address has all its bits set to 0 except for the most
+     *   significant bit, which is 1.
+     *
+     * The key for the second half of the address has all its bits set to 0 except for the most and
+     *   least significant bits, both of which are 1.
+     *
+     * @param contract The contract to save the owner address to.
+     */
+    private void saveContractOwner(Address contract) {
+        Address addr1 = new Address(Arrays.copyOfRange(caller.toBytes(), 0, DataWord.BYTES));
+        Address addr2 = new Address(Arrays.copyOfRange(caller.toBytes(), DataWord.BYTES, Address.ADDRESS_LEN));
+
+        byte[] key1 = new byte[DataWord.BYTES];
+        key1[0] = (byte) 0x80;
+        track.addStorageRow(contract, new DataWord(key1), new DataWord(addr1.toBytes()));
+
+        byte[] key2 = new byte[DataWord.BYTES];
+        key2[0] = (byte) 0x80;
+        key2[DataWord.BYTES - 1] = (byte) 0x01;
+        track.addStorageRow(contract, new DataWord(key2), new DataWord(addr2.toBytes()));
     }
 }
