@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 
 package org.aion.api.server.http;
 
@@ -43,6 +42,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -472,11 +472,12 @@ public class ApiWeb3Aion extends ApiAion {
         IRepository repo = this.ac.getRepository();
 
         @SuppressWarnings("unchecked")
-        DataWord storageValue = (DataWord) repo.getStorageValue(address, key);
-        if (storageValue != null)
-            return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
-        else
+        Optional<DataWord> storageValue = repo.getStorageValue(address, key);
+        if (storageValue.isPresent()) {
+            return new RpcMsg(TypeConverter.toJsonHex(storageValue.get().getData()));
+        } else {
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
+        }
     }
 
     public RpcMsg eth_getTransactionCount(Object _params) {

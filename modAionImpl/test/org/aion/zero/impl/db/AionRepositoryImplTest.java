@@ -146,7 +146,7 @@ public class AionRepositoryImplTest {
         track.flush();
 
         byte[] retrievedValue =
-                repository.getStorageValue(defaultAccount, new DataWord(key)).getNoLeadZeroesData();
+                repository.getStorageValue(defaultAccount, new DataWord(key)).get().getNoLeadZeroesData();
         assertThat(retrievedValue).isEqualTo(value);
 
         byte[] newRoot = repository.getRoot();
@@ -207,13 +207,13 @@ public class AionRepositoryImplTest {
         repoTrack.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
 
         DataWord retrievedStorageValue =
-                repoTrack.getStorageValue(defaultAccount, new DataWord(key));
+                repoTrack.getStorageValue(defaultAccount, new DataWord(key)).get();
         assertThat(retrievedStorageValue).isEqualTo(new DataWord(value));
 
         // commit changes, then check that the root has updated
         repoTrack.flush();
 
-        assertThat(repository.getStorageValue(defaultAccount, new DataWord(key)))
+        assertThat(repository.getStorageValue(defaultAccount, new DataWord(key)).get())
                 .isEqualTo(retrievedStorageValue);
 
         final byte[] newRoot = repository.getRoot();
