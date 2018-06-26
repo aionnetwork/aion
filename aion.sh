@@ -41,9 +41,8 @@ trap "exit" INT TERM
 trap "exit_kernel" EXIT
 
 exit_kernel() { 
-    echo "TRAP: kernel_pid = $kernel_pid" >> /tmp/junk
     if [ ! -z "$kernel_pid" ]; then
-        echo "killing..." >> /tmp/junk
+        echo "killing $kernel_pid"
         kill "$kernel_pid" 
     fi
     exit 0
