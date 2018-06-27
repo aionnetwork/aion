@@ -1096,14 +1096,39 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             // check each block's total difficulty till genesis
             boolean correct = true;
             AionBlock block = getBestBlock();
+            long start, round, time;
+            start = round = System.currentTimeMillis();
+            long bestBlockNumber = block.getNumber();
+
             while (correct && block.getNumber() > 0) {
                 // it is correct if there is no inconsistency wrt to the parent
                 correct = getTotalDifficultyForHash(block.getHash())
                         .equals(getTotalDifficultyForHash(block.getParentHash()).add(block.getDifficultyBI()));
-                LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
-                              block.getShortHash(),
-                              block.getNumber(),
-                              correct ? "OK" : "NOT OK");
+
+                if (!correct) {
+                    LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
+                                  block.getShortHash(),
+                                  block.getNumber(),
+                                  "NOT OK");
+                } else {
+                    time = System.currentTimeMillis();
+                    if (time - round > 4999) {
+                        long remaining = block.getNumber();
+                        long checked = bestBlockNumber - block.getNumber() + 1;
+                        double duration = (time - start) / 1000;
+                        double approx = remaining * (duration / checked);
+                        approx = approx >= 1 ? approx : 1;
+
+                        LOG_CONS.info(
+                                "{} blocks checked in {} sec. {} more blocks to verify. Approximate completion time is {} sec.",
+                                checked,
+                                (long) duration,
+                                remaining,
+                                (long) approx);
+                        round = time;
+                    }
+                }
+
                 // check parent next
                 block = getBlockByHash(block.getParentHash());
             }
@@ -1111,10 +1136,15 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             // check correct TD for genesis block
             if (block.getNumber() == 0) {
                 correct = getTotalDifficultyForHash(block.getHash()).equals(block.getDifficultyBI());
-                LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
-                              block.getShortHash(),
-                              block.getNumber(),
-                              correct ? "OK" : "NOT OK");
+                if (!correct) {
+                    LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
+                                  block.getShortHash(),
+                                  block.getNumber(),
+                                  "NOT OK");
+                } else {
+                    time = ((System.currentTimeMillis() - start) / 1000) + 1;
+                    LOG_CONS.info("{} blocks checked in under {} sec.", bestBlockNumber + 1, time);
+                }
             }
 
             // if any inconsistency, correct the TD
