@@ -59,7 +59,7 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  *      nullify -- disables the TRS contract.
  */
 public class TRSownerContract extends StatefulPrecompiledContract {
-    // move Aion address or grab it from somewhere reliable.
+    // grab AION from CfgAion later
     private static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private static final long COST = 21000L;    // temporary.
     private static final byte TRS_PREFIX = (byte) 0xC0;
@@ -106,6 +106,8 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *       special withdraw event.
      *     precision is the number of decimal places to left-shift percent in order to achieve
      *       greater precision.
+     *
+     *     All input values interpreted as numbers will be interpreted as unsigned and positive.
      *
      *     conditions: precision must be in the range [0, 18] and after the shifts have been applied
      *       to percent the resulting percentage must be in the range [0, 1]. periods must be in the
@@ -160,6 +162,8 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *   precision is the number of decimal places to left-shift percent in order to achieve
      *     greater precision.
      *
+     *   All input values interpreted as numbers will be interpreted as unsigned and positive.
+     *
      *   conditions: precision must be in the range [0, 18] and after the shifts have been applied
      *     to percent the resulting percentage must be in the range [0, 1]. periods must be in the
      *     range [1, 1200].
@@ -189,7 +193,8 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         boolean isDirectDeposit = (deposit == 1 || deposit == 3);
 
-        // Grab the requested number of periods for this contract and verify range.
+        // Grab the requested number of periods for this contract and verify range. Since 2 byte
+        // representation cast to 4-byte int, result is interpreted as unsigned & positive.
         int periods = input[2];
         periods <<= Byte.SIZE;
         periods |= (input[3] & 0xFF);
@@ -198,13 +203,16 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         }
 
         // Grab the precision and percentage and perform the shiftings and verify the range.
+        // 2 byte representation cast to 4-byte int, result is interpreted as unsigned & positive.
         int precision = input[input.length - 1];
         if (precision < 0 || precision > 18) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        BigInteger percent = new BigInteger(Arrays.copyOfRange(input, 2 + PERIODS_LEN,
-            2 + PERIODS_LEN + PERCENT_LEN));
+        // Keep first byte of percentBytes unused (as zero) so result is always unsigned.
+        byte[] percentBytes = new byte[PERCENT_LEN + 1];
+        System.arraycopy(input, 2 + PERIODS_LEN, percentBytes, 1,  PERCENT_LEN);
+        BigInteger percent = new BigInteger(percentBytes);
         BigDecimal realPercent = new BigDecimal(percent).movePointLeft(precision);
         if (realPercent.compareTo(BigDecimal.ZERO) < 0) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -212,8 +220,8 @@ public class TRSownerContract extends StatefulPrecompiledContract {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // Everything is fine. Generate a contract address, save the new contract and return to caller.
-        byte[] ownerNonce = this.caller.toBytes();
+        // All checks OK. Generate contract address, save the new contract & return to caller.
+        byte[] ownerNonce = track.getNonce(this.caller).toByteArray();
         byte[] hashInfo = new byte[ownerNonce.length + Address.ADDRESS_LEN];
         System.arraycopy(ownerNonce, 0, hashInfo, 0, ownerNonce.length);
         System.arraycopy(this.caller.toBytes(), 0, hashInfo, ownerNonce.length, Address.ADDRESS_LEN);

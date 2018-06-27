@@ -1,6 +1,7 @@
 package org.aion.precompiled;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -43,6 +44,8 @@ public class TRSownerContractTest {
         repo = null;
     }
 
+    // <-----------------------------------HELPER METHODS BELOW------------------------------------>
+
     // Returns a new TRSownerContract and calls the contract using caller.
     private TRSownerContract newTRSownerContract(Address caller) {
         return new TRSownerContract(repo, caller);
@@ -70,7 +73,12 @@ public class TRSownerContractTest {
         input[2] |= (periods >> Byte.SIZE);
         input[3] |= (periods & 0xFF);
         byte[] percentBytes = percent.toByteArray();
-        System.arraycopy(percentBytes, 0, input, 14 - percentBytes.length - 1, percentBytes.length);
+        if (percentBytes.length == 10) {
+            System.arraycopy(percentBytes, 1, input, 4, 9);
+        } else {
+            System.arraycopy(percentBytes, 0, input, 14 - percentBytes.length - 1,
+                percentBytes.length);
+        }
         input[13] = (byte) precision;
         return input;
     }
@@ -122,7 +130,7 @@ public class TRSownerContractTest {
         return new BigDecimal(raw).movePointLeft((int) specs[11]);
     }
 
-    // <------------------------------------------------------------------------------------------->
+    // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
 
     @Test(expected=NullPointerException.class)
     public void testCreateNullCaller() {
@@ -162,6 +170,8 @@ public class TRSownerContractTest {
         assertEquals(ResultCode.INVALID_NRG_LIMIT, res.getCode());
         assertEquals(0, res.getNrgLeft());
     }
+
+    // <-------------------------------------CREATE TRS TESTS-------------------------------------->
 
     @Test
     public void testCreateTestModeNotAion() {
@@ -456,16 +466,166 @@ public class TRSownerContractTest {
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
+
+        // Test all 9 bytes of percent as 1's using zero shifts.
+        byte[] rawBytes = new byte[]{ (byte) 0x0, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF };
+        raw = new BigInteger(rawBytes);
+        input = getCreateInput(false, false, 1, raw, 0);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // Test all 9 bytes of percent as 1's using 18 shifts -> 4722.36% still no good.
+        input = getCreateInput(false, false, 1, raw, 18);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testCreateVerify18DecimalPercentage() {
-        //TODO
+        // This is: 99.999999999999999999 with 18 shifts ... verify it is ok and we get it back
+        BigInteger raw = new BigInteger("99999999999999999999");
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        byte[] input = getCreateInput(false, false, 1, raw, 18);
+        TRSownerContract trs = newTRSownerContract(caller);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        byte[] specsKey = new byte[DataWord.BYTES];
+        specsKey[0] = (byte) 0xC0;
+        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage((DataWord) repo.getStorageValue(
+            Address.wrap(res.getOutput()), new DataWord(specsKey))));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+
+        // This is: 73.749309184932750917 with 18 shifts ... verify we get it back
+        raw = new BigInteger("73749309184932750917");
+        input = getCreateInput(false, false, 1, raw, 18);
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage((DataWord) repo.getStorageValue(
+            Address.wrap(res.getOutput()), new DataWord(specsKey))));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+
+        // This is: 0.000000000000000001 with 18 shifts ... verify we get it back
+        raw = new BigInteger("0000000000000000001");
+        input = getCreateInput(false, false, 1, raw, 18);
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage((DataWord) repo.getStorageValue(
+            Address.wrap(res.getOutput()), new DataWord(specsKey))));
+        tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
     @Test
     public void testCreateValidAndInvalidPercentagesByShifting() {
-        //TODO
+        // With no shifting we have: 872743562198734% -> no good
+        int shifts = 0;
+        BigInteger raw = new BigInteger("872743562198734");
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        byte[] input = getCreateInput(false, false, 1, raw, shifts);
+        TRSownerContract trs = newTRSownerContract(caller);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // With 12 shifts we have: 872.743562198734% -> no good
+        shifts = 12;
+        input = getCreateInput(false, false, 1, raw, shifts);
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // With 13 shifts we have: 87.2743562198734% -> good
+        shifts = 13;
+        input = getCreateInput(false, false, 1, raw, shifts);
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        byte[] specsKey = new byte[DataWord.BYTES];
+        specsKey[0] = (byte) 0xC0;
+        assertEquals(new BigDecimal(raw).movePointLeft(shifts), fetchPercentage(
+            (DataWord) repo.getStorageValue(Address.wrap(res.getOutput()), new DataWord(specsKey))));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+
+        // With 14 shifts we have: 8.72743562198734% -> good
+        shifts = 14;
+        input = getCreateInput(false, false, 1, raw, shifts);
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(new BigDecimal(raw).movePointLeft(shifts), fetchPercentage(
+            (DataWord) repo.getStorageValue(Address.wrap(res.getOutput()), new DataWord(specsKey))));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+
+        // With 18 shifts we have: 000.000872743562198734% -> good
+        shifts = 18;
+        input = getCreateInput(false, false, 1, raw, shifts);
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(new BigDecimal(raw).movePointLeft(shifts), fetchPercentage(
+            (DataWord) repo.getStorageValue(Address.wrap(res.getOutput()), new DataWord(specsKey))));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+    }
+
+    @Test
+    public void testCreateTRSaddressDeterministic() {
+        // The TRS contract address returned must be deterministic, based on owner's addr + nonce.
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
+        TRSownerContract trs = newTRSownerContract(caller);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        Address contract = Address.wrap(res.getOutput());
+        tempAddrs.add(contract);
+
+        // Different caller, should be different addr returned.
+        trs = newTRSownerContract(getNewExistentAccount(BigInteger.ZERO));
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertNotEquals(contract, Address.wrap(res.getOutput()));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+
+        // Same caller as original & nonce hasn't changed, should be same contract addr returned.
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(contract, Address.wrap(res.getOutput()));
+
+        // Same caller as original but nonce changed, should be different addr returned.
+        repo.incrementNonce(caller);
+        repo.flush();
+        trs = newTRSownerContract(caller);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertNotEquals(contract, Address.wrap(res.getOutput()));
+        tempAddrs.add(Address.wrap(res.getOutput()));
+    }
+
+    @Test
+    public void testCreateSuccessNrgLeft() {
+        long diff = 540;
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
+        TRSownerContract trs = newTRSownerContract(caller);
+        ContractExecutionResult res = trs.execute(input, COST + diff);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(diff, res.getNrgLeft());
+        tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
 }
