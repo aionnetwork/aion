@@ -113,12 +113,29 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *     returns: the address of the newly created TRS contract in the output field of the
      *       ContractExecutionResult.
      *
+     *                                          ~~~***~~~
+     *
      *     <b>operation 0x1</b> - locks a public-facing TRS contract. Once a contract is locked no
      *       more deposits can be made into it and ability to refund a participant is disabled.
      *       [<32b - contractAddress>]
      *       total = 33 bytes
      *     where:
      *       contractAddress is the address of the public-facing TRS contract to lock.
+     *
+     *     conditions: the caller of this method must be the owner of the specified contract
+     *       otherwise this method will fail.
+     *
+     *     returns: void.
+     *
+     *                                            ~~~***~~~
+     *
+     *     <b>operation 0x2</b> - starts a public-facing TRS contract. Once a contract starts it is
+     *       considered live and the first withdrawal period has officially begun. A contract must
+     *       first be locked before it can be made live.
+     *       [<32b - contractAddress>]
+     *       total = 33 bytes
+     *     where:
+     *       contractAddress is the address of the public-facing TRS contract to start.
      *
      *     conditions: the caller of this method must be the owner of the specified contract
      *       otherwise this method will fail.
@@ -148,6 +165,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         switch (operation) {
             case 0: return create(input, nrgLimit);
             case 1: return lock(input, nrgLimit);
+            case 2: return start(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -296,6 +314,54 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         // All checks OK. Change contract state to locked.
         setLock(contract);
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+    }
+
+    /**
+     * Logic to start an existing public-facing TRS contract where caller is the owner of the contract.
+     *
+     * The input byte array format is defined as follows:
+     *   [<32b - contractAddress>]
+     *   total = 33 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to lock.
+     *
+     * conditions: the caller of this method must be the owner of the specified contract
+     *   otherwise this method will fail.
+     *
+     * @param input The input to the lock public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult start(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexAddr = 1;
+        final int len = 33;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // The caller must also be the owner of this contract.
+        Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
+        if (!this.caller.equals(fetchContractOwner(contract))) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A start call can only execute if the current state of the TRS contract is as follows:
+        // contract is locked & contract is not live.
+        IDataWord specs = fetchContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        byte[] specBytes = specs.getData();
+        if (!isContractLocked(specBytes) || isContractLive(specBytes)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // All checks OK. Change contract state to live.
+        setLive(contract);
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
@@ -475,6 +541,27 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         byte[] specValue = fetchContractSpecs(contract).getData();
         specValue[indexLocked] = (byte) 0x1;
+
+        track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+        track.flush();
+    }
+
+    /**
+     * Updates the specifications associated with the TRS contract whose address is contract so that
+     * the is-live bit will be set. If the bit is already set this method effectively does nothing.
+     *
+     * Assumption: contract IS a valid TRS contract address.
+     *
+     * @param contract The address of the TRS contract.
+     */
+    private void setLive(Address contract) {
+        final int indexLive = 15;
+
+        byte[] specKey = new byte[DataWord.BYTES];
+        specKey[0] = (byte) 0xC0;
+
+        byte[] specValue = fetchContractSpecs(contract).getData();
+        specValue[indexLive] = (byte) 0x1;
 
         track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
         track.flush();
