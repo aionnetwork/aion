@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import java.net.URL?>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            id="settingsPane" visible="false" stylesheets="@../contentPane.css"
+            fx:controller="org.aion.gui.controller.SettingsController"
+            fx:id="parent"
+            AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="10"
+            >
+    <left>
+        <TilePane xmlns:fx="http://javafx.com/fxml" prefWidth="300" orientation="VERTICAL"  AnchorPane.topAnchor="50.0"  alignment="TOP_CENTER">
+            <Label text="General" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0; -fx-text-fill: #40bded;"  />
+            <Label text="Api" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+            <Label text="Net" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+            <Label text="Sync" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+            <Label text="Consensus" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+            <Label text="Database" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+            <Label text="Log" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+            <Label text="GUI" style="-fx-text-fill: BLACK; -fx-text-alignment: CENTER; -fx-font-family: 'Open Sans Regular'; -fx-font-size: 18px; -fx-padding: 0 0 10 0;" />
+        </TilePane>
+    </left>
+    <center>
+        <VBox >
+            <Label text="Some setting here"/>
+        </VBox>
+
+
+    </center>
+    <bottom>
+        <AnchorPane xmlns:fx="http://javafx.com/fxml/1" visible="true"
+                    stylesheets="@../contentPane.css" xmlns="http://javafx.com/javafx/8.0.121"
+                    prefHeight="100">
+            <HBox AnchorPane.leftAnchor="30.0" AnchorPane.bottomAnchor="15" spacing="5">
+            <Button text="Open Configuration file" />
+            <Button text="Reset" />
+            </HBox>
+
+            <HBox AnchorPane.rightAnchor="30.0" AnchorPane.bottomAnchor="15" spacing="5">
+                <Button text="Apply" />
+                <Button text="Close" />
+            </HBox>
+        </AnchorPane>
+    </bottom>
+</BorderPane>

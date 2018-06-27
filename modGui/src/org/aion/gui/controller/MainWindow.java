@@ -159,7 +159,7 @@ public class MainWindow extends Application {
 
     private void registerEventBusConsumer() {
         EventBusRegistry.INSTANCE.getBus(WindowControlsEvent.ID).register(this);
-//        EventBusRegistry.getBus(HeaderPaneButtonEvent.ID).register(this);
+        EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
     }
 
     private void handleMouseDragged(final MouseEvent event) {

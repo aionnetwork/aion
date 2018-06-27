@@ -52,9 +52,9 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     generalKernelInfoRetriever,
                     syncInfoDto
             ));
-            /*put(SettingsController.class, () -> new SettingsController(
+            put(SettingsController.class, () -> new SettingsController(
                     kernelConnection));
-            put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
+            /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
                     kernelConnection));
             put(PeerCountController.class, () -> new PeerCountController(
                     kernelConnection
