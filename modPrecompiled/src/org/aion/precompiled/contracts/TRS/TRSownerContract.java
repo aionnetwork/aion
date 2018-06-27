@@ -63,9 +63,6 @@ public class TRSownerContract extends StatefulPrecompiledContract {
     private static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private static final long COST = 21000L;    // temporary.
     private static final byte TRS_PREFIX = (byte) 0xC0;
-    private static final int PERIODS_LEN = 2;
-    private static final int PERCENT_LEN = 9;
-    private static final int PRECISION_LEN = 1;
     private final Address caller;
 
     /**
@@ -116,6 +113,18 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *     returns: the address of the newly created TRS contract in the output field of the
      *       ContractExecutionResult.
      *
+     *     <b>operation 0x1</b> - locks a public-facing TRS contract. Once a contract is locked no
+     *       more deposits can be made into it and ability to refund a participant is disabled.
+     *       [<32b - contractAddress>]
+     *       total = 33 bytes
+     *     where:
+     *       contractAddress is the address of the public-facing TRS contract to lock.
+     *
+     *     conditions: the caller of this method must be the owner of the specified contract
+     *       otherwise this method will fail.
+     *
+     *     returns: void.
+     *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
      * @return the result of calling execute on the specified input.
@@ -138,6 +147,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         int operation = input[0];
         switch (operation) {
             case 0: return create(input, nrgLimit);
+            case 1: return lock(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -176,11 +186,18 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      * @return the result of executing this logic on the specified input.
      */
     private ContractExecutionResult create(byte[] input, long nrgLimit) {
-        if (input.length != 2 + PERIODS_LEN + PERCENT_LEN + PRECISION_LEN) {
+        // Some "constants".
+        final int indexDepo = 1;
+        final int indexPeriod = 2;
+        final int indexPercent = 4;
+        final int indexPrecision = 13;
+        final int len = 14;
+
+        if (input.length != len) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        int deposit = input[1];
+        int deposit = input[indexDepo];
         if (deposit < 0 || deposit > 3) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -195,23 +212,24 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         // Grab the requested number of periods for this contract and verify range. Since 2 byte
         // representation cast to 4-byte int, result is interpreted as unsigned & positive.
-        int periods = input[2];
+        int periods = input[indexPeriod];
         periods <<= Byte.SIZE;
-        periods |= (input[3] & 0xFF);
+        periods |= (input[indexPeriod + 1] & 0xFF);
         if (periods < 1 || periods > 1200) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Grab the precision and percentage and perform the shiftings and verify the range.
         // 2 byte representation cast to 4-byte int, result is interpreted as unsigned & positive.
-        int precision = input[input.length - 1];
+        int precision = input[indexPrecision];
         if (precision < 0 || precision > 18) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Keep first byte of percentBytes unused (as zero) so result is always unsigned.
-        byte[] percentBytes = new byte[PERCENT_LEN + 1];
-        System.arraycopy(input, 2 + PERIODS_LEN, percentBytes, 1,  PERCENT_LEN);
+        byte[] percentBytes = new byte[indexPrecision - indexPercent + 1];
+        System.arraycopy(input, indexPercent, percentBytes, 1,  indexPrecision - indexPercent);
+        percentBytes[0] = (byte) 0x0;   // sanity
         BigInteger percent = new BigInteger(percentBytes);
         BigDecimal realPercent = new BigDecimal(percent).movePointLeft(precision);
         if (realPercent.compareTo(BigDecimal.ZERO) < 0) {
@@ -234,6 +252,56 @@ public class TRSownerContract extends StatefulPrecompiledContract {
     }
 
     /**
+     * Logic to lock an existing public-facing TRS contract where caller is the owner of the contract.
+     *
+     * The input byte array format is defined as follows:
+     *   [<32b - contractAddress>]
+     *   total = 33 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to lock.
+     *
+     * conditions: the caller of this method must be the owner of the specified contract
+     *   otherwise this method will fail.
+     *
+     * @param input The input to the lock public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult lock(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexAddr = 1;
+        final int len = 33;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // The caller must also be the owner of this contract.
+        Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
+        if (!this.caller.equals(fetchContractOwner(contract))) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A lock call can only execute if the current state of the TRS contract is as follows:
+        // contract is unlocked & contract is not live.
+        IDataWord specs = fetchContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        byte[] specBytes = specs.getData();
+        if (isContractLocked(specBytes) || isContractLive(specBytes)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // All checks OK. Change contract state to locked.
+        setLock(contract);
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+    }
+
+    // <-----------------------DATABASE GET, SET, QUERY METHODS BELOW------------------------------>
+
+    /**
      * Saves a new public-facing TRS contract whose contract address is contract and whose direct
      * deposit option is isDirectDeposit. The new contract will have periods number of withdrawable
      * periods and the percentage that is derived from percent and precision as outlined in create()
@@ -252,6 +320,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      *
      * The 16-byte value for the contract specs is formatted as follows:
      *   | 9b - percentage | 1b - isTest | 1b - isDirectDeposit | 1b - precision | 2b - periods |
+     *   | 1b - isLocked | 1b - isLive |
      *
      * @param contract The address of the new TRS contract.
      * @param isTest True only if this new TRS contract is a test contract.
@@ -263,18 +332,28 @@ public class TRSownerContract extends StatefulPrecompiledContract {
     private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
+        // "constants"
+        final int indexTest = 9;    // note: indexTest == length of percent
+        final int indexDepo = 10;
+        final int indexPrecision = 11;
+        final int indexPeriods = 12;
+        final int indexLocked = 14; // if this changes update isContractLocked & setLock
+        final int indexLive = 15;   // if this changes update isContractLive & setLive
+
         byte[] specKey = new byte[DataWord.BYTES];
         specKey[0] = (byte) 0xC0;
 
         byte[] specValue = new byte[DataWord.BYTES];
         byte[] percentBytes = percent.toByteArray();
-        System.arraycopy(percentBytes, 0, specValue,
-            PERCENT_LEN - percentBytes.length, percentBytes.length);
-        specValue[PERCENT_LEN] = (isTest) ? (byte) 0x1 : (byte) 0x0;
-        specValue[PERCENT_LEN + 1] = (isDirectDeposit) ? (byte) 0x1 : (byte) 0x0;
-        specValue[PERCENT_LEN + 2] = (byte) precision;
-        specValue[PERCENT_LEN + 3] = (byte) ((periods >> Byte.SIZE) & 0xFF);
-        specValue[PERCENT_LEN + 4] = (byte) (periods & 0xFF);
+        System.arraycopy(percentBytes, 0, specValue, indexTest - percentBytes.length,
+            percentBytes.length);
+        specValue[indexTest] = (isTest) ? (byte) 0x1 : (byte) 0x0;
+        specValue[indexDepo] = (isDirectDeposit) ? (byte) 0x1 : (byte) 0x0;
+        specValue[indexPrecision] = (byte) precision;
+        specValue[indexPeriods] = (byte) ((periods >> Byte.SIZE) & 0xFF);
+        specValue[indexPeriods + 1] = (byte) (periods & 0xFF);
+        specValue[indexLocked] = (byte) 0x0; // sanity
+        specValue[indexLive] = (byte) 0x0; // sanity
 
         track.createAccount(contract);
         saveContractOwner(contract);
@@ -306,6 +385,99 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         key2[0] = (byte) 0x80;
         key2[DataWord.BYTES - 1] = (byte) 0x01;
         track.addStorageRow(contract, new DataWord(key2), new DataWord(addr2));
+    }
+
+    /**
+     * Returns the owner of the TRS contract whose address is contract if contract is a valid
+     * contract address.
+     *
+     * Returns null if contract is not a valid TRS contract address and thus there is no owner to
+     * fetch.
+     *
+     * @param contract The TRS contract address.
+     * @return the owner of the contract or null if not a TRS contract.
+     */
+    private Address fetchContractOwner(Address contract) {
+        if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
+        byte[] owner = new byte[Address.ADDRESS_LEN];
+
+        byte[] key1 = new byte[DataWord.BYTES];
+        key1[0] = (byte) 0x80;
+        IDataWord half1 = track.getStorageValue(contract, new DataWord(key1));
+        if (half1 == null) { return null; }
+        System.arraycopy(half1.getData(), 0, owner, 0, DataWord.BYTES);
+
+        byte[] key2 = new byte[DataWord.BYTES];
+        key2[0] = (byte) 0x80;
+        key2[DataWord.BYTES - 1] = (byte) 0x01;
+        IDataWord half2 = track.getStorageValue(contract, new DataWord(key2));
+        if (half2 == null) { return null; }
+        System.arraycopy(half2.getData(), 0, owner, DataWord.BYTES, DataWord.BYTES);
+
+        return new Address(owner);
+    }
+
+    /**
+     * Returns the contract specifications for the TRS contract whose address is contract if this is
+     * a valid contract address.
+     *
+     * Returns null if contract is not a valid TRS contract address and thus there are no specs to
+     * fetch.
+     *
+     * @param contract The TRS contract address.
+     * @return a DataWord wrapper of the contract specifications or null if not a TRS contract.
+     */
+    private IDataWord fetchContractSpecs(Address contract) {
+        if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
+
+        byte[] specKey = new byte[DataWord.BYTES];
+        specKey[0] = (byte) 0xC0;
+        return track.getStorageValue(contract, new DataWord(specKey));
+    }
+
+    /**
+     * Returns true only if the is-locked bit is set in the byte array specs -- assumption: specs is
+     * the byte array representing a contract's specifications.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true if the specs indicate the contract is locked.
+     */
+    private boolean isContractLocked(byte[] specs) {
+        final int indexLocked = 14;
+        return specs[indexLocked] == (byte) 0x1;
+    }
+
+    /**
+     * Returns true only if the is-live bit is set in the byte array specs -- assumption: specs is
+     * the byte array representing a contract's specifications.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true if the specs indicate the contract is live.
+     */
+    private boolean isContractLive(byte[] specs) {
+        final int indexLive = 15;
+        return specs[indexLive] == (byte) 0x1;
+    }
+
+    /**
+     * Updates the specifications associated with the TRS contract whose address is contract so that
+     * the is-locked bit will be set. If the bit is already set this method effectively does nothing.
+     *
+     * Assumption: contract IS a valid TRS contract address.
+     *
+     * @param contract The address of the TRS contract.
+     */
+    private void setLock(Address contract) {
+        final int indexLocked = 14;
+
+        byte[] specKey = new byte[DataWord.BYTES];
+        specKey[0] = (byte) 0xC0;
+
+        byte[] specValue = fetchContractSpecs(contract).getData();
+        specValue[indexLocked] = (byte) 0x1;
+
+        track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+        track.flush();
     }
 
 }
