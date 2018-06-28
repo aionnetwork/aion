@@ -250,9 +250,9 @@ public class NodeMgr implements INodeMgr {
                     it.remove();
                 }
             }
-        } catch (Throwable e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
-            p2pLOG.debug("timeoutOutbound throw ", e.getMessage());
+            p2pLOG.debug("timeoutOutbound IllegalStateException ", e.getMessage());
         }
     }
 
@@ -372,9 +372,9 @@ public class NodeMgr implements INodeMgr {
                     it.remove();
                 }
             }
-        } catch (Throwable e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
-            p2pLOG.debug("timeoutInbound throw ", e.getMessage());
+            p2pLOG.debug("timeoutInbound IllegalStateException ", e.getMessage());
         }
     }
 
@@ -406,9 +406,9 @@ public class NodeMgr implements INodeMgr {
                     it.remove();
                 }
             }
-        } catch (Throwable e) {
+        } catch (IllegalStateException e) {
             e.printStackTrace();
-            p2pLOG.debug("timeoutActive throw ", e.getMessage());
+            p2pLOG.debug("timeoutActive IllegalStateException ", e.getMessage());
         }
     }
 
@@ -463,9 +463,9 @@ public class NodeMgr implements INodeMgr {
             if (node != null) {
                 node.getPeerMetric().ban();
             }
-        } catch (Exception e) {
+        } catch (NullPointerException e) {
             e.printStackTrace();
-            p2pLOG.error("p2p-ban exception {}", e.getMessage());
+            p2pLOG.error("p2p-ban null exception {}", e.getMessage());
         }
     }
 }
