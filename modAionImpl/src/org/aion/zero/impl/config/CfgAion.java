@@ -49,7 +49,7 @@ public final class CfgAion extends Cfg {
 
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
 
-    private CfgAion() {
+    public CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
         this.net = new CfgNet();
@@ -153,20 +153,11 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    @Override
-    public boolean fromXML() {
+    public boolean fromXml(XMLStreamReader sr) throws XMLStreamException {
         boolean shouldWriteBackToFile = false;
-        File cfgFile = new File(CONF_FILE_PATH);
-        if(!cfgFile.exists())
-            return false;
-        XMLInputFactory input = XMLInputFactory.newInstance();
-        FileInputStream fis;
-        try {
-            fis = new FileInputStream(cfgFile);
-            XMLStreamReader sr = input.createXMLStreamReader(fis);
-            loop: while (sr.hasNext()) {
-                int eventType = sr.next();
-                switch (eventType) {
+        loop: while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
@@ -219,9 +210,25 @@ public final class CfgAion extends Cfg {
                         break loop;
                     else
                         break;
-                }
             }
+        }
+        return shouldWriteBackToFile;
+    }
+
+    @Override
+    public boolean fromXML() {
+        boolean shouldWriteBackToFile = false;
+        File cfgFile = new File(CONF_FILE_PATH);
+        if(!cfgFile.exists())
+            return false;
+        XMLInputFactory input = XMLInputFactory.newInstance();
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream(cfgFile);
+            XMLStreamReader sr = input.createXMLStreamReader(fis);
+            shouldWriteBackToFile = fromXml(sr);
             closeFileInputStream(fis);
+
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
             System.exit(1);

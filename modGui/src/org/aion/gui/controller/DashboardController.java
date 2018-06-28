@@ -1,6 +1,7 @@
 package org.aion.gui.controller;
 
 import com.google.common.eventbus.Subscribe;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -21,6 +22,9 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.os.KernelLauncher;
 import org.slf4j.Logger;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -178,5 +182,14 @@ public class DashboardController extends AbstractController {
     private void disableLaunchTerminateButtons() {
         launchKernelButton.setDisable(true);
         terminateKernelButton.setDisable(true);
+    }
+
+    public void configKernel(MouseEvent mouseEvent) {
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.edit(new File("/home/sergiu/repos/aion/config/config.xml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

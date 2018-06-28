@@ -19,6 +19,7 @@
         <pathelement location="${dir.lib}/../aion_api/pack/modAionApi.jar" />
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
         <pathelement location="${dir.lib}/guava-19.0.jar" />
+        <pathelement location="${dir.lib}/richtextfx-fat-0.9.0.jar" />
     </path>
 
     <!-- Test dependencies -->
@@ -37,9 +38,9 @@
         <!-- only used by integration-test -->
 		<pathelement location="${dir.lib}/testfx-core-4.0.13-alpha.jar" />
 		<pathelement location="${dir.lib}/testfx-junit-4.0.13-alpha.jar" />
+        <pathelement location="${dir.lib}/openjfx-monocle-jdk-9+181.jar" /> 
         <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar" />
         <pathelement location="${dir.lib}/../aion_api/lib/gson-2.7.jar" /> <!-- hmm... -->
-        <pathelement location="${dir.lib}/openjfx-monocle-jdk-9+181.jar" /> <!-- hmm... -->
         <pathelement location="${dir.mod}/modAion.jar"/>
         <pathelement location="${dir.mod}/modDbImpl.jar"/>
         <pathelement location="${dir.mod}/modDbImpl.jar"/>

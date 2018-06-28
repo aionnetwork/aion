@@ -1,10 +1,12 @@
 package org.aion.gui.controller;
 
 import javafx.util.Callback;
+import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
+import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.slf4j.Logger;
 
@@ -30,6 +32,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private KernelUpdateTimer kernelUpdateTimer;
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
+    private Cfg cfg;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -53,7 +56,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     syncInfoDto
             ));
             put(SettingsController.class, () -> new SettingsController(
-                    kernelConnection));
+                    new ConfigManipulator(cfg, kernelLauncher)
+            ));
             /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
                     kernelConnection));
             put(PeerCountController.class, () -> new PeerCountController(
@@ -175,9 +179,18 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     }
 
     /**
-     * @return the SyncInfoDto used by this factory
+     * @param cfg sets the cfg used by this factory
+     * @return this
      */
-    public SyncInfoDto getSyncInfoDto() {
-        return syncInfoDto;
+    public ControllerFactory withCfg(Cfg cfg) {
+        this.cfg = cfg;
+        return this;
+    }
+
+    /**
+     * @return the cfg used by this factory
+     */
+    public Cfg getCfg() {
+        return cfg;
     }
 }

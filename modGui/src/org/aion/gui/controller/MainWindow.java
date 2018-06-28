@@ -12,6 +12,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.aion.gui.events.ErrorEvent;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
@@ -76,6 +77,7 @@ public class MainWindow extends Application {
     private final KernelUpdateTimer timer;
     private final KernelLauncher kernelLauncher;
 
+    private Scene scene;
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
     private static final String TITLE = "Aion Kernel";
@@ -110,6 +112,7 @@ public class MainWindow extends Application {
 
         Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
+        this.scene = scene;
 
         stage.setOnCloseRequest(t -> shutDown());
 
@@ -122,7 +125,6 @@ public class MainWindow extends Application {
 
         // Set up event bus
         registerEventBusConsumer();
-
         kernelLauncher.tryResume();
     }
 
@@ -137,6 +139,7 @@ public class MainWindow extends Application {
                 .withTimer(timer)
                 .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc))
                 .withSyncInfoDto(new SyncInfoDto(kc))
+                .withCfg(CfgAion.inst())
         );
         return loader;
     }
@@ -215,4 +218,5 @@ public class MainWindow extends Application {
     public Scene getScene() {
         return stage.getScene();
     }
+
 }
