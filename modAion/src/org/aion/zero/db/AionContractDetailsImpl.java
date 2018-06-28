@@ -29,10 +29,13 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.vm.IDataWord;
+import org.aion.base.vm.IDataWord.WordType;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -45,7 +48,7 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
-public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
+public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
 
     private IByteArrayKeyValueStore dataSource;
 
@@ -80,8 +83,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public void put(DataWord key, DataWord value) {
-        if (value.equals(DataWord.ZERO)) {
+    public void put(IDataWord key, IDataWord value) {
+        WordType vType = value.getType();
+
+        if (value.equals(vType)) {
             storageTrie.delete(key.getData());
         } else {
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
@@ -92,8 +97,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public DataWord get(DataWord key) {
-        DataWord result = DataWord.ZERO;
+    public IDataWord get(IDataWord key) {
+        WordType kType = key.getType();
+        IDataWord result = (kType.equals(WordType.DATA_WORD)) ? DataWord.ZERO : DoubleDataWord.ZERO;
 
         byte[] data = storageTrie.get(key.getData());
         if (data.length > 0) {
@@ -174,13 +180,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-        Map<DataWord, DataWord> storage = new HashMap<>();
+    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
+        Map<IDataWord, IDataWord> storage = new HashMap<>();
         if (keys == null) {
             throw new IllegalArgumentException("Input keys can't be null");
         } else {
-            for (DataWord key : keys) {
-                DataWord value = get(key);
+            for (IDataWord key : keys) {
+                IDataWord value = get(key);
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
@@ -194,15 +200,15 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
         for (int i = 0; i < storageKeys.size(); ++i) {
             put(storageKeys.get(i), storageValues.get(i));
         }
     }
 
     @Override
-    public void setStorage(Map<DataWord, DataWord> storage) {
-        for (DataWord key : storage.keySet()) {
+    public void setStorage(Map<IDataWord, IDataWord> storage) {
+        for (IDataWord key : storage.keySet()) {
             put(key, storage.get(key));
         }
     }
@@ -244,7 +250,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public IContractDetails<DataWord> getSnapshotTo(byte[] hash) {
+    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
 
         IByteArrayKeyValueStore keyValueDataSource = this.storageTrie.getCache().getDb();
 

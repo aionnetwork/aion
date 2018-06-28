@@ -37,6 +37,7 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
 
     public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 
+    private static final WordType wType = WordType.DATA_WORD;
     public static final DataWord ZERO = new DataWord(0);
     public static final DataWord ONE = new DataWord(1);
     public static final int BYTES = 16;
@@ -86,10 +87,12 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         this(wrapper.getData());
     }
 
+    @Override
     public byte[] getData() {
         return data;
     }
 
+    @Override
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);
     }
@@ -118,6 +121,7 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         return v;
     }
 
+    @Override
     public boolean isZero() {
         for (int i = 0; i < BYTES; i++) {
             if (data[BYTES - 1 - i] != 0) {
@@ -133,7 +137,8 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     }
 
 
-    public DataWord clone() {
+    @Override
+    public DataWord copy() {
         byte[] bs = new byte[BYTES];
         System.arraycopy(data, 0, bs, 0, BYTES);
         return new DataWord(bs);
@@ -163,5 +168,8 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     public String toString() {
         return Hex.toHexString(data);
     }
+
+    @Override
+    public WordType getType() { return wType; }
 
 }
