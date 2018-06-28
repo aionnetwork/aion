@@ -53,7 +53,7 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  *      periodAt -- checks the period that a TRS contract is in at a specific block.
  *      availableForWithdrawalAt -- checks the fraction of total withdrawable funds for a contract.
  */
-public class TRSqueryContract extends StatefulPrecompiledContract {
+public final class TRSqueryContract extends StatefulPrecompiledContract {
     private final Address caller;
 
     /**

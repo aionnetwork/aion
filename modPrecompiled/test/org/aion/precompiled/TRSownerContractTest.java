@@ -80,13 +80,11 @@ public class TRSownerContractTest {
 
         Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
 
-        byte[] specKey = new byte[DataWord.BYTES];
-        specKey[0] = (byte) 0xC0;
-        DataWord specs = (DataWord) repo.getStorageValue(contract, new DataWord(specKey));
+        DataWord specs = (DataWord) repo.getStorageValue(contract, getSpecKey());
         byte[] specsBytes = specs.getData();
         specsBytes[14] = (byte) 0x1;
 
-        repo.addStorageRow(contract, new DataWord(specKey), new DataWord(specsBytes));
+        repo.addStorageRow(contract, getSpecKey(), new DataWord(specsBytes));
         repo.flush();
         return contract;
     }
@@ -132,11 +130,11 @@ public class TRSownerContractTest {
     // Returns the address of the owner of the TRS contract given by the address contract.
     private Address fetchOwner(Address contract) {
         byte[] key1 = new byte[DataWord.BYTES];
-        key1[0] = (byte) 0x80;
+        key1[0] = (byte) 0xF0;
         DataWord value1 = (DataWord) repo.getStorageValue(contract, new DataWord(key1));
 
         byte[] key2 = new byte[DataWord.BYTES];
-        key2[0] = (byte) 0x80;
+        key2[0] = (byte) 0xF0;
         key2[DataWord.BYTES - 1] = (byte) 0x01;
         DataWord value2 = (DataWord) repo.getStorageValue(contract, new DataWord(key2));
 
@@ -187,7 +185,7 @@ public class TRSownerContractTest {
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.
     private DataWord getSpecKey() {
         byte[] specsKey = new byte[DataWord.BYTES];
-        specsKey[0] = (byte) 0xC0;
+        specsKey[0] = (byte) 0xE0;
         return new DataWord(specsKey);
     }
 

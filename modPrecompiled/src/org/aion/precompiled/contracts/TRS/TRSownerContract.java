@@ -34,7 +34,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
 
 /**
  * The TRSownerContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -55,15 +54,11 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  *      create -- creates a new public TRS contract.
  *      lock -- locks the TRS contract so that no more deposits may be made.
  *      start -- starts the distribution of the savings in the TRS contract.
- *      mint -- informs the TRS contract about tokens that were minted to it on behalf of a depositor.
  *      nullify -- disables the TRS contract.
+ *      mint -- informs the TRS contract about tokens that were minted to it on behalf of a depositor.
  */
-public class TRSownerContract extends StatefulPrecompiledContract {
-    // grab AION from CfgAion later
-    private static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+public final class TRSownerContract extends AbstractTRS {
     private static final long COST = 21000L;    // temporary.
-    private static final byte TRS_PREFIX = (byte) 0xC0;
-    private final Address caller;
 
     /**
      * Constructs a new TRSownerContract that will use track as the database cache to update its
@@ -76,11 +71,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
     public TRSownerContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
-        super(track);
-        if (caller == null) {
-            throw new NullPointerException("Construct TRSownerContract with null caller.");
-        }
-        this.caller = caller;
+        super(track, caller);
     }
 
     /**
@@ -222,7 +213,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         // If request for a test contract, verify caller is Aion.
         boolean isTestContract = (deposit == 2 || deposit == 3);
-        if (isTestContract && !this.caller.equals(AION)) {
+        if (isTestContract && !caller.equals(AION)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -257,10 +248,10 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         }
 
         // All checks OK. Generate contract address, save the new contract & return to caller.
-        byte[] ownerNonce = track.getNonce(this.caller).toByteArray();
+        byte[] ownerNonce = track.getNonce(caller).toByteArray();
         byte[] hashInfo = new byte[ownerNonce.length + Address.ADDRESS_LEN];
         System.arraycopy(ownerNonce, 0, hashInfo, 0, ownerNonce.length);
-        System.arraycopy(this.caller.toBytes(), 0, hashInfo, ownerNonce.length, Address.ADDRESS_LEN);
+        System.arraycopy(caller.toBytes(), 0, hashInfo, ownerNonce.length, Address.ADDRESS_LEN);
         byte[] trsAddr = HashUtil.h256(hashInfo);
         trsAddr[0] = TRS_PREFIX;
         Address contract = new Address(trsAddr);
@@ -296,7 +287,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         // The caller must also be the owner of this contract.
         Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
-        if (!this.caller.equals(fetchContractOwner(contract))) {
+        if (!caller.equals(fetchContractOwner(contract))) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -344,7 +335,7 @@ public class TRSownerContract extends StatefulPrecompiledContract {
 
         // The caller must also be the owner of this contract.
         Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
-        if (!this.caller.equals(fetchContractOwner(contract))) {
+        if (!caller.equals(fetchContractOwner(contract))) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -398,16 +389,16 @@ public class TRSownerContract extends StatefulPrecompiledContract {
     private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
+        // First, save the "specifications" meta-data for this contract.
+
         // "constants"
         final int indexTest = 9;    // note: indexTest == length of percent
         final int indexDepo = 10;
         final int indexPrecision = 11;
         final int indexPeriods = 12;
-        final int indexLocked = 14; // if this changes update isContractLocked & setLock
-        final int indexLive = 15;   // if this changes update isContractLive & setLive
 
         byte[] specKey = new byte[DataWord.BYTES];
-        specKey[0] = (byte) 0xC0;
+        specKey[0] = SPECS_CODE;
 
         byte[] specValue = new byte[DataWord.BYTES];
         byte[] percentBytes = percent.toByteArray();
@@ -418,12 +409,23 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         specValue[indexPrecision] = (byte) precision;
         specValue[indexPeriods] = (byte) ((periods >> Byte.SIZE) & 0xFF);
         specValue[indexPeriods + 1] = (byte) (periods & 0xFF);
-        specValue[indexLocked] = (byte) 0x0; // sanity
-        specValue[indexLive] = (byte) 0x0; // sanity
+        specValue[LOCK_OFFSET] = (byte) 0x0; // sanity
+        specValue[LIVE_OFFSET] = (byte) 0x0; // sanity
 
         track.createAccount(contract);
         saveContractOwner(contract);
         track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+
+        // Second, save the deposits meta-data for this contract.
+        byte[] depositsKey = new byte[DataWord.BYTES];
+        depositsKey[0] = DEPOSITS_CODE;
+
+        // Last 64 bits of value is the pointer to the head of the list. Set the leftmost of these
+        // 64 bits to 1 to indicate 'null' or no head, since no deposits yet.
+        byte[] depositsValue = new byte[DataWord.BYTES];
+        depositsValue[DEPOSITS_ADDR_SPACE] = (byte) 0x80;
+
+        track.addStorageRow(contract, new DataWord(depositsKey), new DataWord(depositsValue));
         track.flush();
     }
 
@@ -444,11 +446,11 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         byte[] addr2 = Arrays.copyOfRange(caller.toBytes(), DataWord.BYTES, Address.ADDRESS_LEN);
 
         byte[] key1 = new byte[DataWord.BYTES];
-        key1[0] = (byte) 0x80;
+        key1[0] = OWNER_CODE;
         track.addStorageRow(contract, new DataWord(key1), new DataWord(addr1));
 
         byte[] key2 = new byte[DataWord.BYTES];
-        key2[0] = (byte) 0x80;
+        key2[0] = OWNER_CODE;
         key2[DataWord.BYTES - 1] = (byte) 0x01;
         track.addStorageRow(contract, new DataWord(key2), new DataWord(addr2));
     }
@@ -468,61 +470,19 @@ public class TRSownerContract extends StatefulPrecompiledContract {
         byte[] owner = new byte[Address.ADDRESS_LEN];
 
         byte[] key1 = new byte[DataWord.BYTES];
-        key1[0] = (byte) 0x80;
+        key1[0] = OWNER_CODE;
         IDataWord half1 = track.getStorageValue(contract, new DataWord(key1));
         if (half1 == null) { return null; }
         System.arraycopy(half1.getData(), 0, owner, 0, DataWord.BYTES);
 
         byte[] key2 = new byte[DataWord.BYTES];
-        key2[0] = (byte) 0x80;
+        key2[0] = OWNER_CODE;
         key2[DataWord.BYTES - 1] = (byte) 0x01;
         IDataWord half2 = track.getStorageValue(contract, new DataWord(key2));
         if (half2 == null) { return null; }
         System.arraycopy(half2.getData(), 0, owner, DataWord.BYTES, DataWord.BYTES);
 
         return new Address(owner);
-    }
-
-    /**
-     * Returns the contract specifications for the TRS contract whose address is contract if this is
-     * a valid contract address.
-     *
-     * Returns null if contract is not a valid TRS contract address and thus there are no specs to
-     * fetch.
-     *
-     * @param contract The TRS contract address.
-     * @return a DataWord wrapper of the contract specifications or null if not a TRS contract.
-     */
-    private IDataWord fetchContractSpecs(Address contract) {
-        if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
-
-        byte[] specKey = new byte[DataWord.BYTES];
-        specKey[0] = (byte) 0xC0;
-        return track.getStorageValue(contract, new DataWord(specKey));
-    }
-
-    /**
-     * Returns true only if the is-locked bit is set in the byte array specs -- assumption: specs is
-     * the byte array representing a contract's specifications.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is locked.
-     */
-    private boolean isContractLocked(byte[] specs) {
-        final int indexLocked = 14;
-        return specs[indexLocked] == (byte) 0x1;
-    }
-
-    /**
-     * Returns true only if the is-live bit is set in the byte array specs -- assumption: specs is
-     * the byte array representing a contract's specifications.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is live.
-     */
-    private boolean isContractLive(byte[] specs) {
-        final int indexLive = 15;
-        return specs[indexLive] == (byte) 0x1;
     }
 
     /**
@@ -534,13 +494,11 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      * @param contract The address of the TRS contract.
      */
     private void setLock(Address contract) {
-        final int indexLocked = 14;
-
         byte[] specKey = new byte[DataWord.BYTES];
-        specKey[0] = (byte) 0xC0;
+        specKey[0] = SPECS_CODE;
 
         byte[] specValue = fetchContractSpecs(contract).getData();
-        specValue[indexLocked] = (byte) 0x1;
+        specValue[LOCK_OFFSET] = (byte) 0x1;
 
         track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
         track.flush();
@@ -555,13 +513,11 @@ public class TRSownerContract extends StatefulPrecompiledContract {
      * @param contract The address of the TRS contract.
      */
     private void setLive(Address contract) {
-        final int indexLive = 15;
-
         byte[] specKey = new byte[DataWord.BYTES];
-        specKey[0] = (byte) 0xC0;
+        specKey[0] = SPECS_CODE;
 
         byte[] specValue = fetchContractSpecs(contract).getData();
-        specValue[indexLive] = (byte) 0x1;
+        specValue[LIVE_OFFSET] = (byte) 0x1;
 
         track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
         track.flush();
