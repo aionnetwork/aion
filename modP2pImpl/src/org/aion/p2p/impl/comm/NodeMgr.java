@@ -381,15 +381,13 @@ public class NodeMgr implements INodeMgr {
     private void timeoutActive() {
 
         long now = System.currentTimeMillis();
-        OptionalDouble average;
-        synchronized (activeNodes) {
-            average = activeNodes.values().parallelStream()
-                .mapToLong(n -> now - n.getTimestamp()).average();
-        }
+        OptionalDouble average = activeNodes.values().parallelStream()
+            .mapToLong(n -> now - n.getTimestamp()).average();
+
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("average-delay={}ms", (long)average.orElse(0));
+            p2pLOG.debug("average-delay={}ms", (long) average.orElse(0));
         }
 
         try {
@@ -403,7 +401,8 @@ public class NodeMgr implements INodeMgr {
                     it.remove();
                 } else if (!node.getChannel().isConnected()) {
                     p2pMgr.closeSocket(node.getChannel(),
-                        "channel-already-closed node=" + node.getIdShort() + " ip=" + node.getIpStr());
+                        "channel-already-closed node=" + node.getIdShort() + " ip=" + node
+                            .getIpStr());
                     it.remove();
                 }
             }
@@ -416,14 +415,13 @@ public class NodeMgr implements INodeMgr {
     public void dropActive(int nodeIdHash, String _reason) {
 
         INode node = null;
-        synchronized (activeNodes) {
-            try {
-                node = activeNodes.remove(nodeIdHash);
-            } catch (Exception e) {
-                e.printStackTrace();
-                p2pLOG.debug("dropActive exception", e.getMessage());
-            }
+        try {
+            node = activeNodes.remove(nodeIdHash);
+        } catch (Exception e) {
+            e.printStackTrace();
+            p2pLOG.debug("dropActive exception", e.getMessage());
         }
+
         if (node == null) {
             return;
         }
