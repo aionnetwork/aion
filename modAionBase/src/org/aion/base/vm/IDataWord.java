@@ -45,7 +45,4 @@ public interface IDataWord {
     // Returns true only if the underlying byte array consists only of zero bits.
     boolean isZero();
 
-    // Returns the data.
-    byte[] getData();
-
 }

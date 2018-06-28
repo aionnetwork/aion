@@ -5,7 +5,7 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 
@@ -83,9 +83,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     IDataWord fetchContractSpecs(Address contract) {
         if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
 
-        byte[] specKey = new byte[DataWord.BYTES];
+        byte[] specKey = new byte[DoubleDataWord.BYTES];
         specKey[0] = SPECS_CODE;
-        return track.getStorageValue(contract, new DataWord(specKey));
+        return track.getStorageValue(contract, new DoubleDataWord(specKey));
     }
 
 }

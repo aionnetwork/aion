@@ -31,7 +31,7 @@ import org.aion.base.vm.IDataWord;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 
@@ -368,16 +368,16 @@ public final class TRSownerContract extends AbstractTRS {
      *
      * All preconditions on the parameters are assumed already verified.
      *
-     * The meta-data for the contract is stored in the database using 16-byte words as follows:
-     *   key for first half of owner address: 80 ...
-     *   key for second half of owner address: 80 ... 01
-     *   key for contract specs: C0 ...
+     * The following meta-data for the contract is stored in the database using 32-byte words:
      *
-     * where ... means all unmentioned bits replaced by this ellipsis are 0.
+     *   ownership -- The key is 32 zero bytes with its leftmost byte set to OWNER_CODE
+     *                The value is the 32 byte address of the contract owner.
      *
-     * The 16-byte value for the contract specs is formatted as follows:
-     *   | 9b - percentage | 1b - isTest | 1b - isDirectDeposit | 1b - precision | 2b - periods |
-     *   | 1b - isLocked | 1b - isLive |
+     *   specifications -- The key is 32 zero bytes with its leftmost byte set to SPECS_CODE
+     *                     The value is a 32 byte array formatted as follows:
+     *
+     *     | 9b - percentage | 1b - isTest | 1b - isDirectDeposit | 1b - precision | 2b - periods |
+     *     | 1b - isLocked | 1b - isLive |
      *
      * @param contract The address of the new TRS contract.
      * @param isTest True only if this new TRS contract is a test contract.
@@ -397,10 +397,10 @@ public final class TRSownerContract extends AbstractTRS {
         final int indexPrecision = 11;
         final int indexPeriods = 12;
 
-        byte[] specKey = new byte[DataWord.BYTES];
+        byte[] specKey = new byte[DoubleDataWord.BYTES];
         specKey[0] = SPECS_CODE;
 
-        byte[] specValue = new byte[DataWord.BYTES];
+        byte[] specValue = new byte[DoubleDataWord.BYTES];
         byte[] percentBytes = percent.toByteArray();
         System.arraycopy(percentBytes, 0, specValue, indexTest - percentBytes.length,
             percentBytes.length);
@@ -414,18 +414,18 @@ public final class TRSownerContract extends AbstractTRS {
 
         track.createAccount(contract);
         saveContractOwner(contract);
-        track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+        track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
 
         // Second, save the deposits meta-data for this contract.
-        byte[] depositsKey = new byte[DataWord.BYTES];
+        byte[] depositsKey = new byte[DoubleDataWord.BYTES];
         depositsKey[0] = DEPOSITS_CODE;
 
         // Last 64 bits of value is the pointer to the head of the list. Set the leftmost of these
         // 64 bits to 1 to indicate 'null' or no head, since no deposits yet.
-        byte[] depositsValue = new byte[DataWord.BYTES];
+        byte[] depositsValue = new byte[DoubleDataWord.BYTES];
         depositsValue[DEPOSITS_ADDR_SPACE] = (byte) 0x80;
 
-        track.addStorageRow(contract, new DataWord(depositsKey), new DataWord(depositsValue));
+        track.addStorageRow(contract, new DoubleDataWord(depositsKey), new DoubleDataWord(depositsValue));
         track.flush();
     }
 
@@ -442,17 +442,9 @@ public final class TRSownerContract extends AbstractTRS {
      * @param contract The contract to save the owner address to.
      */
     private void saveContractOwner(Address contract) {
-        byte[] addr1 = Arrays.copyOfRange(caller.toBytes(), 0, DataWord.BYTES);
-        byte[] addr2 = Arrays.copyOfRange(caller.toBytes(), DataWord.BYTES, Address.ADDRESS_LEN);
-
-        byte[] key1 = new byte[DataWord.BYTES];
-        key1[0] = OWNER_CODE;
-        track.addStorageRow(contract, new DataWord(key1), new DataWord(addr1));
-
-        byte[] key2 = new byte[DataWord.BYTES];
-        key2[0] = OWNER_CODE;
-        key2[DataWord.BYTES - 1] = (byte) 0x01;
-        track.addStorageRow(contract, new DataWord(key2), new DataWord(addr2));
+        byte[] key = new byte[DoubleDataWord.BYTES];
+        key[0] = OWNER_CODE;
+        track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(caller.toBytes()));
     }
 
     /**
@@ -467,22 +459,13 @@ public final class TRSownerContract extends AbstractTRS {
      */
     private Address fetchContractOwner(Address contract) {
         if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
-        byte[] owner = new byte[Address.ADDRESS_LEN];
 
-        byte[] key1 = new byte[DataWord.BYTES];
-        key1[0] = OWNER_CODE;
-        IDataWord half1 = track.getStorageValue(contract, new DataWord(key1));
-        if (half1 == null) { return null; }
-        System.arraycopy(half1.getData(), 0, owner, 0, DataWord.BYTES);
+        byte[] key = new byte[DoubleDataWord.BYTES];
+        key[0] = OWNER_CODE;
+        IDataWord owner = track.getStorageValue(contract, new DoubleDataWord(key));
+        if (owner == null) { return null; }
 
-        byte[] key2 = new byte[DataWord.BYTES];
-        key2[0] = OWNER_CODE;
-        key2[DataWord.BYTES - 1] = (byte) 0x01;
-        IDataWord half2 = track.getStorageValue(contract, new DataWord(key2));
-        if (half2 == null) { return null; }
-        System.arraycopy(half2.getData(), 0, owner, DataWord.BYTES, DataWord.BYTES);
-
-        return new Address(owner);
+        return new Address(owner.getData());
     }
 
     /**
@@ -494,13 +477,13 @@ public final class TRSownerContract extends AbstractTRS {
      * @param contract The address of the TRS contract.
      */
     private void setLock(Address contract) {
-        byte[] specKey = new byte[DataWord.BYTES];
+        byte[] specKey = new byte[DoubleDataWord.BYTES];
         specKey[0] = SPECS_CODE;
 
         byte[] specValue = fetchContractSpecs(contract).getData();
         specValue[LOCK_OFFSET] = (byte) 0x1;
 
-        track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+        track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
         track.flush();
     }
 
@@ -513,13 +496,13 @@ public final class TRSownerContract extends AbstractTRS {
      * @param contract The address of the TRS contract.
      */
     private void setLive(Address contract) {
-        byte[] specKey = new byte[DataWord.BYTES];
+        byte[] specKey = new byte[DoubleDataWord.BYTES];
         specKey[0] = SPECS_CODE;
 
         byte[] specValue = fetchContractSpecs(contract).getData();
         specValue[LIVE_OFFSET] = (byte) 0x1;
 
-        track.addStorageRow(contract, new DataWord(specKey), new DataWord(specValue));
+        track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
         track.flush();
     }
 
