@@ -381,7 +381,7 @@ public class NodeMgr implements INodeMgr {
     private void timeoutActive() {
 
         long now = System.currentTimeMillis();
-        OptionalDouble average = activeNodes.values().parallelStream()
+        OptionalDouble average = activeNodes.values().stream()
             .mapToLong(n -> now - n.getTimestamp()).average();
 
         double timeout = average.orElse(4000) * 5;
