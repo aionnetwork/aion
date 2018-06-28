@@ -44,9 +44,9 @@ import org.aion.base.type.Address;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.vm.IDataWord;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.mcf.vm.types.DataWord;
 
 /** Detail data storage , */
 public class DetailsDataStore<
@@ -84,7 +84,7 @@ public class DetailsDataStore<
      * @param key
      * @return
      */
-    public synchronized IContractDetails<DataWord> get(byte[] key) {
+    public synchronized IContractDetails<IDataWord> get(byte[] key) {
 
         ByteArrayWrapper wrappedKey = wrap(key);
         Optional<byte[]> rawDetails = detailsSrc.get(key);
@@ -101,7 +101,7 @@ public class DetailsDataStore<
         }
 
         // Found something from cache or database, return it by decoding it.
-        IContractDetails<DataWord> detailsImpl = repoConfig.contractDetailsImpl();
+        IContractDetails<IDataWord> detailsImpl = repoConfig.contractDetailsImpl();
         detailsImpl.setDataSource(storageDSPrune);
         detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
         // if it is present.
@@ -109,7 +109,7 @@ public class DetailsDataStore<
         return detailsImpl;
     }
 
-    public synchronized void update(Address key, IContractDetails<DataWord> contractDetails) {
+    public synchronized void update(Address key, IContractDetails<IDataWord> contractDetails) {
 
         contractDetails.setAddress(key);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());
@@ -171,7 +171,7 @@ public class DetailsDataStore<
             }
 
             // Decode the details.
-            IContractDetails<DataWord> detailsImpl = repoConfig.contractDetailsImpl();
+            IContractDetails<IDataWord> detailsImpl = repoConfig.contractDetailsImpl();
             detailsImpl.setDataSource(storageDSPrune);
             detailsImpl.decode(rawDetails.get()); // We can safely get as we
             // checked if it is present.
