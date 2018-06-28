@@ -239,17 +239,20 @@ public class NodeMgr implements INodeMgr {
     }
 
     private void timeoutOutBound() {
-        Iterator<Integer> outboundIt = getOutboundNodes().keySet().iterator();
-        while (outboundIt.hasNext()) {
-            int outBound = outboundIt.next();
-            INode node = getOutboundNodes().get(outBound);
-            if (System.currentTimeMillis() - node.getTimestamp()
-                > TIMEOUT_OUTBOUND_NODES) {
-                p2pMgr.closeSocket(
-                    node.getChannel(),
-                    "outbound-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
-                outboundIt.remove();
+        try {
+            Iterator<Map.Entry<Integer, INode>> it = outboundNodes.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<Integer, INode> entry = it.next();
+                if (System.currentTimeMillis() - entry.getValue().getTimestamp()
+                    > TIMEOUT_OUTBOUND_NODES) {
+                    p2pMgr.closeSocket(entry.getValue().getChannel(),
+                        "outbound-timeout ip=" + entry.getValue().getIpStr());
+                    it.remove();
+                }
             }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            p2pLOG.debug("timeoutOutbound throw ", e.getMessage());
         }
     }
 
@@ -358,49 +361,69 @@ public class NodeMgr implements INodeMgr {
     }
 
     void timeoutInbound() {
-        Iterator<Integer> inboundIt = inboundNodes.keySet().iterator();
-        while (inboundIt.hasNext()) {
-            int key = inboundIt.next();
-            INode node = inboundNodes.get(key);
-            if (System.currentTimeMillis() - node.getTimestamp() > TIMEOUT_INBOUND_NODES) {
-                p2pMgr.closeSocket(node.getChannel(), "inbound-timeout ip=" + node.getIpStr());
-                inboundIt.remove();
+        try {
+            Iterator<Map.Entry<Integer, INode>> it = inboundNodes.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<Integer, INode> entry = it.next();
+                if (System.currentTimeMillis() - entry.getValue().getTimestamp()
+                    > TIMEOUT_INBOUND_NODES) {
+                    p2pMgr.closeSocket(entry.getValue().getChannel(),
+                        "inbound-timeout ip=" + entry.getValue().getIpStr());
+                    it.remove();
+                }
             }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            p2pLOG.debug("timeoutInbound throw ", e.getMessage());
         }
     }
 
     private void timeoutActive() {
-        long now = System.currentTimeMillis();
 
-        OptionalDouble average = activeNodes.values().stream()
-            .mapToLong(n -> now - n.getTimestamp()).average();
+        long now = System.currentTimeMillis();
+        OptionalDouble average;
+        synchronized (activeNodes) {
+            average = activeNodes.values().parallelStream()
+                .mapToLong(n -> now - n.getTimestamp()).average();
+        }
         double timeout = average.orElse(4000) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
             p2pLOG.debug("average-delay={}ms", (long)average.orElse(0));
         }
 
-        Iterator<Integer> activeIt = activeNodes.keySet().iterator();
-        while (activeIt.hasNext()) {
-            int key = activeIt.next();
-            INode node = getActiveNode(key);
-
-            if (now - node.getTimestamp() > timeout) {
-                p2pMgr.closeSocket(node.getChannel(),
-                    "active-timeout node=" + node.getIdShort() + " ip=" + node.getIpStr());
-                activeIt.remove();
+        try {
+            Iterator<Map.Entry<Integer, INode>> it = activeNodes.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<Integer, INode> entry = it.next();
+                INode node = entry.getValue();
+                if (now - node.getTimestamp() > timeout) {
+                    p2pMgr.closeSocket(node.getChannel(),
+                        "active-timeout ip=" + node.getIpStr());
+                    it.remove();
+                } else if (!node.getChannel().isConnected()) {
+                    p2pMgr.closeSocket(node.getChannel(),
+                        "channel-already-closed node=" + node.getIdShort() + " ip=" + node.getIpStr());
+                    it.remove();
+                }
             }
-
-            if (!node.getChannel().isConnected()) {
-                p2pMgr.closeSocket(node.getChannel(),
-                    "channel-already-closed node=" + node.getIdShort() + " ip=" + node.getIpStr());
-                activeIt.remove();
-            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            p2pLOG.debug("timeoutActive throw ", e.getMessage());
         }
     }
 
     public void dropActive(int nodeIdHash, String _reason) {
-        INode node = activeNodes.remove(nodeIdHash);
+
+        INode node = null;
+        synchronized (activeNodes) {
+            try {
+                node = activeNodes.remove(nodeIdHash);
+            } catch (Exception e) {
+                e.printStackTrace();
+                p2pLOG.debug("dropActive exception", e.getMessage());
+            }
+        }
         if (node == null) {
             return;
         }
@@ -437,9 +460,14 @@ public class NodeMgr implements INodeMgr {
 
     @Override
     public void ban(int _nodeIdHash) {
-        INode node = activeNodes.get(_nodeIdHash);
-        if (node != null) {
-            node.getPeerMetric().ban();
+        try {
+            INode node = activeNodes.get(_nodeIdHash);
+            if (node != null) {
+                node.getPeerMetric().ban();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            p2pLOG.error("p2p-ban exception {}", e.getMessage());
         }
     }
 }
