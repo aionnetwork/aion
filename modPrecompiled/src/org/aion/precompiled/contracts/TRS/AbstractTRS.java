@@ -22,11 +22,15 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // a specific category easily.
     static final byte OWNER_CODE = (byte) 0xF0;
     static final byte SPECS_CODE = (byte) 0xE0;
-    static final byte DEPOSITS_CODE = (byte) 0xD0;
+    static final byte FUNDS_CODE = (byte) 0xD0;
+    static final byte BALANCE_CODE = (byte) 0xB0;
+    static final byte PREV_DEPOSITOR_CODE = (byte) 0xAF;
+    static final byte TTL_BAL_CODE = (byte) 0x90;
+    static final byte BONUS_CODE = (byte) 0x80;
+    static final byte DEPOSITS_CODE = (byte) 0x70;
 
     static final int LOCK_OFFSET = 14;
     static final int LIVE_OFFSET = 15;
-    static final int DEPOSITS_ADDR_SPACE = 8;
 
     final Address caller;
 

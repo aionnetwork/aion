@@ -29,6 +29,7 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 
@@ -59,6 +60,8 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  */
 public final class TRSuseContract extends AbstractTRS {
     private static final long COST = 21000L;    // temporary.
+
+    //TODO: keys need to be static in AbstractTRS
 
     /**
      * Constructs a new TRSuseContract that will use repo as the database cache to update its
@@ -177,24 +180,121 @@ public final class TRSuseContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        return null;
+        // First, update this depositor's current deposit balance.
+        int numRows = updateBalance(contract, amountBytes, amount);
+
+        // Second, update the linked list or any meta-data.
+        updateDeposit(contract, numRows);
+
+        track.flush();
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**
-     * Saves the newly deposited amount into the contract, mapping the depositor (the caller) to this
-     * amount.
+     * Updates this depositor's current deposit balance. If the depositor has no balance then the
+     * deposited amount will be added. If a balance already exists for this depositor then the new
+     * balance will be equal to the old one plus the amount to be deposited.
      *
-     * If the caller has not yet made a deposit and there is no corresponding mapping in the contract
-     * then a new mapping will be created in contract mapping the caller to amount.
+     * Returns the number of rows used to store the depositor's balance in the repository.
      *
-     * If the caller has already made a deposit before and there is a mapping in the contract for
-     * them then that mapping will be updated so that the caller will be mapped to a balance equal
-     * to the sum of amount and the previously recorded balance.
-     *
-     * This method assumes contract is a valid contract address.
+     * @param contract The TRS contract.
+     * @param amount The amount to deposit for the caller.
      */
-    private void saveDeposit(Address contract, BigInteger amount) {
-        //TODO
+    private int updateBalance(Address contract, byte[] amount, BigInteger amountBI) {
+        int len = amount.length - 1;
+        int numRows = (int) Math.ceil(len / (double) DoubleDataWord.BYTES);
+
+        IDataWord value = track.getStorageValue(contract, new DoubleDataWord(caller.toBytes()));
+        if (value == null) {
+            // Then no entry for this depositor currently exists. We create one.
+            byte[] newBal = new byte[numRows * DoubleDataWord.BYTES];
+            System.arraycopy(amount, 1, newBal, newBal.length - len, len);
+            updateBalanceOverRange(contract, 0, numRows - 1, newBal);
+        } else {
+            // Entry exists, we update it.
+            numRows = (len % DoubleDataWord.BYTES == 0) ? numRows + 1 : numRows;
+            BigInteger currBal = fetchBalance(contract, 0, numRows - 1);
+            BigInteger newBal = currBal.add(amountBI);
+            updateBalanceOverRange(contract, 0, numRows - 1, newBal.toByteArray());
+        }
+        return numRows;
+    }
+
+    /**
+     * Updates the meta-data associated with the current caller's balance. When this call returns
+     * the caller's meta-data will reflect the fact that numRows storage rows are in use to store
+     * the current deposit balance and the linked list joining all depositors will be updated, if
+     * necessary, to include the caller.
+     *
+     * This method does not flush!
+     *
+     * @param contract The contract to update.
+     * @param numRows The number of rows in use to hold the caller's deposit balance.
+     */
+    private void updateDeposit(Address contract, int numRows) {
+        // 1. Check if valid bit is set and if so unset it.
+        // 2. If valid bit was unset no need to update 'next', check if numRows differs, if so update.
+        // 3. If valid bit was set, set 'next' to 'head', set 'prev' to null, place self in 'head',
+        //    check if numRows differs, if so update.
+        byte[] meta = track.getStorageValue(contract, new DoubleDataWord(caller.toBytes())).getData();
+        if ((meta[0] & 0x80) == 0x80) {
+            // Valid bit was set so the caller already exists and has a deposit balance.
+            int oldRows = meta[1];
+            if (numRows != oldRows) {
+                meta[1] = 0x0;
+                meta[1] = (byte) numRows;
+                track.addStorageRow(contract, new DoubleDataWord(caller.toBytes()), new DoubleDataWord(meta));
+            }
+        } else {
+            // Valid bit unset, add caller as head of linked list and update meta-data.
+            byte[] key = new byte[DoubleDataWord.BYTES];
+            key[0] = DEPOSITS_CODE;
+            byte[] next = track.getStorageValue(contract, new DoubleDataWord(key)).getData();
+//            next[0] = AION_PREFIX;
+
+            // Unset the null bit.
+        }
+    }
+
+    /**
+     * Returns the caller's deposit balance by considering only rows in the range [start, stop] in
+     * the storage -- the assumption is that these are valid row indices -- as a BigInteger.
+     *
+     * @param contract The contract to query.
+     * @param start The row starting index.
+     * @param stop The row stopping index.
+     * @return a BigInteger of the balance over the specified range.
+     */
+    private BigInteger fetchBalance(Address contract, int start, int stop) {
+        byte[] bal = new byte[(stop - start) * DoubleDataWord.BYTES];
+        for (int i = stop; i >= start; i--) {
+            byte[] key = new byte[DoubleDataWord.BYTES];
+            key[0] = (byte) (DEPOSITS_CODE | i);
+            byte[] val = track.getStorageValue(contract, new DoubleDataWord(key)).getData();
+            System.arraycopy(val, 0, bal, (i - start) * DoubleDataWord.BYTES, DoubleDataWord.BYTES);
+        }
+        return new BigInteger(bal);
+    }
+
+    /**
+     * Saves, overwriting if necessary, the new balance represented by newBal in the storage over
+     * rows in the range [start, stop]. The assumption is that this range can hold the array.
+     *
+     * This method does not flush!
+     *
+     * @param contract The contract to update.
+     * @param start The row starting index.
+     * @param stop The row stopping index.
+     * @param newBal The byte array of the balance to update over the specified range.
+     */
+    private void updateBalanceOverRange(Address contract, int start, int stop, byte[] newBal) {
+        for (int i = start; i <= stop; i++) {
+            byte[] key = new byte[DoubleDataWord.BYTES];
+            key[0] = (byte) (DEPOSITS_CODE | i);
+            byte[] val = Arrays.copyOfRange(newBal, (i - start) * DoubleDataWord.BYTES,
+                (i + 1 - start) * DoubleDataWord.BYTES);
+            track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(val));
+        }
     }
 
 }

@@ -416,14 +416,14 @@ public final class TRSownerContract extends AbstractTRS {
         saveContractOwner(contract);
         track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
 
-        // Second, save the deposits meta-data for this contract.
+        // Second, save the deposits meta-data for this contract. This meta-data is simply a pointer
+        // to the head of the doubly linked list of depositors.
         byte[] depositsKey = new byte[DoubleDataWord.BYTES];
         depositsKey[0] = DEPOSITS_CODE;
 
-        // Last 64 bits of value is the pointer to the head of the list. Set the leftmost of these
-        // 64 bits to 1 to indicate 'null' or no head, since no deposits yet.
+        // The leftmost bit is the null bit, we set it to 1 to indicate there is no head yet.
         byte[] depositsValue = new byte[DoubleDataWord.BYTES];
-        depositsValue[DEPOSITS_ADDR_SPACE] = (byte) 0x80;
+        depositsValue[0] = (byte) 0x80;
 
         track.addStorageRow(contract, new DoubleDataWord(depositsKey), new DoubleDataWord(depositsValue));
         track.flush();
