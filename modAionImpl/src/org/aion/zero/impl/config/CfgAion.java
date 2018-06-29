@@ -39,7 +39,7 @@ import org.aion.zero.impl.GenesisBlockLoader;
 /**
  * @author chris
  */
-public final class CfgAion extends Cfg {
+public class CfgAion extends Cfg {
 
     protected AionGenesis genesis;
 
@@ -88,10 +88,7 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    public CfgConsensusPow getConsensus() {
-        return (CfgConsensusPow) this.consensus;
-    }
-
+    @Override
     public synchronized AionGenesis getGenesis() {
         if (this.genesis == null)
             setGenesis();

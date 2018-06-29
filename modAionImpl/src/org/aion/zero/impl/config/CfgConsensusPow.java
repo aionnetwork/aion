@@ -42,11 +42,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-public final class CfgConsensusPow extends CfgConsensus {
+public class CfgConsensusPow extends CfgConsensus {
 
     private final CfgEnergyStrategy cfgEnergyStrategy;
 
-    CfgConsensusPow() {
+    protected CfgConsensusPow() {
         this.mining = false;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
         this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors

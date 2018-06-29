@@ -28,6 +28,7 @@ package org.aion.mcf.config;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.zero.impl.config.CfgConsensusPow;
 
 /**
  * @author chris
@@ -128,6 +129,15 @@ public abstract class Cfg {
 
     public String[] getNodes() {
         return this.net.getNodes();
+    }
+
+
+    public CfgConsensusPow getConsensus() {
+        return (CfgConsensusPow) this.consensus;
+    }
+
+    public void setConsensus(CfgConsensusPow _consensusPow) {
+        this.consensus = _consensusPow;
     }
 
     /**
