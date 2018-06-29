@@ -74,11 +74,12 @@ public class TRSuseContractTest extends TRShelpers {
 
     // Returns the maximum amount that can be deposited in a single deposit call.
     private BigInteger getMaxOneTimeDeposit() {
-        byte[] maxDepo = new byte[129];
-        for (int i = 1; i < 129; i++) {
-            maxDepo[i] = (byte) 0xFF;
-        }
-        return new BigInteger(maxDepo);
+        return BigInteger.TWO.pow(1024).subtract(BigInteger.ONE);
+    }
+
+    // Returns the maximum amount that a single account can deposit into a TRS contract.
+    private BigInteger getMaxTotalDeposit() {
+        return BigInteger.TWO.pow(4096).subtract(BigInteger.ONE);
     }
 
     // Returns true only if caller has a positive deposit balance in the TRS contract contract.
@@ -372,17 +373,96 @@ public class TRSuseContractTest extends TRShelpers {
 
     @Test
     public void testDepositMultipleTimes() {
+        BigInteger max = getMaxOneTimeDeposit();
+        Address acct = getNewExistentAccount(max);
+        TRSuseContract trs = newTRSuseContract(acct);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
+        BigInteger amt = new BigInteger("123456");
+        BigInteger left = max;
+        BigInteger depo = BigInteger.ZERO;
+        byte[] input = getDepositInput(contract, amt);
+        for (int i = 0; i < 7; i++) {
+            ContractExecutionResult res = trs.execute(input, COST);
+            assertEquals(ResultCode.SUCCESS, res.getCode());
+            assertEquals(0, res.getNrgLeft());
+            left = left.subtract(amt);
+            depo = depo.add(amt);
+        }
+
+        assertEquals(left, repo.getBalance(acct));
+        assertEquals(depo, fetchDepositBalance(contract, acct));
     }
 
     @Test
-    public void testDepositMaxTotalAmount() {
+    public void testDepositMaxMultipleTimes() {
+        // We do a large number of max deposits. There is no way we can test hitting the absolute
+        // maximum but we can still hit it a good number of times.
+        BigInteger maxTotal = getMaxTotalDeposit();
+        BigInteger max = getMaxOneTimeDeposit();
+        Address acct = getNewExistentAccount(maxTotal);
+        TRSuseContract trs = newTRSuseContract(acct);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
+        BigInteger left = maxTotal;
+        BigInteger depo = BigInteger.ZERO;
+        byte[] input = getMaxDepositInput(contract);
+        for (int i = 0; i < 100; i++) {
+            ContractExecutionResult res = trs.execute(input, COST);
+            assertEquals(ResultCode.SUCCESS, res.getCode());
+            assertEquals(0, res.getNrgLeft());
+            left = left.subtract(max);
+            depo = depo.add(max);
+        }
+
+        assertEquals(left, repo.getBalance(acct));
+        assertEquals(depo, fetchDepositBalance(contract, acct));
+        System.out.println(left);
     }
 
     @Test
     public void testDepositMultipleDepositors() {
+        BigInteger max = getMaxOneTimeDeposit();
+        Address acct1 = getNewExistentAccount(max);
+        Address acct2 = getNewExistentAccount(max);
+        Address acct3 = getNewExistentAccount(max);
+        BigInteger acct1Bal = max;
+        BigInteger acct2Bal = max;
+        BigInteger acct3Bal = max;
 
+        TRSuseContract trs1 = newTRSuseContract(acct1);
+        TRSuseContract trs2 = newTRSuseContract(acct2);
+        TRSuseContract trs3 = newTRSuseContract(acct3);
+        Address contract1 = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
+        Address contract2 = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
+        Address contract3 = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
+
+        BigInteger depo1 = new BigInteger("123456");
+        BigInteger depo2 = new BigInteger("4363123");
+        BigInteger depo3 = new BigInteger("325");
+        BigInteger depo4 = new BigInteger("8597455434");
+
+        byte[] input1 = getDepositInput(contract1, depo1);
+        byte[] input2 = getDepositInput(contract2, depo2);
+        byte[] input3 = getDepositInput(contract3, depo3);
+        byte[] input4 = getDepositInput(contract1, depo4);
+
+        trs1.execute(input1, COST);
+        trs2.execute(input2, COST);
+        trs3.execute(input3, COST);
+        trs1.execute(input4, COST);
+
+        acct1Bal = acct1Bal.subtract(depo1).subtract(depo4);
+        acct2Bal = acct2Bal.subtract(depo2);
+        acct3Bal = acct3Bal.subtract(depo3);
+
+        assertEquals(acct1Bal, repo.getBalance(acct1));
+        assertEquals(acct2Bal, repo.getBalance(acct2));
+        assertEquals(acct3Bal, repo.getBalance(acct3));
+
+        assertEquals(depo1.add(depo4), fetchDepositBalance(contract1, acct1));
+        assertEquals(depo2, fetchDepositBalance(contract2, acct2));
+        assertEquals(depo3, fetchDepositBalance(contract3, acct3));
     }
 
     @Test

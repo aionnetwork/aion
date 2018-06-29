@@ -189,6 +189,10 @@ public final class TRSuseContract extends AbstractTRS {
         // then update the deposit meta-data (linked list, count, etc.)
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             int numRows = updateBalance(contract, amountBytes, amount);
+            if (numRows > 16) {
+                // This is our max. In practice no balance should ever get this large.
+                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            }
             updateDeposit(contract, numRows);
             track.addBalance(caller, amount.negate());
             track.flush();
@@ -214,9 +218,10 @@ public final class TRSuseContract extends AbstractTRS {
 
         if ((value != null) && ((value.getData()[0] & 0x0F) != 0x00)) {
             // Then an entry exists and its valid bit is set, so the caller has an existing deposit.
-            numRows = (len % DoubleDataWord.BYTES == 0) ? numRows + 1 : numRows;
-            BigInteger currBal = fetchBalance(contract, 0, numRows - 1);
+            int currRows = (value.getData()[0] & 0x0F);
+            BigInteger currBal = fetchBalance(contract, 0, currRows - 1);
             BigInteger newBal = currBal.add(amountBI);
+            numRows = (len % DoubleDataWord.BYTES == 0) ? numRows + 1 : numRows;
             updateBalanceOverRange(contract, 0, numRows - 1, newBal.toByteArray());
         } else {
             // Then no entry for this depositor currently exists. We create one.
@@ -258,7 +263,6 @@ public final class TRSuseContract extends AbstractTRS {
                 callerVal[0] = (byte) (callerVal[0] & 0x0F);
                 System.arraycopy(listData, 1, callerVal, 1, Address.ADDRESS_LEN - 1);
             }
-            track.addStorageRow(contract, new DoubleDataWord(caller.toBytes()), new DoubleDataWord(callerVal));
 
             // Set caller's previous to null.
             byte[] prevKey = new byte[DoubleDataWord.BYTES];
@@ -272,6 +276,7 @@ public final class TRSuseContract extends AbstractTRS {
             System.arraycopy(caller.toBytes(), 1, listData, 1, Address.ADDRESS_LEN - 1);
             track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(listData));
         }
+        track.addStorageRow(contract, new DoubleDataWord(caller.toBytes()), new DoubleDataWord(callerVal));
     }
 
     /**
@@ -284,12 +289,12 @@ public final class TRSuseContract extends AbstractTRS {
      * @return a BigInteger of the balance over the specified range.
      */
     private BigInteger fetchBalance(Address contract, int start, int stop) {
-        byte[] bal = new byte[(stop - start) * DoubleDataWord.BYTES];
-        for (int i = stop; i >= start; i--) {
+        byte[] bal = new byte[(stop - start + 1) * DoubleDataWord.BYTES + 1];
+        for (int i = start; i <= stop; i++) {
             byte[] key = new byte[DoubleDataWord.BYTES];
             key[0] = (byte) (BALANCE_CODE | i);
             byte[] val = track.getStorageValue(contract, new DoubleDataWord(key)).getData();
-            System.arraycopy(val, 0, bal, (i - start) * DoubleDataWord.BYTES, DoubleDataWord.BYTES);
+            System.arraycopy(val, 0, bal, (i - start) * DoubleDataWord.BYTES + 1, DoubleDataWord.BYTES);
         }
         return new BigInteger(bal);
     }
@@ -306,11 +311,22 @@ public final class TRSuseContract extends AbstractTRS {
      * @param newBal The byte array of the balance to update over the specified range.
      */
     private void updateBalanceOverRange(Address contract, int start, int stop, byte[] newBal) {
-        for (int i = start; i <= stop; i++) {
-            byte[] key = new byte[DoubleDataWord.BYTES];
+        // Deal with first component first as it may not necessarily be 32 bytes.
+        byte[] key = new byte[DoubleDataWord.BYTES];
+        key[0] = (byte) (BALANCE_CODE | start);
+        byte[] val = new byte[DoubleDataWord.BYTES];
+        int componentSize = newBal.length % DoubleDataWord.BYTES;
+        boolean compSizeIsFlush = componentSize == 0;
+        componentSize = (compSizeIsFlush) ? DoubleDataWord.BYTES : componentSize;
+        System.arraycopy(newBal, 0, val, DoubleDataWord.BYTES - componentSize, componentSize);
+        track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(val));
+
+        int offset = DoubleDataWord.BYTES - ((compSizeIsFlush) ? DoubleDataWord.BYTES : componentSize);
+        for (int i = start + 1; i <= stop; i++) {
+            key = new byte[DoubleDataWord.BYTES];
             key[0] = (byte) (BALANCE_CODE | i);
-            byte[] val = Arrays.copyOfRange(newBal, (i - start) * DoubleDataWord.BYTES,
-                (i + 1 - start) * DoubleDataWord.BYTES);
+            val = new byte[DoubleDataWord.BYTES];
+            System.arraycopy(newBal, ((i - start) * DoubleDataWord.BYTES) - offset, val, 0, DoubleDataWord.BYTES);
             track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(val));
         }
     }
