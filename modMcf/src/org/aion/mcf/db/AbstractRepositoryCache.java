@@ -1,25 +1,28 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
 package org.aion.mcf.db;
 
+import java.util.Optional;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
@@ -34,7 +37,6 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -328,8 +330,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public DataWord getStorageValue(Address address, DataWord key) {
-        return getContractDetails(address).get(key);
+    public Optional<DataWord> getStorageValue(Address address, DataWord key) {
+        DataWord res = getContractDetails(address).get(key);
+        return (res == null) ? Optional.empty() : Optional.of(res);
     }
 
     @Override
