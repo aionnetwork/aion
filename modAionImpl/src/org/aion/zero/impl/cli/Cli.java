@@ -1,44 +1,43 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
 
 
 package org.aion.zero.impl.cli;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 
@@ -112,6 +111,52 @@ public class Cli {
                         System.out.println("boot nodes list: 0");
                     }
                     System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    break;
+                case "-s":
+                    if ((args.length == 2) && (args[1].equals("store"))) {
+                        File store = new File(CfgSsl.SSL_KEYSTORE_DIR);
+                        if (store.mkdir()) {
+                            System.out.println("\nCreated sslKeystore directory.");
+                        } else {
+                            System.out.println("\nThe sslKeystore directory already exists.");
+                        }
+                    } else if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
+                        List<String> scriptArgs = new ArrayList<>();
+                        scriptArgs.add("/bin/bash");
+                        scriptArgs.add("create_cert.sh");
+
+                        Console console = System.console();
+                        if (console == null) {
+                            System.out.println("No console found. " +
+                                "For increased security run ./aion.sh from a console.");
+                            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+                                System.out.println("Enter the name of the certificate to create:");
+                                scriptArgs.add(reader.readLine());
+                                System.out.println("Enter the password for the certificate:");
+                                scriptArgs.add(reader.readLine());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                System.exit(1);
+                            }
+                        } else {
+                            console.printf("Enter the name of the certificate to create:\n");
+                            scriptArgs.add(console.readLine());
+                            scriptArgs.add(String.valueOf(
+                                console.readPassword("Enter the password for the certificate:\n")));
+                        }
+
+                        scriptArgs.addAll(Arrays.asList(Arrays.copyOfRange(args, 2, args.length)));
+
+                        new ProcessBuilder(scriptArgs)
+                            .redirectInput(Redirect.INHERIT)
+                            .redirectOutput(Redirect.INHERIT)
+                            .redirectError(Redirect.INHERIT)
+                            .start()
+                            .waitFor();
+                    } else {
+                        printHelp();
+                        return 1;
+                    }
                     break;
                 case "-r":
                     if (args.length < 2) {
@@ -238,21 +283,25 @@ public class Cli {
     private void printHelp() {
         System.out.println("Usage: ./aion.sh [options] [arguments]");
         System.out.println();
-        System.out.println("  -h                           show help info");
+        System.out.println("  -h                                            show help info");
         System.out.println();
-        System.out.println("  -a create                    create a new account");
-        System.out.println("  -a list                      list all existing accounts");
-        System.out.println("  -a export [address]          export private key of an account");
-        System.out.println("  -a import [private_key]      import private key");
+        System.out.println("  -a create                                     create a new account");
+        System.out.println("  -a list                                       list all existing accounts");
+        System.out.println("  -a export [address]                           export private key of an account");
+        System.out.println("  -a import [private_key]                       import private key");
         System.out.println();
-        System.out.println("  -c                           create config with default values");
+        System.out.println("  -c                                            create config with default values");
         System.out.println();
-        System.out.println("  -i                           show information");
+        System.out.println("  -i                                            show information");
         System.out.println();
-        System.out.println("  -r                           remove blocks on side chains and correct block info");
-        System.out.println("  -r [block_number]            revert db up to specific block number");
+        System.out.println("  -s store                                      create the ssl keystore directory");
+        System.out.println("  -s create                                     create an ssl certificate for localhost and ip");
+        System.out.println("  -s create [host] [ip]                         create an ssl certificate for a custom host and ip");
         System.out.println();
-        System.out.println("  -v                           show version");
+        System.out.println("  -r                                            remove blocks on side chains and correct block info");
+        System.out.println("  -r [block_number]                             revert db up to specific block number");
+        System.out.println();
+        System.out.println("  -v                                            show version");
     }
 
     /**

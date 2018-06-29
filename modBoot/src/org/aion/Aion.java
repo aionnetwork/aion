@@ -38,6 +38,7 @@ import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiRpc;
+import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -131,14 +132,18 @@ public class Aion {
         }
 
         NanoServer rpcServer = null;
-        if (cfg.getApi().getRpc().getActive()) {
-            CfgApiRpc rpcCfg = cfg.getApi().getRpc();
+        if(cfg.getApi().getRpc().getActive()) {
+            CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
+            CfgSsl sslCfg = rpcCfg.getSsl();
             rpcServer = new NanoServer(
-                rpcCfg.getIp(),
-                rpcCfg.getPort(),
-                rpcCfg.getCorsEnabled(),
-                rpcCfg.getEnabled(),
-                rpcCfg.getMaxthread());
+                    rpcCfg.getIp(),
+                    rpcCfg.getPort(),
+                    rpcCfg.getCorsEnabled(),
+                    rpcCfg.getEnabled(),
+                    rpcCfg.getMaxthread(),
+                    sslCfg.getEnabled(),
+                    sslCfg.getCert(),
+                    sslCfg.getPass());
             rpcServer.start();
         }
 

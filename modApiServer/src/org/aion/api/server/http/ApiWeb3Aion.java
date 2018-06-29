@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.api.server.http;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
@@ -90,6 +88,7 @@ import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgNetP2p;
+import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
@@ -1584,12 +1583,16 @@ public class ApiWeb3Aion extends ApiAion {
 
         // base.api.rpc
         CfgApiRpc rpcConfig = config.getRpc();
+        CfgSsl sslConfig = rpcConfig.getSsl();
         JSONObject rpc = new JSONObject();
         rpc.put("ip", rpcConfig.getIp());
         rpc.put("port", rpcConfig.getPort());
         rpc.put("corsEnabled", rpcConfig.getCorsEnabled());
         rpc.put("active", rpcConfig.getActive());
         rpc.put("maxThread", rpcConfig.getMaxthread());
+        rpc.put("sslEnabled", sslConfig.getEnabled());
+        rpc.put("sslCert", sslConfig.getCert());
+        rpc.put("sslPass", sslConfig.getPass());
 
         // end
         obj.put("rpc", rpc);
