@@ -20,15 +20,17 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
     // Codes are unique prefixes for keys in the database so that we can look up keys belonging to
     // a specific category easily.
+    //TODO: better to make these entire keys rather than just codes.
     static final byte OWNER_CODE = (byte) 0xF0;
     static final byte SPECS_CODE = (byte) 0xE0;
     static final byte FUNDS_CODE = (byte) 0xD0;
     static final byte BALANCE_CODE = (byte) 0xB0;
-    static final byte PREV_DEPOSITOR_CODE = (byte) 0xAF;
     static final byte TTL_BAL_CODE = (byte) 0x90;
     static final byte BONUS_CODE = (byte) 0x80;
-    static final byte DEPOSITS_CODE = (byte) 0x70;
+    static final byte LINKED_LIST_CODE = (byte) 0x70;
+    static final byte LIST_PREV_CODE = (byte) 0x60;
 
+    static final int DIR_DEPO_OFFSET = 10;
     static final int LOCK_OFFSET = 14;
     static final int LIVE_OFFSET = 15;
 
@@ -90,6 +92,38 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] specKey = new byte[DoubleDataWord.BYTES];
         specKey[0] = SPECS_CODE;
         return track.getStorageValue(contract, new DoubleDataWord(specKey));
+    }
+
+    /**
+     * Returns the owner of the TRS contract whose address is contract if contract is a valid
+     * contract address.
+     *
+     * Returns null if contract is not a valid TRS contract address and thus there is no owner to
+     * fetch.
+     *
+     * @param contract The TRS contract address.
+     * @return the owner of the contract or null if not a TRS contract.
+     */
+    Address fetchContractOwner(Address contract) {
+        if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
+
+        byte[] key = new byte[DoubleDataWord.BYTES];
+        key[0] = OWNER_CODE;
+        IDataWord owner = track.getStorageValue(contract, new DoubleDataWord(key));
+        if (owner == null) { return null; }
+
+        return new Address(owner.getData());
+    }
+
+    /**
+     * Returns true only if the is-direct-deposits-enabled bit is set in specs, where we assume that
+     * specs is the specifications byte array corresponding to some TRS contract.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true only if direct deposits are enabled.
+     */
+    boolean fetchIsDirDepositsEnabled(byte[] specs) {
+        return specs[DIR_DEPO_OFFSET] == (byte) 0x1;
     }
 
 }

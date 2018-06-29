@@ -36,6 +36,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 
 public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> {
@@ -47,9 +48,9 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     // do ... and don't want to break tests that rely on this value.
     public IDataWord storageErrorReturn = DoubleDataWord.ZERO;
 
-    DummyRepo() {}
+    public DummyRepo() {}
 
-    DummyRepo(DummyRepo parent) {
+    public DummyRepo(DummyRepo parent) {
         // Note: only references are copied
         accounts.putAll(parent.accounts);
         contracts.putAll(parent.contracts);
@@ -144,10 +145,14 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     public IDataWord getStorageValue(Address addr, IDataWord key) {
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
-            return new DoubleDataWord(map.get(key.toString()));
-        } else {
-            return storageErrorReturn;
+            byte[] res = map.get(key.toString());
+            if (res.length == DataWord.BYTES) {
+                return new DataWord(res);
+            } else if (res.length == DoubleDataWord.BYTES) {
+                return new DoubleDataWord(res);
+            }
         }
+        return storageErrorReturn;
     }
 
     @Override

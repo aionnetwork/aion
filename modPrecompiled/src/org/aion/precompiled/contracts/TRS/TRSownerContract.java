@@ -393,7 +393,6 @@ public final class TRSownerContract extends AbstractTRS {
 
         // "constants"
         final int indexTest = 9;    // note: indexTest == length of percent
-        final int indexDepo = 10;
         final int indexPrecision = 11;
         final int indexPeriods = 12;
 
@@ -405,7 +404,7 @@ public final class TRSownerContract extends AbstractTRS {
         System.arraycopy(percentBytes, 0, specValue, indexTest - percentBytes.length,
             percentBytes.length);
         specValue[indexTest] = (isTest) ? (byte) 0x1 : (byte) 0x0;
-        specValue[indexDepo] = (isDirectDeposit) ? (byte) 0x1 : (byte) 0x0;
+        specValue[DIR_DEPO_OFFSET] = (isDirectDeposit) ? (byte) 0x1 : (byte) 0x0;
         specValue[indexPrecision] = (byte) precision;
         specValue[indexPeriods] = (byte) ((periods >> Byte.SIZE) & 0xFF);
         specValue[indexPeriods + 1] = (byte) (periods & 0xFF);
@@ -416,16 +415,15 @@ public final class TRSownerContract extends AbstractTRS {
         saveContractOwner(contract);
         track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
 
-        // Second, save the deposits meta-data for this contract. This meta-data is simply a pointer
-        // to the head of the doubly linked list of depositors.
-        byte[] depositsKey = new byte[DoubleDataWord.BYTES];
-        depositsKey[0] = DEPOSITS_CODE;
+        // Second, save the meta-data to the head of the doubly linked list of depositors.
+        byte[] listKey = new byte[DoubleDataWord.BYTES];
+        listKey[0] = LINKED_LIST_CODE;
 
         // The leftmost bit is the null bit, we set it to 1 to indicate there is no head yet.
-        byte[] depositsValue = new byte[DoubleDataWord.BYTES];
-        depositsValue[0] = (byte) 0x80;
+        byte[] listValue = new byte[DoubleDataWord.BYTES];
+        listValue[0] = (byte) 0x80;
 
-        track.addStorageRow(contract, new DoubleDataWord(depositsKey), new DoubleDataWord(depositsValue));
+        track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(listValue));
         track.flush();
     }
 
@@ -445,27 +443,6 @@ public final class TRSownerContract extends AbstractTRS {
         byte[] key = new byte[DoubleDataWord.BYTES];
         key[0] = OWNER_CODE;
         track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(caller.toBytes()));
-    }
-
-    /**
-     * Returns the owner of the TRS contract whose address is contract if contract is a valid
-     * contract address.
-     *
-     * Returns null if contract is not a valid TRS contract address and thus there is no owner to
-     * fetch.
-     *
-     * @param contract The TRS contract address.
-     * @return the owner of the contract or null if not a TRS contract.
-     */
-    private Address fetchContractOwner(Address contract) {
-        if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
-
-        byte[] key = new byte[DoubleDataWord.BYTES];
-        key[0] = OWNER_CODE;
-        IDataWord owner = track.getStorageValue(contract, new DoubleDataWord(key));
-        if (owner == null) { return null; }
-
-        return new Address(owner.getData());
     }
 
     /**

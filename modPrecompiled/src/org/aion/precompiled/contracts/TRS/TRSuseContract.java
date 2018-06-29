@@ -61,8 +61,6 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
 public final class TRSuseContract extends AbstractTRS {
     private static final long COST = 21000L;    // temporary.
 
-    //TODO: keys need to be static in AbstractTRS
-
     /**
      * Constructs a new TRSuseContract that will use repo as the database cache to update its
      * state with and is called by caller.
@@ -137,7 +135,8 @@ public final class TRSuseContract extends AbstractTRS {
      *
      *   conditions: the calling account must have enough balance to deposit amount otherwise this
      *     method effectively does nothing. The deposit operation is enabled only when the contract
-     *     is unlocked; once locked depositing is disabled.
+     *     is unlocked; once locked depositing is disabled. Note that if zero is deposited, the call
+     *     will succeed but the depositor will not be saved into the database.
      *
      *   returns: void.
      *
@@ -155,24 +154,30 @@ public final class TRSuseContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // Grab the contract address and put amount in a byte array one byte larger with an empty
-        // initial byte so that amount will be interpreted as unsigned.
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
-        byte[] amountBytes = new byte[len - indexAmount + 1];
-        System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
-        BigInteger amount = new BigInteger(amountBytes);
-
-        // A deposit operation can only execute if the current state of the TRS contract is:
-        // contract is unlocked (and obviously not live -- check this for sanity).
         IDataWord specs = fetchContractSpecs(contract);
         if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
+        // A deposit operation can only execute if direct depositing is enabled or caller is owner.
+        Address owner = fetchContractOwner(contract);
         byte[] specBytes = specs.getData();
+        if (!caller.equals(owner) && !fetchIsDirDepositsEnabled(specBytes)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A deposit operation can only execute if the current state of the TRS contract is:
+        // contract is unlocked (and obviously not live -- check this for sanity).
         if (isContractLocked(specBytes) || isContractLive(specBytes)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
+
+        // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
+        int amtSize = getSize(input, indexAmount, len);
+        byte[] amountBytes = new byte[amtSize + 1];
+        System.arraycopy(input, len - amtSize, amountBytes, 1, amtSize);
+        BigInteger amount = new BigInteger(amountBytes);
 
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
@@ -180,13 +185,15 @@ public final class TRSuseContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        // First, update this depositor's current deposit balance.
-        int numRows = updateBalance(contract, amountBytes, amount);
+        // If deposit amount is larger than zero, update the depositor's current deposit balance and
+        // then update the deposit meta-data (linked list, count, etc.)
+        if (amount.compareTo(BigInteger.ZERO) > 0) {
+            int numRows = updateBalance(contract, amountBytes, amount);
+            updateDeposit(contract, numRows);
+            track.addBalance(caller, amount.negate());
+            track.flush();
+        }
 
-        // Second, update the linked list or any meta-data.
-        updateDeposit(contract, numRows);
-
-        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
@@ -201,22 +208,23 @@ public final class TRSuseContract extends AbstractTRS {
      * @param amount The amount to deposit for the caller.
      */
     private int updateBalance(Address contract, byte[] amount, BigInteger amountBI) {
-        int len = amount.length - 1;
+        int len = amount.length - 1;    // first byte is invalid as per above.
         int numRows = (int) Math.ceil(len / (double) DoubleDataWord.BYTES);
-
         IDataWord value = track.getStorageValue(contract, new DoubleDataWord(caller.toBytes()));
-        if (value == null) {
-            // Then no entry for this depositor currently exists. We create one.
-            byte[] newBal = new byte[numRows * DoubleDataWord.BYTES];
-            System.arraycopy(amount, 1, newBal, newBal.length - len, len);
-            updateBalanceOverRange(contract, 0, numRows - 1, newBal);
-        } else {
-            // Entry exists, we update it.
+
+        if ((value != null) && ((value.getData()[0] & 0x0F) != 0x00)) {
+            // Then an entry exists and its valid bit is set, so the caller has an existing deposit.
             numRows = (len % DoubleDataWord.BYTES == 0) ? numRows + 1 : numRows;
             BigInteger currBal = fetchBalance(contract, 0, numRows - 1);
             BigInteger newBal = currBal.add(amountBI);
             updateBalanceOverRange(contract, 0, numRows - 1, newBal.toByteArray());
+        } else {
+            // Then no entry for this depositor currently exists. We create one.
+            byte[] newBal = new byte[numRows * DoubleDataWord.BYTES];
+            System.arraycopy(amount, 1, newBal, newBal.length - len, len);
+            updateBalanceOverRange(contract, 0, numRows - 1, newBal);
         }
+
         return numRows;
     }
 
@@ -232,27 +240,37 @@ public final class TRSuseContract extends AbstractTRS {
      * @param numRows The number of rows in use to hold the caller's deposit balance.
      */
     private void updateDeposit(Address contract, int numRows) {
-        // 1. Check if valid bit is set and if so unset it.
-        // 2. If valid bit was unset no need to update 'next', check if numRows differs, if so update.
-        // 3. If valid bit was set, set 'next' to 'head', set 'prev' to null, place self in 'head',
-        //    check if numRows differs, if so update.
-        byte[] meta = track.getStorageValue(contract, new DoubleDataWord(caller.toBytes())).getData();
-        if ((meta[0] & 0x80) == 0x80) {
-            // Valid bit was set so the caller already exists and has a deposit balance.
-            int oldRows = meta[1];
-            if (numRows != oldRows) {
-                meta[1] = 0x0;
-                meta[1] = (byte) numRows;
-                track.addStorageRow(contract, new DoubleDataWord(caller.toBytes()), new DoubleDataWord(meta));
-            }
-        } else {
-            // Valid bit unset, add caller as head of linked list and update meta-data.
-            byte[] key = new byte[DoubleDataWord.BYTES];
-            key[0] = DEPOSITS_CODE;
-            byte[] next = track.getStorageValue(contract, new DoubleDataWord(key)).getData();
-//            next[0] = AION_PREFIX;
+        IDataWord callerData = track.getStorageValue(contract, new DoubleDataWord(caller.toBytes()));
+        boolean callerIsNew = (callerData == null) || ((callerData.getData()[0] & 0x0F) == 0x00);
+        byte[] callerVal = (callerData == null) ? new byte[DoubleDataWord.BYTES] : callerData.getData();
+        callerVal[0] = (byte) ((callerVal[0] & 0xF0) | numRows);
 
-            // Unset the null bit.
+        if (callerIsNew) {
+            byte[] listKey = new byte[DoubleDataWord.BYTES];
+            listKey[0] = LINKED_LIST_CODE;
+            byte[] listData = track.getStorageValue(contract, new DoubleDataWord(listKey)).getData();
+
+            if ((listData[0] & 0x80) == 0x80) {
+                // Then the head of the list is null, so set caller's next to null.
+                callerVal[0] = (byte) ((callerVal[0] & 0x0F) | 0x80);
+            } else {
+                // Then the head of the list is not null, so set caller's next to this head.
+                callerVal[0] = (byte) (callerVal[0] & 0x0F);
+                System.arraycopy(listData, 1, callerVal, 1, Address.ADDRESS_LEN - 1);
+            }
+            track.addStorageRow(contract, new DoubleDataWord(caller.toBytes()), new DoubleDataWord(callerVal));
+
+            // Set caller's previous to null.
+            byte[] prevKey = new byte[DoubleDataWord.BYTES];
+            prevKey[0] = LIST_PREV_CODE;
+            byte[] prevVal = new byte[DoubleDataWord.BYTES];
+            prevVal[0] = (byte) 0x80;
+            track.addStorageRow(contract, new DoubleDataWord(prevKey), new DoubleDataWord(prevVal));
+
+            // Now point the head of the list to caller.
+            listData[0] = (byte) 0x00;
+            System.arraycopy(caller.toBytes(), 1, listData, 1, Address.ADDRESS_LEN - 1);
+            track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(listData));
         }
     }
 
@@ -269,7 +287,7 @@ public final class TRSuseContract extends AbstractTRS {
         byte[] bal = new byte[(stop - start) * DoubleDataWord.BYTES];
         for (int i = stop; i >= start; i--) {
             byte[] key = new byte[DoubleDataWord.BYTES];
-            key[0] = (byte) (DEPOSITS_CODE | i);
+            key[0] = (byte) (BALANCE_CODE | i);
             byte[] val = track.getStorageValue(contract, new DoubleDataWord(key)).getData();
             System.arraycopy(val, 0, bal, (i - start) * DoubleDataWord.BYTES, DoubleDataWord.BYTES);
         }
@@ -290,11 +308,27 @@ public final class TRSuseContract extends AbstractTRS {
     private void updateBalanceOverRange(Address contract, int start, int stop, byte[] newBal) {
         for (int i = start; i <= stop; i++) {
             byte[] key = new byte[DoubleDataWord.BYTES];
-            key[0] = (byte) (DEPOSITS_CODE | i);
+            key[0] = (byte) (BALANCE_CODE | i);
             byte[] val = Arrays.copyOfRange(newBal, (i - start) * DoubleDataWord.BYTES,
                 (i + 1 - start) * DoubleDataWord.BYTES);
             track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(val));
         }
+    }
+
+    /**
+     * Returns the size of input from offset to len such that this value would be the resulting size
+     * of the array over the specified range if all leading zero bytes were removed.
+     *
+     * @param input The array.
+     * @param offset The start of the array.
+     * @param len The length from start.
+     * @return the stripped size of the array over the given range.
+     */
+    private int getSize(byte[] input, int offset, int len) {
+        for (int i = offset; i < len; i++) {
+            if (input[i] != (byte) 0x0) { return len - i; }
+        }
+        return 0;
     }
 
 }
