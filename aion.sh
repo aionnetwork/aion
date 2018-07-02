@@ -37,5 +37,21 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
-env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
+# this will append to the right of $JAVA_OPTS if it's already present on the server
+# the rightmost value of the heapsize parameters will be picked up by the jvm so we should be safe
+
+JAVA_OPTS=$JAVA_OPTS
+
+if [ ! -z "$CORE_XMX" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Xmx$CORE_XMX"
+fi
+
+if [ ! -z "$CORE_XMS" ]; then
+    JAVA_OPTS="$JAVA_OPTS -Xms$CORE_XMS"
+else
+    JAVA_OPTS="$JAVA_OPTS -Xms4g"
+fi
+
+
+env EVMJIT="-cache=1" ./rt/bin/java $JAVA_OPTS \
         -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
