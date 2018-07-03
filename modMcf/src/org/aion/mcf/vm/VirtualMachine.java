@@ -20,20 +20,27 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.mcf.vm;
 
-import org.aion.mcf.vm.AbstractExecutionResult;
+import org.aion.base.db.IRepositoryCache;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 
 /**
- * The result of executing a pre-compiled contract.
+ * High-level interface of Aion virtual machine.
+ *
+ * @author yulong
  */
-public class ContractExecutionResult extends AbstractExecutionResult {
+public interface VirtualMachine {
 
-    public ContractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
-        super(code, nrgLeft, output);
-    }
-
-    public ContractExecutionResult(ResultCode code, long nrgLeft) {
-        super(code, nrgLeft);
-    }
+    /**
+     * Run the given code, under the specified context.
+     *
+     * @param code  byte code
+     * @param ctx   the execution context
+     * @param track state repository track
+     * @return the execution result
+     */
+    AbstractExecutionResult run(byte[] code, IExecutionContext ctx, IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> track);
 }

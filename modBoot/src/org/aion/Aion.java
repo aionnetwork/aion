@@ -78,7 +78,7 @@ public class Aion {
             throw e;
         }
 
-        /* Outputs relevant logger configuration */
+        /* Outputs relevant LOGGER configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out
                 .println("Logger disabled; to enable please check log settings in config.xml\n");

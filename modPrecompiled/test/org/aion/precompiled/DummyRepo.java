@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
@@ -142,7 +143,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public IDataWord getStorageValue(Address addr, IDataWord key) {
+    public Optional<DataWord> getStorageValue(Address addr, IDataWord key) {
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
             byte[] res = map.get(key.toString());

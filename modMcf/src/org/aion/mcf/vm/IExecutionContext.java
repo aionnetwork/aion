@@ -20,20 +20,9 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
 
-import org.aion.mcf.vm.AbstractExecutionResult;
+package org.aion.mcf.vm;
 
-/**
- * The result of executing a pre-compiled contract.
- */
-public class ContractExecutionResult extends AbstractExecutionResult {
+public interface IExecutionContext {
 
-    public ContractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
-        super(code, nrgLeft, output);
-    }
-
-    public ContractExecutionResult(ResultCode code, long nrgLeft) {
-        super(code, nrgLeft);
-    }
 }

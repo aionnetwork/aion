@@ -38,6 +38,7 @@ import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -295,7 +296,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public IDataWord getStorageValue(Address address, IDataWord key) {
+    public Optional<DataWord> getStorageValue(Address address, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(address);
         return (details == null) ? null : details.get(key);
     }

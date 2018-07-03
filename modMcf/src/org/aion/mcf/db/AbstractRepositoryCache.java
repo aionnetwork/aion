@@ -20,6 +20,7 @@
  *******************************************************************************/
 package org.aion.mcf.db;
 
+import java.util.Optional;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
@@ -28,6 +29,7 @@ import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.vm.types.DataWord;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
@@ -327,7 +329,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public IDataWord getStorageValue(Address address, IDataWord key) {
+    public Optional<DataWord> getStorageValue(Address address, IDataWord key) {
         return getContractDetails(address).get(key);
     }
 

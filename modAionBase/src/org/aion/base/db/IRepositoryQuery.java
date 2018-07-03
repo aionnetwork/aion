@@ -34,6 +34,7 @@
  ******************************************************************************/
 package org.aion.base.db;
 
+import java.util.Optional;
 import org.aion.base.type.Address;
 
 import java.math.BigInteger;
@@ -188,7 +189,7 @@ public interface IRepositoryQuery<AS, DW> {
      *            the key of interest
      * @return a {@link DW} representing the data associated with the given key
      */
-    DW getStorageValue(Address address, DW key);
+    Optional<DW> getStorageValue(Address address, DW key);
 
     /**
      * Retrieves the stored transactions for recovering pool tx.

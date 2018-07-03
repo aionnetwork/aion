@@ -30,7 +30,8 @@ import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
+import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
+import org.aion.mcf.vm.AbstractExecutor;
 import org.aion.precompiled.type.IPrecompiledContract;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -41,14 +42,8 @@ import org.slf4j.Logger;
 /**
  * The executor of pre-compiled contracts.
  */
-public class ContractExecutor {
-    private static final Object lock = new Object();
-    private final Logger contractLogger;
-    private boolean isLocalCall;
-    private long blockRemainingNrg;
-    private boolean askNonce = true;
+public class ContractExecutor extends AbstractExecutor {
     private long nrgLimit;
-    private IRepository<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
     private IAionBlock block;
     private AionTransaction tx;
     private IRepositoryCache repoTrack;
@@ -62,15 +57,16 @@ public class ContractExecutor {
      * @param repo The database.
      * @param isLocalCall Whether is a local call or not.
      * @param blockRemainingNrg The remaining block energy left.
-     * @param logger The logger.
+     * @param logger The LOGGER.
      */
     public ContractExecutor(AionTransaction tx, IAionBlock block,
         IRepository<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, boolean isLocalCall,
         long blockRemainingNrg, Logger logger) {
 
-        contractLogger = logger;
-        if (logger.isDebugEnabled()) {
-            logger.debug("Executing transaction: {}", tx);
+        super(repo, isLocalCall, blockRemainingNrg, logger);
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Executing transaction: {}", tx);
         }
 
         this.tx = tx;
@@ -90,7 +86,7 @@ public class ContractExecutor {
      * @param tx The transaction to execute.
      * @param block The block.
      * @param repo The database.
-     * @param logger The logger.
+     * @param logger The LOGGER.
      */
     public ContractExecutor(AionTransaction tx, IAionBlock block,
         IRepository<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Logger logger) {
@@ -257,9 +253,9 @@ public class ContractExecutor {
             track.flush();
         }
 
-        if (contractLogger.isDebugEnabled()) {
-            contractLogger.debug("Transaction receipt: {}", summary.getReceipt());
-            contractLogger.debug("Transaction logs: {}", summary.getLogs());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Transaction receipt: {}", summary.getReceipt());
+            LOGGER.debug("Transaction logs: {}", summary.getLogs());
         }
 
         return summary;
@@ -279,20 +275,4 @@ public class ContractExecutor {
         receipt.setError(exeResult.getCode() == ResultCode.SUCCESS ? "" : exeResult.getCode().name());
         return receipt;
     }
-
-    /**
-     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is called.
-     */
-    public void setBypassNonce() {
-        this.askNonce = false;
-    }
-
-    /**
-     * Tells the ContractExecutor not to bypass incrementing the account's nonce when execute is
-     * called.
-     */
-    public void setNoBypassNonce() {
-        this.askNonce = true;
-    }
-
 }
