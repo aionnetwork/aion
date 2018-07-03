@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,16 +31,16 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.db;
 
+import java.util.Optional;
 import org.aion.base.type.Address;
 
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Repository interface for information retrieval.
@@ -187,9 +187,9 @@ public interface IRepositoryQuery<AS, DW> {
      *            the address of the account of interest
      * @param key
      *            the key of interest
-     * @return a {@link DW} representing the data associated with the given key
+     * @return an {@link Optional} of {@link DW} representing the data associated with the given key
      */
-    DW getStorageValue(Address address, DW key);
+    Optional<DW> getStorageValue(Address address, DW key);
 
     /**
      * Retrieves the stored transactions for recovering pool tx.
