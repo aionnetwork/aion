@@ -389,13 +389,12 @@ public final class TRSownerContract extends AbstractTRS {
     private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
-        // First, save the "specifications" meta-data for this contract.
-
         // "constants"
         final int indexTest = 9;    // note: indexTest == length of percent
         final int indexPrecision = 11;
         final int indexPeriods = 12;
 
+        // Save the "specifications" data for this contract.
         byte[] specKey = new byte[DoubleDataWord.BYTES];
         specKey[0] = SPECS_CODE;
 
@@ -415,15 +414,11 @@ public final class TRSownerContract extends AbstractTRS {
         saveContractOwner(contract);
         track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
 
-        // Second, save the meta-data to the head of the doubly linked list of depositors.
-        byte[] listKey = new byte[DoubleDataWord.BYTES];
-        listKey[0] = LINKED_LIST_CODE;
-
-        // The leftmost bit is the null bit, we set it to 1 to indicate there is no head yet.
+        // Save the data for the head of the linked list; head null bit is set.
         byte[] listValue = new byte[DoubleDataWord.BYTES];
         listValue[0] = (byte) 0x80;
+        addHeadData(contract, listValue);
 
-        track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(listValue));
         track.flush();
     }
 

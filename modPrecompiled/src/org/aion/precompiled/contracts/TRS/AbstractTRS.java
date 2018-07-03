@@ -14,8 +14,9 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  * that may be useful to multiple concrete subclasses.
  */
 public abstract class AbstractTRS extends StatefulPrecompiledContract {
-    // grab AION from CfgAion later
+    // grab AION from CfgAion later and preferrably aion prefix too.
     static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
 
     // Codes are unique prefixes for keys in the database so that we can look up keys belonging to
@@ -124,6 +125,21 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     boolean fetchIsDirDepositsEnabled(byte[] specs) {
         return specs[DIR_DEPO_OFFSET] == (byte) 0x1;
+    }
+
+    /**
+     * Adds the data data as the head entry data (for the linked list) corresponding to the TRS
+     * contract given by the address contract.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract.
+     * @param data The head entry data to add.
+     */
+    void addHeadData(Address contract, byte[] data) {
+        byte[] listKey = new byte[DoubleDataWord.BYTES];
+        listKey[0] = LINKED_LIST_CODE;
+        track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(data));
     }
 
 }

@@ -8,6 +8,7 @@ import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 
 /**
@@ -44,6 +45,37 @@ class TRShelpers {
         return contract;
     }
 
+    // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
+    Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
+        int periods, BigInteger percent, int precision) {
+
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
+
+        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
+        byte[] specsBytes = specs.getData();
+        specsBytes[14] = (byte) 0x1;
+
+        repo.addStorageRow(contract, getSpecKey(), newIDataWord(specsBytes));
+        repo.flush();
+        return contract;
+    }
+
+    // Returns the address of a newly created TRS contract that is locked and live.
+    Address createLockedAndLiveTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
+        int periods, BigInteger percent, int precision) {
+
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
+
+        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
+        byte[] specsBytes = specs.getData();
+        specsBytes[14] = (byte) 0x1;
+        specsBytes[15] = (byte) 0x1;
+
+        repo.addStorageRow(contract, getSpecKey(), newIDataWord(specsBytes));
+        repo.flush();
+        return contract;
+    }
+
     // Returns an input byte array for the create operation using the provided parameters.
     byte[] getCreateInput(boolean isTest, boolean isDirectDeposit, int periods,
         BigInteger percent, int precision) {
@@ -64,6 +96,18 @@ class TRShelpers {
         }
         input[13] = (byte) precision;
         return input;
+    }
+
+    // Returns a DataWord that is the key corresponding to the contract specifications in storage.
+    IDataWord getSpecKey() {
+        byte[] specsKey = new byte[DoubleDataWord.BYTES];
+        specsKey[0] = (byte) 0xE0;
+        return newIDataWord(specsKey);
+    }
+
+    // Returns a new IDataWord that wraps data. Here so we can switch types easy if needed.
+    IDataWord newIDataWord(byte[] data) {
+        return new DoubleDataWord(data);
     }
 
 }

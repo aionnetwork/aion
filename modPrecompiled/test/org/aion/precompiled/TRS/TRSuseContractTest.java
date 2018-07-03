@@ -2,6 +2,8 @@ package org.aion.precompiled.TRS;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -90,7 +92,7 @@ public class TRSuseContractTest extends TRShelpers {
     // Returns the deposit balance associated with account in the TRS contract contract or null if
     // no balance.
     private BigInteger fetchDepositBalance(Address contract, Address account) {
-        IDataWord val = repo.getStorageValue(contract, new DoubleDataWord(account.toBytes()));
+        IDataWord val = repo.getStorageValue(contract, newIDataWord(account.toBytes()));
         if (val == null) { return null; }
         int numRows = (val.getData()[0] & 0x0F);
 
@@ -98,10 +100,52 @@ public class TRSuseContractTest extends TRShelpers {
         byte[] amt = new byte[(numRows * DoubleDataWord.BYTES) + 1];    // + 1 for unsigned.
         for (int i = 0; i < numRows; i++) {
             key[0] = (byte) (0xB0 | i);
-            System.arraycopy(repo.getStorageValue(contract, new DoubleDataWord(key)).getData(),
+            System.arraycopy(account.toBytes(), 1, key, 1, DoubleDataWord.BYTES - 1);
+            System.arraycopy(repo.getStorageValue(contract, newIDataWord(key)).getData(),
                 0, amt, (i * DoubleDataWord.BYTES) + 1, DoubleDataWord.BYTES);
         }
         return new BigInteger(amt);
+    }
+
+    // Returns the head of the list for contract or null if no head.
+    private Address fetchLinkedListHead(Address contract) {
+        byte[] listKey = new byte[DoubleDataWord.BYTES];
+        listKey[0] = 0x70;
+        IDataWord head = repo.getStorageValue(contract, newIDataWord(listKey));
+        if (head == null) { return null; }
+        if ((head.getData()[0] & 0x80) == 0x80) { return null; }
+        byte[] headAddr = new byte[Address.ADDRESS_LEN];
+        headAddr[0] = (byte) 0xA0;
+        System.arraycopy(head.getData(), 1, headAddr, 1, Address.ADDRESS_LEN - 1);
+        return new Address(headAddr);
+    }
+
+    // Returns the next account in the linked list after current, or null if no next.
+    private Address fetchLinkedListNext(Address contract, Address current) {
+        IDataWord next = repo.getStorageValue(contract, newIDataWord(current.toBytes()));
+        if (next == null) { return null; }
+        byte[] nextBytes = next.getData();
+        if ((nextBytes[0] & 0x80) == 0x00) { return null; } // entry invalid
+        if ((nextBytes[0] & 0x40) == 0x40) { return null; } // null bit set
+        byte[] nextAddr = new byte[Address.ADDRESS_LEN];
+        nextAddr[0] = (byte) 0xA0;
+        System.arraycopy(nextBytes, 1, nextAddr, 1, Address.ADDRESS_LEN - 1);
+        return new Address(nextAddr);
+    }
+
+    // Returns the previous account in the linked list prior to current, or null if no previous.
+    private Address fetchLinkedListPrev(Address contract, Address current) {
+        byte[] prevKey = new byte[DoubleDataWord.BYTES];
+        prevKey[0] = 0x60;
+        System.arraycopy(current.toBytes(), 1, prevKey, 1, Address.ADDRESS_LEN - 1);
+        IDataWord prev = repo.getStorageValue(contract, newIDataWord(prevKey));
+        if (prev == null) { return null; }
+        byte[] prevBytes = prev.getData();
+        if ((prevBytes[0] & 0x80) == 0x80) { return null; } // null bit set
+        byte[] prevAddr = new byte[Address.ADDRESS_LEN];
+        prevAddr[0] = (byte) 0xA0;
+        System.arraycopy(prevBytes, 1, prevAddr, 1, Address.ADDRESS_LEN - 1);
+        return new Address(prevAddr);
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
@@ -417,7 +461,6 @@ public class TRSuseContractTest extends TRShelpers {
 
         assertEquals(left, repo.getBalance(acct));
         assertEquals(depo, fetchDepositBalance(contract, acct));
-        System.out.println(left);
     }
 
     @Test
@@ -429,77 +472,231 @@ public class TRSuseContractTest extends TRShelpers {
         BigInteger acct1Bal = max;
         BigInteger acct2Bal = max;
         BigInteger acct3Bal = max;
+        BigInteger acct1Depo = BigInteger.ZERO;
+        BigInteger acct2Depo = BigInteger.ZERO;
+        BigInteger acct3Depo = BigInteger.ZERO;
 
-        TRSuseContract trs1 = newTRSuseContract(acct1);
-        TRSuseContract trs2 = newTRSuseContract(acct2);
-        TRSuseContract trs3 = newTRSuseContract(acct3);
-        Address contract1 = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
-        Address contract2 = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
-        Address contract3 = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
+        BigInteger amt1 = new BigInteger("123456");
+        BigInteger amt2 = new BigInteger("4363123");
+        BigInteger amt3 = new BigInteger("8597455434");
 
-        BigInteger depo1 = new BigInteger("123456");
-        BigInteger depo2 = new BigInteger("4363123");
-        BigInteger depo3 = new BigInteger("325");
-        BigInteger depo4 = new BigInteger("8597455434");
+        byte[] input1 = getDepositInput(contract, amt1);
+        byte[] input2 = getDepositInput(contract, amt2);
+        byte[] input3 = getDepositInput(contract, amt3);
 
-        byte[] input1 = getDepositInput(contract1, depo1);
-        byte[] input2 = getDepositInput(contract2, depo2);
-        byte[] input3 = getDepositInput(contract3, depo3);
-        byte[] input4 = getDepositInput(contract1, depo4);
+        for (int i = 0; i < 10; i++) {
+            newTRSuseContract(acct1).execute(input1, COST);
+            newTRSuseContract(acct2).execute(input2, COST);
+            newTRSuseContract(acct3).execute(input3, COST);
+            newTRSuseContract(acct1).execute(input3, COST);
 
-        trs1.execute(input1, COST);
-        trs2.execute(input2, COST);
-        trs3.execute(input3, COST);
-        trs1.execute(input4, COST);
-
-        acct1Bal = acct1Bal.subtract(depo1).subtract(depo4);
-        acct2Bal = acct2Bal.subtract(depo2);
-        acct3Bal = acct3Bal.subtract(depo3);
+            acct1Bal = acct1Bal.subtract(amt1).subtract(amt3);
+            acct1Depo = acct1Depo.add(amt1).add(amt3);
+            acct2Bal = acct2Bal.subtract(amt2);
+            acct2Depo = acct2Depo.add(amt2);
+            acct3Bal = acct3Bal.subtract(amt3);
+            acct3Depo = acct3Depo.add(amt3);
+        }
 
         assertEquals(acct1Bal, repo.getBalance(acct1));
         assertEquals(acct2Bal, repo.getBalance(acct2));
         assertEquals(acct3Bal, repo.getBalance(acct3));
 
-        assertEquals(depo1.add(depo4), fetchDepositBalance(contract1, acct1));
-        assertEquals(depo2, fetchDepositBalance(contract2, acct2));
-        assertEquals(depo3, fetchDepositBalance(contract3, acct3));
+        assertEquals(acct1Depo, fetchDepositBalance(contract, acct1));
+        assertEquals(acct2Depo, fetchDepositBalance(contract, acct2));
+        assertEquals(acct3Depo, fetchDepositBalance(contract, acct3));
     }
 
     @Test
-    public void testDepositMultipleTimesSomeOkSomeBad() {
+    public void testDepositThatCausesOverflow() {
+        // First we deposit 2**31 - 1 and then deposit 1 to overflow into next row.
+        BigInteger total = BigInteger.TWO.pow(255);
+        Address acct = getNewExistentAccount(total);
+        BigInteger amount = total.subtract(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, amount);
+        trs.execute(input, COST);
 
+        input = getDepositInput(contract, BigInteger.ONE);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+        assertEquals(total, fetchDepositBalance(contract, acct));
+
+        // Second we deposit 1 and then deposit 2**31 - 1 to overflow into next row.
+        acct = getNewExistentAccount(total);
+        amount = total.subtract(BigInteger.ONE);
+        contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        trs = newTRSuseContract(acct);
+        input = getDepositInput(contract, BigInteger.ONE);
+        trs.execute(input, COST);
+
+        input = getDepositInput(contract, amount);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+        assertEquals(total, fetchDepositBalance(contract, acct));
+    }
+
+    @Test
+    public void testDepositNumRowsWhenAllRowsFull() {
+        BigInteger total = BigInteger.TWO.pow(255);
+        Address acct = getNewExistentAccount(total);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, total);
+        trs.execute(input, COST);
+
+        int rows = repo.getStorageValue(contract, new DoubleDataWord(acct.toBytes())).getData()[0] & 0x0F;
+        assertEquals(1, rows);
+    }
+
+    @Test
+    public void testDepositNumRowsWhenOneRowHasOneNonZeroByte() {
+        BigInteger total = BigInteger.TWO.pow(256);
+        Address acct = getNewExistentAccount(total);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, total);
+        trs.execute(input, COST);
+
+        int rows = repo.getStorageValue(contract, new DoubleDataWord(acct.toBytes())).getData()[0] & 0x0F;
+        assertEquals(2, rows);
+    }
+
+    @Test
+    public void testDepositRequiresMoreThan16StorageRows() {
+        // It is computationally infeasible to ever hit the ceiling but just to get a test case in we
+        // will cheat a little and set the 16 storage rows directly.
+        //TODO
+    }
+
+    @Test
+    public void testTotalDepositBalanceOneDepositor() {
+        //TODO
+    }
+
+    @Test
+    public void testTotalDepositBalanceMultipleDeposits() {
+        //TODO
     }
 
     @Test
     public void testDepositWhileTRSisLocked() {
-
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createAndLockTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testDepositWhileTRSisLive() {
-
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true,
+            1, BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
     }
 
     // <----------------------------TRS DEPOSITOR LINKED LIST TESTS-------------------------------->
 
     @Test
     public void testLinkedListNoDepositors() {
-
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        assertNull(fetchLinkedListHead(contract));
     }
 
     @Test
     public void testLinkedListOneDepositor() {
+        // Test one depositor makes one deposit.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        TRSuseContract trs = newTRSuseContract(acct);
+        trs.execute(input, COST);
+        assertEquals(acct, fetchLinkedListHead(contract));
+        assertNull(fetchLinkedListNext(contract, acct));
+        assertNull(fetchLinkedListPrev(contract, acct));
 
+        // Test one depositor makes more than one deposit.
+        trs.execute(input, COST);
+        trs.execute(input, COST);
+        assertEquals(acct, fetchLinkedListHead(contract));
+        assertNull(fetchLinkedListNext(contract, acct));
+        assertNull(fetchLinkedListPrev(contract, acct));
     }
 
     @Test
     public void testLinkedListTwoDepositors() {
+        // Latest unique depositor is head of list.
 
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+
+        TRSuseContract trs = newTRSuseContract(acct);
+        trs.execute(input, COST);
+
+        trs = newTRSuseContract(acct2);
+        trs.execute(input, COST);
+        trs.execute(input, COST);
+
+        trs = newTRSuseContract(acct);
+        trs.execute(input, COST);
+
+        // We should have:      null <- acct2 <-> acct1 -> null      with acct2 as head.
+        assertEquals(acct2, fetchLinkedListHead(contract));
+        assertEquals(acct, fetchLinkedListNext(contract, acct2));
+        assertNull(fetchLinkedListPrev(contract, acct2));
+        assertEquals(acct2, fetchLinkedListPrev(contract, acct));
+        assertNull(fetchLinkedListNext(contract, acct));
     }
 
     @Test
     public void testLinkedListMultipleDepositors() {
+        Address acct1, acct2, acct3, acct4;
+        acct1 = getNewExistentAccount(DEFAULT_BALANCE);
+        acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        acct3 = getNewExistentAccount(DEFAULT_BALANCE);
+        acct4 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct1, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
 
+        newTRSuseContract(acct1).execute(input, COST);
+        newTRSuseContract(acct4).execute(input, COST);
+        newTRSuseContract(acct2).execute(input, COST);
+        newTRSuseContract(acct4).execute(input, COST);
+        newTRSuseContract(acct1).execute(input, COST);
+        newTRSuseContract(acct3).execute(input, COST);
+        newTRSuseContract(acct1).execute(input, COST);
+
+        // We should have:      null <- acct3 <-> acct2 <-> acct4 <-> acct1 -> null     - acct3 head.
+        assertEquals(acct3, fetchLinkedListHead(contract));
+        assertNull(fetchLinkedListPrev(contract, acct3));
+        assertEquals(acct2, fetchLinkedListNext(contract, acct3));
+        assertEquals(acct3, fetchLinkedListPrev(contract, acct2));
+        assertEquals(acct4, fetchLinkedListNext(contract, acct2));
+        assertEquals(acct2, fetchLinkedListPrev(contract, acct4));
+        assertEquals(acct1, fetchLinkedListNext(contract, acct4));
+        assertEquals(acct4, fetchLinkedListPrev(contract, acct1));
+        assertNull(fetchLinkedListNext(contract, acct1));
     }
 
 }

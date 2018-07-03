@@ -214,24 +214,32 @@ public final class TRSuseContract extends AbstractTRS {
      */
     private boolean updateLinkedList(Address contract) {
         byte[] acctData = getAccountData(contract, caller);
-        if ((acctData[0] & 0x80) == 0x80) { return false; }
+        if ((acctData[0] & 0x80) == 0x80) { return true; }  // no update needed.
         acctData[0] |= 0x80; // set valid bit.
 
-        // Set account's 'next' to the current 'head'.
+        // Set caller's 'next' to the current 'head'.
         byte[] headData = getHeadData(contract);
-        if (headData == null) { return false; }
+        if (headData == null) { return false; } // should never happen.
         if ((headData[0] & 0x80) == 0x80) {
             acctData[0] |= 0x40;     // set 'next' to null since head is null.
         } else {
             acctData[0] &= ~0x40;    // unset the null bit for account's 'next' entry.
             System.arraycopy(headData, 1, acctData, 1, DoubleDataWord.BYTES - 1);
+
+            // set the current head's 'prev' to the caller.
+            byte[] currHead = Arrays.copyOfRange(headData, 0, Address.ADDRESS_LEN);
+            currHead[0] = AION_PREFIX;
+            byte[] currHeadPrev = new byte[DoubleDataWord.BYTES];
+            currHeadPrev[0] = 0x00; //sanity.
+            System.arraycopy(caller.toBytes(), 1, currHeadPrev, 1, DoubleDataWord.BYTES - 1);
+            addPreviousData(contract, Address.wrap(currHead) ,currHeadPrev);
         }
 
-        // Set the current 'head' to account.
+        // Set the current 'head' to caller.
         headData[0] &= ~0x80;   // unset the null bit for linked list head.
         System.arraycopy(caller.toBytes(), 1, headData, 1, DoubleDataWord.BYTES - 1);
 
-        // Set account's 'prev' to null.
+        // Set caller's 'prev' to null.
         byte[] prevData = getPreviousData(contract, caller);
         prevData[0] = (byte) 0x80;  // set null bit for previous entry.
 
@@ -254,13 +262,12 @@ public final class TRSuseContract extends AbstractTRS {
     private BigInteger fetchDepositBalance(Address contract, Address account) {
         IDataWord accountData = track.getStorageValue(contract, new DoubleDataWord(account.toBytes()));
         if (accountData == null) { return BigInteger.ZERO; }    // no entry.
-        if ((accountData.getData()[0] & 0x80) == 0x80) { return BigInteger.ZERO; }  // valid bit unset.
+        if ((accountData.getData()[0] & 0x80) == 0x00) { return BigInteger.ZERO; }  // valid bit unset.
 
         int numRows = (accountData.getData()[0] & 0x0F);
         byte[] balance = new byte[(numRows * DoubleDataWord.BYTES) + 1];
         for (int i = 0; i < numRows; i++) {
-            byte[] balKey = new byte[DoubleDataWord.BYTES];
-            balKey[0] = (byte) (BALANCE_CODE | i);
+            byte[] balKey = makeBalanceKey(account, i);
             byte[] balVal = track.getStorageValue(contract, new DoubleDataWord(balKey)).getData();  //NPE if inconsistent state.
             System.arraycopy(balVal, 0, balance, (i * DoubleDataWord.BYTES) + 1, DoubleDataWord.BYTES);
         }
@@ -293,15 +300,14 @@ public final class TRSuseContract extends AbstractTRS {
         int numRows = bal.length / DoubleDataWord.BYTES;
         if (numRows > 16) { return false; }
         for (int i = 0; i < numRows; i++) {
-            byte[] balKey = new byte[DoubleDataWord.BYTES];
-            balKey[0] = (byte) (BALANCE_CODE | i);
+            byte[] balKey = makeBalanceKey(account, i);
             byte[] balVal = new byte[DoubleDataWord.BYTES];
             System.arraycopy(bal, i * DoubleDataWord.BYTES, balVal, 0, DoubleDataWord.BYTES);
             track.addStorageRow(contract, new DoubleDataWord(balKey), new DoubleDataWord(balVal));
         }
 
         // Update account meta data.
-        IDataWord acctData = track.getStorageValue(account, new DoubleDataWord(caller.toBytes()));
+        IDataWord acctData = track.getStorageValue(contract, new DoubleDataWord(account.toBytes()));
         byte[] acctVal;
         if (acctData == null) {
             // Set null bit and row count but do not set valid bit.
@@ -312,7 +318,7 @@ public final class TRSuseContract extends AbstractTRS {
             acctVal = acctData.getData();
             acctVal[0] = (byte) ((acctVal[0] & 0x40) | 0x80 | numRows);
         }
-        track.addStorageRow(contract, new DoubleDataWord(caller.toBytes()), new DoubleDataWord(acctVal));
+        track.addStorageRow(contract, new DoubleDataWord(account.toBytes()), new DoubleDataWord(acctVal));
         return true;
     }
 
@@ -330,15 +336,16 @@ public final class TRSuseContract extends AbstractTRS {
         byte[] temp = balance.toByteArray();
         boolean chopFirstByte = ((temp.length - 1) % DoubleDataWord.BYTES == 0) && (temp[0] == 0x0);
 
-        int numRows;
+        byte[] bal;
         if (chopFirstByte) {
-            numRows = (temp.length - 1) / DoubleDataWord.BYTES; // guaranteed a divisor by above.
+            int numRows = (temp.length - 1) / DoubleDataWord.BYTES; // guaranteed a divisor by above.
+            bal = new byte[numRows * DoubleDataWord.BYTES];
+            System.arraycopy(temp, 1, bal, bal.length - temp.length + 1, temp.length - 1);
         } else {
-            numRows = (int) Math.ceil(((double) temp.length) / DoubleDataWord.BYTES);
+            int numRows = (int) Math.ceil(((double) temp.length) / DoubleDataWord.BYTES);
+            bal = new byte[numRows * DoubleDataWord.BYTES];
+            System.arraycopy(temp, 0, bal, bal.length - temp.length, temp.length);
         }
-
-        byte[] bal = new byte[numRows * DoubleDataWord.BYTES];
-        System.arraycopy(temp, 0, bal, bal.length - temp.length, temp.length);
         return bal;
     }
 
@@ -428,18 +435,23 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
-     * Adds the data data as the head entry data (for the linked list) corresponding to the TRS
-     * contract given by the address contract.
+     * Returns a key for the database to query the balance entry at row number row for the account
+     * account. All valid row numbers are in the range [0, 15].
      *
-     * This method does not flush.
-     *
-     * @param contract The TRS contract.
-     * @param data The head entry data to add.
+     * @param account The account to look up.
+     * @param row The balance row to use.
+     * @return the key to access the specified balance row for the account in contract.
+     * @throws IllegalArgumentException if row is larger than 15 or less than 0.
      */
-    private void addHeadData(Address contract, byte[] data) {
-        byte[] listKey = new byte[DoubleDataWord.BYTES];
-        listKey[0] = LINKED_LIST_CODE;
-        track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(data));
+    private byte[] makeBalanceKey(Address account, int row) {
+        if ((row < 0) || (row > 15)) {
+            throw new IllegalArgumentException("Bad balance row number: " + row);
+        }
+
+        byte[] balKey = new byte[DoubleDataWord.BYTES];
+        balKey[0] = (byte) (BALANCE_CODE | row);
+        System.arraycopy(account.toBytes(), 1, balKey, 1, DoubleDataWord.BYTES - 1);
+        return balKey;
     }
 
 }

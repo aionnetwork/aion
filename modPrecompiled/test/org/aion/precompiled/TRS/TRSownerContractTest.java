@@ -50,26 +50,6 @@ public class TRSownerContractTest extends TRShelpers {
         return new TRSownerContract(repo, caller);
     }
 
-    // Returns a new DoubleDataWord that wraps data. Here so we can switch types easy if needed.
-    private DoubleDataWord newDoubleDataWord(byte[] data) {
-        return new DoubleDataWord(data);
-    }
-
-    // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
-    private Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
-        int periods, BigInteger percent, int precision) {
-
-        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
-
-        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
-        byte[] specsBytes = specs.getData();
-        specsBytes[14] = (byte) 0x1;
-
-        repo.addStorageRow(contract, getSpecKey(), newDoubleDataWord(specsBytes));
-        repo.flush();
-        return contract;
-    }
-
     // Returns an input byte array for the lock operation using the provided parameters.
     private byte[] getLockInput(Address contract) {
         byte[] input = new byte[33];
@@ -90,7 +70,7 @@ public class TRSownerContractTest extends TRShelpers {
     private Address fetchOwner(Address contract) {
         byte[] key = new byte[DoubleDataWord.BYTES];
         key[0] = (byte) 0xF0;
-        IDataWord owner = repo.getStorageValue(contract, newDoubleDataWord(key));
+        IDataWord owner = repo.getStorageValue(contract, newIDataWord(key));
         return Address.wrap(owner.getData());
     }
 
@@ -129,13 +109,6 @@ public class TRSownerContractTest extends TRShelpers {
     // Returns true only if the TRS contract whose contract specs are given by specsData is live.
     private boolean fetchIsLive(IDataWord specsData) {
         return specsData.getData()[15] == (byte) 0x1;
-    }
-
-    // Returns a DataWord that is the key corresponding to the contract specifications in storage.
-    private IDataWord getSpecKey() {
-        byte[] specsKey = new byte[DoubleDataWord.BYTES];
-        specsKey[0] = (byte) 0xE0;
-        return newDoubleDataWord(specsKey);
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
