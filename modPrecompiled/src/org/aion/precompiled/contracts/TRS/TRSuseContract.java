@@ -23,12 +23,14 @@
 package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
@@ -194,6 +196,8 @@ public final class TRSuseContract extends AbstractTRS {
             if (!updateLinkedList(contract)) {
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
+
+            setTotalBalance(contract, fetchTotalBalance(contract).add(amount));
             track.addBalance(caller, amount.negate());
             track.flush();
         }
@@ -260,16 +264,22 @@ public final class TRSuseContract extends AbstractTRS {
      * @return the account's deposit balance for this TRS contract.
      */
     private BigInteger fetchDepositBalance(Address contract, Address account) {
-        IDataWord accountData = track.getStorageValue(contract, new DoubleDataWord(account.toBytes()));
-        if (accountData == null) { return BigInteger.ZERO; }    // no entry.
-        if ((accountData.getData()[0] & 0x80) == 0x00) { return BigInteger.ZERO; }  // valid bit unset.
+        IDataWord accountData = track
+            .getStorageValue(contract, new DoubleDataWord(account.toBytes()));
+        if (accountData == null) {
+            return BigInteger.ZERO;
+        }    // no entry.
+        if ((accountData.getData()[0] & 0x80) == 0x00) {
+            return BigInteger.ZERO;
+        }  // valid bit unset.
 
         int numRows = (accountData.getData()[0] & 0x0F);
         byte[] balance = new byte[(numRows * DoubleDataWord.BYTES) + 1];
         for (int i = 0; i < numRows; i++) {
             byte[] balKey = makeBalanceKey(account, i);
-            byte[] balVal = track.getStorageValue(contract, new DoubleDataWord(balKey)).getData();  //NPE if inconsistent state.
-            System.arraycopy(balVal, 0, balance, (i * DoubleDataWord.BYTES) + 1, DoubleDataWord.BYTES);
+            byte[] balVal = track.getStorageValue(contract, new DoubleDataWord(balKey)).getData();
+            System.arraycopy(balVal, 0, balance, (i * DoubleDataWord.BYTES) + 1,
+                DoubleDataWord.BYTES);
         }
         return new BigInteger(balance);
     }
@@ -296,7 +306,7 @@ public final class TRSuseContract extends AbstractTRS {
      */
     private boolean setDepositBalance(Address contract, Address account, BigInteger balance) {
         if (balance.compareTo(BigInteger.ONE) < 0) { return false; }
-        byte[] bal = toWordAlignedArray(balance);
+        byte[] bal = toDoubleWordAlignedArray(balance);
         int numRows = bal.length / DoubleDataWord.BYTES;
         if (numRows > 16) { return false; }
         for (int i = 0; i < numRows; i++) {
@@ -320,33 +330,6 @@ public final class TRSuseContract extends AbstractTRS {
         }
         track.addStorageRow(contract, new DoubleDataWord(account.toBytes()), new DoubleDataWord(acctVal));
         return true;
-    }
-
-    /**
-     * Returns a byte array representing balance such that the returned array is 32-byte word
-     * aligned.
-     *
-     * None of the 32-byte consecutive sections of the array will consist only of zero bytes. At
-     * least 1 byte per such section will be non-zero.
-     *
-     * @param balance The balance to convert.
-     * @return the 32-byte word-aligned byte array representation of balance.
-     */
-    private byte[] toWordAlignedArray(BigInteger balance) {
-        byte[] temp = balance.toByteArray();
-        boolean chopFirstByte = ((temp.length - 1) % DoubleDataWord.BYTES == 0) && (temp[0] == 0x0);
-
-        byte[] bal;
-        if (chopFirstByte) {
-            int numRows = (temp.length - 1) / DoubleDataWord.BYTES; // guaranteed a divisor by above.
-            bal = new byte[numRows * DoubleDataWord.BYTES];
-            System.arraycopy(temp, 1, bal, bal.length - temp.length + 1, temp.length - 1);
-        } else {
-            int numRows = (int) Math.ceil(((double) temp.length) / DoubleDataWord.BYTES);
-            bal = new byte[numRows * DoubleDataWord.BYTES];
-            System.arraycopy(temp, 0, bal, bal.length - temp.length, temp.length);
-        }
-        return bal;
     }
 
     /**
@@ -436,18 +419,13 @@ public final class TRSuseContract extends AbstractTRS {
 
     /**
      * Returns a key for the database to query the balance entry at row number row for the account
-     * account. All valid row numbers are in the range [0, 15].
+     * account. All valid row numbers are in the range [0, 15] and we assume row is valid here.
      *
      * @param account The account to look up.
-     * @param row The balance row to use.
+     * @param row The balance row to query.
      * @return the key to access the specified balance row for the account in contract.
-     * @throws IllegalArgumentException if row is larger than 15 or less than 0.
      */
     private byte[] makeBalanceKey(Address account, int row) {
-        if ((row < 0) || (row > 15)) {
-            throw new IllegalArgumentException("Bad balance row number: " + row);
-        }
-
         byte[] balKey = new byte[DoubleDataWord.BYTES];
         balKey[0] = (byte) (BALANCE_CODE | row);
         System.arraycopy(account.toBytes(), 1, balKey, 1, DoubleDataWord.BYTES - 1);

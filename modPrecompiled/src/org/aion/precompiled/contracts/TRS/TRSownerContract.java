@@ -419,6 +419,8 @@ public final class TRSownerContract extends AbstractTRS {
         listValue[0] = (byte) 0x80;
         addHeadData(contract, listValue);
 
+        // Save the total balance for this contract, currently as zero.
+        setTotalBalance(contract, BigInteger.ZERO);
         track.flush();
     }
 

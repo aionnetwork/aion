@@ -1,10 +1,14 @@
 package org.aion.precompiled.contracts.TRS;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
@@ -24,8 +28,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     //TODO: better to make these entire keys rather than just codes.
     static final byte OWNER_CODE = (byte) 0xF0;
     static final byte SPECS_CODE = (byte) 0xE0;
-    static final byte FUNDS_CODE = (byte) 0xD0;
     static final byte BALANCE_CODE = (byte) 0xB0;
+    static final byte TTL_BAL_SPECS_CODE = (byte) 0x91;
     static final byte TTL_BAL_CODE = (byte) 0x90;
     static final byte BONUS_CODE = (byte) 0x80;
     static final byte LINKED_LIST_CODE = (byte) 0x70;
@@ -140,6 +144,106 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] listKey = new byte[DoubleDataWord.BYTES];
         listKey[0] = LINKED_LIST_CODE;
         track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(data));
+    }
+
+    /**
+     * Returns the total deposit balance for the TRS contract given by the address contract.
+     *
+     * @param contract The TRS contract to query.
+     * @return the total balance of the contract.
+     */
+    BigInteger fetchTotalBalance(Address contract) {
+        byte[] ttlSpecKey = new byte[DataWord.BYTES];
+        ttlSpecKey[0] = TTL_BAL_SPECS_CODE;
+        IDataWord ttlSpec = track.getStorageValue(contract, new DataWord(ttlSpecKey));
+        int numRows = ByteBuffer.wrap(Arrays.copyOfRange(
+            ttlSpec.getData(), DataWord.BYTES - Integer.BYTES ,DataWord.BYTES)).getInt();
+        if (numRows == 0) { return BigInteger.ZERO; }
+
+        byte[] balance = new byte[(numRows * DoubleDataWord.BYTES) + 1];
+        for (int i = 0; i < numRows; i++) {
+            byte[] ttlKey = makeTotalBalanceKey(i);
+            byte[] ttlVal = track.getStorageValue(contract, new DataWord(ttlKey)).getData();
+            System.arraycopy(ttlVal, 0, balance, (i * DoubleDataWord.BYTES) + 1, DoubleDataWord.BYTES);
+        }
+        return new BigInteger(balance);
+    }
+
+    /**
+     * Sets the total balance of the TRS contract whose address is contract.
+     *
+     * If the contract does not have a total balance entry this method will create the entries
+     * sufficient to hold it and update the total balance specifications corresponding to it.
+     *
+     * This method assumes that balance is non-negative.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract to update.
+     * @param balance The total balance to set.
+     */
+    void setTotalBalance(Address contract, BigInteger balance) {
+        byte[] bal = toDoubleWordAlignedArray(balance);
+        int numRows = bal.length / DoubleDataWord.BYTES;
+        for (int i = 0; i < numRows; i++) {
+            byte[] ttlKey = makeTotalBalanceKey(i);
+            byte[] ttlVal = new byte[DoubleDataWord.BYTES];
+            System.arraycopy(bal, i * DoubleDataWord.BYTES, ttlVal, 0, DoubleDataWord.BYTES);
+            track.addStorageRow(contract, new DataWord(ttlKey), new DoubleDataWord(ttlVal));
+        }
+
+        // Update total balance specs.
+        byte[] ttlSpec = new byte[DataWord.BYTES];
+        for (int i = 0; i < Integer.BYTES; i++) {
+            ttlSpec[DataWord.BYTES - i - 1] = (byte) ((numRows >> (i * Byte.SIZE)) & 0xFF);
+        }
+        byte[] ttlSpecKey = new byte[DataWord.BYTES];
+        ttlSpecKey[0] = TTL_BAL_SPECS_CODE;
+        track.addStorageRow(contract, new DataWord(ttlSpecKey), new DataWord(ttlSpec));
+    }
+
+    /**
+     * Returns a key for the database to query the total balance entry at row number row of some
+     * TRS contract.
+     *
+     * @param row The total balance row to query.
+     * @return the key to access the specified total balance row for some contract.
+     */
+    private byte[] makeTotalBalanceKey(int row) {
+        byte[] ttlKey = new byte[DataWord.BYTES];
+        ttlKey[0] = TTL_BAL_CODE;
+        for (int i = 0; i < Integer.BYTES; i++) {
+            ttlKey[DataWord.BYTES - i - 1] = (byte) ((row >> (i * Byte.SIZE)) & 0xFF);
+        }
+        return ttlKey;
+    }
+
+    /**
+     * Returns a byte array representing balance such that the returned array is 32-byte word
+     * aligned.
+     *
+     * None of the 32-byte consecutive sections of the array will consist only of zero bytes. At
+     * least 1 byte per such section will be non-zero.
+     *
+     * @param balance The balance to convert.
+     * @return the 32-byte word-aligned byte array representation of balance.
+     */
+    byte[] toDoubleWordAlignedArray(BigInteger balance) {
+        if (balance.equals(BigInteger.ZERO)) { return new byte[DoubleDataWord.BYTES]; }
+        byte[] temp = balance.toByteArray();
+        boolean chopFirstByte = ((temp.length - 1) % DoubleDataWord.BYTES == 0) && (temp[0] == 0x0);
+
+        byte[] bal;
+        if (chopFirstByte) {
+            int numRows = (temp.length - 1) / DoubleDataWord.BYTES; // guaranteed a divisor by above.
+            bal = new byte[numRows * DoubleDataWord.BYTES];
+            System.arraycopy(temp, 1, bal, bal.length - temp.length + 1, temp.length - 1);
+        } else {
+            int numRows = (int) Math.ceil(((double) temp.length) / DoubleDataWord.BYTES);
+            bal = new byte[numRows * DoubleDataWord.BYTES];
+            System.arraycopy(temp, 0, bal, bal.length - temp.length, temp.length);
+        }
+        return bal;
     }
 
 }

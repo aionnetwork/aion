@@ -8,10 +8,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
@@ -107,6 +110,24 @@ public class TRSuseContractTest extends TRShelpers {
         return new BigInteger(amt);
     }
 
+    // Returns the total deposit balance for the TRS contract contract.
+    private BigInteger fetchTotalBalance(Address contract) {
+        byte[] ttlSpecKey = new byte[DataWord.BYTES];
+        ttlSpecKey[0] = (byte) 0x91;
+        IDataWord ttlSpec = repo.getStorageValue(contract, new DataWord(ttlSpecKey));
+        int numRows = ByteBuffer.wrap(Arrays.copyOfRange(
+            ttlSpec.getData(), DataWord.BYTES - Integer.BYTES, DataWord.BYTES)).getInt();
+        if (numRows == 0) { return BigInteger.ZERO; }
+
+        byte[] balance = new byte[(numRows * DoubleDataWord.BYTES) + 1];
+        for (int i = 0; i < numRows; i++) {
+            byte[] ttlKey = makeTotalBalanceKey(i);
+            byte[] ttlVal = repo.getStorageValue(contract, new DataWord(ttlKey)).getData();
+            System.arraycopy(ttlVal, 0, balance, (i * DoubleDataWord.BYTES) + 1, DoubleDataWord.BYTES);
+        }
+        return new BigInteger(balance);
+    }
+
     // Returns the head of the list for contract or null if no head.
     private Address fetchLinkedListHead(Address contract) {
         byte[] listKey = new byte[DoubleDataWord.BYTES];
@@ -146,6 +167,15 @@ public class TRSuseContractTest extends TRShelpers {
         prevAddr[0] = (byte) 0xA0;
         System.arraycopy(prevBytes, 1, prevAddr, 1, Address.ADDRESS_LEN - 1);
         return new Address(prevAddr);
+    }
+
+    private byte[] makeTotalBalanceKey(int row) {
+        byte[] ttlKey = new byte[DataWord.BYTES];
+        ttlKey[0] = (byte) 0x90;
+        for (int i = 0; i < Integer.BYTES; i++) {
+            ttlKey[DataWord.BYTES - i - 1] = (byte) ((row >> (i * Byte.SIZE)) & 0xFF);
+        }
+        return ttlKey;
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
@@ -289,6 +319,7 @@ public class TRSuseContractTest extends TRShelpers {
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
+        assertEquals(BigInteger.TWO, fetchTotalBalance(contract));
     }
 
     @Test
@@ -328,6 +359,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
         assertFalse(fetchAccountHasPositiveDepositBalance(contract, acct));
+        assertEquals(BigInteger.ZERO, fetchTotalBalance(contract));
 
         // Test zero deposit with non-zero balance.
         acct = getNewExistentAccount(DEFAULT_BALANCE);
@@ -339,6 +371,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
         assertFalse(fetchAccountHasPositiveDepositBalance(contract, acct));
+        assertEquals(BigInteger.ZERO, fetchTotalBalance(contract));
     }
 
     @Test
@@ -355,6 +388,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
         assertEquals(BigInteger.ONE, fetchDepositBalance(contract, acct));
+        assertEquals(BigInteger.ONE, fetchTotalBalance(contract));
 
         // Test deposit with balance larger than one.
         acct = getNewExistentAccount(DEFAULT_BALANCE);
@@ -368,6 +402,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(DEFAULT_BALANCE.subtract(BigInteger.ONE), repo.getBalance(acct));
         assertEquals(BigInteger.ONE, fetchDepositBalance(contract, acct));
+        assertEquals(BigInteger.ONE, fetchTotalBalance(contract));
     }
 
     @Test
@@ -383,6 +418,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
         assertEquals(DEFAULT_BALANCE, fetchDepositBalance(contract, acct));
+        assertEquals(DEFAULT_BALANCE, fetchTotalBalance(contract));
 
         // Test on max deposit amount.
         BigInteger max = getMaxOneTimeDeposit();
@@ -397,6 +433,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
         assertEquals(max, fetchDepositBalance(contract, acct));
+        assertEquals(max, fetchTotalBalance(contract));
     }
 
     @Test
@@ -413,6 +450,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(DEFAULT_BALANCE, repo.getBalance(acct));
         assertEquals(max, fetchDepositBalance(contract, acct));
+        assertEquals(max, fetchTotalBalance(contract));
     }
 
     @Test
@@ -436,6 +474,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         assertEquals(left, repo.getBalance(acct));
         assertEquals(depo, fetchDepositBalance(contract, acct));
+        assertEquals(depo, fetchTotalBalance(contract));
     }
 
     @Test
@@ -461,6 +500,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         assertEquals(left, repo.getBalance(acct));
         assertEquals(depo, fetchDepositBalance(contract, acct));
+        assertEquals(depo, fetchTotalBalance(contract));
     }
 
     @Test
@@ -506,6 +546,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(acct1Depo, fetchDepositBalance(contract, acct1));
         assertEquals(acct2Depo, fetchDepositBalance(contract, acct2));
         assertEquals(acct3Depo, fetchDepositBalance(contract, acct3));
+        assertEquals(acct1Depo.add(acct2Depo).add(acct3Depo), fetchTotalBalance(contract));
     }
 
     @Test
@@ -525,6 +566,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
         assertEquals(total, fetchDepositBalance(contract, acct));
+        assertEquals(total, fetchTotalBalance(contract));
 
         // Second we deposit 1 and then deposit 2**31 - 1 to overflow into next row.
         acct = getNewExistentAccount(total);
@@ -540,6 +582,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
         assertEquals(total, fetchDepositBalance(contract, acct));
+        assertEquals(total, fetchTotalBalance(contract));
     }
 
     @Test
@@ -572,16 +615,6 @@ public class TRSuseContractTest extends TRShelpers {
     public void testDepositRequiresMoreThan16StorageRows() {
         // It is computationally infeasible to ever hit the ceiling but just to get a test case in we
         // will cheat a little and set the 16 storage rows directly.
-        //TODO
-    }
-
-    @Test
-    public void testTotalDepositBalanceOneDepositor() {
-        //TODO
-    }
-
-    @Test
-    public void testTotalDepositBalanceMultipleDeposits() {
         //TODO
     }
 
