@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.db;
 
 import static org.aion.crypto.HashUtil.h256;
@@ -29,6 +27,7 @@ import static org.aion.crypto.HashUtil.h256;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.aion.base.db.IContractDetails;
@@ -38,7 +37,6 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.core.AccountState;
-//import org.aion.types.vm.DataWord;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
@@ -168,14 +166,13 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getBalance();
     }
 
-    public DataWord getStorageValue(Address addr, DataWord key) {
+    public Optional<DataWord> getStorageValue(Address addr, DataWord key) {
         IContractDetails<DataWord> details = getContractDetails(addr);
-
-        if (details == null) {
-            return null;
+        if (details != null) {
+            DataWord val = details.get(key);
+            return (val == null) ? Optional.empty() : Optional.of(val);
         }
-
-        return details.get(key);
+        return Optional.empty();
     }
 
     public void addStorageRow(Address addr, DataWord key, DataWord value) {

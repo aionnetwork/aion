@@ -1,24 +1,25 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * <p>This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * <p>The aion network project is free software: you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software Foundation, either
- * version 3 of the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * <p>You should have received a copy of the GNU General Public License along with the aion network
- * project source files. If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.api.server.http;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
@@ -40,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -486,10 +488,12 @@ public class ApiWeb3Aion extends ApiAion {
         IRepository repo = this.ac.getRepository();
 
         @SuppressWarnings("unchecked")
-        DataWord storageValue = (DataWord) repo.getStorageValue(address, key);
-        if (storageValue != null)
-            return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
-        else return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
+        Optional<DataWord> storageValue = (Optional<DataWord>) repo.getStorageValue(address, key);
+        if (storageValue.isPresent()) {
+            return new RpcMsg(TypeConverter.toJsonHex(storageValue.get().getData()));
+        } else {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
+        }
     }
 
     public RpcMsg eth_getTransactionCount(Object _params) {

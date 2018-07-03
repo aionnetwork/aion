@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.db;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -295,9 +295,13 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public DataWord getStorageValue(Address address, DataWord key) {
+    public Optional<DataWord> getStorageValue(Address address, DataWord key) {
         IContractDetails<DataWord> details = getContractDetails(address);
-        return (details == null) ? null : details.get(key);
+        if (details != null) {
+            DataWord val = details.get(key);
+            return (val == null) ? Optional.empty() : Optional.of(val);
+        }
+        return Optional.empty();
     }
 
     @Override
