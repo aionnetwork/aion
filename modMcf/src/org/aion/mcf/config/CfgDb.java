@@ -34,6 +34,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.google.common.base.Objects;
 import org.aion.base.util.Utils;
 import org.aion.db.impl.DBVendor;
 
@@ -389,5 +391,25 @@ public class CfgDb {
                 entry.getValue().enable_heap_cache = value;
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgDb cfgDb = (CfgDb) o;
+        return compression == cfgDb.compression &&
+                check_integrity == cfgDb.check_integrity &&
+                expert == cfgDb.expert &&
+                Objects.equal(path, cfgDb.path) &&
+                Objects.equal(vendor, cfgDb.vendor) &&
+                Objects.equal(prune, cfgDb.prune) &&
+                prune_option == cfgDb.prune_option &&
+                Objects.equal(specificConfig, cfgDb.specificConfig);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(path, vendor, compression, check_integrity, prune, prune_option, expert, specificConfig);
     }
 }

@@ -194,6 +194,10 @@ public class AionHub {
         }
     }
 
+    public void initPow() {
+        this.pow.init(blockchain, mempool, eventMgr);
+    }
+
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
         cbs.add(new ReqStatusHandler(syncLOG, this.blockchain, this.p2pMgr,

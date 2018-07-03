@@ -4,9 +4,17 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.dynamic2.ConfigProposalResult;
+import org.aion.mcf.config.dynamic2.InFlightConfigReceiverMBean;
 import org.aion.os.KernelLauncher;
 import org.aion.zero.impl.config.CfgAion;
 
+import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import java.io.File;
@@ -63,7 +71,7 @@ public class ConfigManipulator {
         try {
             XMLStreamReader xmlStream = XMLInputFactory.newInstance()
                     .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
-            new CfgAion().fromXml(xmlStream);
+            new CfgAion().fromXML(xmlStream);
             return Optional.empty();
         } catch (Exception e) {
             e.printStackTrace();
@@ -72,12 +80,32 @@ public class ConfigManipulator {
         }
     }
 
-    public ApplyConfigResult applyNewConfig(String cfgXml) {
-        if(kernelLauncher.hasLaunchedInstance()) {
-            return new ApplyConfigResult(false,
-                    "Kernel is running.  Please terminate before applying.",
-                    null);
+    private void doJmxStuff(String cfgText) {
+        // JMX stuff
+        try {
+            JMXServiceURL url =
+                    new JMXServiceURL("service:jmx:rmi:///jndi/rmi://127.0.0.1:11234/jmxrmi");
+            JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
+            MBeanServerConnection mbeanServerConnection = jmxc.getMBeanServerConnection();
+            ObjectName mbeanName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
+            InFlightConfigReceiverMBean mbeanProxy = MBeanServerInvocationHandler.newProxyInstance(
+                    mbeanServerConnection, mbeanName, InFlightConfigReceiverMBean.class, true);
+
+            ConfigProposalResult result = mbeanProxy.propose(cfgText);
+            System.out.println("result = " + result.success);
+        } catch (Exception e) {
+            System.out.println("Something went horribly wrong!!");
+            e.printStackTrace();
         }
+        // End JMX stuff
+    }
+
+    public ApplyConfigResult applyNewConfig(String cfgXml) {
+//        if(kernelLauncher.hasLaunchedInstance()) {
+//            return new ApplyConfigResult(false,
+//                    "Kernel is running.  Please terminate before applying.",
+//                    null);
+//        }
 
         Optional<String> maybeError = checkForErrors(cfgXml);
         if(maybeError.isPresent()) {
@@ -85,6 +113,8 @@ public class ConfigManipulator {
                     + maybeError.get();
             return new ApplyConfigResult(false, msg, null);
         }
+
+        doJmxStuff(cfgXml);
 
         final String backupConfigFilename;
         try {
@@ -98,8 +128,9 @@ public class ConfigManipulator {
         }
 
         try {
-            Files.write(cfgXml, configFile(), Charsets.UTF_8);
-        } catch (IOException ioe) {
+            //Files.write(cfgXml, configFile(), Charsets.UTF_8);
+            System.out.println("Pretending to write the file!");
+        } catch (RuntimeException /* TODO IOExcepion */ioe) {
             String msg =
                     "Failed to write to the config file, so aborting operation.  Error during write:\n\n"
                     + ioe.getMessage();

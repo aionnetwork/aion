@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.xml.stream.*;
+
+import com.google.common.base.Objects;
 import org.aion.mcf.config.*;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
@@ -39,7 +41,7 @@ import org.aion.zero.impl.GenesisBlockLoader;
 /**
  * @author chris
  */
-public class CfgAion extends Cfg {
+public final class CfgAion extends Cfg {
 
     protected AionGenesis genesis;
 
@@ -88,7 +90,10 @@ public class CfgAion extends Cfg {
         }
     }
 
-    @Override
+    public CfgConsensusPow getConsensus() {
+        return (CfgConsensusPow) this.consensus;
+    }
+
     public synchronized AionGenesis getGenesis() {
         if (this.genesis == null)
             setGenesis();
@@ -150,7 +155,7 @@ public class CfgAion extends Cfg {
         }
     }
 
-    public boolean fromXml(XMLStreamReader sr) throws XMLStreamException {
+    public boolean fromXML(final XMLStreamReader sr) throws XMLStreamException {
         boolean shouldWriteBackToFile = false;
         loop: while (sr.hasNext()) {
             int eventType = sr.next();
@@ -223,9 +228,8 @@ public class CfgAion extends Cfg {
         try {
             fis = new FileInputStream(cfgFile);
             XMLStreamReader sr = input.createXMLStreamReader(fis);
-            shouldWriteBackToFile = fromXml(sr);
+            shouldWriteBackToFile = fromXML(sr);
             closeFileInputStream(fis);
-
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
             System.exit(1);
@@ -335,5 +339,18 @@ public class CfgAion extends Cfg {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgAion cfgAion = (CfgAion) o;
+        return Objects.equal(genesis, cfgAion.genesis);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(genesis);
     }
 }

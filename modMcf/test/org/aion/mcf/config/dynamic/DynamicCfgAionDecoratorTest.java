@@ -1,50 +1,45 @@
 package org.aion.mcf.config.dynamic;
 
 import org.aion.mcf.config.Cfg;
-import org.aion.mcf.config.ConfigProposalResult;
+import org.aion.mcf.config.dynamic2.ConfigProposalResult;
+import org.aion.mcf.config.dynamic2.InFlightConfigReceiverMBean;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.Test;
 
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import java.lang.management.ManagementFactory;
 
 public class DynamicCfgAionDecoratorTest {
-
-    @Test
-    public void test() {
-        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-        ObjectName objectName = null;
-        try {
-            objectName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-        }
-
-        Cfg cfg = CfgAion.inst();
-        IDynamicConfig dc = new DynamicCfgAionDecorator(cfg);
-        try {
-            server.registerMBean(dc, objectName);
-        } catch (InstanceAlreadyExistsException e) {
-            e.printStackTrace();
-        } catch (MBeanRegistrationException e) {
-            e.printStackTrace();
-        } catch (NotCompliantMBeanException e) {
-            e.printStackTrace();
-        }
-
-        while (true) {
-        }
-    }
+//
+//    @Test
+//    public void test() {
+//        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+//        ObjectName objectName = null;
+//        try {
+//            objectName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
+//        } catch (MalformedObjectNameException e) {
+//            e.printStackTrace();
+//        }
+//
+//        Cfg cfg = CfgAion.inst();
+//        IDynamicConfig dc = new DynamicCfgAionDecorator(cfg);
+//        try {
+//            server.registerMBean(dc, objectName);
+//        } catch (InstanceAlreadyExistsException e) {
+//            e.printStackTrace();
+//        } catch (MBeanRegistrationException e) {
+//            e.printStackTrace();
+//        } catch (NotCompliantMBeanException e) {
+//            e.printStackTrace();
+//        }
+//
+//        while (true) {
+//        }
+//    }
 
     @Test
     public void client() throws Exception {
@@ -53,14 +48,14 @@ public class DynamicCfgAionDecoratorTest {
         JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
         MBeanServerConnection mbeanServerConnection = jmxc.getMBeanServerConnection();
         ObjectName mbeanName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
-        DynamicCfgAionDecoratorMBean mbeanProxy = (DynamicCfgAionDecoratorMBean) MBeanServerInvocationHandler.newProxyInstance(
-                mbeanServerConnection, mbeanName, DynamicCfgAionDecoratorMBean.class, true);
+        InFlightConfigReceiverMBean mbeanProxy = (InFlightConfigReceiverMBean) MBeanServerInvocationHandler.newProxyInstance(
+                mbeanServerConnection, mbeanName, InFlightConfigReceiverMBean.class, true);
 
 
         Cfg cfg = new CfgAion();
         cfg.setId("testId");
-        ConfigProposalResult result = mbeanProxy.proposeCfg(cfgExample);
-        System.out.println(result.result);
+        ConfigProposalResult result = mbeanProxy.propose(cfgExample);
+        System.out.println("result = " + result.success);
     }
 
     private String cfgExample = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
@@ -70,7 +65,7 @@ public class DynamicCfgAionDecoratorTest {
             "\t<api>\n" +
             "\t\t<rpc active=\"false\" ip=\"127.0.0.1\" port=\"8545\">\n" +
             "\t\t\t<!--boolean, enable/disable cross origin requests (browser enforced)-->\n" +
-            "\t\t\t<cors-enabled>false</cors-enabled>\n" +
+            "\t\t\t<cors-enabled>true</cors-enabled>\n" +
             "\t\t\t<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->\n" +
             "\t\t\t<apis-enabled>web3,eth,personal,stratum</apis-enabled>\n" +
             "\t\t\t<!--size of thread pool allocated for rpc requests-->\n" +

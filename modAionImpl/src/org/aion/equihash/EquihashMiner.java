@@ -32,6 +32,7 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
+import org.aion.mcf.config.Cfg;
 import org.aion.mcf.mine.AbstractMineRunner;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
@@ -267,6 +268,14 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         } else {
             LOG.info("<sealing-disabled>");
         }
+    }
+
+    /**
+     * TODO keep this, or replace with setCfg to just replace the entire thing?
+     */
+//    @Override
+    public Cfg getCfg() {
+        return this.cfg;
     }
 
     /**

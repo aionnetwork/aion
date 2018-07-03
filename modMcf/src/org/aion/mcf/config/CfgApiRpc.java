@@ -23,6 +23,8 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -192,5 +194,24 @@ public final class CfgApiRpc {
     public int getMaxthread() { return maxthread; }
     public boolean isFiltersEnabled() {
         return filtersEnabled;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgApiRpc cfgApiRpc = (CfgApiRpc) o;
+        return active == cfgApiRpc.active &&
+                port == cfgApiRpc.port &&
+                corsEnabled == cfgApiRpc.corsEnabled &&
+                maxthread == cfgApiRpc.maxthread &&
+                filtersEnabled == cfgApiRpc.filtersEnabled &&
+                Objects.equal(ip, cfgApiRpc.ip) &&
+                Objects.equal(enabled, cfgApiRpc.enabled);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(active, ip, port, enabled, corsEnabled, maxthread, filtersEnabled);
     }
 }

@@ -25,10 +25,10 @@
 
 package org.aion.mcf.config;
 
+import org.aion.mcf.types.AbstractBlock;
+
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import org.aion.mcf.types.AbstractBlock;
-import org.aion.zero.impl.config.CfgConsensusPow;
 
 /**
  * @author chris
@@ -132,12 +132,12 @@ public abstract class Cfg {
     }
 
 
-    public CfgConsensusPow getConsensus() {
-        return (CfgConsensusPow) this.consensus;
+    public CfgConsensus getConsensus() {
+        return this.consensus;
     }
 
-    public void setConsensus(CfgConsensusPow _consensusPow) {
-        this.consensus = _consensusPow;
+    public void setConsensus(CfgConsensus _consensus) {
+        this.consensus = _consensus;
     }
 
     /**
