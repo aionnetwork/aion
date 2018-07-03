@@ -134,8 +134,7 @@ public class NodeMgr implements INodeMgr {
                         n.getChannel().hashCode())
                     );
                 } catch (Exception ex) {
-                    ex.printStackTrace();
-                    p2pLOG.error("NodeMgr dumpNodeInfo exception {}", ex.getMessage());
+                    p2pLOG.info("NodeMgr dumpNodeInfo exception.", ex);
                 }
             }
         }
@@ -251,8 +250,8 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            e.printStackTrace();
-            p2pLOG.debug("timeoutOutbound IllegalStateException ", e.getMessage());
+            p2pLOG.info("timeoutOutbound IllegalStateException", e);
+
         }
     }
 
@@ -373,8 +372,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            e.printStackTrace();
-            p2pLOG.debug("timeoutInbound IllegalStateException ", e.getMessage());
+            p2pLOG.info("timeoutInbound IllegalStateException ", e);
         }
     }
 
@@ -407,8 +405,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            e.printStackTrace();
-            p2pLOG.debug("timeoutActive IllegalStateException ", e.getMessage());
+            p2pLOG.info("timeoutActive IllegalStateException ", e);
         }
     }
 
@@ -418,8 +415,7 @@ public class NodeMgr implements INodeMgr {
         try {
             node = activeNodes.remove(nodeIdHash);
         } catch (Exception e) {
-            e.printStackTrace();
-            p2pLOG.debug("dropActive exception", e.getMessage());
+            p2pLOG.info("dropActive exception ", e);
         }
 
         if (node == null) {
@@ -451,8 +447,7 @@ public class NodeMgr implements INodeMgr {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            p2pLOG.error("p2p-shutdown exception {}", e.getMessage());
+            p2pLOG.info("p2p-shutdown exception ", e);
         }
     }
 
@@ -464,8 +459,7 @@ public class NodeMgr implements INodeMgr {
                 node.getPeerMetric().ban();
             }
         } catch (NullPointerException e) {
-            e.printStackTrace();
-            p2pLOG.error("p2p-ban null exception {}", e.getMessage());
+            p2pLOG.info("p2p-ban null exception ", e);
         }
     }
 }
