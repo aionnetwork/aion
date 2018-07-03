@@ -58,8 +58,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private static final String RESOLVER_HASH = "ResolverHash";
     private static final String OWNER_HASH = "OwnerHash";
     private static final String TTL_HASH = "TTLHash";
+    private Address activeDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000600");
+    private Address domainNameAddressPair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000603");
 
-    private Address address; // of contract
+    private Address address;
     private Address ownerAddress;
     private Address ownerAddressKey;
     private Address resolverAddressKey;
@@ -72,6 +74,15 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             Address address,
             Address ownerAddress) { // byte
         super(track);
+        if (!isAvailableDomain(address, ownerAddress)) {
+            System.out.println("This domain is not available for you");
+            throw new IllegalArgumentException(
+                    "This domain is not available for you\n");
+        }
+        else{
+            System.out.println("Registered domain success at:" + address);
+        }
+
         this.address = address;
         setUpKeys();
         if (!isValidDomainAddress(address)) {
@@ -84,9 +95,9 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         }
         if (!(getOwnerAddress().equals(ownerAddress))
                 && !(getOwnerAddress()
-                        .equals(
-                                Address.wrap(
-                                        "0000000000000000000000000000000000000000000000000000000000000000")))) {
+                .equals(
+                        Address.wrap(
+                                "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
                     "The owner address of this domain from repository is different than the given"
                             + "owner address from the input\n");
@@ -106,7 +117,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
      *      [96 signature]
      *      1 + 1 + 32 + 96 = 130
      *
-     *      [32b new address] - optional
+     *      [32b subdomain address] - optional
      *      [96b signature] - optional
      *      [32b subdomain name in bytes] - optional
      *      130 + 32 + 32 + 32 = 226
@@ -165,9 +176,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
-        byte[] payload = new byte[34];
-        System.arraycopy(input, 0, payload, 0, 34);
-        boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
+        byte[] data = new byte[32];
+        System.arraycopy(ownerAddress.toBytes(), 0, data, 0, 32);
+
+        boolean b = ECKeyEd25519.verify(data, sig.getSignature(), sig.getPubkey(null));
         if (!b) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -380,6 +392,16 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] ret = new byte[counter];
         System.arraycopy(b, 0, ret, 0, counter);
         return ret;
+    }
+
+    private boolean isAvailableDomain(Address domainAddress, Address ownerAddress){
+        IDataWord addrFirstPart = this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())));
+        IDataWord addrSecondPart = this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(blake128(domainAddress.toBytes()))));
+        Address addrFromRepo = Address.wrap(combineTwoBytes(addrFirstPart.getData(), addrSecondPart.getData()));
+
+        if (addrFromRepo.equals(ownerAddress))
+            return true;
+        return false;
     }
 
     /** getter functions */

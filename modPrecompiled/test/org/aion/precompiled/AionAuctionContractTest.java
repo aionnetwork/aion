@@ -22,20 +22,30 @@
  */
 package org.aion.precompiled;
 
-import org.aion.base.db.IRepositoryCache;
+import org.aion.base.db.*;
 import org.aion.base.type.Address;
+import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.config.CfgPrune;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.AionAuctionContract;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.AionNameServiceContract;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.ContractDetailsAion;
+import org.aion.zero.impl.types.AionBlock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.util.Properties;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -81,6 +91,32 @@ public class AionAuctionContractTest {
         repo.addBalance(Address.wrap(k4.getAddress()), new BigInteger("10000"));
     }
 
+    private static IRepositoryConfig repoConfig =
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
+
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
+
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
+
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
+
     @After
     public void tearDown(){
 
@@ -93,6 +129,16 @@ public class AionAuctionContractTest {
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
                         (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+    }
+
+    @Test()
+    public void testBlockchain(){
+        AionRepositoryImpl repo = AionRepositoryImpl.createForTesting(repoConfig);
+        IRepositoryCache tracker = repo.startTracking();
+        AionAuctionContract aac = new AionAuctionContract(tracker, Address.wrap(defaultKey.getAddress()));
+        tracker.getBlockStore();
+
+
     }
 
     @Test()
@@ -162,8 +208,6 @@ public class AionAuctionContractTest {
         assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
         assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
 
-        aac.query();
-
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
                         (IRepositoryCache) repo, Address.wrap(result.getOutput()), Address.wrap(k4.getAddress()));
@@ -177,7 +221,7 @@ public class AionAuctionContractTest {
     }
 
     @Test
-    public void testMain() throws UnsupportedEncodingException {
+    public void testMain(){
         final long inputEnergy = 24000L;
 
         BigInteger amount = new BigInteger("1000");
@@ -228,8 +272,6 @@ public class AionAuctionContractTest {
         assertEquals(8000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
         assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
 
-        aac.query();
-
         try {
             Thread.sleep(3 * 1000L);
         } catch (InterruptedException e) {
@@ -241,8 +283,6 @@ public class AionAuctionContractTest {
         assertEquals(8000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
         assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
         assertEquals(7000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
-
-        aac.query();
 
         try {
             Thread.sleep(3 * 1000L);
@@ -256,10 +296,66 @@ public class AionAuctionContractTest {
         assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
         assertEquals(10000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
 
-        aac.query();
     }
 
     //-------------------------------------Basic Tests ------------------------------------------//
+    @Test()
+    public void testQuery() {
+        //register multiple domain names
+
+        BigInteger amount = new BigInteger("1000");
+        BigInteger amount2 = new BigInteger("2000");
+        BigInteger amount3 = new BigInteger("3000");
+
+        byte[] combined = setupInputs("aion.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac = new AionAuctionContract(repo, Address.wrap(k.getAddress()));
+        aac.execute(combined, DEFAULT_INPUT_NRG);
+
+        byte[] combined2 = setupInputs("aaaa.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
+        AionAuctionContract aac2 = new AionAuctionContract(repo, Address.wrap(k.getAddress()));
+        aac.execute(combined2, DEFAULT_INPUT_NRG);
+
+        byte[] combined3 = setupInputs("bbbb.aaaa.aion", Address.wrap(k2.getAddress()), amount3.toByteArray(), k2);
+        AionAuctionContract aac3 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()));
+        aac.execute(combined3, DEFAULT_INPUT_NRG);
+
+        try {
+            Thread.sleep(1000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        byte[] combined4 = setupInputs("cccc.aaaa.aion", Address.wrap(k.getAddress()), amount3.toByteArray(), k);
+        AionAuctionContract aac4 = new AionAuctionContract(repo, Address.wrap(k.getAddress()));
+        aac.execute(combined4, DEFAULT_INPUT_NRG);
+
+        byte[] combined5 = setupInputs("cccc.aaaa.aion", Address.wrap(k2.getAddress()), amount2.toByteArray(), k2);
+        AionAuctionContract aac5 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()));
+        aac.execute(combined5, DEFAULT_INPUT_NRG);
+
+        aac.displayMyBidForDomain("aion.aion", k);
+        aac.displayMyBids(k);
+        //aac.displayAllAuctionDomains();
+        //aac.displayAllActiveDomains();
+
+        try {
+            Thread.sleep(1500L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        aac.displayAllDomains();
+
+        try {
+            Thread.sleep(1000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        aac.displayMyDomains(k);
+
+
+    }
+
     @Test()
     public void testInvalidDomainNames(){
         byte[] combined = setupInputs("aa.aion", Address.wrap(defaultKey.getAddress()), defaultBidAmount.toByteArray(), defaultKey);
@@ -419,7 +515,6 @@ public class AionAuctionContractTest {
         byte[] input = setupInputs(domainName1, Address.wrap(defaultKey.getAddress()), defaultBidAmount.toByteArray(), defaultKey);
         testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        ECKey k3 = ECKeyFac.inst().create();
         AionAuctionContract aac3 = new AionAuctionContract(repo, Address.wrap(k3.getAddress()));
         BigInteger anotherAmount = new BigInteger("5000");
         byte[] input3 = setupInputs(domainName1, Address.wrap(k3.getAddress()), anotherAmount.toByteArray(), k3);
