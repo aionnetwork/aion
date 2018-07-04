@@ -10,7 +10,6 @@ import org.mockito.ArgumentMatchers;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 
-import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -28,7 +27,7 @@ public class KernelLauncherTest {
         KernelLaunchConfigurator klc = mock(KernelLaunchConfigurator.class);
         EventBusRegistry ebr = mock(EventBusRegistry.class);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, mock(File.class) /* not used */);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, mock(File.class) /* not used */);
 
         String expectedPid = "1337";
         Process process = mock(Process.class);
@@ -42,7 +41,7 @@ public class KernelLauncherTest {
         KernelLaunchConfigurator klc = mock(KernelLaunchConfigurator.class);
         EventBusRegistry ebr = mock(EventBusRegistry.class);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, mock(File.class) /* not used */);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, mock(File.class) /* not used */);
 
         Process process = mock(Process.class);
         when(process.waitFor()).thenThrow(new InterruptedException());
@@ -54,7 +53,7 @@ public class KernelLauncherTest {
         KernelLaunchConfigurator klc = mock(KernelLaunchConfigurator.class);
         EventBusRegistry ebr = mock(EventBusRegistry.class);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, mock(File.class) /* not used */);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, mock(File.class) /* not used */);
 
         String stdout = "something_that_is_not_a_number";
         Process process = mock(Process.class);
@@ -69,7 +68,7 @@ public class KernelLauncherTest {
         EventBusRegistry ebr = mock(EventBusRegistry.class);
         when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(mock(EventBus.class));
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, mock(File.class) /* not used */);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, mock(File.class) /* not used */);
 
         unit.setCurrentInstance(mock(KernelInstanceId.class));
         unit.tryResume();
@@ -81,7 +80,7 @@ public class KernelLauncherTest {
         EventBusRegistry ebr = mock(EventBusRegistry.class);
         File pidFile = mock(File.class);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, pidFile);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, pidFile);
 
         when(pidFile.exists()).thenReturn(false);
         assertThat(unit.tryResume(), is(false));
@@ -104,7 +103,7 @@ public class KernelLauncherTest {
         EventBus eb = mock(EventBus.class);
         when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(eb);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, mock(File.class) /* not used */);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, mock(File.class) /* not used */);
 
         unit.setCurrentInstance(mock(KernelInstanceId.class));
         verify(eb).post(ArgumentMatchers.any(KernelProcEvent.KernelLaunchedEvent.class));
@@ -118,7 +117,7 @@ public class KernelLauncherTest {
         EventBus eb = mock(EventBus.class);
         when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(eb);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, mock(File.class) /* not used */);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, mock(File.class) /* not used */);
 
         unit.setCurrentInstance(null);
         verify(eb).post(ArgumentMatchers.any(KernelProcEvent.KernelTerminatedEvent.class));
@@ -128,7 +127,7 @@ public class KernelLauncherTest {
     @Test(expected = IllegalArgumentException.class)
     public void testTerminateWhenNoCurrentInstance() throws Exception {
         EventBusRegistry ebr = mock(EventBusRegistry.class);
-        KernelLauncher unit = new KernelLauncher(CfgGuiLauncher.AUTODETECTING_CONFIG, ebr);
+        KernelLauncher unit = new KernelLauncher(CfgGuiLauncher.DEFAULT_CONFIG, ebr);
         unit.terminate();
     }
 
@@ -138,7 +137,7 @@ public class KernelLauncherTest {
         EventBusRegistry ebr = mock(EventBusRegistry.class);
         File pidFile = mock(File.class);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.AUTODETECTING_CONFIG, klc, ebr, pidFile);
+                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, pidFile);
 
         when(pidFile.exists()).thenReturn(true);
         when(pidFile.isFile()).thenReturn(true);
@@ -149,7 +148,7 @@ public class KernelLauncherTest {
     /*
     @Test
     public void test() throws Exception {
-        //Process proc = new KernelLauncher(CfgGuiLauncher.AUTODETECTING_CONFIG).launch();
+        //Process proc = new KernelLauncher(CfgGuiLauncher.DEFAULT_CONFIG).launch();
         Thread.sleep(15000);
     }
     */
@@ -158,7 +157,7 @@ public class KernelLauncherTest {
     @Test
     public void testLaunchAuto() throws Exception {
         KernelLaunchConfigurator klc = mock(KernelLaunchConfigurator.class);
-        KernelLauncher unit = new KernelLauncher(CfgGuiLauncher.AUTODETECTING_CONFIG, klc);
+        KernelLauncher unit = new KernelLauncher(CfgGuiLauncher.DEFAULT_CONFIG, klc);
 
         ProcessBuilder processBuilder = mock(ProcessBuilder.class);
         unit.launch(processBuilder);
@@ -171,7 +170,7 @@ public class KernelLauncherTest {
         KernelLaunchConfigurator klc = mock(KernelLaunchConfigurator.class);
         CfgGuiLauncher cfg = new CfgGuiLauncher();
         cfg.setAutodetectJavaRuntime(false);
-        KernelLauncher unit = new KernelLauncher(CfgGuiLauncher.AUTODETECTING_CONFIG, klc);
+        KernelLauncher unit = new KernelLauncher(CfgGuiLauncher.DEFAULT_CONFIG, klc);
 
         ProcessBuilder processBuilder = mock(ProcessBuilder.class);
         unit.launch(processBuilder);

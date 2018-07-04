@@ -223,4 +223,9 @@ public class CfgLogTest extends CfgLog {
 
         return true;
     }
+
+    @Test
+    public void test() {
+        System.out.println( new CfgLog().toXML() );
+    }
 }

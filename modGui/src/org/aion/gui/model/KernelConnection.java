@@ -117,7 +117,7 @@ public class KernelConnection {
      *
      * @return api that the kernel is connected to
      */
-    @VisibleForTesting IAionAPI getApi() {
+    IAionAPI getApi() {
         // Impl note: Can make this public if there's a good reason for other classes
         // to call this in the future.  Because of the non-thread-safe nature of API,
         // currently it is restricted and the recommended way to call the API is to subclass
@@ -128,8 +128,10 @@ public class KernelConnection {
 
     private String getConnectionString() {
         final String protocol = "tcp";
-        final String ip = Preconditions.checkNotNull(cfgApi.getZmq().getIp());
-        final String port = Preconditions.checkNotNull(String.valueOf(cfgApi.getZmq().getPort()));
+        final String ip = Preconditions.checkNotNull(cfgApi.getZmq().getIp(),
+                "ip is not configured");
+        final String port = Preconditions.checkNotNull(String.valueOf(cfgApi.getZmq().getPort()),
+                "port is not configured");
         return protocol + "://" + ip + ":" + port;
     }
 }

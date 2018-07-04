@@ -86,7 +86,7 @@ public class MainWindow extends Application {
 
     public MainWindow() {
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
-        kernelLauncher = new KernelLauncher(CfgGuiLauncher.AUTODETECTING_CONFIG /* TODO actual config */,
+        kernelLauncher = new KernelLauncher(CfgAion.inst().getGui().getCfgGuiLauncher(),
                 EventBusRegistry.INSTANCE);
     }
 

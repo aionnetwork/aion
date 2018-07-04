@@ -47,14 +47,13 @@ trap "exit_kernel" EXIT
 
 exit_kernel() { 
     if [ ! -z "$kernel_pid" ]; then
-        echo "killing $kernel_pid"
-        kill "$kernel_pid" 
+        kill "$kernel_pid" &> /dev/null 
     fi
-    exit 0
+    exit 1
 }
 
 
-env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
+env EVMJIT="-cache=1" $JAVA_CMD -Xms2g -Dcom.sun.management.jmxremote=true  -Dcom.sun.management.jmxremote.port=11234  -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false \
         -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
 kernel_pid=$!
 wait

@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Optional;
 
 /** Facilitates launching an instance of the Kernel and managing the launched instance. */
 public class KernelLauncher {
@@ -34,7 +33,7 @@ public class KernelLauncher {
     /**
      * Constructor.
      *
-     * @see {@link CfgGuiLauncher#AUTODETECTING_CONFIG} if you want Kernel Launcher to auto-detect
+     * @see {@link CfgGuiLauncher#DEFAULT_CONFIG} if you want Kernel Launcher to auto-detect
      *      the parameters
      */
     public KernelLauncher(CfgGuiLauncher config,
@@ -205,18 +204,35 @@ public class KernelLauncher {
         return kernel;
     }
 
-    @VisibleForTesting void removePersistedPid() throws IOException {
+    @VisibleForTesting void removePersistedPid() {
         if(pidFile.exists() && pidFile.isFile()) {
-            pidFile.delete();
+            String cannotRemoveMessage = String.format(
+                    "Failed to remove Kernel pid file '%s'.  " +
+                            "GUI may start in an incorrect next time it is run." +
+                            "  Please remove the file manually to correct this.",
+                    pidFile.getAbsolutePath()
+            );
+            try {
+                if (!pidFile.delete()) {
+                    LOGGER.error(cannotRemoveMessage);
+                }
+            } catch (SecurityException se) {
+                LOGGER.error(cannotRemoveMessage);
+            }
+        } else {
+            LOGGER.warn("Could not find Kernel pid file '{}' when trying to delete it.",
+                    pidFile.getAbsolutePath());
         }
     }
 
     @VisibleForTesting void setCurrentInstance(KernelInstanceId instance) {
         this.currentInstance = instance;
         if(null == instance) {
-            eventBusRegistry.getBus(EventBusRegistry.KERNEL_BUS).post(new KernelProcEvent.KernelTerminatedEvent());
+            eventBusRegistry.getBus(EventBusRegistry.KERNEL_BUS)
+                    .post(new KernelProcEvent.KernelTerminatedEvent());
         } else {
-            eventBusRegistry.getBus(EventBusRegistry.KERNEL_BUS).post(new KernelProcEvent.KernelLaunchedEvent());
+            eventBusRegistry.getBus(EventBusRegistry.KERNEL_BUS)
+                    .post(new KernelProcEvent.KernelLaunchedEvent());
         }
     }
 

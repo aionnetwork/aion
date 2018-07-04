@@ -1,7 +1,12 @@
 package org.aion.mcf.config;
 
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 
 /**
  * Configuration for Aion kernel launcher within modGui.
@@ -14,17 +19,22 @@ public class CfgGuiLauncher {
     private String javaHome;
     private String aionSh;
     private String workingDir;
-    private boolean keepKernelOnExit;
+//    private boolean keepKernelOnExit;
 
     private String kernelPidFile;
 
     /**
      * Instance of a configuration that uses autodetection.  Provided here for convenience.
      */
-    public static final CfgGuiLauncher AUTODETECTING_CONFIG = new CfgGuiLauncher();
+    public static final CfgGuiLauncher DEFAULT_CONFIG = new CfgGuiLauncher();
 
     static {
-        AUTODETECTING_CONFIG.setAutodetectJavaRuntime(true);
+        DEFAULT_CONFIG.setAutodetectJavaRuntime(true);
+        // below parameters have no effect since auto-detect is on, but we'll fill them
+        // out so that they show up if #toXML is called
+        DEFAULT_CONFIG.setJavaHome("/placeholder/for/java_home");
+        DEFAULT_CONFIG.setJavaHome("aion.sh");
+        DEFAULT_CONFIG.setWorkingDir("/placeholder/for/aion_root_dir");
     }
 
     /** Populate this object from XML data */
@@ -47,9 +57,9 @@ public class CfgGuiLauncher {
                         case "working-dir":
                             this.workingDir = Cfg.readValue(sr);
                             break;
-                        case "keep-kernel-on-exit":
-                            this.keepKernelOnExit = Boolean.parseBoolean(Cfg.readValue(sr));
-                            break;
+//                        case "keep-kernel-on-exit":
+//                            this.keepKernelOnExit = Boolean.parseBoolean(Cfg.readValue(sr));
+//                            break;
                         default:
                             break;
                     }
@@ -103,15 +113,15 @@ public class CfgGuiLauncher {
         this.aionSh = aionSh;
     }
 
-    /** @return whether a launched kernel should keep running after GUI exits */
-    public boolean isKeepKernelOnExit() {
-        return keepKernelOnExit;
-    }
-
-    /** @param keepKernelOnExit whether a launched kernel should keep running after GUI exits */
-    public void setKeepKernelOnExit(boolean keepKernelOnExit) {
-        this.keepKernelOnExit = keepKernelOnExit;
-    }
+//    /** @return whether a launched kernel should keep running after GUI exits */
+//    public boolean isKeepKernelOnExit() {
+//        return keepKernelOnExit;
+//    }
+//
+//    /** @param keepKernelOnExit whether a launched kernel should keep running after GUI exits */
+//    public void setKeepKernelOnExit(boolean keepKernelOnExit) {
+//        this.keepKernelOnExit = keepKernelOnExit;
+//    }
 
     /** @return path to kernel pid file */
     public String getKernelPidFile() {
@@ -121,5 +131,63 @@ public class CfgGuiLauncher {
     /** @param kernelPidFile path to kernel pid file */
     public void setKernelPidFile(String kernelPidFile) {
         this.kernelPidFile = kernelPidFile;
+    }
+
+    public String toXML() {
+        final XMLOutputFactory output = XMLOutputFactory.newInstance();
+        output.setProperty("escapeCharacters", false);
+        XMLStreamWriter xmlWriter;
+        String xml;
+        try {
+            Writer strWriter = new StringWriter();
+            xmlWriter = output.createXMLStreamWriter(strWriter);
+
+            // start element gui
+            xmlWriter.writeCharacters("\t");
+            xmlWriter.writeStartElement("launcher");
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("Whether JVM settings for launching kernel should be autodetected; " +
+                    "'true' or 'false'");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("autodetect");
+            xmlWriter.writeCharacters(String.valueOf(isAutodetectJavaRuntime()));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("Path to JAVA_HOME.  This field has no effect if autodetect is true.");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("java-home");
+            xmlWriter.writeCharacters(getJavaHome());
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("Working directory of kernel process.  This field has no effect if autodetect is true.");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("working-dir");
+            xmlWriter.writeCharacters(getWorkingDir());
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeComment("Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.");
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("aion-sh");
+            xmlWriter.writeCharacters(getAionSh());
+            xmlWriter.writeEndElement();
+
+            // close element gui
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeEndElement();
+
+            xml = strWriter.toString();
+            strWriter.flush();
+            strWriter.close();
+            xmlWriter.flush();
+            xmlWriter.close();
+            return xml;
+        } catch (IOException | XMLStreamException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 }
