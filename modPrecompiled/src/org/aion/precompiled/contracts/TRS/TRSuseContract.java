@@ -22,6 +22,7 @@
  */
 package org.aion.precompiled.contracts.TRS;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
@@ -162,7 +163,7 @@ public final class TRSuseContract extends AbstractTRS {
         // A deposit operation can only execute if direct depositing is enabled or caller is owner.
         Address owner = getContractOwner(contract);
         byte[] specBytes = specs.getData();
-        if (!caller.equals(owner) && !fetchIsDirDepositsEnabled(specBytes)) {
+        if (!caller.equals(owner) && !isDirDepositsEnabled(specBytes)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -186,242 +187,35 @@ public final class TRSuseContract extends AbstractTRS {
         // If deposit amount is larger than zero, update the depositor's current deposit balance and
         // then update the deposit meta-data (linked list, count, etc.)
         if (amount.compareTo(BigInteger.ZERO) > 0) {
-            BigInteger currAmount = fetchDepositBalance(contract, caller);
+            BigInteger currAmount = getDepositBalance(contract, caller);
             if (!setDepositBalance(contract, caller, currAmount.add(amount))) {
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
-            if (!updateLinkedList(contract)) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-            }
-
-            setTotalBalance(contract, fetchTotalBalance(contract).add(amount));
+            updateLinkedList(contract);
+            setTotalBalance(contract, getTotalBalance(contract).add(amount));
             track.addBalance(caller, amount.negate());
             track.flush();
         }
-
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
-    /**
-     * Updates the linked list data structure in the storage by proposing to add caller to the list.
-     *
-     * If caller has a valid storage entry we know it already exists in the list and so no changes
-     * are made. However, if caller has no valid storage entry, we make one for it and we add caller
-     * to the head of the linked list.
-     *
-     * Returns true if the list was successfully updated, otherwise false.
-     *
-     * @param contract The TRS contract.
-     */
-    private boolean updateLinkedList(Address contract) {
-        byte[] acctData = getAccountData(contract, caller);
-        if ((acctData[0] & 0x80) == 0x80) { return true; }  // no update needed.
-        acctData[0] |= 0x80; // set valid bit.
+    private void updateLinkedList(Address contract) {
+        byte[] next = getListNextBytes(contract, caller);
+        if (accountIsValid(next)) { return; }  // no update needed.
 
-        // Set caller's 'next' to the current 'head'.
-        byte[] headData = getHeadData(contract);
-        if (headData == null) { return false; } // should never happen.
-        if ((headData[0] & 0x80) == 0x80) {
-            acctData[0] |= 0x40;     // set 'next' to null since head is null.
-        } else {
-            acctData[0] &= ~0x40;    // unset the null bit for account's 'next' entry.
-            System.arraycopy(headData, 1, acctData, 1, DOUBLE_WORD_SIZE - 1);
+        // Set caller's next entry to point to head.
+        byte[] head = getListHead(contract);
+        setListNext(contract, caller, next[0], head, true);
 
-            // set the current head's 'prev' to the caller.
-            byte[] currHead = Arrays.copyOfRange(headData, 0, Address.ADDRESS_LEN);
-            currHead[0] = AION_PREFIX;
-            byte[] currHeadPrev = new byte[DOUBLE_WORD_SIZE];
-            currHeadPrev[0] = 0x00; //sanity.
-            System.arraycopy(caller.toBytes(), 1, currHeadPrev, 1, DOUBLE_WORD_SIZE - 1);
-            addPreviousData(contract, Address.wrap(currHead) ,currHeadPrev);
+        // If head was non-null set the head's previous entry to point to caller.
+        if (head != null) {
+            head[0] = AION_PREFIX;
+            setListPrevious(contract, Address.wrap(head), Arrays.copyOf(caller.toBytes(), Address.ADDRESS_LEN));
         }
 
-        // Set the current 'head' to caller.
-        headData[0] &= ~0x80;   // unset the null bit for linked list head.
-        System.arraycopy(caller.toBytes(), 1, headData, 1, DOUBLE_WORD_SIZE - 1);
-
-        // Set caller's 'prev' to null.
-        byte[] prevData = getPreviousData(contract, caller);
-        prevData[0] = (byte) 0x80;  // set null bit for previous entry.
-
-        addAccountData(contract, caller, acctData);
-        setListHead(contract, headData);
-        addPreviousData(contract, caller, prevData);
-        return true;
-    }
-
-    /**
-     * Returns the deposit balance for account in the TRS contract given by the address contract.
-     *
-     * If account does not have a valid entry in this TRS contract (that is, an existent storage
-     * row with the valid bit set) then zero is returned.
-     *
-     * @param contract The TRS contract to query.
-     * @param account The account to look up.
-     * @return the account's deposit balance for this TRS contract.
-     */
-    private BigInteger fetchDepositBalance(Address contract, Address account) {
-        IDataWord accountData = track
-            .getStorageValue(contract, toIDataWord(account.toBytes()));
-        if (accountData == null) {
-            return BigInteger.ZERO;
-        }    // no entry.
-        if ((accountData.getData()[0] & 0x80) == 0x00) {
-            return BigInteger.ZERO;
-        }  // valid bit unset.
-
-        int numRows = (accountData.getData()[0] & 0x0F);
-        byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
-        for (int i = 0; i < numRows; i++) {
-            byte[] balKey = makeBalanceKey(account, i);
-            byte[] balVal = track.getStorageValue(contract, toIDataWord(balKey)).getData();
-            System.arraycopy(balVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1,
-                DOUBLE_WORD_SIZE);
-        }
-        return new BigInteger(balance);
-    }
-
-    /**
-     * Sets the deposit balance for the account account in the TRS contract given by the address
-     * contract to the amount specified by balance.
-     *
-     * If balance is not a strictly positive number, or if balance requires more than 16 storage
-     * rows to store, then no update to the account in question will be made and the method will
-     * return false.
-     *
-     * Returns true if the deposit balance was successfully set.
-     *
-     * This method also sets the account's deposit row count so that the newly set balance can be
-     * properly retrieved. If the account does not yet have a valid entry then an entry is created
-     * for it but marked as invalid. Entry must be added to list to make it valid.
-     *
-     * This method does not flush.
-     *
-     * @param contract The TRS contract.
-     * @param account The account to update.
-     * @param balance The deposit balance to set.
-     */
-    private boolean setDepositBalance(Address contract, Address account, BigInteger balance) {
-        if (balance.compareTo(BigInteger.ONE) < 0) { return false; }
-        byte[] bal = toDoubleWordAlignedArray(balance);
-        int numRows = bal.length / DOUBLE_WORD_SIZE;
-        if (numRows > 16) { return false; }
-        for (int i = 0; i < numRows; i++) {
-            byte[] balKey = makeBalanceKey(account, i);
-            byte[] balVal = new byte[DOUBLE_WORD_SIZE];
-            System.arraycopy(bal, i * DOUBLE_WORD_SIZE, balVal, 0, DOUBLE_WORD_SIZE);
-            track.addStorageRow(contract, toIDataWord(balKey), toIDataWord(balVal));
-        }
-
-        // Update account meta data.
-        IDataWord acctData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
-        byte[] acctVal;
-        if (acctData == null) {
-            // Set null bit and row count but do not set valid bit.
-            acctVal = new byte[DOUBLE_WORD_SIZE];
-            acctVal[0] = (byte) (0x40 | numRows);
-        } else {
-            // Set valid bit, row count and preserve the previous null bit setting.
-            acctVal = acctData.getData();
-            acctVal[0] = (byte) ((acctVal[0] & 0x40) | 0x80 | numRows);
-        }
-        track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(acctVal));
-        return true;
-    }
-
-    /**
-     * Returns the account data associated with account in the TRS contract given by the address
-     * contract.
-     *
-     * If account has no account data then a byte array consisting only of zero bytes is returned.
-     *
-     * @param contract The TRS contract to query.
-     * @return the account data of the caller.
-     */
-    private byte[] getAccountData(Address contract, Address account) {
-        IDataWord acctData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
-        return (acctData == null) ? new byte[DOUBLE_WORD_SIZE] : acctData.getData();
-    }
-
-    /**
-     * Adds the data data as the account data corresponding to account in the TRS contract given by
-     * the address contract.
-     *
-     * This method does not flush.
-     *
-     * @param contract The TRS contract.
-     * @param account The account to update.
-     * @param data The account data to add.
-     */
-    private void addAccountData(Address contract, Address account, byte[] data) {
-        track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(data));
-    }
-
-    /**
-     * Returns the previous entry data for account in the TRS contract given by the address contract.
-     *
-     * This data represents the account that is previous to account in the linked list.
-     *
-     * If account does not yet have a previous data entry then this method returns a byte array
-     * consisting only of zero bytes.
-     *
-     * @param contract The TRS contract.
-     * @param account The account to look up.
-     * @return the previous entry in the linked list.
-     */
-    private byte[] getPreviousData(Address contract, Address account) {
-        byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
-        prevKey[0] = LIST_PREV_PREFIX;
-        System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
-        IDataWord val = track.getStorageValue(contract, toIDataWord(prevKey));
-        return (val == null) ? new byte[DOUBLE_WORD_SIZE] : val.getData();
-    }
-
-    /**
-     * Adds the data data as previous entry data (for the linked list) corresponding to account in
-     * the TRS contract given by the address contract.
-     *
-     * This method does not flush.
-     *
-     * @param contract The TRS contract.
-     * @param account The account to update.
-     * @param data The previous entry data to add.
-     */
-    private void addPreviousData(Address contract, Address account, byte[] data) {
-        byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
-        prevKey[0] = LIST_PREV_PREFIX;
-        System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
-        track.addStorageRow(contract, toIDataWord(prevKey), toIDataWord(data));
-    }
-
-    /**
-     * Returns the linked list head data for the TRS contract given by the address contract or null
-     * if there is no head data for the specified contract (this should never happen).
-     *
-     * This data represents the head of the linked list in the given contract.
-     *
-     * @param contract The TRS contract.
-     * @return the head of the linked list.
-     */
-    private byte[] getHeadData(Address contract) {
-        IDataWord listVal = track.getStorageValue(contract, LIST_HEAD_KEY);
-        if (listVal == null) { return null; }
-        return listVal.getData();
-    }
-
-    /**
-     * Returns a key for the database to query the balance entry at row number row for the account
-     * account. All valid row numbers are in the range [0, 15] and we assume row is valid here.
-     *
-     * @param account The account to look up.
-     * @param row The balance row to query.
-     * @return the key to access the specified balance row for the account in contract.
-     */
-    private byte[] makeBalanceKey(Address account, int row) {
-        byte[] balKey = new byte[DOUBLE_WORD_SIZE];
-        balKey[0] = (byte) (BALANCE_PREFIX | row);
-        System.arraycopy(account.toBytes(), 1, balKey, 1, DOUBLE_WORD_SIZE - 1);
-        return balKey;
+        // Set the head of the list to point to caller and set caller's previous entry to null.
+        setListHead(contract, Arrays.copyOf(caller.toBytes(), Address.ADDRESS_LEN));
+        setListPrevious(contract, caller, null);
     }
 
 }

@@ -13,7 +13,6 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
@@ -93,7 +92,7 @@ public class TRSownerContractTest extends TRShelpers {
     // Returns true only if the TRS contract whose contract specs are given by specsData has direct
     // deposit enabled.
     private boolean fetchIsDirectDeposit(IDataWord specsData) {
-        return AbstractTRS.fetchIsDirDepositsEnabled(specsData.getData());
+        return AbstractTRS.isDirDepositsEnabled(specsData.getData());
     }
 
     // Returns the percentage configured for the TRS contract whose contract specs are given by specsData.

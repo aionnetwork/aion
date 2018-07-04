@@ -30,6 +30,7 @@ class TRShelpers {
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
         Address acct = Address.wrap(ECKeyFac.inst().create().getAddress());
+        acct.toBytes()[0] = (byte) 0xA0;
         repo.createAccount(acct);
         repo.addBalance(acct, balance);
         repo.flush();

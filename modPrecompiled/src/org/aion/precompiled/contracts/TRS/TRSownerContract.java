@@ -355,4 +355,42 @@ public final class TRSownerContract extends AbstractTRS {
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
+
+    // <------------------------------------HELPER METHODS----------------------------------------->
+
+    /**
+     * Saves a new public-facing TRS contract whose contract address is contract and whose direct
+     * deposit option is isDirectDeposit. The new contract will have periods number of withdrawable
+     * periods and the percentage that is derived from percent and precision as outlined in create()
+     * is the percentage of total funds withdrawable in the one-off special event. The isTest
+     * parameter tells this method whether to save the new contract as a test contract (using 30
+     * second periods) or not (using 30 day periods). The owner of the contract is caller.
+     *
+     * Assumption: all parameters are non-null.
+     *
+     * If periods, percent or precision are larger than expected they will each be truncated so that
+     * they use the expected number of bytes each.
+     *
+     * If contract already exists then this method does nothing.
+     *
+     * @param contract The address of the new TRS contract.
+     * @param isTest True only if this new TRS contract is a test contract.
+     * @param isDirectDeposit True only if direct depositing is enabled for this TRS contract.
+     * @param periods The number of withdrawable periods this TRS contract is live for.
+     * @param percent The percent of total funds withdrawable in the one-off event.
+     * @param precision The number of decimal places to put the decimal point in percent.
+     */
+    private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
+        int periods, BigInteger percent, int precision) {
+
+        if (getContractOwner(contract) != null) { return; } // contract exists already.
+
+        track.createAccount(contract);
+        setContractOwner(contract);
+        setContractSpecs(contract, isTest, isDirectDeposit, periods, percent, precision);
+        setListHead(contract, null);
+        setTotalBalance(contract, BigInteger.ZERO);
+        track.flush();
+    }
+
 }

@@ -31,10 +31,13 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * mutable bytes following this prefix. In these cases oly the prefixes are provided. Otherwise
      * for immutable keys we store them as an IDataWord object directly.
      */
-    static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, NULL32;
+    static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, NULL32, INVALID;
     static final byte BALANCE_PREFIX = (byte) 0xB0;
     static final byte LIST_PREV_PREFIX = (byte) 0x60;
     static final byte FUNDS_PREFIX = (byte) 0x90;
+
+    private static final byte NULL_BIT = (byte) 0x80;
+    private static final byte VALID_BIT = (byte) 0x40;
 
     static {
         byte[] singleKey = new byte[SINGLE_WORD_SIZE];
@@ -51,8 +54,11 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         LIST_HEAD_KEY = toIDataWord(singleKey);
 
         byte[] value = new byte[DOUBLE_WORD_SIZE];
-        value[0] = (byte) 0x80;
+        value[0] = NULL_BIT;
         NULL32 = toIDataWord(value);
+
+        value[0] = (byte) 0x0;
+        INVALID = toIDataWord(value);
     }
 
     // Constructor.
@@ -68,7 +74,6 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
 
-    // Some important indices for the contract specs.
     private static final int TEST_OFFSET = 9;
     private static final int DIR_DEPO_OFFSET = 10;
     private static final int PRECISION_OFFSET = 11;
@@ -86,6 +91,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return a DataWord wrapper of the contract specifications or null if not a TRS contract.
      */
     IDataWord getContractSpecs(Address contract) {
+        //TODO return byte[]?
         if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
         return track.getStorageValue(contract, SPECS_KEY);
     }
@@ -170,11 +176,11 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return a byte array if there is a non-null head or null otherwise.
      * @throws NullPointerException if contract has no linked list.
      */
-    byte[] getListHead(Address contract) {
+    public byte[] getListHead(Address contract) {
         IDataWord head = track.getStorageValue(contract, LIST_HEAD_KEY);
         if (head == null) { throw new NullPointerException("Contract has no list: " + contract); }
         byte[] headData = head.getData();
-        return ((headData[0] & 0x80) == 0x80) ? null : head.getData();
+        return ((headData[0] & NULL_BIT) == NULL_BIT) ? null : Arrays.copyOf(headData, headData.length);
     }
 
     /**
@@ -183,20 +189,205 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * of head are the 31 bytes of a valid Aion account address without the Aion prefix.
      *
      * If head is null this method will set the head of the linked list to null.
+     * If head is not null this method will set the head to head and will ensure that the null bit
+     * is not set.
      *
      * This method does nothing if head is not 32 bytes.
      *
      * This method does not flush.
      *
-     * @param contract The TRS contract.
+     * @param contract The TRS contract to update.
      * @param head The head entry data to add.
      */
     void setListHead(Address contract, byte[] head) {
         if (head == null) {
             track.addStorageRow(contract, LIST_HEAD_KEY, NULL32);
         } else if (head.length == DOUBLE_WORD_SIZE) {
+            head[0] = 0x0;
             track.addStorageRow(contract, LIST_HEAD_KEY, toIDataWord(head));
         }
+    }
+
+    /**
+     * Returns the byte array representing account's previous entry in the linked list for the TRS
+     * contract given by contract or null if the previous entry is null.
+     *
+     * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
+     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     *
+     * This method throws an exception if there is no previous entry for account. This should never
+     * happen and is here only for debugging.
+     *
+     * @param contract The TRS contract to query.
+     * @return a byte array if there is a non-null head or null otherwise.
+     * @throws NullPointerException if contract has no linked list.
+     */
+    public byte[] getListPrev(Address contract, Address account) {
+        byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
+        prevKey[0] = LIST_PREV_PREFIX;
+        System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
+
+        IDataWord prev = track.getStorageValue(contract, toIDataWord(prevKey));
+        if (prev == null) { throw new NullPointerException("Account has no prev: " + account); }
+        byte[] prevData = prev.getData();
+        return ((prevData[0] & NULL_BIT) == NULL_BIT) ? null : Arrays.copyOf(prevData, prevData.length);
+    }
+
+    /**
+     * Sets account's previous entry in the linked list to prev, where prev is assumed to be
+     * correctly formatted so that the first byte of prev is 0x80 iff the previous entry is null,
+     * and so that the following 31 bytes of prev are the 31 bytes of a valid Aion account address
+     * without the Aion prefix.
+     *
+     * If prev is null this method will set the previous entry for account to null.
+     * If prev is not null this method will set account's previous entry to prev and ensure the null
+     * bit is not set.
+     *
+     * This method does nothing if prev is not 32 bytes.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account in contract whose previous entry is being updated.
+     * @param prev The previous entry.
+     */
+    void setListPrevious(Address contract, Address account, byte[] prev) {
+        byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
+        prevKey[0] = LIST_PREV_PREFIX;
+        System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
+
+        if (prev == null) {
+            track.addStorageRow(contract, toIDataWord(prevKey), NULL32);
+        } else if (prev.length == DOUBLE_WORD_SIZE) {
+            prev[0] = 0x0;
+            track.addStorageRow(contract, toIDataWord(prevKey), toIDataWord(prev));
+        }
+    }
+
+    /**
+     * Returns account's next entry in the linked list for the TRS contract contract or null if next
+     * is null.
+     *
+     * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
+     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     *
+     * This method throws an exception if there is no previous entry for account. This should never
+     * happen and is here only for debugging.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account in contract whose next entry is being updated.
+     * @return account's next entry.
+     * @throws NullPointerException if account has no next entry.
+     */
+    public byte[] getListNext(Address contract, Address account) {
+        IDataWord next = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        if (next == null) { throw new NullPointerException("Account has no next: " + account); }
+        byte[] nextData = next.getData();
+        return ((nextData[0] & NULL_BIT) == NULL_BIT) ? null : Arrays.copyOf(nextData, nextData.length);
+    }
+
+    /**
+     * Returns account's next entry in the linked list for the TRS contract contract as the full
+     * byte array. This method does not return null if the next entry's null bit is set! This is a
+     * way of getting the exact byte array back, which is useful since this array also has a valid
+     * bit, which the null return value of getListNext may hide.
+     *
+     * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
+     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     *
+     * This method throws an exception if there is no previous entry for account. This should never
+     * happen and is here only for debugging.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account in contract whose next entry is being updated.
+     * @return account's next entry.
+     * @throws NullPointerException if account has no next entry.
+     */
+    public byte[] getListNextBytes(Address contract, Address account) {
+        IDataWord next = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        if (next == null) { throw new NullPointerException("Account has no next: " + account); }
+        return Arrays.copyOf(next.getData(), next.getData().length);
+    }
+
+    /**
+     * Sets account's next entry in the linked list to next, where next is assumed to be correctly
+     * formatted so that the first byte of head has its most significant bit set if next is null and
+     * its second most significant bit set if it is invalid, and so that the following 31 bytes of
+     * head are the 31 bytes of a valid Aion account address without the Aion prefix.
+     *
+     * If isValid is false then the next entry is set to invalid, indicating that this account has
+     * been deleted.
+     *
+     * If isValid is true and next is null this method will set the next entry for account to null.
+     * If isValid is true next is not null then this method will set account's next entry to next
+     * and ensure the null bit is not set and that the valid bit is set.
+     *
+     * The oldMeta parameter is the current (soon to be "old") meta-data about the account's next
+     * entry. This is the first byte returned by the getListNextBytes method. This byte contains
+     * data about validity and the row counts for the account's balance. This method will persist
+     * this meta-data except in the case that we are setting the account to be invalid.
+     *
+     * This method does nothing if next is not 32 bytes.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account in contract whose next entry is being updated.
+     * @param next The next entry.
+     * @param isValid True only if the account is to be marked as invalid or deleted.
+     */
+    void setListNext(Address contract, Address account, byte oldMeta, byte[] next, boolean isValid) {
+        if (!isValid) {
+            track.addStorageRow(contract, toIDataWord(account.toBytes()), INVALID);
+        } else if (next == null) {
+            byte[] nullNext = Arrays.copyOf(NULL32.getData(), NULL32.getData().length);
+            nullNext[0] |= VALID_BIT;
+            nullNext[0] |= oldMeta;
+            track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(nullNext));
+        } else if (next.length == DOUBLE_WORD_SIZE) {
+            next[0] = VALID_BIT;
+            next[0] |= oldMeta;
+            next[0] &= ~NULL_BIT;
+            track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(next));
+        }
+    }
+
+    /**
+     * Returns true only if the is-valid bit is set in the byte array specs, where it is assumed that
+     * spec is the byte array returned by the getListNext method since the account's valid bit is
+     * located in that byte array along with the account's next entry.
+     *
+     * An account marked invalid means that it will deleted from the storage.
+     *
+     * @param spec The byte array result of getListNext for some account.
+     * @return true only if the is-valid bit is set.
+     */
+    public static boolean accountIsValid(byte[] spec) {
+        return ((spec != null) && ((spec[0] & VALID_BIT) == VALID_BIT));
+    }
+
+    /**
+     * Sets the is-valid bit in spec to true, where it is assumed that spec is the byte array
+     * returned by the getListNext method.
+     *
+     * This method signals that the corresponding account is a valid account.
+     *
+     * @param spec The byte array result of getListNext for some account.
+     */
+    public static void setIsValidBit(byte[] spec) {
+        spec[0] |= VALID_BIT;
+    }
+
+    /**
+     * Sets the is-valid bit in spec to false, where it is assumed that spec is the byte array
+     * returned by the getListNext method.
+     *
+     * This method signals that the corresponding account is invalid or deleted.
+     *
+     * @param spec The byte array result of getListNext for some account.
+     */
+    public static void unsetIsValidBit(byte[] spec) {
+        spec[0] &= ~VALID_BIT;
     }
 
     /**
@@ -205,7 +396,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return the total balance of the contract.
      */
-    BigInteger fetchTotalBalance(Address contract) {
+    public BigInteger getTotalBalance(Address contract) {
         IDataWord ttlSpec = track.getStorageValue(contract, FUNDS_SPECS_KEY);
         int numRows = ByteBuffer.wrap(Arrays.copyOfRange(
             ttlSpec.getData(), SINGLE_WORD_SIZE - Integer.BYTES, SINGLE_WORD_SIZE)).getInt();
@@ -252,6 +443,84 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
+     * Returns the deposit balance for account in the TRS contract given by the address contract.
+     *
+     * If account does not have a valid entry in this TRS contract (that is, an existent storage
+     * row with the valid bit set) then zero is returned.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to look up.
+     * @return the account's deposit balance for this TRS contract.
+     */
+    public BigInteger getDepositBalance(Address contract, Address account) {
+        IDataWord accountData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        if (accountData == null) {
+            return BigInteger.ZERO;
+        }    // no entry.
+        if ((accountData.getData()[0] & VALID_BIT) == 0x00) {
+            return BigInteger.ZERO;
+        }  // valid bit unset.
+
+        int numRows = (accountData.getData()[0] & 0x0F);
+        byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
+        for (int i = 0; i < numRows; i++) {
+            byte[] balKey = makeBalanceKey(account, i);
+            byte[] balVal = track.getStorageValue(contract, toIDataWord(balKey)).getData();
+            System.arraycopy(balVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1,
+                DOUBLE_WORD_SIZE);
+        }
+        return new BigInteger(balance);
+    }
+
+    /**
+     * Sets the deposit balance for the account account in the TRS contract given by the address
+     * contract to the amount specified by balance.
+     *
+     * If balance is not a strictly positive number, or if balance requires more than 16 storage
+     * rows to store, then no update to the account in question will be made and the method will
+     * return false.
+     *
+     * Returns true if the deposit balance was successfully set.
+     *
+     * This method also sets the account's deposit row count so that the newly set balance can be
+     * properly retrieved. If the account does not yet have a valid entry then an entry is created
+     * for it but marked as invalid. Entry must be added to list to make it valid.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract.
+     * @param account The account to update.
+     * @param balance The deposit balance to set.
+     */
+    boolean setDepositBalance(Address contract, Address account, BigInteger balance) {
+        if (balance.compareTo(BigInteger.ONE) < 0) { return false; }
+        byte[] bal = toDoubleWordAlignedArray(balance);
+        int numRows = bal.length / DOUBLE_WORD_SIZE;
+        if (numRows > 16) { return false; }
+        for (int i = 0; i < numRows; i++) {
+            byte[] balKey = makeBalanceKey(account, i);
+            byte[] balVal = new byte[DOUBLE_WORD_SIZE];
+            System.arraycopy(bal, i * DOUBLE_WORD_SIZE, balVal, 0, DOUBLE_WORD_SIZE);
+            track.addStorageRow(contract, toIDataWord(balKey), toIDataWord(balVal));
+        }
+
+        // Update account meta data.
+        IDataWord acctData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        byte[] acctVal;
+        if (acctData == null) {
+            // Set null bit and row count but do not set valid bit.
+            acctVal = new byte[DOUBLE_WORD_SIZE];
+            acctVal[0] = (byte) (NULL_BIT | numRows);
+        } else {
+            // Set valid bit, row count and preserve the previous null bit setting.
+            acctVal = acctData.getData();
+            acctVal[0] = (byte) ((acctVal[0] & NULL_BIT) | VALID_BIT | numRows);
+        }
+        track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(acctVal));
+        return true;
+    }
+
+    /**
      * Returns a key for the database to query the total balance entry at row number row of some
      * TRS contract.
      *
@@ -268,42 +537,22 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Saves a new public-facing TRS contract whose contract address is contract and whose direct
-     * deposit option is isDirectDeposit. The new contract will have periods number of withdrawable
-     * periods and the percentage that is derived from percent and precision as outlined in create()
-     * is the percentage of total funds withdrawable in the one-off special event. The isTest
-     * parameter tells this method whether to save the new contract as a test contract (using 30
-     * second periods) or not (using 30 day periods). The owner of the contract is caller.
+     * Returns a key for the database to query the balance entry at row number row for the account
+     * account. All valid row numbers are in the range [0, 15] and we assume row is valid here.
      *
-     * All preconditions on the parameters are assumed already verified.
-     *
-     * @param contract The address of the new TRS contract.
-     * @param isTest True only if this new TRS contract is a test contract.
-     * @param isDirectDeposit True only if direct depositing is enabled for this TRS contract.
-     * @param periods The number of withdrawable periods this TRS contract is live for.
-     * @param percent The percent of total funds withdrawable in the one-off event.
-     * @param precision The number of decimal places to put the decimal point in percent.
+     * @param account The account to look up.
+     * @param row The balance row to query.
+     * @return the key to access the specified balance row for the account in contract.
      */
-    void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
-        int periods, BigInteger percent, int precision) {
-
-        //TODO if contract already exists, stop this
-        track.createAccount(contract);
-        setContractOwner(contract);
-
-        // Save the "specifications" data for this contract.
-        setContractSpecs(contract, isTest, isDirectDeposit, periods, percent, precision);
-
-        // Save the data for the head of the linked list; head null bit is set.
-        setListHead(contract, null);
-
-        // Save the total balance for this contract, currently as zero.
-        setTotalBalance(contract, BigInteger.ZERO);
-        track.flush();
+    private byte[] makeBalanceKey(Address account, int row) {
+        byte[] balKey = new byte[DOUBLE_WORD_SIZE];
+        balKey[0] = (byte) (BALANCE_PREFIX | row);
+        System.arraycopy(account.toBytes(), 1, balKey, 1, DOUBLE_WORD_SIZE - 1);
+        return balKey;
     }
 
     /**
-     * Updates the specifications associated with the TRS contract whose address is contract so that
+     * Sets the specifications associated with the TRS contract whose address is contract so that
      * the is-locked bit will be set. If the bit is already set this method effectively does nothing.
      *
      * Assumption: contract IS a valid TRS contract address.
@@ -311,14 +560,14 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The address of the TRS contract.
      */
     void setLock(Address contract) {
-        byte[] specValue = getContractSpecs(contract).getData();
-        specValue[LOCK_OFFSET] = (byte) 0x1;
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(specValue));
-        track.flush();
+        byte[] spec = getContractSpecs(contract).getData();
+        spec[LOCK_OFFSET] = (byte) 0x1;
+        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
+        track.flush();  //TODO remove
     }
 
     /**
-     * Updates the specifications associated with the TRS contract whose address is contract so that
+     * Sets the specifications associated with the TRS contract whose address is contract so that
      * the is-live bit will be set. If the bit is already set this method effectively does nothing.
      *
      * Assumption: contract IS a valid TRS contract address.
@@ -326,16 +575,16 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The address of the TRS contract.
      */
     void setLive(Address contract) {
-        byte[] specValue = getContractSpecs(contract).getData();
-        specValue[LIVE_OFFSET] = (byte) 0x1;
-
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(specValue));
-        track.flush();
+        byte[] spec = getContractSpecs(contract).getData();
+        spec[LIVE_OFFSET] = (byte) 0x1;
+        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
+        track.flush();  //TODO remove
     }
 
     /**
-     * Returns true only if the is-locked bit is set in the byte array specs -- assumption: specs is
-     * the byte array representing a contract's specifications.
+     * Returns true only if the is-locked bit in specs is set.
+     *
+     * Assumption: specs IS a valid TRS specifications byte array.
      *
      * @param specs The specifications of some TRS contract.
      * @return true if the specs indicate the contract is locked.
@@ -345,8 +594,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns true only if the is-live bit is set in the byte array specs -- assumption: specs is
-     * the byte array representing a contract's specifications.
+     * Returns true only if the is-live bit in specs is set.
+     *
+     * Assumption: specs IS a valid TRS specifications byte array.
      *
      * @param specs The specifications of some TRS contract.
      * @return true if the specs indicate the contract is live.
@@ -356,14 +606,27 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns true only if the is-direct-deposits-enabled bit is set in specs, where we assume that
-     * specs is the specifications byte array corresponding to some TRS contract.
+     * Returns true only if the bit in specs is set that represents direct deposits being enabled.
+     *
+     * Assumption: specs IS a valid TRS specifications byte array.
      *
      * @param specs The specifications of some TRS contract.
      * @return true only if direct deposits are enabled.
      */
-    public static boolean fetchIsDirDepositsEnabled(byte[] specs) {
+    public static boolean isDirDepositsEnabled(byte[] specs) {
         return specs[DIR_DEPO_OFFSET] == (byte) 0x1;
+    }
+
+    /**
+     * Returns true only if the is-test bit in specs is set.
+     *
+     * Assumption: specs IS a valid TRS specifications byte array.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true if the specs indicate the contract is for testing.
+     */
+    public static boolean isTestContract(byte[] specs) {
+        return specs[TEST_OFFSET] == (byte) 0x1;
     }
 
     /**
