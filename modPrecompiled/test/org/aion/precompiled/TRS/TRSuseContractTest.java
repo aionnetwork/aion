@@ -44,11 +44,6 @@ public class TRSuseContractTest extends TRShelpers {
 
     // <-----------------------------------HELPER METHODS BELOW------------------------------------>
 
-    // Returns a new TRSuseContract and calls the contract using caller.
-    private TRSuseContract newTRSuseContract(Address caller) {
-        return new TRSuseContract(repo, caller);
-    }
-
     // Returns a properly formatted byte array to be used as input for the deposit operation.
     private byte[] getDepositInput(Address contract, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();

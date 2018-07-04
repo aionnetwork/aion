@@ -292,18 +292,18 @@ public final class TRSownerContract extends AbstractTRS {
 
         // A lock call can only execute if the current state of the TRS contract is as follows:
         // contract is unlocked & contract is not live.
-        IDataWord specs = getContractSpecs(contract);
+        byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] specBytes = specs.getData();
-        if (isContractLocked(specBytes) || isContractLive(specBytes)) {
+        if (isContractLocked(specs) || isContractLive(specs)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // All checks OK. Change contract state to locked.
         setLock(contract);
+        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
@@ -340,18 +340,18 @@ public final class TRSownerContract extends AbstractTRS {
 
         // A start call can only execute if the current state of the TRS contract is as follows:
         // contract is locked & contract is not live.
-        IDataWord specs = getContractSpecs(contract);
+        byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] specBytes = specs.getData();
-        if (!isContractLocked(specBytes) || isContractLive(specBytes)) {
+        if (!isContractLocked(specs) || isContractLive(specs)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // All checks OK. Change contract state to live.
         setLive(contract);
+        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
@@ -384,7 +384,6 @@ public final class TRSownerContract extends AbstractTRS {
         int periods, BigInteger percent, int precision) {
 
         if (getContractOwner(contract) != null) { return; } // contract exists already.
-
         track.createAccount(contract);
         setContractOwner(contract);
         setContractSpecs(contract, isTest, isDirectDeposit, periods, percent, precision);

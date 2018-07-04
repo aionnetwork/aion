@@ -22,7 +22,6 @@
  */
 package org.aion.precompiled.contracts.TRS;
 
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
@@ -155,21 +154,20 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
-        IDataWord specs = getContractSpecs(contract);
+        byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A deposit operation can only execute if direct depositing is enabled or caller is owner.
         Address owner = getContractOwner(contract);
-        byte[] specBytes = specs.getData();
-        if (!caller.equals(owner) && !isDirDepositsEnabled(specBytes)) {
+        if (!caller.equals(owner) && !isDirDepositsEnabled(specs)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A deposit operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity).
-        if (isContractLocked(specBytes) || isContractLive(specBytes)) {
+        if (isContractLocked(specs) || isContractLive(specs)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -199,6 +197,15 @@ public final class TRSuseContract extends AbstractTRS {
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
+    /**
+     * Updates the linked list for the TRS contract given by contract, if necessary.
+     *
+     * If the caller already exists in the contract then no update is performed, we assume the
+     * caller must already be in the list. But if the caller does not exist then the caller is added
+     * into the head of the linked list.
+     *
+     * @param contract The TRS contract to update.
+     */
     private void updateLinkedList(Address contract) {
         byte[] next = getListNextBytes(contract, caller);
         if (accountIsValid(next)) { return; }  // no update needed.

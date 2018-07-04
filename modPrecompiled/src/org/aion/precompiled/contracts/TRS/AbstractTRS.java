@@ -1,5 +1,6 @@
 package org.aion.precompiled.contracts.TRS;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -22,20 +23,21 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
-    static final int DOUBLE_WORD_SIZE = DoubleDataWord.BYTES;
-    static final int SINGLE_WORD_SIZE = DataWord.BYTES;
     final Address caller;
 
     /*
      * The database keys each have unique prefixes denoting the function of that key. Some keys have
      * mutable bytes following this prefix. In these cases oly the prefixes are provided. Otherwise
-     * for immutable keys we store them as an IDataWord object directly.
+     * for unchanging keys we store them as an IDataWord object directly.
      */
-    static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, NULL32, INVALID;
-    static final byte BALANCE_PREFIX = (byte) 0xB0;
-    static final byte LIST_PREV_PREFIX = (byte) 0x60;
-    static final byte FUNDS_PREFIX = (byte) 0x90;
+    private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, NULL32, INVALID;
+    private static final byte BALANCE_PREFIX = (byte) 0xB0;
+    private static final byte LIST_PREV_PREFIX = (byte) 0x60;
+    private static final byte FUNDS_PREFIX = (byte) 0x90;
 
+    private static final int DOUBLE_WORD_SIZE = DoubleDataWord.BYTES;
+    private static final int SINGLE_WORD_SIZE = DataWord.BYTES;
+    private static final int MAX_DEPOSIT_ROWS = 16;
     private static final byte NULL_BIT = (byte) 0x80;
     private static final byte VALID_BIT = (byte) 0x40;
 
@@ -88,12 +90,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * Returns null if contract is not a valid TRS contract address and thus there are no specs.
      *
      * @param contract The TRS contract address to query.
-     * @return a DataWord wrapper of the contract specifications or null if not a TRS contract.
+     * @return the contract specifications or null if not a TRS contract.
      */
-    IDataWord getContractSpecs(Address contract) {
-        //TODO return byte[]?
+    public byte[] getContractSpecs(Address contract) {
         if (contract.toBytes()[0] != TRS_PREFIX) { return null; }
-        return track.getStorageValue(contract, SPECS_KEY);
+        IDataWord spec = track.getStorageValue(contract, SPECS_KEY);
+        return (spec == null) ? null : Arrays.copyOf(spec.getData(), spec.getData().length);
     }
 
     /**
@@ -142,7 +144,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract address to query.
      * @return the owner of the contract or null if not a TRS contract.
      */
-    Address getContractOwner(Address contract) {
+    public Address getContractOwner(Address contract) {
         IDataWord owner = track.getStorageValue(contract, OWNER_KEY);
         return  (owner == null) ? null : new Address(owner.getData());
     }
@@ -367,30 +369,6 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the is-valid bit in spec to true, where it is assumed that spec is the byte array
-     * returned by the getListNext method.
-     *
-     * This method signals that the corresponding account is a valid account.
-     *
-     * @param spec The byte array result of getListNext for some account.
-     */
-    public static void setIsValidBit(byte[] spec) {
-        spec[0] |= VALID_BIT;
-    }
-
-    /**
-     * Sets the is-valid bit in spec to false, where it is assumed that spec is the byte array
-     * returned by the getListNext method.
-     *
-     * This method signals that the corresponding account is invalid or deleted.
-     *
-     * @param spec The byte array result of getListNext for some account.
-     */
-    public static void unsetIsValidBit(byte[] spec) {
-        spec[0] &= ~VALID_BIT;
-    }
-
-    /**
      * Returns the total deposit balance for the TRS contract given by the address contract.
      *
      * @param contract The TRS contract to query.
@@ -445,8 +423,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     /**
      * Returns the deposit balance for account in the TRS contract given by the address contract.
      *
-     * If account does not have a valid entry in this TRS contract (that is, an existent storage
-     * row with the valid bit set) then zero is returned.
+     * If account does not have a valid entry in this TRS contract, either because it does not exist
+     * or its valid bit is unset, then zero is returned.
      *
      * @param contract The TRS contract to query.
      * @param account The account to look up.
@@ -454,12 +432,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     public BigInteger getDepositBalance(Address contract, Address account) {
         IDataWord accountData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
-        if (accountData == null) {
-            return BigInteger.ZERO;
-        }    // no entry.
-        if ((accountData.getData()[0] & VALID_BIT) == 0x00) {
-            return BigInteger.ZERO;
-        }  // valid bit unset.
+        if (accountData == null) { return BigInteger.ZERO; }
+        if ((accountData.getData()[0] & VALID_BIT) == 0x00) { return BigInteger.ZERO; }
 
         int numRows = (accountData.getData()[0] & 0x0F);
         byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
@@ -474,17 +448,18 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
     /**
      * Sets the deposit balance for the account account in the TRS contract given by the address
-     * contract to the amount specified by balance.
+     * contract to the amount specified by balance and updates the account's 'next' specs to have
+     * the number of rows needed to represent this balance.
      *
-     * If balance is not a strictly positive number, or if balance requires more than 16 storage
-     * rows to store, then no update to the account in question will be made and the method will
-     * return false.
+     * If this is the first deposit for account and account doesn't yet exist then the next entry
+     * will have the null bit set, the valid bit unset and the number of rows. Otherwise, for an
+     * existing account, the previous setting of the null bit will be persisted and the valid bit
+     * will be set and the number of rows will be there along with the address of the next entry.
+     *
+     * If balance requires more than MAX_DEPOSIT_ROWS storage rows to store, then no update to the
+     * account in question will be made and the method will return false.
      *
      * Returns true if the deposit balance was successfully set.
-     *
-     * This method also sets the account's deposit row count so that the newly set balance can be
-     * properly retrieved. If the account does not yet have a valid entry then an entry is created
-     * for it but marked as invalid. Entry must be added to list to make it valid.
      *
      * This method does not flush.
      *
@@ -493,10 +468,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param balance The deposit balance to set.
      */
     boolean setDepositBalance(Address contract, Address account, BigInteger balance) {
-        if (balance.compareTo(BigInteger.ONE) < 0) { return false; }
+        if (balance.compareTo(BigInteger.ONE) < 0) { return true; }
         byte[] bal = toDoubleWordAlignedArray(balance);
         int numRows = bal.length / DOUBLE_WORD_SIZE;
-        if (numRows > 16) { return false; }
+        if (numRows > MAX_DEPOSIT_ROWS) { return false; }
         for (int i = 0; i < numRows; i++) {
             byte[] balKey = makeBalanceKey(account, i);
             byte[] balVal = new byte[DOUBLE_WORD_SIZE];
@@ -518,6 +493,112 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         }
         track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(acctVal));
         return true;
+    }
+
+    /**
+     * Sets the specifications associated with the TRS contract whose address is contract so that
+     * the is-locked bit will be set. If the bit is already set this method effectively does nothing.
+     *
+     * Assumption: contract IS a valid TRS contract address.
+     *
+     * @param contract The address of the TRS contract.
+     */
+    void setLock(Address contract) {
+        byte[] spec = getContractSpecs(contract);
+        spec[LOCK_OFFSET] = (byte) 0x1;
+        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
+    }
+
+    /**
+     * Sets the specifications associated with the TRS contract whose address is contract so that
+     * the is-live bit will be set. If the bit is already set this method effectively does nothing.
+     *
+     * Assumption: contract IS a valid TRS contract address.
+     *
+     * @param contract The address of the TRS contract.
+     */
+    void setLive(Address contract) {
+        byte[] spec = getContractSpecs(contract);
+        spec[LIVE_OFFSET] = (byte) 0x1;
+        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
+    }
+
+    /**
+     * Returns the percentage of the total funds in a TRS contract that are available for withdrawal
+     * during the one-off special withdrawal event.
+     *
+     * Assumption: specs is a byte array returned from the getContractSpecs method.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return the withdrawal percetage for the one-off event.
+     */
+    public static BigDecimal getPercentage(byte[] specs) {
+        if (specs == null) { return BigDecimal.ZERO; }
+        BigInteger raw = new BigInteger(Arrays.copyOfRange(specs, 0, TEST_OFFSET));
+        return new BigDecimal(raw).movePointLeft((int) specs[PRECISION_OFFSET]);
+    }
+
+    /**
+     * Returns the number of periods for the TRS contract whose specifications are given by specs.
+     *
+     * Assumption: specs is a byte array returned from the getContractSpecs method.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return the number of periods for the contract.
+     */
+    public static int getPeriods(byte[] specs) {
+        int periods = specs[PERIODS_OFFSET];
+        periods <<= Byte.SIZE;
+        periods |= (specs[PERIODS_OFFSET + 1] & 0xFF);
+        return periods;
+    }
+
+    /**
+     * Returns true only if the is-locked bit in specs is set.
+     *
+     * Assumption: specs is a byte array returned from the getContractSpecs method.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true if the specs indicate the contract is locked.
+     */
+    public static boolean isContractLocked(byte[] specs) {
+        return ((specs != null) && (specs[LOCK_OFFSET] == (byte) 0x1));
+    }
+
+    /**
+     * Returns true only if the is-live bit in specs is set.
+     *
+     * Assumption: specs is a byte array returned from the getContractSpecs method.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true if the specs indicate the contract is live.
+     */
+    public static boolean isContractLive(byte[] specs) {
+        return ((specs != null) && (specs[LIVE_OFFSET] == (byte) 0x1));
+    }
+
+    /**
+     * Returns true only if the bit in specs is set that represents direct deposits being enabled.
+     *
+     * Assumption: specs is a byte array returned from the getContractSpecs method.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true only if direct deposits are enabled.
+     */
+    public static boolean isDirDepositsEnabled(byte[] specs) {
+        return ((specs != null) && (specs[DIR_DEPO_OFFSET] == (byte) 0x1));
+    }
+
+    /**
+     * Returns true only if the is-test bit in specs is set.
+     *
+     * Assumption: specs is a byte array returned from the getContractSpecs method.
+     *
+     * @param specs The specifications of some TRS contract.
+     * @return true if the specs indicate the contract is for testing.
+     */
+    public static boolean isTestContract(byte[] specs) {
+        return ((specs != null) && (specs[TEST_OFFSET] == (byte) 0x1));
     }
 
     /**
@@ -552,84 +633,6 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the specifications associated with the TRS contract whose address is contract so that
-     * the is-locked bit will be set. If the bit is already set this method effectively does nothing.
-     *
-     * Assumption: contract IS a valid TRS contract address.
-     *
-     * @param contract The address of the TRS contract.
-     */
-    void setLock(Address contract) {
-        byte[] spec = getContractSpecs(contract).getData();
-        spec[LOCK_OFFSET] = (byte) 0x1;
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
-        track.flush();  //TODO remove
-    }
-
-    /**
-     * Sets the specifications associated with the TRS contract whose address is contract so that
-     * the is-live bit will be set. If the bit is already set this method effectively does nothing.
-     *
-     * Assumption: contract IS a valid TRS contract address.
-     *
-     * @param contract The address of the TRS contract.
-     */
-    void setLive(Address contract) {
-        byte[] spec = getContractSpecs(contract).getData();
-        spec[LIVE_OFFSET] = (byte) 0x1;
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
-        track.flush();  //TODO remove
-    }
-
-    /**
-     * Returns true only if the is-locked bit in specs is set.
-     *
-     * Assumption: specs IS a valid TRS specifications byte array.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is locked.
-     */
-    public static boolean isContractLocked(byte[] specs) {
-        return specs[LOCK_OFFSET] == (byte) 0x1;
-    }
-
-    /**
-     * Returns true only if the is-live bit in specs is set.
-     *
-     * Assumption: specs IS a valid TRS specifications byte array.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is live.
-     */
-    public static boolean isContractLive(byte[] specs) {
-        return specs[LIVE_OFFSET] == (byte) 0x1;
-    }
-
-    /**
-     * Returns true only if the bit in specs is set that represents direct deposits being enabled.
-     *
-     * Assumption: specs IS a valid TRS specifications byte array.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true only if direct deposits are enabled.
-     */
-    public static boolean isDirDepositsEnabled(byte[] specs) {
-        return specs[DIR_DEPO_OFFSET] == (byte) 0x1;
-    }
-
-    /**
-     * Returns true only if the is-test bit in specs is set.
-     *
-     * Assumption: specs IS a valid TRS specifications byte array.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is for testing.
-     */
-    public static boolean isTestContract(byte[] specs) {
-        return specs[TEST_OFFSET] == (byte) 0x1;
-    }
-
-    /**
      * Returns a byte array representing balance such that the returned array is 32-byte word
      * aligned.
      *
@@ -639,7 +642,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param balance The balance to convert.
      * @return the 32-byte word-aligned byte array representation of balance.
      */
-    byte[] toDoubleWordAlignedArray(BigInteger balance) {
+    private byte[] toDoubleWordAlignedArray(BigInteger balance) {
         if (balance.equals(BigInteger.ZERO)) { return new byte[DOUBLE_WORD_SIZE]; }
         byte[] temp = balance.toByteArray();
         boolean chopFirstByte = ((temp.length - 1) % DOUBLE_WORD_SIZE == 0) && (temp[0] == 0x0);
@@ -663,7 +666,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param word The word to wrap.
      * @return the word as an IDataWord.
      */
-    static IDataWord toIDataWord(byte[] word) {
+    private static IDataWord toIDataWord(byte[] word) {
         if (word.length == SINGLE_WORD_SIZE) {
             return new DataWord(word);
         } else if (word.length == DOUBLE_WORD_SIZE) {

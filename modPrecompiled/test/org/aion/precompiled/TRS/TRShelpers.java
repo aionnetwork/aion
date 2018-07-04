@@ -13,6 +13,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
+import org.aion.precompiled.contracts.TRS.TRSuseContract;
 
 /**
  * A class exposing commonly used helper methods and variables for TRS-related testing.
@@ -36,6 +37,11 @@ class TRShelpers {
         repo.flush();
         tempAddrs.add(acct);
         return acct;
+    }
+
+    // Returns a new TRSuseContract and calls the contract using caller.
+    TRSuseContract newTRSuseContract(Address caller) {
+        return new TRSuseContract(repo, caller);
     }
 
     // Returns the address of a newly created TRS contract, assumes all params are valid.
