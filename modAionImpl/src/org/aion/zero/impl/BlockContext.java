@@ -1,12 +1,11 @@
 package org.aion.zero.impl;
 
+import java.math.BigInteger;
 import org.aion.zero.impl.types.AionBlock;
 
-import java.math.BigInteger;
-
 /**
- * Wraps contextual / metadata about the block that are not
- * part of the block itself (not associated with PoW/PoS)
+ * Wraps contextual / metadata about the block that are not part of the block itself (not associated
+ * with PoW/PoS)
  */
 public class BlockContext {
     public final AionBlock block;
