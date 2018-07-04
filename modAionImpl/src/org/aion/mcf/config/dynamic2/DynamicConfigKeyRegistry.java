@@ -5,7 +5,10 @@ import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.applier.MiningApplier;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgConsensusPow;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -33,60 +36,47 @@ import java.util.function.Function;
  * to return "atomic" types (i.e. primitives or their object equivalents).
  */
 public class DynamicConfigKeyRegistry {
-    private final Map<String, Function<Cfg,?>> key2Getter; // config_key to getter
-    private final Map<String, IDynamicConfigApplier> key2Applier; // config_key to applier
+    private final
+    Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> key2GetterApplier; // config_key -> (getter,applier)
 
     public DynamicConfigKeyRegistry() {
-        this(DEFAULT_GETTERS, DEFAULT_APPLIERS);
+        this(DEFAULT_GETTERS_APPLIERS);
     }
 
     @VisibleForTesting
-    public DynamicConfigKeyRegistry(Map<String, Function<Cfg,?>> getters,
-                                    Map<String, IDynamicConfigApplier> appliers) {
-        this.key2Getter = getters;
-        this.key2Applier = appliers;
+    DynamicConfigKeyRegistry(Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> key2GetterApplier) {
+        this.key2GetterApplier = new HashMap<>(key2GetterApplier);
     }
 
-    public void bind(String key, Function<Cfg,Object> getter, IDynamicConfigApplier applier) {
-        key2Getter.put(key, getter);
-        key2Applier.put(key, applier);
+    public void bind(String key, Function<Cfg,?> getter, IDynamicConfigApplier applier) {
+        key2GetterApplier.put(key, new ImmutablePair<>(getter, applier));
     }
 
     public Set<String> getBoundKeys() {
-        return key2Applier.keySet(); // should be identical to key2Getter.keySet()
+        return key2GetterApplier.keySet();
     }
 
     public Function<Cfg,?> getGetter(String key) {
-        return key2Getter.get(key);
+        return key2GetterApplier.get(key).getLeft();
     }
 
     public IDynamicConfigApplier getApplier(String key) {
-        return key2Applier.get(key);
+        return key2GetterApplier.get(key).getRight();
     }
 
-    private static Map<String, Function<Cfg,?>> DEFAULT_GETTERS = new HashMap<>() {{
-        put("aion.consensus.mining", cfg -> ((CfgConsensusPow)cfg.getConsensus()).getMining());
+    private static Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>>
+    DEFAULT_GETTERS_APPLIERS = new HashMap<>() {{
+        put("aion.consensus.mining", ImmutablePair.of(
+                cfg -> ((CfgConsensusPow)cfg.getConsensus()).getMining(),
+                new MiningApplier()));
 
         // Below are sections where no config keys within are dynamically changeable
-        put("aion.api", cfg -> cfg.getApi());
-        put("aion.net.id", cfg -> cfg.getNet().getId());
-        put("aion.net.p2p", cfg -> cfg.getNet().getP2p());
-        put("aion.sync", cfg -> cfg.getSync());
-        put("aion.log", cfg -> cfg.getLog());
-        put("aion.db", cfg -> cfg.getDb());
-
-    }};
-
-    private static Map<String,IDynamicConfigApplier> DEFAULT_APPLIERS = new HashMap<>() {{
-        put("aion.consensus.mining", new MiningApplier());
-
-        // Below are sections where no config keys within are dynamically changeable
-        put("aion.api", NotImplementedThrower.INST);
-        put("aion.net.id", NotImplementedThrower.INST);
-        put("aion.net.p2p", NotImplementedThrower.INST);
-        put("aion.sync", NotImplementedThrower.INST);
-        put("aion.log", NotImplementedThrower.INST);
-        put("aion.db", NotImplementedThrower.INST);
+        put("aion.api", ImmutablePair.of(cfg -> cfg.getApi(), NotImplementedThrower.INST));
+        put("aion.net.id", ImmutablePair.of(cfg -> cfg.getNet().getId(), NotImplementedThrower.INST));
+        put("aion.net.p2p", ImmutablePair.of(cfg -> cfg.getNet().getP2p(), NotImplementedThrower.INST));
+        put("aion.sync", ImmutablePair.of(cfg -> cfg.getSync(), NotImplementedThrower.INST));
+        put("aion.log", ImmutablePair.of(cfg -> cfg.getLog(), NotImplementedThrower.INST));
+        put("aion.db", ImmutablePair.of(cfg -> cfg.getDb(), NotImplementedThrower.INST));
     }};
 
     /**

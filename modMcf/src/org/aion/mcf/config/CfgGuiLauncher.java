@@ -190,6 +190,7 @@ public class CfgGuiLauncher {
             e.printStackTrace();
             return "";
         }
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -197,7 +198,7 @@ public class CfgGuiLauncher {
         if (o == null || getClass() != o.getClass()) return false;
         CfgGuiLauncher that = (CfgGuiLauncher) o;
         return autodetectJavaRuntime == that.autodetectJavaRuntime &&
-                keepKernelOnExit == that.keepKernelOnExit &&
+//                keepKernelOnExit == that.keepKernelOnExit &&
                 Objects.equal(javaHome, that.javaHome) &&
                 Objects.equal(aionSh, that.aionSh) &&
                 Objects.equal(workingDir, that.workingDir) &&
@@ -206,6 +207,6 @@ public class CfgGuiLauncher {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(autodetectJavaRuntime, javaHome, aionSh, workingDir, keepKernelOnExit, kernelPidFile);
+        return Objects.hashCode(autodetectJavaRuntime, javaHome, aionSh, workingDir, /*keepKernelOnExit,*/ kernelPidFile);
     }
 }
