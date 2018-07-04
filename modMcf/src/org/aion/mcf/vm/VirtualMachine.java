@@ -23,9 +23,7 @@
 package org.aion.mcf.vm;
 
 import org.aion.base.db.IRepositoryCache;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.base.type.IExecutionResult;
 
 /**
  * High-level interface of Aion virtual machine.
@@ -37,10 +35,10 @@ public interface VirtualMachine {
     /**
      * Run the given code, under the specified context.
      *
-     * @param code  byte code
-     * @param ctx   the execution context
+     * @param code byte code
+     * @param ctx the execution context
      * @param track state repository track
      * @return the execution result
      */
-    AbstractExecutionResult run(byte[] code, IExecutionContext ctx, IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> track);
+    IExecutionResult run(byte[] code, IExecutionContext ctx, IRepositoryCache track);
 }

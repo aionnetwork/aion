@@ -33,8 +33,8 @@ import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
+import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.junit.After;
 import org.junit.Before;
@@ -127,10 +127,10 @@ public class AionNameServiceContractTest {
         ContractExecutionResult res = ansc.execute(combined, inputEnergy);
         ContractExecutionResult res2 = ansc2.execute(combined2, inputEnergy);
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(3000L, res.getNrgLeft());
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
         assertEquals(0, res2.getNrgLeft());
     }
 
@@ -199,7 +199,7 @@ public class AionNameServiceContractTest {
     // Address.wrap(k2.getAddress()), domainName1, domainName3);
     //        ContractExecutionResult res = ansc.execute(combined, inputEnergy);
     //        ContractExecutionResult res2 = ansc.execute(combined2, inputEnergy);
-    //        assertEquals(ResultCode.INTERNAL_ERROR ,res2.getCode());
+    //        assertEquals(ResultCode.INTERNAL_ERROR ,res2.getResultCode());
     //    }
 
     @Test
@@ -255,11 +255,11 @@ public class AionNameServiceContractTest {
         ContractExecutionResult res4 = ansc3.execute(combined4, inputEnergy);
 
         // check for pass and fails
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
         assertEquals(0L, res2.getNrgLeft());
-        assertEquals(ResultCode.SUCCESS, res3.getCode());
+        assertEquals(ResultCode.SUCCESS, res3.getResultCode());
         assertEquals(3000L, res3.getNrgLeft());
-        assertEquals(ResultCode.SUCCESS, res4.getCode());
+        assertEquals(ResultCode.SUCCESS, res4.getResultCode());
         assertEquals(4000L, res4.getNrgLeft());
 
         AionNameServiceContract ansc4 =
@@ -278,7 +278,7 @@ public class AionNameServiceContractTest {
                         domainName1,
                         domainName5);
         ContractExecutionResult res = ansc1.execute(combined, inputEnergy);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(3000L, res.getNrgLeft());
     }
 
@@ -295,10 +295,10 @@ public class AionNameServiceContractTest {
         // create ANS contracts
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+                    repo, domainAddress1, Address.wrap(k.getAddress()));
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress2, Address.wrap(k.getAddress()));
+                    repo, domainAddress2, Address.wrap(k.getAddress()));
 
         // setup the inputs 1: set
         // resolver-----------------------------------------------------------------------------
@@ -323,11 +323,11 @@ public class AionNameServiceContractTest {
 
         // basic checks
         // ------------------------------------------------------------------------------------------------
-        assertEquals(ResultCode.SUCCESS, res1.getCode());
+        assertEquals(ResultCode.SUCCESS, res1.getResultCode());
         assertEquals(4000L, res1.getNrgLeft());
-        assertEquals(ResultCode.SUCCESS, res2.getCode());
+        assertEquals(ResultCode.SUCCESS, res2.getResultCode());
         assertEquals(4000L, res2.getNrgLeft());
-        assertEquals(ResultCode.SUCCESS, res3.getCode());
+        assertEquals(ResultCode.SUCCESS, res3.getResultCode());
         assertEquals(3000L, res3.getNrgLeft());
 
         // storage checks
@@ -337,13 +337,13 @@ public class AionNameServiceContractTest {
 
         // contract2
         ContractExecutionResult res4 = ansc2.execute(combined4, inputEnergy);
-        assertEquals(ResultCode.SUCCESS, res4.getCode());
+        assertEquals(ResultCode.SUCCESS, res4.getResultCode());
         assertEquals(4000L, res4.getNrgLeft());
         assertEquals(newAddress4, ansc2.getResolverAddress());
 
         // contract1 transfer owner, and checks if transfer is correctly executed
         ContractExecutionResult res5 = ansc.execute(combined5, inputEnergy);
-        assertEquals(ResultCode.SUCCESS, res5.getCode());
+        assertEquals(ResultCode.SUCCESS, res5.getResultCode());
         assertEquals(3000L, res5.getNrgLeft());
         assertEquals(newAddress5, ansc.getOwnerAddress());
     }
@@ -398,7 +398,7 @@ public class AionNameServiceContractTest {
                 ansc2.getOwnerAddress(Address.wrap(combineTwoBytes(ownerHash1, ownerHash2)));
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(newAddress5, actualReturnedAddress);
     }
@@ -426,7 +426,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(newAddress1, actualReturnedAddress);
     }
@@ -472,7 +472,7 @@ public class AionNameServiceContractTest {
                 ansc2.getOwnerAddress(Address.wrap(combineTwoBytes(ownerHash1, ownerHash2)));
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(Address.wrap(k.getAddress()), actualReturnedAddress);
     }
@@ -501,7 +501,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(emptyAddress, actualReturnedAddress);
     }
@@ -535,7 +535,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         // since the signature is incorrect, contract is not modified
         assertEquals(emptyAddress, actualReturnedAddress);
@@ -554,7 +554,7 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+                    repo, domainAddress1, Address.wrap(k.getAddress()));
 
         byte[] combined =
                 setupInputs(
@@ -568,7 +568,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(emptyAddress, actualReturnedAddress);
     }
@@ -589,7 +589,7 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+                    repo, domainAddress1, Address.wrap(k.getAddress()));
 
         byte[] combined = setupInputs(newAddress1, (byte) 0x0, (byte) 0x1, notk);
 
@@ -598,7 +598,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         // since the signature is incorrect, contract is not modified
         assertEquals(emptyAddress, actualReturnedAddress);
@@ -618,7 +618,7 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+                    repo, domainAddress1, Address.wrap(k.getAddress()));
 
         byte[] combined = setupInputs(newAddress1, (byte) 0x0, (byte) 0x3, k);
         byte[] combined2 = setupInputs(newAddress2, (byte) 0x0, (byte) 0x3, k);
@@ -630,12 +630,12 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress2 = ansc.getOwnerAddress();
 
         // check for success and failure for execute with valid new address
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(newAddress1, actualReturnedAddress);
 
         // check for success and failure for execute with invalid new address
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
         assertEquals(inputEnergy, res2.getNrgLeft());
         assertEquals(newAddress1, actualReturnedAddress2);
     }
@@ -654,10 +654,10 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress1, Address.wrap(k.getAddress()));
+                    repo, domainAddress1, Address.wrap(k.getAddress()));
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
-                        (IRepositoryCache) repo, domainAddress2, Address.wrap(k.getAddress()));
+                    repo, domainAddress2, Address.wrap(k.getAddress()));
 
         byte[] combined = setupInputs(newAddress1, (byte) 0x0, (byte) 0x1, k);
         byte[] combined2 = setupInputs(newAddress2, (byte) 0x0, (byte) 0x2, k);
@@ -684,28 +684,28 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress4 = ansc2.getOwnerAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_NRG, res.getCode());
+        assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
         assertEquals(emptyAddress, actualReturnedAddress);
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_NRG, res2.getCode());
+        assertEquals(ResultCode.OUT_OF_NRG, res2.getResultCode());
         assertEquals(expectedEnergyLeft, res2.getNrgLeft());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
         assertEquals(emptyAddress, actualReturnedAddress2);
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_NRG, res3.getCode());
+        assertEquals(ResultCode.OUT_OF_NRG, res3.getResultCode());
         assertEquals(expectedEnergyLeft, res3.getNrgLeft());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
         assertEquals(emptyAddress, actualReturnedAddress3);
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_NRG, res4.getCode());
+        assertEquals(ResultCode.OUT_OF_NRG, res4.getResultCode());
         assertEquals(expectedEnergyLeft, res4.getNrgLeft());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
@@ -746,9 +746,9 @@ public class AionNameServiceContractTest {
         ContractExecutionResult res2 = ansc.execute(combined2, inputEnergy);
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
         assertEquals(expectedEnergyLeft2, res2.getNrgLeft());
     }
 

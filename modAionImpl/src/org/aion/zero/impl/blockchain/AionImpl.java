@@ -57,6 +57,7 @@ public class AionImpl implements IAionChain {
 
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
+    private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
     public AionHub aionHub;
 
@@ -148,7 +149,7 @@ public class AionImpl implements IAionChain {
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true);
+            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true, LOG_VM);
             return executor.execute().getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -167,7 +168,7 @@ public class AionImpl implements IAionChain {
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true);
+            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true, LOG_VM);
             return executor.execute().getReceipt();
         } finally {
             repository.rollback();

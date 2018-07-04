@@ -29,9 +29,7 @@ import static org.aion.crypto.HashUtil.h256;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
@@ -41,7 +39,6 @@ import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -169,7 +166,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getBalance();
     }
 
-    public Optional<DataWord> getStorageValue(Address addr, IDataWord key) {
+    public IDataWord getStorageValue(Address addr, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(addr);
 
         if (details == null) {

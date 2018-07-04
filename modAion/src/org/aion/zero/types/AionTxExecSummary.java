@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITxExecSummary;
+import org.aion.base.type.ITxReceipt;
 import org.aion.mcf.core.TxTouchedStorage;
 import org.aion.mcf.db.DetailsDataStore;
 import org.aion.mcf.vm.types.DataWord;
@@ -353,6 +354,11 @@ public class AionTxExecSummary implements ITxExecSummary {
 
     public static Builder builderFor(AionTxReceipt receipt) {
         return new Builder(receipt);
+    }
+
+    @Override
+    public Object getBuilder(ITxReceipt receipt) {
+        return builderFor((AionTxReceipt) receipt);
     }
 
     /**

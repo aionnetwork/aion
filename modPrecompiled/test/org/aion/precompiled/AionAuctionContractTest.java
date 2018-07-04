@@ -1,21 +1,15 @@
 package org.aion.precompiled;
 
-import org.aion.base.db.IRepositoryCache;
+import static org.aion.crypto.HashUtil.blake128;
+
+import java.math.BigInteger;
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.precompiled.contracts.AionAuctionContract;
 import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.Map;
-import java.util.Collections.*;
-
-import static org.aion.crypto.HashUtil.blake128;
 
 public class AionAuctionContractTest {
 
@@ -34,27 +28,27 @@ public class AionAuctionContractTest {
 
         BigInteger amount = new BigInteger("1000");
         byte[] combined = setupInputs(domainAddress1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
-        AionAuctionContract aac = new AionAuctionContract((IRepositoryCache) repo, domainAddress1);
+        AionAuctionContract aac = new AionAuctionContract(repo, domainAddress1);
         aac.execute(combined, inputEnergy);
 
         BigInteger amount2 = new BigInteger("5000");
         byte[] combined2 = setupInputs(domainAddress1, Address.wrap(k2.getAddress()), amount2.toByteArray(), k2);
-        AionAuctionContract aac2 = new AionAuctionContract((IRepositoryCache) repo, domainAddress1);
+        AionAuctionContract aac2 = new AionAuctionContract(repo, domainAddress1);
         aac2.execute(combined2, inputEnergy);
 
         BigInteger amount3 = new BigInteger("2000");
         byte[] combined3 = setupInputs(domainAddress1, Address.wrap(k3.getAddress()), amount3.toByteArray(), k3);
-        AionAuctionContract aac3 = new AionAuctionContract((IRepositoryCache) repo, domainAddress1);
+        AionAuctionContract aac3 = new AionAuctionContract(repo, domainAddress1);
         aac3.execute(combined3, inputEnergy);
 
         BigInteger amount4 = new BigInteger("5000");
         byte[] combined4 = setupInputs(domainAddress1, Address.wrap(k4.getAddress()), amount4.toByteArray(), k4);
-        AionAuctionContract aac4 = new AionAuctionContract((IRepositoryCache) repo, domainAddress1);
+        AionAuctionContract aac4 = new AionAuctionContract(repo, domainAddress1);
         aac4.execute(combined4, inputEnergy);
 
         BigInteger amount5 = new BigInteger("2000");
         byte[] combined5 = setupInputs(domainAddress1, Address.wrap(k5.getAddress()), amount5.toByteArray(), k5);
-        AionAuctionContract aac5 = new AionAuctionContract((IRepositoryCache) repo, domainAddress1);
+        AionAuctionContract aac5 = new AionAuctionContract(repo, domainAddress1);
         aac5.execute(combined5, inputEnergy);
 
         try {
@@ -65,12 +59,12 @@ public class AionAuctionContractTest {
 
         BigInteger amount6 = new BigInteger("2000");
         byte[] combined6 = setupInputs(domainAddress2, Address.wrap(k.getAddress()), amount6.toByteArray(), k);
-        AionAuctionContract aac6 = new AionAuctionContract((IRepositoryCache) repo, domainAddress2);
+        AionAuctionContract aac6 = new AionAuctionContract(repo, domainAddress2);
         aac6.execute(combined6, inputEnergy);
 
         BigInteger amount7 = new BigInteger("4000");
         byte[] combined7 = setupInputs(domainAddress2, Address.wrap(k2.getAddress()), amount7.toByteArray(), k2);
-        AionAuctionContract aac7 = new AionAuctionContract((IRepositoryCache) repo, domainAddress2);
+        AionAuctionContract aac7 = new AionAuctionContract(repo, domainAddress2);
         aac7.execute(combined7, inputEnergy);
 
         try {
@@ -93,8 +87,8 @@ public class AionAuctionContractTest {
         ECKey k2 = new ECKeyEd25519();
 
         DummyRepo repo = new DummyRepo();
-        AionAuctionContract aac = new AionAuctionContract((IRepositoryCache)repo, domainAddress1);
-        AionAuctionContract aac2 = new AionAuctionContract((IRepositoryCache)repo, domainAddress2);
+        AionAuctionContract aac = new AionAuctionContract(repo, domainAddress1);
+        AionAuctionContract aac2 = new AionAuctionContract(repo, domainAddress2);
 
         String aaa = "aaaasadsaf";
 

@@ -22,10 +22,9 @@
  */
 package org.aion.mcf.vm.types;
 
+import java.util.Arrays;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
-
-import java.util.Arrays;
 
 /**
  * Utility class for creating/operating bloom.
@@ -78,8 +77,8 @@ public class Bloom {
     }
 
     /**
-     * Checks if this bloom contains another bloom, this can be used to construct
-     * queries from creating blooms
+     * Checks if this bloom contains another bloom, this can be used to construct queries from
+     * creating blooms
      *
      * @param topicBloom another bloom already set with bloomBits
      * @return {@code true} if our bloom contains other bloom, {@code false} otherwise

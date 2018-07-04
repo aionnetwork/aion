@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
@@ -51,7 +50,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
 
     public DummyRepo() {}
 
-    public DummyRepo(DummyRepo parent) {
+    private DummyRepo(DummyRepo parent) {
         // Note: only references are copied
         accounts.putAll(parent.accounts);
         contracts.putAll(parent.contracts);
@@ -134,16 +133,12 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
 
     @Override
     public void addStorageRow(Address addr, IDataWord key, IDataWord value) {
-        Map<String, byte[]> map = storage.get(addr);
-        if (map == null) {
-            map = new HashMap<>();
-            storage.put(addr, map);
-        }
+        Map<String, byte[]> map = storage.computeIfAbsent(addr, k -> new HashMap<>());
         map.put(key.toString(), value.getData());
     }
 
     @Override
-    public Optional<DataWord> getStorageValue(Address addr, IDataWord key) {
+    public IDataWord getStorageValue(Address addr, IDataWord key) {
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
             byte[] res = map.get(key.toString());

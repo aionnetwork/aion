@@ -22,17 +22,11 @@
  */
 package org.aion.precompiled;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.AbstractExecutor;
-import org.aion.precompiled.type.IPrecompiledContract;
+import org.aion.mcf.vm.IPrecompiledContract;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -43,11 +37,10 @@ import org.slf4j.Logger;
  * The executor of pre-compiled contracts.
  */
 public class ContractExecutor extends AbstractExecutor {
+
     private long nrgLimit;
     private IAionBlock block;
     private AionTransaction tx;
-    private IRepositoryCache repoTrack;
-    private ContractExecutionResult exeResult;
 
     /**
      * Constructs a new ContractExecutor.
@@ -59,9 +52,8 @@ public class ContractExecutor extends AbstractExecutor {
      * @param blockRemainingNrg The remaining block energy left.
      * @param logger The LOGGER.
      */
-    public ContractExecutor(AionTransaction tx, IAionBlock block,
-        IRepository<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, boolean isLocalCall,
-        long blockRemainingNrg, Logger logger) {
+    public ContractExecutor(AionTransaction tx, IAionBlock block, IRepository repo,
+        boolean isLocalCall, long blockRemainingNrg, Logger logger) {
 
         super(repo, isLocalCall, blockRemainingNrg, logger);
 
@@ -71,9 +63,6 @@ public class ContractExecutor extends AbstractExecutor {
 
         this.tx = tx;
         this.repo = repo;
-        this.repoTrack = this.repo.startTracking();
-        this.isLocalCall = isLocalCall;
-        this.blockRemainingNrg = blockRemainingNrg;
         this.block = block;
         this.nrgLimit = tx.nrgLimit() - tx.transactionCost(block.getNumber());
         this.exeResult = new ContractExecutionResult(ResultCode.SUCCESS, this.nrgLimit);
@@ -88,9 +77,7 @@ public class ContractExecutor extends AbstractExecutor {
      * @param repo The database.
      * @param logger The LOGGER.
      */
-    public ContractExecutor(AionTransaction tx, IAionBlock block,
-        IRepository<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Logger logger) {
-
+    public ContractExecutor(AionTransaction tx, IAionBlock block, IRepository repo, Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
     }
 
@@ -98,95 +85,13 @@ public class ContractExecutor extends AbstractExecutor {
      * Execute the transaction.
      */
     public AionTxExecSummary execute() {
-        synchronized (lock) {
-            // prepare, preliminary check
-            if (prepare()) {
-
-                if (!isLocalCall) {
-                    IRepositoryCache track = repo.startTracking();
-                    // increase nonce
-                    if (askNonce) {
-                        track.incrementNonce(tx.getFrom());
-                    }
-
-                    // charge nrg cost
-                    // Note: if the tx is a inpool tx, it will temp charge more balance for the account
-                    // once the block info been updated. the balance in pendingPool will correct.
-                    BigInteger txNrgLimit = BigInteger.valueOf(tx.nrgLimit());
-                    BigInteger txNrgPrice = tx.nrgPrice().value();
-                    BigInteger txNrgCost = txNrgLimit.multiply(txNrgPrice);
-                    track.addBalance(tx.getFrom(), txNrgCost.negate());
-                    track.flush();
-                }
-
-                // run the logic
-                call();
-            }
-
-            // finalize
-            return finish();
-        }
-    }
-
-    /**
-     * Prepares for transaction execution.
-     */
-    private boolean prepare() {
-        if (isLocalCall) {
-            return true;
-        }
-
-        // check nrg limit
-        BigInteger txNrgPrice = tx.nrgPrice().value();
-        long txNrgLimit = tx.nrgLimit();
-
-        // may need separate energy rules for pre-comp contracts?
-        if (tx.isContractCreation()) {
-            if (!TxNrgRule.isValidNrgContractCreate(txNrgLimit)) {
-                exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NRG_LIMIT, txNrgLimit);
-                return false;
-            }
-        } else {
-            if (!TxNrgRule.isValidNrgTx(txNrgLimit)) {
-                exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NRG_LIMIT, txNrgLimit);
-                return false;
-            }
-        }
-
-        if (txNrgLimit > blockRemainingNrg || this.nrgLimit < 0) {
-            exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NRG_LIMIT, 0);
-            return false;
-        }
-
-        // check nonce
-        if (askNonce) {
-            BigInteger txNonce = new BigInteger(1, tx.getNonce());
-            BigInteger nonce = repo.getNonce(tx.getFrom());
-
-            if (!txNonce.equals(nonce)) {
-                exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NONCE, 0);
-                return false;
-            }
-        }
-
-        // check balance
-        BigInteger txValue = new BigInteger(1, tx.getValue());
-        BigInteger txTotal = txNrgPrice.multiply(BigInteger.valueOf(txNrgLimit)).add(txValue);
-        BigInteger balance = repo.getBalance(tx.getFrom());
-        if (txTotal.compareTo(balance) > 0) {
-            exeResult.setCodeAndNrgLeft(ResultCode.INSUFFICIENT_BALANCE, 0);
-            return false;
-        }
-
-        // TODO: confirm if signature check is not required here
-
-        return true;
+        return (AionTxExecSummary) execute(tx, nrgLimit);
     }
 
     /**
      * Performs the contract call.
      */
-    private void call() {
+    protected void call() {
         IPrecompiledContract pc = ContractFactory.getPrecompiledContract(tx.getTo(), tx.getFrom(),
             this.repoTrack);
 
@@ -200,8 +105,14 @@ public class ContractExecutor extends AbstractExecutor {
             repoTrack.addBalance(tx.getTo(), txValue);
             */
         } else {
-            exeResult.setCodeAndNrgLeft(ResultCode.INTERNAL_ERROR, 0);
+            exeResult.setCodeAndNrgLeft(ResultCode.INTERNAL_ERROR.toInt(), 0);
         }
+    }
+
+    @Override
+    protected void create() {
+        throw new UnsupportedOperationException(
+            "Can't create solidity contract inside the precompiled-contract");
     }
 
     /**
@@ -209,7 +120,7 @@ public class ContractExecutor extends AbstractExecutor {
      *
      * @return the execution summary.
      */
-    private AionTxExecSummary finish() {
+    protected AionTxExecSummary finish() {
 
         AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(getReceipt()) //
             .logs(new ArrayList<>()) //
@@ -217,7 +128,7 @@ public class ContractExecutor extends AbstractExecutor {
             .internalTransactions(new ArrayList<>()) //
             .result(exeResult.getOutput());
 
-        switch (exeResult.getCode()) {
+        switch (ResultCode.fromInt(exeResult.getCode())) {
             case SUCCESS:
                 repoTrack.flush();
                 break;
@@ -238,25 +149,7 @@ public class ContractExecutor extends AbstractExecutor {
 
         AionTxExecSummary summary = builder.build();
 
-        if (!isLocalCall && !summary.isRejected()) {
-            IRepositoryCache track = repo.startTracking();
-            // refund nrg left
-            if (exeResult.getCode() == ResultCode.SUCCESS || exeResult.getCode() == ResultCode.REVERT) {
-                track.addBalance(tx.getFrom(), summary.getRefund());
-            }
-
-            tx.setNrgConsume(tx.nrgLimit() - exeResult.getNrgLeft());
-
-            // Transfer fees to miner
-            track.addBalance(block.getCoinbase(), summary.getFee());
-
-            track.flush();
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Transaction receipt: {}", summary.getReceipt());
-            LOGGER.debug("Transaction logs: {}", summary.getLogs());
-        }
+        updateRepo(summary, tx, block.getCoinbase(), new ArrayList<>());
 
         return summary;
     }
@@ -267,12 +160,6 @@ public class ContractExecutor extends AbstractExecutor {
      * @return the transaction receipt.
      */
     protected AionTxReceipt getReceipt() {
-        AionTxReceipt receipt = new AionTxReceipt();
-        receipt.setTransaction(tx);
-        receipt.setLogs(new ArrayList<>());
-        receipt.setNrgUsed(tx.nrgLimit() - exeResult.getNrgLeft());
-        receipt.setExecutionResult(exeResult.getOutput());
-        receipt.setError(exeResult.getCode() == ResultCode.SUCCESS ? "" : exeResult.getCode().name());
-        return receipt;
+        return (AionTxReceipt) buildReceipt(new AionTxReceipt(), tx, new ArrayList<>());
     }
 }

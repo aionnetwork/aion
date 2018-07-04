@@ -27,10 +27,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
+import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
-public class AbstractExecutionResult {
+public abstract class AbstractExecutionResult implements IExecutionResult {
 
     public enum ResultCode {
         SUCCESS(0),
@@ -64,6 +65,7 @@ public class AbstractExecutionResult {
         public static ResultCode fromInt(int code) {
             return intMap.get(code);
         }
+
         public int toInt() {
             return val;
         }
@@ -96,20 +98,20 @@ public class AbstractExecutionResult {
         this(code, nrgLeft, ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
-    /**
-     * Parse execution result from byte array.
-     */
-    public static AbstractExecutionResult parse(byte[] result) {
-        ByteBuffer buffer = ByteBuffer.wrap(result);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-
-        ResultCode code = ResultCode.fromInt(buffer.getInt());
-        long nrgLeft = buffer.getLong();
-        byte[] output = new byte[buffer.getInt()];
-        buffer.get(output);
-
-        return new AbstractExecutionResult(code, nrgLeft, output);
-    }
+//    /**
+//     * Parse execution result from byte array.
+//     */
+//    public static IExecutionResult parse(byte[] result) {
+//        ByteBuffer buffer = ByteBuffer.wrap(result);
+//        buffer.order(ByteOrder.BIG_ENDIAN);
+//
+//        ResultCode code = ResultCode.fromInt(buffer.getInt());
+//        long nrgLeft = buffer.getLong();
+//        byte[] output = new byte[buffer.getInt()];
+//        buffer.get(output);
+//
+//        return new AbstractExecutionResult(code, nrgLeft, output);
+//    }
 
     /**
      * Encode execution resul tinto byte array.
@@ -133,15 +135,19 @@ public class AbstractExecutionResult {
      *
      * @return the result code.
      */
-    public ResultCode getCode() {
+    public int getCode() {
+        return code.toInt();
+    }
+
+    public ResultCode getResultCode() {
         return code;
     }
 
     /**
      * Sets the code.
      */
-    public void setCode(ResultCode code) {
-        this.code = code;
+    public void setCode(int code) {
+        this.code = ResultCode.fromInt(code);
     }
 
     /**
@@ -166,8 +172,8 @@ public class AbstractExecutionResult {
      * @param code The new code.
      * @param nrgLeft The new nrgLeft.
      */
-    public void setCodeAndNrgLeft(ResultCode code, long nrgLeft) {
-        this.code = code;
+    public void setCodeAndNrgLeft(int code, long nrgLeft) {
+        setCode(code);
         this.nrgLeft = nrgLeft;
     }
 
@@ -187,7 +193,6 @@ public class AbstractExecutionResult {
         this.output = output;
     }
 
-    @Override
     public String toString() {
         return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + Hex
             .toHexString(output) + "]";

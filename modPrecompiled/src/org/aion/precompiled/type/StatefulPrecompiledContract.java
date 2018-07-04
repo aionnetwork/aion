@@ -26,6 +26,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.IPrecompiledContract;
 
 /**
  * A pre-compiled contract that is capable of modifying state.

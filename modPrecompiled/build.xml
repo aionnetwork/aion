@@ -121,7 +121,6 @@
                 <pathelement location="${dir.mod}/modAionBase.jar"/>
                 <pathelement location="${dir.mod}/modCrypto.jar"/>
                 <pathelement location="${dir.mod}/modAion.jar"/>
-                <pathelement location="${dir.mod}/modPrecompiled.jar"/>
             </modulepath>
         </javac>
 

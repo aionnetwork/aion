@@ -31,8 +31,8 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.junit.After;
 import org.junit.Before;
@@ -88,7 +88,7 @@ public class TotalCurrencyContractTest {
         ContractExecutionResult res = tcc.execute(payload, COST);
 
         System.out.println("Contract result: " + res.toString());
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -100,7 +100,7 @@ public class TotalCurrencyContractTest {
         ContractExecutionResult res = tcc.execute(payload, COST);
 
         System.out.println("Contract result: " + res.toString());
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class TotalCurrencyContractTest {
         byte[] payload = new byte[]{ 0 };
         ContractExecutionResult res = tcc.execute(payload, COST - 1);
 
-        assertEquals(ResultCode.OUT_OF_NRG, res.getCode());
+        assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -121,7 +121,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         ContractExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -132,14 +132,14 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         ContractExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
 
         tcc = new TotalCurrencyContract(repo, ADDR, Address.wrap(ownerKey.getAddress()));
         input = new byte[]{ (byte) 0x0 };
         res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT, new BigInteger(res.getOutput()));
     }
 
@@ -150,12 +150,12 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         ContractExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
 
         res = tcc.execute(new byte[]{ (byte) 0x1 }, COST);  // query a diff chainID
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
     }
 
@@ -171,7 +171,7 @@ public class TotalCurrencyContractTest {
 
         ContractExecutionResult res = tcc.execute(new byte[]{ (byte) 0x0 }, COST);
 
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getOutput()));
     }
 
@@ -180,7 +180,7 @@ public class TotalCurrencyContractTest {
         System.out.println("Running TestUpdateTotalInsufficientNrg.");
 
         ContractExecutionResult res = tcc.execute(new byte[]{ (byte) 0x0 }, COST - 1);
-        assertEquals(ResultCode.OUT_OF_NRG, res.getCode());
+        assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -192,7 +192,7 @@ public class TotalCurrencyContractTest {
             constructUpdateInput((byte) 0x0, (byte) 0x0), 0, 100);  // cut sig short.
         ContractExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -205,7 +205,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         ContractExecutionResult res = contract.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -217,7 +217,7 @@ public class TotalCurrencyContractTest {
         input[30] = (byte) ~input[30];  // flip a bit
 
         ContractExecutionResult res = tcc.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -236,14 +236,14 @@ public class TotalCurrencyContractTest {
         tcc.execute(input, COST);
 
         ContractExecutionResult res = tcc.execute(new byte[]{ (byte) 0x0 }, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getOutput()));
 
         tcc.execute(input, COST);
         tcc.execute(input, COST);
 
         res = tcc.execute(new byte[]{ (byte) 0x0 }, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
     }
 
@@ -254,7 +254,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x1);    // 0x1 == subtract
         ContractExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
 
         // Verify total amount is non-negative.
@@ -269,7 +269,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x2);    // only 0, 1 are valid.
         ContractExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -290,15 +290,15 @@ public class TotalCurrencyContractTest {
         tcc.execute(input2, COST);
 
         ContractExecutionResult res = tcc.execute(new byte[]{ (byte) 0x0 }, COST);  // get chain 0.
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT, new BigInteger(res.getOutput()));
 
         res = tcc.execute(new byte[]{ (byte) 0x1 }, COST);  // get chain 1.
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getOutput()));
 
         res = tcc.execute((new byte[]{ (byte) 0x10 }), COST);   // get chain 16.
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getOutput()));
     }
 

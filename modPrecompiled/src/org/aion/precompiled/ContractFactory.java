@@ -24,10 +24,10 @@ package org.aion.precompiled;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.mcf.vm.IPrecompiledContract;
 import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.precompiled.contracts.MultiSignatureContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
-import org.aion.precompiled.type.IPrecompiledContract;
 
 /**
  * A factory class that produces pre-compiled contract instances.

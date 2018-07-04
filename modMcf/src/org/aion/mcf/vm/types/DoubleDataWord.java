@@ -36,8 +36,10 @@ import org.aion.base.vm.IDataWord;
  * often have need of 32-byte storage keys.
  */
 public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
+
     private static final WordType wType = WordType.DOUBLE_DATA_WORD;
-    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
+    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256)
+        .subtract(BigInteger.ONE);
 
     public static final DataWord ZERO = new DataWord(0);
     public static final DataWord ONE = new DataWord(1);
@@ -48,7 +50,9 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     /**
      * Constructs a new DoubleDataWord of 32 zero bytes.
      */
-    public DoubleDataWord() { this.data = new byte[BYTES]; }
+    public DoubleDataWord() {
+        this.data = new byte[BYTES];
+    }
 
     /**
      * Constructs a new DoubleDataWord whose numeric representation is equal to num.
@@ -83,7 +87,8 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
             this.data = new byte[BYTES];
             System.arraycopy(data, 0, this.data, BYTES - data.length, data.length);
         } else {
-            throw new RuntimeException("DoubleDataWord can't exceed 32 bytes: " + Hex.toHexString(data));
+            throw new RuntimeException(
+                "DoubleDataWord can't exceed 32 bytes: " + Hex.toHexString(data));
         }
     }
 
@@ -109,7 +114,9 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     }
 
     @Override
-    public WordType getType() { return wType; }
+    public WordType getType() {
+        return wType;
+    }
 
     @Override
     public byte[] getData() {
@@ -170,9 +177,15 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) { return false; }
-        if (this == o) { return true; }
-        if (!(o instanceof DoubleDataWord)) { return false; }
+        if (o == null) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DoubleDataWord)) {
+            return false;
+        }
 
         DoubleDataWord doubleDataWordWord = (DoubleDataWord) o;
         return Arrays.equals(this.data, doubleDataWordWord.data);

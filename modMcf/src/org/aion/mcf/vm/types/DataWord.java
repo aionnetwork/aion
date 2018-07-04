@@ -22,22 +22,21 @@
  */
 package org.aion.mcf.vm.types;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 /**
- * Data word is the basic unit data used by virtual machine. The size of a data word is
- * 128 bits.
+ * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.
  */
 public class DataWord implements Comparable<DataWord>, IDataWord {
 
-    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
+    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128)
+        .subtract(BigInteger.ONE);
 
     private static final WordType wType = WordType.DATA_WORD;
     public static final DataWord ZERO = new DataWord(0);
@@ -148,8 +147,12 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         DataWord dataWord = (DataWord) o;
 
@@ -172,6 +175,8 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     }
 
     @Override
-    public WordType getType() { return wType; }
+    public WordType getType() {
+        return wType;
+    }
 
 }

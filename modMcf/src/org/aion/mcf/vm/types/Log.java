@@ -22,6 +22,8 @@
  */
 package org.aion.mcf.vm.types;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.aion.base.type.Address;
 import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
@@ -30,17 +32,14 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * A log is emitted by the LOGX vm instruction. It's composed of address, topics
- * and data.
+ * A log is emitted by the LOGX vm instruction. It's composed of address, topics and data.
  */
 public class Log {
+
     private Address addr;
     private List<byte[]> topics = new ArrayList<>();
-    private byte[] data = new byte[]{};
+    private byte[] data;
 
     public Log(byte[] rlp) {
         RLPList params = RLP.decode2(rlp);
@@ -121,8 +120,9 @@ public class Log {
         }
         topicsStr.append("]");
 
-        return "LogInfo{" + "address=0x" + this.addr.toString() + ", topics=" + topicsStr + ", data="
-                + Hex.toHexString(data) + '}';
+        return "LogInfo{" + "address=0x" + this.addr.toString() + ", topics=" + topicsStr
+            + ", data="
+            + Hex.toHexString(data) + '}';
     }
 
 }

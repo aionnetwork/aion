@@ -27,8 +27,18 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.util.*;
-import org.aion.base.db.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IRepository;
+import org.aion.base.db.IRepositoryCache;
+import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
@@ -38,7 +48,6 @@ import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -296,7 +305,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public Optional<DataWord> getStorageValue(Address address, IDataWord key) {
+    public IDataWord getStorageValue(Address address, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(address);
         return (details == null) ? null : details.get(key);
     }

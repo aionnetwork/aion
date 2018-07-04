@@ -18,8 +18,8 @@ import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.MultiSignatureContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.junit.After;
@@ -68,7 +68,7 @@ public class MultiSignatureContractTest {
 
         MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
         ContractExecutionResult res = msc.execute(input, nrgLimit);
-        assertEquals(code, res.getCode());
+        assertEquals(code, res.getResultCode());
         assertEquals(nrg, res.getNrgLeft());
         return res;
     }
@@ -250,7 +250,7 @@ public class MultiSignatureContractTest {
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, ownerAddrs);
         MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
         ContractExecutionResult res = msc.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         Address wallet = new Address(res.getOutput());
         repo.addBalance(wallet, balance);
         addrsToClean.add(wallet);

@@ -34,13 +34,12 @@
  ******************************************************************************/
 package org.aion.base.db;
 
-import java.util.Optional;
-import org.aion.base.type.Address;
-
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.aion.base.type.Address;
+import org.aion.base.vm.IDataWord;
 
 /**
  * Repository interface for information retrieval.
@@ -189,7 +188,7 @@ public interface IRepositoryQuery<AS, DW> {
      *            the key of interest
      * @return a {@link DW} representing the data associated with the given key
      */
-    Optional<DW> getStorageValue(Address address, DW key);
+    IDataWord getStorageValue(Address address, DW key);
 
     /**
      * Retrieves the stored transactions for recovering pool tx.

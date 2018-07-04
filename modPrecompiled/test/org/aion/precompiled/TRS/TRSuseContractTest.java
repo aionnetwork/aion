@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
+import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
@@ -115,7 +115,7 @@ public class TRSuseContractTest extends TRShelpers {
     public void testCreateNullInput() {
         TRSuseContract trs = newTRSuseContract(getNewExistentAccount(BigInteger.ZERO));
         ContractExecutionResult res = trs.execute(null, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -123,7 +123,7 @@ public class TRSuseContractTest extends TRShelpers {
     public void testCreateEmptyInput() {
         TRSuseContract trs = newTRSuseContract(getNewExistentAccount(BigInteger.ZERO));
         ContractExecutionResult res = trs.execute(ByteUtil.EMPTY_BYTE_ARRAY, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -135,7 +135,7 @@ public class TRSuseContractTest extends TRShelpers {
         ContractExecutionResult res;
         for (int i = 0; i <= useCurrMaxOp; i++) {
             res = trs.execute(input, COST - 1);
-            assertEquals(ResultCode.OUT_OF_NRG, res.getCode());
+            assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
             assertEquals(0, res.getNrgLeft());
         }
     }
@@ -148,7 +148,7 @@ public class TRSuseContractTest extends TRShelpers {
         ContractExecutionResult res;
         for (int i = 0; i <= useCurrMaxOp; i++) {
             res = trs.execute(input, StatefulPrecompiledContract.TX_NRG_MAX + 1);
-            assertEquals(ResultCode.INVALID_NRG_LIMIT, res.getCode());
+            assertEquals(ResultCode.INVALID_NRG_LIMIT, res.getResultCode());
             assertEquals(0, res.getNrgLeft());
         }
     }
@@ -161,13 +161,13 @@ public class TRSuseContractTest extends TRShelpers {
         TRSuseContract trs = newTRSuseContract(getNewExistentAccount(BigInteger.ZERO));
         byte[] input = new byte[1];
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test on maximum too-small amount.
         input = new byte[160];
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -176,7 +176,7 @@ public class TRSuseContractTest extends TRShelpers {
         TRSuseContract trs = newTRSuseContract(getNewExistentAccount(BigInteger.ZERO));
         byte[] input = new byte[162];
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -187,7 +187,7 @@ public class TRSuseContractTest extends TRShelpers {
         TRSuseContract trs = newTRSuseContract(acct);
         byte[] input = getDepositInput(acct, BigInteger.TWO);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test on contract address looks like a legit TRS address (proper prefix).
@@ -197,7 +197,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         input = getDepositInput(Address.wrap(addr), BigInteger.TWO);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -211,13 +211,13 @@ public class TRSuseContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE.add(BigInteger.ONE));
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getCode());
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test on maximum too-large amount.
         input = getMaxDepositInput(contract);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getCode());
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode.
@@ -225,13 +225,13 @@ public class TRSuseContractTest extends TRShelpers {
         contract = createTRScontract(AION, true, true, 1, BigInteger.ZERO, 0);
         input = getDepositInput(contract, DEFAULT_BALANCE.add(BigInteger.ONE));
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getCode());
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test on maximum too-large amount.
         input = getMaxDepositInput(contract);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getCode());
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -243,7 +243,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, BigInteger.TWO);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -256,7 +256,7 @@ public class TRSuseContractTest extends TRShelpers {
         TRSuseContract trs = newTRSuseContract(acct);
         byte[] input = getDepositInput(contract, BigInteger.TWO);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -268,7 +268,7 @@ public class TRSuseContractTest extends TRShelpers {
         TRSuseContract trs = newTRSuseContract(contract);
         byte[] input = getDepositInput(contract, BigInteger.TWO);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -281,7 +281,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, BigInteger.ZERO);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertFalse(fetchAccountHasPositiveDepositBalance(contract, acct));
 
@@ -292,7 +292,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         input = getDepositInput(contract, BigInteger.ZERO);
        res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertFalse(fetchAccountHasPositiveDepositBalance(contract, acct));
     }
@@ -306,7 +306,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
@@ -319,7 +319,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         input = getDepositInput(contract, BigInteger.ONE);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(DEFAULT_BALANCE.subtract(BigInteger.ONE), repo.getBalance(acct));
@@ -334,7 +334,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
@@ -348,7 +348,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         input = getMaxDepositInput(contract);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
@@ -364,7 +364,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         byte[] input = getMaxDepositInput(contract);
         ContractExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertTrue(fetchAccountHasPositiveDepositBalance(contract, acct));
         assertEquals(DEFAULT_BALANCE, repo.getBalance(acct));
@@ -384,7 +384,7 @@ public class TRSuseContractTest extends TRShelpers {
         byte[] input = getDepositInput(contract, amt);
         for (int i = 0; i < 7; i++) {
             ContractExecutionResult res = trs.execute(input, COST);
-            assertEquals(ResultCode.SUCCESS, res.getCode());
+            assertEquals(ResultCode.SUCCESS, res.getResultCode());
             assertEquals(0, res.getNrgLeft());
             left = left.subtract(amt);
             depo = depo.add(amt);
@@ -409,7 +409,7 @@ public class TRSuseContractTest extends TRShelpers {
         byte[] input = getMaxDepositInput(contract);
         for (int i = 0; i < 100; i++) {
             ContractExecutionResult res = trs.execute(input, COST);
-            assertEquals(ResultCode.SUCCESS, res.getCode());
+            assertEquals(ResultCode.SUCCESS, res.getResultCode());
             assertEquals(0, res.getNrgLeft());
             left = left.subtract(max);
             depo = depo.add(max);

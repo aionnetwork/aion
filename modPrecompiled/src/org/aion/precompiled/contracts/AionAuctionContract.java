@@ -22,21 +22,24 @@
  */
 package org.aion.precompiled.contracts;
 
-import java.math.BigInteger;
-import java.util.*;
+import static org.aion.crypto.HashUtil.blake128;
+
 import com.google.common.primitives.Longs;
-import org.aion.base.db.*;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import static org.aion.crypto.HashUtil.blake128;
 
 /**
  * The AionAuctionContract is used to register domain names. Accounts can start and bid in an

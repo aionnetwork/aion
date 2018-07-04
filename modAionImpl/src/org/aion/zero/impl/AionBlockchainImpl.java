@@ -57,6 +57,7 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
@@ -122,6 +123,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo>
             transactionStore;
     private AionBlock bestBlock;
+
+    private static final  Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
@@ -1054,7 +1057,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         long energyRemaining = block.getNrgLimit();
         for (AionTransaction tx : block.getTransactionsList()) {
             TransactionExecutor executor =
-                    new TransactionExecutor(tx, block, track, false, energyRemaining);
+                    new TransactionExecutor(tx, block, track, false, energyRemaining, LOGGER_VM);
             AionTxExecSummary summary = executor.execute();
 
             if (!summary.isRejected()) {
@@ -1090,7 +1093,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         for (AionTransaction tx : block.getTransactionsList()) {
-            TransactionExecutor executor = new TransactionExecutor(tx, block, track);
+            TransactionExecutor executor = new TransactionExecutor(tx, block, track, LOGGER_VM);
             AionTxExecSummary summary = executor.execute();
 
             track.flush();
