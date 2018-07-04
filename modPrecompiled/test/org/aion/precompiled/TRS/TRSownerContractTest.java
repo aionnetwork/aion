@@ -12,10 +12,12 @@ import java.util.Arrays;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.junit.After;
@@ -68,9 +70,9 @@ public class TRSownerContractTest extends TRShelpers {
 
     // Returns the address of the owner of the TRS contract given by the address contract.
     private Address fetchOwner(Address contract) {
-        byte[] key = new byte[DoubleDataWord.BYTES];
+        byte[] key = new byte[DataWord.BYTES];
         key[0] = (byte) 0xF0;
-        IDataWord owner = repo.getStorageValue(contract, newIDataWord(key));
+        IDataWord owner = repo.getStorageValue(contract, new DataWord(key));
         return Address.wrap(owner.getData());
     }
 
@@ -91,7 +93,7 @@ public class TRSownerContractTest extends TRShelpers {
     // Returns true only if the TRS contract whose contract specs are given by specsData has direct
     // deposit enabled.
     private boolean fetchIsDirectDeposit(IDataWord specsData) {
-        return specsData.getData()[10] == (byte) 0x1;
+        return AbstractTRS.fetchIsDirDepositsEnabled(specsData.getData());
     }
 
     // Returns the percentage configured for the TRS contract whose contract specs are given by specsData.
@@ -103,12 +105,12 @@ public class TRSownerContractTest extends TRShelpers {
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is locked.
     private boolean fetchIsLocked(IDataWord specsData) {
-        return specsData.getData()[14] == (byte) 0x1;
+        return AbstractTRS.isContractLocked(specsData.getData());
     }
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is live.
     private boolean fetchIsLive(IDataWord specsData) {
-        return specsData.getData()[15] == (byte) 0x1;
+        return AbstractTRS.isContractLive(specsData.getData());
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
@@ -244,7 +246,8 @@ public class TRSownerContractTest extends TRShelpers {
         // Test on min periods.
         int periods = 1;
         byte[] input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
-        TRSownerContract trs = newTRSownerContract(getNewExistentAccount(BigInteger.ZERO));
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        TRSownerContract trs = newTRSownerContract(caller);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -253,6 +256,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLocked(word));
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // Test on max periods.
         periods = 1200;
@@ -282,6 +288,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
 
+        repo.incrementNonce(AION);
+        repo.flush();
+
         // Test on max periods.
         periods = 1200;
         input = getCreateInput(true, false, periods, BigInteger.ZERO, 0);
@@ -303,7 +312,8 @@ public class TRSownerContractTest extends TRShelpers {
         int periods3 = 0x1FF;
 
         byte[] input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
-        TRSownerContract trs = newTRSownerContract(getNewExistentAccount(BigInteger.ZERO));
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        TRSownerContract trs = newTRSownerContract(caller);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -312,6 +322,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLocked(word));
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         input = getCreateInput(false, false, periods2, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
@@ -322,6 +335,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLocked(word));
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         input = getCreateInput(false, false, periods3, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
@@ -379,6 +395,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
 
+        repo.incrementNonce(caller);
+        repo.flush();
+
         // When true
         isDirectDeposit = true;
         input = getCreateInput(false, isDirectDeposit, 1, BigInteger.ZERO, 0);
@@ -407,6 +426,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
 
+        repo.incrementNonce(caller);
+        repo.flush();
+
         // Test 18 shifts.
         input = getCreateInput(false, false, 1, BigInteger.ZERO, 18);
         res = trs.execute(input, COST);
@@ -434,6 +456,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLocked(word));
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // Test 18 shifts.
         raw = new BigInteger("100000000000000000000");
@@ -498,6 +523,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
 
+        repo.incrementNonce(caller);
+        repo.flush();
+
         // This is: 73.749309184932750917 with 18 shifts ... verify we get it back
         raw = new BigInteger("73749309184932750917");
         input = getCreateInput(false, false, 1, raw, 18);
@@ -510,6 +538,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLocked(word));
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // This is: 0.000000000000000001 with 18 shifts ... verify we get it back
         raw = new BigInteger("0000000000000000001");
@@ -558,6 +589,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
 
+        repo.incrementNonce(caller);
+        repo.flush();
+
         // With 14 shifts we have: 8.72743562198734% -> good
         shifts = 14;
         input = getCreateInput(false, false, 1, raw, shifts);
@@ -570,6 +604,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(fetchIsLocked(word));
         assertFalse(fetchIsLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // With 18 shifts we have: 000.000872743562198734% -> good
         shifts = 18;
@@ -942,14 +979,16 @@ public class TRSownerContractTest extends TRShelpers {
             1, BigInteger.ZERO, 0);
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
-        System.arraycopy(acct.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         TRSownerContract trs = new TRSownerContract(repo, acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
 
+        repo.incrementNonce(acct);
+        repo.flush();
+
         // Test what looks like a proper TRS address (has TRS prefix).
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         input[input.length - 1] = (byte) ~input[input.length - 1];  // flip a bit
         trs = new TRSownerContract(repo, acct);
         res = trs.execute(input, COST);
@@ -1102,8 +1141,8 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
-    public void testAbleToNullifyWhileLive() {
-        //TODO -- is this wanted?
+    public void testNotAbleToNullifyWhileLive() {
+        //TODO
     }
 
 }

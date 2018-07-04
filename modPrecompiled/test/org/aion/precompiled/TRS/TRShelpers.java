@@ -1,5 +1,7 @@
 package org.aion.precompiled.TRS;
 
+import static junit.framework.TestCase.fail;
+
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
@@ -8,6 +10,7 @@ import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 
@@ -42,6 +45,8 @@ class TRShelpers {
         TRSownerContract trs = new TRSownerContract(repo, owner);
         Address contract = new Address(trs.execute(input, COST).getOutput());
         tempAddrs.add(contract);
+        repo.incrementNonce(owner);
+        repo.flush();
         return contract;
     }
 
@@ -100,14 +105,21 @@ class TRShelpers {
 
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.
     IDataWord getSpecKey() {
-        byte[] specsKey = new byte[DoubleDataWord.BYTES];
+        byte[] specsKey = new byte[DataWord.BYTES];
         specsKey[0] = (byte) 0xE0;
-        return newIDataWord(specsKey);
+        return new DataWord(specsKey);
     }
 
     // Returns a new IDataWord that wraps data. Here so we can switch types easy if needed.
     IDataWord newIDataWord(byte[] data) {
-        return new DoubleDataWord(data);
+        if (data.length == DataWord.BYTES) {
+            return new DataWord(data);
+        } else if (data.length == DoubleDataWord.BYTES) {
+            return new DoubleDataWord(data);
+        } else {
+            fail();
+        }
+        return null;
     }
 
 }

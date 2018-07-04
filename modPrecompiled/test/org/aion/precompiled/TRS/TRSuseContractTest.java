@@ -130,7 +130,7 @@ public class TRSuseContractTest extends TRShelpers {
 
     // Returns the head of the list for contract or null if no head.
     private Address fetchLinkedListHead(Address contract) {
-        byte[] listKey = new byte[DoubleDataWord.BYTES];
+        byte[] listKey = new byte[DataWord.BYTES];
         listKey[0] = 0x70;
         IDataWord head = repo.getStorageValue(contract, newIDataWord(listKey));
         if (head == null) { return null; }
@@ -225,6 +225,11 @@ public class TRSuseContractTest extends TRShelpers {
             assertEquals(ResultCode.INVALID_NRG_LIMIT, res.getCode());
             assertEquals(0, res.getNrgLeft());
         }
+    }
+
+    @Test
+    public void testInvalidOperation() {
+        //TODO - need all ops implemented first
     }
 
     // <-------------------------------------DEPOSIT TRS TESTS------------------------------------->
