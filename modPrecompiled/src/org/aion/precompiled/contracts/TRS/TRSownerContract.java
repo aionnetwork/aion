@@ -32,7 +32,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 
 /**
@@ -287,24 +286,24 @@ public final class TRSownerContract extends AbstractTRS {
 
         // The caller must also be the owner of this contract.
         Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
-        if (!caller.equals(fetchContractOwner(contract))) {
+        if (!caller.equals(getContractOwner(contract))) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A lock call can only execute if the current state of the TRS contract is as follows:
         // contract is unlocked & contract is not live.
-        IDataWord specs = fetchContractSpecs(contract);
+        byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] specBytes = specs.getData();
-        if (isContractLocked(specBytes) || isContractLive(specBytes)) {
+        if (isContractLocked(specs) || isContractLive(specs)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // All checks OK. Change contract state to locked.
         setLock(contract);
+        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
@@ -335,28 +334,29 @@ public final class TRSownerContract extends AbstractTRS {
 
         // The caller must also be the owner of this contract.
         Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
-        if (!caller.equals(fetchContractOwner(contract))) {
+        if (!caller.equals(getContractOwner(contract))) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A start call can only execute if the current state of the TRS contract is as follows:
         // contract is locked & contract is not live.
-        IDataWord specs = fetchContractSpecs(contract);
+        byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        byte[] specBytes = specs.getData();
-        if (!isContractLocked(specBytes) || isContractLive(specBytes)) {
+        if (!isContractLocked(specs) || isContractLive(specs)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // All checks OK. Change contract state to live.
         setLive(contract);
+        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
-    // <-----------------------DATABASE GET, SET, QUERY METHODS BELOW------------------------------>
+
+    // <------------------------------------HELPER METHODS----------------------------------------->
 
     /**
      * Saves a new public-facing TRS contract whose contract address is contract and whose direct
@@ -366,18 +366,12 @@ public final class TRSownerContract extends AbstractTRS {
      * parameter tells this method whether to save the new contract as a test contract (using 30
      * second periods) or not (using 30 day periods). The owner of the contract is caller.
      *
-     * All preconditions on the parameters are assumed already verified.
+     * Assumption: all parameters are non-null.
      *
-     * The following meta-data for the contract is stored in the database using 32-byte words:
+     * If periods, percent or precision are larger than expected they will each be truncated so that
+     * they use the expected number of bytes each.
      *
-     *   ownership -- The key is 32 zero bytes with its leftmost byte set to OWNER_CODE
-     *                The value is the 32 byte address of the contract owner.
-     *
-     *   specifications -- The key is 32 zero bytes with its leftmost byte set to SPECS_CODE
-     *                     The value is a 32 byte array formatted as follows:
-     *
-     *     | 9b - percentage | 1b - isTest | 1b - isDirectDeposit | 1b - precision | 2b - periods |
-     *     | 1b - isLocked | 1b - isLive |
+     * If contract already exists then this method does nothing.
      *
      * @param contract The address of the new TRS contract.
      * @param isTest True only if this new TRS contract is a test contract.
@@ -389,97 +383,12 @@ public final class TRSownerContract extends AbstractTRS {
     private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
-        // First, save the "specifications" meta-data for this contract.
-
-        // "constants"
-        final int indexTest = 9;    // note: indexTest == length of percent
-        final int indexPrecision = 11;
-        final int indexPeriods = 12;
-
-        byte[] specKey = new byte[DoubleDataWord.BYTES];
-        specKey[0] = SPECS_CODE;
-
-        byte[] specValue = new byte[DoubleDataWord.BYTES];
-        byte[] percentBytes = percent.toByteArray();
-        System.arraycopy(percentBytes, 0, specValue, indexTest - percentBytes.length,
-            percentBytes.length);
-        specValue[indexTest] = (isTest) ? (byte) 0x1 : (byte) 0x0;
-        specValue[DIR_DEPO_OFFSET] = (isDirectDeposit) ? (byte) 0x1 : (byte) 0x0;
-        specValue[indexPrecision] = (byte) precision;
-        specValue[indexPeriods] = (byte) ((periods >> Byte.SIZE) & 0xFF);
-        specValue[indexPeriods + 1] = (byte) (periods & 0xFF);
-        specValue[LOCK_OFFSET] = (byte) 0x0; // sanity
-        specValue[LIVE_OFFSET] = (byte) 0x0; // sanity
-
+        if (getContractOwner(contract) != null) { return; } // contract exists already.
         track.createAccount(contract);
-        saveContractOwner(contract);
-        track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
-
-        // Second, save the meta-data to the head of the doubly linked list of depositors.
-        byte[] listKey = new byte[DoubleDataWord.BYTES];
-        listKey[0] = LINKED_LIST_CODE;
-
-        // The leftmost bit is the null bit, we set it to 1 to indicate there is no head yet.
-        byte[] listValue = new byte[DoubleDataWord.BYTES];
-        listValue[0] = (byte) 0x80;
-
-        track.addStorageRow(contract, new DoubleDataWord(listKey), new DoubleDataWord(listValue));
-        track.flush();
-    }
-
-    /**
-     * Saves the owner of the contract into the contract address. Since our key-value pairs in the
-     * database are 16 byte words we must store the owner address in two key-value pairs.
-     *
-     * The key for the first half of the address has all its bits set to 0 except for the most
-     *   significant bit, which is 1.
-     *
-     * The key for the second half of the address has all its bits set to 0 except for the most and
-     *   least significant bits, both of which are 1.
-     *
-     * @param contract The contract to save the owner address to.
-     */
-    private void saveContractOwner(Address contract) {
-        byte[] key = new byte[DoubleDataWord.BYTES];
-        key[0] = OWNER_CODE;
-        track.addStorageRow(contract, new DoubleDataWord(key), new DoubleDataWord(caller.toBytes()));
-    }
-
-    /**
-     * Updates the specifications associated with the TRS contract whose address is contract so that
-     * the is-locked bit will be set. If the bit is already set this method effectively does nothing.
-     *
-     * Assumption: contract IS a valid TRS contract address.
-     *
-     * @param contract The address of the TRS contract.
-     */
-    private void setLock(Address contract) {
-        byte[] specKey = new byte[DoubleDataWord.BYTES];
-        specKey[0] = SPECS_CODE;
-
-        byte[] specValue = fetchContractSpecs(contract).getData();
-        specValue[LOCK_OFFSET] = (byte) 0x1;
-
-        track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
-        track.flush();
-    }
-
-    /**
-     * Updates the specifications associated with the TRS contract whose address is contract so that
-     * the is-live bit will be set. If the bit is already set this method effectively does nothing.
-     *
-     * Assumption: contract IS a valid TRS contract address.
-     *
-     * @param contract The address of the TRS contract.
-     */
-    private void setLive(Address contract) {
-        byte[] specKey = new byte[DoubleDataWord.BYTES];
-        specKey[0] = SPECS_CODE;
-
-        byte[] specValue = fetchContractSpecs(contract).getData();
-        specValue[LIVE_OFFSET] = (byte) 0x1;
-
-        track.addStorageRow(contract, new DoubleDataWord(specKey), new DoubleDataWord(specValue));
+        setContractOwner(contract);
+        setContractSpecs(contract, isTest, isDirectDeposit, periods, percent, precision);
+        setListHead(contract, null);
+        setTotalBalance(contract, BigInteger.ZERO);
         track.flush();
     }
 

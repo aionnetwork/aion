@@ -1,5 +1,7 @@
 package org.aion.precompiled.TRS;
 
+import static junit.framework.TestCase.fail;
+
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
@@ -8,7 +10,10 @@ import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
+import org.aion.precompiled.contracts.TRS.TRSuseContract;
 
 /**
  * A class exposing commonly used helper methods and variables for TRS-related testing.
@@ -26,11 +31,17 @@ class TRShelpers {
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
         Address acct = Address.wrap(ECKeyFac.inst().create().getAddress());
+        acct.toBytes()[0] = (byte) 0xA0;
         repo.createAccount(acct);
         repo.addBalance(acct, balance);
         repo.flush();
         tempAddrs.add(acct);
         return acct;
+    }
+
+    // Returns a new TRSuseContract and calls the contract using caller.
+    TRSuseContract newTRSuseContract(Address caller) {
+        return new TRSuseContract(repo, caller);
     }
 
     // Returns the address of a newly created TRS contract, assumes all params are valid.
@@ -41,6 +52,39 @@ class TRShelpers {
         TRSownerContract trs = new TRSownerContract(repo, owner);
         Address contract = new Address(trs.execute(input, COST).getOutput());
         tempAddrs.add(contract);
+        repo.incrementNonce(owner);
+        repo.flush();
+        return contract;
+    }
+
+    // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
+    Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
+        int periods, BigInteger percent, int precision) {
+
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
+
+        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
+        byte[] specsBytes = specs.getData();
+        specsBytes[14] = (byte) 0x1;
+
+        repo.addStorageRow(contract, getSpecKey(), newIDataWord(specsBytes));
+        repo.flush();
+        return contract;
+    }
+
+    // Returns the address of a newly created TRS contract that is locked and live.
+    Address createLockedAndLiveTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
+        int periods, BigInteger percent, int precision) {
+
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
+
+        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
+        byte[] specsBytes = specs.getData();
+        specsBytes[14] = (byte) 0x1;
+        specsBytes[15] = (byte) 0x1;
+
+        repo.addStorageRow(contract, getSpecKey(), newIDataWord(specsBytes));
+        repo.flush();
         return contract;
     }
 
@@ -64,6 +108,25 @@ class TRShelpers {
         }
         input[13] = (byte) precision;
         return input;
+    }
+
+    // Returns a DataWord that is the key corresponding to the contract specifications in storage.
+    IDataWord getSpecKey() {
+        byte[] specsKey = new byte[DataWord.BYTES];
+        specsKey[0] = (byte) 0xE0;
+        return new DataWord(specsKey);
+    }
+
+    // Returns a new IDataWord that wraps data. Here so we can switch types easy if needed.
+    IDataWord newIDataWord(byte[] data) {
+        if (data.length == DataWord.BYTES) {
+            return new DataWord(data);
+        } else if (data.length == DoubleDataWord.BYTES) {
+            return new DoubleDataWord(data);
+        } else {
+            fail();
+        }
+        return null;
     }
 
 }

@@ -8,19 +8,19 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 
 /**
  * Tests the TRSownerContract API.
@@ -50,26 +50,6 @@ public class TRSownerContractTest extends TRShelpers {
         return new TRSownerContract(repo, caller);
     }
 
-    // Returns a new DoubleDataWord that wraps data. Here so we can switch types easy if needed.
-    private DoubleDataWord newDoubleDataWord(byte[] data) {
-        return new DoubleDataWord(data);
-    }
-
-    // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
-    private Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
-        int periods, BigInteger percent, int precision) {
-
-        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
-
-        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
-        byte[] specsBytes = specs.getData();
-        specsBytes[14] = (byte) 0x1;
-
-        repo.addStorageRow(contract, getSpecKey(), newDoubleDataWord(specsBytes));
-        repo.flush();
-        return contract;
-    }
-
     // Returns an input byte array for the lock operation using the provided parameters.
     private byte[] getLockInput(Address contract) {
         byte[] input = new byte[33];
@@ -87,55 +67,38 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     // Returns the address of the owner of the TRS contract given by the address contract.
-    private Address fetchOwner(Address contract) {
-        byte[] key = new byte[DoubleDataWord.BYTES];
-        key[0] = (byte) 0xF0;
-        IDataWord owner = repo.getStorageValue(contract, newDoubleDataWord(key));
-        return Address.wrap(owner.getData());
+    private Address getOwner(AbstractTRS trs, Address contract) {
+        return trs.getContractOwner(contract);
     }
 
-    // Returns the periods configured for the TRS contract whose contract specs are given by specsData.
-    private int fetchPeriods(IDataWord specsData) {
-        byte[] specs = specsData.getData();
-        int periods = specs[12];
-        periods <<= Byte.SIZE;
-        periods |= (specs[13] & 0xFF);
-        return periods;
+    // Returns the periods configured for the TRS contract.
+    private int getPeriods(AbstractTRS trs, Address contract) {
+        return AbstractTRS.getPeriods(trs.getContractSpecs(contract));
     }
 
-    // Returns true only if the TRS contract whose contract specs are given by specsData is in Test Mode.
-    private boolean fetchIsTest(IDataWord specsData) {
-        return specsData.getData()[9] == (byte) 0x1;
+    // Returns true only if the TRS contract is in Test Mode.
+    private boolean isTestContract(AbstractTRS trs, Address contract) {
+        return AbstractTRS.isTestContract(trs.getContractSpecs(contract));
     }
 
-    // Returns true only if the TRS contract whose contract specs are given by specsData has direct
-    // deposit enabled.
-    private boolean fetchIsDirectDeposit(IDataWord specsData) {
-        return specsData.getData()[10] == (byte) 0x1;
+    // Returns true only if the TRS contract has direct deposit enabled.
+    private boolean getIsDirectDepositEnabled(AbstractTRS trs, Address contract) {
+        return AbstractTRS.isDirDepositsEnabled(trs.getContractSpecs(contract));
     }
 
-    // Returns the percentage configured for the TRS contract whose contract specs are given by specsData.
-    private BigDecimal fetchPercentage(IDataWord specsData) {
-        byte[] specs = specsData.getData();
-        BigInteger raw = new BigInteger(Arrays.copyOfRange(specs, 0, 9));
-        return new BigDecimal(raw).movePointLeft((int) specs[11]);
+    // Returns the percentage configured for the TRS contract.
+    private BigDecimal getPercentage(AbstractTRS trs, Address contract) {
+        return AbstractTRS.getPercentage(trs.getContractSpecs(contract));
     }
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is locked.
-    private boolean fetchIsLocked(IDataWord specsData) {
-        return specsData.getData()[14] == (byte) 0x1;
+    private boolean getIsContractLocked(IDataWord specsData) {
+        return AbstractTRS.isContractLocked(specsData.getData());
     }
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is live.
-    private boolean fetchIsLive(IDataWord specsData) {
-        return specsData.getData()[15] == (byte) 0x1;
-    }
-
-    // Returns a DataWord that is the key corresponding to the contract specifications in storage.
-    private IDataWord getSpecKey() {
-        byte[] specsKey = new byte[DoubleDataWord.BYTES];
-        specsKey[0] = (byte) 0xE0;
-        return newDoubleDataWord(specsKey);
+    private boolean getIsContractLive(IDataWord specsData) {
+        return AbstractTRS.isContractLive(specsData.getData());
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
@@ -246,10 +209,10 @@ public class TRSownerContractTest extends TRShelpers {
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
-        assertEquals(caller, fetchOwner(new Address(res.getOutput())));
+        assertEquals(caller, getOwner(trs, new Address(res.getOutput())));
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -261,9 +224,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
-        assertEquals(AION, fetchOwner(new Address(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
+        assertEquals(AION, getOwner(trs, new Address(res.getOutput())));
     }
 
     @Test
@@ -271,15 +234,19 @@ public class TRSownerContractTest extends TRShelpers {
         // Test on min periods.
         int periods = 1;
         byte[] input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
-        TRSownerContract trs = newTRSownerContract(getNewExistentAccount(BigInteger.ZERO));
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        TRSownerContract trs = newTRSownerContract(caller);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // Test on max periods.
         periods = 1200;
@@ -288,9 +255,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -304,10 +271,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(AION);
+        repo.flush();
 
         // Test on max periods.
         periods = 1200;
@@ -316,9 +286,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -330,34 +300,41 @@ public class TRSownerContractTest extends TRShelpers {
         int periods3 = 0x1FF;
 
         byte[] input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
-        TRSownerContract trs = newTRSownerContract(getNewExistentAccount(BigInteger.ZERO));
+        Address caller = getNewExistentAccount(BigInteger.ZERO);
+        TRSownerContract trs = newTRSownerContract(caller);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         input = getCreateInput(false, false, periods2, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods2, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods2, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         input = getCreateInput(false, false, periods3, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(periods3, fetchPeriods(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(periods3, getPeriods(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -371,9 +348,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(isTest, fetchIsTest(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(isTest, isTestContract(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
 
         // When true
@@ -384,9 +361,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(isTest, fetchIsTest(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(isTest, isTestContract(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -401,10 +378,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(isDirectDeposit, fetchIsDirectDeposit(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(isDirectDeposit, getIsDirectDepositEnabled(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // When true
         isDirectDeposit = true;
@@ -413,9 +393,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(isDirectDeposit, fetchIsDirectDeposit(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(isDirectDeposit, getIsDirectDepositEnabled(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -429,10 +409,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(BigDecimal.ZERO, fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(BigDecimal.ZERO, getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // Test 18 shifts.
         input = getCreateInput(false, false, 1, BigInteger.ZERO, 18);
@@ -440,9 +423,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(BigDecimal.ZERO.movePointLeft(18), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(BigDecimal.ZERO.movePointLeft(18), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -457,10 +440,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // Test 18 shifts.
         raw = new BigInteger("100000000000000000000");
@@ -469,9 +455,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -520,10 +506,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // This is: 73.749309184932750917 with 18 shifts ... verify we get it back
         raw = new BigInteger("73749309184932750917");
@@ -533,10 +522,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // This is: 0.000000000000000001 with 18 shifts ... verify we get it back
         raw = new BigInteger("0000000000000000001");
@@ -546,9 +538,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(18), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -580,10 +572,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(shifts), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(shifts), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // With 14 shifts we have: 8.72743562198734% -> good
         shifts = 14;
@@ -593,10 +588,13 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(shifts), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(shifts), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
+
+        repo.incrementNonce(caller);
+        repo.flush();
 
         // With 18 shifts we have: 000.000872743562198734% -> good
         shifts = 18;
@@ -606,9 +604,9 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertEquals(new BigDecimal(raw).movePointLeft(shifts), fetchPercentage(word));
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertEquals(new BigDecimal(raw).movePointLeft(shifts), getPercentage(trs, Address.wrap(res.getOutput())));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
         tempAddrs.add(Address.wrap(res.getOutput()));
     }
 
@@ -625,8 +623,8 @@ public class TRSownerContractTest extends TRShelpers {
         tempAddrs.add(contract);
 
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         // Different caller, should be different addr returned.
         trs = newTRSownerContract(getNewExistentAccount(BigInteger.ZERO));
@@ -637,8 +635,8 @@ public class TRSownerContractTest extends TRShelpers {
         tempAddrs.add(Address.wrap(res.getOutput()));
 
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         // Same caller as original & nonce hasn't changed, should be same contract addr returned.
         trs = newTRSownerContract(caller);
@@ -648,8 +646,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(contract, Address.wrap(res.getOutput()));
 
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         // Same caller as original but nonce changed, should be different addr returned.
         repo.incrementNonce(caller);
@@ -662,8 +660,8 @@ public class TRSownerContractTest extends TRShelpers {
         tempAddrs.add(Address.wrap(res.getOutput()));
 
         word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
     }
 
     @Test
@@ -678,8 +676,8 @@ public class TRSownerContractTest extends TRShelpers {
         tempAddrs.add(Address.wrap(res.getOutput()));
 
         IDataWord word = repo.getStorageValue(Address.wrap(res.getOutput()), getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
     }
 
     @Test
@@ -776,8 +774,8 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         IDataWord word = repo.getStorageValue(contract, getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         byte[] input = getLockInput(contract);
         TRSownerContract trs = new TRSownerContract(repo, acct);
@@ -786,8 +784,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));    // lock worked.
-        assertFalse(fetchIsLive(word));
+        assertTrue(getIsContractLocked(word));    // lock worked.
+        assertFalse(getIsContractLive(word));
 
         // attempt to lock the contract again...
         res = trs.execute(input, COST);
@@ -799,8 +797,8 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         input = getLockInput(contract);
         trs = new TRSownerContract(repo, AION);
@@ -809,8 +807,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));    // lock worked.
-        assertFalse(fetchIsLive(word));
+        assertTrue(getIsContractLocked(word));    // lock worked.
+        assertFalse(getIsContractLive(word));
 
         // attempt to lock the contract again...
         res = trs.execute(input, COST);
@@ -826,8 +824,8 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         IDataWord word = repo.getStorageValue(contract, getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         byte[] input = getLockInput(contract);
         TRSownerContract trs = new TRSownerContract(repo, acct);
@@ -836,16 +834,16 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));    // lock worked.
-        assertFalse(fetchIsLive(word));
+        assertTrue(getIsContractLocked(word));    // lock worked.
+        assertFalse(getIsContractLive(word));
 
         // Test in test mode.
         contract = createTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertFalse(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertFalse(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         input = getLockInput(contract);
         trs = new TRSownerContract(repo, AION);
@@ -854,8 +852,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));    // lock worked.
-        assertFalse(fetchIsLive(word));
+        assertTrue(getIsContractLocked(word));    // lock worked.
+        assertFalse(getIsContractLive(word));
     }
 
     @Test
@@ -872,7 +870,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         IDataWord word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLive(word));
+        assertTrue(getIsContractLive(word));
 
         // Attempt to lock live contract.
         input = getLockInput(contract);
@@ -892,7 +890,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLive(word));
+        assertTrue(getIsContractLive(word));
 
         // Attempt to lock live contract.
         input = getLockInput(contract);
@@ -969,14 +967,16 @@ public class TRSownerContractTest extends TRShelpers {
             1, BigInteger.ZERO, 0);
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
-        System.arraycopy(acct.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         TRSownerContract trs = new TRSownerContract(repo, acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
+        repo.incrementNonce(acct);
+        repo.flush();
+
         // Test what looks like a proper TRS address (has TRS prefix).
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         input[input.length - 1] = (byte) ~input[input.length - 1];  // flip a bit
         trs = new TRSownerContract(repo, acct);
         res = trs.execute(input, COST);
@@ -1020,8 +1020,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         IDataWord word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));
-        assertTrue(fetchIsLive(word));  // contract is live now.
+        assertTrue(getIsContractLocked(word));
+        assertTrue(getIsContractLive(word));  // contract is live now.
 
         // Try to start contract again.
         res = trs.execute(input, COST);
@@ -1039,8 +1039,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));
-        assertTrue(fetchIsLive(word));  // contract is live now.
+        assertTrue(getIsContractLocked(word));
+        assertTrue(getIsContractLive(word));  // contract is live now.
 
         // Try to start contract again.
         res = trs.execute(input, COST);
@@ -1056,7 +1056,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         IDataWord word = repo.getStorageValue(contract, getSpecKey());
-        assertFalse(fetchIsLocked(word));
+        assertFalse(getIsContractLocked(word));
 
         byte[] input = getStartInput(contract);
         TRSownerContract trs = new TRSownerContract(repo, acct);
@@ -1069,7 +1069,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertFalse(fetchIsLocked(word));
+        assertFalse(getIsContractLocked(word));
 
         input = getStartInput(contract);
         trs = new TRSownerContract(repo, acct);
@@ -1086,8 +1086,8 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         IDataWord word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertTrue(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         byte[] input = getStartInput(contract);
         TRSownerContract trs = new TRSownerContract(repo, acct);
@@ -1096,16 +1096,16 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));
-        assertTrue(fetchIsLive(word));  // true now.
+        assertTrue(getIsContractLocked(word));
+        assertTrue(getIsContractLive(word));  // true now.
 
         // Test in test mode.
         contract = createAndLockTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));
-        assertFalse(fetchIsLive(word));
+        assertTrue(getIsContractLocked(word));
+        assertFalse(getIsContractLive(word));
 
         input = getStartInput(contract);
         trs = new TRSownerContract(repo, AION);
@@ -1114,8 +1114,8 @@ public class TRSownerContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
 
         word = repo.getStorageValue(contract, getSpecKey());
-        assertTrue(fetchIsLocked(word));
-        assertTrue(fetchIsLive(word));  // true now.
+        assertTrue(getIsContractLocked(word));
+        assertTrue(getIsContractLive(word));  // true now.
     }
 
     @Test
@@ -1129,8 +1129,8 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
-    public void testAbleToNullifyWhileLive() {
-        //TODO -- is this wanted?
+    public void testNotAbleToNullifyWhileLive() {
+        //TODO
     }
 
 }
