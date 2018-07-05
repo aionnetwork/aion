@@ -52,7 +52,7 @@ public abstract class AbstractExecutor {
     public AbstractExecutor(IRepository _repo,
         boolean _localCall, long _blkRemainingNrg, Logger _logger) {
         this.repo = _repo;
-        this.repoTrack = _repo.startTracking();
+        this.repoTrack = repo.startTracking();
         this.isLocalCall = _localCall;
         this.blockRemainingNrg = _blkRemainingNrg;
         LOGGER = _logger;
