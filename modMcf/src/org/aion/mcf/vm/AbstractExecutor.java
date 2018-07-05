@@ -73,7 +73,7 @@ public abstract class AbstractExecutor {
                     // charge nrg cost
                     // Note: if the tx is a inpool tx, it will temp charge more balance for the account
                     // once the block info been updated. the balance in pendingPool will correct.
-                    BigInteger nrgLimit = BigInteger.valueOf(tx.getNrgConsume());
+                    BigInteger nrgLimit = BigInteger.valueOf(tx.getNrg());
                     BigInteger nrgPrice = BigInteger.valueOf(tx.getNrgPrice());
                     BigInteger txNrgCost = nrgLimit.multiply(nrgPrice);
                     track.addBalance(tx.getFrom(), txNrgCost.negate());
