@@ -33,48 +33,22 @@ import org.aion.base.util.Hex;
 
 public abstract class AbstractExecutionResult implements IExecutionResult {
 
-    public enum ResultCode {
-        SUCCESS(0),
-        FAILURE(1),
-        OUT_OF_NRG(2),
-        BAD_INSTRUCTION(3),
-        BAD_JUMP_DESTINATION(4),
-        STACK_OVERFLOW(5),
-        STACK_UNDERFLOW(6),
-        REVERT(7),
-        INVALID_NONCE(8),
-        INVALID_NRG_LIMIT(9),
-        INSUFFICIENT_BALANCE(10),
-        CONTRACT_ALREADY_EXISTS(11),
-        INTERNAL_ERROR(-1);
-
-        private int val;
-
-        ResultCode(int val) {
-            this.val = val;
-        }
-
-        private static Map<Integer, ResultCode> intMap = new HashMap<>();
-
-        static {
-            for (ResultCode code : ResultCode.values()) {
-                intMap.put(code.val, code);
-            }
-        }
-
-        public static ResultCode fromInt(int code) {
-            return intMap.get(code);
-        }
-
-        public int toInt() {
-            return val;
-        }
-    }
-
     private ResultCode code;
     private long nrgLeft;
     private byte[] output;
+    public AbstractExecutionResult(byte[] result) {
+        ByteBuffer buffer = ByteBuffer.wrap(result);
+        buffer.order(ByteOrder.BIG_ENDIAN);
 
+        ResultCode code = ResultCode.fromInt(buffer.getInt());
+        long nrgLeft = buffer.getLong();
+        byte[] output = new byte[buffer.getInt()];
+        buffer.get(output);
+
+        this.code = code;
+        this.nrgLeft = nrgLeft;
+        this.output = output;
+    }
     /**
      * Constructs a new ExecutionResult with output.
      *
@@ -97,21 +71,6 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     public AbstractExecutionResult(ResultCode code, long nrgLeft) {
         this(code, nrgLeft, ByteUtil.EMPTY_BYTE_ARRAY);
     }
-
-//    /**
-//     * Parse execution result from byte array.
-//     */
-//    public static IExecutionResult parse(byte[] result) {
-//        ByteBuffer buffer = ByteBuffer.wrap(result);
-//        buffer.order(ByteOrder.BIG_ENDIAN);
-//
-//        ResultCode code = ResultCode.fromInt(buffer.getInt());
-//        long nrgLeft = buffer.getLong();
-//        byte[] output = new byte[buffer.getInt()];
-//        buffer.get(output);
-//
-//        return new AbstractExecutionResult(code, nrgLeft, output);
-//    }
 
     /**
      * Encode execution resul tinto byte array.
@@ -139,15 +98,15 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
         return code.toInt();
     }
 
-    public ResultCode getResultCode() {
-        return code;
-    }
-
     /**
      * Sets the code.
      */
     public void setCode(int code) {
         this.code = ResultCode.fromInt(code);
+    }
+
+    public ResultCode getResultCode() {
+        return code;
     }
 
     /**
@@ -196,5 +155,43 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     public String toString() {
         return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + Hex
             .toHexString(output) + "]";
+    }
+
+    public enum ResultCode {
+        SUCCESS(0),
+        FAILURE(1),
+        OUT_OF_NRG(2),
+        BAD_INSTRUCTION(3),
+        BAD_JUMP_DESTINATION(4),
+        STACK_OVERFLOW(5),
+        STACK_UNDERFLOW(6),
+        REVERT(7),
+        INVALID_NONCE(8),
+        INVALID_NRG_LIMIT(9),
+        INSUFFICIENT_BALANCE(10),
+        CONTRACT_ALREADY_EXISTS(11),
+        INTERNAL_ERROR(-1);
+
+        private static Map<Integer, ResultCode> intMap = new HashMap<>();
+
+        static {
+            for (ResultCode code : ResultCode.values()) {
+                intMap.put(code.val, code);
+            }
+        }
+
+        private int val;
+
+        ResultCode(int val) {
+            this.val = val;
+        }
+
+        public static ResultCode fromInt(int code) {
+            return intMap.get(code);
+        }
+
+        public int toInt() {
+            return val;
+        }
     }
 }

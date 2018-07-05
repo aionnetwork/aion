@@ -22,8 +22,6 @@
  */
 package org.aion.precompiled;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import org.aion.mcf.vm.AbstractExecutionResult;
 
 /**
@@ -39,15 +37,12 @@ public class ContractExecutionResult extends AbstractExecutionResult {
         super(code, nrgLeft);
     }
 
+    public ContractExecutionResult(byte[] result) {
+        super(result);
+    }
+
     public static ContractExecutionResult parse(byte[] result) {
-        ByteBuffer buffer = ByteBuffer.wrap(result);
-        buffer.order(ByteOrder.BIG_ENDIAN);
 
-        ResultCode code = ResultCode.fromInt(buffer.getInt());
-        long nrgLeft = buffer.getLong();
-        byte[] output = new byte[buffer.getInt()];
-        buffer.get(output);
-
-        return new ContractExecutionResult(code, nrgLeft, output);
+        return new ContractExecutionResult(result);
     }
 }
