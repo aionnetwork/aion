@@ -58,7 +58,6 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  *      updateTotal -- updates the total balance, in case of subsequent sales. Owner-only.
  */
 public final class TRSuseContract extends AbstractTRS {
-    private static final long COST = 21000L;    // temporary.
 
     /**
      * Constructs a new TRSuseContract that will use repo as the database cache to update its
@@ -146,7 +145,7 @@ public final class TRSuseContract extends AbstractTRS {
      * Logic to deposit funds to an existing public-facing TRS contract.
      *
      * The input byte array format is defined as follows:
-     *   [<32b - contractAddress> | <128b - amount>]
+     *   [<1b - 0x0> | <32b - contractAddress> | <128b - amount>]
      *   total = 161 bytes
      * where:
      *   contractAddress is the address of the public-facing TRS contract to deposit funds into.
@@ -224,7 +223,7 @@ public final class TRSuseContract extends AbstractTRS {
      * Logic to refund funds for an account in an existing public-facing TRS contract.
      *
      * The input byte array format is defined as follows:
-     *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
+     *     [<1b - 0x5> | <32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
      *     total = 193 bytes
      *   where:
      *     contractAddress is the address of the public-facing TRS contract that the account given

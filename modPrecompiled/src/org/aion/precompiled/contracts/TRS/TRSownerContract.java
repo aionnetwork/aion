@@ -57,7 +57,6 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  *      mint -- informs the TRS contract about tokens that were minted to it on behalf of a depositor.
  */
 public final class TRSownerContract extends AbstractTRS {
-    private static final long COST = 21000L;    // temporary.
 
     /**
      * Constructs a new TRSownerContract that will use track as the database cache to update its
@@ -263,7 +262,7 @@ public final class TRSownerContract extends AbstractTRS {
      * Logic to lock an existing public-facing TRS contract where caller is the owner of the contract.
      *
      * The input byte array format is defined as follows:
-     *   [<32b - contractAddress>]
+     *   [<1b - 0x1> | <32b - contractAddress>]
      *   total = 33 bytes
      * where:
      *   contractAddress is the address of the public-facing TRS contract to lock.
@@ -311,7 +310,7 @@ public final class TRSownerContract extends AbstractTRS {
      * Logic to start an existing public-facing TRS contract where caller is the owner of the contract.
      *
      * The input byte array format is defined as follows:
-     *   [<32b - contractAddress>]
+     *   [<1b - 0x2> | <32b - contractAddress>]
      *   total = 33 bytes
      * where:
      *   contractAddress is the address of the public-facing TRS contract to lock.

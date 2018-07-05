@@ -22,6 +22,7 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // TODO: grab AION from CfgAion later and preferrably aion prefix too.
     static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    static final long COST = 21000L;    // temporary.
     static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
     final Address caller;

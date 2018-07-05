@@ -14,6 +14,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
+import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.junit.Assert;
 
@@ -29,6 +30,7 @@ class TRShelpers {
     int ownerCurrMaxOp = 2; // remove once this hits ownerMaxOp
     int useMaxOp = 6;
     int useCurrMaxOp = 0;   // remove once this hits useMaxOp
+    private static final byte[] out = new byte[1];
 
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
@@ -41,15 +43,18 @@ class TRShelpers {
         return acct;
     }
 
-    // Returns a new TRSownerContract and calls the contract using caller.
+    // Returns a new TRSownerContract that calls the contract using caller.
     TRSownerContract newTRSownerContract(Address caller) {
         return new TRSownerContract(repo, caller);
     }
 
-    // Returns a new TRSuseContract and calls the contract using caller.
+    // Returns a new TRSuseContract that calls the contract using caller.
     TRSuseContract newTRSuseContract(Address caller) {
         return new TRSuseContract(repo, caller);
     }
+
+    // Returns a new TRSqueryContract that calls the contract using caller.
+    TRSqueryContract newTRSqueryContract(Address caller) { return new TRSqueryContract(repo, caller); }
 
     // Returns the address of a newly created TRS contract, assumes all params are valid.
     Address createTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
@@ -151,6 +156,26 @@ class TRShelpers {
         System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
         System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the isLive (or isStarted) operation.
+    byte[] getIsLiveInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = 0x0;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
+    // Returns a byte array signalling false for a TRS contract query operation result.
+    byte[] getFalseContractOutput() {
+        out[0] = 0x0;
+        return out;
+    }
+
+    // Returns a byte array signalling true for a TRS contract query operation result.
+    byte[] getTrueContractOutput() {
+        out[0] = 0x1;
+        return out;
     }
 
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.
