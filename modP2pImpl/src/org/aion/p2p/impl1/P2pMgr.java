@@ -457,7 +457,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskClear getClearInstance() {
-        return new TaskClear(this, this.nodeMgr, this.start);
+        return new TaskClear(this.nodeMgr, this.start);
     }
 
     private TaskConnectPeers getConnectPeersInstance() {

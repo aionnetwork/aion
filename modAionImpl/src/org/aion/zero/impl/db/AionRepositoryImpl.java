@@ -729,6 +729,11 @@ public class AionRepositoryImpl
     }
 
     /** For testing. */
+    public IByteArrayKeyValueDatabase getBlockDatabase() {
+        return this.blockDatabase;
+    }
+
+    /** For testing. */
     public IByteArrayKeyValueDatabase getIndexDatabase() {
         return this.indexDatabase;
     }

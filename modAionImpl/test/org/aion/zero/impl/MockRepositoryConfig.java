@@ -10,7 +10,9 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.zero.impl.db.ContractDetailsAion;
 
 public class MockRepositoryConfig implements IRepositoryConfig {
+
     private DBVendor vendor = DBVendor.MOCKDB;
+    private IPruneConfig pruneConfig = new CfgPrune(false);
 
     @Override
     public String getDbPath() {
@@ -19,7 +21,7 @@ public class MockRepositoryConfig implements IRepositoryConfig {
 
     @Override
     public IPruneConfig getPruneConfig() {
-        return new CfgPrune(false);
+        return pruneConfig;
     }
 
     @Override
@@ -37,5 +39,9 @@ public class MockRepositoryConfig implements IRepositoryConfig {
 
     public MockRepositoryConfig(DBVendor vendor) {
         this.vendor = vendor;
+    }
+
+    public MockRepositoryConfig(IPruneConfig _pruneConfig) {
+        this.pruneConfig = _pruneConfig;
     }
 }
