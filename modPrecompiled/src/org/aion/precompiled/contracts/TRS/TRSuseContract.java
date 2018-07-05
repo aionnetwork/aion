@@ -86,12 +86,32 @@ public final class TRSuseContract extends AbstractTRS {
      *     total = 161 bytes
      *   where:
      *     contractAddress is the address of the public-facing TRS contract to deposit funds into.
-     *     amount is the amount of funds to deposit. The contract interprets these 128 bytes as an
+     *       amount is the amount of funds to deposit. The contract interprets these 128 bytes as an
      *       unsigned and positive amount.
      *
      *     conditions: the calling account must have enough balance to deposit amount otherwise this
      *       method effectively does nothing. The deposit operation is enabled only when the contract
      *       is unlocked; once locked depositing is disabled.
+     *
+     *     returns: void.
+     *
+     *                                          ~~~***~~~
+     *
+     *   <b>operation 0x5</b> - refunds a specified amount of depositor's balance for the public-
+     *     facing TRS contract.
+     *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
+     *     total = 193 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account given
+     *       by the address accountAddress is being refunded from. The proposed refund amount is
+     *       given by amount. The contract interprets the 128 bytes of amount as unsigned and
+     *       strictly positive.
+     *
+     *     conditions: the calling account must be the owner of the public-facing TRS contract. The
+     *       account accountAddress must have a deposit balannce into this TRS contract of at least
+     *       amount. The refund operation is enabled only when the contract is unlocked; once locked
+     *       refunding is disabled. If any of these conditions are not satisfied this method
+     *       effectively does nothing.
      *
      *     returns: void.
      *
@@ -117,6 +137,7 @@ public final class TRSuseContract extends AbstractTRS {
         int operation = input[0];
         switch (operation) {
             case 0: return deposit(input, nrgLimit);
+            case 5: return refund(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -148,6 +169,8 @@ public final class TRSuseContract extends AbstractTRS {
         final int indexAddress = 1;
         final int indexAmount = 33;
         final int len = 161;
+
+        //TODO: ensure caller has AION PREFIX -- good reminder if this ever changes.
 
         if (input.length != len) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -189,7 +212,7 @@ public final class TRSuseContract extends AbstractTRS {
             if (!setDepositBalance(contract, caller, currAmount.add(amount))) {
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
-            updateLinkedList(contract);
+            listAddCallerToHead(contract);
             setTotalBalance(contract, getTotalBalance(contract).add(amount));
             track.addBalance(caller, amount.negate());
             track.flush();
@@ -198,15 +221,105 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
-     * Updates the linked list for the TRS contract given by contract, if necessary.
+     * Logic to refund funds for an account in an existing public-facing TRS contract.
      *
-     * If the caller already exists in the contract then no update is performed, we assume the
-     * caller must already be in the list. But if the caller does not exist then the caller is added
-     * into the head of the linked list.
+     * The input byte array format is defined as follows:
+     *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
+     *     total = 193 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account given
+     *       by the address accountAddress is being refunded from. The proposed refund amount is
+     *       given by amount. The contract interprets the 128 bytes of amount as unsigned and
+     *       strictly positive.
+     *
+     *     conditions: the calling account must be the owner of the public-facing TRS contract. The
+     *       account accountAddress must have a deposit balannce into this TRS contract of at least
+     *       amount. The refund operation is enabled only when the contract is unlocked; once locked
+     *       refunding is disabled. If any of these conditions are not satisfied this method
+     *       effectively does nothing.
+     *
+     *     returns: void.
+     *
+     * @param input The input to refund an account for a public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult refund(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexContract = 1;
+        final int indexAccount = 33;
+        final int indexAmount = 65;
+        final int len = 193;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A refund operation can only execute if the caller is the contract owner.
+        Address owner = getContractOwner(contract);
+        if (!caller.equals(owner)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A refund operation can only execute if the current state of the TRS contract is:
+        // contract is unlocked (and obviously not live -- check this for sanity).
+        if (isContractLocked(specs) || isContractLive(specs)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+
+        // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
+        byte[] amountBytes = new byte[len - indexAmount + 1];
+        System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
+        BigInteger amount = new BigInteger(amountBytes);
+
+        // The account must have a deposit balance large enough to make the refund.
+        BigInteger newBalance = getDepositBalance(contract, account).subtract(amount);
+        if (newBalance.compareTo(BigInteger.ZERO) < 0) {
+            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+        }
+
+        // If refund amount is larger than zero, update the depositor's current deposit balance and
+        // then update the deposit meta-data (linked list, count, etc.) and refund the account.
+        if (amount.compareTo(BigInteger.ZERO) > 0) {
+            if (!setDepositBalance(contract, account, newBalance)) {
+                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            }
+            setTotalBalance(contract, getTotalBalance(contract).subtract(newBalance));
+
+            // If the account's balance drops to zero, delete account from the TRS contract.
+            if (newBalance.equals(BigInteger.ZERO)) {
+                listRemoveAccount(contract, account);
+            }
+
+            track.addBalance(account, amount);
+        }
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+    }
+
+
+    // <-------------------------------------HELPER METHODS---------------------------------------->
+
+    /**
+     * Updates the linked list for the TRS contract given by contract, if necessary, in the following
+     * way:
+     *
+     * If the caller does not have a valid account in the TRS contract contract then that account is
+     * added to the head of the linked list for that contract.
+     *
+     * If the account is valid and already exists this method does nothing, since the caller must
+     * already be in the list.
      *
      * @param contract The TRS contract to update.
      */
-    private void updateLinkedList(Address contract) {
+    private void listAddCallerToHead(Address contract) {
         byte[] next = getListNextBytes(contract, caller);
         if (accountIsValid(next)) { return; }  // no update needed.
 
@@ -223,6 +336,45 @@ public final class TRSuseContract extends AbstractTRS {
         // Set the head of the list to point to caller and set caller's previous entry to null.
         setListHead(contract, Arrays.copyOf(caller.toBytes(), Address.ADDRESS_LEN));
         setListPrevious(contract, caller, null);
+    }
+
+    /**
+     * Updates the linked list for the TRS contract given by contract, if necessary, in the following
+     * way:
+     *
+     * If the account is valid and exists in contract then that account is removed from the linked
+     * list for contract and the account is marked as invalid since we cannot have valid accounts
+     * that are not in the list.
+     *
+     * If the account is not valid for the TRS contract this method does nothing, since the account
+     * must not be in the list anyway.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account to remove from the list.
+     */
+    private void listRemoveAccount(Address contract, Address account) {
+        byte[] prev = getListPrev(contract, account);
+        byte[] next = getListNext(contract, account);
+
+        // If account is head of list, set head to account's next entry.
+        if (Arrays.equals(account.toBytes(), getListHead(contract))) {
+            setListHead(contract, getListNext(contract, account));
+        }
+
+        // If account has a previous entry, set that entry's next entry to account's next entry.
+        if (prev != null) {
+            byte[] prevNext = getListNext(contract, prev);
+            setListNext(contract, account, prevNext[0], next, true);
+        }
+
+        // If account has a next entry, set that entry's previous entry to account's previous entry.
+        if (next != null) {
+            setListPrevious(contract, account, prev);
+        }
+
+        // Mark account as invalid (trumps setting next to null), set its previous to null.
+        setListNext(contract, account, (byte) 0x0, null, false);
+        setListPrevious(contract, account, null);
     }
 
 }

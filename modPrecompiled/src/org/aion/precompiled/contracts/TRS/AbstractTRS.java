@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -273,7 +274,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
      * last 31 bytes of a valid Aion account address without the Aion prefix.
      *
-     * This method throws an exception if there is no previous entry for account. This should never
+     * This method throws an exception if there is no next entry for account. This should never
      * happen and is here only for debugging.
      *
      * @param contract The TRS contract to query.
@@ -284,6 +285,30 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     public byte[] getListNext(Address contract, Address account) {
         IDataWord next = track.getStorageValue(contract, toIDataWord(account.toBytes()));
         if (next == null) { throw new NullPointerException("Account has no next: " + account); }
+        byte[] nextData = next.getData();
+        return ((nextData[0] & NULL_BIT) == NULL_BIT) ? null : Arrays.copyOf(nextData, nextData.length);
+    }
+
+    /**
+     * Returns account's next entry in the linked list for the TRS contract contract or null if next
+     * is null.
+     *
+     * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
+     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     *
+     * This method throws an exception if there is no next entry for account. This should never
+     * happen and is here only for debugging.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account in contract whose next entry is being updated.
+     * @return account's next entry.
+     * @throws NullPointerException if account has no next entry.
+     */
+    byte[] getListNext(Address contract, byte[] account) {
+        IDataWord next = track.getStorageValue(contract, toIDataWord(account));
+        if (next == null) {
+            throw new NullPointerException("Account has no next: " + ByteUtil.toHexString(account));
+        }
         byte[] nextData = next.getData();
         return ((nextData[0] & NULL_BIT) == NULL_BIT) ? null : Arrays.copyOf(nextData, nextData.length);
     }
@@ -325,9 +350,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * and ensure the null bit is not set and that the valid bit is set.
      *
      * The oldMeta parameter is the current (soon to be "old") meta-data about the account's next
-     * entry. This is the first byte returned by the getListNextBytes method. This byte contains
-     * data about validity and the row counts for the account's balance. This method will persist
-     * this meta-data except in the case that we are setting the account to be invalid.
+     * entry. This is the first byte returned by the getListNextBytes or getListNext methods. This
+     * byte contains data about validity and the row counts for the account's balance. This method
+     * will persist this meta-data except in the case that we are setting the account to be invalid.
      *
      * This method does nothing if next is not 32 bytes.
      *
@@ -399,10 +424,17 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * This method does not flush.
      *
+     * If balance is negative this method throws an exception. This should never happen and is only
+     * here for debugging.
+     *
      * @param contract The TRS contract to update.
      * @param balance The total balance to set.
+     * @throws IllegalArgumentException if balance is negative.
      */
     void setTotalBalance(Address contract, BigInteger balance) {
+        if (balance.compareTo(BigInteger.ZERO) < 0) {
+            throw new IllegalArgumentException("setTotalBalance to negative balance!");
+        }
         byte[] bal = toDoubleWordAlignedArray(balance);
         int numRows = bal.length / DOUBLE_WORD_SIZE;
         for (int i = 0; i < numRows; i++) {
