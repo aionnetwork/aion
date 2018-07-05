@@ -12,6 +12,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 
@@ -39,6 +40,11 @@ class TRShelpers {
         return acct;
     }
 
+    // Returns a new TRSownerContract and calls the contract using caller.
+    TRSownerContract newTRSownerContract(Address caller) {
+        return new TRSownerContract(repo, caller);
+    }
+
     // Returns a new TRSuseContract and calls the contract using caller.
     TRSuseContract newTRSuseContract(Address caller) {
         return new TRSuseContract(repo, caller);
@@ -62,13 +68,10 @@ class TRShelpers {
         int periods, BigInteger percent, int precision) {
 
         Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
-
-        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
-        byte[] specsBytes = specs.getData();
-        specsBytes[14] = (byte) 0x1;
-
-        repo.addStorageRow(contract, getSpecKey(), newIDataWord(specsBytes));
-        repo.flush();
+        byte[] input = getLockInput(contract);
+        if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            fail("Failed to lock contract!");
+        }
         return contract;
     }
 
@@ -77,14 +80,14 @@ class TRShelpers {
         int periods, BigInteger percent, int precision) {
 
         Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
-
-        IDataWord specs = repo.getStorageValue(contract, getSpecKey());
-        byte[] specsBytes = specs.getData();
-        specsBytes[14] = (byte) 0x1;
-        specsBytes[15] = (byte) 0x1;
-
-        repo.addStorageRow(contract, getSpecKey(), newIDataWord(specsBytes));
-        repo.flush();
+        byte[] input = getLockInput(contract);
+        if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            fail("Failed to lock contract!");
+        }
+        input = getStartInput(contract);
+        if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            fail("Failed to start contract!");
+        }
         return contract;
     }
 
@@ -110,7 +113,24 @@ class TRShelpers {
         return input;
     }
 
+    // Returns an input byte array for the lock operation using the provided parameters.
+    byte[] getLockInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = (byte) 0x1;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
+    // Returns an input byte array for the start operation using the provided parameters.
+    byte[] getStartInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = (byte) 0x2;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.
+    //TODO remove
     IDataWord getSpecKey() {
         byte[] specsKey = new byte[DataWord.BYTES];
         specsKey[0] = (byte) 0xE0;

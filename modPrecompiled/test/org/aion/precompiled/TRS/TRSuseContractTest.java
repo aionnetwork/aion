@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
+import org.aion.crypto.ECKeyFac;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
@@ -55,13 +56,38 @@ public class TRSuseContractTest extends TRShelpers {
         return input;
     }
 
+    // Returns a properly formatted byte array to be used as input for the refund operation.
+    private byte[] getRefundInput(Address contract, Address account, BigInteger amount) {
+        byte[] amtBytes = amount.toByteArray();
+        if (amtBytes.length > 128) { fail(); }
+        byte[] input = new byte[193];
+        input[0] = 0x5;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the refund operation, to
+    // refund the maximum allowable amount.
+    private byte[] getMaxRefundInput(Address contract, Address account) {
+        byte[] input = new byte[193];
+        input[0] = 0x5;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        for (int i = 65; i < 193; i++) {
+            input[i] = (byte) 0xFF;
+        }
+        return input;
+    }
+
     // Returns a properly formatted byte array to be used as input for the deposit operation, to
     // deposit the maximum allowable amount.
     private byte[] getMaxDepositInput(Address contract) {
         byte[] input = new byte[161];
         input[0] = 0x0;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        for (int i = 33; i <= 160; i++) {
+        for (int i = 33; i < 161; i++) {
             input[i] = (byte) 0xFF;
         }
         return input;
@@ -613,12 +639,323 @@ public class TRSuseContractTest extends TRShelpers {
 
     @Test
     public void testAccountIsValidAfterMultipleDeposits() {
-
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        trs.execute(input, COST);
+        trs.execute(input, COST);
+        trs.execute(input, COST);
+        trs.execute(input, COST);
+        assertTrue(accountIsValid(trs, contract, acct));
     }
 
     @Test
     public void testMultipleAccountsValidAfterDeposits() {
+        Address acct1 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct3 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct1, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
 
+        TRSuseContract trs1 = newTRSuseContract(acct1);
+        trs1.execute(input, COST);
+        TRSuseContract trs2 = newTRSuseContract(acct2);
+        trs2.execute(input, COST);
+        TRSuseContract trs3 = newTRSuseContract(acct3);
+        trs3.execute(input, COST);
+
+        assertTrue(accountIsValid(trs1, contract, acct1));
+        assertTrue(accountIsValid(trs2, contract, acct2));
+        assertTrue(accountIsValid(trs3, contract, acct3));
+    }
+
+    // <--------------------------------------REFUND TRS TESTS------------------------------------->
+
+    @Test
+    public void testRefundInputTooShort() {
+        // Test maximum too-short size.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = new byte[192];
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // Test minimum too-short size.
+        input = new byte[1];
+        res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundInputTooLarge() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = new byte[194];
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundBadTRScontract() {
+        // Test TRS address that looks like regular account address.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = getRefundInput(contract, acct, BigInteger.ZERO);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // Test TRS address with TRS prefix, so it looks legit.
+        byte[] addr = ECKeyFac.inst().create().getAddress();
+        addr[0] = (byte) 0xC0;
+        contract = new Address(addr);
+        tempAddrs.add(contract);
+        input = getRefundInput(contract, acct, BigInteger.ZERO);
+        res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundCallerIsNotOwner() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // acct2 deposits so that it does have a balance to refund from.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        TRSuseContract trs = newTRSuseContract(acct2);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+
+        // acct2 calls refund but owner is acct
+        input = getRefundInput(contract, acct2, BigInteger.ONE);
+        res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundAccountNotInContract() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // acct2 has never deposited and is not a valid account in the contract yet.
+        byte[] input = getRefundInput(contract, acct2, BigInteger.ONE);
+        TRSuseContract trs = newTRSuseContract(acct2);
+        ContractExecutionResult res = trs.execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // Have others deposit but not acct2 and try again ... should be same result.
+        Address acct3 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct4 = getNewExistentAccount(DEFAULT_BALANCE);
+
+        input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct4).execute(input, COST).getCode());
+
+        input = getRefundInput(contract, acct2, BigInteger.ONE);
+        res = newTRSuseContract(acct2).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundContractIsLocked() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Have acct2 deposit some balance.
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+
+        // Now lock the contract.
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        // Now have contract owner try to refund acct2.
+        input = getRefundInput(contract, acct2, BigInteger.ONE);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundContractIsLive() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Have acct2 deposit some balance.
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+
+        // Now lock the contract and make it live.
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        input = getStartInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        // Now have contract owner try to refund acct2.
+        input = getRefundInput(contract, acct2, BigInteger.ONE);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundAccountBalanceInsufficient() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Have acct2 deposit some balance.
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+
+        // Now have contract owner try to refund acct2 for more than acct2 has deposited.
+        input = getRefundInput(contract, acct2, DEFAULT_BALANCE.add(BigInteger.ONE));
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testRefundAccountFullBalance() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        assertEquals(DEFAULT_BALANCE, repo.getBalance(acct2));
+
+        // Have acct2 deposit some balance.
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        TRSuseContract trs = newTRSuseContract(acct2);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct2));
+        assertEquals(DEFAULT_BALANCE, getTotalBalance(trs, contract));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct2));
+        assertTrue(accountIsValid(trs, contract, acct2));
+
+        // Now have contract owner try to refund acct2 for exactly what acct2 has deposited.
+        input = getRefundInput(contract, acct2, DEFAULT_BALANCE);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct2));
+        assertEquals(BigInteger.ZERO, getTotalBalance(trs, contract));
+        assertEquals(DEFAULT_BALANCE, repo.getBalance(acct2));
+        assertFalse(accountIsValid(trs, contract, acct2));
+    }
+
+    @Test
+    public void testRefundAccountFullBalance2() {
+        // Same as above test but we test here a balance that spans multiple storage rows.
+        BigInteger max = getMaxOneTimeDeposit();
+        Address acct = getNewExistentAccount(max);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        assertEquals(max, repo.getBalance(acct));
+
+        byte[] input = getMaxDepositInput(contract);
+        TRSuseContract trs = newTRSuseContract(acct);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+
+        assertEquals(max, getDepositBalance(trs, contract, acct));
+        assertEquals(max, getTotalBalance(trs, contract));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+        assertTrue(accountIsValid(trs, contract, acct));
+
+        input = getMaxRefundInput(contract, acct);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
+        assertEquals(BigInteger.ZERO, getTotalBalance(trs, contract));
+        assertEquals(max, repo.getBalance(acct));
+        assertFalse(accountIsValid(trs, contract, acct));
+    }
+
+    @Test
+    public void testRefundAccountBalanceLeftover() {
+        BigInteger max = getMaxOneTimeDeposit();
+        Address acct = getNewExistentAccount(max);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        assertEquals(max, repo.getBalance(acct));
+
+        BigInteger depositAmt = new BigInteger("897326236725789012");
+        byte[] input = getDepositInput(contract, depositAmt);
+        TRSuseContract trs = newTRSuseContract(acct);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+
+        assertEquals(depositAmt, getDepositBalance(trs, contract, acct));
+        assertEquals(depositAmt, getTotalBalance(trs, contract));
+        assertEquals(max.subtract(depositAmt), repo.getBalance(acct));
+        assertTrue(accountIsValid(trs, contract, acct));
+
+        BigInteger diff = new BigInteger("23478523");
+        input = getRefundInput(contract, acct, depositAmt.subtract(diff));
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        assertEquals(diff, getDepositBalance(trs, contract, acct));
+        assertEquals(diff, getTotalBalance(trs, contract));
+        assertEquals(max.subtract(diff), repo.getBalance(acct));
+        assertTrue(accountIsValid(trs, contract, acct));
+    }
+
+    @Test
+    public void testRefundTotalBalanceMultipleAccounts() {
+        //TODO
+    }
+
+    @Test
+    public void testRefundInvalidAccount() {
+        // We make an account invalid by depositing and then fully refunding it.
+    }
+
+    @Test
+    public void testRefundZeroForNonExistentAccount() {
+        //TODO
+    }
+
+    @Test
+    public void testRefundZeroForInvalidAccount() {
+        //TODO
+    }
+
+    @Test
+    public void testRefundZeroForValidAccount() {
+        //TODO
+    }
+
+    @Test
+    public void testRefundSuccessNrgLeft() {
+        //TODO
     }
 
     // <----------------------------TRS DEPOSITOR LINKED LIST TESTS-------------------------------->
@@ -711,6 +1048,46 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(acct1, getLinkedListNext(trs, contract, acct4));
         assertEquals(acct4, getLinkedListPrev(trs, contract, acct1));
         assertNull(getLinkedListNext(trs, contract, acct1));
+    }
+
+    @Test
+    public void testRemoveHeadOfListWithHeadOnly() {
+        //TODO
+    }
+
+    @Test
+    public void testRemoveHeadOfListWithHeadAndNextOnly() {
+        //TODO
+    }
+
+    @Test
+    public void testRemoveHeadOfLargerList() {
+        //TODO
+    }
+
+    @Test
+    public void testRemoveTailOfSizeTwoList() {
+        //TODO
+    }
+
+    @Test
+    public void testRemoveTailOfLargerList() {
+        //TODO
+    }
+
+    @Test
+    public void testRemoveInteriorOfSizeThreeList() {
+        //TODO
+    }
+
+    @Test
+    public void testRemoveInteriorOfLargerList() {
+        //TODO
+    }
+
+    @Test
+    public void testMultipleListRemovals() {
+        //TODO
     }
 
 }

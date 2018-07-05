@@ -292,7 +292,7 @@ public final class TRSuseContract extends AbstractTRS {
             if (!setDepositBalance(contract, account, newBalance)) {
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
-            setTotalBalance(contract, getTotalBalance(contract).subtract(newBalance));
+            setTotalBalance(contract, getTotalBalance(contract).subtract(amount));
 
             // If the account's balance drops to zero, delete account from the TRS contract.
             if (newBalance.equals(BigInteger.ZERO)) {

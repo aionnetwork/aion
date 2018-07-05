@@ -44,27 +44,6 @@ public class TRSownerContractTest extends TRShelpers {
 
     // <-----------------------------------HELPER METHODS BELOW------------------------------------>
 
-    // Returns a new TRSownerContract and calls the contract using caller.
-    private TRSownerContract newTRSownerContract(Address caller) {
-        return new TRSownerContract(repo, caller);
-    }
-
-    // Returns an input byte array for the lock operation using the provided parameters.
-    private byte[] getLockInput(Address contract) {
-        byte[] input = new byte[33];
-        input[0] = (byte) 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        return input;
-    }
-
-    // Returns an input byte array for the start operation using the provided parameters.
-    private byte[] getStartInput(Address contract) {
-        byte[] input = new byte[33];
-        input[0] = (byte) 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        return input;
-    }
-
     // Returns the address of the owner of the TRS contract given by the address contract.
     private Address getOwner(AbstractTRS trs, Address contract) {
         return trs.getContractOwner(contract);
