@@ -305,6 +305,7 @@ public final class TRSuseContract extends AbstractTRS {
             }
 
             track.addBalance(account, amount);
+            track.flush();
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }

@@ -15,6 +15,7 @@ import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
+import org.junit.Assert;
 
 /**
  * A class exposing commonly used helper methods and variables for TRS-related testing.
@@ -126,6 +127,29 @@ class TRShelpers {
         byte[] input = new byte[33];
         input[0] = (byte) 0x2;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the deposit operation.
+    byte[] getDepositInput(Address contract, BigInteger amount) {
+        byte[] amtBytes = amount.toByteArray();
+        if (amtBytes.length > 128) { Assert.fail(); }
+        byte[] input = new byte[161];
+        input[0] = 0x0;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length , amtBytes.length);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the refund operation.
+    byte[] getRefundInput(Address contract, Address account, BigInteger amount) {
+        byte[] amtBytes = amount.toByteArray();
+        if (amtBytes.length > 128) { Assert.fail(); }
+        byte[] input = new byte[193];
+        input[0] = 0x5;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
     }
 

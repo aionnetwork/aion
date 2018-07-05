@@ -49,29 +49,6 @@ public class TRSuseContractTest extends TRShelpers {
 
     // <-----------------------------------HELPER METHODS BELOW------------------------------------>
 
-    // Returns a properly formatted byte array to be used as input for the deposit operation.
-    private byte[] getDepositInput(Address contract, BigInteger amount) {
-        byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) { fail(); }
-        byte[] input = new byte[161];
-        input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length , amtBytes.length);
-        return input;
-    }
-
-    // Returns a properly formatted byte array to be used as input for the refund operation.
-    private byte[] getRefundInput(Address contract, Address account, BigInteger amount) {
-        byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) { fail(); }
-        byte[] input = new byte[193];
-        input[0] = 0x5;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
-        System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
-        return input;
-    }
-
     // Returns a properly formatted byte array to be used as input for the refund operation, to
     // refund the maximum allowable amount.
     private byte[] getMaxRefundInput(Address contract, Address account) {
