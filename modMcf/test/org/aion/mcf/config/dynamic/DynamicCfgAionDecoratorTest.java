@@ -1,5 +1,6 @@
 package org.aion.mcf.config.dynamic;
 
+import com.google.common.io.CharSource;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.dynamic2.ConfigProposalResult;
 import org.aion.mcf.config.dynamic2.InFlightConfigReceiverMBean;
@@ -12,6 +13,8 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
 
 public class DynamicCfgAionDecoratorTest {
 //
@@ -55,7 +58,16 @@ public class DynamicCfgAionDecoratorTest {
         Cfg cfg = new CfgAion();
         cfg.setId("testId");
         ConfigProposalResult result = mbeanProxy.propose(cfgExample);
-        System.out.println("result = " + result.success);
+        System.out.println("result = " + result.isSuccess());
+    }
+
+    @Test
+    public void cfgParse() throws Exception {
+        Cfg cfg = new CfgAion();
+        XMLStreamReader xmlStream = XMLInputFactory.newInstance()
+                .createXMLStreamReader(CharSource.wrap(cfgExample).openStream());
+        ((CfgAion) cfg).fromXML(xmlStream);
+        return;
     }
 
     private String cfgExample = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +

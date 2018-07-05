@@ -45,7 +45,7 @@ public class DynamicConfigKeyRegistry {
 
     @VisibleForTesting
     DynamicConfigKeyRegistry(Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> key2GetterApplier) {
-        this.key2GetterApplier = new HashMap<>(key2GetterApplier);
+        this.key2GetterApplier = key2GetterApplier; // note: not a deep copy
     }
 
     public void bind(String key, Function<Cfg,?> getter, IDynamicConfigApplier applier) {
@@ -88,12 +88,14 @@ public class DynamicConfigKeyRegistry {
 
         @Override
         public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
-            throw new InFlightConfigChangeNotAllowedException();
+            throw new InFlightConfigChangeNotAllowedException(
+                    "In-flight change for this config key has not been implemented.");
         }
 
         @Override
         public InFlightConfigChangeResult undo(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
-            throw new InFlightConfigChangeNotAllowedException();
+            throw new InFlightConfigChangeNotAllowedException(
+                    "In-flight change for this config key has not been implemented.");
         }
     }
 }

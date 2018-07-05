@@ -18,5 +18,5 @@ public interface InFlightConfigReceiverMBean {
      * @param configXmlText XML text that is serializable by {@link CfgAion#fromXml(XMLStreamReader)}
      * @return result of apply
      */
-    ConfigProposalResult propose(String configXmlText);
+    ConfigProposalResult propose(String configXmlText) throws RollbackException;
 }

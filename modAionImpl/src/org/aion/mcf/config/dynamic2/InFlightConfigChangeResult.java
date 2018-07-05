@@ -16,4 +16,12 @@ public class InFlightConfigChangeResult {
     IDynamicConfigApplier getApplier() {
         return this.applier;
     }
+
+    @Override
+    public String toString() {
+        return "InFlightConfigChangeResult{" +
+                "success=" + success +
+                ", applier=" + applier +
+                '}';
+    }
 }

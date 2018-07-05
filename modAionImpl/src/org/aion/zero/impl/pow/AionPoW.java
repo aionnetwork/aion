@@ -73,12 +73,34 @@ public class AionPoW {
     private SyncMgr syncMgr;
 
     private EventExecuteService ees;
+    private Thread periodicBlockTemplateProducer;
+    private Runnable epPow;
+
+    private volatile boolean paused = false;
+    private final Object pauseLock = new Object();
 
     private final class EpPOW implements Runnable {
         boolean go = true;
         @Override
         public void run() {
             while (go) {
+                synchronized (pauseLock) {
+                    if(!go) { // TODO revisit this later
+                        break;
+                    }
+                }
+                if(paused) {
+                    try {
+                        pauseLock.wait();
+                    } catch (InterruptedException e) {
+                        LOG.info("Resumed EpPOW because of InterruptedException");
+                        break;
+                    }
+                    if(!go) { //TODO revisit this later
+                        break;
+                    }
+                }
+
                 IEvent e = ees.take();
 
                 if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
@@ -107,7 +129,7 @@ public class AionPoW {
     }
 
     /**
-     * Initializes this instance.
+     * Initializes this instance, if not already initialized.  Otherwise, no-op.
      *
      * @param blockchain
      *            Aion blockchain instance
@@ -135,27 +157,55 @@ public class AionPoW {
 
 
             registerCallback();
-            ees.start(new EpPOW());
+            this.epPow = new EpPOW();
+            ees.start(epPow);
 
-            new Thread(() -> {
+            this.periodicBlockTemplateProducer = new Thread(() -> {
                 while (!shutDown.get()) {
+                    synchronized (pauseLock) {
+                        if(!shutDown.get()) { // TODO revisit this later
+                            break;
+                        }
+                    }
+                    if(paused) {
+                        try {
+                            pauseLock.wait();
+                        } catch (InterruptedException e) {
+                            LOG.info("Resumed EpPOW because of InterruptedException");
+                            break;
+                        }
+                        if(!shutDown.get()) { //TODO revisit this later
+                            break;
+                        }
+                    }
                     try {
                         Thread.sleep(100);
 
                         long now = System.currentTimeMillis();
-                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
-                                || now - lastUpdate.get() > 10000) { // fallback, when
-                                                               // we never
-                                                               // received any
-                                                               // events
+                        if (now - lastUpdate.get() > 3000
+                                && newPendingTxReceived.compareAndSet(true, false)
+                                || now - lastUpdate.get() > 10000) {
+                            // fallback, when we never received any events
                             createNewBlockTemplate();
                         }
                     } catch (InterruptedException e) {
                         break;
                     }
                 }
-            }, "pow").start();
+            }, "pow");
+            this.periodicBlockTemplateProducer.start();
         }
+    }
+
+    public void resumeWorkers() {
+        synchronized (pauseLock) {
+            paused = false;
+            pauseLock.notifyAll();
+        }
+    }
+
+    public void pauseWorkers() {
+        paused = true;
     }
 
     /**

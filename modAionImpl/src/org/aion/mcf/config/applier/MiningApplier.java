@@ -18,9 +18,9 @@ public class MiningApplier implements IDynamicConfigApplier {
         boolean newMining = ((CfgConsensusPow)newCfg.getConsensus()).getMining();
         if(oldMining != newMining) {
             if(newMining) {
-                startMining();
+                startOrResumeMining();
             } else {
-                stopMining();
+                pauseMining();
             }
         }
         return new InFlightConfigChangeResult(true, this);
@@ -31,19 +31,24 @@ public class MiningApplier implements IDynamicConfigApplier {
         return apply(newCfg, oldCfg); // same thing as apply, but with the operators reversed
     }
 
-    private void startMining() {
+    private void startOrResumeMining() {
         System.out.println("Mining applier started mining");
         IAionChain ac = AionFactory.create();
-        ((CfgConsensusPow)((EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()).setMining(true); // fix terrible casting
-        ((EquihashMiner)ac.getBlockMiner()).registerCallback(); // TODO does stopMining need to unregister these?
-        AionHub.inst().initPow(); // does stopMining need to turn this off?
-        ac.getBlockMiner().delayedStartMining(10);
+        ((CfgConsensusPow)(
+                (EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()
+        ).setMining(true); // fix terrible casting
+        ((EquihashMiner)ac.getBlockMiner()).registerCallback(); // need to unregister when pausing otherwise the Q will overflow
+        AionHub.inst().resumeOrStartPow(); // idempotent
+        ac.getBlockMiner().delayedStartMining(5);
     }
 
-    private void stopMining() {
+    private void pauseMining() {
         System.out.println("Mining applier stopped mining");
         IAionChain ac = AionFactory.create();
-        ((CfgConsensusPow)((EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()).setMining(true); // fix terrible casting
+        ((CfgConsensusPow)(
+                (EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()
+        ).setMining(false); // fix terrible casting
+        AionHub.inst().pausePow();
         ac.getBlockMiner().stopMining();
     }
 }

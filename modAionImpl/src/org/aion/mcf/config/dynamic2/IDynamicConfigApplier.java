@@ -15,7 +15,9 @@ public interface IDynamicConfigApplier {
     /**
      * Alter the Aion kernel based on some config change between oldCfg and newCfg.  The change
      * must be revertible by {@link #undo(Cfg, Cfg)}.  If this method fails when applying the
-     * intended alteration, it must revert any partial changes and throw.
+     * intended alteration, it must try to recover by reverting any partial changes then return
+     * {@link InFlightConfigChangeResult} with success set to false.  If it failed to revert
+     * then it must throw an exception.
      *
      * @param oldCfg old config
      * @param newCfg new config
