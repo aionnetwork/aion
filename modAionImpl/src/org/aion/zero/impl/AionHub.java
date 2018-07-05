@@ -111,12 +111,7 @@ public class AionHub {
      * holder pattern
      */
     private static class Holder {
-
         static final AionHub INSTANCE = new AionHub();
-    }
-
-    public static AionHub inst() {
-        return Holder.INSTANCE;
     }
 
     public AionHub() {
@@ -196,11 +191,11 @@ public class AionHub {
 
     public void resumeOrStartPow() {
         this.pow.init(blockchain, mempool, eventMgr); //idempotent
-        this.pow.resumeWorkers();
+//        this.pow.resumeWorkers();
     }
 
     public void pausePow() {
-        this.pow.pauseWorkers();
+        this.pow.pause();
     }
 
     private void registerCallback() {

@@ -73,11 +73,6 @@ public class AionPoW {
     private SyncMgr syncMgr;
 
     private EventExecuteService ees;
-    private Thread periodicBlockTemplateProducer;
-    private Runnable epPow;
-
-    private volatile boolean paused = false;
-    private final Object pauseLock = new Object();
 
     private final class EpPOW implements Runnable {
         boolean go = true;
@@ -85,34 +80,28 @@ public class AionPoW {
         public void run() {
             while (go) {
                 synchronized (pauseLock) {
-                    if(!go) { // TODO revisit this later
-                        break;
+                    if (paused) {
+                        try {
+                            pauseLock.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if(!go) break;
                     }
-                }
-                if(paused) {
-                    try {
-                        pauseLock.wait();
-                    } catch (InterruptedException e) {
-                        LOG.info("Resumed EpPOW because of InterruptedException");
-                        break;
-                    }
-                    if(!go) { //TODO revisit this later
-                        break;
-                    }
-                }
+                    LOG.info(String.format("<< %s / %s >> EpPow thread is running", Thread.currentThread().getId(), Thread.currentThread().toString()));
+                    IEvent e = ees.take();
 
-                IEvent e = ees.take();
-
-                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                    newPendingTxReceived.set(true);
-                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                    // create a new block template every time the best block
-                    // updates.
-                    createNewBlockTemplate();
-                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
-                    processSolution((Solution) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
-                    go = false;
+                    if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                        newPendingTxReceived.set(true);
+                    } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                        // create a new block template every time the best block
+                        // updates.
+                        createNewBlockTemplate();
+                    } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                        processSolution((Solution) e.getFuncArgs().get(0));
+                    } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
+                        go = false;
+                    }
                 }
             }
         }
@@ -129,7 +118,7 @@ public class AionPoW {
     }
 
     /**
-     * Initializes this instance, if not already initialized.  Otherwise, no-op.
+     * Initializes this instance.
      *
      * @param blockchain
      *            Aion blockchain instance
@@ -157,55 +146,67 @@ public class AionPoW {
 
 
             registerCallback();
-            this.epPow = new EpPOW();
-            ees.start(epPow);
+            ees.start(new EpPOW());
 
-            this.periodicBlockTemplateProducer = new Thread(() -> {
-                while (!shutDown.get()) {
-                    synchronized (pauseLock) {
-                        if(!shutDown.get()) { // TODO revisit this later
-                            break;
-                        }
-                    }
+            this.periodicPowThread = new PeriodicPowThread();
+            this.periodicPowThread.start();
+        }
+    }
+
+    public void pause() {
+        LOG.info(String.format("<< %s / %s >> set pause = true", java.lang.Thread.currentThread().getId() , java.lang.Thread.currentThread().toString()));
+//        periodicPowThread.pause();
+        this.paused = true;
+    }
+
+    private volatile boolean paused = false;
+    private final Object pauseLock = new Object();
+    PeriodicPowThread periodicPowThread;
+
+    private class PeriodicPowThread extends Thread {
+
+//        public void pause() {
+//            LOG.info(String.format("<< %s / %s >> pause called", java.lang.Thread.currentThread().getId() , java.lang.Thread.currentThread().toString()));
+//        }
+
+        public PeriodicPowThread() {
+            setName("pow");
+            LOG.info("PeriodicPowThread constructed with id = " + getId());
+        }
+
+        @Override
+        public void run() {
+            while (!shutDown.get()) {
+                synchronized (pauseLock) {
                     if(paused) {
                         try {
+                            LOG.info(String.format("<< %s / %s >> wait a minute wait a minute", this.getId(), this.toString()));
                             pauseLock.wait();
+                            LOG.info(String.format("<< %s / %s>> pow thread got woke", this.getId(), this.toString()));
                         } catch (InterruptedException e) {
-                            LOG.info("Resumed EpPOW because of InterruptedException");
-                            break;
-                        }
-                        if(!shutDown.get()) { //TODO revisit this later
-                            break;
+                            e.printStackTrace();
                         }
                     }
-                    try {
-                        Thread.sleep(100);
-
-                        long now = System.currentTimeMillis();
-                        if (now - lastUpdate.get() > 3000
-                                && newPendingTxReceived.compareAndSet(true, false)
-                                || now - lastUpdate.get() > 10000) {
-                            // fallback, when we never received any events
-                            createNewBlockTemplate();
-                        }
-                    } catch (InterruptedException e) {
-                        break;
-                    }
+                    if(shutDown.get()) break;
                 }
-            }, "pow");
-            this.periodicBlockTemplateProducer.start();
-        }
-    }
 
-    public void resumeWorkers() {
-        synchronized (pauseLock) {
-            paused = false;
-            pauseLock.notifyAll();
-        }
-    }
+                try {
+                    Thread.sleep(1000);
+                    LOG.info(String.format("<< %s / %s >> pow thread doing work", this.getId(), this.toString()));
 
-    public void pauseWorkers() {
-        paused = true;
+                    long now = System.currentTimeMillis();
+                    if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
+                            || now - lastUpdate.get() > 10000) { // fallback, when
+                        // we never
+                        // received any
+                        // events
+                        createNewBlockTemplate();
+                    }
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
     }
 
     /**

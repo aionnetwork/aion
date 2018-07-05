@@ -92,7 +92,7 @@ public class ConfigManipulator {
                     mbeanServerConnection, mbeanName, InFlightConfigReceiverMBean.class, true);
 
             ConfigProposalResult result = mbeanProxy.propose(cfgText);
-            System.out.println("result = " + result.success);
+            System.out.println("result = " + result.isSuccess());
         } catch (Exception e) {
             System.out.println("Something went horribly wrong!!");
             e.printStackTrace();

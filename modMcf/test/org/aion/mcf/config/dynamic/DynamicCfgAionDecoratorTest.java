@@ -169,4 +169,44 @@ public class DynamicCfgAionDecoratorTest {
             "\t</gui>\n" +
             "\n" +
             "</aion>";
+
+    private boolean flag = false;
+    Object pauseLock = new Object();
+
+    @Test
+    public void thread() throws Exception {
+        Thread t = new Thread( () -> {
+            for(;;) {
+                synchronized (pauseLock) {
+                    if(flag) {
+                        try {
+                            pauseLock.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                System.out.println("t Running");
+            }
+        });
+
+        Thread modifier = new Thread( () -> {
+            try {
+                increment();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        t.start();
+        modifier.start();
+        t.join();
+    }
+
+    private void increment() throws InterruptedException {
+        System.out.println("zzz");
+        Thread.sleep(1500);
+        System.out.println("set to true");
+        flag = true;
+    }
 }

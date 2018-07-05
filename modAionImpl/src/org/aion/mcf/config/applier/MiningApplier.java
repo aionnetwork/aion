@@ -7,6 +7,7 @@ import org.aion.mcf.config.dynamic2.InFlightConfigChangeException;
 import org.aion.mcf.config.dynamic2.InFlightConfigChangeResult;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.blockchain.AionFactory;
+import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgConsensusPow;
 
@@ -38,7 +39,7 @@ public class MiningApplier implements IDynamicConfigApplier {
                 (EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()
         ).setMining(true); // fix terrible casting
         ((EquihashMiner)ac.getBlockMiner()).registerCallback(); // need to unregister when pausing otherwise the Q will overflow
-        AionHub.inst().resumeOrStartPow(); // idempotent
+        AionImpl.inst().getAionHub().resumeOrStartPow(); // idempotent
         ac.getBlockMiner().delayedStartMining(5);
     }
 
@@ -48,7 +49,7 @@ public class MiningApplier implements IDynamicConfigApplier {
         ((CfgConsensusPow)(
                 (EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()
         ).setMining(false); // fix terrible casting
-        AionHub.inst().pausePow();
+        AionImpl.inst().getAionHub().pausePow();
         ac.getBlockMiner().stopMining();
     }
 }
