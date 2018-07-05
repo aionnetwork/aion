@@ -273,7 +273,12 @@ public final class TRSuseContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
+        // Ensure the account exists (ie. has a positive deposit balance for the contract).
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        BigInteger accountBalance = getDepositBalance(contract, account);
+        if (accountBalance.equals(BigInteger.ZERO)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
         byte[] amountBytes = new byte[len - indexAmount + 1];
@@ -281,7 +286,7 @@ public final class TRSuseContract extends AbstractTRS {
         BigInteger amount = new BigInteger(amountBytes);
 
         // The account must have a deposit balance large enough to make the refund.
-        BigInteger newBalance = getDepositBalance(contract, account).subtract(amount);
+        BigInteger newBalance = accountBalance.subtract(amount);
         if (newBalance.compareTo(BigInteger.ZERO) < 0) {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
@@ -357,19 +362,23 @@ public final class TRSuseContract extends AbstractTRS {
         byte[] next = getListNext(contract, account);
 
         // If account is head of list, set head to account's next entry.
-        if (Arrays.equals(account.toBytes(), getListHead(contract))) {
+        byte[] head = getListHead(contract);    //TODO: maybe decouple metadata from next so we dont
+        head[0] = AION_PREFIX;                  //TODO: have to do awkward things like this?
+        if (Arrays.equals(account.toBytes(), head)) {
             setListHead(contract, getListNext(contract, account));
         }
 
         // If account has a previous entry, set that entry's next entry to account's next entry.
         if (prev != null) {
-            byte[] prevNext = getListNext(contract, prev);
-            setListNext(contract, account, prevNext[0], next, true);
+            byte[] prevCopy = Arrays.copyOf(prev, prev.length);
+            prevCopy[0] = AION_PREFIX;
+            byte[] prevNext = getListNext(contract, prevCopy);
+            setListNext(contract, prevCopy, prevNext[0], next, true);
         }
 
         // If account has a next entry, set that entry's previous entry to account's previous entry.
         if (next != null) {
-            setListPrevious(contract, account, prev);
+            setListPrevious(contract, next, prev);
         }
 
         // Mark account as invalid (trumps setting next to null), set its previous to null.

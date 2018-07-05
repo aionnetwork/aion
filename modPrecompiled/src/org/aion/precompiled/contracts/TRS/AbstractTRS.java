@@ -255,9 +255,31 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param prev The previous entry.
      */
     void setListPrevious(Address contract, Address account, byte[] prev) {
+        setListPrevious(contract, account.toBytes(), prev);
+    }
+
+    /**
+     * Sets account's previous entry in the linked list to prev, where prev is assumed to be
+     * correctly formatted so that the first byte of prev is 0x80 iff the previous entry is null,
+     * and so that the following 31 bytes of prev are the 31 bytes of a valid Aion account address
+     * without the Aion prefix.
+     *
+     * If prev is null this method will set the previous entry for account to null.
+     * If prev is not null this method will set account's previous entry to prev and ensure the null
+     * bit is not set.
+     *
+     * This method does nothing if prev is not 32 bytes.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account in contract whose previous entry is being updated.
+     * @param prev The previous entry.
+     */
+    void setListPrevious(Address contract, byte[] account, byte[] prev) {
         byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
         prevKey[0] = LIST_PREV_PREFIX;
-        System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
+        System.arraycopy(account, 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
 
         if (prev == null) {
             track.addStorageRow(contract, toIDataWord(prevKey), NULL32);
@@ -283,10 +305,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @throws NullPointerException if account has no next entry.
      */
     public byte[] getListNext(Address contract, Address account) {
-        IDataWord next = track.getStorageValue(contract, toIDataWord(account.toBytes()));
-        if (next == null) { throw new NullPointerException("Account has no next: " + account); }
-        byte[] nextData = next.getData();
-        return ((nextData[0] & NULL_BIT) == NULL_BIT) ? null : Arrays.copyOf(nextData, nextData.length);
+        return getListNext(contract, account.toBytes());
     }
 
     /**
@@ -364,18 +383,49 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param isValid True only if the account is to be marked as invalid or deleted.
      */
     void setListNext(Address contract, Address account, byte oldMeta, byte[] next, boolean isValid) {
+        setListNext(contract, account.toBytes(), oldMeta, next, isValid);
+    }
+
+    /**
+     * Sets account's next entry in the linked list to next, where next is assumed to be correctly
+     * formatted so that the first byte of head has its most significant bit set if next is null and
+     * its second most significant bit set if it is invalid, and so that the following 31 bytes of
+     * head are the 31 bytes of a valid Aion account address without the Aion prefix.
+     *
+     * If isValid is false then the next entry is set to invalid, indicating that this account has
+     * been deleted.
+     *
+     * If isValid is true and next is null this method will set the next entry for account to null.
+     * If isValid is true next is not null then this method will set account's next entry to next
+     * and ensure the null bit is not set and that the valid bit is set.
+     *
+     * The oldMeta parameter is the current (soon to be "old") meta-data about the account's next
+     * entry. This is the first byte returned by the getListNextBytes or getListNext methods. This
+     * byte contains data about validity and the row counts for the account's balance. This method
+     * will persist this meta-data except in the case that we are setting the account to be invalid.
+     *
+     * This method does nothing if next is not 32 bytes.
+     *
+     * This method does not flush.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account in contract whose next entry is being updated.
+     * @param next The next entry.
+     * @param isValid True only if the account is to be marked as invalid or deleted.
+     */
+    void setListNext(Address contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
         if (!isValid) {
-            track.addStorageRow(contract, toIDataWord(account.toBytes()), INVALID);
+            track.addStorageRow(contract, toIDataWord(account), INVALID);
         } else if (next == null) {
             byte[] nullNext = Arrays.copyOf(NULL32.getData(), NULL32.getData().length);
             nullNext[0] |= VALID_BIT;
             nullNext[0] |= oldMeta;
-            track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(nullNext));
+            track.addStorageRow(contract, toIDataWord(account), toIDataWord(nullNext));
         } else if (next.length == DOUBLE_WORD_SIZE) {
             next[0] = VALID_BIT;
             next[0] |= oldMeta;
             next[0] &= ~NULL_BIT;
-            track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(next));
+            track.addStorageRow(contract, toIDataWord(account), toIDataWord(next));
         }
     }
 
