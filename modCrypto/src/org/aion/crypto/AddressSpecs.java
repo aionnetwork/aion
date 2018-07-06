@@ -3,6 +3,7 @@ package org.aion.crypto;
 import org.aion.base.util.ByteUtil;
 
 import java.nio.ByteBuffer;
+import java.util.BitSet;
 
 /**
  * A set of static functions to define the creation
@@ -24,5 +25,26 @@ public class AddressSpecs {
         // [1:]
         buf.put(HashUtil.h256(publicKey), 1, 31);
         return buf.array();
+    }
+
+    public static String checksummedAddress(String address) {
+        assert address != null;
+        address = address.replace("0x", "");
+        assert address.length() == 64;
+
+        byte[] h = HashUtil.h256(ByteUtil.hexStringToBytes(address));
+        BitSet b = BitSet.valueOf(h);
+        char[] caddr = address.toCharArray();
+        for (int i = 0; i < 64; i++) {
+            if (Character.isDigit(caddr[i]))
+                continue;
+
+            if (Character.isAlphabetic(caddr[i])) {
+                caddr[i] = b.get(i) ? Character.toUpperCase(caddr[i]) : Character.toLowerCase(caddr[i]);
+                continue;
+            }
+            return null; // not a valid address
+        }
+        return String.valueOf(caddr);
     }
 }
