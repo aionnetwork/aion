@@ -40,7 +40,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import org.aion.base.vm.IDataWord;
 
 /**
  * Repository interface for information retrieval.
@@ -204,4 +204,5 @@ public interface IRepositoryQuery<AS, DW> {
      * @return the list of transactions encoded bytes.
      */
     List<byte[]> getCacheTx();
+
 }

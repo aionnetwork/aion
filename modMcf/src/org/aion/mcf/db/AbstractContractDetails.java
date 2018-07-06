@@ -30,6 +30,9 @@ import org.aion.base.util.Hex;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.aion.base.vm.IDataWord;
+import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
@@ -122,5 +125,18 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
         String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";
         ret += "  Storage: " + getStorageHash();
         return ret;
+    }
+
+    /**
+     * Returns an IDataWord object that wraps data appropriately. If data is 16 bytes a DataWord
+     * object is used. Otherwise if 32 bytes a DoubleDataWord object is used.
+     *
+     * Precondition: data is not null and data.length == 16 or 32.
+     *
+     * @param data The data to convert.
+     * @return the data as an IDataWord object.
+     */
+    protected IDataWord toIDataWord(byte[] data) {
+        return (data.length == DataWord.BYTES) ? new DataWord(data) : new DoubleDataWord(data);
     }
 }
