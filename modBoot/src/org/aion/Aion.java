@@ -140,27 +140,22 @@ public class Aion {
         }
 
         /*
-         * Dynamic configuration stuff.  Invokable through JMX interface.
+         * Create JMX server and register in-flight config receiver MBean
          */
-        DynamicConfigKeyRegistry dynamicConfigKeyRegistry = new DynamicConfigKeyRegistry();
-        InFlightConfigReceiver inFlightConfigReceiver = new InFlightConfigReceiver(cfg, dynamicConfigKeyRegistry);
+        InFlightConfigReceiver inFlightConfigReceiver = new InFlightConfigReceiver(
+                cfg, new DynamicConfigKeyRegistry());
         MBeanServer server = ManagementFactory.getPlatformMBeanServer();
         ObjectName objectName = null;
         try {
-            objectName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
+            objectName = new ObjectName("org.aion.mcf.config.receiver:id=1");
             server.registerMBean(inFlightConfigReceiver, objectName);
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-            System.exit(2);
-        } catch (NotCompliantMBeanException e) {
-            e.printStackTrace();
-            System.exit(2);
-        } catch (InstanceAlreadyExistsException e) {
-            e.printStackTrace();
-            System.exit(2);
-        } catch (MBeanRegistrationException e) {
-            e.printStackTrace();
-            System.exit(2);
+        } catch (MalformedObjectNameException
+                | NotCompliantMBeanException
+                | InstanceAlreadyExistsException
+                | MBeanRegistrationException ex) {
+            genLog.error(
+                    "Failed to initialize JMX server.  In-flight configuration changes will not be available.",
+                    ex);
         }
 
         /*

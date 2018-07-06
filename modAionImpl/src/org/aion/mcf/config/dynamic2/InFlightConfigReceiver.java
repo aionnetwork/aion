@@ -51,7 +51,7 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
      * the active config.
      */
     @Override
-    public ConfigProposalResult propose(String configXmlText) throws RollbackException {
+    public synchronized ConfigProposalResult propose(String configXmlText) throws RollbackException {
         LOG.trace("Received new configuration XML");
         LOG.trace(configXmlText);
         CfgAion newCfg = new CfgAion();

@@ -57,43 +57,47 @@ import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
  * new mining task to miners when needed.
  */
 public class AionPoW {
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
+    private final CfgAion config = CfgAion.inst();
+    protected AtomicBoolean initialized = new AtomicBoolean(false);
+    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    protected AtomicLong lastUpdate = new AtomicLong(0);
+    private AtomicBoolean shutDown = new AtomicBoolean();
 
-    private static final int syncLimit = 128;
+    private SyncMgr syncMgr;
+    private EventExecuteService ees;
 
     protected IAionBlockchain blockchain;
     protected IPendingState<AionTransaction> pendingState;
     protected IEventMgr eventMgr;
 
-    protected AtomicBoolean initialized = new AtomicBoolean(false);
-    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected AtomicLong lastUpdate = new AtomicLong(0);
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
+    private static final int syncLimit = 128;
 
-    private AtomicBoolean shutDown = new AtomicBoolean();
-    private SyncMgr syncMgr;
-
-    private EventExecuteService ees;
+    private volatile boolean paused = false;
+    private final Object pauseMonitor = new Object();
 
     private final class EpPOW implements Runnable {
         boolean go = true;
         @Override
         public void run() {
-            while (go) {
-                synchronized (pauseLock) {
+            while (go) { // TODO double check this sync logic
+                synchronized (pauseMonitor) {
                     if (paused) {
                         try {
-                            pauseLock.wait();
+                            LOG.debug("EpPOW paused");
+                            pauseMonitor.wait();
+                            LOG.debug("EpPOW resumed");
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        if (!go)
+                        if (!go) {
                             break;
+                        }
                     }
                 }
+                LOG.debug("EpPOW doing work");
 
-                LOG.info("EPPow doing work");
                 IEvent e = ees.take();
-
                 if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
                     newPendingTxReceived.set(true);
                 } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
@@ -109,7 +113,41 @@ public class AionPoW {
         }
     }
 
-    private final CfgAion config = CfgAion.inst();
+    private class PeriodicPowRunner implements Runnable {
+        @Override
+        public void run() {
+            while (!shutDown.get()) {
+                synchronized (pauseMonitor) {
+                    if(paused) {
+                        try {
+                            LOG.debug("PeriodicPowRunner paused");
+                            pauseMonitor.wait();
+                            LOG.debug("PeriodicPowRunner resumed");
+                        } catch (InterruptedException e) {
+                            LOG.debug("PeriodicPowRunner interrupted while waiting");
+                            break;
+                        }
+                    }
+                    if(shutDown.get()) break;
+                }
+                LOG.trace("PeriodicPow doing work");
+
+                try {
+                    Thread.sleep(100);
+
+                    long now = System.currentTimeMillis();
+                    if (now - lastUpdate.get() > 3000
+                            && newPendingTxReceived.compareAndSet(true, false)
+                            || now - lastUpdate.get() > 10000) /* fallback when we never received any event*/ {
+                        createNewBlockTemplate();
+                    }
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+    }
+
 
     /**
      * Creates an {@link AionPoW} instance. Be sure to call
@@ -136,7 +174,6 @@ public class AionPoW {
             this.eventMgr = eventMgr;
             this.syncMgr = SyncMgr.inst();
 
-
             // return early if mining is disabled, otherwise we are doing needless
             // work by generating new block templates on IMPORT_BEST
             if (!config.getConsensus().getMining())
@@ -146,68 +183,24 @@ public class AionPoW {
             ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
-
             registerCallback();
             ees.start(new EpPOW());
 
-            this.periodicPowThread = new PeriodicPowThread();
-            this.periodicPowThread.start();
+            new Thread(new PeriodicPowRunner(), "pow").start();
         }
     }
 
+    /** Pause the workers that produce new block templates */
     public void pause() {
-        LOG.info(String.format("<< %s / %s >> set pause = true", java.lang.Thread.currentThread().getId() , java.lang.Thread.currentThread().toString()));
-//        periodicPowThread.pause();
+        LOG.info("Pausing AionPoW workers.");
         this.paused = true;
     }
 
-    private volatile boolean paused = false;
-    private final Object pauseLock = new Object();
-    PeriodicPowThread periodicPowThread;
-
-    private class PeriodicPowThread extends Thread {
-
-//        public void pause() {
-//            LOG.info(String.format("<< %s / %s >> pause called", java.lang.Thread.currentThread().getId() , java.lang.Thread.currentThread().toString()));
-//        }
-
-        public PeriodicPowThread() {
-            setName("pow");
-            LOG.info("PeriodicPowThread constructed with id = " + getId());
-        }
-
-        @Override
-        public void run() {
-            while (!shutDown.get()) {
-                synchronized (pauseLock) {
-                    if(paused) {
-                        try {
-                            LOG.info(String.format("<< %s / %s >> wait a minute wait a minute", this.getId(), this.toString()));
-                            pauseLock.wait();
-                            LOG.info(String.format("<< %s / %s>> pow thread got woke", this.getId(), this.toString()));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if(shutDown.get()) break;
-                }
-
-                try {
-                    Thread.sleep(1000);
-                    LOG.info(String.format("<< %s / %s >> pow thread doing work", this.getId(), this.toString()));
-
-                    long now = System.currentTimeMillis();
-                    if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
-                            || now - lastUpdate.get() > 10000) { // fallback, when
-                        // we never
-                        // received any
-                        // events
-                        createNewBlockTemplate();
-                    }
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
+    /** Resume the workers that produce new block templates */
+    public void resume() {
+        synchronized (pauseMonitor) {
+            paused = false;
+            pauseMonitor.notifyAll();
         }
     }
 

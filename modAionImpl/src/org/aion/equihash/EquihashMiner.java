@@ -201,7 +201,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                 }
             }
             threads.clear();
-
+            ees.clear();
         }
     }
 

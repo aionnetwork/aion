@@ -191,7 +191,7 @@ public class AionHub {
 
     public void resumeOrStartPow() {
         this.pow.init(blockchain, mempool, eventMgr); //idempotent
-//        this.pow.resumeWorkers();
+        this.pow.resume();
     }
 
     public void pausePow() {

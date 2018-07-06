@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * Provides an interface (intended to be used by Controllers) to manipulate the Kernel config.xml
- * file.  In the future it will also talk to the interface in the Kernel that will allow for
- * dynamic config change.
+ * Provides an interface (intended to be used by Controllers) to manipulate the kernel config.
+ * This includes both the config.xml file as well as sending remote commands to a running kernel
+ * to reconfigure it dynamically.
  */
 public class ConfigManipulator {
     // TODO:
@@ -80,11 +80,10 @@ public class ConfigManipulator {
         }
     }
 
-    private ApplyConfigResult doJmxStuff(String cfgText) {
-        // JMX stuff
+    private ApplyConfigResult sendConfigProposal(String cfgText) {
         try {
             JMXServiceURL url =
-                    new JMXServiceURL("service:jmx:rmi:///jndi/rmi://127.0.0.1:11234/jmxrmi");
+                    new JMXServiceURL(InFlightConfigReceiverMBean.createJmxUrl(12));
             JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
             MBeanServerConnection mbeanServerConnection = jmxc.getMBeanServerConnection();
             ObjectName mbeanName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
@@ -101,7 +100,6 @@ public class ConfigManipulator {
             e.printStackTrace();
             return new ApplyConfigResult(false, e.getMessage(), e);
         }
-        // End JMX stuff
     }
 
     public ApplyConfigResult applyNewConfig(String cfgXml) {
@@ -118,7 +116,7 @@ public class ConfigManipulator {
             return new ApplyConfigResult(false, msg, null);
         }
 
-        ApplyConfigResult result = doJmxStuff(cfgXml);
+        ApplyConfigResult result = sendConfigProposal(cfgXml);
         if(!result.isSucceeded()) {
             return result;
         }
