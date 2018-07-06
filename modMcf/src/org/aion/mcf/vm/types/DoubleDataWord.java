@@ -17,8 +17,8 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     private static final WordType wType = WordType.DOUBLE_DATA_WORD;
     public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
 
-    public static final DataWord ZERO = new DataWord(0);
-    public static final DataWord ONE = new DataWord(1);
+    public static final DoubleDataWord ZERO = new DoubleDataWord(0);
+    public static final DoubleDataWord ONE = new DoubleDataWord(1);
     public static final int BYTES = 32;
 
     private byte[] data;
@@ -133,7 +133,7 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     public IDataWord copy() {
         byte[] bs = new byte[BYTES];
         System.arraycopy(data, 0, bs, 0, BYTES);
-        return new DataWord(bs);
+        return new DoubleDataWord(bs);
     }
 
     @Override

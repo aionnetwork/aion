@@ -24,7 +24,6 @@
  ******************************************************************************/
 package org.aion.mcf.db;
 
-import javax.xml.crypto.Data;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
