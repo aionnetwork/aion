@@ -85,8 +85,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     @Override
     public void put(IDataWord key, IDataWord value) {
         WordType vType = value.getType();
+        IDataWord zero = (vType.equals(WordType.DATA_WORD)) ? DataWord.ZERO : DoubleDataWord.ZERO;
 
-        if (value.equals(vType)) {
+        if (value.equals(zero)) {
             storageTrie.delete(key.getData());
         } else {
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
@@ -104,7 +105,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         byte[] data = storageTrie.get(key.getData());
         if (data.length > 0) {
             byte[] dataDecoded = RLP.decode2(data).get(0).getRLPData();
-            result = new DataWord(dataDecoded);
+            result = toIDataWord(dataDecoded);
         }
 
         return result;

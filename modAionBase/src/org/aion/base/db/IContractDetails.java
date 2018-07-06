@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.aion.base.vm.IDataWord;
 
 public interface IContractDetails<DW> {
 
@@ -84,4 +85,5 @@ public interface IContractDetails<DW> {
     IContractDetails<DW> getSnapshotTo(byte[] hash);
 
     void setDataSource(IByteArrayKeyValueStore dataSource);
+
 }

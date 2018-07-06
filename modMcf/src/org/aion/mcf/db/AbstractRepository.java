@@ -330,4 +330,5 @@ public abstract class AbstractRepository<
     public boolean isSnapshot() {
         return isSnapshot;
     }
+
 }
