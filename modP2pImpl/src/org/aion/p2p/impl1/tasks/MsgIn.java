@@ -39,7 +39,7 @@ public class MsgIn {
      * @param route The route.
      * @param msg The message.
      */
-    public MsgIn(int nodeId, String displayId, int route, byte[] msg) {
+    MsgIn(final int nodeId, final String displayId, final int route, final byte[] msg) {
         this.nodeId = nodeId;
         this.displayId = displayId;
         this.route = route;
@@ -50,11 +50,11 @@ public class MsgIn {
         return this.nodeId;
     }
 
-    public String getDisplayId() {
+    String getDisplayId() {
         return this.displayId;
     }
 
-    public int getRoute() {
+    int getRoute() {
         return this.route;
     }
 

@@ -13,13 +13,19 @@
 		<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.mod}/modP2p.jar" />
 		<pathelement location="${dir.mod}/modP2pImpl.jar" />
+                <pathelement location="${dir.mod}/modLogger.jar" />
+		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
+		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
+                <pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
 	</path>
 
 	<path id="cp">
 		<pathelement location="${dir.mod}/modP2p.jar" />
+                <pathelement location="${dir.mod}/modLogger.jar" />		
 		<pathelement location="${dir.lib}/libminiupnp/miniupnpc_linux.jar" />
 		<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.mod}/modAionBase.jar" />
+		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 	</path>
 
 	<target name="clean_build" depends="clean">
@@ -36,7 +42,7 @@
 
 	<target name="test_build" depends="build">
 		<mkdir dir="${dir.test}" />
-		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
 			<classpath>
 				<path refid="classpath.test" />
 			</classpath>
@@ -77,7 +83,7 @@
 	<target name="build">
 		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}" />
-		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
+		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
 			<modulepath refid="cp" />
 		</javac>
 		<jar destfile="modP2pImpl.jar" filesetmanifest="mergewithoutmain" basedir="${dir.dest}" />
