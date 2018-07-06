@@ -86,22 +86,24 @@ public class AionPoW {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        if(!go) break;
+                        if (!go)
+                            break;
                     }
-                    LOG.info(String.format("<< %s / %s >> EpPow thread is running", Thread.currentThread().getId(), Thread.currentThread().toString()));
-                    IEvent e = ees.take();
+                }
 
-                    if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                        newPendingTxReceived.set(true);
-                    } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                        // create a new block template every time the best block
-                        // updates.
-                        createNewBlockTemplate();
-                    } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
-                        processSolution((Solution) e.getFuncArgs().get(0));
-                    } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
-                        go = false;
-                    }
+                LOG.info("EPPow doing work");
+                IEvent e = ees.take();
+
+                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                    newPendingTxReceived.set(true);
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    // create a new block template every time the best block
+                    // updates.
+                    createNewBlockTemplate();
+                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                    processSolution((Solution) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
+                    go = false;
                 }
             }
         }

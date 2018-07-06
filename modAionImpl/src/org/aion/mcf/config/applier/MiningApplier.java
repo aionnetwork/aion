@@ -50,6 +50,7 @@ public class MiningApplier implements IDynamicConfigApplier {
                 (EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()
         ).setMining(false); // fix terrible casting
         AionImpl.inst().getAionHub().pausePow();
-        ac.getBlockMiner().stopMining();
+//        ac.getBlockMiner().stopMining();
+        ((EquihashMiner) ac.getBlockMiner()).pauseMining();
     }
 }

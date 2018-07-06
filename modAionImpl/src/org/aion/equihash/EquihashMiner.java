@@ -41,6 +41,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.IAionBlock;
 
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +53,6 @@ import static org.aion.base.util.Hex.toHexString;
  */
 
 public class EquihashMiner extends AbstractMineRunner<AionBlock> {
-
     public final static String VERSION = "0.1.0";
 
     private IAionChain a0Chain;
@@ -68,16 +68,19 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     // Equihash solver implementation
     private Equihash miner;
 
-    // 15 second show status delay
-    private static int STATUS_INTERVAL = 15;
-
     // Status scheduler
     private ScheduledThreadPoolExecutor scheduledWorkers;
+    private ScheduledFuture showMiningStatusFuture;
 
     // keep a moving average filter for the last 64 STATUS_INTERVALs
     private MAF hashrateMAF;
 
     private EventExecuteService ees;
+
+    private boolean isPaused;
+
+    // 15 second show status delay
+    private static int STATUS_INTERVAL = 15;
 
     /**
      * Miner threads
@@ -98,7 +101,6 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             }
         }
     }
-
 
     private static class Holder {
         static final EquihashMiner INSTANCE = new EquihashMiner();
@@ -158,7 +160,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             fireMinerStarted();
             LOG.info("sealer starting 🔒 {" + cpuThreads + "}");
 
-            scheduledWorkers.scheduleWithFixedDelay(new ShowMiningStatusTask(), STATUS_INTERVAL * 2, STATUS_INTERVAL,
+            this.showMiningStatusFuture = scheduledWorkers
+                    .scheduleWithFixedDelay(new ShowMiningStatusTask(), STATUS_INTERVAL * 2, STATUS_INTERVAL,
                     TimeUnit.SECONDS);
 
             for (int i = 0; i < cpuThreads; i++) {
@@ -169,6 +172,41 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                 threads.add(t);
             }
         }
+    }
+
+    public void pauseMining() {
+        if (isMining) {
+            isMining = false;
+            fireMinerStopped();
+            LOG.info("sealer stopping 🔒");
+
+            showMiningStatusFuture.cancel(true);
+            isPaused = true;
+
+            // interrupt
+            int cnt = 0;
+            for (Thread t : threads) {
+                t.interrupt();
+                LOG.info("Interrupt sealer {}", ++cnt);
+            }
+
+            // join
+            cnt = 0;
+            for (Thread t : threads) {
+                try {
+                    t.join();
+                    LOG.info("Stopped sealer {}", ++cnt);
+                } catch (InterruptedException e) {
+                    LOG.error("Failed to stop sealer thread");
+                }
+            }
+            threads.clear();
+
+        }
+    }
+
+    public boolean isPaused() {
+        return this.isPaused;
     }
 
     @Override
@@ -333,6 +371,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             hashrateMAF.add(hashrate);
             LOG.info("Aion internal miner generating {} solutions per second", hashrate);
         }
+
+
     }
 
     public void shutdown() {

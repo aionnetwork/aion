@@ -80,7 +80,7 @@ public class ConfigManipulator {
         }
     }
 
-    private void doJmxStuff(String cfgText) {
+    private ApplyConfigResult doJmxStuff(String cfgText) {
         // JMX stuff
         try {
             JMXServiceURL url =
@@ -93,9 +93,13 @@ public class ConfigManipulator {
 
             ConfigProposalResult result = mbeanProxy.propose(cfgText);
             System.out.println("result = " + result.isSuccess());
+            String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
+
+            return new ApplyConfigResult(result.isSuccess(), msg, result.getErrorCause());
         } catch (Exception e) {
             System.out.println("Something went horribly wrong!!");
             e.printStackTrace();
+            return new ApplyConfigResult(false, e.getMessage(), e);
         }
         // End JMX stuff
     }
@@ -114,7 +118,10 @@ public class ConfigManipulator {
             return new ApplyConfigResult(false, msg, null);
         }
 
-        doJmxStuff(cfgXml);
+        ApplyConfigResult result = doJmxStuff(cfgXml);
+        if(!result.isSucceeded()) {
+            return result;
+        }
 
         final String backupConfigFilename;
         try {
@@ -138,7 +145,7 @@ public class ConfigManipulator {
             return new ApplyConfigResult(false, msg, null);
         }
 
-        return new ApplyConfigResult(true, "Config saved.  Previous copy is backed up at " + backupConfigFilename, null);
+        return new ApplyConfigResult(result.isSucceeded(), "Config saved.  Previous copy is backed up at " + backupConfigFilename, null);
     }
 
     private String backupConfig() throws IOException {
