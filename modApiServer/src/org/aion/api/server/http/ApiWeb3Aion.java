@@ -1,6 +1,5 @@
-/**
- * ***************************************************************************** Copyright (c)
- * 2017-2018 Aion foundation.
+/* ******************************************************************************
+ * Copyright (c) 2017-2018 Aion foundation.
  *
  * <p>This file is part of the aion network project.
  *
@@ -15,10 +14,11 @@
  * <p>You should have received a copy of the GNU General Public License along with the aion network
  * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * <p>Contributors: Aion foundation.
+ * Contributors:
+ *     Aion foundation.
  *
- * <p>****************************************************************************
- */
+ ******************************************************************************/
+
 package org.aion.api.server.http;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
@@ -34,23 +34,46 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.api.server.ApiAion;
-import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.rpc.RpcError;
 import org.aion.api.server.rpc.RpcMsg;
-import org.aion.api.server.types.*;
+import org.aion.api.server.types.ArgFltr;
+import org.aion.api.server.types.ArgTxCall;
+import org.aion.api.server.types.Blk;
+import org.aion.api.server.types.CompiledContr;
+import org.aion.api.server.types.Evt;
+import org.aion.api.server.types.Fltr;
+import org.aion.api.server.types.FltrBlk;
+import org.aion.api.server.types.FltrLg;
+import org.aion.api.server.types.FltrTx;
+import org.aion.api.server.types.NumericalValue;
+import org.aion.api.server.types.SyncInfo;
+import org.aion.api.server.types.Tx;
+import org.aion.api.server.types.TxRecpt;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.*;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.FastByteComparisons;
+import org.aion.base.util.TypeConverter;
+import org.aion.base.util.Utils;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -58,8 +81,14 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.config.*;
+import org.aion.mcf.config.CfgApi;
+import org.aion.mcf.config.CfgApiNrg;
+import org.aion.mcf.config.CfgApiRpc;
+import org.aion.mcf.config.CfgApiZmq;
+import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgNetP2p;
+import org.aion.mcf.config.CfgSync;
+import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
@@ -73,7 +102,6 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
-import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.PeerState;
@@ -182,16 +210,7 @@ public class ApiWeb3Aion extends ApiAion {
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
         isSeedMode = CfgAion.inst().getConsensus().isSeed();
 
-        // instantiate nrg price oracle
-        IAionBlockchain bc = (IAionBlockchain) _ac.getBlockchain();
-        long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
-        long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
-
-        NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
-        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
-            oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
-
-        this.nrgOracle = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
+        initNrgOracle(_ac);
 
         if (isFilterEnabled) {
             evtMgr = this.ac.getAionHub().getEventMgr();
@@ -212,96 +231,59 @@ public class ApiWeb3Aion extends ApiAion {
 
         // ops-related endpoints
         // https://github.com/google/guava/wiki/CachesExplained#refresh
-        CachedRecentEntities =
-                CacheBuilder.newBuilder()
-                        .maximumSize(1)
-                        .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
-                        .build(
-                                new CacheLoader<Integer, ChainHeadView>() {
-                                    public ChainHeadView load(Integer key) { // no checked exception
-                                        ChainHeadView view =
-                                                new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
-                                        return view;
-                                    }
+        CachedRecentEntities = CacheBuilder.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
+                .build(
+                    new CacheLoader<>() {
+                        public ChainHeadView load(Integer key) { // no checked exception
+                            return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
+                        }
 
-                                    public ListenableFuture<ChainHeadView> reload(
-                                            final Integer key, ChainHeadView prev) {
-                                        try {
-                                            ListenableFutureTask<ChainHeadView> task =
-                                                    ListenableFutureTask.create(
-                                                            new Callable<ChainHeadView>() {
-                                                                public ChainHeadView call() {
-                                                                    return new ChainHeadView(prev)
-                                                                            .update();
-                                                                }
-                                                            });
-                                            cacheUpdateExecutor.execute(task);
-                                            return task;
-                                        } catch (Throwable e) {
-                                            LOG.debug(
-                                                    "<cache-updater - could not queue up task: ",
-                                                    e);
-                                            throw (e);
-                                        } // exception is swallowed by refresh and load. so just log
-                                          // it for our logs
-                                    }
-                                });
+                        public ListenableFuture<ChainHeadView> reload(final Integer key,
+                            ChainHeadView prev) {
+                            try {
+                                ListenableFutureTask<ChainHeadView> task = ListenableFutureTask
+                                    .create(() -> new ChainHeadView(prev).update());
+                                cacheUpdateExecutor.execute(task);
+                                return task;
+                            } catch (Throwable e) {
+                                LOG.debug("<cache-updater - could not queue up task: ", e);
+                                throw (e);
+                            } // exception is swallowed by refresh and load. so just log it for our logs
+                        }
+                    });
 
-        cacheUpdateExecutor =
-                new ThreadPoolExecutor(
-                        1,
-                        1,
-                        10,
-                        TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(1),
-                        new CacheUpdateThreadFactory());
+        cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
 
-        MinerStats =
-                CacheBuilder.newBuilder()
-                        .maximumSize(1)
-                        .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
-                        .build(
-                                new CacheLoader<String, MinerStatsView>() {
-                                    public MinerStatsView load(String key) { // no checked exception
-                                        Address miner = new Address(key);
-                                        MinerStatsView view =
-                                                new MinerStatsView(
-                                                                STRATUM_RECENT_BLK_COUNT,
-                                                                miner.toBytes())
-                                                        .update();
-                                        return view;
-                                    }
 
-                                    public ListenableFuture<MinerStatsView> reload(
-                                            final String key, MinerStatsView prev) {
-                                        try {
-                                            ListenableFutureTask<MinerStatsView> task =
-                                                    ListenableFutureTask.create(
-                                                            new Callable<MinerStatsView>() {
-                                                                public MinerStatsView call() {
-                                                                    return new MinerStatsView(prev)
-                                                                            .update();
-                                                                }
-                                                            });
-                                            MinerStatsExecutor.execute(task);
-                                            return task;
-                                        } catch (Throwable e) {
-                                            LOG.debug(
-                                                    "<miner-stats - could not queue up task: ", e);
-                                            throw (e);
-                                        } // exception is swallowed by refresh and load. so just log
-                                          // it for our logs
-                                    }
-                                });
+        MinerStats = CacheBuilder.newBuilder()
+                .maximumSize(1)
+                .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
+                .build(
+                        new CacheLoader<String, MinerStatsView>() {
+                            public MinerStatsView load(String key) { // no checked exception
+                                Address miner = new Address(key);
+                                MinerStatsView view = new MinerStatsView(STRATUM_RECENT_BLK_COUNT, miner.toBytes()).update();
+                                return view;
+                            }
 
-        MinerStatsExecutor =
-                new ThreadPoolExecutor(
-                        1,
-                        1,
-                        10,
-                        TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(1),
-                        new MinerStatsThreadFactory());
+                            public ListenableFuture<MinerStatsView> reload(final String key, MinerStatsView prev) {
+                                try {
+                                    ListenableFutureTask<MinerStatsView> task = ListenableFutureTask.create(
+                                        () -> new MinerStatsView(prev).update());
+                                    MinerStatsExecutor.execute(task);
+                                    return task;
+                                } catch (Throwable e) {
+                                    LOG.debug("<miner-stats - could not queue up task: ", e);
+                                    throw(e);
+                                } // exception is swallowed by refresh and load. so just log it for our logs
+                            }
+                        });
+
+        MinerStatsExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1), new MinerStatsThreadFactory());
     }
 
     // --------------------------------------------------------------------
@@ -311,7 +293,7 @@ public class ApiWeb3Aion extends ApiAion {
     /* Return a reference to the AIONBlock without converting values to hex
      * Requied for the mining pool implementation
      */
-    AionBlock getBlockRaw(int bn) {
+    private AionBlock getBlockRaw(int bn) {
         // long bn = this.parseBnOrId(_bnOrId);
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
         if (nb == null) {
@@ -437,7 +419,8 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(null)) bnOrId = _bnOrId + "";
+        if (_bnOrId != null)
+            bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
@@ -475,7 +458,8 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(null)) bnOrId = _bnOrId + "";
+        if (_bnOrId != null)
+            bnOrId = _bnOrId + "";
 
         DataWord key;
 
@@ -524,7 +508,8 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(null)) bnOrId = _bnOrId + "";
+        if (_bnOrId != null)
+            bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
@@ -604,7 +589,8 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(null)) bnOrId = _bnOrId + "";
+        if (_bnOrId != null)
+            bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
@@ -707,7 +693,8 @@ public class ApiWeb3Aion extends ApiAion {
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(null)) bnOrId = _bnOrId + "";
+        if (_bnOrId != null)
+            bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
         if (bn == null || bn < 0)
@@ -1149,7 +1136,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         int duration = 300;
-        if (_duration != null && !_duration.equals(null))
+        if (_duration != null)
             duration = new BigInteger(_duration + "").intValueExact();
 
         return new RpcMsg(unlockAccount(_account, _password, duration));
@@ -1531,8 +1518,6 @@ public class ApiWeb3Aion extends ApiAion {
         p2p.put("errorTolerance", configP2p.getErrorTolerance());
         p2p.put("maxActiveNodes", configP2p.getMaxActiveNodes());
         p2p.put("maxTempNodes", configP2p.getMaxTempNodes());
-        p2p.put("showLog", configP2p.getShowLog());
-        p2p.put("showStatus", configP2p.getShowStatus());
         p2p.put("clusterNodeMode", configP2p.inClusterNodeMode());
         p2p.put("syncOnlyMode", configP2p.inSyncOnlyMode());
 
@@ -1713,9 +1698,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         private JSONObject getJson(AionBlock _b) {
-            Map.Entry<JSONObject, JSONArray> response;
-            BigInteger totalDiff =
-                    ac.getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
+            BigInteger totalDiff = ac.getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
             return Blk.AionBlockOnlyToJson(_b, totalDiff);
         }
 
@@ -1848,7 +1831,7 @@ public class ApiWeb3Aion extends ApiAion {
             return metrics;
         }
 
-        public ChainHeadView update() {
+        ChainHeadView update() {
             // get the latest head
             AionBlock blk = getBestBlock();
 
@@ -1874,7 +1857,7 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()) == false
+            while(!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
                     && itr < qSize
                     && blk.getNumber() > 2) {
 
@@ -1925,11 +1908,11 @@ public class ApiWeb3Aion extends ApiAion {
             return this;
         }
 
-        public JSONObject getResponse() {
+        JSONObject getResponse() {
             return response;
         }
 
-        public long getViewBestBlock() {
+        long getViewBestBlock() {
             return blkObjList.get(hashQueue.peekFirst()).getNumber();
         }
     }
@@ -2328,7 +2311,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (_blockNum != null && !_blockNum.equals(null)) {
+        if (_blockNum != null) {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);
@@ -2364,7 +2347,7 @@ public class ApiWeb3Aion extends ApiAion {
         private int qSize;
         private byte[] miner;
 
-        public MinerStatsView(MinerStatsView cv) {
+        MinerStatsView(MinerStatsView cv) {
             hashQueue = new LinkedList<>(cv.hashQueue);
             blocks = new HashMap<>(cv.blocks);
             response = new JSONObject(cv.response, JSONObject.getNames(cv.response));
@@ -2372,7 +2355,7 @@ public class ApiWeb3Aion extends ApiAion {
             miner = cv.miner;
         }
 
-        public MinerStatsView(int _qSize, byte[] _miner) {
+        MinerStatsView(int _qSize, byte[] _miner) {
             hashQueue = new LinkedList<>();
             blocks = new HashMap<>();
             response = new JSONObject();
@@ -2451,7 +2434,7 @@ public class ApiWeb3Aion extends ApiAion {
             return o;
         }
 
-        public MinerStatsView update() {
+        MinerStatsView update() {
             // get the latest head
             AionBlock blk = getBestBlock();
 
@@ -2478,7 +2461,7 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash()) == false
+            while(!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
                     && itr < qSize
                     && blk.getNumber() > 2) {
 
@@ -2523,7 +2506,7 @@ public class ApiWeb3Aion extends ApiAion {
             return this;
         }
 
-        public JSONObject getResponse() {
+        JSONObject getResponse() {
             return response;
         }
     }

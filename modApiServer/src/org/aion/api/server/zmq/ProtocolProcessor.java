@@ -65,6 +65,7 @@ public class ProtocolProcessor implements Runnable {
 
     private static final long zmqHWM = 100_000;
     private static final int SOCKETID_LEN = 5;
+    private static final int SOCKET_RECV_TIMEOUT = 3000;
 
     public ProtocolProcessor(IHdlr _handler, final CfgApiZmq cfg) {
         this.handler = _handler;
@@ -73,6 +74,8 @@ public class ProtocolProcessor implements Runnable {
 
     public void shutdown() throws InterruptedException {
         handler.shutDown();
+        shutDown.set(true);
+        Thread.sleep(SOCKET_RECV_TIMEOUT);
         Proxy.shutdown();
     }
 
@@ -117,9 +120,8 @@ public class ProtocolProcessor implements Runnable {
             }
 
             if (LOG.isInfoEnabled()) {
-                LOG.info("Shutting down Sockets...");
+                LOG.info("Shutting down Zmq sockets...");
             }
-            shutDown.set(true);
             // Shutdown HdlrZmq
             ((HdlrZmq) handler).shutdown();
             // Shutdown ZmqSocket
@@ -133,7 +135,7 @@ public class ProtocolProcessor implements Runnable {
 
             ctx.close();
             if (LOG.isInfoEnabled()) {
-                LOG.info("Shutdown Sockets... Done!");
+                LOG.info("Shutdown Zmq sockets... Done!");
             }
 
         } catch (Exception e) {
@@ -172,7 +174,7 @@ public class ProtocolProcessor implements Runnable {
                         try {
                             byte[] socketId = ByteBuffer.allocate(5).put(ByteUtil.longToBytes(i), 3, 5).array();
                             sock.send(socketId, ZMQ.SNDMORE);
-                            sock.send(rsp, ZMQ.PAIR);
+                            sock.send(rsp, ZMQ.DONTWAIT);
                         } catch (Exception e) {
                             LOG.error("ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
                         }
@@ -187,8 +189,8 @@ public class ProtocolProcessor implements Runnable {
             }
         }
         sock.close();
-        if (LOG.isInfoEnabled()) {
-            LOG.info("close eventRun Sockets...");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("close eventRun sockets...");
         }
     }
 
@@ -228,7 +230,7 @@ public class ProtocolProcessor implements Runnable {
             }
             try {
                 sock.send(tps.getSocketId(), ZMQ.SNDMORE);
-                sock.send(rsp, ZMQ.PAIR);
+                sock.send(rsp, ZMQ.DONTWAIT);
             } catch (Exception e) {
                 if (LOG.isErrorEnabled()) {
                     LOG.error("ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
@@ -236,14 +238,15 @@ public class ProtocolProcessor implements Runnable {
             }
         }
         sock.close();
-        if (LOG.isInfoEnabled()) {
-            LOG.info("close callbackRun Sockets...");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("close callbackRun sockets...");
         }
     }
 
     private void workerRun(ZMQ.Context ctx) {
         Socket sock = ctx.socket(ZMQ.DEALER);
         sock.connect(AION_ZMQ_WK_TH);
+        sock.setReceiveTimeOut(SOCKET_RECV_TIMEOUT);
 
         while (!shutDown.get()) {
             try {
@@ -253,26 +256,26 @@ public class ProtocolProcessor implements Runnable {
                 }
                 if (socketId != null && socketId.length == SOCKETID_LEN) {
                     byte[] req = sock.recv(0);
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("ProtocolProcessor.workerRun reqMsg: [{}]", Hex.toHexString(req));
-                    }
-                    byte[] rsp = ((HdlrZmq) this.handler).process(req, socketId);
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("ProtocolProcessor.workerRun rspMsg: [{}]", Hex.toHexString(rsp));
-                    }
-
-                    try {
-                        sock.send(socketId, ZMQ.SNDMORE);
-                        sock.send(rsp, ZMQ.PAIR);
-                    } catch (Exception e) {
-                        if (LOG.isErrorEnabled()) {
-                            LOG.error("ProtocolProcessor.workerRun sock.send exception: " + e.getMessage());
+                    if (req != null) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("ProtocolProcessor.workerRun reqMsg: [{}]",
+                                Hex.toHexString(req));
                         }
-                    }
-                } else {
-                    if (LOG.isErrorEnabled()) {
-                        LOG.error("ProtocolProcessor.workerRun incorrect socketID [{}]",
-                                socketId == null ? "null" : Hex.toHexString(socketId));
+                        byte[] rsp = ((HdlrZmq) this.handler).process(req, socketId);
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("ProtocolProcessor.workerRun rspMsg: [{}]",
+                                Hex.toHexString(rsp));
+                        }
+
+                        try {
+                            sock.send(socketId, ZMQ.SNDMORE);
+                            sock.send(rsp, ZMQ.DONTWAIT);
+                        } catch (Exception e) {
+                            if (LOG.isErrorEnabled()) {
+                                LOG.error("ProtocolProcessor.workerRun sock.send exception: " + e
+                                    .getMessage());
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -282,14 +285,15 @@ public class ProtocolProcessor implements Runnable {
             }
         }
         sock.close();
-        if (LOG.isInfoEnabled()) {
-            LOG.info("close workerRun Sockets...");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("close workerRun sockets...");
         }
     }
 
     private void hbRun(ZMQ.Context ctx) {
         Socket sock = ctx.socket(ZMQ.DEALER);
         sock.connect(AION_ZMQ_HB_TH);
+        sock.setReceiveTimeOut(SOCKET_RECV_TIMEOUT);
 
         while (!shutDown.get()) {
             try {
@@ -299,26 +303,25 @@ public class ProtocolProcessor implements Runnable {
                 }
                 if (socketId != null && socketId.length == SOCKETID_LEN) {
                     byte[] req = sock.recv(0);
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("ProtocolProcessor.hbRun reqMsg: [{}]", Hex.toHexString(req));
-                    }
-                    byte[] rsp = ApiUtil.toReturnHeader(JAVAAPI_VAR, Message.Retcode.r_heartbeatReturn_VALUE);
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("ProtocolProcessor.hbRun rspMsg: [{}]", Hex.toHexString(rsp));
-                    }
-
-                    try {
-                        sock.send(socketId, ZMQ.SNDMORE);
-                        sock.send(rsp, ZMQ.PAIR);
-                    } catch (Exception e) {
-                        if (LOG.isErrorEnabled()) {
-                            LOG.error("ProtocolProcessor.hbRun sock.send exception: " + e.getMessage());
+                    if (req != null) {
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("ProtocolProcessor.hbRun reqMsg: [{}]", Hex.toHexString(req));
                         }
-                    }
-                } else {
-                    if (LOG.isErrorEnabled()) {
-                        LOG.error("ProtocolProcessor.hbRun incorrect socketID [{}]",
-                            socketId == null ? "null" : Hex.toHexString(socketId));
+                        byte[] rsp = ApiUtil
+                            .toReturnHeader(JAVAAPI_VAR, Message.Retcode.r_heartbeatReturn_VALUE);
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("ProtocolProcessor.hbRun rspMsg: [{}]", Hex.toHexString(rsp));
+                        }
+
+                        try {
+                            sock.send(socketId, ZMQ.SNDMORE);
+                            sock.send(rsp, ZMQ.DONTWAIT);
+                        } catch (Exception e) {
+                            if (LOG.isErrorEnabled()) {
+                                LOG.error("ProtocolProcessor.hbRun sock.send exception: " + e
+                                    .getMessage());
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -328,8 +331,8 @@ public class ProtocolProcessor implements Runnable {
             }
         }
         sock.close();
-        if (LOG.isInfoEnabled()) {
-            LOG.info("close hbRun Sockets...");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("close hbRun sockets...");
         }
     }
 }
