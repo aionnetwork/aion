@@ -31,27 +31,38 @@
 package org.aion.zero.impl.sync;
 
 import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
-import org.aion.mcf.valid.BlockHeaderValidator;
-import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.apache.commons.collections4.map.LRUMap;
-import org.slf4j.Logger;
+import org.aion.base.util.Utils;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
+import org.apache.commons.collections4.map.LRUMap;
+import org.slf4j.Logger;
 
 /**
  * @author chris
@@ -62,35 +73,23 @@ public final class SyncMgr {
     private static final int INTERVAL_SHOW_STATUS = 10000;
 
     private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
-
-    private int blocksQueueMax; // block header wrappers
-
-    private AionBlockchainImpl chain;
-
-    private IP2pMgr p2pMgr;
-
-    private IEventMgr evtMgr;
-
-    private AtomicBoolean start = new AtomicBoolean(true);
-
     private final NetworkStatus networkStatus = new NetworkStatus();
-
     // peer syncing states
     private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
-
     // store the downloaded headers from network
     private final BlockingQueue<HeadersWrapper> downloadedHeaders = new LinkedBlockingQueue<>();
-
     // store the headers whose bodies have been requested from corresponding peer
     private final ConcurrentHashMap<Integer, HeadersWrapper> headersWithBodiesRequested = new ConcurrentHashMap<>();
-
     // store the downloaded blocks that are ready to import
     private final BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>();
-
     // store the hashes of blocks which have been successfully imported
     private final Map<ByteArrayWrapper, Object> importedBlockHashes = Collections
         .synchronizedMap(new LRUMap<>(4096));
-
+    private int blocksQueueMax; // block header wrappers
+    private AionBlockchainImpl chain;
+    private IP2pMgr p2pMgr;
+    private IEventMgr evtMgr;
+    private AtomicBoolean start = new AtomicBoolean(true);
     //private ExecutorService workers = Executors.newFixedThreadPool(5);
     private ExecutorService workers = Executors.newCachedThreadPool(new ThreadFactory() {
 
@@ -108,11 +107,8 @@ public final class SyncMgr {
     private Thread syncSs = null;
 
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-
-    private static final class AionSyncMgrHolder {
-
-        static final SyncMgr INSTANCE = new SyncMgr();
-    }
+    private volatile long timeUpdated = System.currentTimeMillis();
+    private AtomicBoolean queueFull = new AtomicBoolean(false);
 
     public static SyncMgr inst() {
         return AionSyncMgrHolder.INSTANCE;
@@ -137,7 +133,11 @@ public final class SyncMgr {
         // trigger send headers routine immediately
         if (_remoteTotalDiff.compareTo(selfTd) > 0) {
             this.getHeaders(selfTd);
+        }
 
+        long now = System.currentTimeMillis();
+        if ((now - timeUpdated) > 1000) {
+            timeUpdated = now;
             // update network best status
             synchronized (this.networkStatus) {
                 BigInteger networkTd = this.networkStatus.getTargetTotalDiff();
@@ -151,7 +151,9 @@ public final class SyncMgr {
                             this.networkStatus.getTargetTotalDiff().toString(10),
                             _remoteTotalDiff.toString(10),
                             this.networkStatus.getTargetBestBlockNumber(), _remoteBestBlockNumber,
-                            this.networkStatus.getTargetBestBlockHash(), remoteBestBlockHash
+                            this.networkStatus.getTargetBestBlockHash().isEmpty() ? ""
+                                : Utils.getNodeIdShort(this.networkStatus.getTargetBestBlockHash()),
+                            Utils.getNodeIdShort(remoteBestBlockHash)
                         );
                     }
 
@@ -191,7 +193,8 @@ public final class SyncMgr {
         if (_showStatus) {
             syncSs = new Thread(
                 new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus,
-                    statics, _printReport, _reportFolder, AionLoggerFactory.getLogger(LogEnum.P2P.name())), "sync-ss");
+                    statics, _printReport, _reportFolder,
+                    AionLoggerFactory.getLogger(LogEnum.P2P.name())), "sync-ss");
             syncSs.start();
         }
 
@@ -203,8 +206,6 @@ public final class SyncMgr {
         events.add(new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE));
         this.evtMgr.registerEvent(events);
     }
-
-    private AtomicBoolean queueFull = new AtomicBoolean(false);
 
     private void getHeaders(BigInteger _selfTd) {
         if (downloadedBlocks.size() > blocksQueueMax) {
@@ -356,8 +357,12 @@ public final class SyncMgr {
         }
     }
 
-
     public Map<Integer, PeerState> getPeerStates() {
         return new HashMap<>(this.peerStates);
+    }
+
+    private static final class AionSyncMgrHolder {
+
+        static final SyncMgr INSTANCE = new SyncMgr();
     }
 }
