@@ -25,6 +25,7 @@ package org.aion.precompiled.contracts.TRS;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
@@ -33,6 +34,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * The TRSownerContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -67,9 +69,10 @@ public final class TRSownerContract extends AbstractTRS {
      * @throws NullPointerException if track or caller are null.
      */
     public TRSownerContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
+        IAionBlockchain blockchain) {
 
-        super(track, caller);
+        super(track, caller, blockchain);
     }
 
     /**
@@ -388,6 +391,7 @@ public final class TRSownerContract extends AbstractTRS {
         setContractSpecs(contract, isTest, isDirectDeposit, periods, percent, precision);
         setListHead(contract, null);
         setTotalBalance(contract, BigInteger.ZERO);
+        setTimestamp(contract, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
         track.flush();
     }
 

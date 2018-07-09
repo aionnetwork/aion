@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -14,6 +15,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
@@ -23,16 +25,19 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // TODO: grab AION from CfgAion later and preferrably aion prefix too.
     static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final long COST = 21000L;    // temporary.
+    static final long TEST_DURATION = 1;
+    static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
     static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
     final Address caller;
+    protected final IAionBlockchain blockchain;
 
     /*
      * The database keys each have unique prefixes denoting the function of that key. Some keys have
      * mutable bytes following this prefix. In these cases oly the prefixes are provided. Otherwise
      * for unchanging keys we store them as an IDataWord object directly.
      */
-    private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, NULL32, INVALID;
+    private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, TIMESTAMP, NULL32, INVALID;
     private static final byte BALANCE_PREFIX = (byte) 0xB0;
     private static final byte LIST_PREV_PREFIX = (byte) 0x60;
     private static final byte FUNDS_PREFIX = (byte) 0x90;
@@ -57,6 +62,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         singleKey[0] = (byte) 0x70;
         LIST_HEAD_KEY = toIDataWord(singleKey);
 
+        singleKey[0] = (byte) 0x50;
+        TIMESTAMP = toIDataWord(singleKey);
+
         byte[] value = new byte[DOUBLE_WORD_SIZE];
         value[0] = NULL_BIT;
         NULL32 = toIDataWord(value);
@@ -66,10 +74,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     // Constructor.
-    AbstractTRS(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
+    AbstractTRS(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
+        IAionBlockchain blockchain) {
         super(track);
         if (caller == null) { throw new NullPointerException("Construct TRS with null caller."); }
         this.caller = caller;
+        this.blockchain = blockchain;
     }
 
     // The execute method for subclasses to implement.
@@ -634,6 +644,50 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         periods <<= Byte.SIZE;
         periods |= (specs[PERIODS_OFFSET + 1] & 0xFF);
         return periods;
+    }
+
+    /**
+     * Sets the timestamp for the TRS contract given by contract to timestamp.
+     *
+     * If contract already has a timestamp set then this method does nothing. Thus the timestamp can
+     * only be set once.
+     *
+     * Assumption: timestamp is the result of System.currentTimeMillis converted to seconds.
+     *
+     * @param contract The TRS contract to update.
+     * @param timestamp The timestamp value to set.
+     */
+    public void setTimestamp(Address contract, long timestamp) {
+        if (track.getStorageValue(contract, TIMESTAMP) != null) { return; }
+        byte[] value = new byte[DataWord.BYTES];
+
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(timestamp);
+        System.arraycopy(buffer.array(), 0, value, DataWord.BYTES - Long.BYTES, Long.BYTES);
+        track.addStorageRow(contract, TIMESTAMP, toIDataWord(value));
+    }
+
+    /**
+     * Returns a non-negative timestamp value associated with the TRS contract given by contract.
+     * This is the timestamp that was placed on this contract when it was created.
+     *
+     * Returns a negative timestamp if contract has no timestamp set. The TRS logic guarantees this
+     * happens only when contract is not a valid TRS contract address.
+     *
+     * @param contract The TRS contract to query.
+     * @return The timestamp for the TRS contract contract.
+     */
+    public long getTimestamp(Address contract) {
+        IDataWord value = track.getStorageValue(contract, TIMESTAMP);
+        if (value == null) { return -1; }
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(Arrays.copyOfRange(value.getData(), DataWord.BYTES - Long.BYTES, DataWord.BYTES));
+        buffer.flip();
+        return buffer.getLong();
+    }
+
+    public void t() {
+
     }
 
     /**

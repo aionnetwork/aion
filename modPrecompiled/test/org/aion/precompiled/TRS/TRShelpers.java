@@ -3,6 +3,8 @@ package org.aion.precompiled.TRS;
 import static junit.framework.TestCase.fail;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -16,6 +18,8 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
+import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.junit.Assert;
 
 /**
@@ -25,12 +29,14 @@ class TRShelpers {
     Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     long COST = 21000L;
     IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
+    IAionBlockchain blockchain = StandaloneBlockchain.inst();
     List<Address> tempAddrs;
-    int ownerMaxOp = 4;
+    private static final byte[] out = new byte[1];
+
+    int ownerMaxOp = 4;     //TODO remove this stuff..
     int ownerCurrMaxOp = 2; // remove once this hits ownerMaxOp
     int useMaxOp = 6;
     int useCurrMaxOp = 0;   // remove once this hits useMaxOp
-    private static final byte[] out = new byte[1];
 
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
@@ -45,23 +51,23 @@ class TRShelpers {
 
     // Returns a new TRSownerContract that calls the contract using caller.
     TRSownerContract newTRSownerContract(Address caller) {
-        return new TRSownerContract(repo, caller);
+        return new TRSownerContract(repo, caller, blockchain);
     }
 
     // Returns a new TRSuseContract that calls the contract using caller.
     TRSuseContract newTRSuseContract(Address caller) {
-        return new TRSuseContract(repo, caller);
+        return new TRSuseContract(repo, caller, blockchain);
     }
 
     // Returns a new TRSqueryContract that calls the contract using caller.
-    TRSqueryContract newTRSqueryContract(Address caller) { return new TRSqueryContract(repo, caller); }
+    TRSqueryContract newTRSqueryContract(Address caller) { return new TRSqueryContract(repo, caller, blockchain); }
 
     // Returns the address of a newly created TRS contract, assumes all params are valid.
     Address createTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
-        TRSownerContract trs = new TRSownerContract(repo, owner);
+        TRSownerContract trs = new TRSownerContract(repo, owner, blockchain);
         Address contract = new Address(trs.execute(input, COST).getOutput());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
@@ -180,6 +186,15 @@ class TRShelpers {
         input[0] = 0x2;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the periodsAt operation.
+    byte[] getPeriodAtInput(Address contract, long blockNum) {
+        ByteBuffer buffer = ByteBuffer.allocate(41);
+        buffer.put((byte) 0x4);
+        buffer.put(contract.toBytes());
+        buffer.putLong(blockNum);
+        return Arrays.copyOf(buffer.array(), 41);
     }
 
     // Returns a byte array signalling false for a TRS contract query operation result.

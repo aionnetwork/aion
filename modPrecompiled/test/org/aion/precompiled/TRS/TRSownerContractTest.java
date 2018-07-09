@@ -79,6 +79,11 @@ public class TRSownerContractTest extends TRShelpers {
         return AbstractTRS.isContractLive(specsData.getData());
     }
 
+    // Returns the timestamp for this contract.
+    private long getContractTimestamp(AbstractTRS trs, Address contract) {
+        return trs.getTimestamp(contract);
+    }
+
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
 
     @Test(expected=NullPointerException.class)
@@ -659,6 +664,24 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
+    public void testCreateContractHasTimestamp() {
+        Address caller = getNewExistentAccount(BigInteger.ONE);
+        byte[] input = getCreateInput(false, true, 1, BigInteger.ZERO, 0);
+        TRSownerContract trs = newTRSownerContract(caller);
+
+        long before = System.currentTimeMillis();
+        ContractExecutionResult res = trs.execute(input, COST);
+        long after = System.currentTimeMillis();
+
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        Address contract = Address.wrap(res.getOutput());
+        long timestamp = getContractTimestamp(trs, contract);
+
+        assertTrue(timestamp >= before);
+        assertTrue(timestamp <= after);
+    }
+
+    @Test
     public void testAbleToNullifyWhileUnlocked() {
         //TODO
     }
@@ -673,7 +696,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
         byte[] input = new byte[1];
         input[0] = (byte) 0x1;
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -681,7 +704,7 @@ public class TRSownerContractTest extends TRShelpers {
         // Test on address size 31.
         input = new byte[32];
         input[0] = (byte) 0x1;
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -695,7 +718,7 @@ public class TRSownerContractTest extends TRShelpers {
         byte[] input = new byte[34];
         input[0] = (byte) 0x1;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -708,7 +731,7 @@ public class TRSownerContractTest extends TRShelpers {
         Address contract = createTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
         byte[] input = getLockInput(acct);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -716,7 +739,7 @@ public class TRSownerContractTest extends TRShelpers {
         // Test attempt to lock what looks like a TRS address (proper prefix).
         input = getLockInput(contract);
         input[input.length - 1] = (byte) ~input[input.length - 1];
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -729,7 +752,7 @@ public class TRSownerContractTest extends TRShelpers {
         Address contract = createTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
         byte[] input = getLockInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, AION);
+        TRSownerContract trs = newTRSownerContract(AION);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -738,7 +761,7 @@ public class TRSownerContractTest extends TRShelpers {
         contract = createTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
         input = getLockInput(contract);
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -756,7 +779,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLive(word));
 
         byte[] input = getLockInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -779,7 +802,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLive(word));
 
         input = getLockInput(contract);
-        trs = new TRSownerContract(repo, AION);
+        trs = newTRSownerContract(AION);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -806,7 +829,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLive(word));
 
         byte[] input = getLockInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -824,7 +847,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLive(word));
 
         input = getLockInput(contract);
-        trs = new TRSownerContract(repo, AION);
+        trs = newTRSownerContract(AION);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -842,7 +865,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         byte[] input = getStartInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -852,7 +875,7 @@ public class TRSownerContractTest extends TRShelpers {
 
         // Attempt to lock live contract.
         input = getLockInput(contract);
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -862,7 +885,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         input = getStartInput(contract);
-        trs = new TRSownerContract(repo, AION);
+        trs = newTRSownerContract(AION);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -872,15 +895,10 @@ public class TRSownerContractTest extends TRShelpers {
 
         // Attempt to lock live contract.
         input = getLockInput(contract);
-        trs = new TRSownerContract(repo, AION);
+        trs = newTRSownerContract(AION);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
-    }
-
-    @Test
-    public void testCannotRefundOnceLocked() {
-        //TODO: in use contract
     }
 
     @Test
@@ -908,7 +926,7 @@ public class TRSownerContractTest extends TRShelpers {
             0);
         byte[] input = new byte[1];
         input[0] = (byte) 0x1;
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -916,7 +934,7 @@ public class TRSownerContractTest extends TRShelpers {
         // Test on address size 31.
         input = new byte[32];
         input[0] = (byte) 0x1;
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -930,7 +948,7 @@ public class TRSownerContractTest extends TRShelpers {
         byte[] input = new byte[34];
         input[0] = (byte) 0x1;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -946,7 +964,7 @@ public class TRSownerContractTest extends TRShelpers {
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -956,7 +974,7 @@ public class TRSownerContractTest extends TRShelpers {
 
         // Test what looks like a proper TRS address (has TRS prefix).
         input[input.length - 1] = (byte) ~input[input.length - 1];  // flip a bit
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -969,7 +987,7 @@ public class TRSownerContractTest extends TRShelpers {
         Address contract = createAndLockTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
         byte[] input = getLockInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, AION);
+        TRSownerContract trs = newTRSownerContract(AION);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -978,7 +996,7 @@ public class TRSownerContractTest extends TRShelpers {
         contract = createAndLockTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
         input = getLockInput(contract);
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -992,7 +1010,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         byte[] input = getStartInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -1011,7 +1029,7 @@ public class TRSownerContractTest extends TRShelpers {
             BigInteger.ZERO, 0);
 
         input = getStartInput(contract);
-        trs = new TRSownerContract(repo, AION);
+        trs = newTRSownerContract(AION);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -1037,7 +1055,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLocked(word));
 
         byte[] input = getStartInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -1050,7 +1068,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLocked(word));
 
         input = getStartInput(contract);
-        trs = new TRSownerContract(repo, acct);
+        trs = newTRSownerContract(acct);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -1068,7 +1086,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLive(word));
 
         byte[] input = getStartInput(contract);
-        TRSownerContract trs = new TRSownerContract(repo, acct);
+        TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -1086,7 +1104,7 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLive(word));
 
         input = getStartInput(contract);
-        trs = new TRSownerContract(repo, AION);
+        trs = newTRSownerContract(AION);
         res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
@@ -1094,11 +1112,6 @@ public class TRSownerContractTest extends TRShelpers {
         word = repo.getStorageValue(contract, getSpecKey());
         assertTrue(getIsContractLocked(word));
         assertTrue(getIsContractLive(word));  // true now.
-    }
-
-    @Test
-    public void testCannotRefundWhileLive() {
-        //TODO: in use contract
     }
 
     @Test

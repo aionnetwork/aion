@@ -31,6 +31,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * The TRSuseContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -67,9 +68,10 @@ public final class TRSuseContract extends AbstractTRS {
      * @param caller The calling address.
      */
     public TRSuseContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller,
+        IAionBlockchain blockchain) {
 
-        super(repo, caller);
+        super(repo, caller, blockchain);
     }
 
     /**
