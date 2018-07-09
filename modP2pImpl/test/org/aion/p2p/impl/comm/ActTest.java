@@ -23,17 +23,14 @@
  *
  */
 
-package org.aion.p2p.impl;
+package org.aion.p2p.impl.comm;
 
 import static org.junit.Assert.assertEquals;
 
-import org.aion.p2p.impl.comm.Act;
-import org.junit.Test;
 import java.util.concurrent.ThreadLocalRandom;
+import org.junit.Test;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class ActTest {
 
     @Test
@@ -54,12 +51,11 @@ public class ActTest {
         assertEquals(Act.UNKNOWN, Act.filter(Act.PING));
         assertEquals(Act.UNKNOWN, Act.filter(Act.PONG));
 
-        byte a1 = (byte)ThreadLocalRandom.current().nextInt(7, Byte.MAX_VALUE + 1);
+        byte a1 = (byte) ThreadLocalRandom.current().nextInt(7, Byte.MAX_VALUE + 1);
 
         System.out.println(a1);
         System.out.println(Act.UNKNOWN);
 
         assertEquals(Act.UNKNOWN, Act.filter(a1));
-
     }
 }
