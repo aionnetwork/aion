@@ -121,12 +121,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         IDataWord result = DataWord.ZERO;
 
         byte[] data = storageTrie.get(key.getData());
-        data = (data.length > 0) ? RLP.decode2(data).get(0).getRLPData() : data;
-
-        if (data.length == DoubleDataWord.BYTES) {
-            result = new DoubleDataWord(data);
+        if (data.length >= DoubleDataWord.BYTES) {
+            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData());
         } else if (data.length > 0) {
-            result = new DataWord(data);
+            result = new DataWord(RLP.decode2(data).get(0).getRLPData());
         }
 
         return result;

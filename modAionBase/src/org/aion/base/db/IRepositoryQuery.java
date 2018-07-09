@@ -204,5 +204,4 @@ public interface IRepositoryQuery<AS, DW> {
      * @return the list of transactions encoded bytes.
      */
     List<byte[]> getCacheTx();
-
 }

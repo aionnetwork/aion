@@ -126,5 +126,4 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
         ret += "  Storage: " + getStorageHash();
         return ret;
     }
-
 }
