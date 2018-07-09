@@ -28,10 +28,6 @@ package org.aion.base.vm;
  *
  */
 public interface IDataWord {
-    enum WordType { DATA_WORD, DOUBLE_DATA_WORD }
-
-    // Returns a convenient enum for determining the subclass type.
-    WordType getType();
 
     // Returns the byte array data the IDataWord wraps.
     byte[] getData();

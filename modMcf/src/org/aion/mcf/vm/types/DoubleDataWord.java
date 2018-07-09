@@ -14,7 +14,6 @@ import org.aion.base.vm.IDataWord;
  * often have need of 32-byte storage keys.
  */
 public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
-    private static final WordType wType = WordType.DOUBLE_DATA_WORD;
     public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
 
     public static final DoubleDataWord ZERO = new DoubleDataWord(0);
@@ -85,9 +84,6 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     public DoubleDataWord(ByteArrayWrapper wrapper) {
         this(wrapper.getData());
     }
-
-    @Override
-    public WordType getType() { return wType; }
 
     @Override
     public byte[] getData() {

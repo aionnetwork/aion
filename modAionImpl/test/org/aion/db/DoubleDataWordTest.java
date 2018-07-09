@@ -1,4 +1,4 @@
-package org.aion;
+package org.aion.db;
 
 import static org.junit.Assert.*;
 

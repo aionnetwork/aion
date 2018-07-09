@@ -24,7 +24,6 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
-import org.aion.base.vm.IDataWord.WordType;
 import org.aion.mcf.vm.types.DataWord;
 
 import java.util.*;
@@ -58,8 +57,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     @Override
     public IDataWord get(IDataWord key) {
-        WordType kType = key.getType();
-        IDataWord zero = (kType.equals(WordType.DATA_WORD)) ? DataWord.ZERO : DoubleDataWord.ZERO;
 
         IDataWord value = storage.get(key);
         if (value != null) {
@@ -69,7 +66,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
                 return null;
             }
             value = origContract.get(key);
-            storage.put(key.copy(), value == null ? zero : value.copy());
+            storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
         }
 
         if (value == null || value.isZero()) {
@@ -105,7 +102,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
-                if (value != null) {
+                if ((value != null) && (!value.isZero())) {
                     storage.put(key, value);
                 }
             }

@@ -297,7 +297,11 @@ public class AionRepositoryImpl
     @Override
     public IDataWord getStorageValue(Address address, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(address);
-        return (details == null) ? null : details.get(key);
+        IDataWord value = (details == null) ? null : details.get(key);
+        if (value == null) {
+            return null;
+        }
+        return (value.isZero()) ? null : value;
     }
 
     @Override

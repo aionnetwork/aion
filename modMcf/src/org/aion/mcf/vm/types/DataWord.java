@@ -37,7 +37,6 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
 
     public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 
-    private static final WordType wType = WordType.DATA_WORD;
     public static final DataWord ZERO = new DataWord(0);
     public static final DataWord ONE = new DataWord(1);
     public static final int BYTES = 16;
@@ -168,8 +167,5 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     public String toString() {
         return Hex.toHexString(data);
     }
-
-    @Override
-    public WordType getType() { return wType; }
 
 }

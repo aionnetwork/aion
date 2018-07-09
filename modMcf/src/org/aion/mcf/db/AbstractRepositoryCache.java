@@ -328,7 +328,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
 
     @Override
     public IDataWord getStorageValue(Address address, IDataWord key) {
-        return getContractDetails(address).get(key);
+        IDataWord value = getContractDetails(address).get(key);
+        if (value == null) { return null; }
+        return (value.isZero()) ? null : value;
     }
 
     @Override
