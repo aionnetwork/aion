@@ -49,7 +49,8 @@ public class BridgeStorageConnector {
         NEW_OWNER(new DataWord(0x1)),
         MEMBER_COUNT(new DataWord(0x2)),
         MIN_THRESH(new DataWord(0x3)),
-        RING_LOCKED(new DataWord(0x4));
+        RING_LOCKED(new DataWord(0x4)),
+        INITIALIZED(new DataWord(0x42));
 
         private DataWord offset;
 
@@ -77,6 +78,18 @@ public class BridgeStorageConnector {
             @Nonnull final Address contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;
+    }
+
+    public void setInitialized(final boolean initialized) {
+        DataWord init = initialized ? new DataWord(1) : new DataWord(0);
+        this.setWORD(S_OFFSET.INITIALIZED.offset, init);
+    }
+
+    public boolean getInitialized() {
+        byte[] word = this.getWORD(S_OFFSET.INITIALIZED.offset);
+        if (word == null)
+            return false;
+        return (word[15] & 0x1) == 1;
     }
 
     public void setOwner(@Nonnull final byte[] address) {

@@ -59,6 +59,11 @@ public class BridgeStorageConnectorTest {
     }
 
     @Test
+    public void testDefaultInitialized() {
+        assertThat(this.connector.getInitialized()).isFalse();
+    }
+
+    @Test
     public void testNoKeyOverlap() {
         byte[] key = HashUtil.h256("key".getBytes());
         this.connector.setActiveMember(key, true);
@@ -89,5 +94,14 @@ public class BridgeStorageConnectorTest {
         this.connector.setNewOwner(newOwnerAddress);
         byte[] retrieved = this.connector.getNewOwner();
         assertThat(retrieved).isEqualTo(newOwnerAddress);
+    }
+
+    @Test
+    public void testInitialized() {
+        this.connector.setInitialized(false);
+        assertThat(this.connector.getInitialized()).isFalse();
+
+        this.connector.setInitialized(true);
+        assertThat(this.connector.getInitialized()).isTrue();
     }
 }
