@@ -15,5 +15,6 @@ public class BridgeBundle {
                         @Nonnull final byte[] data) {
         this.transferValue = transferValue;
         this.recipient = recipient;
+        this.data = data;
     }
 }

@@ -2,9 +2,9 @@ package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
-import org.aion.crypto.*;
-import org.aion.crypto.jce.ECSignatureFactory;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.crypto.HashUtil;
+import org.aion.crypto.ISignature;
+import org.aion.crypto.SignatureFac;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -198,8 +198,9 @@ public class BridgeController {
         int signed = 0;
         for (byte[] sigBytes : signatures) {
             ISignature sig = SignatureFac.fromBytes(sigBytes);
-            if (SignatureFac.verify(hash, sig))
+            if (SignatureFac.verify(hash, sig) && this.connector.getActiveMember(sig.getAddress())) {
                 signed++;
+            }
         }
 
         int minThresh = this.connector.getMinThresh();
@@ -208,7 +209,13 @@ public class BridgeController {
 
         // otherwise, we're clear to proceed with transfers
         for (BridgeBundle b : bundles) {
-            this.connector.transfer(b.recipient, b.transferValue);
+            if (!this.connector.transfer(b.recipient, b.transferValue))
+                /*
+                 * Rationale behind throwing on transfer, one invalid transfer indicates
+                 * (to me atleast) a possible serialization or malicious error. The best
+                 * we could do is consider whoever sent this batch malicious, and reject.
+                 */
+                return ErrCode.INVALID_TRANSFER;
         }
         return ErrCode.NO_ERROR;
     }

@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 
-public class BridgeControllerTest {
+public class BridgeControllerOwnerTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;

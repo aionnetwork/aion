@@ -148,12 +148,12 @@ public class BridgeStorageConnector {
         if (lockedWord == null)
             return false;
         // this may be redundant
-        return (lockedWord[0] & 0x01) == 1;
+        return (lockedWord[15] & 0x01) == 1;
     }
 
     // TODO: this can be optimized
     public void setActiveMember(@Nonnull final byte[] key,
-                                @Nonnull final boolean value) {
+                                final boolean value) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(
                 HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
@@ -162,7 +162,7 @@ public class BridgeStorageConnector {
         this.setWORD(hWord, b);
     }
 
-    public boolean getActiveMember(byte[] key) {
+    public boolean getActiveMember(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(
                 HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
@@ -176,7 +176,7 @@ public class BridgeStorageConnector {
     }
 
     public void setBundle(@Nonnull final byte[] key,
-                          @Nonnull final boolean value) {
+                          final boolean value) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
