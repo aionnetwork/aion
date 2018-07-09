@@ -22,12 +22,11 @@
 		</nrg-recommendation>
 	</api>
 	<net>
-		<id>128</id>
+		<id>32</id>
 		<nodes>
-			<node>p2p://a25d1000-8c7e-496c-9c4e-c89318280274@40.117.138.214:30303</node>
-			<node>p2p://a25d2000-729a-4584-86f1-e19ab97cf9ce@104.211.28.191:30303</node>
-			<node>p2p://a25d3000-216b-47d4-ac44-5d8181b56e7e@23.101.139.58:30303</node>
-			<node>p2p://a25d4000-6a29-4ca6-8b06-b2781ba7f9bf@23.101.134.120:30303</node>
+			<node>p2p://a30d1000-8c7e-496c-9c4e-c89318280274@168.6.170.146:30303</node>
+			<node>p2p://a30d2000-729a-4584-86f1-e19ab97cf9ce@23.96.22.19:30303</node>
+			<node>p2p://a30d3000-216b-47d4-ac44-5d8181b56e7e@137.117.56.84:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
@@ -43,9 +42,9 @@
 		<show-status>false</show-status>
 	</sync>
 	<consensus>
-		<mining>false</mining>
-		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
-		<cpu-mine-threads>2</cpu-mine-threads>
+		<mining>true</mining>
+		<miner-address>a08fc457b39b03c30dc71bdb89a4d0409dd4fa42f6539a5c3ee4054af9b71f23</miner-address>
+		<cpu-mine-threads>1</cpu-mine-threads>
 		<extra-data>AION</extra-data>
 		<nrg-strategy>
 			<!-- <monotonic-increase></monotonic-increase> -->
@@ -68,7 +67,7 @@
 		<!--Caution: changing implementation requires re-syncing from genesis!-->
 		<vendor>leveldb</vendor>
 		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
-		<enable_db_compression>false</enable_db_compression>
+		<enable_db_compression>true</enable_db_compression>
 	</db>
 	<log>
 		<!--Enable/Disable logback service; if disabled, output will not be logged -->
