@@ -214,7 +214,7 @@ public class BridgeStorageConnector {
         assert dword.length > 16;
 
         byte[] lowerKeyBytes = ByteUtil.chop(
-                HashUtil.blake256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
+                HashUtil.h256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
         DataWord lowerKey = new DataWord(lowerKeyBytes);
 
         byte[] upper = new byte[dword.length - 16];
@@ -236,7 +236,7 @@ public class BridgeStorageConnector {
             return null;
 
         byte[] lowerKeyBytes = ByteUtil.chop(
-                HashUtil.blake256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
+                HashUtil.h256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
         DataWord lowerKey = new DataWord(lowerKeyBytes);
         word = this.track.getStorageValue(contractAddress, lowerKey);
 
@@ -253,5 +253,31 @@ public class BridgeStorageConnector {
         if (Arrays.equals(dword, ByteUtil.EMPTY_WORD))
             return null;
         return dword;
+    }
+
+    /**
+     * Performs a transfer of value from one account to the other, <b>without</b> executing
+     * contract logic. Therefore contracts will <i>not</i> be able to respond to transfers
+     * coming in from the bridge. Unsure of whether this is ideal.
+     *
+     * @implNote assumes that the {@code fromValue} derived from the track will never
+     * be null.
+     *
+     * @param to recipient address
+     * @param value to be sent (in base units)
+     * @return {@code true} if value was performed, {@code false} otherwise
+     */
+    public boolean transfer(@Nonnull final byte[] to,
+                            @Nonnull final BigInteger value) {
+        assert to.length == 32;
+        Address toAddress = new Address(to);
+
+        BigInteger fromValue = this.track.getBalance(this.contractAddress);
+        if (fromValue.compareTo(value) < 0)
+            return false;
+
+        this.track.addBalance(this.contractAddress, value.negate());
+        this.track.addBalance(toAddress, value);
+        return true;
     }
 }
