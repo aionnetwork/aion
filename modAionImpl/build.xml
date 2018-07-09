@@ -163,7 +163,6 @@
                 <pathelement location="${dir.lib}/guava-19.0.jar"/>
                 <pathelement location="${dir.lib}/libnsc.jar"/>
                 <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
-                <pathelement location="${dir.lib}/leveldbjni-all-1.18.3.jar"/>
             </modulepath>
         </javac>
 
