@@ -166,6 +166,22 @@ class TRShelpers {
         return input;
     }
 
+    // Returns a properly formatted byte array to be used as input for the isLocked operation.
+    byte[] getIsLockedInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = 0x1;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the isDirectDepositEnabled op.
+    byte[] getIsDirDepoEnabledInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = 0x2;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
     // Returns a byte array signalling false for a TRS contract query operation result.
     byte[] getFalseContractOutput() {
         out[0] = 0x0;

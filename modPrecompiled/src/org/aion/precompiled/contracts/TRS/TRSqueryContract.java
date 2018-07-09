@@ -251,4 +251,8 @@ public final class TRSqueryContract extends AbstractTRS {
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
     }
 
+    private void t() {
+
+    }
+
 }

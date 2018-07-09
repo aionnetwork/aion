@@ -172,6 +172,146 @@ public class TRSqueryContractTest extends TRShelpers {
 
     // <------------------------------------IS LOCKED TRS TESTS------------------------------------>
 
+    @Test
+    public void testIsLockedInputTooShort() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = new byte[32];
+        input[0] = 0x1;
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testIsLockedInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = new byte[34];
+        input[0] = 0x1;
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testIsLockedNonExistentContract() {
+        // Test on a contract address that is just a regular account address.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = getIsLockedInput(acct);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getFalseContractOutput(), res.getOutput());
+
+        // Test on a contract address that looks real, uses TRS prefix.
+        byte[] phony = acct.toBytes();
+        phony[0] = (byte) 0xC0;
+        input = getIsLockedInput(new Address(phony));
+        res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getFalseContractOutput(), res.getOutput());
+    }
+
+    @Test
+    public void testIsLockedOnUnlockedContract() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getIsLockedInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getFalseContractOutput(), res.getOutput());
+    }
+
+    @Test
+    public void testIsLockedOnLockedContract() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createAndLockTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getIsLockedInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getTrueContractOutput(), res.getOutput());
+    }
+
+    @Test
+    public void testIsLockedOnLiveContract() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true,
+            1, BigInteger.ZERO, 0);
+        byte[] input = getIsLockedInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getTrueContractOutput(), res.getOutput());
+    }
+
     // <------------------------------IS DIR DEPO ENABLED TRS TESTS-------------------------------->
+
+    @Test
+    public void testIsDepoEnabledInputTooShort() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = new byte[32];
+        input[0] = 0x2;
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testIsDepoEnabledInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = new byte[34];
+        input[0] = 0x2;
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testIsDepoEnabledNonExistentContract() {
+        // Test on a contract address that is just a regular account address.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = getIsDirDepoEnabledInput(acct);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getFalseContractOutput(), res.getOutput());
+
+        // Test on a contract address that looks real, uses TRS prefix.
+        byte[] phony = acct.toBytes();
+        phony[0] = (byte) 0xC0;
+        input = getIsDirDepoEnabledInput(new Address(phony));
+        res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getFalseContractOutput(), res.getOutput());
+    }
+
+    @Test
+    public void testIsDepoEnabledWhenDisabled() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getIsDirDepoEnabledInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getFalseContractOutput(), res.getOutput());
+    }
+
+    @Test
+    public void testIsDepoEnabledWhenEnabled() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getIsDirDepoEnabledInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertArrayEquals(getTrueContractOutput(), res.getOutput());
+    }
 
 }
