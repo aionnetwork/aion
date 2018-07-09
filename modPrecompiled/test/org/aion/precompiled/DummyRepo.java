@@ -46,9 +46,9 @@ public class DummyRepo implements IRepositoryCache<AccountState, DataWord, IBloc
     // do ... and don't want to break tests that rely on this value.
     public DataWord storageErrorReturn = DataWord.ZERO;
 
-    DummyRepo() {}
+    public DummyRepo() {}
 
-    DummyRepo(DummyRepo parent) {
+    public DummyRepo(DummyRepo parent) {
         // Note: only references are copied
         accounts.putAll(parent.accounts);
         contracts.putAll(parent.contracts);

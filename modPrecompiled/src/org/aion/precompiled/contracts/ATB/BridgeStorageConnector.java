@@ -10,6 +10,8 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 
 import javax.annotation.Nonnull;
+import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * Storage layout mapping as the following:
@@ -22,8 +24,22 @@ import javax.annotation.Nonnull;
  * minThresh        WORD    0x3     the minimum amount of votes required
  * ringLocked       WORD    0x4     if the ring is locked or not
  *
+ * There are two mapping fields:
+ * memberMap        map[WORD] => boolean    {@code TRUE} if member is active
+ * bundleMap        map[WORD] => boolean    {@code TRUE} if bundle has been processed
+ *
+ * Maps are prepended with respective offsets, their keys are derived
+ * as the following:
+ *
+ * {@code h256(concat(MAP_OFFSET, key))}
+ *
  * Handles all loading/unloading, disguises itself like a simple POJO
  * from the outside.
+ *
+ * Impl Detail Notes (Contracts):
+ *
+ * [C1] The storage does not distinguish between empty byte array (16 bytes 0) and nulls.
+ * Any time it detects that the response is a 16-byte 0, a null is returned instead.
  *
  */
 public class BridgeStorageConnector {
@@ -37,8 +53,19 @@ public class BridgeStorageConnector {
 
         private DataWord offset;
 
-        private S_OFFSET(DataWord offset) {
+        S_OFFSET(DataWord offset) {
             this.offset = offset;
+        }
+    }
+
+    private enum M_ID {
+        BUNDLE_MAP((byte) 0x1),
+        ACTIVE_MAP((byte) 0x2);
+
+        private byte[] id;
+
+        M_ID(byte id) {
+            this.id = new byte[] {id};
         }
     }
 
@@ -52,13 +79,18 @@ public class BridgeStorageConnector {
         this.contractAddress = contractAddress;
     }
 
-    public void setOwner(byte[] address) {
+    public void setOwner(@Nonnull final byte[] address) {
+        assert address.length == 32 : "address length must be 32 bytes";
         this.setDWORD(S_OFFSET.OWNER.offset, address);
     }
 
     public byte[] getOwner() {
-        byte[] ret = this.getWORD(S_OFFSET.OWNER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.OWNER.offset);
+    }
+
+    public void setNewOwner(@Nonnull final byte[] address) {
+        assert address.length == 32 : "address length must be 32 bytes";
+        this.setDWORD(S_OFFSET.NEW_OWNER.offset, address);
     }
 
     public byte[] getNewOwner() {
@@ -66,11 +98,95 @@ public class BridgeStorageConnector {
         return BridgeUtilities.getAddress(ret);
     }
 
+    public void setMemberCount(int amount) {
+        assert amount >= 0 : "amount must be positive";
+        this.setWORD(S_OFFSET.MEMBER_COUNT.offset, new DataWord(amount));
+    }
+
+    public int getMemberCount() {
+        byte[] countWord = this.getWORD(S_OFFSET.MEMBER_COUNT.offset);
+        if (countWord == null)
+            return 0;
+        return new BigInteger(1, countWord).intValueExact();
+    }
+
+    public void setMinThresh(int amount) {
+        assert amount >= 0 : "amount must be positive";
+        this.setWORD(S_OFFSET.MIN_THRESH.offset, new DataWord(amount));
+    }
+
+    public int getMinThresh() {
+        // C1 covere by getWORD
+        byte[] threshWord = this.getWORD(S_OFFSET.MEMBER_COUNT.offset);
+        if (threshWord == null)
+            return 0;
+        return new BigInteger(1, threshWord).intValueExact();
+    }
+
+    // TODO: this can be optimized
+    public void setRingLocked(boolean value) {
+        DataWord lockedDw = value ? new DataWord(1) : new DataWord(0);
+        this.setWORD(S_OFFSET.RING_LOCKED.offset, lockedDw);
+    }
+
+    public boolean getRingLocked() {
+        // C1 covered by getWORD
+        byte[] lockedWord = this.getWORD(S_OFFSET.RING_LOCKED.offset);
+        if (lockedWord == null)
+            return false;
+        // this may be redundant
+        return (lockedWord[0] & 0x01) == 1;
+    }
+
+    // TODO: this can be optimized
+    public void setActiveMember(@Nonnull final byte[] key,
+                                @Nonnull final boolean value) {
+        assert key.length == 32;
+        byte[] h = ByteUtil.chop(
+                HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        DataWord hWord = new DataWord(h);
+        DataWord b = value ? new DataWord(1) : new DataWord(0);
+        this.setWORD(hWord, b);
+    }
+
+    public boolean getActiveMember(byte[] key) {
+        assert key.length == 32;
+        byte[] h = ByteUtil.chop(
+                HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        DataWord hWord = new DataWord(h);
+
+        // C1 covered by getWORD
+        byte[] activeMemberWord = this.getWORD(hWord);
+        if (activeMemberWord == null)
+            return false;
+        return (activeMemberWord[15] & 0x01) == 1;
+    }
+
+    public void setBundle(@Nonnull final byte[] key,
+                          @Nonnull final boolean value) {
+        assert key.length == 32;
+        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
+        DataWord hWord = new DataWord(h);
+        DataWord b = value ? new DataWord(1) : new DataWord(0);
+        this.setWORD(hWord, b);
+    }
+
+    public boolean getBundle(@Nonnull final byte[] key) {
+        assert key.length == 32;
+        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
+        DataWord hWord = new DataWord(h);
+        byte[] bundleWord = this.getWORD(hWord);
+        if (bundleWord == null)
+            return false;
+        return (bundleWord[15] & 0x01) == 1;
+    }
+
     // DWORD helpers
 
     private byte[] getWORD(@Nonnull final DataWord key) {
         IDataWord word = this.track.getStorageValue(contractAddress, key);
-        if (word == null)
+        // C1
+        if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD))
             return null;
         return word.getData();
     }
@@ -83,8 +199,18 @@ public class BridgeStorageConnector {
     private void setDWORD(@Nonnull final DataWord key,
                           @Nonnull final byte[] dword) {
         assert dword.length > 16;
+
+        byte[] lowerKeyBytes = ByteUtil.chop(
+                HashUtil.blake256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
+        DataWord lowerKey = new DataWord(lowerKeyBytes);
+
         byte[] upper = new byte[dword.length - 16];
         byte[] lower = new byte[16];
+        System.arraycopy(dword, 0, upper, 0, dword.length - 16);
+        System.arraycopy(dword, dword.length - 16, lower, 0, 16);
+
+        this.track.addStorageRow(contractAddress, key, new DataWord(upper));
+        this.track.addStorageRow(contractAddress, lowerKey, new DataWord(lower));
     }
 
     private byte[] getDWORD(@Nonnull final DataWord key) {
@@ -96,8 +222,9 @@ public class BridgeStorageConnector {
         if (upper == null)
             return null;
 
-        DataWord lowerKey = new DataWord(
+        byte[] lowerKeyBytes = ByteUtil.chop(
                 HashUtil.blake256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
+        DataWord lowerKey = new DataWord(lowerKeyBytes);
         word = this.track.getStorageValue(contractAddress, lowerKey);
 
         if (word == null)
@@ -106,6 +233,12 @@ public class BridgeStorageConnector {
         byte[] lower = word.getData();
         if (lower == null)
             return null;
-        return ByteUtil.merge(upper, lower);
+
+        byte[] dword = ByteUtil.merge(upper, lower);
+
+        // C1
+        if (Arrays.equals(dword, ByteUtil.EMPTY_WORD))
+            return null;
+        return dword;
     }
 }
