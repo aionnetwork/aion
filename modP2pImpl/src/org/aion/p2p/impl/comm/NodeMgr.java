@@ -164,8 +164,8 @@ public class NodeMgr implements INodeMgr {
         try {
             putLock.lockInterruptibly();
 
-            if (tempNodes.size() < maxTempNodes && !_n.getIfFromBootList() && !tempNodes
-                .containsKey(_n.getPeerId()) && notActiveNode(_n.getIdHash())) {
+            if (tempNodes.size() < maxTempNodes && !tempNodes
+                .containsKey(_n.getPeerId()) && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
             }
         } catch (InterruptedException e) {
