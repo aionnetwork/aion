@@ -31,10 +31,10 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
-import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * The TRSownerContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -70,7 +70,7 @@ public final class TRSownerContract extends AbstractTRS {
      */
     public TRSownerContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
-        IAionBlockchain blockchain) {
+        IBlockchain blockchain) {
 
         super(track, caller, blockchain);
     }

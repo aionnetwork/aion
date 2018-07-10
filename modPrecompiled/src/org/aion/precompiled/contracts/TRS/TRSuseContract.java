@@ -28,10 +28,10 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
-import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * The TRSuseContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -69,7 +69,7 @@ public final class TRSuseContract extends AbstractTRS {
      */
     public TRSuseContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller,
-        IAionBlockchain blockchain) {
+        IBlockchain blockchain) {
 
         super(repo, caller, blockchain);
     }

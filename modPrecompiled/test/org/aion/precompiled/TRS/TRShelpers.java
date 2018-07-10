@@ -188,6 +188,14 @@ class TRShelpers {
         return input;
     }
 
+    // Returns a properly formatted byte array to be used as input for the period operation.
+    byte[] getPeriodInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = 0x3;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
     // Returns a properly formatted byte array to be used as input for the periodsAt operation.
     byte[] getPeriodAtInput(Address contract, long blockNum) {
         ByteBuffer buffer = ByteBuffer.allocate(41);

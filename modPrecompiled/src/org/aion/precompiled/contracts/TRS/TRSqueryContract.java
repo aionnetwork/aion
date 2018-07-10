@@ -24,17 +24,15 @@ package org.aion.precompiled.contracts.TRS;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.type.IBlock;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.IAionBlock;
 
 /**
  * The TRSqueryContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -71,7 +69,7 @@ public final class TRSqueryContract extends AbstractTRS {
      */
     public TRSqueryContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller,
-        IAionBlockchain blockchain) {
+        IBlockchain blockchain) {
 
         super(repo, caller, blockchain);
     }
@@ -125,6 +123,26 @@ public final class TRSqueryContract extends AbstractTRS {
      *
      *                                           ~~~***~~~
      *
+     *   <b>operation 0x3</b> - returns the current period that the specified public-facing TRS
+     *     contract is in. The current time that is used to determine this period is the timestamp
+     *     of the blockchain's best block.
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
+     *
+     *     coditions: none.
+     *
+     *     returns: a byte array of length 4 that is the byte representation of a signed integer.
+     *       This value is equal to the period the contract is in at the current best block. The
+     *       contract is defined as being in period 0 at all times prior to the moment when the
+     *       contract was made live. Once the contract becomes live it is in period 1 and this
+     *       proceeds until it is in period P, the maximum period defined for the contract. From
+     *       this point onwards the contract remains in period P. The duration of a period is 30
+     *       days.
+     *
+     *                                           ~~~***~~~
+     *
      *   <b>operation 0x4</b> - returns the period that the specified public-facing TRS contract is
      *     in at the specified block number.
      *     [<32b - contractAddress> | <8b - blockNumber>]
@@ -141,7 +159,8 @@ public final class TRSqueryContract extends AbstractTRS {
      *       contract is defined as being in period 0 at all times prior to the moment when the
      *       contract was made live. Once the contract becomes live it is in period 1 and this
      *       proceeds until it is in period P, the maximum period defined for the contract. From
-     *       this point onwards the contract remains in period P.
+     *       this point onwards the contract remains in period P. The duration of a period is 30
+     *       days.
      *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
@@ -167,6 +186,7 @@ public final class TRSqueryContract extends AbstractTRS {
             case 0: return isStarted(input, nrgLimit);
             case 1: return isLocked(input, nrgLimit);
             case 2: return isDirectDepositEnabled(input, nrgLimit);
+            case 3: return period(input, nrgLimit);
             case 4: return periodAt(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -279,6 +299,45 @@ public final class TRSqueryContract extends AbstractTRS {
     }
 
     /**
+     * Logic to query a public-facing TRS contract to determine which period the contract is in
+     * currently. That is, what period the contract is in at the time given by the timestamp of the
+     * current best block in the blockchain.
+     *
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x3> | <32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
+     *
+     *     coditions: none.
+     *
+     *     returns: a byte array of length 4 that is the byte representation of a signed integer.
+     *       This value is equal to the period the contract is in at the current best block. The
+     *       contract is defined as being in period 0 at all times prior to the moment when the
+     *       contract was made live. Once the contract becomes live it is in period 1 and this
+     *       proceeds until it is in period P, the maximum period defined for the contract. From
+     *       this point onwards the contract remains in period P.
+     *
+     * @param input The input to query a public-facing TRS contract for its period at the best block.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult period(byte[] input, long nrgLimit) {
+        // Some "constants"
+        final int indexAddress = 1;
+        final int len = 33;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Grab the contract address and block number and determine the period.
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+
+        return determinePeriod(contract, blockchain.getBestBlock(), nrgLimit);
+    }
+
+    /**
      * Logic to query a public-facing TRS contract to determine which period the contract is in at
      * the specified block number.
      *
@@ -309,45 +368,65 @@ public final class TRSqueryContract extends AbstractTRS {
         final int indexBlockNum = 33;
         final int len = 41;
 
-        ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
-
         if (input.length != len) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // If contract doesn't exist, return an error.
+        // Grab the contract address and block number and determine the period.
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
-        byte[] specs = getContractSpecs(contract);
-        if (specs == null) {
+
+        ByteBuffer blockBuf = ByteBuffer.allocate(Long.BYTES);
+        blockBuf.put(Arrays.copyOfRange(input, indexBlockNum, len));
+        blockBuf.flip();
+        long blockNum = blockBuf.getLong();
+
+        if (blockNum <= 0) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        ByteBuffer block = ByteBuffer.allocate(Long.BYTES);
-        block.put(Arrays.copyOfRange(input, indexBlockNum, len));
-        block.flip();
-        long blockNum = block.getLong();
+        return determinePeriod(contract, blockchain.getBlockByNumber(blockNum), nrgLimit);
+    }
 
-        if (blockNum < 0) {
+    /**
+     * Attempts to determine the period that the TRS contract whose address is contract is in at
+     * the time denoted by the timestamp of block.
+     *
+     * If the contract does not exist or block is null then this method returns a result with an
+     * internal error.
+     *
+     * Otherwise the returned result is success and its output is a byte array of length 4 that is
+     * equivalent to a signed integer and which represents the period that the contract is in.
+     *
+     * @param contract The TRS contract to query.
+     * @param block The block.
+     * @param nrg The energy.
+     * @return the period the contract is in at time given by block's timestamp.
+     */
+    private ContractExecutionResult determinePeriod(Address contract, IBlock block, long nrg) {
+        // If contract doesn't exist, return an error.
+        ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
+
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // If contract is not yet live we are in period 0.
         if (!isContractLive(specs)) {
             output.putInt(0);
-            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, output.array());
+            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrg, output.array());
         }
 
         // Grab the timestamp of block number blockNum and calculate the period the contract is in.
-        IAionBlock queryBlock = blockchain.getBlockByNumber(blockNum);
-        if (queryBlock == null) {
+        if (block == null) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        long blockTime = queryBlock.getTimestamp();
+        long blockTime = block.getTimestamp();
         int period = calculatePeriod(contract, specs, blockTime);
         output.putInt(period);
 
-        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, output.array());
+        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrg, output.array());
     }
 
     /**

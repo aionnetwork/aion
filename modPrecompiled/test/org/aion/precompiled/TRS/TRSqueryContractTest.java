@@ -2,14 +2,12 @@ package org.aion.precompiled.TRS;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.aion.api.sol.impl.Int;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
@@ -23,7 +21,6 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.IAionBlock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +30,7 @@ import org.junit.Test;
  */
 public class TRSqueryContractTest extends TRShelpers {
     private static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
+    private ECKey senderKey;
 
     @Before
     public void setup() {
@@ -48,12 +46,13 @@ public class TRSqueryContractTest extends TRShelpers {
         }
         tempAddrs = null;
         repo = null;
+        senderKey = null;
     }
 
     // <-----------------------------------HELPER METHODS BELOW------------------------------------>
 
     // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
-    // method creates a new block every sleepDuration seconds.
+    // method creates a new block every sleepDuration milliseconds.
     private void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
         StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
             .withDefaultAccounts()
@@ -61,7 +60,7 @@ public class TRSqueryContractTest extends TRShelpers {
             .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        ECKey senderKey = bundle.privateKeys.get(0);
+        senderKey = bundle.privateKeys.get(0);
         AionBlock previousBlock = bc.genesis;
 
         for (int i = 0; i < numBlocks; i++) {
@@ -70,6 +69,15 @@ public class TRSqueryContractTest extends TRShelpers {
         }
 
         blockchain = bc;
+    }
+
+    // Adds numBlocks more blocks to the blockchain every sleepDuration milliseconds.
+    private void addBlocks(int numBlocks, long sleepDuration) throws InterruptedException {
+        AionBlock previousBlock = blockchain.getBestBlock();
+        for (int i = 0; i < numBlocks; i++) {
+            previousBlock = createBundleAndCheck(((StandaloneBlockchain) blockchain), senderKey, previousBlock);
+            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
+        }
     }
 
     private static AionBlock createBundleAndCheck(StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
@@ -370,6 +378,138 @@ public class TRSqueryContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
         assertArrayEquals(getTrueContractOutput(), res.getOutput());
+    }
+
+    // <--------------------------------------PERIOD TESTS----------------------------------------->
+
+    @Test
+    public void testPeriodInputTooShort() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = new byte[32];
+        input[0] = 0x3;
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testPeriodInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = new byte[34];
+        input[0] = 0x3;
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testPeriodOfNonExistentContract() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = getPeriodInput(acct);
+        ContractExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testPeriodBeforeIsLive() throws InterruptedException {
+        Address contract = createAndLockTRScontract(AION, true, true, 4,
+            BigInteger.ZERO, 0);
+        createBlockchain(1, TimeUnit.SECONDS.toMillis(2));
+
+        byte[] input = getPeriodInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
+    }
+
+    @Test
+    public void testPeriodOnEmptyBlockchain() throws InterruptedException {
+        // Then we are using the genesis block which has a timestamp of zero and therefore we are
+        // in period 0 at this point.
+        Address contract = createLockedAndLiveTRScontract(AION, true, true,
+            4, BigInteger.ZERO, 0);
+        createBlockchain(0, 0);
+
+        byte[] input = getPeriodInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
+    }
+
+    @Test
+    public void testPeriodContractDeployedAfterBestBlock() throws InterruptedException {
+        // Contract deployed 2 seconds after best block so period will be zero.
+        createBlockchain(10, 0);
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        Address contract = createLockedAndLiveTRScontract(AION, true, true,
+            5, BigInteger.ZERO, 0);
+
+        byte[] input = getPeriodInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
+    }
+
+    @Test
+    public void testPeriodWhenPeriodsIsOne() throws InterruptedException {
+        // Contract deployed 2 seconds after best block so period will be zero.
+        createBlockchain(3, 0);
+        Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+        Address contract = createLockedAndLiveTRScontract(AION, true, true,
+            1, BigInteger.ZERO, 0);
+
+        byte[] input = getPeriodInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        int period1 = new BigInteger(res.getOutput()).intValue();
+
+        // Now we should be in period 1 forever.
+        addBlocks(2, TimeUnit.SECONDS.toMillis(1));
+        res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        int period2 = new BigInteger(res.getOutput()).intValue();
+
+        addBlocks(3, TimeUnit.SECONDS.toMillis(1));
+        res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        int period3 = new BigInteger(res.getOutput()).intValue();
+
+        assertEquals(0, period1);
+        assertTrue(period2 > period1);
+        assertEquals(1, period2);
+        assertEquals(period3, period2);
+    }
+
+    @Test
+    public void testPeriodAtDifferentMoments() throws InterruptedException {
+        int numPeriods = 4;
+        Address contract = createLockedAndLiveTRScontract(AION, true, true,
+            numPeriods, BigInteger.ZERO, 0);
+        createBlockchain(1, 0);
+
+        // we expect the best block to have the same timestamp as the contract, and reasonable to
+        // assume it is 1 or 2 seconds after at most. It should not be in period 4 yet.
+        byte[] input = getPeriodInput(contract);
+        ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        int period1 = new BigInteger(res.getOutput()).intValue();
+
+        // We can safely assume now the best block is in period 4.
+        addBlocks(2, TimeUnit.SECONDS.toMillis(2));
+        res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        int period2 = new BigInteger(res.getOutput()).intValue();
+
+        addBlocks(5, TimeUnit.SECONDS.toMillis(1));
+        res = newTRSqueryContract(AION).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        int period3 = new BigInteger(res.getOutput()).intValue();
+
+        assertTrue(period1 > 0);
+        assertTrue(period2 > period1);
+        assertEquals(period3, period2);
+        assertEquals(numPeriods, period3);
     }
 
     // <-------------------------------------PERIOD AT TESTS--------------------------------------->

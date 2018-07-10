@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
@@ -669,9 +670,9 @@ public class TRSownerContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, true, 1, BigInteger.ZERO, 0);
         TRSownerContract trs = newTRSownerContract(caller);
 
-        long before = System.currentTimeMillis();
+        long before = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
         ContractExecutionResult res = trs.execute(input, COST);
-        long after = System.currentTimeMillis();
+        long after = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
 
         assertEquals(ResultCode.SUCCESS, res.getCode());
         Address contract = Address.wrap(res.getOutput());

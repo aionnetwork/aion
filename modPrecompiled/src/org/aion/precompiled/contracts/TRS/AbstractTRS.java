@@ -10,12 +10,12 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
@@ -30,7 +30,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
     final Address caller;
-    protected final IAionBlockchain blockchain;
+    protected final IBlockchain blockchain;
 
     /*
      * The database keys each have unique prefixes denoting the function of that key. Some keys have
@@ -75,7 +75,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
     // Constructor.
     AbstractTRS(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
-        IAionBlockchain blockchain) {
+        IBlockchain blockchain) {
         super(track);
         if (caller == null) { throw new NullPointerException("Construct TRS with null caller."); }
         this.caller = caller;
