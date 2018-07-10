@@ -35,6 +35,11 @@ import java.util.function.Function;
  * property is present in the new configuration, it will be rejected.
  */
 public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
+    /** Default JMX port */
+    public static final int DEFAULT_JMX_PORT = 11235; /* TODO put in config.xml */
+    /** Default JMX object name */
+    public static final String DEFAULT_JMX_OBJECT_NAME = "org.aion.mcf.config.receiver:id=1";
+
     private final Cfg activeCfg;
     private final DynamicConfigKeyRegistry configKeyRegistry;
 
@@ -64,7 +69,11 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
             return new ConfigProposalResult(false, ex);
         }
 
-        return applyNewConfig(newCfg);
+        ConfigProposalResult result = applyNewConfig(newCfg);
+        if(result.isSuccess()) {
+            CfgAion.setInst(newCfg);
+        }
+        return result;
     }
 
     @VisibleForTesting ConfigProposalResult applyNewConfig(Cfg newCfg) throws RollbackException {
@@ -136,5 +145,12 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
         if(!exceptions.isEmpty()) {
             throw new RollbackException("Rollback had errors", exceptions);
         }
+    }
+
+    /**
+     * @return a JMX URL that client can use to connect to JMX server.
+     */
+    public static String createJmxUrl(int port) {
+            return String.format("service:jmx:rmi:///jndi/rmi://127.0.0.1:%d/jmxrmi", port);
     }
 }

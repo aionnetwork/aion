@@ -147,7 +147,7 @@ public class Aion {
         MBeanServer server = ManagementFactory.getPlatformMBeanServer();
         ObjectName objectName = null;
         try {
-            objectName = new ObjectName("org.aion.mcf.config.receiver:id=1");
+            objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
             server.registerMBean(inFlightConfigReceiver, objectName);
         } catch (MalformedObjectNameException
                 | NotCompliantMBeanException

@@ -24,8 +24,4 @@ public interface InFlightConfigReceiverMBean {
      *                          kernel failed to restore itself to the initial state.
      */
     ConfigProposalResult propose(String configXmlText) throws RollbackException;
-
-    default String createJmxUrl(int port) {
-        return String.format("service:jmx:rmi:///jndi/rmi://127.0.0.1:%d/jmxrmi", port);
-    }
 }

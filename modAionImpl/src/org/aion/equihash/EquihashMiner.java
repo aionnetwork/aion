@@ -115,13 +115,18 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         return Holder.INSTANCE;
     }
 
+    private EquihashMiner() {
+        this(AionImpl.inst().getAionHub().getEventMgr());
+    }
+
+
     /**
      * Private constructor; called by singleton instance once
      */
-    private EquihashMiner() {
+    public /* FIXME */ EquihashMiner(IEventMgr eventMgr) {
         this.cfg = CfgAion.inst();
 
-        this.a0Chain = AionImpl.inst();
+//        this.a0Chain = AionImpl.inst();
 
         cpuThreads = cfg.getConsensus().getCpuMineThreads();
 
@@ -137,7 +142,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         ees = new EventExecuteService(1000, "EpMiner", Thread.NORM_PRIORITY, LOG);
         ees.setFilter(setEvtFilter());
 
-        this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
+//        this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
+        this.evtMgr = eventMgr;
         registerMinerEvents();
         registerCallback();
 

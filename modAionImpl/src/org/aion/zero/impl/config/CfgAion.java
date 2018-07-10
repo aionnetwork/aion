@@ -66,11 +66,15 @@ public final class CfgAion extends Cfg {
     }
 
     private static class CfgAionHolder {
-        private static final CfgAion inst = new CfgAion();
+        private static CfgAion inst = new CfgAion();
     }
 
     public static CfgAion inst() {
         return CfgAionHolder.inst;
+    }
+
+    public static void setInst(CfgAion cfgAion) {
+        CfgAionHolder.inst = cfgAion;
     }
 
     @Override
@@ -88,6 +92,10 @@ public final class CfgAion extends Cfg {
                 throw new RuntimeException(e2);
             }
         }
+    }
+
+    public void setGenesis(AionGenesis genesis) {
+        this.genesis = genesis;
     }
 
     public CfgConsensusPow getConsensus() {

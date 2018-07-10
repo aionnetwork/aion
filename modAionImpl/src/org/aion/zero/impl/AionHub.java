@@ -115,13 +115,17 @@ public class AionHub {
     }
 
     public AionHub() {
+        this(AionBlockchainImpl.inst());
+    }
+
+    public AionHub(AionBlockchainImpl aionBlockchainImpl) {
 
         this.cfg = CfgAion.inst();
 
         // load event manager before init blockchain instance
         loadEventMgr();
 
-        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+        AionBlockchainImpl blockchain = aionBlockchainImpl;
         blockchain.setEventManager(this.eventMgr);
         this.blockchain = blockchain;
 
@@ -196,6 +200,10 @@ public class AionHub {
 
     public void pausePow() {
         this.pow.pause();
+    }
+
+    public AionPoW getPoW() {
+        return this.pow;
     }
 
     private void registerCallback() {

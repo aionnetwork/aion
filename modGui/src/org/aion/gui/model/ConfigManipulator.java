@@ -3,14 +3,19 @@ package org.aion.gui.model;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.dynamic2.ConfigProposalResult;
+import org.aion.mcf.config.dynamic2.InFlightConfigReceiver;
 import org.aion.mcf.config.dynamic2.InFlightConfigReceiverMBean;
+import org.aion.mcf.config.dynamic2.RollbackException;
 import org.aion.os.KernelLauncher;
 import org.aion.zero.impl.config.CfgAion;
+import org.slf4j.Logger;
 
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
@@ -19,6 +24,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Optional;
 
 /**
@@ -41,10 +47,12 @@ public class ConfigManipulator {
 
     private String lastLoadContent;
 
+    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+
     /**
      * Constructor
      *
-     * @param cfg The Cfg that is currently in use by
+     * @param cfg            The Cfg that is currently in use by
      * @param kernelLauncher
      */
     public ConfigManipulator(Cfg cfg,
@@ -80,28 +88,46 @@ public class ConfigManipulator {
         }
     }
 
+    /**
+     * @param cfgText
+     * @return
+     */
     private ApplyConfigResult sendConfigProposal(String cfgText) {
         try {
-            JMXServiceURL url =
-                    new JMXServiceURL(InFlightConfigReceiverMBean.createJmxUrl(12));
-            JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
-            MBeanServerConnection mbeanServerConnection = jmxc.getMBeanServerConnection();
-            ObjectName mbeanName = new ObjectName("org.aion.mcf.config.dynamic:type=testing");
-            InFlightConfigReceiverMBean mbeanProxy = MBeanServerInvocationHandler.newProxyInstance(
-                    mbeanServerConnection, mbeanName, InFlightConfigReceiverMBean.class, true);
+            JMXServiceURL url = new JMXServiceURL(
+                    InFlightConfigReceiver.createJmxUrl(InFlightConfigReceiver.DEFAULT_JMX_PORT));
+            try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
+                MBeanServerConnection mbeanServerConnection = conn.getMBeanServerConnection();
+                ObjectName objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
+                InFlightConfigReceiverMBean mbeanProxy = MBeanServerInvocationHandler.newProxyInstance(
+                        mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
 
-            ConfigProposalResult result = mbeanProxy.propose(cfgText);
-            System.out.println("result = " + result.isSuccess());
-            String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
+                ConfigProposalResult result = mbeanProxy.propose(cfgText);
+                LOG.debug("JMX propose call returned: " + result.toString());
+                String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
 
-            return new ApplyConfigResult(result.isSuccess(), msg, result.getErrorCause());
-        } catch (Exception e) {
-            System.out.println("Something went horribly wrong!!");
-            e.printStackTrace();
-            return new ApplyConfigResult(false, e.getMessage(), e);
+                return new ApplyConfigResult(result.isSuccess(), msg, result.getErrorCause());
+            }
+        } catch (IOException | MalformedObjectNameException ex) {
+            LOG.error("JMX call exception", ex);
+            return new ApplyConfigResult(false,
+                    "Failed to make JMX call", ex);
+        } catch (RollbackException re) {
+            LOG.error("Kernel encountered config error and failed to roll back", re);
+            return new ApplyConfigResult(false,
+                    "Encountered error while applying config changes, " +
+                            "but could not undo the partially applied changes.  " +
+                            "It is recommended that you restart your kernel.",
+                    re);
         }
     }
 
+    /**
+     * Apply a new config
+     *
+     * @param cfgXml XML text of new config
+     * @return {@link ApplyConfigResult} whether it was successful or failure, plus reason for failure
+     */
     public ApplyConfigResult applyNewConfig(String cfgXml) {
 //        if(kernelLauncher.hasLaunchedInstance()) {
 //            return new ApplyConfigResult(false,
@@ -110,14 +136,14 @@ public class ConfigManipulator {
 //        }
 
         Optional<String> maybeError = checkForErrors(cfgXml);
-        if(maybeError.isPresent()) {
+        if (maybeError.isPresent()) {
             String msg = "Could not apply config because it has errors.  File will not be saved.  Error was:\n\n"
                     + maybeError.get();
             return new ApplyConfigResult(false, msg, null);
         }
 
         ApplyConfigResult result = sendConfigProposal(cfgXml);
-        if(!result.isSucceeded()) {
+        if (!result.isSucceeded()) {
             return result;
         }
 
@@ -127,7 +153,7 @@ public class ConfigManipulator {
         } catch (IOException ioe) {
             String msg =
                     "Failed to backup existing config, so aborting operation.  Error during backup:\n\n"
-                    + ioe.getMessage();
+                            + ioe.getMessage();
             ioe.printStackTrace();
             return new ApplyConfigResult(false, msg, null);
         }
@@ -138,12 +164,14 @@ public class ConfigManipulator {
         } catch (RuntimeException /* TODO IOExcepion */ioe) {
             String msg =
                     "Failed to write to the config file, so aborting operation.  Error during write:\n\n"
-                    + ioe.getMessage();
+                            + ioe.getMessage();
             ioe.printStackTrace();
             return new ApplyConfigResult(false, msg, null);
         }
 
-        return new ApplyConfigResult(result.isSucceeded(), "Config saved.  Previous copy is backed up at " + backupConfigFilename, null);
+        return new ApplyConfigResult(result.isSucceeded(),
+                "Config saved.  Previous copy is backed up at " + backupConfigFilename,
+                null);
     }
 
     private String backupConfig() throws IOException {
@@ -158,6 +186,4 @@ public class ConfigManipulator {
     private File backupConfigFile() {
         return new File(cfg.getBasePath() + "/config/config.backup.xml");
     }
-
-
 }

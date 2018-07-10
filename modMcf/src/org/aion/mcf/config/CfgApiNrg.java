@@ -54,9 +54,19 @@ public final class CfgApiNrg {
     public long getNrgPriceDefault() {
         return this.defaultPrice;
     }
+
+    public void setNrgPriceDefault(long defaultPrice) {
+        this.defaultPrice = defaultPrice;
+    }
+
     public long getNrgPriceMax() {
         return this.maxPrice;
     }
+
+    public void setNrgPriceMax(long maxPrice) {
+        this.maxPrice = maxPrice;
+    }
+
     public boolean isOracleEnabled() { return this.oracleEnabled; }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {

@@ -95,7 +95,7 @@ public class AionPoW {
                         }
                     }
                 }
-                LOG.debug("EpPOW doing work");
+                LOG.trace("EpPOW doing work");
 
                 IEvent e = ees.take();
                 if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
@@ -130,7 +130,7 @@ public class AionPoW {
                     }
                     if(shutDown.get()) break;
                 }
-                LOG.trace("PeriodicPow doing work");
+//                LOG.trace("PeriodicPow doing work");
 
                 try {
                     Thread.sleep(100);
@@ -188,6 +188,18 @@ public class AionPoW {
 
             new Thread(new PeriodicPowRunner(), "pow").start();
         }
+    }
+
+    public void initThreads() {
+        //FIXME refactor should not be public
+        setupHandler();
+        ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+        ees.setFilter(setEvtFilter());
+
+        registerCallback();
+        ees.start(new EpPOW());
+
+        new Thread(new PeriodicPowRunner(), "pow").start();
     }
 
     /** Pause the workers that produce new block templates */

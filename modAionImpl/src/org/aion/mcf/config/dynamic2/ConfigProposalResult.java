@@ -22,4 +22,12 @@ public class ConfigProposalResult implements Serializable {
     public Throwable getErrorCause() {
         return errorCause;
     }
+
+    @Override
+    public String toString() {
+        return "ConfigProposalResult{" +
+                "success=" + success +
+                ", errorCause=" + errorCause +
+                '}';
+    }
 }
