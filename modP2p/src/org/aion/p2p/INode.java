@@ -72,6 +72,8 @@ public interface INode {
      */
     BigInteger getTotalDifficulty();
 
+    int getPeerId();
+
     long getTimestamp();
 
     /**
