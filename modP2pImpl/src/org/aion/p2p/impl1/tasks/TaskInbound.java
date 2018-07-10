@@ -113,8 +113,7 @@ public class TaskInbound implements Runnable {
                 }
                 continue;
             } catch (InterruptedException e) {
-                e.printStackTrace();
-                p2pLOG.error("taskInbound exception {}", e.toString());
+                p2pLOG.error("taskInbound exception ", e);
                 return;
             }
 
@@ -517,7 +516,7 @@ public class TaskInbound implements Runnable {
                         }
                     }
                     node.setBinaryVersion(binaryVersion);
-                    nodeMgr.moveInboundToActive(_channelHash);
+                    nodeMgr.movePeerToActive(_channelHash, "inbound");
                     this.sendMsgQue.offer(
                         new MsgOut(
                             node.getIdHash(),
@@ -535,11 +534,11 @@ public class TaskInbound implements Runnable {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        INode node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
+        INode node = nodeMgr.getNodefromOutBoundList(_nodeIdHash);
         if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
             node.setBinaryVersion(_binaryVersion);
-            nodeMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort());
+            nodeMgr.movePeerToActive(node.getIdHash(), "outbound");
         }
     }
 
