@@ -11,8 +11,6 @@ import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static com.google.common.truth.Truth.assertThat;
 
 public class BridgeControllerRingTest {
@@ -54,17 +52,47 @@ public class BridgeControllerRingTest {
     }
 
     @Test
-    public void checkInitialization() {
+    public void testRingInitialization() {
         for (ECKey k : members) {
             assertThat(this.connector.getActiveMember(k.getAddress())).isTrue();
         }
     }
 
     @Test
-    public void checkReinitialization() {
+    public void testRingReinitialization() {
         BridgeController.ErrCode code = this.controller.ringInitialize(
                 OWNER_ADDR.toBytes(),
                 getMemberAddress(members));
         assertThat(code).isEqualTo(BridgeController.ErrCode.RING_LOCKED);
+    }
+
+    @Test
+    public void testRingAddMember() {
+        // TODO
+    }
+
+    @Test
+    public void testRingAddMemberNotOwner() {
+        // TODO
+    }
+
+    @Test
+    public void testRingAddExistingMember() {
+        // TODO
+    }
+
+    @Test
+    public void testRingRemoveMember() {
+        // TODO
+    }
+
+    @Test
+    public void testRingRemoveMemberNotOwner() {
+        // TODO
+    }
+
+    @Test
+    public void testRingRemoveNonExistingMember() {
+        // TODO
     }
 }
