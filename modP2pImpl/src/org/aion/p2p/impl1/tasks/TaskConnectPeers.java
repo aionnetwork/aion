@@ -89,7 +89,7 @@ public class TaskConnectPeers implements Runnable {
                 // continue;
                 // }
             } catch (Exception e) {
-                p2pLOG.debug("tcp-Exception {}", e);
+                p2pLOG.debug("tcp-Exception {}", e.toString());
                 continue;
             }
             int nodeIdHash = node.getIdHash();
@@ -148,13 +148,13 @@ public class TaskConnectPeers implements Runnable {
                 } catch (IOException e) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG.debug("connect-outbound io-exception addr={}:{} reason={}",
-                            node.getIpStr(), _port, e);
+                            node.getIpStr(), _port, e.toString());
                     }
                     // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
                     p2pLOG
                         .debug("connect-outbound exception -> id={} ip={} reason={}", node.getIdShort(),
-                            node.getIpStr(), e);
+                            node.getIpStr(), e.toString());
                 }
             }
         }
