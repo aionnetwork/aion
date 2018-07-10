@@ -37,6 +37,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingState;
+import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -51,13 +52,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
+import static org.spongycastle.asn1.x500.style.RFC4519Style.c;
 
 /**
  * {@link AionPoW} contains the logic to process new mined blocks and dispatch
  * new mining task to miners when needed.
  */
 public class AionPoW {
-    private final CfgAion config = CfgAion.inst();
+    private CfgAion config = CfgAion.inst();
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
     protected AtomicLong lastUpdate = new AtomicLong(0);
@@ -76,7 +78,15 @@ public class AionPoW {
     private volatile boolean paused = false;
     private final Object pauseMonitor = new Object();
 
+    public void setCfg(CfgAion newCfg) {
+        config = newCfg;
+    }
+
     private final class EpPOW implements Runnable {
+        public EpPOW() {
+            System.out.println("EpPOW ctor");
+        }
+
         boolean go = true;
         @Override
         public void run() {
@@ -114,6 +124,10 @@ public class AionPoW {
     }
 
     private class PeriodicPowRunner implements Runnable {
+        public PeriodicPowRunner() {
+            System.out.println("PeriodPowRunner ctor");
+        }
+
         @Override
         public void run() {
             while (!shutDown.get()) {
@@ -168,14 +182,16 @@ public class AionPoW {
      *            Event manager
      */
     public void init(IAionBlockchain blockchain, IPendingState<AionTransaction> pendingState, IEventMgr eventMgr) {
-        if (initialized.compareAndSet(false, true)) {
-            this.blockchain = blockchain;
-            this.pendingState = pendingState;
-            this.eventMgr = eventMgr;
-            this.syncMgr = SyncMgr.inst();
+        this.blockchain = blockchain;
+        this.pendingState = pendingState;
+        this.eventMgr = eventMgr;
+        this.syncMgr = SyncMgr.inst();
 
-            // return early if mining is disabled, otherwise we are doing needless
-            // work by generating new block templates on IMPORT_BEST
+        // skip if mining is disabled, otherwise we are doing needless
+        // work by generating new block templates on IMPORT_BEST
+        if (!config.getConsensus().getMining()
+                && initialized.compareAndSet(false, true)) {
+
             if (!config.getConsensus().getMining())
                 return;
 

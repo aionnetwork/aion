@@ -3,6 +3,8 @@ package org.aion.mcf.config.applier;
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEventMgr;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgConsensus;
@@ -17,9 +19,16 @@ import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.types.AionTransaction;
+import org.slf4j.Logger;
 
 public class MiningApplier implements IDynamicConfigApplier {
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
     private static int START_MINING_DELAY_SEC = 5;
+
+    boolean run = false;
+    public MiningApplier() {
+        run = false;
+    }
 
     @Override
     public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
@@ -44,7 +53,7 @@ public class MiningApplier implements IDynamicConfigApplier {
         IAionChain ac = AionFactory.create();
         AionHub hub = AionImpl.inst().getAionHub();
         startOrResumeMiningInternal((EquihashMiner)ac.getBlockMiner(),
-                AionImpl.inst().getAionHub().getPoW(),
+                hub.getPoW(),
                 hub.getBlockchain(),
                 hub.getPendingState(),
                 hub.getEventMgr());
@@ -60,25 +69,33 @@ public class MiningApplier implements IDynamicConfigApplier {
                                      IAionBlockchain aionBlockchain,
                                      IPendingState<AionTransaction> pendingState,
                                      IEventMgr eventMgr) {
-        System.out.println("Mining applier started mining");
+        LOG.info("Mining applier started mining");
 
         ((CfgConsensusPow)equihashMiner.getCfg().getConsensus()).setMining(true); // awful casting
         equihashMiner.registerCallback(); // should we also unregister when pausing?
         pow.init(aionBlockchain, pendingState, eventMgr); // idempotent; calling it a second time just no-ops
-        pow.initThreads();
+        if(!run) {
+            pow.initThreads();
+            run = true;
+        }
         pow.resume();
         equihashMiner.delayedStartMining(START_MINING_DELAY_SEC);
     }
 
     @VisibleForTesting
     void pauseMining() {
-        System.out.println("Mining applier stopped mining");
         IAionChain ac = AionFactory.create();
-        ((CfgConsensusPow)(
-                (EquihashMiner)ac.getBlockMiner()).getCfg().getConsensus()
-        ).setMining(false); // fix terrible casting
-        AionImpl.inst().getAionHub().pausePow();
+        pauseMiningInternal((EquihashMiner)ac.getBlockMiner(), AionImpl.inst().getAionHub().getPoW());
+    }
+
+    @VisibleForTesting
+    void pauseMiningInternal(EquihashMiner miner,
+                             AionPoW pow) {
+        LOG.info("Mining applier stopped mining");
+        ((CfgConsensusPow)(miner.getCfg()).getConsensus()).setMining(false); // fix terrible casting
+//        AionImpl.inst().getAionHub().pausePow();
 //        ac.getBlockMiner().stopMining();
-        ((EquihashMiner) ac.getBlockMiner()).pauseMining();
+        pow.pause();
+        miner.pauseMining();
     }
 }
