@@ -170,6 +170,10 @@ public class CfgConsensusPow extends CfgConsensus {
         return (byte) Math.min(procs, this.cpuMineThreads);
     }
 
+    public void setCpuMineThreads(int threads) {
+        this.cpuMineThreads = (byte)threads;
+    }
+
     public String getExtraData() {
         return this.extraData;
     }

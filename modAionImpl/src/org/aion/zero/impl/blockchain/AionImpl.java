@@ -41,6 +41,7 @@ import org.aion.mcf.mine.IMineRunner;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -72,7 +73,7 @@ public class AionImpl implements IAionChain {
         return Holder.INSTANCE;
     }
 
-    private AionImpl() {
+    protected AionImpl() {
         this.cfg = CfgAion.inst();
         aionHub = new AionHub();
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
@@ -87,8 +88,12 @@ public class AionImpl implements IAionChain {
         return aionHub.getBlockchain();
     }
 
+    protected IAionBlockchain getAionBlockchain() {
+        return aionHub.getBlockchain();
+    }
+
     public synchronized ImportResult addNewMinedBlock(AionBlock block) {
-        ImportResult importResult = this.aionHub.getBlockchain().tryToConnect(block);
+        ImportResult importResult = getAionBlockchain().tryToConnect(block);
 
         if (importResult == ImportResult.IMPORTED_BEST) {
             this.aionHub.getPropHandler().propagateNewBlock(block);
@@ -294,7 +299,7 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address, byte[] blockHash) {
         try {
-            byte[] stateRoot = this.aionHub.getBlockchain().getBlockByHash(blockHash).getStateRoot();
+            byte[] stateRoot = getAionBlockchain().getBlockByHash(blockHash).getStateRoot();
             AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 
@@ -311,7 +316,7 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address) {
         try {
-            byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
+            byte[] stateRoot = getBlockchain().getBestBlock().getStateRoot();
             AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 

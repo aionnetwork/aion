@@ -282,6 +282,14 @@ public class CfgDb {
         return this.path;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
+    }
+
     public CfgPrune getPrune() {
         return this.prune;
     }

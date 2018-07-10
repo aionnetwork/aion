@@ -1,5 +1,6 @@
 package org.aion.mcf.config.applier;
 
+import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEventMgr;
@@ -11,15 +12,18 @@ import org.aion.mcf.blockchain.IPendingState;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.types.AionTransaction;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -34,45 +38,67 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 public class MiningApplierTest {
-    protected static Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-    @Before
-    public void before() {
-        // Long running test, so print out some debug info
+    static {
         AionLoggerFactory
                 .init(new HashMap<>() {{
                           put(LogEnum.CONS.name(), LogLevels.DEBUG.name());
                           put(LogEnum.GEN.name(), LogLevels.INFO.name());
-                }},
+                      }},
                         false /*logToFile*/,
                         "" /*logPath*/);
+    }
+    protected static Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+    private StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+    private StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+    private StandaloneBlockchain aionBlockchain =  bundle.bc;
+
+    @Before
+    public void before() {
+        // Long running test, so print out some debug info
+
         LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+    }
+
+    @After
+    public void after() {
+
     }
 
     @Test
     public void testStartThenStopThenStartKernel() throws Throwable {
         // Test setup
+        String tempDb = "database.temp." + System.currentTimeMillis();
+        File tempDbFile = new File(System.getProperty("user.home") + "/" + tempDb);
+        System.out.println(tempDbFile.getAbsolutePath());
+        if(tempDbFile.exists()) {
+            tempDbFile.delete();
+        }
+        tempDbFile.deleteOnExit();
 
         // In the ideal world, we would construct a Cfg/CfgAion and pass it to our objects
         // that we test, but since they're all looking at the CfgAion.inst() singleton,
         // we'll just set those values directly.  When we refactor our the references to
         // CfgAion.inst() in the classes we're testing, we should change this.
+
         CfgAion.inst().getConsensus().setMining(false);
+        CfgAion.inst().getDb().setPath(tempDb);
+        CfgAion.inst().getConsensus().setCpuMineThreads(10);
 
         Properties prop = new Properties();
         prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
         IEventMgr eventMgr = new EventMgrA0(prop);
         eventMgr.start();
 
-        IAionBlockchain aionBlockchain = StandaloneBlockchain.inst();
         IPendingState<AionTransaction> pendingState = mock(IPendingState.class);
 
-        AionPoW pow = new AionPoW();
+        AionPoW pow = new AionPoW(new InstrumentedAionImpl());
         pow.init(aionBlockchain, pendingState, eventMgr);
 
-        JSONObject genesisJson = new JSONObject(genesisBlockJson);
+        JSONObject genesisJson = new JSONObject(GENESIS_BLOCK_JSON);
         AionGenesis genesis = GenesisBlockLoader.loadJSON(genesisJson);
         aionBlockchain.setBestBlock(genesis);
+        aionBlockchain.setGenesis(genesis);
 
         EquihashMiner mineRunner = new EquihashMiner(eventMgr);
         MiningApplier miningApplier = new MiningApplier();
@@ -95,7 +121,7 @@ public class MiningApplierTest {
                     System.out.println("Current best block = " + aionBlockchain.getBestBlock());
                     return aionBlockchain.getBestBlock().getNumber() > 0;
                 },
-                TimeUnit.SECONDS, 15, 300,
+                TimeUnit.SECONDS, 15, 600,
                 "Expected at least one block to be mined after 5 minutes");
         final long bestBlock = aionBlockchain.getBestBlock().getNumber();
         System.out.println("New block has been mined.  New best block number is " + bestBlock);
@@ -166,7 +192,21 @@ public class MiningApplierTest {
         }
     }
 
-    private final String genesisBlockJson = "{" +
+    private class InstrumentedAionImpl extends AionImpl {
+
+        public InstrumentedAionImpl() {
+            super();
+        }
+
+        @Override
+        public IAionBlockchain getAionBlockchain() {
+            return aionBlockchain;
+        }
+
+
+    }
+
+    private static final String GENESIS_BLOCK_JSON = "{" +
             "  \"alloc\": {}," +
             "  \"networkBalanceAlloc\": {" +
             "    \"0\": {" +
@@ -175,7 +215,7 @@ public class MiningApplierTest {
             "  }," +
             "  \"energyLimit\": \"15000000\"," +
             "  \"nonce\": \"0x00\"," +
-            "  \"difficulty\": \"0x0\"," +
+            "  \"difficulty\": \"0x1\"," +
             "  \"coinbase\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"," +
             "  \"timestamp\": \"1524528000\"," +
             "  \"parentHash\": \"0x6a6d99a2ef14ab3b835dfc92fb918d76c37f6578a69825fbe19cd366485604b1\"," +

@@ -67,6 +67,7 @@ public class AionPoW {
 
     private SyncMgr syncMgr;
     private EventExecuteService ees;
+    private AionImpl aionImpl;
 
     protected IAionBlockchain blockchain;
     protected IPendingState<AionTransaction> pendingState;
@@ -169,6 +170,11 @@ public class AionPoW {
      * the instance.
      */
     public AionPoW() {
+        this(AionImpl.inst());
+    }
+
+    public AionPoW(AionImpl aionImpl) {
+        this.aionImpl = aionImpl;
     }
 
     /**
@@ -189,7 +195,7 @@ public class AionPoW {
 
         // skip if mining is disabled, otherwise we are doing needless
         // work by generating new block templates on IMPORT_BEST
-        if (!config.getConsensus().getMining()
+        if (config.getConsensus().getMining()
                 && initialized.compareAndSet(false, true)) {
 
             if (!config.getConsensus().getMining())
@@ -303,7 +309,8 @@ public class AionPoW {
             block.getHeader().setSolution(solution.getSolution());
 
             // This can be improved
-            ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
+//            ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
+             ImportResult importResult = aionImpl.addNewMinedBlock(block);
 
             // Check that the new block was successfully added
             if (importResult.isSuccessful()) {
