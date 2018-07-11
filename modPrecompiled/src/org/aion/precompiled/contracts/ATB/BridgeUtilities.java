@@ -1,7 +1,9 @@
 package org.aion.precompiled.contracts.ATB;
 
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.DataWord;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -21,5 +23,21 @@ public class BridgeUtilities {
         byte[] out = new byte[20];
         System.arraycopy(addr, addr.length - 20, out, 0, 20);
         return addr;
+    }
+
+    static byte[] toSignature(@Nonnull final String funcSignature) {
+        byte[] sigChopped = new byte[4];
+        byte[] full = HashUtil.keccak256(funcSignature.getBytes());
+        System.arraycopy(full, 0, sigChopped, 0, 4);
+        return sigChopped;
+    }
+
+    static byte[] getSignature(@Nonnull final byte[] input) {
+        if (input.length < 4)
+            return null;
+
+        byte[] sig = new byte[4];
+        System.arraycopy(input, 0, sig, 0, 4);
+        return sig;
     }
 }

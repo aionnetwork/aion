@@ -19,7 +19,7 @@ public class BridgeDeserializer {
     private static final BigInteger INT_MAX_VAL = BigInteger.valueOf(Integer.MAX_VALUE);
 
     /**
-     * Parses a call to {@code setNewOwner}, externally this is known as
+     * Parses a call with one owner address, externally this is known as
      * {@code changeOwner}
      *
      * @implNote assume that input contains function signature
@@ -39,13 +39,48 @@ public class BridgeDeserializer {
 
     /**
      * // TODO: should we re-organize this into a class based structure
+     * // TODO: possible to attack this, ideally we figure out an upper bound
      *
-     * @param call
-     * @return
+     * @param call input data
+     * @return {@code 3D byte array}, containing address, value, signature lists
      */
-    private static byte[][][] parseBundleRequest(byte[] call) {
+    public static byte[][][] parseBundleRequest(@Nonnull final byte[] call) {
         // TODO
-        return null;
+        if (call.length < CALL_OFFSET + (LIST_META * LIST_PT) * 4)
+            return null;
+
+        byte[][] addressList = parseList(call, CALL_OFFSET, 32);
+
+        if (addressList == null)
+            return null;
+
+        byte[][] uintList = parseList(call, CALL_OFFSET + LIST_PT, 16);
+
+        if (uintList == null)
+            return null;
+
+        if (addressList.length != uintList.length)
+            return null;
+
+        byte[][] signatureUpperList = parseList(call, CALL_OFFSET + LIST_PT * 2, 32);
+
+        if (signatureUpperList == null)
+            return null;
+
+        byte[][] signatureLowerList = parseList(call, CALL_OFFSET + LIST_PT * 3, 32);
+
+        if (signatureLowerList == null)
+            return null;
+
+        if (signatureLowerList.length != signatureUpperList.length)
+            return null;
+
+        byte[][] mergedSignatureList = new byte[signatureLowerList.length][];
+        for (int i = 0; i < signatureLowerList.length; i++) {
+            mergedSignatureList[i] = ByteUtil.merge(signatureUpperList[i], signatureLowerList[i]);
+        }
+
+        return new byte[][][] {addressList, uintList, mergedSignatureList};
     }
 
     /**
@@ -83,8 +118,22 @@ public class BridgeDeserializer {
         if (listLength == ERR_INT)
             return null;
 
-        // TODO:
-        return null;
+        // do a quick calculation to check that we have sufficient length
+        // to cover the length
+        if (listLength * elementLength > (call.length - listOffset - LIST_PT))
+            return null;
+
+        byte[][] output = new byte[listLength][];
+
+        // yuck
+        int counter = 0;
+        for (int i = listOffset + LIST_META; i < listLength * elementLength; i += elementLength) {
+            byte[] element = new byte[elementLength];
+            System.arraycopy(call, i, element, 0, elementLength);
+            output[counter] = element;
+            counter++;
+        }
+        return output;
     }
 
     private static int parseMeta(byte[] call, int offset) {
