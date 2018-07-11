@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.equihash;
@@ -32,15 +32,18 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
-import org.aion.mcf.config.Cfg;
 import org.aion.mcf.mine.AbstractMineRunner;
-import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.IAionBlock;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
@@ -56,7 +59,6 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     public static final String VERSION = "0.1.0";
     public static final String MINER_THREAD_NAME_PREFIX = "miner-";
 
-    private IAionChain a0Chain;
     private CfgAion cfg;
     private IEventMgr evtMgr;
 
@@ -86,62 +88,24 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
      */
     private List<Thread> threads = new ArrayList<>();
 
-    private final class EpMiner implements Runnable {
-        boolean go = true;
-        @Override
-        public void run() {
-            while (go) {
-                IEvent e = ees.take();
-                if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
-                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
-                    go = false;
-                }
-            }
-        }
-    }
+    public EquihashMiner(IEventMgr eventMgr, CfgAion cfg) {
+        // should move new calls and singleton .inst() references into ctor parameters when
+        // we touch them so this class becomes more testable.
 
-    private static class Holder {
-        static final EquihashMiner INSTANCE = new EquihashMiner();
-    }
-
-    /**
-     * Singleton instance
-     *
-     * @return Equihash miner instance
-     */
-    public static EquihashMiner inst() {
-        return Holder.INSTANCE;
-    }
-
-    private EquihashMiner() {
-        this(AionImpl.inst().getAionHub().getEventMgr());
-    }
-
-
-    /**
-     * Private constructor; called by singleton instance once
-     */
-    public /* FIXME */ EquihashMiner(IEventMgr eventMgr) {
-        this.cfg = CfgAion.inst();
-
-//        this.a0Chain = AionImpl.inst();
-
-        cpuThreads = cfg.getConsensus().getCpuMineThreads();
-
+        this.cfg = cfg;
+        this.cpuThreads = cfg.getConsensus().getCpuMineThreads();
         this.n = CfgAion.getN();
         this.k = CfgAion.getK();
         this.miner = new Equihash(n, k);
 
-        scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-        hashrateMAF = new MAF(64);
+        this.scheduledWorkers = new ScheduledThreadPoolExecutor(1);
+        this.hashrateMAF = new MAF(64);
 
         setCpuThreads(cfg.getConsensus().getCpuMineThreads());
 
-        ees = new EventExecuteService(1000, "EpMiner", Thread.NORM_PRIORITY, LOG);
-        ees.setFilter(setEvtFilter());
+        this.ees = new EventExecuteService(1000, "EpMiner", Thread.NORM_PRIORITY, LOG);
+        this.ees.setFilter(setEvtFilter());
 
-//        this.evtMgr = this.a0Chain.getAionHub().getEventMgr();
         this.evtMgr = eventMgr;
         registerMinerEvents();
         registerCallback();
@@ -179,7 +143,10 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
-    public void pauseMining() {
+    /**
+     * Stop the mine workers (resumable with {@link #startMining()})
+     */
+    public void stopMining() {
         if (isMining) {
             isMining = false;
             fireMinerStopped();
@@ -210,38 +177,51 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
+    /** Whether miners are paused */
     public boolean isPaused() {
         return this.isPaused;
     }
 
-    @Override
-    public void stopMining() {
-        if (isMining) {
-            isMining = false;
-            fireMinerStopped();
-            LOG.info("sealer stopping 🔒");
+//    /**
+//     * Stop the mine workers and shut down their thread pool.  Cannot be restarted with {@link #startMining()}
+//     * once this has been called.
+//     */
+//    @Override
+//    public void stopMining() {
+//        if (isMining) {
+//            isMining = false;
+//            fireMinerStopped();
+//            LOG.info("sealer stopping 🔒");
+//
+//            // interrupt
+//            int cnt = 0;
+//            for (Thread t : threads) {
+//                t.interrupt();
+//                LOG.info("Interrupt sealer {}", ++cnt);
+//            }
+//
+//            // join
+//            cnt = 0;
+//            for (Thread t : threads) {
+//                try {
+//                    t.join();
+//                    LOG.info("Stopped sealer {}", ++cnt);
+//                } catch (InterruptedException e) {
+//                    LOG.error("Failed to stop sealer thread");
+//                }
+//            }
+//        }
+//
+//        if(scheduledWorkers.isShutdown()) {
+//            scheduledWorkers.shutdownNow();
+//        }
+//    }
 
+    public void shutdown() {
+        if(scheduledWorkers.isShutdown()) {
             scheduledWorkers.shutdownNow();
-
-            // interrupt
-            int cnt = 0;
-            for (Thread t : threads) {
-                t.interrupt();
-                LOG.info("Interrupt sealer {}", ++cnt);
-            }
-
-            // join
-            cnt = 0;
-            for (Thread t : threads) {
-                try {
-                    t.join();
-                    LOG.info("Stopped sealer {}", ++cnt);
-                } catch (InterruptedException e) {
-                    LOG.error("Failed to stop sealer thread");
-                }
-            }
-
         }
+        ees.shutdown();
     }
 
     /**
@@ -314,14 +294,6 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     }
 
     /**
-     * TODO keep this, or replace with setCfg to just replace the entire thing?
-     */
-//    @Override
-    public Cfg getCfg() {
-        return this.cfg;
-    }
-
-    /**
      * This miner will listen to the ON_BLOCK_TEMPLATE event from the consensus
      * handler.
      */
@@ -368,6 +340,30 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         return hashrateMAF.getAverage();
     }
 
+    public CfgAion getCfg() {
+        return this.cfg;
+    }
+
+    public void setCfg(CfgAion cfg) {
+        this.cfg = cfg;
+    }
+
+    private final class EpMiner implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+                if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
+                        && e.getCallbackType() == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
+                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
     private class ShowMiningStatusTask implements Runnable {
         @Override
         public void run() {
@@ -376,11 +372,5 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             hashrateMAF.add(hashrate);
             LOG.info("Aion internal miner generating {} solutions per second", hashrate);
         }
-
-
-    }
-
-    public void shutdown() {
-        ees.shutdown();
     }
 }

@@ -37,7 +37,6 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingState;
-import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -47,12 +46,16 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
-import static org.spongycastle.asn1.x500.style.RFC4519Style.c;
 
 /**
  * {@link AionPoW} contains the logic to process new mined blocks and dispatch
@@ -80,82 +83,6 @@ public class AionPoW {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
     private static final int syncLimit = 128;
-
-    public void setCfg(CfgAion newCfg) {
-        config = newCfg;
-    }
-
-    private final class EpPOW implements Runnable {
-        boolean go = true;
-        @Override
-        public void run() {
-            while (go) { // TODO double check this sync logic
-                synchronized (pauseMonitor) {
-                    if (paused) {
-                        try {
-                            LOG.debug("EpPOW paused");
-                            pauseMonitor.wait();
-                            LOG.debug("EpPOW resumed");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (!go) {
-                            break;
-                        }
-                    }
-                }
-                LOG.trace("EpPOW doing work");
-
-                IEvent e = ees.take();
-                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                    newPendingTxReceived.set(true);
-                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                    // create a new block template every time the best block
-                    // updates.
-                    createNewBlockTemplate();
-                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
-                    processSolution((Solution) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
-                    go = false;
-                }
-            }
-        }
-    }
-
-    private class PeriodicPowRunner implements Runnable {
-        @Override
-        public void run() {
-            while (!shutDown.get()) {
-                synchronized (pauseMonitor) {
-                    if(paused) {
-                        try {
-                            LOG.debug("PeriodicPowRunner paused");
-                            pauseMonitor.wait();
-                            LOG.debug("PeriodicPowRunner resumed");
-                        } catch (InterruptedException e) {
-                            LOG.debug("PeriodicPowRunner interrupted while waiting");
-                            break;
-                        }
-                    }
-                    if(shutDown.get()) break;
-                }
-
-                try {
-                    Thread.sleep(100);
-
-                    long now = System.currentTimeMillis();
-                    if (now - lastUpdate.get() > 3000
-                            && newPendingTxReceived.compareAndSet(true, false)
-                            || now - lastUpdate.get() > 10000) /* fallback when we never received any event*/ {
-                        createNewBlockTemplate();
-                    }
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        }
-    }
-
 
     /**
      * Creates an {@link AionPoW} instance. Be sure to call
@@ -276,7 +203,6 @@ public class AionPoW {
             block.getHeader().setSolution(solution.getSolution());
 
             // This can be improved
-//            ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
              ImportResult importResult = aionImpl.addNewMinedBlock(block);
 
             // Check that the new block was successfully added
@@ -359,4 +285,78 @@ public class AionPoW {
         }
     }
 
+    public void setCfg(CfgAion newCfg) {
+        config = newCfg;
+    }
+
+    private final class EpPOW implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) { // TODO double check this sync logic
+                synchronized (pauseMonitor) {
+                    if (paused) {
+                        try {
+                            LOG.debug("EpPOW paused");
+                            pauseMonitor.wait();
+                            LOG.debug("EpPOW resumed");
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if (!go) {
+                            break;
+                        }
+                    }
+                }
+                LOG.trace("EpPOW doing work");
+
+                IEvent e = ees.take();
+                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                    newPendingTxReceived.set(true);
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    // create a new block template every time the best block
+                    // updates.
+                    createNewBlockTemplate();
+                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                    processSolution((Solution) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
+                    go = false;
+                }
+            }
+        }
+    }
+
+    private class PeriodicPowRunner implements Runnable {
+        @Override
+        public void run() {
+            while (!shutDown.get()) {
+                synchronized (pauseMonitor) {
+                    if(paused) {
+                        try {
+                            LOG.debug("PeriodicPowRunner paused");
+                            pauseMonitor.wait();
+                            LOG.debug("PeriodicPowRunner resumed");
+                        } catch (InterruptedException e) {
+                            LOG.debug("PeriodicPowRunner interrupted while waiting");
+                            break;
+                        }
+                    }
+                    if(shutDown.get()) break;
+                }
+
+                try {
+                    Thread.sleep(100);
+
+                    long now = System.currentTimeMillis();
+                    if (now - lastUpdate.get() > 3000
+                            && newPendingTxReceived.compareAndSet(true, false)
+                            || now - lastUpdate.get() > 10000) /* fallback when we never received any event*/ {
+                        createNewBlockTemplate();
+                    }
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+    }
 }

@@ -35,6 +35,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
@@ -55,33 +56,49 @@ import java.util.List;
 import java.util.Optional;
 
 public class AionImpl implements IAionChain {
-
-    private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
-    private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
-
     public AionHub aionHub;
 
     private CfgAion cfg;
-
     private TxCollector collector;
+    private final IMineRunner blockMiner;
+
+    private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+    private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
 
     private static class Holder {
         static final AionImpl INSTANCE = new AionImpl();
     }
 
+    /**
+     * Constructor
+     *
+     * @param blockMiner Block miner
+     */
+    public AionImpl(IMineRunner blockMiner, AionHub aionHub, CfgAion cfg) {
+        this.cfg = cfg;
+        this.aionHub = aionHub;
+        LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
+                + cfg.getNet().getP2p().getPort() + ">");
+
+        collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX); // should make this injectable also
+        this.blockMiner = blockMiner;
+    }
+
+    public AionImpl(AionHub aionHub, CfgAion cfg) {
+        this(new EquihashMiner(aionHub.getEventMgr(), cfg), aionHub, cfg);
+    }
+
+    /**
+     * Use of singleton instance is discouraged.  Please use
+     * {@link #AionImpl(IMineRunner, AionHub, CfgAion)} whenever possible.
+     */
     public static AionImpl inst() {
         return Holder.INSTANCE;
     }
 
     protected AionImpl() {
-        this.cfg = CfgAion.inst();
-        aionHub = new AionHub();
-        LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
-                + cfg.getNet().getP2p().getPort() + ">");
-
-        collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
+        this(new AionHub(), CfgAion.inst());
     }
-
 
     @Override
     public IPowChain<AionBlock, A0BlockHeader> getBlockchain() {
@@ -103,7 +120,6 @@ public class AionImpl implements IAionChain {
 
     @Override
     public IMineRunner getBlockMiner() {
-
         Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
 
         if (minerCoinbase.equals(Address.EMPTY_ADDRESS())) {
@@ -111,7 +127,7 @@ public class AionImpl implements IAionChain {
             return null;
         }
 
-        return EquihashMiner.inst();
+        return blockMiner;
     }
 
     @Override

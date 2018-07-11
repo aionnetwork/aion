@@ -71,16 +71,12 @@ public class MiningApplier implements IDynamicConfigApplier {
                                      IEventMgr eventMgr) {
         LOG.info("Mining applier started mining");
 
-        ((CfgConsensusPow)equihashMiner.getCfg().getConsensus()).setMining(true); // awful casting
+        equihashMiner.getCfg().getConsensus().setMining(true);
         if(!run) {
             equihashMiner.registerCallback(); // should we also unregister when pausing?
             run = true;
         }
         pow.init(aionBlockchain, pendingState, eventMgr); // idempotent; calling it a second time just no-ops
-//        if(!run) {
-//            pow.initThreads();
-//            run = true;
-//        }
         pow.resume();
         equihashMiner.delayedStartMining(START_MINING_DELAY_SEC);
     }
@@ -95,10 +91,10 @@ public class MiningApplier implements IDynamicConfigApplier {
     void pauseMiningInternal(EquihashMiner miner,
                              AionPoW pow) {
         LOG.info("Mining applier stopped mining");
-        ((CfgConsensusPow)(miner.getCfg()).getConsensus()).setMining(false); // fix terrible casting
+        miner.getCfg().getConsensus().setMining(false);
 //        AionImpl.inst().getAionHub().pausePow();
 //        ac.getBlockMiner().stopMining();
         pow.pause();
-        miner.pauseMining();
+        miner.stopMining();
     }
 }

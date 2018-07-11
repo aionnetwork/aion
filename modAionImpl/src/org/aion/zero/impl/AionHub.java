@@ -106,14 +106,6 @@ public class AionHub {
      */
     private volatile AionBlock startingBlock;
 
-    /**
-     * Initialize as per the <a href= "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
-     * holder pattern
-     */
-    private static class Holder {
-        static final AionHub INSTANCE = new AionHub();
-    }
-
     public AionHub() {
         this(AionBlockchainImpl.inst());
     }

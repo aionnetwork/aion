@@ -57,6 +57,11 @@ public class MiningApplierIntegrationTest {
         LOG = AionLoggerFactory.getLogger("TEST");
     }
 
+    /**
+     * Test that {@link MiningApplier} can start, stop, then re-start {@link EquihashMiner} and
+     * {@link AionPoW} workers and that doing so does not disrupt their ability to mine blocks
+     * into a {@link IAionBlockchain}.
+     */
     @Test
     public void testStartThenStopThenStartKernel() throws Throwable {
         // Set up test: start AionPoW and EquihashMiner with mining off
@@ -87,7 +92,7 @@ public class MiningApplierIntegrationTest {
         aionBlockchain.setBestBlock(genesis);
         aionBlockchain.setGenesis(genesis);
 
-        EquihashMiner mineRunner = new EquihashMiner(eventMgr);
+        EquihashMiner mineRunner = new EquihashMiner(eventMgr, CfgAion.inst());
         MiningApplier miningApplier = new MiningApplier();
 
         // Pre-test sanity check
