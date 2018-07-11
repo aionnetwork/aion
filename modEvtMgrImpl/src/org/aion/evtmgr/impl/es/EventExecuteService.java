@@ -68,7 +68,6 @@ public class EventExecuteService {
     /** Clear all events from queue */
     public void clear() {
         callbackEvt.clear();
-        LOG.info("callbackEvt.size = " + callbackEvt.size());
     }
 
     public boolean add(IEvent event) {

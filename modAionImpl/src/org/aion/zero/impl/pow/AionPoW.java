@@ -66,9 +66,6 @@ public class AionPoW {
     public static final String POW_THREAD_NAME = "pow";
 
     private CfgAion config = CfgAion.inst();
-    protected AtomicBoolean initialized = new AtomicBoolean(false);
-    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected AtomicLong lastUpdate = new AtomicLong(0);
     private AtomicBoolean shutDown = new AtomicBoolean();
     private volatile boolean paused = false;
     private final Object pauseMonitor = new Object();
@@ -76,6 +73,10 @@ public class AionPoW {
     private SyncMgr syncMgr;
     private EventExecuteService ees;
     private AionImpl aionImpl;
+
+    protected AtomicBoolean initialized = new AtomicBoolean(false);
+    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    protected AtomicLong lastUpdate = new AtomicLong(0);
 
     protected IAionBlockchain blockchain;
     protected IPendingState<AionTransaction> pendingState;

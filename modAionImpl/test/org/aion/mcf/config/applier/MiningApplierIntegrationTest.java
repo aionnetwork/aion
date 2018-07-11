@@ -74,8 +74,6 @@ public class MiningApplierIntegrationTest {
         // CfgAion.inst() in the classes we're testing, we should change this.
         CfgAion.inst().getConsensus().setMining(false);
         CfgAion.inst().getDb().setPath(tmp.getRoot().getPath());
-//        CfgAion.inst().getConsensus().setCpuMineThreads(
-//                Math.max(1, Runtime.getRuntime().availableProcessors() - 2));
 
         Properties prop = new Properties();
         prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
@@ -93,7 +91,7 @@ public class MiningApplierIntegrationTest {
         aionBlockchain.setGenesis(genesis);
 
         EquihashMiner mineRunner = new EquihashMiner(eventMgr, CfgAion.inst());
-        MiningApplier miningApplier = new MiningApplier();
+        MiningApplier miningApplier = new MiningApplier(mineRunner, pow, aionBlockchain, pendingState, eventMgr);
 
         // Pre-test sanity check
         LOG.info("Initial state best block = {}", aionBlockchain.getBestBlock());
@@ -105,7 +103,7 @@ public class MiningApplierIntegrationTest {
 
         // PART 1: Turn on mining and check that a new block is mined within 10 minutes
         LOG.info("Starting mining via MiningApplier and waiting for a block to be mined.");
-        miningApplier.startOrResumeMiningInternal(mineRunner, pow, aionBlockchain, pendingState, eventMgr);
+        miningApplier.startOrResumeMining();
         TimeUnit.SECONDS.sleep(10); // due to delayedStartMining
         assertThat(mineRunner.isMining(), is(true));
         callFunctionUntilTrue(
@@ -120,7 +118,7 @@ public class MiningApplierIntegrationTest {
 
         // PART 2: Turn off mining and verify threads stopped
         LOG.info("Pausing mining via MiningApplier and verifying that threads have stopped.");
-        miningApplier.pauseMiningInternal(mineRunner, pow);
+        miningApplier.pauseMining();
         TimeUnit.SECONDS.sleep(13);
         assertThat(mineRunner.isMining(), is(false));
 
@@ -139,9 +137,11 @@ public class MiningApplierIntegrationTest {
                         , t.getState(), is(not(Thread.State.RUNNABLE)))
         );
 
-        // PART 3: Turn mining back on and check that a new block is mined within 5 minutes
+        // PART 3: Turn mining back on and check that a new block is mined within 20 minutes
+        // 20 min. is probably overkill, but don't want Jenkins intermittently failing
+        // this if it's running slow.
         LOG.info("Restarting mining via MiningApplier and waiting for a block to be mined.");
-        miningApplier.startOrResumeMiningInternal(mineRunner, pow, aionBlockchain, pendingState, eventMgr);
+        miningApplier.startOrResumeMining();
         TimeUnit.SECONDS.sleep(10); // due to delayedStartMining
         assertThat(mineRunner.isMining(), is(true));
         callFunctionUntilTrue(
@@ -149,8 +149,8 @@ public class MiningApplierIntegrationTest {
                     LOG.info("Current best block = {}", aionBlockchain.getBestBlock());
                     return aionBlockchain.getBestBlock().getNumber() > bestBlock;
                 },
-                TimeUnit.SECONDS, 15, 600 /* longer timeout since difficulty has increased */,
-                "Expected at least one block to be mined after 10 minutes");
+                TimeUnit.SECONDS, 15,1200,
+                "Expected at least one block to be mined after 20 minutes");
         LOG.info("New block has been mined.  New best block number is " +
                 aionBlockchain.getBestBlock().getNumber());
     }

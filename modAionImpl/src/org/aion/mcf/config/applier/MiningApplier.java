@@ -21,13 +21,52 @@ import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
+/**
+ * Alters Aion kernel to switch on or off mining.
+ */
 public class MiningApplier implements IDynamicConfigApplier {
+    private EquihashMiner equihashMiner;
+    private AionPoW pow;
+    private IAionBlockchain aionBlockchain;
+    private IPendingState<AionTransaction> pendingState;
+    private IEventMgr eventMgr;
+
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
     private static int START_MINING_DELAY_SEC = 5;
 
-    boolean run = false;
+    /**
+     * Constructor
+     *
+     * @param equihashMiner equihash miner that will be altered
+     * @param pow pow that will be altered
+     * @param aionBlockchain blockchain that pow operates upon
+     * @param pendingState pending state used by pow
+     * @param eventMgr event manager used by pow
+     */
+    public MiningApplier(EquihashMiner equihashMiner,
+                         AionPoW pow,
+                         IAionBlockchain aionBlockchain,
+                         IPendingState<AionTransaction> pendingState,
+                         IEventMgr eventMgr) {
+        this.equihashMiner = equihashMiner;
+        this.pow = pow;
+        this.aionBlockchain = aionBlockchain;
+        this.pendingState = pendingState;
+        this.eventMgr = eventMgr;
+    }
+
+    /**
+     * Constructor using dependencies stored in the global AionHub instance; i.e.
+     * {@link AionImpl#getAionHub()}.  Use
+     * {@link MiningApplier#MiningApplier(EquihashMiner, AionPoW, IAionBlockchain, IPendingState, IEventMgr)}
+     * whenever possible to avoid dependencies on the singleton.
+     */
     public MiningApplier() {
-        run = false;
+        this((EquihashMiner)AionFactory.create().getBlockMiner(),
+                AionImpl.inst().getAionHub().getPoW(),
+                AionImpl.inst().getAionHub().getBlockchain(),
+                AionImpl.inst().getAionHub().getPendingState(),
+                AionImpl.inst().getAionHub().getEventMgr());
     }
 
     @Override
@@ -49,33 +88,13 @@ public class MiningApplier implements IDynamicConfigApplier {
         return apply(newCfg, oldCfg); // same thing as apply, but with the operators reversed
     }
 
-    private void startOrResumeMining() {
-        IAionChain ac = AionFactory.create();
-        AionHub hub = AionImpl.inst().getAionHub();
-        startOrResumeMiningInternal((EquihashMiner)ac.getBlockMiner(),
-                hub.getPoW(),
-                hub.getBlockchain(),
-                hub.getPendingState(),
-                hub.getEventMgr());
-    }
-
-    /**
-     * For testing/internal only.  Production code should not call this because all the other code
-     * in kernel only cares about the global singleton instances of these parameters.
-     */
     @VisibleForTesting
-    void startOrResumeMiningInternal(EquihashMiner equihashMiner,
-                                     AionPoW pow,
-                                     IAionBlockchain aionBlockchain,
-                                     IPendingState<AionTransaction> pendingState,
-                                     IEventMgr eventMgr) {
+    void startOrResumeMining() {
         LOG.info("Mining applier started mining");
-
         equihashMiner.getCfg().getConsensus().setMining(true);
-        if(!run) {
-            equihashMiner.registerCallback(); // should we also unregister when pausing?
-            run = true;
-        }
+        equihashMiner.registerCallback(); // when pow and equihashMiner are stopped, the registered
+                                          // events aren't sent, so we don't bother unregistering
+                                          // when stopped.
         pow.init(aionBlockchain, pendingState, eventMgr); // idempotent; calling it a second time just no-ops
         pow.resume();
         equihashMiner.delayedStartMining(START_MINING_DELAY_SEC);
@@ -83,18 +102,9 @@ public class MiningApplier implements IDynamicConfigApplier {
 
     @VisibleForTesting
     void pauseMining() {
-        IAionChain ac = AionFactory.create();
-        pauseMiningInternal((EquihashMiner)ac.getBlockMiner(), AionImpl.inst().getAionHub().getPoW());
-    }
-
-    @VisibleForTesting
-    void pauseMiningInternal(EquihashMiner miner,
-                             AionPoW pow) {
         LOG.info("Mining applier stopped mining");
-        miner.getCfg().getConsensus().setMining(false);
-//        AionImpl.inst().getAionHub().pausePow();
-//        ac.getBlockMiner().stopMining();
+        equihashMiner.getCfg().getConsensus().setMining(false);
         pow.pause();
-        miner.stopMining();
+        equihashMiner.stopMining();
     }
 }

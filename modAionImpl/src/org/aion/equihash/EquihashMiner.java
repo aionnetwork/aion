@@ -77,8 +77,8 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
     private MAF hashrateMAF;
 
     private EventExecuteService ees;
-
     private boolean isPaused;
+    private boolean callbacksRegistered = false;
 
     // 15 second show status delay
     private static int STATUS_INTERVAL = 15;
@@ -97,6 +97,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         this.n = CfgAion.getN();
         this.k = CfgAion.getK();
         this.miner = new Equihash(n, k);
+        this.callbacksRegistered = false;
 
         this.scheduledWorkers = new ScheduledThreadPoolExecutor(1);
         this.hashrateMAF = new MAF(64);
@@ -182,41 +183,10 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         return this.isPaused;
     }
 
-//    /**
-//     * Stop the mine workers and shut down their thread pool.  Cannot be restarted with {@link #startMining()}
-//     * once this has been called.
-//     */
-//    @Override
-//    public void stopMining() {
-//        if (isMining) {
-//            isMining = false;
-//            fireMinerStopped();
-//            LOG.info("sealer stopping 🔒");
-//
-//            // interrupt
-//            int cnt = 0;
-//            for (Thread t : threads) {
-//                t.interrupt();
-//                LOG.info("Interrupt sealer {}", ++cnt);
-//            }
-//
-//            // join
-//            cnt = 0;
-//            for (Thread t : threads) {
-//                try {
-//                    t.join();
-//                    LOG.info("Stopped sealer {}", ++cnt);
-//                } catch (InterruptedException e) {
-//                    LOG.error("Failed to stop sealer thread");
-//                }
-//            }
-//        }
-//
-//        if(scheduledWorkers.isShutdown()) {
-//            scheduledWorkers.shutdownNow();
-//        }
-//    }
-
+    /**
+     * Shut down the workers and event handler.  Cannot be resumed/restarted afterward.
+     */
+    @Override
     public void shutdown() {
         if(scheduledWorkers.isShutdown()) {
             scheduledWorkers.shutdownNow();
@@ -299,12 +269,13 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
      */
     public void registerCallback() {
         // Only register events if actual mining
-        if (cfg.getConsensus().getMining()) {
+        if (!callbacksRegistered && cfg.getConsensus().getMining()) {
             if (this.evtMgr != null) {
                 IHandler hdrCons = this.evtMgr.getHandler(4);
                 if (hdrCons != null) {
                     hdrCons.eventCallback(new EventCallback(ees, LOG));
                 }
+                callbacksRegistered = true;
             } else {
                 LOG.error("event manager is null");
             }

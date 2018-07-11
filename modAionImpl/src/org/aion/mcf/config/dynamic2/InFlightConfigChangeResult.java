@@ -9,11 +9,11 @@ public class InFlightConfigChangeResult {
         this.applier = applier;
     }
 
-    boolean isSuccess() {
+    public boolean isSuccess() {
         return this.success;
     }
 
-    IDynamicConfigApplier getApplier() {
+    public IDynamicConfigApplier getApplier() {
         return this.applier;
     }
 
