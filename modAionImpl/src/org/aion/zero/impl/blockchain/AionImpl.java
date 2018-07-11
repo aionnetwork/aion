@@ -61,6 +61,7 @@ public class AionImpl implements IAionChain {
     private CfgAion cfg;
     private TxCollector collector;
     private final IMineRunner blockMiner;
+    private final IAionBlockchain blockchain;
 
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
@@ -74,9 +75,10 @@ public class AionImpl implements IAionChain {
      *
      * @param blockMiner Block miner
      */
-    public AionImpl(IMineRunner blockMiner, AionHub aionHub, CfgAion cfg) {
+    public AionImpl(IAionBlockchain blockchain, IMineRunner blockMiner, AionHub aionHub, CfgAion cfg) {
         this.cfg = cfg;
         this.aionHub = aionHub;
+        this.blockchain = blockchain;
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
 
@@ -85,12 +87,15 @@ public class AionImpl implements IAionChain {
     }
 
     public AionImpl(AionHub aionHub, CfgAion cfg) {
-        this(new EquihashMiner(aionHub.getEventMgr(), cfg), aionHub, cfg);
+        this(aionHub.getBlockchain(),
+                new EquihashMiner(aionHub.getEventMgr(), cfg),
+                aionHub,
+                cfg);
     }
 
     /**
      * Use of singleton instance is discouraged.  Please use
-     * {@link #AionImpl(IMineRunner, AionHub, CfgAion)} whenever possible.
+     * {@link #AionImpl(IAionBlockchain, IMineRunner, AionHub, CfgAion)} whenever possible.
      */
     public static AionImpl inst() {
         return Holder.INSTANCE;
@@ -102,11 +107,11 @@ public class AionImpl implements IAionChain {
 
     @Override
     public IPowChain<AionBlock, A0BlockHeader> getBlockchain() {
-        return aionHub.getBlockchain();
+        return blockchain;
     }
 
     protected IAionBlockchain getAionBlockchain() {
-        return aionHub.getBlockchain();
+        return blockchain;
     }
 
     public synchronized ImportResult addNewMinedBlock(AionBlock block) {
@@ -225,7 +230,7 @@ public class AionImpl implements IAionChain {
 
     @Override
     public void exitOn(long number) {
-        aionHub.getBlockchain().setExitOn(number);
+        blockchain.setExitOn(number);
     }
 
     @Override

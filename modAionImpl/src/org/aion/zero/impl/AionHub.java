@@ -88,7 +88,7 @@ public class AionHub {
 
     private IPendingStateInternal<AionBlock, AionTransaction> mempool;
 
-    private IAionBlockchain blockchain;
+    private final IAionBlockchain blockchain;
 
     // TODO: Refactor to interface later
     private AionRepositoryImpl repository;

@@ -9,6 +9,7 @@ import org.aion.log.LogEnum;
 import org.aion.log.LogLevels;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.GenesisBlockLoader;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -81,8 +82,9 @@ public class MiningApplierIntegrationTest {
         eventMgr.start();
 
         IPendingState<AionTransaction> pendingState = mock(IPendingState.class);
-
-        AionPoW pow = new AionPoW(new CustomBlockchainAionImpl());
+        EquihashMiner mineRunner = new EquihashMiner(eventMgr, CfgAion.inst());
+        AionPoW pow = new AionPoW(new AionImpl(aionBlockchain, mineRunner,
+                new AionHub(), CfgAion.inst()));
         pow.init(aionBlockchain, pendingState, eventMgr);
 
         JSONObject genesisJson = new JSONObject(GENESIS_BLOCK_JSON);
@@ -90,7 +92,6 @@ public class MiningApplierIntegrationTest {
         aionBlockchain.setBestBlock(genesis);
         aionBlockchain.setGenesis(genesis);
 
-        EquihashMiner mineRunner = new EquihashMiner(eventMgr, CfgAion.inst());
         MiningApplier miningApplier = new MiningApplier(mineRunner, pow, aionBlockchain, pendingState, eventMgr);
 
         // Pre-test sanity check
@@ -184,24 +185,7 @@ public class MiningApplierIntegrationTest {
             }
         }
     }
-
-    /**
-     * AionImpl is hardcoded to use the IAionBlockchain constructed in AionHub,
-     * this subclass overrides that so we can use the IAionBlockchain constructed
-     * in this test.
-     */
-    private class CustomBlockchainAionImpl extends AionImpl {
-
-        public CustomBlockchainAionImpl() {
-            super();
-        }
-
-        @Override
-        public IAionBlockchain getAionBlockchain() {
-            return aionBlockchain;
-        }
-    }
-
+    
     /** Genesis block with lowest possible difficulty */
     private static final String GENESIS_BLOCK_JSON = "{" +
             "  \"alloc\": {}," +
