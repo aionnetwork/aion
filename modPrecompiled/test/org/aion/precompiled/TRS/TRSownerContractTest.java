@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
+import org.aion.crypto.hash.Blake2b.Param.Default;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
@@ -32,6 +33,7 @@ public class TRSownerContractTest extends TRShelpers {
         repo = new DummyRepo();
         ((DummyRepo) repo).storageErrorReturn = null;
         tempAddrs = new ArrayList<>();
+        repo.addBalance(AION, BigInteger.ONE);
     }
 
     @After
@@ -682,11 +684,6 @@ public class TRSownerContractTest extends TRShelpers {
         assertTrue(timestamp <= after);
     }
 
-    @Test
-    public void testAbleToNullifyWhileUnlocked() {
-        //TODO
-    }
-
     // <-------------------------------------LOCK TRS TESTS---------------------------------------->
 
     @Test
@@ -771,7 +768,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testLockButContractAlreadyLocked() {
         // Test not in test mode.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
 
@@ -779,7 +776,11 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLocked(word));
         assertFalse(getIsContractLive(word));
 
-        byte[] input = getLockInput(contract);
+        // Deposit into contract so we can lock it.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+
+        input = getLockInput(contract);
         TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
@@ -797,6 +798,10 @@ public class TRSownerContractTest extends TRShelpers {
         // Test in test mode.
         contract = createTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
+
+        // Deposit into contract so we can lock it.
+        input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getCode());
 
         word = repo.getStorageValue(contract, getSpecKey());
         assertFalse(getIsContractLocked(word));
@@ -821,7 +826,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testLockAndVerifyIsLocked() {
         // Test not in test mode.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
 
@@ -829,7 +834,11 @@ public class TRSownerContractTest extends TRShelpers {
         assertFalse(getIsContractLocked(word));
         assertFalse(getIsContractLive(word));
 
-        byte[] input = getLockInput(contract);
+        // Deposit into contract so we can lock it.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+
+        input = getLockInput(contract);
         TRSownerContract trs = newTRSownerContract(acct);
         ContractExecutionResult res = trs.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
@@ -842,6 +851,10 @@ public class TRSownerContractTest extends TRShelpers {
         // Test in test mode.
         contract = createTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
+
+        // Deposit into contract so we can lock it.
+        input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getCode());
 
         word = repo.getStorageValue(contract, getSpecKey());
         assertFalse(getIsContractLocked(word));
@@ -861,7 +874,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testLockButContractIsLive() {
         // Test not in test mode.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
 
@@ -903,18 +916,27 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
-    public void testBonusDepositsOnceLocked() {
-        //TODO: in use contract
-    }
+    public void testLockWithContractBalanceZero() {
+        Address owner = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getLockInput(contract);
+        ContractExecutionResult res = newTRSownerContract(owner).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertFalse(getIsContractLocked(repo.getStorageValue(contract, getSpecKey())));
 
-    @Test
-    public void testBonusDepositsBeforeLocked() {
-        //TODO: in use contract
-    }
+        // Now deposit into contract and refund it so we are back at zero and try again.
+        input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getCode());
+        input = getRefundInput(contract, owner, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getCode());
 
-    @Test
-    public void testAbleToNullifyWhileLocked() {
-        //TODO
+        input = getLockInput(contract);
+        res = newTRSownerContract(owner).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertFalse(getIsContractLocked(repo.getStorageValue(contract, getSpecKey())));
     }
 
     // <-------------------------------------START TRS TESTS--------------------------------------->
@@ -922,7 +944,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testStartAddressTooSmall() {
         // Test on empty address.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         createAndLockTRScontract(acct, false, false, 1, BigInteger.ZERO,
             0);
         byte[] input = new byte[1];
@@ -943,7 +965,7 @@ public class TRSownerContractTest extends TRShelpers {
 
     @Test
     public void testStartAddressTooLarge() {
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false,
             1, BigInteger.ZERO, 0);
         byte[] input = new byte[34];
@@ -959,7 +981,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testStartNotTRScontractAddress() {
         // Test regular address as a TRS address.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false,
             1, BigInteger.ZERO, 0);
         byte[] input = new byte[33];
@@ -984,7 +1006,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testStartNotContractOwner() {
         // Test not in test mode: owner is acct, caller is AION.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
         byte[] input = getLockInput(contract);
@@ -1006,7 +1028,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testStartButContractAlreadyLive() {
         // Test not in test mode.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
 
@@ -1078,7 +1100,7 @@ public class TRSownerContractTest extends TRShelpers {
     @Test
     public void testStartAndVerifyIsLive() {
         // Test not in test mode.
-        Address acct = getNewExistentAccount(BigInteger.ZERO);
+        Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
 
@@ -1116,13 +1138,98 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
-    public void testCannotMakeBonusDepositsWhileLive() {
-        //TODO: in use contract
+    public void testBonusBalanceNonExistentContract() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        assertEquals(BigInteger.ZERO, getBonusBalance(newTRSownerContract(acct), acct));
     }
 
     @Test
-    public void testNotAbleToNullifyWhileLive() {
-        //TODO
+    public void testBonusBalanceOnContractNotYetLive() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Deposit bonus funds into contract. Until it is live the contract does not see these funds.
+        repo.addBalance(contract, new BigInteger("100"));
+        assertEquals(BigInteger.ZERO, getBonusBalance(newTRSownerContract(acct), contract));
+
+        // Now deposit regularly and lock the contract. Again we should still not see the bonus yet.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.ZERO, getBonusBalance(newTRSownerContract(acct), contract));
+    }
+
+    @Test
+    public void testStartZeroBonusBalance() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Deposit regularly and lock contract. We have no bonus deposits in. Start contract.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        input = getStartInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        assertEquals(BigInteger.ZERO, getBonusBalance(newTRSownerContract(acct), contract));
+    }
+
+    @Test
+    public void testStartNonZeroBonusBalance() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        BigInteger bonus1 = new BigInteger("23");
+        BigInteger bonus2 = new BigInteger("346234");
+        BigInteger bonus3 = new BigInteger("98234623");
+
+        repo.addBalance(contract, bonus1);  // make a bonus deposit.
+
+        // Deposit regularly and lock contract. We have no bonus deposits in. Start contract.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        repo.addBalance(contract, bonus2);  // make a bonus deposit.
+
+        input = getStartInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        repo.addBalance(contract, bonus3);  // this deposit should be ignored.
+
+        assertEquals(bonus1.add(bonus2), getBonusBalance(newTRSownerContract(acct), contract));
+    }
+
+    @Test
+    public void testStartNonZeroBonusBalanceUsesMultipleRows() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        BigInteger bonus = BigInteger.TWO.pow(300);
+
+        repo.addBalance(contract, bonus);  // make a bonus deposit.
+
+        // Deposit regularly and lock contract. We have no bonus deposits in. Start contract.
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        repo.addBalance(contract, bonus);  // make a bonus deposit.
+
+        input = getStartInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        repo.addBalance(contract, bonus);  // this deposit should be ignored.
+
+        assertEquals(bonus.add(bonus), getBonusBalance(newTRSownerContract(acct), contract));
     }
 
 }

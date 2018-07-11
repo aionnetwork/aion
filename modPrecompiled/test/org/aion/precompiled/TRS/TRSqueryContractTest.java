@@ -6,21 +6,14 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.HashUtil;
-import org.aion.mcf.core.ImportResult;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +23,13 @@ import org.junit.Test;
  */
 public class TRSqueryContractTest extends TRShelpers {
     private static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
-    private ECKey senderKey;
 
     @Before
     public void setup() {
         repo = new DummyRepo();
         ((DummyRepo) repo).storageErrorReturn = null;
         tempAddrs = new ArrayList<>();
+        repo.addBalance(AION, BigInteger.ONE);
     }
 
     @After
@@ -50,61 +43,6 @@ public class TRSqueryContractTest extends TRShelpers {
     }
 
     // <-----------------------------------HELPER METHODS BELOW------------------------------------>
-
-    // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
-    // method creates a new block every sleepDuration milliseconds.
-    private void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-            .withDefaultAccounts()
-            .withValidatorConfiguration("simple")
-            .build();
-
-        StandaloneBlockchain bc = bundle.bc;
-        senderKey = bundle.privateKeys.get(0);
-        AionBlock previousBlock = bc.genesis;
-
-        for (int i = 0; i < numBlocks; i++) {
-            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
-            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
-        }
-
-        blockchain = bc;
-    }
-
-    // Adds numBlocks more blocks to the blockchain every sleepDuration milliseconds.
-    private void addBlocks(int numBlocks, long sleepDuration) throws InterruptedException {
-        AionBlock previousBlock = blockchain.getBestBlock();
-        for (int i = 0; i < numBlocks; i++) {
-            previousBlock = createBundleAndCheck(((StandaloneBlockchain) blockchain), senderKey, previousBlock);
-            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
-        }
-    }
-
-    private static AionBlock createBundleAndCheck(StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
-        byte[] ZERO_BYTE = new byte[0];
-
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
-        List<AionTransaction> transactions = new ArrayList<>();
-
-        // create 100 transactions per bundle
-        for (int i = 0; i < 100; i++) {
-            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
-            AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),
-                destAddr, BigInteger.ONE.toByteArray(), ZERO_BYTE, 21000, 1);
-            sendTransaction.sign(key);
-            transactions.add(sendTransaction);
-            accountNonce = accountNonce.add(BigInteger.ONE);
-        }
-
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
-        assertEquals(100, block.getTransactionsList().size());
-        // clear the trie
-        bc.getRepository().flush();
-
-        ImportResult result = bc.tryToConnect(block);
-        assertEquals(ImportResult.IMPORTED_BEST, result);
-        return block;
-    }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
 

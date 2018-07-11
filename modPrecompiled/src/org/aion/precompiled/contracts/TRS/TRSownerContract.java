@@ -115,7 +115,8 @@ public final class TRSownerContract extends AbstractTRS {
      *       contractAddress is the address of the public-facing TRS contract to lock.
      *
      *     conditions: the caller of this method must be the owner of the specified contract
-     *       otherwise this method will fail.
+     *       otherwise this method will fail. A contract cannot be locked until the total amount of
+     *       funds deposited into the contract is a strictly positive number.
      *
      *     returns: void.
      *
@@ -271,7 +272,8 @@ public final class TRSownerContract extends AbstractTRS {
      *   contractAddress is the address of the public-facing TRS contract to lock.
      *
      * conditions: the caller of this method must be the owner of the specified contract
-     *   otherwise this method will fail.
+     *   otherwise this method will fail. A contract cannot be locked until the total amount of funds
+     *   deposited into the contract is a strictly positive number.
      *
      * @param input The input to the lock public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -296,6 +298,11 @@ public final class TRSownerContract extends AbstractTRS {
         // contract is unlocked & contract is not live.
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A contract must have a strictly positive balance before it can be locked.
+        if (getTotalBalance(contract).compareTo(BigInteger.ZERO) <= 0) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -351,8 +358,9 @@ public final class TRSownerContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // All checks OK. Change contract state to live.
+        // All checks OK. Change contract state to live and save set bonus balance for the contract.
         setLive(contract);
+        setBonusBalance(contract);
         track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }

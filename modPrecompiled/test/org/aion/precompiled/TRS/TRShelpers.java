@@ -1,25 +1,33 @@
 package org.aion.precompiled.TRS;
 
 import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
+import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 
 /**
@@ -31,6 +39,7 @@ class TRShelpers {
     IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
     IAionBlockchain blockchain = StandaloneBlockchain.inst();
     List<Address> tempAddrs;
+    ECKey senderKey;
     private static final byte[] out = new byte[1];
 
     int ownerMaxOp = 4;     //TODO remove this stuff..
@@ -47,6 +56,61 @@ class TRShelpers {
         repo.flush();
         tempAddrs.add(acct);
         return acct;
+    }
+
+    // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
+    // method creates a new block every sleepDuration milliseconds.
+    void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
+        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
+            .withDefaultAccounts()
+            .withValidatorConfiguration("simple")
+            .build();
+
+        StandaloneBlockchain bc = bundle.bc;
+        senderKey = bundle.privateKeys.get(0);
+        AionBlock previousBlock = bc.genesis;
+
+        for (int i = 0; i < numBlocks; i++) {
+            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
+            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
+        }
+
+        blockchain = bc;
+    }
+
+    // Adds numBlocks more blocks to the blockchain every sleepDuration milliseconds.
+    void addBlocks(int numBlocks, long sleepDuration) throws InterruptedException {
+        AionBlock previousBlock = blockchain.getBestBlock();
+        for (int i = 0; i < numBlocks; i++) {
+            previousBlock = createBundleAndCheck(((StandaloneBlockchain) blockchain), senderKey, previousBlock);
+            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
+        }
+    }
+
+    private static AionBlock createBundleAndCheck(StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
+        byte[] ZERO_BYTE = new byte[0];
+
+        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+        List<AionTransaction> transactions = new ArrayList<>();
+
+        // create 100 transactions per bundle
+        for (int i = 0; i < 100; i++) {
+            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
+            AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),
+                destAddr, BigInteger.ONE.toByteArray(), ZERO_BYTE, 21000, 1);
+            sendTransaction.sign(key);
+            transactions.add(sendTransaction);
+            accountNonce = accountNonce.add(BigInteger.ONE);
+        }
+
+        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        assertEquals(100, block.getTransactionsList().size());
+        // clear the trie
+        bc.getRepository().flush();
+
+        ImportResult result = bc.tryToConnect(block);
+        assertEquals(ImportResult.IMPORTED_BEST, result);
+        return block;
     }
 
     // Returns a new TRSownerContract that calls the contract using caller.
@@ -76,23 +140,33 @@ class TRShelpers {
     }
 
     // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
+    // The owner deposits 1 token so that the contract can be locked.
     Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
         Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
-        byte[] input = getLockInput(contract);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        if (!newTRSuseContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo.getBalance(owner));
+        }
+        input = getLockInput(contract);
         if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         return contract;
     }
 
-    // Returns the address of a newly created TRS contract that is locked and live.
+    // Returns the address of a newly created TRS contract that is locked and live. The owner deposits
+    //  token so that the contract can be locked.
     Address createLockedAndLiveTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
         Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
-        byte[] input = getLockInput(contract);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        if (!newTRSuseContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo.getBalance(owner));
+        }
+        input = getLockInput(contract);
         if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
@@ -149,6 +223,14 @@ class TRShelpers {
         input[0] = 0x0;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length , amtBytes.length);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the withdraw operation.
+    byte[] getWithdrawInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = (byte) 0x1;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         return input;
     }
 
@@ -215,6 +297,11 @@ class TRShelpers {
     byte[] getTrueContractOutput() {
         out[0] = 0x1;
         return out;
+    }
+
+    // Returns the balance of bonus tokens in the TRS contract contract.
+    BigInteger getBonusBalance(AbstractTRS trs, Address contract) {
+        return trs.getBonusBalance(contract);
     }
 
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.

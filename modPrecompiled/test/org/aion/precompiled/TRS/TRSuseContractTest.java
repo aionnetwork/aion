@@ -8,10 +8,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
@@ -36,6 +40,7 @@ public class TRSuseContractTest extends TRShelpers {
         repo = new DummyRepo();
         ((DummyRepo) repo).storageErrorReturn = null;
         tempAddrs = new ArrayList<>();
+        repo.addBalance(AION, BigInteger.ONE);
     }
 
     @After
@@ -828,6 +833,91 @@ public class TRSuseContractTest extends TRShelpers {
     }
 
     // <----------------------------------TRS WITHDRAWAL TESTS------------------------------------->
+
+    @Test
+    public void testWithdrawInputTooShort() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = new byte[32];
+        input[0] = 0x1;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN - 1);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testWithdrawInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = new byte[34];
+        input[0] = 0x1;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testWithdrawContractNotLockedOrLive() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+
+        input = getWithdrawInput(contract);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(newTRSuseContract(acct), contract, acct));
+    }
+
+    @Test
+    public void testWithdrawContractLockedNotLive() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+
+        // Lock the contract.
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        input = getWithdrawInput(contract);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(newTRSuseContract(acct), contract, acct));
+    }
+
+    @Test
+    public void removeThis() throws InterruptedException {
+        //TODO: remove this test.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+
+        // Lock the contract.
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        input = getStartInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        // Add block to blockchain.
+        createBlockchain(2, TimeUnit.SECONDS.toMillis(1));
+
+        input = getWithdrawInput(contract);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(BigInteger.ONE, repo.getBalance(acct));
+        //TODO: remove this test.
+    }
 
     @Test
     public void testLastWithdrawalPeriodNonExistentContract() {

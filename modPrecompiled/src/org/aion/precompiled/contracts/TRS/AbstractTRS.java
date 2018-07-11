@@ -2,6 +2,8 @@ package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -38,11 +40,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * for unchanging keys we store them as an IDataWord object directly.
      */
     private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, TIMESTAMP,
-        NULL32, INVALID;
+        BONUS_SPECS_KEY, NULL32, INVALID;
     private static final byte BALANCE_PREFIX = (byte) 0xB0;
     private static final byte LIST_PREV_PREFIX = (byte) 0x60;
     private static final byte FUNDS_PREFIX = (byte) 0x90;
     private static final byte WITHDRAW_PREFIX = (byte) 0x30;
+    private static final byte BONUS_PREFIX = (byte) 0x21;
 
     private static final int DOUBLE_WORD_SIZE = DoubleDataWord.BYTES;
     private static final int SINGLE_WORD_SIZE = DataWord.BYTES;
@@ -66,6 +69,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
         singleKey[0] = (byte) 0x50;
         TIMESTAMP = toIDataWord(singleKey);
+
+        singleKey[0] = (byte) 0x20;
+        BONUS_SPECS_KEY = toIDataWord(singleKey);
 
         byte[] value = new byte[DOUBLE_WORD_SIZE];
         value[0] = NULL_BIT;
@@ -863,8 +869,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the amount of tokens account is eligible to withdraw in special one-off event.
      */
     private BigInteger computeSpecialWithdrawalAmount(Address contract, Address account) {
-        //TODO
-        return null;
+        if (accountIsEligibleForSpecial(contract, account)) {
+            //TODO
+            return BigInteger.ZERO;
+        } else {
+            return BigInteger.ZERO;
+        }
     }
 
     /**
@@ -882,7 +892,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private int computeNumberPeriodsBehind(Address contract, Address account, int currPeriod) {
         //TODO
-        return -1;
+        return 1;
     }
 
     /**
@@ -906,7 +916,113 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
         //TODO
-        return null;
+        return BigInteger.ONE;
+    }
+
+    /**
+     * Returns the total amount of funds that is owed to account in the TRS contract contract. This
+     * is the amount that account will receive once account has successfully withdrawn funds for
+     * every period that the contract has.
+     *
+     * This amount is B + A, where B is the deposit balance in account at the time the contract
+     * goes live and A is the share of bonus tokens that account is entitled to.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the total amount of funds owed to account over the lifetime of the contract.
+     */
+    public BigInteger computeTotalOwed(Address contract, Address account) {
+        return getDepositBalance(contract, account).add(computeBonusShare(contract, account));
+    }
+
+    /**
+     * Returns the total amount of bonus tokens that account is entitled to receive from the TRS
+     * contract contract.
+     *
+     * If the contract balance is zero then this method should never be called -- we only get here
+     * once contract is locked and live, but contract must have non-zero balance to lock -- thus an
+     * exception is thrown in this case to help with debugging.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the share of bonus tokens account is entitled to receive.
+     * @throws IllegalStateException if contract has no total balance.
+     */
+    private BigInteger computeBonusShare(Address contract, Address account) {
+        BigDecimal bonusFunds = new BigDecimal(getBonusBalance(contract));
+        BigDecimal acctBalance = new BigDecimal(getDepositBalance(contract, account));
+
+        BigInteger totalBalance = getTotalBalance(contract);
+        if (totalBalance.compareTo(BigInteger.ZERO) <= 0) {
+            throw new IllegalStateException("Contract has no balance, can't compute bonus share!");
+        }
+        BigDecimal totalBalanceDec = new BigDecimal(totalBalance);
+
+        BigDecimal fraction = acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
+        BigDecimal share = fraction.multiply(
+            bonusFunds, new MathContext(18, RoundingMode.HALF_DOWN));
+
+        return share.toBigInteger();
+    }
+
+    /**
+     * Sets the bonus balance for the TRS contract contract to the balance that that account has at
+     * the moment this method is called. By "the balance that that account has" we mean the amount
+     * of balance directly associated with the address contract in the database, and not the total
+     * deposit balance that the contract itself stores over multiple storage rows in the database.
+     *
+     * If the bonus balance has already been set for the contract then this method does nothing.
+     * The bonus balance can only be set once in a contract's lifetime and this method should only
+     * be called at exactly one point: when the contract first is started / goes live.
+     *
+     * Throws an exception if contract has no balance, which should only happen if contract does
+     * not exist in the database, here for debugging.
+     *
+     * @param contract The TRS contract to update.
+     * @throws IllegalStateException if contract has no balance.
+     */
+    void setBonusBalance(Address contract) {
+        if (track.getStorageValue(contract, BONUS_SPECS_KEY) != null) { return; }
+        BigInteger balance = track.getBalance(contract);
+        if (balance == null) { throw new IllegalStateException("Contract has no balance!"); }
+
+        byte[] bal = toDoubleWordAlignedArray(balance);
+        int numRows = bal.length / DOUBLE_WORD_SIZE;
+        for (int i = 0; i < numRows; i++) {
+            byte[] bonusKey = makeBonusKey(i);
+            byte[] bonusVal = new byte[DOUBLE_WORD_SIZE];
+            System.arraycopy(bal, i * DOUBLE_WORD_SIZE, bonusVal, 0, DOUBLE_WORD_SIZE);
+            track.addStorageRow(contract, toIDataWord(bonusKey), toIDataWord(bonusVal));
+        }
+
+        // Update bonus balance specs.
+        byte[] bonusSpec = new byte[SINGLE_WORD_SIZE];
+        for (int i = 0; i < Integer.BYTES; i++) {
+            bonusSpec[SINGLE_WORD_SIZE - i - 1] = (byte) ((numRows >>> (i * Byte.SIZE)) & 0xFF);
+        }
+        track.addStorageRow(contract, BONUS_SPECS_KEY, toIDataWord(bonusSpec));
+    }
+
+    /**
+     * Returns the bonus balance that the TRS contract contract has. If no bonus balance has been
+     * set yet or contract does not exist, this method returns zero.
+     *
+     * @param contract The TRS contract to query.
+     * @return the bonus balance of the TRS contract contract.
+     */
+    public BigInteger getBonusBalance(Address contract) {
+        IDataWord bonusSpec = track.getStorageValue(contract, BONUS_SPECS_KEY);
+        if (bonusSpec == null) { return BigInteger.ZERO; }
+        int numRows = ByteBuffer.wrap(Arrays.copyOfRange(
+            bonusSpec.getData(), SINGLE_WORD_SIZE - Integer.BYTES, SINGLE_WORD_SIZE)).getInt();
+        if (numRows == 0) { return BigInteger.ZERO; }
+
+        byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
+        for (int i = 0; i < numRows; i++) {
+            byte[] bonusVal = track.getStorageValue(contract, toIDataWord(makeBonusKey(i))).getData();
+            System.arraycopy(bonusVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
+        }
+        return new BigInteger(balance);
     }
 
     /**
@@ -990,10 +1106,26 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
+     * Returns a key for the database to query the total bonus balance entry at row number row of
+     * some TRS contract.
+     *
+     * @param row The bonus balance row to make the key for.
+     * @return the key to access the specified bonus balance row for some contract.
+     */
+    private byte[] makeBonusKey(int row) {
+        byte[] bonusKey = new byte[SINGLE_WORD_SIZE];
+        bonusKey[0] = BONUS_PREFIX;
+        for (int i = 0; i < Integer.BYTES; i++) {
+            bonusKey[SINGLE_WORD_SIZE - i - 1] = (byte) ((row >>> (i * Byte.SIZE)) & 0xFF);
+        }
+        return bonusKey;
+    }
+
+    /**
      * Returns a key for the database to query the total balance entry at row number row of some
      * TRS contract.
      *
-     * @param row The total balance row to query.
+     * @param row The total balance row to make the key for.
      * @return the key to access the specified total balance row for some contract.
      */
     private byte[] makeTotalBalanceKey(int row) {
