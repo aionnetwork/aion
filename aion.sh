@@ -143,7 +143,7 @@ while $noInterrupt; do
 		  for ((i=0; i<${#threads[@]}; ++i)); do
 		    tTime=$(top -n1 -p $kPID -H | egrep -o "[0-9]{2}\.[0-9]{2} ${threads[i]}" | cut -d" " -f1)
 		    tState=$(jstack -l $kPID | egrep -A1 "${threads[i]}" | egrep -o "State.*" | cut -d" " -f2)
-		    if [[ $tTime == ${tPrev[i]} ]] || [[ $tState == "BLOCKED" ]]; then 
+		    if [[ $tTime == ${tPrev[i]} ]] && [[ $tState == "BLOCKED" ]]; then 
 		      echo "## ${threads[i]} THREAD DEAD ##"
 		      (jstack -l $kPID | egrep -A1 "${threads[i]}") > threadDump_$countRebounce.txt
 		      watching=false
