@@ -1,6 +1,5 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.api.sol.impl.Int;
 import org.aion.base.util.ByteUtil;
 
 import javax.annotation.Nonnull;
