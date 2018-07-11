@@ -156,10 +156,6 @@ public class NodeMgr implements INodeMgr {
      */
     @Override
     public void addTempNode(final INode _n) {
-//        if (tempNodes.size() < maxTempNodes) {
-//            tempNodes.add(_n);
-//        }
-
         final ReentrantLock putLock = this.putLock;
         try {
             putLock.lockInterruptibly();
@@ -187,8 +183,6 @@ public class NodeMgr implements INodeMgr {
 
     @Override
     public INode tempNodesTake() {
-        //return tempNodes.take();
-
         INode node = null;
         final ReentrantLock takeLock = this.takeLock;
         try {
@@ -328,76 +322,6 @@ public class NodeMgr implements INodeMgr {
 //            return !ips.contains(_ip);
 //        }
     }
-
-//    /**
-//     * @param _channelHashCode int
-//     */
-//    // Attention: move node from container need sync to avoid node not belong to
-//    // any container during transit.
-//    public synchronized void moveInboundToActive(int _channelHashCode) {
-//        INode node = inboundNodes.remove(_channelHashCode);
-//        if (node != null) {
-//
-//            if (activeNodes.size() >= maxActiveNodes) {
-//                p2pMgr.closeSocket(node.getChannel(), "inbound -> active, active full");
-//                return;
-//            }
-//
-//            if (node.getIdHash() == p2pMgr.getSelfIdHash()) {
-//                p2pMgr.closeSocket(node.getChannel(), "inbound -> active, self-connected");
-//                return;
-//            }
-//
-//            node.setConnection("inbound");
-//            node.setFromBootList(seedIps.contains(node.getIpStr()));
-//            INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
-//            if (previous != null) {
-//                p2pMgr.closeSocket(node.getChannel(),
-//                    "inbound -> active, node " + previous.getIdShort() + " exits");
-//            } else if (!activeIpAllow(node.getIpStr())) {
-//                p2pMgr.closeSocket(node.getChannel(),
-//                    "inbound -> active, ip " + node.getIpStr() + " exits");
-//            } else {
-//                if (p2pLOG.isDebugEnabled()) {
-//                    p2pLOG.debug("inbound -> active node-id={} ip={}", node.getIdShort(), node
-//                        .getIpStr());
-//                }
-//            }
-//        }
-//    }
-//
-//    /**
-//     * @param _nodeIdHash int
-//     * @param _shortId String
-//     */
-//    // Attention: move node from container need sync to avoid node not belong to
-//    // any container during transit.
-//    public synchronized void moveOutboundToActive(int _nodeIdHash, String _shortId) {
-//        INode node = outboundNodes.remove(_nodeIdHash);
-//        if (node != null) {
-//
-//            if (activeNodes.size() >= maxActiveNodes) {
-//                p2pMgr.closeSocket(node.getChannel(), "outbound -> active, active full");
-//                return;
-//            }
-//
-//            if (node.getIdHash() == p2pMgr.getSelfIdHash()) {
-//                p2pMgr.closeSocket(node.getChannel(), "outbound -> active, self-connected");
-//                return;
-//            }
-//
-//            node.setConnection("outbound");
-//            INode previous = activeNodes.putIfAbsent(_nodeIdHash, node);
-//            if (previous != null) {
-//                p2pMgr.closeSocket(node.getChannel(),
-//                    "outbound -> active, node " + previous.getIdShort() + " exits");
-//            } else {
-//                if (p2pLOG.isDebugEnabled()) {
-//                    p2pLOG.debug("outbound -> active node-id={} ip={}", _shortId, node.getIpStr());
-//                }
-//            }
-//        }
-//    }
 
     public void movePeerToActive(int _hash, String _type) {
         Map<Integer, INode> nodes = (_type.contentEquals("inbound")) ? inboundNodes : outboundNodes;
