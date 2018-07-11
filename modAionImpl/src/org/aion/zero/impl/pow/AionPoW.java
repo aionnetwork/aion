@@ -59,11 +59,16 @@ import static org.spongycastle.asn1.x500.style.RFC4519Style.c;
  * new mining task to miners when needed.
  */
 public class AionPoW {
+    public static final String EPPOW_THREAD_NAME = "EpPow";
+    public static final String POW_THREAD_NAME = "pow";
+
     private CfgAion config = CfgAion.inst();
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
     protected AtomicLong lastUpdate = new AtomicLong(0);
     private AtomicBoolean shutDown = new AtomicBoolean();
+    private volatile boolean paused = false;
+    private final Object pauseMonitor = new Object();
 
     private SyncMgr syncMgr;
     private EventExecuteService ees;
@@ -76,18 +81,11 @@ public class AionPoW {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
     private static final int syncLimit = 128;
 
-    private volatile boolean paused = false;
-    private final Object pauseMonitor = new Object();
-
     public void setCfg(CfgAion newCfg) {
         config = newCfg;
     }
 
     private final class EpPOW implements Runnable {
-        public EpPOW() {
-            System.out.println("EpPOW ctor");
-        }
-
         boolean go = true;
         @Override
         public void run() {
@@ -125,10 +123,6 @@ public class AionPoW {
     }
 
     private class PeriodicPowRunner implements Runnable {
-        public PeriodicPowRunner() {
-            System.out.println("PeriodPowRunner ctor");
-        }
-
         @Override
         public void run() {
             while (!shutDown.get()) {
@@ -145,7 +139,6 @@ public class AionPoW {
                     }
                     if(shutDown.get()) break;
                 }
-//                LOG.trace("PeriodicPow doing work");
 
                 try {
                     Thread.sleep(100);
@@ -202,39 +195,13 @@ public class AionPoW {
                 return;
 
             setupHandler();
-            ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
+            ees = new EventExecuteService(100_000, EPPOW_THREAD_NAME, Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
             registerCallback();
             ees.start(new EpPOW());
 
-            new Thread(new PeriodicPowRunner(), "pow").start();
-        }
-    }
-
-    public void initThreads() {
-        //FIXME refactor should not be public
-        setupHandler();
-        ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
-        ees.setFilter(setEvtFilter());
-
-        registerCallback();
-        ees.start(new EpPOW());
-
-        new Thread(new PeriodicPowRunner(), "pow").start();
-    }
-
-    /** Pause the workers that produce new block templates */
-    public void pause() {
-        LOG.info("Pausing AionPoW workers.");
-        this.paused = true;
-    }
-
-    /** Resume the workers that produce new block templates */
-    public void resume() {
-        synchronized (pauseMonitor) {
-            paused = false;
-            pauseMonitor.notifyAll();
+            new Thread(new PeriodicPowRunner(), POW_THREAD_NAME).start();
         }
     }
 
@@ -362,10 +329,34 @@ public class AionPoW {
         }
     }
 
+    /**
+     * Shut down the worker threads.  Cannot be resumed; for pause/resume functionality see
+     * {@link #pause()}.
+     */
     public synchronized void shutdown() {
         if (ees != null) {
             ees.shutdown();
         }
         shutDown.set(true);
     }
+
+
+    /** Pause the worker threads.  Resumable by {@link #resume()}. */
+    public void pause() {
+        LOG.info("Pausing AionPoW workers.");
+        this.paused = true;
+    }
+
+    /**
+     * Resume the worker threads if paused by {@link #pause()}.  If not paused, this method
+     * does nothing.
+     */
+    public void resume() {
+        synchronized (pauseMonitor) {
+            LOG.info("Resuming AionPoW workers.");
+            paused = false;
+            pauseMonitor.notifyAll();
+        }
+    }
+
 }

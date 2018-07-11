@@ -53,12 +53,11 @@ import static org.aion.base.util.Hex.toHexString;
  */
 
 public class EquihashMiner extends AbstractMineRunner<AionBlock> {
-    public final static String VERSION = "0.1.0";
+    public static final String VERSION = "0.1.0";
+    public static final String MINER_THREAD_NAME_PREFIX = "miner-";
 
     private IAionChain a0Chain;
-
     private CfgAion cfg;
-
     private IEventMgr evtMgr;
 
     // Equihash parameters
@@ -171,7 +170,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                     TimeUnit.SECONDS);
 
             for (int i = 0; i < cpuThreads; i++) {
-                Thread t = new Thread(this::mine, "miner-" + (i + 1));
+                Thread t = new Thread(this::mine, MINER_THREAD_NAME_PREFIX + (i + 1));
 
                 t.start();
                 LOG.info("sealer {} starting.", i + 1);

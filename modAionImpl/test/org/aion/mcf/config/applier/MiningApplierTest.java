@@ -1,6 +1,5 @@
 package org.aion.mcf.config.applier;
 
-import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEventMgr;
@@ -20,7 +19,9 @@ import org.aion.zero.types.AionTransaction;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -37,53 +38,41 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
+/** Test {@link MiningApplier} */
 public class MiningApplierTest {
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder(new File("."));
+
+    private StandaloneBlockchain aionBlockchain = new StandaloneBlockchain
+            .Builder().withValidatorConfiguration("simple").build().bc;
+
+    private static final Logger LOG;
     static {
+        // Long running test, so print out some debug info
         AionLoggerFactory
                 .init(new HashMap<>() {{
                           put(LogEnum.CONS.name(), LogLevels.DEBUG.name());
-                          put(LogEnum.GEN.name(), LogLevels.INFO.name());
+                          put("TEST", LogLevels.INFO.name());
                       }},
                         false /*logToFile*/,
                         "" /*logPath*/);
-    }
-    protected static Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-    private StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-    private StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
-    private StandaloneBlockchain aionBlockchain =  bundle.bc;
-
-    @Before
-    public void before() {
-        // Long running test, so print out some debug info
-
-        LOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-    }
-
-    @After
-    public void after() {
-
+        LOG = AionLoggerFactory.getLogger("TEST");
     }
 
     @Test
     public void testStartThenStopThenStartKernel() throws Throwable {
-        // Test setup
-        String tempDb = "database.temp." + System.currentTimeMillis();
-        File tempDbFile = new File(System.getProperty("user.home") + "/" + tempDb);
-        System.out.println(tempDbFile.getAbsolutePath());
-        if(tempDbFile.exists()) {
-            tempDbFile.delete();
-        }
-        tempDbFile.deleteOnExit();
+        // Set up test: start AionPoW and EquihashMiner with mining off
+        LOG.info("Using temp db path {} [Absolute path: {}]",
+                tmp.getRoot().getPath(), tmp.getRoot().getAbsolutePath());
 
         // In the ideal world, we would construct a Cfg/CfgAion and pass it to our objects
         // that we test, but since they're all looking at the CfgAion.inst() singleton,
         // we'll just set those values directly.  When we refactor our the references to
         // CfgAion.inst() in the classes we're testing, we should change this.
-
         CfgAion.inst().getConsensus().setMining(false);
-        CfgAion.inst().getDb().setPath(tempDb);
-        CfgAion.inst().getConsensus().setCpuMineThreads(10);
+        CfgAion.inst().getDb().setPath(tmp.getRoot().getPath());
+        CfgAion.inst().getConsensus().setCpuMineThreads(
+                Math.max(1, Runtime.getRuntime().availableProcessors() - 2));
 
         Properties prop = new Properties();
         prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
@@ -104,67 +93,68 @@ public class MiningApplierTest {
         MiningApplier miningApplier = new MiningApplier();
 
         // Pre-test sanity check
-        System.out.println("Initial state best block = "+ aionBlockchain.getBestBlock());
+        LOG.info("Initial state best block = {}", aionBlockchain.getBestBlock());
         mineRunner.delayedStartMining(5);
 
         assertThat(mineRunner.isMining(), is(false));
         assertThat(mineRunner.getHashrate(), is(0.));
         assertThat(aionBlockchain.getBestBlock().getNumber(), is(0l));
 
-        // Test 1: Turn on mining and check that a new block is mined within 5 minutes
-        System.out.println("Starting mining via MiningApplier and waiting for a block to be mined.");
+        // PART 1: Turn on mining and check that a new block is mined within 10 minutes
+        LOG.info("Starting mining via MiningApplier and waiting for a block to be mined.");
         miningApplier.startOrResumeMiningInternal(mineRunner, pow, aionBlockchain, pendingState, eventMgr);
         TimeUnit.SECONDS.sleep(10); // due to delayedStartMining
         assertThat(mineRunner.isMining(), is(true));
         callFunctionUntilTrue(
                 () -> {
-                    System.out.println("Current best block = " + aionBlockchain.getBestBlock());
+                    LOG.info("Current best block = " + aionBlockchain.getBestBlock());
                     return aionBlockchain.getBestBlock().getNumber() > 0;
                 },
                 TimeUnit.SECONDS, 15, 600,
-                "Expected at least one block to be mined after 5 minutes");
+                "Expected at least one block to be mined after 10 minutes");
         final long bestBlock = aionBlockchain.getBestBlock().getNumber();
-        System.out.println("New block has been mined.  New best block number is " + bestBlock);
+        LOG.info("New block has been mined.  New best block number is {}", bestBlock);
 
-        // Test 2: Turn off mining and verify threads stopped
-        System.out.println("Pausing mining via MiningApplier and verifying that threads have stopped.");
+        // PART 2: Turn off mining and verify threads stopped
+        LOG.info("Pausing mining via MiningApplier and verifying that threads have stopped.");
         miningApplier.pauseMiningInternal(mineRunner, pow);
-        TimeUnit.SECONDS.sleep(15);
+        TimeUnit.SECONDS.sleep(13);
         assertThat(mineRunner.isMining(), is(false));
 
-        // hackily get all the thread names we care about and verify that they're waiting
+        // hackily get all the thread names we care about and verify that they're not RUNNABLE
         List<Thread> minersAndPowThreads = Thread.getAllStackTraces().keySet().stream().filter(
-                t -> t.getName().contains("miner") || t.getName().contains("pow") || t.getName().contains("EpPow")
+                t -> t.getName().contains(EquihashMiner.MINER_THREAD_NAME_PREFIX)
+                        || t.getName().contains(AionPoW.EPPOW_THREAD_NAME)
+                        || t.getName().contains(AionPoW.POW_THREAD_NAME)
         ).collect(Collectors.toList());
-        System.out.println("Found relevant threads: ");
+        LOG.info("Found relevant threads: ");
         minersAndPowThreads.stream().forEach(
-                t -> System.out.println(String.format("%s -> %s" ,t.getName(), t.getState()))
+                t -> LOG.info("{} -> {}" ,t.getName(), t.getState())
         );
         minersAndPowThreads.stream().forEach(
                 t -> assertThat(String.format("Thread '%s' should not be RUNNABLE", t.getName())
                         , t.getState(), is(not(Thread.State.RUNNABLE)))
         );
 
-        // Test 3: Turn mining back on and check that a new block is mined within 5 minutes
-        System.out.println("Restarting mining via MiningApplier and waiting for a block to be mined.");
+        // PART 3: Turn mining back on and check that a new block is mined within 5 minutes
+        LOG.info("Restarting mining via MiningApplier and waiting for a block to be mined.");
         miningApplier.startOrResumeMiningInternal(mineRunner, pow, aionBlockchain, pendingState, eventMgr);
         TimeUnit.SECONDS.sleep(10); // due to delayedStartMining
         assertThat(mineRunner.isMining(), is(true));
         callFunctionUntilTrue(
                 () -> {
-                    System.out.println("Current best block = " + aionBlockchain.getBestBlock());
+                    LOG.info("Current best block = {}", aionBlockchain.getBestBlock());
                     return aionBlockchain.getBestBlock().getNumber() > bestBlock;
                 },
                 TimeUnit.SECONDS, 15, 600 /* longer timeout since difficulty has increased */,
                 "Expected at least one block to be mined after 10 minutes");
-        System.out.println("New block has been mined.  New best block number is " +
+        LOG.info("New block has been mined.  New best block number is " +
                 aionBlockchain.getBestBlock().getNumber());
     }
 
     /**
-     * Keep running boolean function until it returns true, at a specified period, until timeout is reached.
-     *
-     * Not intended for strict time-keeping tests.
+     * Keep running boolean function until it returns true, at a specified period, until timeout is
+     * reached.  Not intended for any test that needs strict timing.
      */
     private final void callFunctionUntilTrue(BooleanSupplier function,
                                              TimeUnit timeUnit,
@@ -176,22 +166,28 @@ public class MiningApplierTest {
         for(;;) {
             boolean result = function.getAsBoolean();
             if(result) {
-                System.out.println(String.format("Condition met after waiting for %d %s",
+                LOG.info(String.format("Condition met after waiting for %d %s",
                         timeUnit.convert(System.currentTimeMillis() - initial, TimeUnit.MILLISECONDS),
                         timeUnit));
                 return;
             } else if (elapsed >= timeout) {
                 fail(failMsg);
             } else {
-                System.out.println(String.format(
-                        "sleeping %d %s while waiting for condition to be true (timeout: %d %s.  waited %d %s so far)",
-                        period, timeUnit, timeout, timeUnit, elapsed, timeUnit));
-                timeUnit.sleep(period);
                 elapsed += period;
+                LOG.info(String.format(
+                        "sleeping %d %s while waiting for condition to be true (Timeout: %d %s. Waited %d %s so far)",
+                        period, timeUnit, timeout, timeUnit,
+                        timeUnit.convert(elapsed, TimeUnit.MILLISECONDS), timeUnit));
+                timeUnit.sleep(period);
             }
         }
     }
 
+    /**
+     * AionImpl is hardcoded to use the IAionBlockchain constructed in AionHub,
+     * this subclass overrides that so we can use the IAionBlockchain constructed
+     * in this test.
+     */
     private class InstrumentedAionImpl extends AionImpl {
 
         public InstrumentedAionImpl() {
@@ -202,8 +198,6 @@ public class MiningApplierTest {
         public IAionBlockchain getAionBlockchain() {
             return aionBlockchain;
         }
-
-
     }
 
     private static final String GENESIS_BLOCK_JSON = "{" +
