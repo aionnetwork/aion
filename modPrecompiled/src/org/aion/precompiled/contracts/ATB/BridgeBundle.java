@@ -8,7 +8,7 @@ public class BridgeBundle {
     public final byte[] recipient;
 
     public BridgeBundle(@Nonnull final BigInteger transferValue,
-                         @Nonnull final byte[] recipient) {
+                        @Nonnull final byte[] recipient) {
         this.transferValue = transferValue;
         this.recipient = recipient;
     }

@@ -2,6 +2,7 @@ package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -13,26 +14,16 @@ import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseAddressFromCall;
-import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseAddressList;
-import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseBundleRequest;
+import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.getSignature;
-import static org.aion.precompiled.contracts.ATB.BridgeUtilities.toSignature;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract {
-
-    // function signatures
-    // state changes
-    private static final byte[] SIG_CHANGE_OWNER = toSignature("changeOwner(address)");
-    private static final byte[] SIG_ACCEPT_OWNERSHIP = toSignature("acceptOwnership");
-    private static final byte[] SIG_RING_INITIALIZE = toSignature("initializeRing(address[])");
-    private static final byte[] SIG_ADD_RING_MEMBER = toSignature("addRingMember(address)");
-    private static final byte[] SIG_REMOVE_RING_MEMBER = toSignature("removeRingMember(address)");
-    private static final byte[] SIG_SUBMIT_BUNDLE = toSignature("submitBundle(address[],uint128[],bytes32[],bytes32[]");
 
     private static final int BUNDLE_PARAM_ACC = 0;
     private static final int BUNDLE_PARAM_VAL = 1;
     private static final int BUNDLE_PARAM_SIG = 2;
+
+    private static final long ENERGY_CONSUME = 21000L;
 
     // queries
 
@@ -45,7 +36,6 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
 
     // some useful defaults
     // TODO: add passing returns (need more though on gas consumption)
-    private static ContractExecutionResult THROW = new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
 
     public TokenBridgeContract(@Nonnull final ExecutionContext context,
                                @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
@@ -60,84 +50,120 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
 
     @Override
     public ContractExecutionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
+        if (nrgLimit < ENERGY_CONSUME)
+            return THROW;
+
         // as a preset, try to initialize before execution
         this.controller.initialize();
-        // giant switch statement
-        // TODO: could optimize by using a reverse hashmap, then switch on enums
+
         byte[] signature = getSignature(input);
+        if (signature == null)
+            return THROW;
 
-        if (Arrays.equals(signature, SIG_CHANGE_OWNER)) {
-            byte[] address = parseAddressFromCall(input);
+        BridgeFuncSig sig = BridgeFuncSig.getSignatureEnum(signature);
+        if (sig == null)
+            return THROW;
 
-            if (address == null)
-                return THROW;
+        switch(sig) {
+            case SIG_CHANGE_OWNER: {
+                byte[] address = parseAddressFromCall(input);
+                if (address == null)
+                    return fail();
+                ErrCode code = this.controller.setNewOwner(this.context.caller().toBytes(), address);
 
-            this.controller.setNewOwner(this.context.caller().toBytes(), address);
-
-        } else if (Arrays.equals(signature, SIG_ACCEPT_OWNERSHIP)) {
-
-            this.controller.acceptOwnership(this.context.caller().toBytes());
-
-        } else if (Arrays.equals(signature, SIG_RING_INITIALIZE)) {
-
-            // TODO
-            byte[][] addressList = parseAddressList(input);
-
-            if (addressList == null)
-                return THROW;
-
-            ErrCode code = this.controller.ringInitialize(this.context.caller().toBytes(), addressList);
-
-            if (code != ErrCode.NO_ERROR)
-                return THROW;
-
-        } else if (Arrays.equals(signature, SIG_ADD_RING_MEMBER)) {
-            byte[] address = parseAddressFromCall(input);
-            if (address == null)
-                return THROW;
-
-            ErrCode code = this.controller.ringAddMember(this.context.caller().toBytes(), address);
-
-            if (code != ErrCode.NO_ERROR)
-                return THROW;
-
-        } else if (Arrays.equals(signature, SIG_REMOVE_RING_MEMBER)) {
-            byte[] address = parseAddressFromCall(input);
-
-            if (address == null)
-                return THROW;
-
-            ErrCode code = this.controller.ringRemoveMember(this.context.caller().toBytes(), address);
-
-            if (code != ErrCode.NO_ERROR)
-                return THROW;
-
-        } else if (Arrays.equals(signature, SIG_SUBMIT_BUNDLE)) {
-            // TODO: possible attack vector, unsecure deserialization
-            byte[][][] bundleRequests = parseBundleRequest(input);
-
-            if (bundleRequests == null)
-                return THROW;
-
-            byte[][] signatures = bundleRequests[BUNDLE_PARAM_SIG];
-
-            // more of a sanity check
-            if (bundleRequests[0].length != bundleRequests[1].length)
-                return THROW;
-
-            int bundleLen = bundleRequests[0].length;
-            BridgeBundle[] bundles = new BridgeBundle[bundleLen];
-            for (int i = 0; i < bundleLen; i++) {
-                bundles[i] = new BridgeBundle(
-                        new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
-                        bundleRequests[BUNDLE_PARAM_VAL][i]);
+                if (code != ErrCode.NO_ERROR)
+                    return fail();
+                return success();
             }
-            ErrCode code = this.controller.
-                    processBundles(this.context.caller().toBytes(), bundles, signatures);
+            case SIG_ACCEPT_OWNERSHIP: {
+                ErrCode code = this.controller.acceptOwnership(this.context.caller().toBytes());
+                if (code !=  ErrCode.NO_ERROR)
+                    return fail();
+                return success();
+            }
+            case SIG_RING_INITIALIZE: {
+                // TODO
+                byte[][] addressList = parseAddressList(input);
 
-            if (code != ErrCode.NO_ERROR)
+                if (addressList == null)
+                    return fail();
+
+                ErrCode code = this.controller.ringInitialize(this.context.caller().toBytes(), addressList);
+                if (code != ErrCode.NO_ERROR)
+                    return fail();
+                return success();
+            }
+            case SIG_RING_ADD_MEMBER: {
+                byte[] address = parseAddressFromCall(input);
+                if (address == null)
+                    return THROW;
+
+                ErrCode code = this.controller.ringAddMember(this.context.caller().toBytes(), address);
+                if (code != ErrCode.NO_ERROR)
+                    return THROW;
+                break;
+            }
+            case SIG_RING_REMOVE_MEMBER: {
+                byte[] address = parseAddressFromCall(input);
+
+                if (address == null)
+                    return THROW;
+
+                ErrCode code = this.controller.ringRemoveMember(this.context.caller().toBytes(), address);
+                if (code != ErrCode.NO_ERROR)
+                    return THROW;
+                break;
+            }
+            case SIG_SUBMIT_BUNDLE: {
+                // TODO: possible attack vector, unsecure deserialization
+                byte[][][] bundleRequests = parseBundleRequest(input);
+
+                if (bundleRequests == null)
+                    return fail();
+
+                byte[][] signatures = bundleRequests[BUNDLE_PARAM_SIG];
+
+                // more of a sanity check
+                if (bundleRequests[0].length != bundleRequests[1].length)
+                    return fail();
+
+                int bundleLen = bundleRequests[0].length;
+                BridgeBundle[] bundles = new BridgeBundle[bundleLen];
+                for (int i = 0; i < bundleLen; i++) {
+                    bundles[i] = new BridgeBundle(
+                            new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
+                            bundleRequests[BUNDLE_PARAM_VAL][i]);
+                }
+                ErrCode code = this.controller.
+                        processBundles(this.context.caller().toBytes(), bundles, signatures);
+
+                if (code != ErrCode.NO_ERROR)
+                    return fail();
+                break;
+            }
+            case PURE_OWNER:
+                return success(this.connector.getOwner() == null ?);
+            default:
                 return THROW;
         }
+        throw new RuntimeException("should never reach here");
+    }
+
+    private static ContractExecutionResult THROW =
+            new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
+    private ContractExecutionResult fail() {
         return THROW;
+    }
+
+    private ContractExecutionResult success() {
+        long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
+        return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, energyRemaining);
+    }
+
+    private ContractExecutionResult success(@Nonnull final byte[] response) {
+        // should always be positive
+        long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
+        assert energyRemaining >= 0;
+        return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
     }
 }

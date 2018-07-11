@@ -26,21 +26,21 @@ public class BridgeDeserializer {
      * @param call input call with function signature
      * @return {@code address} of new owner, {@code null} if anything is invalid
      */
-    public static byte[] parseAddressFromCall(byte[] call) {
+    public static byte[] parseAddressFromCall(@Nonnull final byte[] call) {
         if (call.length != (ADDR_SIZE + CALL_OFFSET))
             return null;
-        byte[] address = new byte[ADDR_SIZE];
+        final byte[] address = new byte[ADDR_SIZE];
         System.arraycopy(call, CALL_OFFSET, address, 0, ADDR_SIZE);
         if (!checkAddressValidity(address))
             return null;
         return address;
     }
 
-    public static byte[][] parseAddressList(byte[] call) {
+    public static byte[][] parseAddressList(@Nonnull final byte[] call) {
         if (call.length < CALL_OFFSET + (LIST_META * LIST_PT))
             return null;
 
-        byte[][] addressList = parseList(call, CALL_OFFSET, 32);
+        final byte[][] addressList = parseList(call, CALL_OFFSET, 32);
 
         if (addressList == null)
             return null;
@@ -48,7 +48,7 @@ public class BridgeDeserializer {
         // do a final check for address validity, if you're not sure what is
         // considered a valid address in this contract please see the function
         // below, note the implications with regards to the bridge design
-        for (byte[] l : addressList) {
+        for (final byte[] l : addressList) {
             if (!checkAddressValidity(l))
                 return null;
         }
@@ -71,37 +71,32 @@ public class BridgeDeserializer {
         if (call.length < CALL_OFFSET + (LIST_META * LIST_PT) * 4)
             return null;
 
-        byte[][] addressList = parseList(call, CALL_OFFSET, 32);
-
+        final byte[][] addressList = parseList(call, CALL_OFFSET, 32);
         if (addressList == null)
             return null;
 
-        byte[][] uintList = parseList(call, CALL_OFFSET + LIST_PT, 16);
-
+        final byte[][] uintList = parseList(call, CALL_OFFSET + LIST_PT, 16);
         if (uintList == null)
             return null;
 
         if (addressList.length != uintList.length)
             return null;
 
-        byte[][] signatureUpperList = parseList(call, CALL_OFFSET + LIST_PT * 2, 32);
-
+        final byte[][] signatureUpperList = parseList(call, CALL_OFFSET + LIST_PT * 2, 32);
         if (signatureUpperList == null)
             return null;
 
-        byte[][] signatureLowerList = parseList(call, CALL_OFFSET + LIST_PT * 3, 32);
-
+        final byte[][] signatureLowerList = parseList(call, CALL_OFFSET + LIST_PT * 3, 32);
         if (signatureLowerList == null)
             return null;
 
         if (signatureLowerList.length != signatureUpperList.length)
             return null;
 
-        byte[][] mergedSignatureList = new byte[signatureLowerList.length][];
+        final byte[][] mergedSignatureList = new byte[signatureLowerList.length][];
         for (int i = 0; i < signatureLowerList.length; i++) {
             mergedSignatureList[i] = ByteUtil.merge(signatureUpperList[i], signatureLowerList[i]);
         }
-
         return new byte[][][] {addressList, uintList, mergedSignatureList};
     }
 
@@ -129,14 +124,14 @@ public class BridgeDeserializer {
         if (callLength < CALL_OFFSET + LIST_META + LIST_PT)
             return null;
 
-        int listOffset = parseMeta(call, offset);
+        final int listOffset = parseMeta(call, offset);
         if (listOffset == ERR_INT)
             return null;
 
         if (listOffset > call.length)
             return null;
 
-        int listLength = parseMeta(call, listOffset);
+        final int listLength = parseMeta(call, listOffset);
         if (listLength == ERR_INT)
             return null;
 
@@ -145,7 +140,7 @@ public class BridgeDeserializer {
         if (listLength * elementLength > (call.length - listOffset - LIST_PT))
             return null;
 
-        byte[][] output = new byte[listLength][];
+        final byte[][] output = new byte[listLength][];
 
         // yuck
         int counter = 0;
@@ -159,7 +154,8 @@ public class BridgeDeserializer {
     }
 
 
-    private static int parseMeta(byte[] call, int offset) {
+    private static int parseMeta(@Nonnull final byte[] call,
+                                 final int offset) {
         // more minimum length checks
         final byte[] pt = new byte[LIST_PT];
         System.arraycopy(call, offset, pt, 0, LIST_PT);

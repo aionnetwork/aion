@@ -12,8 +12,7 @@ import java.util.Arrays;
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed
  * from concerns regarding communicate with outside world (external) and communicating
- * with the database. See {@link BridgeSerializationConnector} and {@link BridgeStorageConnector}
- * respectively for information on those layers of components
+ * with the database.
  */
 public class BridgeController {
 
