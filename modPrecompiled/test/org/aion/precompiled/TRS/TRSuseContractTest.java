@@ -120,6 +120,16 @@ public class TRSuseContractTest extends TRShelpers {
         }
     }
 
+    // Returns true only if account is eligible to use the special one-off withdrawal event.
+    private boolean accountIsEligibleForSpecial(TRSuseContract trs, Address contract, Address account) {
+        return trs.accountIsEligibleForSpecial(contract, account);
+    }
+
+    // Returns the last period in which account made a withdrawal or -1 if bad contract or account.
+    private int getAccountLastWithdrawalPeriod(AbstractTRS trs, Address contract, Address account) {
+        return trs.getAccountLastWithdrawalPeriod(contract, account);
+    }
+
     // Returns the head of the list for contract or null if no head.
     private Address getLinkedListHead(TRSuseContract trs, Address contract) {
         byte[] head = trs.getListHead(contract);
@@ -130,8 +140,9 @@ public class TRSuseContractTest extends TRShelpers {
 
     // Returns the next account in the linked list after current, or null if no next.
     private Address getLinkedListNext(TRSuseContract trs, Address contract, Address current) {
-        byte[] next = trs.getListNext(contract, current);
-        if (next == null) { return null; }
+        byte[] next = trs.getListNextBytes(contract, current);
+        boolean noNext = (((next[0] & 0x80) == 0x80) || ((next[0] & 0x40) == 0x00));
+        if (noNext) { return null; }
         next[0] = (byte) 0xA0;
         return new Address(next);
     }
@@ -667,6 +678,226 @@ public class TRSuseContractTest extends TRShelpers {
         assertTrue(accountIsValid(trs1, contract, acct1));
         assertTrue(accountIsValid(trs2, contract, acct2));
         assertTrue(accountIsValid(trs3, contract, acct3));
+    }
+
+    /*
+     * We have an account "come" (deposit) and then "go" (refund all) and then come back again.
+     * We want to ensure that the account's is-valid bit, its balance and the linked list are
+     * all responding as expected to this.
+     * First we test when we have only 1 user and then with multiple users.
+    */
+
+    @Test
+    public void testAccountComingAndGoingSolo() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Come.
+        TRSuseContract trs = newTRSuseContract(acct);
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        trs.execute(input, COST);
+
+        assertTrue(accountIsValid(trs, contract, acct));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct));
+        assertEquals(DEFAULT_BALANCE, getTotalBalance(trs, contract));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct));
+        assertEquals(acct, getLinkedListHead(trs, contract));
+        assertNull(getLinkedListPrev(trs, contract, acct));
+        assertNull(getLinkedListNext(trs, contract, acct));
+
+        // Go.
+        input = getRefundInput(contract, acct, DEFAULT_BALANCE);
+        trs.execute(input, COST);
+
+        assertFalse(accountIsValid(trs, contract, acct));
+        assertFalse(accountIsEligibleForSpecial(trs, contract, acct));
+        assertEquals(BigInteger.ZERO, getTotalBalance(trs, contract));
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
+        assertNull(getLinkedListHead(trs, contract));
+        assertNull(getLinkedListPrev(trs, contract, acct));
+        assertNull(getLinkedListNext(trs, contract, acct));
+
+        // Come back.
+        BigInteger amt =  DEFAULT_BALANCE.subtract(BigInteger.ONE);
+        input = getDepositInput(contract, amt);
+        trs.execute(input, COST);
+
+        assertTrue(accountIsValid(trs, contract, acct));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct));
+        assertEquals(amt, getTotalBalance(trs, contract));
+        assertEquals(amt, getDepositBalance(trs, contract, acct));
+        assertEquals(acct, getLinkedListHead(trs, contract));
+        assertNull(getLinkedListPrev(trs, contract, acct));
+        assertNull(getLinkedListNext(trs, contract, acct));
+    }
+
+    @Test
+    public void testAccountComingAndGoingMultipleUsers() {
+        Address owner = getNewExistentAccount(BigInteger.ONE);
+        Address acct1 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct3 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address acct4 = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+        TRSuseContract trs = newTRSuseContract(owner);
+
+        // Come.    We have:    head-> acct4 <-> acct3 <-> acct2 <-> acct1 -> null
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        newTRSuseContract(acct1).execute(input, COST);
+        newTRSuseContract(acct2).execute(input, COST);
+        newTRSuseContract(acct3).execute(input, COST);
+        newTRSuseContract(acct4).execute(input, COST);
+
+        assertTrue(accountIsValid(trs, contract, acct1));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct1));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct1));
+        assertTrue(accountIsValid(trs, contract, acct2));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct2));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct2));
+        assertTrue(accountIsValid(trs, contract, acct3));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct3));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct3));
+        assertTrue(accountIsValid(trs, contract, acct4));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct4));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct4));
+        assertEquals(DEFAULT_BALANCE.multiply(new BigInteger("4")), getTotalBalance(trs, contract));
+        assertEquals(acct4, getLinkedListHead(trs, contract));
+        assertEquals(acct3, getLinkedListNext(trs, contract, acct4));
+        assertEquals(acct2, getLinkedListNext(trs, contract, acct3));
+        assertEquals(acct1, getLinkedListNext(trs, contract, acct2));
+        assertNull(getLinkedListNext(trs, contract, acct1));
+        assertEquals(acct2, getLinkedListPrev(trs, contract, acct1));
+        assertEquals(acct3, getLinkedListPrev(trs, contract, acct2));
+        assertEquals(acct4, getLinkedListPrev(trs, contract, acct3));
+        assertNull(getLinkedListPrev(trs, contract, acct4));
+
+        // Go.  We have:    head-> acct3 <-> acct1 -> null
+        input = getRefundInput(contract, acct2, DEFAULT_BALANCE);
+        trs.execute(input, COST);
+        input = getRefundInput(contract, acct4, DEFAULT_BALANCE);
+        trs.execute(input, COST);
+
+        assertTrue(accountIsValid(trs, contract, acct1));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct1));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct1));
+        assertFalse(accountIsValid(trs, contract, acct2));
+        assertFalse(accountIsEligibleForSpecial(trs, contract, acct2));
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct2));
+        assertTrue(accountIsValid(trs, contract, acct3));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct3));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct3));
+        assertFalse(accountIsValid(trs, contract, acct4));
+        assertFalse(accountIsEligibleForSpecial(trs, contract, acct4));
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct4));
+        assertEquals(DEFAULT_BALANCE.multiply(BigInteger.TWO), getTotalBalance(trs, contract));
+        assertEquals(acct3, getLinkedListHead(trs, contract));
+        assertEquals(acct1, getLinkedListNext(trs, contract, acct3));
+        assertNull(getLinkedListNext(trs, contract, acct1));
+        assertEquals(acct3, getLinkedListPrev(trs, contract, acct1));
+        assertNull(getLinkedListPrev(trs, contract, acct3));
+
+        // Come back. We have:  head-> acct2 <-> acct4 <-> acct3 <-> acct1 -> null
+        input = getDepositInput(contract, DEFAULT_BALANCE);
+        newTRSuseContract(acct4).execute(input, COST);
+        newTRSuseContract(acct2).execute(input, COST);
+
+        assertTrue(accountIsValid(trs, contract, acct1));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct1));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct1));
+        assertTrue(accountIsValid(trs, contract, acct2));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct2));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct2));
+        assertTrue(accountIsValid(trs, contract, acct3));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct3));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct3));
+        assertTrue(accountIsValid(trs, contract, acct4));
+        assertTrue(accountIsEligibleForSpecial(trs, contract, acct4));
+        assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, acct4));
+        assertEquals(DEFAULT_BALANCE.multiply(new BigInteger("4")), getTotalBalance(trs, contract));
+        assertEquals(acct2, getLinkedListHead(trs, contract));
+        assertEquals(acct4, getLinkedListNext(trs, contract, acct2));
+        assertEquals(acct3, getLinkedListNext(trs, contract, acct4));
+        assertEquals(acct1, getLinkedListNext(trs, contract, acct3));
+        assertNull(getLinkedListNext(trs, contract, acct1));
+        assertEquals(acct3, getLinkedListPrev(trs, contract, acct1));
+        assertEquals(acct4, getLinkedListPrev(trs, contract, acct3));
+        assertEquals(acct2, getLinkedListPrev(trs, contract, acct4));
+        assertNull(getLinkedListPrev(trs, contract, acct2));
+    }
+
+    // <----------------------------------TRS WITHDRAWAL TESTS------------------------------------->
+
+    @Test
+    public void testLastWithdrawalPeriodNonExistentContract() {
+        Address account = getNewExistentAccount(BigInteger.ONE);
+        assertEquals(-1, getAccountLastWithdrawalPeriod(newTRSuseContract(account), account, account));
+    }
+
+    @Test
+    public void testLastWithdrawalPeriodAccountNotInContract() {
+        Address owner = getNewExistentAccount(BigInteger.ONE);
+        Address stranger = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        assertEquals(-1, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, stranger));
+    }
+
+    @Test
+    public void testLastWithdrawalPeriodBeforeLive() {
+        // Test before locking.
+        Address owner = getNewExistentAccount(BigInteger.ONE);
+        Address acc = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
+        assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
+
+        // Test that locking changes nothing.
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(owner).execute(input, COST).getCode());
+        assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
+    }
+
+    @Test
+    public void testLastWithdrawalPeriodOnceLive() {
+        Address owner = getNewExistentAccount(BigInteger.ONE);
+        Address acc = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
+
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(owner).execute(input, COST).getCode());
+        input = getStartInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(owner).execute(input, COST).getCode());
+        assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
+    }
+
+    @Test
+    public void testLastWithdrawalPeriodComingAndGoing() {
+        Address owner = getNewExistentAccount(BigInteger.ONE);
+        Address acc = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
+        assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
+
+        input = getRefundInput(contract, acc, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getCode());
+        assertEquals(-1, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
+
+        input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
+        assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
     }
 
     // <--------------------------------------REFUND TRS TESTS------------------------------------->

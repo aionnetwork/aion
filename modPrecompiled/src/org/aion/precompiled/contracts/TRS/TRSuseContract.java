@@ -98,6 +98,25 @@ public final class TRSuseContract extends AbstractTRS {
      *
      *                                          ~~~***~~~
      *
+     *   <b>operation 0x1</b> - withdraws funds from the calling account's TRS deposit balance and
+     *     puts them into the calling account. Each account is eligible to make 1 withdrawal per
+     *     period as well as a special one-off withdrawal that will be claimed automatically on the
+     *     account's first ever withdrawal. If an account has missed previous periods then the next
+     *     call to this operation will withdraw for the current period as well as any previously
+     *     missed periods.
+     *
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account is
+     *       attempting to withdraw funds from.
+     *
+     *     conditions: the TRS contract must be live in order to withdraw funds from it.
+     *
+     *     returns: void.
+     *
+     *                                          ~~~***~~~
+     *
      *   <b>operation 0x5</b> - refunds a specified amount of depositor's balance for the public-
      *     facing TRS contract.
      *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
@@ -138,6 +157,7 @@ public final class TRSuseContract extends AbstractTRS {
         int operation = input[0];
         switch (operation) {
             case 0: return deposit(input, nrgLimit);
+            case 1: return withdraw(input, nrgLimit);
             case 5: return refund(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -170,8 +190,6 @@ public final class TRSuseContract extends AbstractTRS {
         final int indexAddress = 1;
         final int indexAmount = 33;
         final int len = 161;
-
-        //TODO: ensure caller has AION PREFIX -- good reminder if this ever changes.
 
         if (input.length != len) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -219,6 +237,53 @@ public final class TRSuseContract extends AbstractTRS {
             track.flush();
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+    }
+
+    /**
+     * Logic to withdraw funds from an existing public-facing TRS contract.
+     *
+     * The input byte array format is defined as follows:
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account is
+     *       attempting to withdraw funds from.
+     *
+     *     conditions: the TRS contract must be live in order to withdraw funds from it.
+     *
+     *     returns: void.
+     *
+     * @param input The input to withdraw from a public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult withdraw(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexAddress = 1;
+        final int len = 33;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A withdraw operation can only execute if the current state of the TRS contract is:
+        // contract is live (and obviously locked -- check this for sanity).
+        if (!isContractLocked(specs) || !isContractLive(specs)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        if (!makeWithdrawal(contract, caller)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        track.flush();
+        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -364,8 +429,9 @@ public final class TRSuseContract extends AbstractTRS {
         byte[] next = getListNext(contract, account);
 
         // If account is head of list, set head to account's next entry.
-        byte[] head = getListHead(contract);    //TODO: maybe decouple metadata from next so we dont
-        head[0] = AION_PREFIX;                  //TODO: have to do awkward things like this?
+        byte[] head = getListHead(contract);
+        //TODO: maybe decouple metadata from next so we dont have to do awkward things like this?
+        head[0] = AION_PREFIX;
         if (Arrays.equals(account.toBytes(), head)) {
             setListHead(contract, getListNext(contract, account));
         }

@@ -429,35 +429,4 @@ public final class TRSqueryContract extends AbstractTRS {
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrg, output.array());
     }
 
-    /**
-     * Returns the period that the TRS contract given by the address contract is in at the time
-     * specified by currTime.
-     *
-     * All contracts have some fixed number of periods P and this method returns a value in the
-     * range [0, P] only.
-     *
-     * If currTime is less than the contract's timestamp then zero is returned, otherwise a positive
-     * number is returned.
-     *
-     * Once this method returns P for some currTime value it will return P for all values greater or
-     * equal to that currTime.
-     *
-     * Assumption: contract is the address of a valid TRS contract that has a timestamp.
-     *
-     * @param contract The TRS contract to query.
-     * @param currTime The time at which the contract is being queried for.
-     * @return the period the contract is in at currTime.
-     */
-    private int calculatePeriod(Address contract, byte[] specs, long currTime) {
-        long timestamp = getTimestamp(contract);
-        if (timestamp > currTime) { return 0; }
-
-        long periods = getPeriods(specs);
-        long diff = currTime - timestamp;
-        long scale = (isTestContract(specs)) ? TEST_DURATION : PERIOD_DURATION;
-
-        long result = (diff / scale) + 1;
-        return (int) ((result > periods) ? periods : result);
-    }
-
 }

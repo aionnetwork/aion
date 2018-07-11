@@ -37,10 +37,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * mutable bytes following this prefix. In these cases oly the prefixes are provided. Otherwise
      * for unchanging keys we store them as an IDataWord object directly.
      */
-    private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, TIMESTAMP, NULL32, INVALID;
+    private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, TIMESTAMP,
+        NULL32, INVALID;
     private static final byte BALANCE_PREFIX = (byte) 0xB0;
     private static final byte LIST_PREV_PREFIX = (byte) 0x60;
     private static final byte FUNDS_PREFIX = (byte) 0x90;
+    private static final byte WITHDRAW_PREFIX = (byte) 0x30;
 
     private static final int DOUBLE_WORD_SIZE = DoubleDataWord.BYTES;
     private static final int SINGLE_WORD_SIZE = DataWord.BYTES;
@@ -426,7 +428,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     void setListNext(Address contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
         if (!isValid) {
+            // Mark account invalid and also make it ineligible for special withdrawal.
             track.addStorageRow(contract, toIDataWord(account), INVALID);
+            setAccountIneligibleForSpecial(contract, account);
         } else if (next == null) {
             byte[] nullNext = Arrays.copyOf(NULL32.getData(), NULL32.getData().length);
             nullNext[0] |= VALID_BIT;
@@ -575,10 +579,11 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         // Update account meta data.
         IDataWord acctData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
         byte[] acctVal;
-        if (acctData == null) {
-            // Set null bit and row count but do not set valid bit.
+        if ((acctData == null) || (acctData.equals(INVALID))) {
+            // Set null bit and row count but do not set valid bit. Also init withdrawal stats.
             acctVal = new byte[DOUBLE_WORD_SIZE];
             acctVal[0] = (byte) (NULL_BIT | numRows);
+            initWithdrawalStats(contract, account);
         } else {
             // Set valid bit, row count and preserve the previous null bit setting.
             acctVal = acctData.getData();
@@ -686,8 +691,254 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         return buffer.getLong();
     }
 
-    public void t() {
+    /**
+     * Returns true if account was able to withdraw a non-zero amount from the TRS contract contract
+     * into its account. Returns false otherwise.
+     *
+     * If this method returns true, signalling a successful withdrawal, then F tokens will have been
+     * transferred from the contract into the account and the account will have withdrawn all
+     * possible funds it was eligible to withdraw over the period of time from the moment the
+     * contract went live until the current time. Thus, the account will be unable to withdraw funds
+     * until the next period.
+     *
+     * If the contract is in its final period then a call to this method will withdraw all remaining
+     * funds that account has in the contract.
+     *
+     * We define F as follows for all periods except the final period (where F is defined trivially
+     * as outlined above):
+     *
+     *   F = S + NQ
+     *
+     * where S is the special one-off withdrawal amount. The first time account tries to withdraw
+     * funds S will be possibly non-zero (depending on the one-off withdrawal amount set by the
+     * owner) but all subsequent withdrawal attempts we will have S = 0.
+     *
+     * N is the number of periods account is behind by. So that if the last period account had
+     * withdrawn funds during was period T and the contract is current at period P then we have
+     * N = P - T.
+     *
+     * Q is the amount of funds account is eligible to withdraw per each period. This amount does
+     * not consider the special one-off event. If the account has a balance of B when the contract
+     * goes live and the contract has a total of A periods, and if C is the total amount of bonus
+     * tokens in the contract, then the account is eligible to receive a proportional share of C,
+     * call this amount D, so that the ratio of D to C is the same as the ratio of B to the
+     * contract's total balance when it went live.
+     * Then we have Q = (B / A) + D - |S|
+     *
+     * here we define |S| as S above except we assume that the account is always eligible to use
+     * the special one-off amount.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account to withdraw funds from.
+     * @return true only if a non-zero amount was withdrawn from the contract into account.
+     */
+    boolean makeWithdrawal(Address contract, Address account) {
+        // Grab period here since computations are dependent upon it and a new block may arrive,
+        // changing the period mid-computation.
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) { return false; }
+        int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
 
+        BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
+        BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
+        int numPeriodsBehind = computeNumberPeriodsBehind(contract, account, currPeriod);
+
+        BigInteger amount = fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind));
+        amount = amount.add(specialAmt);
+
+        // If amount is non-zero then transfer the funds and update account's last withdrawal period.
+        if (amount.compareTo(BigInteger.ZERO) > 0) {
+            track.addBalance(account, amount);
+            updateAccountLastWithdrawalPeriod(contract, account, currPeriod);
+            setAccountIneligibleForSpecial(contract, account.toBytes());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Initializes the withdrawal stats associated with account in the TRS contract given by
+     * contract. The initial withdrawal stats set the account as eligible for the one-off special
+     * withdrawal and set its most recent withdrawal period to period 0.
+     *
+     * This method will override the current stats if any exist and it should therefore only be
+     * called when an account is first depositing and entering the contract.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account whose withdrawal stats will be initialized.
+     */
+    private void initWithdrawalStats(Address contract, Address account) {
+        byte[] stats = new byte[SINGLE_WORD_SIZE];
+        stats[0] = 0x1; // set is-eligible.
+        track.addStorageRow(contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(stats));
+    }
+
+    /**
+     * Sets the account in contract as ineligible to use the special one-off withdrawal event. Once
+     * an account is set ineligible it can only be made eligible again if that account re-enters the
+     * contract. Once the contract is live this is impossible.
+     *
+     * This method should only ever be called in two cases:
+     *   1. The account has been fully refunded and therefore removed from the contract.
+     *   2. The account has used the special one-off withdrawal event.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account to be made ineligible for the special withdrawal.
+     */
+    private void setAccountIneligibleForSpecial(Address contract, byte[] account) {
+        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        byte[] statsBytes = (stats == null) ? new byte[SINGLE_WORD_SIZE] : stats.getData();
+        statsBytes[0] = 0x0;    // unset is-eligible.
+        track.addStorageRow(contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(statsBytes));
+    }
+
+    /**
+     * Sets the period that account most recently withdrew funds from in to period.
+     *
+     * This method throws an exception if account has no withdrawal stats. This should never happen
+     * and is here for debugging.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account whose most recent period is to be updated.
+     * @throws NullPointerException if account has no withdrawal stats.
+     */
+    private void updateAccountLastWithdrawalPeriod(Address contract, Address account, int period) {
+        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        if (stats == null) { throw new NullPointerException("Account has no withdrawal stats!"); }
+        byte[] statsBytes = stats.getData();
+        statsBytes[2] = (byte) (period & 0xFF);
+        statsBytes[1] = (byte) ((period >>> Byte.SIZE) & 0xFF);
+        track.addStorageRow(contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(statsBytes));
+    }
+
+    /**
+     * Returns the last period in which account made a withdrawal in the TRS contract contract.
+     *
+     * If contract is not a TRS contract or if account has no balance in contract then -1 is
+     * returned. Otherwise the return value is in the range [0, P], where P is the number of periods
+     * the contract has.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the last period in which account has withdrawn from the contract.
+     */
+    public int getAccountLastWithdrawalPeriod(Address contract, Address account) {
+        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        if ((stats == null) || (!accountIsValid(getListNextBytes(contract, account)))) { return -1; }
+        byte[] statsBytes = stats.getData();
+        int lastPeriod = statsBytes[1];
+        lastPeriod <<= Byte.SIZE;
+        lastPeriod |= statsBytes[2];
+        return lastPeriod;
+    }
+
+    /**
+     * Returns true only if the account in the TRS contract given by contract is eligible to use the
+     * special one-off withdrawal event.
+     *
+     * Returns false otherwise.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account whose special withdrawal eligibility is to be queried.
+     * @return true only if the account is eligible for the special withdrawal event.
+     */
+    public boolean accountIsEligibleForSpecial(Address contract, Address account) {
+        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        return ((stats != null) && (stats.getData()[0] == 0x1));
+    }
+
+    /**
+     * Returns the amount of tokens that account is eligible to withdraw from contract using the
+     * special one-off event.
+     *
+     * If account is ineligible to make a special withdrawal then this method returns zero.
+     * If account is eligible to make a special withdrawal then this method returns S = MB,
+     *
+     * where B is the balance that account has at the moment the contract goes live and M is the
+     * multiplier in the range [0,1] as defined by the contract owner which signifies the fraction
+     * of account's balance that account can claim in the one-off event.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the amount of tokens account is eligible to withdraw in special one-off event.
+     */
+    private BigInteger computeSpecialWithdrawalAmount(Address contract, Address account) {
+        //TODO
+        return null;
+    }
+
+    /**
+     * Returns the number of withdrawal periods account is behind by in contract. That is, if the
+     * period that account last withdrew funds in was period T then this method returns:
+     *
+     *   currPeriod - T.
+     *
+     * where currPeriod >= T.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @param currPeriod The current period the contract is in.
+     * @return the number of withdrawal periods account is behind by.
+     */
+    private int computeNumberPeriodsBehind(Address contract, Address account, int currPeriod) {
+        //TODO
+        return -1;
+    }
+
+    /**
+     * Returns the amount of funds that account is eligible to withdraw from contract per each
+     * withdrawal period.
+     *
+     * Let T be the total amount of funds that account will withdraw from the contract if account
+     * withdraws for each period. Let S be the amount of funds account was able to withdraw in the
+     * special one-off event. Let the contract have P periods in total.
+     *
+     * Then account will be eligible to withdraw (T - S) / P funds per period.
+     *
+     * T itself is the sum of B and A, where B is the total balance that account has in the contract
+     * at the moment the contract goes live and A is the share of bonus tokens that account is
+     * entitled to. This share is proportional to the amount of funds account has in the contract
+     * in relation to the total amount of funds in the contract.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the amount of funds account is eligible to withdraw each period, excluding special funds.
+     */
+    private BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
+        //TODO
+        return null;
+    }
+
+    /**
+     * Returns the period that the TRS contract given by the address contract is in at the time
+     * specified by currTime.
+     *
+     * All contracts have some fixed number of periods P and this method returns a value in the
+     * range [0, P] only.
+     *
+     * If currTime is less than the contract's timestamp then zero is returned, otherwise a positive
+     * number is returned.
+     *
+     * Once this method returns P for some currTime value it will return P for all values greater or
+     * equal to that currTime.
+     *
+     * Assumption: contract is the address of a valid TRS contract that has a timestamp.
+     *
+     * @param contract The TRS contract to query.
+     * @param specs The result of the getContractSpecs method.
+     * @param currTime The time at which the contract is being queried for.
+     * @return the period the contract is in at currTime.
+     */
+    int calculatePeriod(Address contract, byte[] specs, long currTime) {
+        long timestamp = getTimestamp(contract);
+        if (timestamp > currTime) { return 0; }
+
+        long periods = getPeriods(specs);
+        long diff = currTime - timestamp;
+        long scale = (isTestContract(specs)) ? TEST_DURATION : PERIOD_DURATION;
+
+        long result = (diff / scale) + 1;
+        return (int) ((result > periods) ? periods : result);
     }
 
     /**
@@ -767,6 +1018,33 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         balKey[0] = (byte) (BALANCE_PREFIX | row);
         System.arraycopy(account.toBytes(), 1, balKey, 1, DOUBLE_WORD_SIZE - 1);
         return balKey;
+    }
+
+    /**
+     * Returns a key for the database to query account's withdrawal stats, which include whether or
+     * not the account is eligible for the special one-off withdrawal and the latest period at which
+     * the account has withdrawn funds.
+     *
+     * @param account The account to look up.
+     * @return the key to access the account's withdrawal stats.
+     */
+    private byte[] makeWithdrawalKey(Address account) {
+        return makeWithdrawalKey(account.toBytes());
+    }
+
+    /**
+     * Returns a key for the database to query account's withdrawal stats, which include whether or
+     * not the account is eligible for the special one-off withdrawal and the latest period at which
+     * the account has withdrawn funds.
+     *
+     * @param account The account to look up.
+     * @return the key to access the account's withdrawal stats.
+     */
+    private byte[] makeWithdrawalKey(byte[] account) {
+        byte[] withKey = new byte[DOUBLE_WORD_SIZE];
+        withKey[0] = WITHDRAW_PREFIX;
+        System.arraycopy(account, 1, withKey, 1, DOUBLE_WORD_SIZE - 1);
+        return withKey;
     }
 
     /**
