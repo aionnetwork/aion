@@ -110,11 +110,6 @@ public class TRSuseContractTest extends TRShelpers {
         return trs.getDepositBalance(contract, account);
     }
 
-    // Returns the total deposit balance for the TRS contract contract.
-    private BigInteger getTotalBalance(TRSuseContract trs, Address contract) {
-        return trs.getTotalBalance(contract);
-    }
-
     // Returns true only if account is a valid account in contract.
     private boolean accountIsValid(TRSuseContract trs, Address contract, Address account) {
         try {
@@ -133,31 +128,6 @@ public class TRSuseContractTest extends TRShelpers {
     // Returns the last period in which account made a withdrawal or -1 if bad contract or account.
     private int getAccountLastWithdrawalPeriod(AbstractTRS trs, Address contract, Address account) {
         return trs.getAccountLastWithdrawalPeriod(contract, account);
-    }
-
-    // Returns the head of the list for contract or null if no head.
-    private Address getLinkedListHead(TRSuseContract trs, Address contract) {
-        byte[] head = trs.getListHead(contract);
-        if (head == null) { return null; }
-        head[0] = (byte) 0xA0;
-        return new Address(head);
-    }
-
-    // Returns the next account in the linked list after current, or null if no next.
-    private Address getLinkedListNext(TRSuseContract trs, Address contract, Address current) {
-        byte[] next = trs.getListNextBytes(contract, current);
-        boolean noNext = (((next[0] & 0x80) == 0x80) || ((next[0] & 0x40) == 0x00));
-        if (noNext) { return null; }
-        next[0] = (byte) 0xA0;
-        return new Address(next);
-    }
-
-    // Returns the previous account in the linked list prior to current, or null if no previous.
-    private Address getLinkedListPrev(TRSuseContract trs, Address contract, Address current) {
-        byte[] prev = trs.getListPrev(contract, current);
-        if (prev == null) { return null; }
-        prev[0] = (byte) 0xA0;
-        return new Address(prev);
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->

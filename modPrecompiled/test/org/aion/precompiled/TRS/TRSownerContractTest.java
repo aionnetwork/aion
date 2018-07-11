@@ -4,10 +4,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -1230,6 +1236,239 @@ public class TRSownerContractTest extends TRShelpers {
         repo.addBalance(contract, bonus);  // this deposit should be ignored.
 
         assertEquals(bonus.add(bonus), getBonusBalance(newTRSownerContract(acct), contract));
+    }
+
+    @Test
+    public void testTotalOwed1() {
+        // acct is only depositor in the contract so he should be owed his full deposit + all bonus funds.
+        BigInteger deposit = BigInteger.TWO.pow(300);
+        BigInteger bonus = BigInteger.TWO.pow(222).subtract(BigInteger.ONE);
+
+        Address acct = getNewExistentAccount(deposit);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, deposit);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        repo.addBalance(contract, bonus);
+
+        lockAndStartContract(contract, acct);
+        assertEquals(deposit.add(bonus), getTotalOwed(newTRSownerContract(acct), contract, acct));
+    }
+
+    @Test
+    public void testTotalOwed2() {
+        // we check the owings are distributed correctly. We pass in the fraction of the total wealth
+        // that 1 of the 3 depositors holds. The rest is taken care of.
+        checkOwings(79);
+        checkOwings(99);
+        checkOwings(1);
+        checkOwings(21);
+        checkOwings(33);
+        checkOwings(0);
+    }
+
+    @Test
+    public void testTotalOwed3() {
+        // acct owns an incredibly small portion of the wealth. We want to make sure in such an
+        // unequal setting the account still cannot lose its deposit.
+        BigInteger deposit1 = BigInteger.ONE;
+        BigInteger deposit2 = BigInteger.TWO.pow(317);
+
+        // With these differences we expect that if the bonus deposit is equal to the sum of these
+        // 2 deposits then acct will be owed 2 tokens. If the bonus deposit is equal to 1 less than
+        // this sum then acct will be owed 1 token and we will have 1 outstanding unclaimed bonus
+        // token. We test both scenarios.
+        BigInteger sum = deposit1.add(deposit2);
+        checkOwingsGivenDepositsAndBonus(deposit1, deposit2, sum);
+        checkOwingsGivenDepositsAndBonus(deposit1, deposit2, sum.subtract(BigInteger.valueOf(1)));
+
+        // A 1-10 inequality against a very large bonus deposit.
+        checkOwingsGivenDepositsAndBonus(deposit1, BigInteger.TEN, deposit2);
+    }
+
+    /**
+     * A rigorous checking that the bonus shares and total owings per the two accounts in a contract
+     * make sense and satisfy all the expected properties. This method is intended to be used to
+     * check very uneven distributions.
+     *
+     * @param deposit1 The first account's deposit amount.
+     * @param deposit2 The second account's deposit amount.
+     * @param bonus The bonus deposit.
+     */
+    private void checkOwingsGivenDepositsAndBonus(BigInteger deposit1, BigInteger deposit2, BigInteger bonus) {
+        Address acct1 = getNewExistentAccount(deposit1);
+        Address acct2 = getNewExistentAccount(deposit2);
+        Address contract = createTRScontract(acct1, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, deposit1);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        input = getDepositInput(contract, deposit2);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+        repo.addBalance(contract, bonus);
+
+        lockAndStartContract(contract, acct1);
+
+        // Verify acct1 and acct2 are not owed less than they deposited.
+        AbstractTRS trs = newTRSownerContract(acct1);
+        BigInteger acct1Owed = getTotalOwed(trs, contract, acct1);
+        BigInteger acct2Owed = getTotalOwed(trs, contract, acct2);
+        assertTrue(deposit1.compareTo(acct1Owed) <= 0);
+        assertTrue(deposit2.compareTo(acct2Owed) <= 0);
+
+        // Verify that the ratio of each account to the total deposits is very close to the corresponding
+        // ratios of bonus tokens owed. The error here will be +/- 1 percent.
+        BigInteger ratio1 = new BigDecimal(deposit1).divide(
+            new BigDecimal(deposit1.add(deposit2)), 18, RoundingMode.HALF_DOWN).
+            movePointRight(2).toBigInteger();
+        BigInteger ratio2 = new BigDecimal(deposit2).divide(
+            new BigDecimal(deposit1.add(deposit2)), 18, RoundingMode.HALF_DOWN).
+            movePointRight(2).toBigInteger();
+        BigInteger ratioSum = ratio1.add(ratio2);
+        assertTrue(ratioSum.compareTo(new BigInteger("100")) <= 0);
+        assertTrue(ratioSum.compareTo(new BigInteger("99")) >= 0);
+
+        BigInteger share1 = getBonusShare(trs, contract, acct1);
+        BigInteger share2 = getBonusShare(trs, contract, acct2);
+
+        BigInteger expectedShare1Upper = new BigDecimal(bonus).multiply(new BigDecimal(ratio1.add(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare1Lower = new BigDecimal(bonus).multiply(new BigDecimal(ratio1.subtract(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare2Upper = new BigDecimal(bonus).multiply(new BigDecimal(ratio2.add(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare2Lower = new BigDecimal(bonus).multiply(new BigDecimal(ratio2.subtract(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        assertTrue(share1.compareTo(expectedShare1Upper) <= 0);
+        assertTrue(share1.compareTo(expectedShare1Lower) >= 0);
+        assertTrue(share2.compareTo(expectedShare2Upper) <= 0);
+        assertTrue(share2.compareTo(expectedShare2Lower) >= 0);
+
+        // Verify that the contract has enough funds to payout.
+        BigInteger owedTotal = acct1Owed.add(acct2Owed);
+        BigInteger fundsTotal = getTotalBalance(trs, contract).add(getBonusBalance(trs, contract));
+        assertTrue(owedTotal.compareTo(fundsTotal) <= 0);
+        BigInteger owedLowerBound = fundsTotal.subtract(BigInteger.ONE);
+        assertTrue(owedTotal.compareTo(owedLowerBound) >= 0);
+    }
+
+    /**
+     * A rigorous checking that the bonus shares and total owings per the three accounts in a contract
+     * make sense and satisfy all the expected properties. The frac param is the fraction of the total
+     * deposits that one of the depositors owns. This allows us to tamper with these relations.
+     *
+     * @param frac The fraction of the total deposits for one account, must be in range [0, 99]
+     */
+    private void checkOwings(int frac) {
+        BigInteger deposit1 = BigInteger.TWO.pow(131);
+        BigInteger deposit2 = BigInteger.TWO.pow(111).subtract(BigInteger.ONE);
+        BigDecimal fraction = new BigDecimal(BigInteger.valueOf(frac)).movePointLeft(2);
+        BigDecimal fracRemain = new BigDecimal(BigInteger.valueOf(100 - frac)).movePointLeft(2);
+        BigDecimal depo1Dec = new BigDecimal(deposit1);
+        BigDecimal depo2Dec = new BigDecimal(deposit2);
+
+        BigDecimal multiplier = fraction.divide(fracRemain, 18, RoundingMode.HALF_DOWN);
+        BigDecimal depositDec = multiplier.multiply(depo1Dec.add(depo2Dec));
+        BigDecimal totalDec = depositDec.add(depo1Dec).add(depo2Dec);
+
+        // Verify depositDec is indeed frac% of total.
+        BigInteger fracBI = depositDec.divide(totalDec, 18, RoundingMode.HALF_DOWN).movePointRight(2).toBigInteger();
+        assertEquals(fracBI, BigInteger.valueOf(frac));
+
+        // Converted into integers we lose some precision; still very close to frac% though.
+        BigInteger deposit = depositDec.toBigInteger();
+        BigInteger total = deposit.add(deposit1).add(deposit2);
+
+        BigInteger bonus = BigInteger.TWO.pow(56);
+
+        // Actually perform the deposits and then do checks.
+        Address acct = getNewExistentAccount(deposit);
+        Address acct1 = getNewExistentAccount(deposit1);
+        Address acct2 = getNewExistentAccount(deposit2);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, deposit);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getDepositInput(contract, deposit1);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        input = getDepositInput(contract, deposit2);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+        repo.addBalance(contract, bonus);
+
+        lockAndStartContract(contract, acct);
+
+        // Verify the shares of the bonus tokens are very close to the expected amounts. That is,
+        // their sum should be in the range [b-n-1, b] where b is total bonus tokens and n is number
+        // of depositors.
+        AbstractTRS trs = newTRSownerContract(acct);
+        BigInteger lowerBound = bonus.subtract(BigInteger.TWO);
+        BigInteger acctShare = getBonusShare(trs, contract, acct);
+        BigInteger acct1Share = getBonusShare(trs, contract, acct1);
+        BigInteger acct2Share = getBonusShare(trs, contract, acct2);
+        BigInteger shareSum = acctShare.add(acct1Share).add(acct2Share);
+        assertTrue(shareSum.compareTo(lowerBound) >= 0);
+        assertTrue(shareSum.compareTo(bonus) <= 0);
+
+        // Verify the total amount owed to each depositor is their deposit balance plus their bonus share.
+        BigInteger owed = getTotalOwed(trs, contract, acct);
+        BigInteger owed1 = getTotalOwed(trs, contract, acct1);
+        BigInteger owed2 = getTotalOwed(trs, contract, acct2);
+        assertEquals(owed, deposit.add(acctShare));
+        assertEquals(owed1, deposit1.add(acct1Share));
+        assertEquals(owed2, deposit2.add(acct2Share));
+
+        // Verify the sum of the total owings falls in the range [T-n-1,T] for T equal to the total
+        // contract balance plus the bonus balance.
+        BigInteger totalOwing = owed.add(owed1).add(owed2);
+        BigInteger upperBound = total.add(bonus);
+        lowerBound = upperBound.subtract(BigInteger.TWO);
+        assertTrue(totalOwing.compareTo(upperBound) <= 0);
+        assertTrue(totalOwing.compareTo(lowerBound) >= 0);
+
+        // Verify no depositors are owed less than they deposited.
+        assertTrue(owed.compareTo(deposit) >= 0);
+        assertTrue(owed1.compareTo(deposit1) >= 0);
+        assertTrue(owed2.compareTo(deposit2) >= 0);
+
+        // Verify the ratios are very close to expected. Error should be +/-1.
+        BigInteger ratio = BigInteger.valueOf(frac);
+        BigInteger ratio1 = new BigDecimal(deposit1).divide(new BigDecimal(total), 18, RoundingMode.HALF_DOWN).
+            movePointRight(2).toBigInteger();
+        BigInteger ratio2 = new BigDecimal(deposit2).divide(new BigDecimal(total), 18, RoundingMode.HALF_DOWN).
+            movePointRight(2).toBigInteger();
+        BigInteger ratioSum = ratio.add(ratio1).add(ratio2);
+        assertTrue(ratioSum.compareTo(new BigInteger("100")) <= 0);
+        assertTrue(ratioSum.compareTo(new BigInteger("99")) >= 0);
+
+        BigInteger expectedShareUpper = new BigDecimal(bonus).multiply(new BigDecimal(ratio.add(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShareLower = new BigDecimal(bonus).multiply(new BigDecimal(ratio.subtract(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare1Upper = new BigDecimal(bonus).multiply(new BigDecimal(ratio1.add(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare1Lower = new BigDecimal(bonus).multiply(new BigDecimal(ratio1.subtract(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare2Upper = new BigDecimal(bonus).multiply(new BigDecimal(ratio2.add(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+        BigInteger expectedShare2Lower = new BigDecimal(bonus).multiply(new BigDecimal(ratio2.subtract(BigInteger.ONE)).
+            movePointLeft(2)).toBigInteger();
+
+        assertTrue(acctShare.compareTo(expectedShareUpper) <= 0);
+        assertTrue(acctShare.compareTo(expectedShareLower) >= 0);
+        assertTrue(acct1Share.compareTo(expectedShare1Upper) <= 0);
+        assertTrue(acct1Share.compareTo(expectedShare1Lower) >= 0);
+        assertTrue(acct2Share.compareTo(expectedShare2Upper) <= 0);
+        assertTrue(acct2Share.compareTo(expectedShare2Lower) >= 0);
+
+        // Finally, verify that the sum of all owings is not greater than the sum of the total balance
+        // plus bonus balance.
+        BigInteger owingsTotal = owed.add(owed1).add(owed2);
+        BigInteger fundsTotal = getTotalBalance(trs, contract).add(getBonusBalance(trs, contract));
+        BigInteger fundsLowerBound = fundsTotal.subtract(BigInteger.TWO);
+        assertTrue(owingsTotal.compareTo(fundsTotal) <= 0);
+        assertTrue(owingsTotal.compareTo(fundsLowerBound) >= 0);
     }
 
 }

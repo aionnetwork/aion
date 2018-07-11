@@ -2,12 +2,15 @@ package org.aion.precompiled.TRS;
 
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
@@ -302,6 +305,76 @@ class TRShelpers {
     // Returns the balance of bonus tokens in the TRS contract contract.
     BigInteger getBonusBalance(AbstractTRS trs, Address contract) {
         return trs.getBonusBalance(contract);
+    }
+
+    // Returns the total amount of tokens account can withdraw over the lifetime of the contract.
+    BigInteger getTotalOwed(AbstractTRS trs, Address contract, Address account) {
+        return trs.computeTotalOwed(contract, account);
+    }
+
+    // Returns the head of the list for contract or null if no head.
+    Address getLinkedListHead(AbstractTRS trs, Address contract) {
+        byte[] head = trs.getListHead(contract);
+        if (head == null) { return null; }
+        head[0] = (byte) 0xA0;
+        return new Address(head);
+    }
+
+    // Returns the next account in the linked list after current, or null if no next.
+    Address getLinkedListNext(AbstractTRS trs, Address contract, Address current) {
+        byte[] next = trs.getListNextBytes(contract, current);
+        boolean noNext = (((next[0] & 0x80) == 0x80) || ((next[0] & 0x40) == 0x00));
+        if (noNext) { return null; }
+        next[0] = (byte) 0xA0;
+        return new Address(next);
+    }
+
+    // Returns the previous account in the linked list prior to current, or null if no previous.
+    Address getLinkedListPrev(AbstractTRS trs, Address contract, Address current) {
+        byte[] prev = trs.getListPrev(contract, current);
+        if (prev == null) { return null; }
+        prev[0] = (byte) 0xA0;
+        return new Address(prev);
+    }
+
+    // Returns the share of the bonus tokens account is entitled to withdraw over life of contract.
+    BigInteger getBonusShare(AbstractTRS trs, Address contract, Address account) {
+        return trs.computeBonusShare(contract, account);
+    }
+
+    // Returns the total deposit balance for the TRS contract contract.
+    BigInteger getTotalBalance(AbstractTRS trs, Address contract) {
+        return trs.getTotalBalance(contract);
+    }
+
+    /**
+     * Returns a set of all the accounts that have deposited a positive amount of tokens into the
+     * TRS contract contract.
+     *
+     * @param contract The TRS contract to query.
+     * @return the set of all depositors.
+     */
+    Set<Address> getAllDepositors(AbstractTRS trs, Address contract) {
+        Set<Address> depositors = new HashSet<>();
+        Address curr = getLinkedListHead(trs, contract);
+        while (curr != null) {
+            assertFalse(depositors.contains(curr));
+            depositors.add(curr);
+            curr = getLinkedListNext(trs, contract, curr);
+        }
+        return depositors;
+    }
+
+    void lockAndStartContract(Address contract, Address owner) {
+        byte[] input = getLockInput(contract);
+        AbstractTRS trs = newTRSownerContract(owner);
+        if (!trs.execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            Assert.fail("Unable to lock contract!");
+        }
+        input = getStartInput(contract);
+        if (!trs.execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+            Assert.fail("Unable to start contract!");
+        }
     }
 
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.

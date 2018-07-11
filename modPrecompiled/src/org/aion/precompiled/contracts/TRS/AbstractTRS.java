@@ -932,7 +932,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the total amount of funds owed to account over the lifetime of the contract.
      */
     public BigInteger computeTotalOwed(Address contract, Address account) {
-        return getDepositBalance(contract, account).add(computeBonusShare(contract, account));
+        BigInteger bal = getDepositBalance(contract, account);
+        BigInteger bon = computeBonusShare(contract, account);
+        return bal.add(bon);
+//        return getDepositBalance(contract, account).add(computeBonusShare(contract, account));
     }
 
     /**
@@ -948,7 +951,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the share of bonus tokens account is entitled to receive.
      * @throws IllegalStateException if contract has no total balance.
      */
-    private BigInteger computeBonusShare(Address contract, Address account) {
+    public BigInteger computeBonusShare(Address contract, Address account) {
         BigDecimal bonusFunds = new BigDecimal(getBonusBalance(contract));
         BigDecimal acctBalance = new BigDecimal(getDepositBalance(contract, account));
 
@@ -959,8 +962,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         BigDecimal totalBalanceDec = new BigDecimal(totalBalance);
 
         BigDecimal fraction = acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
-        BigDecimal share = fraction.multiply(
-            bonusFunds, new MathContext(18, RoundingMode.HALF_DOWN));
+        BigDecimal share = fraction.multiply(bonusFunds);
+//        BigDecimal share = fraction.multiply(
+//            bonusFunds, new MathContext(18, RoundingMode.HALF_DOWN));
 
         return share.toBigInteger();
     }
