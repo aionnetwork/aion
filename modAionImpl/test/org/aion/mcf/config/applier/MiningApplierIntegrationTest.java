@@ -17,8 +17,6 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.types.AionTransaction;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -38,8 +36,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
-/** Test {@link MiningApplier} */
-public class MiningApplierTest {
+/** Test {@link MiningApplier} interaction with {@link EquihashMiner} and {@link AionPoW} */
+public class MiningApplierIntegrationTest {
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder(new File("."));
 
@@ -71,8 +69,8 @@ public class MiningApplierTest {
         // CfgAion.inst() in the classes we're testing, we should change this.
         CfgAion.inst().getConsensus().setMining(false);
         CfgAion.inst().getDb().setPath(tmp.getRoot().getPath());
-        CfgAion.inst().getConsensus().setCpuMineThreads(
-                Math.max(1, Runtime.getRuntime().availableProcessors() - 2));
+//        CfgAion.inst().getConsensus().setCpuMineThreads(
+//                Math.max(1, Runtime.getRuntime().availableProcessors() - 2));
 
         Properties prop = new Properties();
         prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
@@ -81,7 +79,7 @@ public class MiningApplierTest {
 
         IPendingState<AionTransaction> pendingState = mock(IPendingState.class);
 
-        AionPoW pow = new AionPoW(new InstrumentedAionImpl());
+        AionPoW pow = new AionPoW(new CustomBlockchainAionImpl());
         pow.init(aionBlockchain, pendingState, eventMgr);
 
         JSONObject genesisJson = new JSONObject(GENESIS_BLOCK_JSON);
@@ -176,8 +174,7 @@ public class MiningApplierTest {
                 elapsed += period;
                 LOG.info(String.format(
                         "sleeping %d %s while waiting for condition to be true (Timeout: %d %s. Waited %d %s so far)",
-                        period, timeUnit, timeout, timeUnit,
-                        timeUnit.convert(elapsed, TimeUnit.MILLISECONDS), timeUnit));
+                        period, timeUnit, timeout, timeUnit, elapsed, timeUnit));
                 timeUnit.sleep(period);
             }
         }
@@ -188,9 +185,9 @@ public class MiningApplierTest {
      * this subclass overrides that so we can use the IAionBlockchain constructed
      * in this test.
      */
-    private class InstrumentedAionImpl extends AionImpl {
+    private class CustomBlockchainAionImpl extends AionImpl {
 
-        public InstrumentedAionImpl() {
+        public CustomBlockchainAionImpl() {
             super();
         }
 
@@ -200,6 +197,7 @@ public class MiningApplierTest {
         }
     }
 
+    /** Genesis block with lowest possible difficulty */
     private static final String GENESIS_BLOCK_JSON = "{" +
             "  \"alloc\": {}," +
             "  \"networkBalanceAlloc\": {" +
