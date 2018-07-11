@@ -741,6 +741,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     boolean makeWithdrawal(Address contract, Address account) {
         // Grab period here since computations are dependent upon it and a new block may arrive,
         // changing the period mid-computation.
+        //TODO double check documentation
         byte[] specs = getContractSpecs(contract);
         if (specs == null) { return false; }
         int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
@@ -870,8 +871,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private BigInteger computeSpecialWithdrawalAmount(Address contract, Address account) {
         if (accountIsEligibleForSpecial(contract, account)) {
-            //TODO
-            return BigInteger.ZERO;
+            return computeBonusShare(contract, account);
         } else {
             return BigInteger.ZERO;
         }
@@ -891,32 +891,25 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the number of withdrawal periods account is behind by.
      */
     private int computeNumberPeriodsBehind(Address contract, Address account, int currPeriod) {
-        //TODO
-        return 1;
+        return getPeriods(getContractSpecs(contract)) - currPeriod;
     }
 
     /**
      * Returns the amount of funds that account is eligible to withdraw from contract per each
-     * withdrawal period.
+     * withdrawal period. This is not including bonus funds but only regular deposit funds.
      *
-     * Let T be the total amount of funds that account will withdraw from the contract if account
-     * withdraws for each period. Let S be the amount of funds account was able to withdraw in the
-     * special one-off event. Let the contract have P periods in total.
+     * Let T be the deposit balance that account has at the moment the contract goes live. Let P be
+     * the number of periods the contract has.
      *
-     * Then account will be eligible to withdraw (T - S) / P funds per period.
-     *
-     * T itself is the sum of B and A, where B is the total balance that account has in the contract
-     * at the moment the contract goes live and A is the share of bonus tokens that account is
-     * entitled to. This share is proportional to the amount of funds account has in the contract
-     * in relation to the total amount of funds in the contract.
+     * Then account will be eligible to withdraw T / P funds per period.
      *
      * @param contract The TRS contract to query.
      * @param account The account to query.
      * @return the amount of funds account is eligible to withdraw each period, excluding special funds.
      */
     private BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
-        //TODO
-        return BigInteger.ONE;
+        return getDepositBalance(contract, account).
+            divide(BigInteger.valueOf(getPeriods(getContractSpecs(contract))));
     }
 
     /**
@@ -932,10 +925,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the total amount of funds owed to account over the lifetime of the contract.
      */
     public BigInteger computeTotalOwed(Address contract, Address account) {
-        BigInteger bal = getDepositBalance(contract, account);
-        BigInteger bon = computeBonusShare(contract, account);
-        return bal.add(bon);
-//        return getDepositBalance(contract, account).add(computeBonusShare(contract, account));
+        return getDepositBalance(contract, account).add(computeBonusShare(contract, account));
     }
 
     /**
@@ -963,9 +953,6 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
         BigDecimal fraction = acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
         BigDecimal share = fraction.multiply(bonusFunds);
-//        BigDecimal share = fraction.multiply(
-//            bonusFunds, new MathContext(18, RoundingMode.HALF_DOWN));
-
         return share.toBigInteger();
     }
 
