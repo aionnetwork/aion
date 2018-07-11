@@ -8,6 +8,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
 import org.aion.precompiled.contracts.ATB.BridgeController;
 import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
+import org.aion.precompiled.contracts.ATB.ErrCode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,10 +61,10 @@ public class BridgeControllerRingTest {
 
     @Test
     public void testRingReinitialization() {
-        BridgeController.ErrCode code = this.controller.ringInitialize(
+        ErrCode code = this.controller.ringInitialize(
                 OWNER_ADDR.toBytes(),
                 getMemberAddress(members));
-        assertThat(code).isEqualTo(BridgeController.ErrCode.RING_LOCKED);
+        assertThat(code).isEqualTo(ErrCode.RING_LOCKED);
     }
 
     @Test

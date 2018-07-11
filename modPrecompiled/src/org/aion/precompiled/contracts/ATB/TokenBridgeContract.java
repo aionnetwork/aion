@@ -2,7 +2,6 @@ package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -15,6 +14,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseAddressFromCall;
+import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseAddressList;
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseBundleRequest;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.getSignature;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.toSignature;
@@ -44,6 +44,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
     private final BridgeController controller;
 
     // some useful defaults
+    // TODO: add passing returns (need more though on gas consumption)
     private static ContractExecutionResult THROW = new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
 
     public TokenBridgeContract(@Nonnull final ExecutionContext context,
@@ -72,27 +73,45 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
                 return THROW;
 
             this.controller.setNewOwner(this.context.caller().toBytes(), address);
+
         } else if (Arrays.equals(signature, SIG_ACCEPT_OWNERSHIP)) {
+
             this.controller.acceptOwnership(this.context.caller().toBytes());
+
         } else if (Arrays.equals(signature, SIG_RING_INITIALIZE)) {
 
             // TODO
+            byte[][] addressList = parseAddressList(input);
+
+            if (addressList == null)
+                return THROW;
+
+            ErrCode code = this.controller.ringInitialize(this.context.caller().toBytes(), addressList);
+
+            if (code != ErrCode.NO_ERROR)
+                return THROW;
 
         } else if (Arrays.equals(signature, SIG_ADD_RING_MEMBER)) {
             byte[] address = parseAddressFromCall(input);
             if (address == null)
                 return THROW;
 
-            BridgeController.ErrCode code = this.controller.ringAddMember(this.context.caller().toBytes(), address);
+            ErrCode code = this.controller.ringAddMember(this.context.caller().toBytes(), address);
 
-            if (code != BridgeController.ErrCode.NO_ERROR)
+            if (code != ErrCode.NO_ERROR)
                 return THROW;
+
         } else if (Arrays.equals(signature, SIG_REMOVE_RING_MEMBER)) {
             byte[] address = parseAddressFromCall(input);
 
             if (address == null)
                 return THROW;
-            BridgeController.ErrCode code = this.controller.ringRemoveMember(this.context.caller().toBytes(), address);
+
+            ErrCode code = this.controller.ringRemoveMember(this.context.caller().toBytes(), address);
+
+            if (code != ErrCode.NO_ERROR)
+                return THROW;
+
         } else if (Arrays.equals(signature, SIG_SUBMIT_BUNDLE)) {
             // TODO: possible attack vector, unsecure deserialization
             byte[][][] bundleRequests = parseBundleRequest(input);
@@ -113,10 +132,10 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
                         new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
                         bundleRequests[BUNDLE_PARAM_VAL][i]);
             }
-            BridgeController.ErrCode code = this.controller.
+            ErrCode code = this.controller.
                     processBundles(this.context.caller().toBytes(), bundles, signatures);
 
-            if (code != BridgeController.ErrCode.NO_ERROR)
+            if (code != ErrCode.NO_ERROR)
                 return THROW;
         }
         return THROW;

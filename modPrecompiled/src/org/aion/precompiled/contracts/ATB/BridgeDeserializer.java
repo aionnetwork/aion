@@ -37,12 +37,35 @@ public class BridgeDeserializer {
         return address;
     }
 
+    public static byte[][] parseAddressList(byte[] call) {
+        if (call.length < CALL_OFFSET + (LIST_META * LIST_PT))
+            return null;
+
+        byte[][] addressList = parseList(call, CALL_OFFSET, 32);
+
+        if (addressList == null)
+            return null;
+
+        // do a final check for address validity, if you're not sure what is
+        // considered a valid address in this contract please see the function
+        // below, note the implications with regards to the bridge design
+        for (byte[] l : addressList) {
+            if (!checkAddressValidity(l))
+                return null;
+        }
+        return addressList;
+    }
+
     /**
      * // TODO: should we re-organize this into a class based structure
      * // TODO: possible to attack this, ideally we figure out an upper bound
      *
+     * @implNote perhaps a length check is wrongly added here too, we do not want to
+     * check later as other deserialization would be a waste.
+     *
      * @param call input data
      * @return {@code 3D byte array}, containing address, value, signature lists
+     * {@code null} if anything regarding deserialization is wrong
      */
     public static byte[][][] parseBundleRequest(@Nonnull final byte[] call) {
         // TODO
@@ -135,6 +158,7 @@ public class BridgeDeserializer {
         }
         return output;
     }
+
 
     private static int parseMeta(byte[] call, int offset) {
         // more minimum length checks

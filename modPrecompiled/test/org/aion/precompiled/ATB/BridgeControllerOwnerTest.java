@@ -6,6 +6,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
 import org.aion.precompiled.contracts.ATB.BridgeController;
 import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
+import org.aion.precompiled.contracts.ATB.ErrCode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,8 +41,8 @@ public class BridgeControllerOwnerTest {
         // sanity check
         assertThat(this.connector.getNewOwner()).isEqualTo(newOwner);
 
-        BridgeController.ErrCode err = this.controller.acceptOwnership(newOwner);
-        assertThat(err).isEqualTo(BridgeController.ErrCode.NO_ERROR);
+        ErrCode err = this.controller.acceptOwnership(newOwner);
+        assertThat(err).isEqualTo(ErrCode.NO_ERROR);
 
         assertThat(this.connector.getOwner()).isEqualTo(newOwner);
     }
@@ -52,7 +53,7 @@ public class BridgeControllerOwnerTest {
         byte[] newOwner = HashUtil.h256("newOwner".getBytes());
 
         this.controller.initialize();
-        BridgeController.ErrCode err = this.controller.setNewOwner(notOwner, newOwner);
-        assertThat(err).isEqualTo(BridgeController.ErrCode.NOT_OWNER);
+        ErrCode err = this.controller.setNewOwner(notOwner, newOwner);
+        assertThat(err).isEqualTo(ErrCode.NOT_OWNER);
     }
 }
