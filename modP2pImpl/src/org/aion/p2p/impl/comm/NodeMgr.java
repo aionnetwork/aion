@@ -381,7 +381,7 @@ public class NodeMgr implements INodeMgr {
         OptionalDouble average = activeNodes.values().stream()
             .mapToLong(n -> now - n.getTimestamp()).average();
 
-        double timeout = average.orElse(4000) * 5;
+        long timeout = ((long) average.orElse(4000)) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
             p2pLOG.debug("average-delay={}ms", (long) average.orElse(0));
