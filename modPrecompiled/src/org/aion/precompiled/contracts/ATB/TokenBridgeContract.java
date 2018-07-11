@@ -16,6 +16,7 @@ import java.util.Arrays;
 
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.getSignature;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract {
 
@@ -142,9 +143,11 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
                 break;
             }
             case PURE_OWNER:
-                return success(this.connector.getOwner() == null ?);
+                return success(orDefaultDword(this.connector.getOwner()));
+            case PURE_NEW_OWNER:
+                return success(orDefaultDword(this.connector.getNewOwner()));
             default:
-                return THROW;
+                return fail();
         }
         throw new RuntimeException("should never reach here");
     }

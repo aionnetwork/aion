@@ -1,5 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.DataWord;
 
@@ -39,5 +40,13 @@ public class BridgeUtilities {
         byte[] sig = new byte[4];
         System.arraycopy(input, 0, sig, 0, 4);
         return sig;
+    }
+
+    static byte[] orDefaultWord(@Nullable final byte[] input) {
+        return input == null ? ByteUtil.EMPTY_HALFWORD : input;
+    }
+
+    static byte[] orDefaultDword(@Nullable final byte[] input) {
+        return input == null ? ByteUtil.EMPTY_WORD : input;
     }
 }
