@@ -1,5 +1,6 @@
 package org.aion.gui.model;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
@@ -24,7 +25,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Optional;
 
 /**
@@ -62,7 +62,7 @@ public class ConfigManipulator {
 
     public String loadFromConfigFile() {
         try {
-            lastLoadContent = Files.toString(configFile(), Charsets.UTF_8);
+            lastLoadContent = new FileLoaderSaver().load(configFile());
             return lastLoadContent;
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,19 +72,6 @@ public class ConfigManipulator {
 
     public String getLastLoadedContent() {
         return lastLoadContent;
-    }
-
-    public Optional<String> checkForErrors(String cfgXml) {
-        try {
-            XMLStreamReader xmlStream = XMLInputFactory.newInstance()
-                    .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
-            new CfgAion().fromXML(xmlStream);
-            return Optional.empty();
-        } catch (Exception e) {
-            e.printStackTrace();
-            String errorText = e.getMessage();
-            return Optional.of(errorText != null ? errorText : "Unknown error");
-        }
     }
 
     /**
@@ -118,7 +105,7 @@ public class ConfigManipulator {
         }
 
         try {
-            Files.write(cfgXml, configFile(), Charsets.UTF_8);
+            new FileLoaderSaver().save(cfgXml, configFile());
             LOG.info("Saving new config.xml");
         } catch (IOException ioe) {
             String msg =
@@ -133,30 +120,35 @@ public class ConfigManipulator {
                 null);
     }
 
-    /**
-     * @param cfgText
-     * @return
-     */
-    private ApplyConfigResult sendConfigProposal(String cfgText) {
+    private Optional<String> checkForErrors(String cfgXml) {
         try {
-            JMXServiceURL url = new JMXServiceURL(
-                    InFlightConfigReceiver.createJmxUrl(InFlightConfigReceiver.DEFAULT_JMX_PORT));
-            try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
-                MBeanServerConnection mbeanServerConnection = conn.getMBeanServerConnection();
-                ObjectName objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
-                InFlightConfigReceiverMBean mbeanProxy = MBeanServerInvocationHandler.newProxyInstance(
-                        mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
+            XMLStreamReader xmlStream = XMLInputFactory.newInstance()
+                    .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
+            new CfgAion().fromXML(xmlStream);
+            return Optional.empty();
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errorText = e.getMessage();
+            return Optional.of(errorText != null ? errorText : "Unknown error");
+        }
+    }
 
-                ConfigProposalResult result = mbeanProxy.propose(cfgText);
-                LOG.debug("JMX propose call returned: " + result.toString());
-                String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
+    private ApplyConfigResult sendConfigProposal(String cfgText) {
+        return sendConfigProposal(new JmxCaller(), cfgText);
+    }
 
-                return new ApplyConfigResult(result.isSuccess(), msg, result.getErrorCause());
-            }
+    @VisibleForTesting
+    ApplyConfigResult sendConfigProposal(JmxCaller jmx, String cfgText) {
+        try {
+            ConfigProposalResult result = jmx.getInFlightConfigReceiver().propose(cfgText);
+            LOG.debug("JMX propose call returned: " + result.toString());
+            String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
+
+            return new ApplyConfigResult(result.isSuccess(), msg, result.getErrorCause());
         } catch (IOException | MalformedObjectNameException ex) {
-            LOG.error("JMX call exception", ex);
-            return new ApplyConfigResult(false,
-                    "Failed to make JMX call", ex);
+                LOG.error("JMX call exception", ex);
+                return new ApplyConfigResult(false,
+                        "Failed to make JMX call", ex);
         } catch (RollbackException re) {
             LOG.error("Kernel encountered config error and failed to roll back", re);
             return new ApplyConfigResult(false,
@@ -178,5 +170,34 @@ public class ConfigManipulator {
 
     private File backupConfigFile() {
         return new File(cfg.getBasePath() + "/config/config.backup.xml");
+    }
+
+    // -- Inner classes ---------------------------------------------------------------------------
+    // (only used to make unit testing of ConfigManipulator easier)
+
+    @VisibleForTesting
+    static class JmxCaller {
+        public InFlightConfigReceiverMBean getInFlightConfigReceiver()
+                throws IOException, MalformedObjectNameException {
+            JMXServiceURL url = new JMXServiceURL(
+                    InFlightConfigReceiver.createJmxUrl(InFlightConfigReceiver.DEFAULT_JMX_PORT));
+            try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
+                MBeanServerConnection mbeanServerConnection = conn.getMBeanServerConnection();
+                ObjectName objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
+                return MBeanServerInvocationHandler.newProxyInstance(
+                        mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
+            }
+        }
+    }
+
+    @VisibleForTesting
+    static class FileLoaderSaver {
+        public void save(String cfgXml, File file) throws IOException {
+            Files.write(cfgXml, file, Charsets.UTF_8);
+        }
+
+        public String load(File file) throws IOException {
+            return Files.toString(file, Charsets.UTF_8);
+        }
     }
 }
