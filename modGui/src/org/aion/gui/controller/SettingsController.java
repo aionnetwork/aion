@@ -41,37 +41,19 @@ public class SettingsController extends AbstractController {
         EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
     }
 
-    @Subscribe
-    private void handleHeaderPaneButtonEvent(final HeaderPaneButtonEvent event) {
-        /*
-        if (event.getType().equals(HeaderPaneButtonEvent.Type.SETTINGS)) {
-            reloadView();
-        }
-        */
-    }
-
-    public void validateXml(MouseEvent mouseEvent) {
-        String xml = xmlArea.getText();
-        Alert alert;
-        Optional<String> maybeError = configManip.checkForErrors(xml);
-        if(maybeError.isPresent()) {
-            alert = new Alert(Alert.AlertType.ERROR, maybeError.get(), ButtonType.YES);
-        } else {
-            alert = new Alert(Alert.AlertType.NONE, "Configuration is valid.", ButtonType.YES);
-        }
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-        alert.showAndWait();
-    }
+//    @Subscribe
+//    private void handleHeaderPaneButtonEvent(final HeaderPaneButtonEvent event) {
+//
+//    }
 
     public void resetXml(MouseEvent mouseEvent) {
         Platform.runLater(() -> xmlArea.setText(configManip.getLastLoadedContent()));
     }
 
-
     public void applyAndSave(MouseEvent mouseEvent) {
         ApplyConfigResult result = configManip.applyNewConfig(xmlArea.getText());
         Alert alert = new Alert(
-                (result.isSucceeded() ? Alert.AlertType.NONE : Alert.AlertType.ERROR),
+                (result.isSucceeded() ? Alert.AlertType.CONFIRMATION : Alert.AlertType.ERROR),
                 result.getDisplayableError(),
                 ButtonType.OK
         );

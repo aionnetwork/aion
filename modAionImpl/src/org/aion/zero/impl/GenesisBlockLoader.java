@@ -51,6 +51,36 @@ public class GenesisBlockLoader {
 
     private static final Pattern isAlphaNumeric = Pattern.compile("^(0x)?[0-9a-fA-F]+$");
 
+    /**
+     * Loader function, ported from @chrislol's configuration class, will open a
+     * file located at filePath. Load the JSON (not incrementally) and generate
+     * a genesis object that defaults back to parameters specified in
+     * {@link AionGenesis} if not specified.
+     *
+     * Alternatively, if the file cannot be loaded, then the default genesis
+     * file is loaded
+     *
+     * Makes no assumptions about thread-safety.
+     *
+     * @param filePath
+     *            filepath to the genesis JSON file
+     * @return genesis file
+     */
+    public static AionGenesis loadJSON(String filePath) throws IOException, HeaderStructureException {
+        File genesisFile = new File(filePath);
+        if (genesisFile.exists()) {
+            try (InputStream is = new FileInputStream(genesisFile)) {
+                String json = new String(ByteStreams.toByteArray(is));
+                JSONObject mapper = new JSONObject(json);
+                return loadJSON(mapper);
+            } catch (IOException | JSONException e) {
+                throw new IOException(e);
+            }
+        } else {
+            throw new IOException(String.format("Genesis file not found at %s", filePath));
+        }
+    }
+
     public static AionGenesis loadJSON(JSONObject mapper) throws IOException, HeaderStructureException {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
 
@@ -137,34 +167,5 @@ public class GenesisBlockLoader {
         }
 
         return genesisBuilder.build();
-    }
-        /**
-         * Loader function, ported from @chrislol's configuration class, will open a
-         * file located at filePath. Load the JSON (not incrementally) and generate
-         * a genesis object that defaults back to parameters specified in
-         * {@link AionGenesis} if not specified.
-         *
-         * Alternatively, if the file cannot be loaded, then the default genesis
-         * file is loaded
-         *
-         * Makes no assumptions about thread-safety.
-         *
-         * @param filePath
-         *            filepath to the genesis JSON file
-         * @return genesis file
-         */
-    public static AionGenesis loadJSON(String filePath) throws IOException, HeaderStructureException {
-        File genesisFile = new File(filePath);
-        if (genesisFile.exists()) {
-            try (InputStream is = new FileInputStream(genesisFile)) {
-                String json = new String(ByteStreams.toByteArray(is));
-                JSONObject mapper = new JSONObject(json);
-                return loadJSON(mapper);
-            } catch (IOException | JSONException e) {
-                throw new IOException(e);
-            }
-        } else {
-            throw new IOException(String.format("Genesis file not found at %s", filePath));
-        }
     }
 }

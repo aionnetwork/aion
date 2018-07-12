@@ -33,7 +33,6 @@ import java.util.Optional;
  * to reconfigure it dynamically.
  */
 public class ConfigManipulator {
-    // TODO:
     // Current method of determining file path of config.xml is a little wonky.  cfg is the
     // instance of Cfg that the GUI is currently running.
     //
@@ -89,6 +88,52 @@ public class ConfigManipulator {
     }
 
     /**
+     * Apply a new config
+     *
+     * @param cfgXml XML text of new config
+     * @return {@link ApplyConfigResult} whether it was successful or failure, plus reason for failure
+     */
+    public ApplyConfigResult applyNewConfig(String cfgXml) {
+        Optional<String> maybeError = checkForErrors(cfgXml);
+        if (maybeError.isPresent()) {
+            String msg = "Could not apply config because it has errors.  File will not be saved.  Error was:\n\n"
+                    + maybeError.get();
+            return new ApplyConfigResult(false, msg, null);
+        }
+
+        ApplyConfigResult result = sendConfigProposal(cfgXml);
+        if (!result.isSucceeded()) {
+            return result;
+        }
+
+        final String backupConfigFilename;
+        try {
+            backupConfigFilename = backupConfig();
+        } catch (IOException ioe) {
+            String msg =
+                    "Failed to backup existing config, so aborting operation.  Error during backup:\n\n"
+                            + ioe.getMessage();
+            ioe.printStackTrace();
+            return new ApplyConfigResult(false, msg, null);
+        }
+
+        try {
+            Files.write(cfgXml, configFile(), Charsets.UTF_8);
+            LOG.info("Saving new config.xml");
+        } catch (IOException ioe) {
+            String msg =
+                    "Failed to write to the config file, so aborting operation.  Error during write:\n\n"
+                            + ioe.getMessage();
+            ioe.printStackTrace();
+            return new ApplyConfigResult(false, msg, null);
+        }
+
+        return new ApplyConfigResult(result.isSucceeded(),
+                "Config saved.  Previous copy is backed up at " + backupConfigFilename,
+                null);
+    }
+
+    /**
      * @param cfgText
      * @return
      */
@@ -120,58 +165,6 @@ public class ConfigManipulator {
                             "It is recommended that you restart your kernel.",
                     re);
         }
-    }
-
-    /**
-     * Apply a new config
-     *
-     * @param cfgXml XML text of new config
-     * @return {@link ApplyConfigResult} whether it was successful or failure, plus reason for failure
-     */
-    public ApplyConfigResult applyNewConfig(String cfgXml) {
-//        if(kernelLauncher.hasLaunchedInstance()) {
-//            return new ApplyConfigResult(false,
-//                    "Kernel is running.  Please terminate before applying.",
-//                    null);
-//        }
-
-        Optional<String> maybeError = checkForErrors(cfgXml);
-        if (maybeError.isPresent()) {
-            String msg = "Could not apply config because it has errors.  File will not be saved.  Error was:\n\n"
-                    + maybeError.get();
-            return new ApplyConfigResult(false, msg, null);
-        }
-
-        ApplyConfigResult result = sendConfigProposal(cfgXml);
-        if (!result.isSucceeded()) {
-            return result;
-        }
-
-        final String backupConfigFilename;
-        try {
-            backupConfigFilename = backupConfig();
-        } catch (IOException ioe) {
-            String msg =
-                    "Failed to backup existing config, so aborting operation.  Error during backup:\n\n"
-                            + ioe.getMessage();
-            ioe.printStackTrace();
-            return new ApplyConfigResult(false, msg, null);
-        }
-
-        try {
-            //Files.write(cfgXml, configFile(), Charsets.UTF_8);
-            System.out.println("Pretending to write the file!");
-        } catch (RuntimeException /* TODO IOExcepion */ioe) {
-            String msg =
-                    "Failed to write to the config file, so aborting operation.  Error during write:\n\n"
-                            + ioe.getMessage();
-            ioe.printStackTrace();
-            return new ApplyConfigResult(false, msg, null);
-        }
-
-        return new ApplyConfigResult(result.isSucceeded(),
-                "Config saved.  Previous copy is backed up at " + backupConfigFilename,
-                null);
     }
 
     private String backupConfig() throws IOException {

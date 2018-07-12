@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.*?>
 
 <?import org.aion.gui.views.XmlArea?>
+
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             id="settingsPane" visible="false" stylesheets="@../contentPane.css"
             fx:controller="org.aion.gui.controller.SettingsController"
@@ -26,12 +27,11 @@
                     stylesheets="@../contentPane.css" xmlns="http://javafx.com/javafx/8.0.121"
                     prefHeight="100">
             <HBox AnchorPane.leftAnchor="30.0" AnchorPane.bottomAnchor="15" spacing="5">
-            <Button text="Reset" onMouseClicked="#resetXml"/>
+            <Button text="Reset" fx:id="resetButton" onMouseClicked="#resetXml"/>
             </HBox>
 
             <HBox AnchorPane.rightAnchor="30.0" AnchorPane.bottomAnchor="15" spacing="5">
-                <Button text="Validate" onMouseClicked="#validateXml"/>
-                <Button text="Apply &amp; save" onMouseClicked="#applyAndSave" />
+                <Button text="Apply &amp; save" fx:id="applyAndSaveButton" onMouseClicked="#applyAndSave" />
             </HBox>
         </AnchorPane>
     </bottom>

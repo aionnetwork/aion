@@ -18,6 +18,7 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.types.AionTransaction;
 import org.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -63,6 +64,7 @@ public class MiningApplierIntegrationTest {
      * {@link AionPoW} workers and that doing so does not disrupt their ability to mine blocks
      * into a {@link IAionBlockchain}.
      */
+    @Ignore
     @Test
     public void testStartThenStopThenStartKernel() throws Throwable {
         // Set up test: start AionPoW and EquihashMiner with mining off
@@ -185,7 +187,7 @@ public class MiningApplierIntegrationTest {
             }
         }
     }
-    
+
     /** Genesis block with lowest possible difficulty */
     private static final String GENESIS_BLOCK_JSON = "{" +
             "  \"alloc\": {}," +

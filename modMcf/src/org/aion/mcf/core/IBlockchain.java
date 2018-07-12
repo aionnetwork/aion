@@ -42,7 +42,7 @@ import java.util.List;
  * @param <INFO>
  */
 @SuppressWarnings("rawtypes")
-public interface  IBlockchain<BLK extends IBlock, BH extends AbstractBlockHeader, TX extends ITransaction, TR extends AbstractTxReceipt, INFO extends AbstractTxInfo>
+public interface IBlockchain<BLK extends IBlock, BH extends AbstractBlockHeader, TX extends ITransaction, TR extends AbstractTxReceipt, INFO extends AbstractTxInfo>
         extends IPowChain<BLK, BH> {
 
     long getSize();

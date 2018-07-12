@@ -32,7 +32,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private KernelUpdateTimer kernelUpdateTimer;
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
-    private Cfg cfg;
+    private ConfigManipulator configManipulator;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -56,7 +56,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     syncInfoDto
             ));
             put(SettingsController.class, () -> new SettingsController(
-                    new ConfigManipulator(cfg, kernelLauncher)
+                    configManipulator
             ));
             /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
                     kernelConnection));
@@ -179,18 +179,18 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     }
 
     /**
-     * @param cfg sets the cfg used by this factory
+     * @param configManipulator sets the ConfigManipulator used by this factory
      * @return this
      */
-    public ControllerFactory withCfg(Cfg cfg) {
-        this.cfg = cfg;
+    public ControllerFactory withConfigManipulator(ConfigManipulator configManipulator) {
+        this.configManipulator = configManipulator;
         return this;
     }
 
     /**
-     * @return the cfg used by this factory
+     * @return the ConfigManipulator used by this factory
      */
-    public Cfg getCfg() {
-        return cfg;
+    public ConfigManipulator getConfigManipulator() {
+        return configManipulator;
     }
 }

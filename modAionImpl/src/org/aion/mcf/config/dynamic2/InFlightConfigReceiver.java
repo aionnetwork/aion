@@ -71,6 +71,11 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
 
         ConfigProposalResult result = applyNewConfig(newCfg);
         if(result.isSuccess()) {
+            // At kernel start-up time, values from CfgAion.inst() are read and copied
+            // to other places.  Right now we don't do anything to find/update those
+            // values (assume the IDynamicConfigApplier subclasses will all do the
+            // necessary updating correctly).  Revisit this that becomes too
+            // confusing/spaghetti-like.
             CfgAion.setInst(newCfg);
         }
         return result;
