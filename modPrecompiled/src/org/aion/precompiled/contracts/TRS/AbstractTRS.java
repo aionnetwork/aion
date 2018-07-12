@@ -741,30 +741,22 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     boolean makeWithdrawal(Address contract, Address account) {
         byte[] specs = getContractSpecs(contract);
         if (specs == null) { return false; }
-        //TODO: refactor this
 
         // Grab period here since computations are dependent upon it and a new block may arrive,
         // changing the period mid-computation.
         int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
+
+        // Calculate withdrawal amount. If we are in last period then account can withdraw all
+        // outstanding funds.
+        BigInteger amount;
         if (getPeriods(specs) == currPeriod) {
-            // Then we are in the final withdrawal period and the account is eligible to claim the
-            // remainder of all outstanding owings.
-            BigInteger unclaimed = computeOutstadingOwings(contract, account);
-            if (unclaimed.compareTo(BigInteger.ZERO) > 0) {
-                track.addBalance(account, unclaimed);
-                updateAccountLastWithdrawalPeriod(contract, account, currPeriod);
-                setAccountIneligibleForSpecial(contract, account.toBytes());
-                return true;
-            }
-            return false;
+            amount = computeOutstadingOwings(contract, account);
+        } else {
+            BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
+            BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
+            int numPeriodsBehind = computeNumberPeriodsBehind(contract, account, currPeriod);
+            amount = (fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind))).add(specialAmt);
         }
-
-        BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
-        BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
-        int numPeriodsBehind = computeNumberPeriodsBehind(contract, account, currPeriod);
-
-        BigInteger amount = fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind));
-        amount = amount.add(specialAmt);
 
         // If amount is non-zero then transfer the funds and update account's last withdrawal period.
         if (amount.compareTo(BigInteger.ZERO) > 0) {
@@ -884,12 +876,25 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private BigInteger computeSpecialWithdrawalAmount(Address contract, Address account) {
         if (accountIsEligibleForSpecial(contract, account)) {
-            BigDecimal owed = new BigDecimal(computeTotalOwed(contract, account));
-            BigDecimal percent = getPercentage(getContractSpecs(contract)).movePointLeft(2);
-            return owed.multiply(percent).toBigInteger();
+            return computeRawSpecialAmount(contract, account);
         } else {
             return BigInteger.ZERO;
         }
+    }
+
+    /**
+     * Returns the amount that account is eligible to withdraw in the special one-off withdrawal
+     * event. This method does not care whether or not special withdrawal has occurred or not, it
+     * merely reports the amount that can be withdrawn in that event.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the amount account is eligible to withdraw in the special event.
+     */
+    private BigInteger computeRawSpecialAmount(Address contract, Address account) {
+        BigDecimal owed = new BigDecimal(computeTotalOwed(contract, account));
+        BigDecimal percent = getPercentage(getContractSpecs(contract)).movePointLeft(2);
+        return owed.multiply(percent).toBigInteger();
     }
 
     /**
@@ -988,8 +993,16 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the amount of unclaimed tokens account has yet to withdraw from their total owings.
      */
     private BigInteger computeOutstadingOwings(Address contract, Address account) {
-        //TODO
-        return BigInteger.ZERO;
+        int lastPeriod = getAccountLastWithdrawalPeriod(contract, account);
+        BigInteger amtPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
+        BigInteger specialAmt = computeRawSpecialAmount(contract, account);
+
+        // If account is eligible for special withdrawal then it has withdrawn zero funds in the
+        // special event. Otherwise it has withdrawn specialAmt.
+        specialAmt = (accountIsEligibleForSpecial(contract, account)) ? BigInteger.ZERO : specialAmt;
+        BigInteger totalWithdrawn = (amtPerPeriod.multiply(BigInteger.valueOf(lastPeriod))).add(specialAmt);
+        BigInteger owings = computeTotalOwed(contract, account);
+        return owings.subtract(totalWithdrawn);
     }
 
     /**

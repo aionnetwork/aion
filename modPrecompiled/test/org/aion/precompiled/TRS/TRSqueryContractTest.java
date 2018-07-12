@@ -525,19 +525,21 @@ public class TRSqueryContractTest extends TRShelpers {
     public void testPeriodAtAfterIsLive() throws InterruptedException {
         Address contract = createLockedAndLiveTRScontract(AION, true, true,
             4, BigInteger.ZERO, 0);
-        createBlockchain(2, TimeUnit.SECONDS.toMillis(3));
+        createBlockchain(2, TimeUnit.SECONDS.toMillis(1));
 
+        BigInteger expectedPeriod = grabPeriodAt(newTRSownerContract(AION), contract, 1);
         byte[] input = getPeriodAtInput(contract, 1);
         ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
-        assertEquals(BigInteger.ONE, new BigInteger(res.getOutput()));
+        assertEquals(expectedPeriod, new BigInteger(res.getOutput()));
 
+        expectedPeriod = grabPeriodAt(newTRSownerContract(AION), contract, 2);
         input = getPeriodAtInput(contract, 2);
         res = newTRSqueryContract(AION).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
-        assertTrue(new BigInteger(res.getOutput()).compareTo(BigInteger.ONE) > 0);
+        assertEquals(expectedPeriod, new BigInteger(res.getOutput()));
     }
 
     @Test

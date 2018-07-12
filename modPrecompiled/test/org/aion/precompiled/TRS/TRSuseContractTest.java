@@ -199,6 +199,11 @@ public class TRSuseContractTest extends TRShelpers {
      * Returns the amount an account is expected to receive from a first withdrawal from a contract
      * given that the params are true of the contract and the caller.
      *
+     * This method is unreliable if the first withdraw is performed in the last period. There are
+     * roundoff errors that accrue and cause the non-final withdrawal amounts to be round down and
+     * their sum may be less than the total owed. The contract handles the final period specially to
+     * ensure all funds owed are paid out.
+     *
      * @param trs An AbstractTRS instance.
      * @param contract The contract in question.
      * @param deposits The amount the caller deposited.
@@ -208,12 +213,13 @@ public class TRSuseContractTest extends TRShelpers {
      * @param periods The number of periods the contract has.
      * @return the expected amount to withdraw on a first call to the contract.
      */
-    private BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract, BigInteger deposits, BigInteger total,
-        BigInteger bonus, BigDecimal percent, int periods) {
+    private BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract, BigInteger deposits,
+        BigInteger total, BigInteger bonus, BigDecimal percent, int periods) {
 
         BigInteger currPeriod = grabCurrentPeriod(trs, contract);
         BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
-        BigInteger expectedSpecial = grabSpecialAmount(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus), percent);
+        BigInteger expectedSpecial = grabSpecialAmount(new BigDecimal(deposits), new BigDecimal(total),
+            new BigDecimal(bonus), percent);
         BigInteger expectedWithdraw = currPeriod.multiply(grabWithdrawAmt(owings, expectedSpecial, periods));
         return expectedWithdraw.add(expectedSpecial);
     }
@@ -1184,22 +1190,17 @@ public class TRSuseContractTest extends TRShelpers {
         // We try to put the contract in the final period and withdraw.
         createBlockchain(1, TimeUnit.SECONDS.toMillis(4));
         AbstractTRS trs = newTRSownerContract(AION);
+
+        // We are in last period so we expect to withdraw our total owings.
         BigInteger currPeriod = grabCurrentPeriod(trs, contract);
         assertTrue(currPeriod.compareTo(BigInteger.valueOf(periods)) == 0);
-        BigInteger expectedAmt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
-
-        // Verify that the expectedAmt is equal to the total owings for each account.
         BigInteger accOwed = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
-//        assertEquals(accOwed, expectedAmt);
-        BigInteger totalOwed = accOwed.multiply(BigInteger.valueOf(depositors));
-        assertTrue(totalOwed.compareTo(total.add(bonus)) <= 0);
-
 
         Set<Address> contributors = getAllDepositors(trs, contract);
         byte[] input = getWithdrawInput(contract);
         for (Address acc : contributors) {
             assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
-            assertEquals(expectedAmt, repo.getBalance(acc));
+            assertEquals(accOwed, repo.getBalance(acc));
         }
     }
 

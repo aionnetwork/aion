@@ -118,6 +118,17 @@ class TRShelpers {
         return block;
     }
 
+    // Returns the contract specifications byte array associated with contract.
+    byte[] getContractSpecs(AbstractTRS trs, Address contract) {
+        return trs.getContractSpecs(contract);
+    }
+
+    // Returns the period the contract is in at the block number blockNum.
+    BigInteger grabPeriodAt(AbstractTRS trs, Address contract, long blockNum) {
+        long timestamp = blockchain.getBlockByNumber(blockNum).getTimestamp();
+        return BigInteger.valueOf(trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
+    }
+
     // Returns a new TRSownerContract that calls the contract using caller.
     TRSownerContract newTRSownerContract(Address caller) {
         return new TRSownerContract(repo, caller, blockchain);
