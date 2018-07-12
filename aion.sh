@@ -37,8 +37,6 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
-#env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-#	-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
 
 
 ####### WATCHGUARD IMPLEMENTATION #######
@@ -46,10 +44,10 @@ chmod +x ./rt/bin/*
 #   To kill: ps aux | egrep "aion.sh" 	#
 #					#
 #   Wait - reboot timer condition	#
-#   Sample - rebounce checking rate	#
+#   Sample - kernel checking rate	#
 #   Tolerance - kernel dead condition	#
-#   ThreadRate - frequency of checking	#
-#	thread dead condition (sample)  #
+#   ThreadRate - thread checking rate	#
+#		(threadRate * sample)	#
 #					#
 #########################################
 
@@ -70,14 +68,14 @@ fi
 
 if $guard; then
 
+	echo "######################"
+	echo "  Watchguard Enabled  "
+	echo "######################"
+
 	wait=300	# sec
-	sample=30	# sec
-	tolerance=60 	# sec
-	threadRate=3 	# rate
-	#wait=30
-	#sample=1
-	#tolerance=1
-	#threadRate=20
+	sample=1	# sec
+	tolerance=1 	# sec
+	threadRate=1 	# rate
 
 	config=config/config.xml
 	logging=$(egrep -o "log-file.*log-file" $config | cut -d">" -f2 | cut -d"<" -f1)
@@ -97,10 +95,10 @@ if $guard; then
 		# Interrupts the Aion kernel and awaits shutdown complete
 		if $running; then
 		  kill $kPID
-		  temp=$(top -n1 -p $kPID | egrep -o "$kPID")
+		  temp=$(ps --pid $kPID | egrep -o "$kPID")
 		  while [[ $temp -eq $kPID ]] ; do
 		    sleep 2s
-		    temp=$(top -n1 -p $kPID | egrep -o "$kPID")
+		    temp=$(ps --pid $kPID | egrep -o "$kPID")
 		  done
 		  running=false
 		  watching=false
@@ -110,7 +108,7 @@ if $guard; then
 		# Removes remnant processes accessing kernel logfile
 		if $logging; then
 		  temp=$(lsof $file | egrep "java" | cut -c 9-13)
-		  remnants=($temp)
+		  remnants=($tep)
 		  for ((i=0; i<${#remnants[@]}; ++i)); do
 		    kill ${remnants[i]}
 		  done
@@ -133,7 +131,6 @@ if $guard; then
 		  sleep $sleep
 		fi
 		lastBoot=$newBoot
-		echo
 
 		# Execute Java kernel
 		env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
@@ -167,7 +164,7 @@ if $guard; then
 			  threads=($temp)
 			  checkRate=0
 			  for ((i=0; i<${#threads[@]}; ++i)); do
-			    tTime=$(top -n1 -p $kPID -H | egrep -o "[0-9]{2}\.[0-9]{2} ${threads[i]}" | cut -d" " -f1)
+			    tTime=$(ps --pid $kPID | egrep -o "[0-9]{2}\.[0-9]{2} ${threads[i]}" | cut -d" " -f1)
 			    tState=$(jstack -l $kPID | egrep -A1 "${threads[i]}" | egrep -o "State.*" | cut -d" " -f2)
 			    if [[ $tTime == ${tPrev[i]} ]] && [[ $tState == "BLOCKED" ]]; then 
 			      echo "## ${threads[i]} THREAD DEAD ##"
@@ -185,10 +182,10 @@ if $guard; then
 		# Shutsdown Aion kernel
 		echo "## Killing Kernel ##"
 		kill $kPID
-		temp=$(top -n1 -p $kPID | egrep -o "$kPID")
+		temp=$(ps --pid $kPID | egrep -o "$kPID")
 		while [[ $temp -eq $kPID ]] ; do
 		  sleep 2s
-		  temp=$(top -n1 -p $kPID | egrep -o "$kPID")
+		  temp=$(ps --pid $kPID | egrep -o "$kPID")
 		done
 		running=false
 
@@ -197,6 +194,7 @@ if $guard; then
 		echo "############################## REBOUNCE COUNT [$countRebounce] ##############################"
 
 	done
+
 else
 
   	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
