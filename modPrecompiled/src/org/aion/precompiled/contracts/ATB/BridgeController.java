@@ -5,9 +5,13 @@ import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
+import org.aion.mcf.vm.types.Log;
+import org.aion.vm.ExecutionContext;
 
 import javax.annotation.Nonnull;
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed
@@ -16,14 +20,17 @@ import java.util.Arrays;
  */
 public class BridgeController {
 
-    private BridgeStorageConnector connector;
+    private final BridgeStorageConnector connector;
+    private final ExecutionContext context;
     private final Address contractAddress;
     private final Address ownerAddress;
 
     public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
+                            @Nonnull final ExecutionContext context,
                             @Nonnull final Address contractAddress,
                             @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
+        this.context = context;
         this.contractAddress = contractAddress;
         this.ownerAddress = ownerAddress;
     }
@@ -69,6 +76,8 @@ public class BridgeController {
             return ErrCode.NOT_NEW_OWNER;
         this.connector.setOwner(caller);
         this.connector.setNewOwner(ByteUtil.EMPTY_WORD);
+
+        emitChangedOwner(caller);
         return ErrCode.NO_ERROR;
     }
 
@@ -126,6 +135,7 @@ public class BridgeController {
         this.connector.setMemberCount(memberCount);
         this.connector.setMinThresh(thresh);
 
+        emitAddMember(address);
         return ErrCode.NO_ERROR;
     }
 
@@ -147,6 +157,7 @@ public class BridgeController {
         this.connector.setMemberCount(memberCount);
         this.connector.setMinThresh(thresh);
 
+        emitRemoveMember(address);
         return ErrCode.NO_ERROR;
     }
 
@@ -215,8 +226,42 @@ public class BridgeController {
                  * we could do is consider whoever sent this batch malicious, and reject.
                  */
                 return ErrCode.INVALID_TRANSFER;
+            // otherwise transfer was successful
+            emitDistributed(b.recipient, b.transferValue);
         }
+        emitProcessedBundle(hash);
         return ErrCode.NO_ERROR;
     }
 
+    private void addLog(List<byte[]> topics) {
+        this.context.result().addLog(new Log(this.contractAddress, topics, null));
+    }
+
+    private void emitAddMember(@Nonnull final byte[] address) {
+        List<byte[]> topics = Arrays.asList(BridgeEventSig.ADD_MEMBER.getHashed(), address);
+        addLog(topics);
+    }
+
+    private void emitRemoveMember(@Nonnull final byte[] address) {
+        List<byte[]> topics = Arrays.asList(BridgeEventSig.REMOVE_MEMBER.getHashed(), address);
+        addLog(topics);
+    }
+
+    private void emitChangedOwner(@Nonnull final byte[] ownerAddress) {
+        List<byte[]> topics = Arrays.asList(BridgeEventSig.CHANGE_OWNER.getHashed(), ownerAddress);
+        addLog(topics);
+    }
+
+    // events
+    private void emitDistributed(@Nonnull final byte[] recipient,
+                                 @Nonnull final BigInteger value) {
+        List<byte[]> topics = Arrays.asList(BridgeEventSig.DISTRIBUTED.getHashed(),
+                recipient, BridgeUtilities.pad(value.toByteArray(), 32));
+        addLog(topics);
+    }
+
+    private void emitProcessedBundle(@Nonnull final byte[] bundleHash) {
+        List<byte[]> topics = Arrays.asList(BridgeEventSig.PROCESSED_BUNDLE.getHashed(), bundleHash);
+        addLog(topics);
+    }
 }

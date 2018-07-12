@@ -6,6 +6,7 @@ import org.aion.mcf.vm.types.DataWord;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.math.BigInteger;
 
 /**
  * Collection of minimal utilities used by the bridge contract. Some code
@@ -33,6 +34,10 @@ public class BridgeUtilities {
         return sigChopped;
     }
 
+    static byte[] toEventSignature(@Nonnull final String eventSignature) {
+        return HashUtil.keccak256(eventSignature.getBytes());
+    }
+
     static byte[] getSignature(@Nonnull final byte[] input) {
         if (input.length < 4)
             return null;
@@ -48,5 +53,25 @@ public class BridgeUtilities {
 
     static byte[] orDefaultDword(@Nullable final byte[] input) {
         return input == null ? ByteUtil.EMPTY_WORD : input;
+    }
+
+    private static final byte[] TRUE = ByteUtil.hexStringToBytes("00000000000000000000000000000001");
+    static byte[] booleanToResultBytes(final boolean input) {
+        return input ? TRUE : ByteUtil.EMPTY_HALFWORD;
+    }
+
+    static byte[] pad(@Nonnull final byte[] input,
+                      final int length) {
+        assert input.length <= length;
+        if (input.length == length)
+            return input;
+
+        byte[] out = new byte[length];
+        System.arraycopy(input, 0, out, out.length - input.length, input.length);
+        return out;
+    }
+
+    static byte[] intToResultBytes(final int input) {
+        return pad(BigInteger.valueOf(input).toByteArray(), 16);
     }
 }

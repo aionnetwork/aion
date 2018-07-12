@@ -10,12 +10,21 @@ public class BridgeDeserializer {
     private static final int ERR_INT = -1;
 
     private static final int CALL_OFFSET = 4;
+    private static final int DWORD_SIZE = 32;
     private static final int ADDR_SIZE = 32;
 
     private static final int LIST_PT = 16;
     private static final int LIST_META = 16;
 
     private static final BigInteger INT_MAX_VAL = BigInteger.valueOf(Integer.MAX_VALUE);
+
+    public static byte[] parseDwordFromCall(@Nonnull final byte[] call) {
+        if (call.length != (DWORD_SIZE + CALL_OFFSET))
+            return null;
+        final byte[] dword = new byte[DWORD_SIZE];
+        System.arraycopy(call, CALL_OFFSET, dword, 0, ADDR_SIZE);
+        return dword;
+    }
 
     /**
      * Parses a call with one owner address, externally this is known as
@@ -27,11 +36,8 @@ public class BridgeDeserializer {
      * @return {@code address} of new owner, {@code null} if anything is invalid
      */
     public static byte[] parseAddressFromCall(@Nonnull final byte[] call) {
-        if (call.length != (ADDR_SIZE + CALL_OFFSET))
-            return null;
-        final byte[] address = new byte[ADDR_SIZE];
-        System.arraycopy(call, CALL_OFFSET, address, 0, ADDR_SIZE);
-        if (!checkAddressValidity(address))
+        byte[] address = parseDwordFromCall(call);
+        if (address == null || !checkAddressValidity(address))
             return null;
         return address;
     }

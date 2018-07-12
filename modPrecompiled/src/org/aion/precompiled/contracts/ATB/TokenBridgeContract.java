@@ -15,8 +15,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
-import static org.aion.precompiled.contracts.ATB.BridgeUtilities.getSignature;
-import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract {
 
@@ -83,7 +82,6 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
                 return success();
             }
             case SIG_RING_INITIALIZE: {
-                // TODO
                 byte[][] addressList = parseAddressList(input);
 
                 if (addressList == null)
@@ -146,6 +144,23 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
                 return success(orDefaultDword(this.connector.getOwner()));
             case PURE_NEW_OWNER:
                 return success(orDefaultDword(this.connector.getNewOwner()));
+            case PURE_RING_LOCKED:
+                return success(booleanToResultBytes(this.connector.getRingLocked()));
+            case PURE_MIN_THRESH:
+                return success(intToResultBytes(this.connector.getMinThresh()));
+            case PURE_MEMBER_COUNT:
+                return success(intToResultBytes(this.connector.getMemberCount()));
+            case PURE_RING_MAP: {
+                byte[] address = parseAddressFromCall(input);
+                if (address == null)
+                    return fail();
+                return success(booleanToResultBytes(this.connector.getActiveMember(address)));
+            }
+            case PURE_ACTION_MAP:
+                byte[] bundleHash = parseDwordFromCall(input);
+                if (bundleHash == null)
+                    return fail();
+                return success(booleanToResultBytes(this.connector.getBundle(bundleHash)));
             default:
                 return fail();
         }
