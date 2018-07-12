@@ -263,13 +263,13 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
-		<echo message="building modPrecompiled" />
-		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
+		<echo message="building modFastVM" />
+		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
-		<echo message="building modFastVM" />
-		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="clean_build">
+		<echo message="building modPrecompiled" />
+		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
