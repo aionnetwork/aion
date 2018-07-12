@@ -6,7 +6,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
-import org.aion.vm.ExecutionContext;
+import org.aion.vm.TransactionResult;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
@@ -21,16 +21,16 @@ import java.util.List;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private final ExecutionContext context;
+    private TransactionResult result;
     private final Address contractAddress;
     private final Address ownerAddress;
 
     public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
-                            @Nonnull final ExecutionContext context,
+                            @Nonnull final TransactionResult result,
                             @Nonnull final Address contractAddress,
                             @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
-        this.context = context;
+        this.result = result;
         this.contractAddress = contractAddress;
         this.ownerAddress = ownerAddress;
     }
@@ -48,6 +48,14 @@ public class BridgeController {
     // owner
 
     // guards/modifiers
+
+    /**
+     * Checks whether the given address is the owner of the contract or not.
+     * @implNote assumes the address is non-null and properly formatted
+     *
+     * @param address to be checked for ownership
+     * @return {@code true} if address is the owner {@code false} otherwise
+     */
     private boolean isOwner(@Nonnull final byte[] address) {
         byte[] owner = this.connector.getOwner();
         if (owner == null)
@@ -55,6 +63,11 @@ public class BridgeController {
         return Arrays.equals(owner, address);
     }
 
+    /**
+     * Checks whether the given address is the intended newOwner of the contract
+     * @param address to be checked for new ownership
+     * @return {@code} true if the address is the intended new owner {@code false} otherwise
+     */
     private boolean isNewOwner(@Nonnull final byte[] address) {
         byte[] newOwner = this.connector.getNewOwner();
         if (newOwner == null)
@@ -234,7 +247,7 @@ public class BridgeController {
     }
 
     private void addLog(List<byte[]> topics) {
-        this.context.result().addLog(new Log(this.contractAddress, topics, null));
+        this.result.addLog(new Log(this.contractAddress, topics, null));
     }
 
     private void emitAddMember(@Nonnull final byte[] address) {

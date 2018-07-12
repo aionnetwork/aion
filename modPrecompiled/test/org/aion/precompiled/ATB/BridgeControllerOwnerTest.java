@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.precompiled.ATB.BridgeTestUtils.*;
 
 public class BridgeControllerOwnerTest {
 
@@ -23,7 +24,8 @@ public class BridgeControllerOwnerTest {
     public void beforeEach() {
         DummyRepo repo = new DummyRepo();
         this.connector = new BridgeStorageConnector((IRepositoryCache) repo, CONTRACT_ADDR);
-        this.controller = new BridgeController(connector, CONTRACT_ADDR, OWNER_ADDR);
+        this.controller = new BridgeController(connector,
+                dummyContext().result(), CONTRACT_ADDR, OWNER_ADDR);
     }
 
     @Test

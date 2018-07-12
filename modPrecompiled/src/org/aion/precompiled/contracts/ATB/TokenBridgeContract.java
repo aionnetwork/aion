@@ -45,7 +45,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
         this.context = context;
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
-        this.controller = new BridgeController(this.connector, contractAddress, ownerAddress);
+        this.controller = new BridgeController(this.connector, this.context.result(), contractAddress, ownerAddress);
     }
 
     @Override
