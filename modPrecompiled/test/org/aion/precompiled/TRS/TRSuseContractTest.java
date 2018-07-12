@@ -1609,7 +1609,212 @@ public class TRSuseContractTest extends TRShelpers {
 
     // <-------------------------------TRS BULK-WITHDRAWAL TESTS----------------------------------->
 
-    //TODO
+    @Test
+    public void testBulkWithdrawInputTooShort() {
+        // Test maximum too-short size.
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = new byte[32];
+        input[0] = 0x3;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN - 1);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+
+        // Test minimum too-short size.
+        input = new byte[1];
+        res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testBulkWithdrawInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = new byte[34];
+        input[0] = 0x3;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+        assertEquals(0, res.getNrgLeft());
+    }
+
+    @Test
+    public void testBulkWithdrawCallerNotOwner() {
+        BigDecimal percent = new BigDecimal("44.44");
+        BigInteger deposits = new BigInteger("2652545");
+        BigInteger bonus = new BigInteger("326543");
+        int periods = 3;
+        int depositors = 6;
+        Address contract = setupContract(depositors, deposits, bonus, periods, percent);
+
+        // Try to do a bulk-withdraw calling as every depositor in the contract (owner is AION).
+        byte[] input = getBulkWithdrawInput(contract);
+        AbstractTRS trs = newTRSownerContract(AION);
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acc).execute(input, COST).getCode());
+        }
+
+        // Verify no one received any funds.
+        for (Address acc : contributors) {
+            assertEquals(BigInteger.ZERO, repo.getBalance(acc));
+        }
+    }
+
+    @Test
+    public void testBulkWithdrawContractNotLockedNotLive() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Try first with no one in the contract. Caller is owner.
+        byte[] input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+
+        // Now deposit some and try again.
+        input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testBulkWithdrawContractLockedNotLive() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Deposit some funds and lock.
+        byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
+        input = getLockInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+
+        // Try to withdraw.
+        input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+    }
+
+    @Test
+    public void testBulkWithdrawOneDepositor() throws InterruptedException {
+        BigDecimal percent = new BigDecimal("12.008");
+        BigInteger deposits = new BigInteger("11118943432");
+        BigInteger bonus = new BigInteger("346");
+        int periods = 3;
+        int depositors = 1;
+        Address contract = setupContract(depositors, deposits, bonus, periods, percent);
+
+        // Verify depositor has no account balance.
+        AbstractTRS trs = newTRSownerContract(AION);
+        Address depositor = getAllDepositors(trs, contract).iterator().next();
+        assertEquals(BigInteger.ZERO, repo.getBalance(depositor));
+
+        createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
+
+        // Do a bulk-withdraw from the contract.
+        byte[] input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getCode());
+        BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, deposits, bonus, percent, periods);
+        assertEquals(amt, repo.getBalance(depositor));
+    }
+
+    @Test
+    public void testBulkWithdrawMultipleDepositors() throws InterruptedException {
+        BigDecimal percent = new BigDecimal("61.987653");
+        BigInteger deposits = new BigInteger("346264344");
+        BigInteger bonus = new BigInteger("18946896534");
+        int periods = 3;
+        int depositors = 6;
+        Address contract = setupContract(depositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
+        BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
+        BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
+
+        // Do a bulk-withdraw on the contract.
+        byte[] input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getCode());
+
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            assertEquals(amt, repo.getBalance(acc));
+        }
+
+        // Move into final period and withdraw the rest.
+        addBlocks(1, TimeUnit.SECONDS.toMillis(4));
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getCode());
+        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
+        for (Address acc : contributors) {
+            assertEquals(owings, repo.getBalance(acc));
+        }
+    }
+
+    @Test
+    public void testBulkWithdrawSomeDepositorsHaveWithdrawnSomeNotThisPeriod() throws InterruptedException {
+        BigDecimal percent = new BigDecimal("74.237");
+        BigInteger deposits = new BigInteger("3436");
+        BigInteger bonus = new BigInteger("345");
+        int periods = 3;
+        int depositors = 5;
+        Address contract = setupContract(depositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
+        BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
+        BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
+
+        // Have half of the depositors withdraw.
+        byte[] input = getWithdrawInput(contract);
+        boolean withdraw = true;
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            if (withdraw) {
+                assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
+                assertEquals(amt, repo.getBalance(acc));
+            } else {
+                assertEquals(BigInteger.ZERO, repo.getBalance(acc));
+            }
+            withdraw = !withdraw;
+        }
+
+        // Do a bulk-withdraw on the contract. Check all accounts have amt now and no one has more.
+        input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getCode());
+        for (Address acc : contributors) {
+            assertEquals(amt, repo.getBalance(acc));
+        }
+    }
+
+    @Test
+    public void testBulkWithdrawSpecialEventBeforeLiveBlock() {
+        //TODO
+    }
+
+    @Test
+    public void testBulkWithdrawAtFinalPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testBulkWithdrawMultipleTimesSpecialPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testBulkWithdrawMultipleTimesNonFinalPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testBulkWithdrawMultipleTimesFinalPeriod() {
+        //TODO
+    }
 
     // <--------------------------------------REFUND TRS TESTS------------------------------------->
 
@@ -1617,8 +1822,6 @@ public class TRSuseContractTest extends TRShelpers {
     public void testRefundInputTooShort() {
         // Test maximum too-short size.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
         byte[] input = new byte[192];
         ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
@@ -1634,8 +1837,6 @@ public class TRSuseContractTest extends TRShelpers {
     @Test
     public void testRefundInputTooLarge() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
         byte[] input = new byte[194];
         ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
@@ -2019,6 +2220,10 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(diff, res.getNrgLeft());
     }
+
+    // <---------------------------------TRS DEPOSIT-FOR TESTS------------------------------------->
+
+    //TODO
 
     // <----------------------------TRS DEPOSITOR LINKED LIST TESTS-------------------------------->
 

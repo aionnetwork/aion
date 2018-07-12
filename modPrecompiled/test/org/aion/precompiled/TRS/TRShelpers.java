@@ -315,6 +315,14 @@ class TRShelpers {
         return Arrays.copyOf(buffer.array(), 41);
     }
 
+    // Returns a properly formatted byte array to be used as input for the bulk-withdraw operation.
+    byte[] getBulkWithdrawInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = 0x3;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
     // Returns a byte array signalling false for a TRS contract query operation result.
     byte[] getFalseContractOutput() {
         out[0] = 0x0;
