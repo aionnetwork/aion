@@ -43,7 +43,7 @@ public class KeccakHash extends StatefulPrecompiledContract{
      * Returns the hash of given input
      *
      * input is defined as
-     *      [nb input byte array]
+     *      [nb input byte array] n > 0
      *
      * the returned hash is in ContractExecutionResult.getOutput
      */

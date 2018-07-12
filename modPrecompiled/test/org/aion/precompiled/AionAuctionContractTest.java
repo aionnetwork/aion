@@ -45,6 +45,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.Properties;
 
@@ -185,7 +186,6 @@ public class AionAuctionContractTest {
 
     }
 
-
     @Test()
     public void testBlockchain(){
         AionRepositoryImpl repo = AionRepositoryImpl.createForTesting(repoConfig);
@@ -276,9 +276,63 @@ public class AionAuctionContractTest {
     }
 
     @Test
-    public void testMain(){
+    public void testExtendExtensionRequest() {
         final long inputEnergy = 24000L;
 
+        BigInteger amount = new BigInteger("1000");
+        byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac = new AionAuctionContract(repo, domainAddress1);
+        aac.execute(combined, inputEnergy);
+
+        try {
+            Thread.sleep(4000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // try to extend - should work
+        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
+        ContractExecutionResult res = aac.execute(combined2, inputEnergy);
+
+        // try to extend 2nd time in a row - should be denied
+        byte[] combined3 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
+        ContractExecutionResult res2 = aac.execute(combined3, inputEnergy);
+
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        Assert.assertArrayEquals("already been extended".getBytes(), res2.getOutput());
+
+        try {
+            Thread.sleep(6000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testInvalidExtensionRequest(){
+        final long inputEnergy = 24000L;
+
+        BigInteger amount = new BigInteger("1000");
+        byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac = new AionAuctionContract(repo, domainAddress1);
+        aac.execute(combined, inputEnergy);
+
+        try {
+            Thread.sleep(4000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // try to extend - should not work since owner is incorrect
+        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k2.getAddress()));
+        ContractExecutionResult res = aac.execute(combined2, inputEnergy);
+
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+    }
+
+    @Test
+    public void testMain(){
+        final long inputEnergy = 24000L;
         BigInteger amount = new BigInteger("1000");
         byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, domainAddress1);
@@ -340,7 +394,7 @@ public class AionAuctionContractTest {
         assertEquals(7000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
 
         try {
-            Thread.sleep(3 * 1000L);
+            Thread.sleep(5 * 1000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -481,12 +535,26 @@ public class AionAuctionContractTest {
     public void testIncorrectInputLength(){
         byte[] input = setupInputs(domainName1, Address.wrap(defaultKey.getAddress()), defaultBidAmount.toByteArray(), defaultKey);
         byte[] wrongInput = new byte[130];
+        byte[] wrongInput2 = new byte[131];
+        byte[] wrongInput3 = setupForExtension(domainName1, Address.wrap(defaultKey.getAddress()));
+        byte[] wrongInput5 = new byte[wrongInput3.length];
+        byte[] wrongInput4 = new byte[input.length-2];
+
         System.arraycopy(input, 0, wrongInput, 0, 130);
         ContractExecutionResult result = testAAC.execute(wrongInput, DEFAULT_INPUT_NRG);
+        System.arraycopy(input, 0, wrongInput2, 0, 131);
+        ContractExecutionResult result2 = testAAC.execute(wrongInput2, DEFAULT_INPUT_NRG);
 
         assertEquals(ResultCode.INTERNAL_ERROR, result.getCode());
         assertEquals(result.getNrgLeft(), 4000);
         Assert.assertArrayEquals("incorrect input length".getBytes(), result.getOutput());
+
+        wrongInput3[0] = -1;
+        System.arraycopy(input, 0, wrongInput4, 0, input.length-2);
+        ContractExecutionResult result3 = testAAC.execute(wrongInput5, DEFAULT_INPUT_NRG);
+        ContractExecutionResult result4 = testAAC.execute(wrongInput4, DEFAULT_INPUT_NRG);
+
+        byte[]input2 = setupForExtension(domainName1, Address.wrap(defaultKey.getAddress()));
     }
 
     @Test
@@ -658,4 +726,23 @@ public class AionAuctionContractTest {
         return ret;
     }
 
+    private byte[] setupForExtension(String domainName, Address ownerAddress){
+        int domainLength = domainName.length();
+        int offset = 0;
+        byte[] ret = new byte[1 + domainLength + 32 + 96 + 1];
+
+        ISignature signature = k.sign(ownerAddress.toBytes());
+
+        System.arraycopy(new byte[]{(byte)domainLength}, 0, ret, offset, 1);
+        offset++;
+        System.arraycopy(domainName.getBytes(), 0, ret, offset, domainLength);
+        offset = offset + domainLength;
+        System.arraycopy(ownerAddress.toBytes(), 0, ret, offset, 32);
+        offset = offset + 32;
+        System.arraycopy(signature.toBytes(), 0, ret, offset, 96);
+        offset = offset + 96;
+        System.arraycopy(new byte[]{(byte)0}, 0, ret, offset, 1);
+
+        return ret;
+    }
 }
