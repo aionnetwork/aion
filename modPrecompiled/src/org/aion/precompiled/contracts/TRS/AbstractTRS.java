@@ -741,16 +741,19 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     boolean makeWithdrawal(Address contract, Address account) {
         byte[] specs = getContractSpecs(contract);
         if (specs == null) { return false; }
+        if (isAccountDoneWithdrawing(contract, account)) { return false; }
 
         // Grab period here since computations are dependent upon it and a new block may arrive,
         // changing the period mid-computation.
         int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
+        boolean inFinalPeriod = (getPeriods(specs) == currPeriod);
 
         // Calculate withdrawal amount. If we are in last period then account can withdraw all
         // outstanding funds.
         BigInteger amount;
-        if (getPeriods(specs) == currPeriod) {
+        if (inFinalPeriod) {
             amount = computeOutstadingOwings(contract, account);
+            setAccountIsDoneWithdrawing(contract, account);
         } else {
             BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
             BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
@@ -782,7 +785,43 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     private void initWithdrawalStats(Address contract, Address account) {
         byte[] stats = new byte[SINGLE_WORD_SIZE];
         stats[0] = 0x1; // set is-eligible.
+        stats[SINGLE_WORD_SIZE - 1] = 0x0;  // sanity. Set is-done to false (is done withdrawing)
         track.addStorageRow(contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(stats));
+    }
+
+    /**
+     * Sets account as finished withdrawing funds from contract. Once this method is called and this
+     * value is set it cannot be unset, and once this value is set the account will no longer be
+     * able to withdraw from the contract. This method should only be called in one place: when the
+     * account makes a withdrawal in the final withdrawal period. Nowhere else.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account to update.
+     */
+    private void setAccountIsDoneWithdrawing(Address contract, Address account) {
+        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        if (stats == null) { return; }
+        byte[] statsBytes = stats.getData();
+        statsBytes[statsBytes.length - 1] = 0x1;    // set is-done flag.
+        track.addStorageRow(contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(statsBytes));
+    }
+
+    /**
+     * Returns true only if account is done withdrawing from contract. False otherwise.
+     *
+     * If this method returns true then account must be prohibited from withdrawing any positive
+     * amount of tokens from the contract.
+     *
+     * If contract or account are invalid this method returns true.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return true only if account is done withdrawing funds from contract.
+     */
+    public boolean isAccountDoneWithdrawing(Address contract, Address account) {
+        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        if (stats == null) { return true; }
+        return stats.getData()[stats.getData().length - 1] == 0x1;
     }
 
     /**
@@ -932,7 +971,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
         BigDecimal owedWithoutSpecial = new BigDecimal(computeTotalOwed(contract, account).
-            subtract(computeSpecialWithdrawalAmount(contract, account)));
+            subtract(computeRawSpecialAmount(contract, account)));
         BigDecimal totalPeriods = new BigDecimal(getPeriods(getContractSpecs(contract)));
         return owedWithoutSpecial.divide(totalPeriods, 18, RoundingMode.HALF_DOWN).toBigInteger();
     }
@@ -1186,6 +1225,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the key to access the specified balance row for the account in contract.
      */
     private byte[] makeBalanceKey(Address account, int row) {
+        if (account == null) { return DataWord.ZERO.getData(); }
         byte[] balKey = new byte[DOUBLE_WORD_SIZE];
         balKey[0] = (byte) (BALANCE_PREFIX | row);
         System.arraycopy(account.toBytes(), 1, balKey, 1, DOUBLE_WORD_SIZE - 1);
@@ -1201,6 +1241,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the key to access the account's withdrawal stats.
      */
     private byte[] makeWithdrawalKey(Address account) {
+        if (account == null) { return DataWord.ZERO.getData(); }
         return makeWithdrawalKey(account.toBytes());
     }
 
@@ -1213,6 +1254,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the key to access the account's withdrawal stats.
      */
     private byte[] makeWithdrawalKey(byte[] account) {
+        if (account == null) { return DataWord.ZERO.getData(); }
         byte[] withKey = new byte[DOUBLE_WORD_SIZE];
         withKey[0] = WITHDRAW_PREFIX;
         System.arraycopy(account, 1, withKey, 1, DOUBLE_WORD_SIZE - 1);
