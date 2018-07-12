@@ -54,8 +54,8 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  *      withdraw -- withdraws funds from a public-facing TRS contract.
  *      bulkDeposit -- bulk fund depositing on the behalf of depositors. Owner-only.
  *      bulkWithdraw -- bulk fund withdrawal to all depositors. Owner-only.
- *      depositBonus -- deposits bonus funds into a public-facing TRS contract.
  *      refund -- refunds funds to a depositor. Can only be called prior to locking. Owner-only.
+ *      depositFor -- deposits funds into a public-facing TRS contract on an accout's behalf. Owner-only.
  *      updateTotal -- updates the total balance, in case of subsequent sales. Owner-only.
  */
 public final class TRSuseContract extends AbstractTRS {
@@ -117,7 +117,24 @@ public final class TRSuseContract extends AbstractTRS {
      *
      *                                          ~~~***~~~
      *
-     *   <b>operation 0x5</b> - refunds a specified amount of depositor's balance for the public-
+     *   <b>operation 0x3</b> - withdraws funds from the contract on behalf of each depositor in the
+     *     contract. This operation is functionally equivalent to having each depositor in the
+     *     contract perform a withdraw operation.
+     *
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account is
+     *       attempting to perform a bulk withdrawal of funds from.
+     *
+     *     conditions: the TRS contract must be live in order to bulk withdraw funds from it. The
+     *       caller must be the owner of the contract.
+     *
+     *     returns: void.
+     *
+     *                                          ~~~***~~~
+     *
+     *   <b>operation 0x4</b> - refunds a specified amount of depositor's balance for the public-
      *     facing TRS contract.
      *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
      *     total = 193 bytes
@@ -132,6 +149,26 @@ public final class TRSuseContract extends AbstractTRS {
      *       amount. The refund operation is enabled only when the contract is unlocked; once locked
      *       refunding is disabled. If any of these conditions are not satisfied this method
      *       effectively does nothing.
+     *
+     *     returns: void.
+     *
+     *                                          ~~~***~~~
+     *
+     *   <b>operation 0x5</b> - deposits the specified amount of funds into the contract on the
+     *     behalf of the specified account. This operation is here so that, if direct deposits into
+     *     the contract are disabled, the contract owner has a means of depositing funds into the
+     *     contract for the users.
+     *
+     *     [<32b - contractAddress> | <32b - forAccount> | <128b - amount>]
+     *     total = 193 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
+     *     forAccount is the account that will be listed as having amount deposited into it if the
+     *       operation succeeds.
+     *     amount is the amount of funds to deposit into the contract on forAccount's behalf.
+     *
+     *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
+     *       must be the contract owner.
      *
      *     returns: void.
      *
@@ -158,7 +195,8 @@ public final class TRSuseContract extends AbstractTRS {
         switch (operation) {
             case 0: return deposit(input, nrgLimit);
             case 1: return withdraw(input, nrgLimit);
-            case 5: return refund(input, nrgLimit);
+            case 3: return bulkWithdraw(input, nrgLimit);
+            case 4: return refund(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -287,10 +325,70 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
+     * Logic to bulk-withdraw funds from an existing public-facing TRS contract.
+     *
+     * The input byte array format is defined as follows:
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account is
+     *       attempting to perform a bulk withdrawal of funds from.
+     *
+     *     conditions: the TRS contract must be live in order to bulk withdraw funds from it. The
+     *       caller must be the owner of the contract.
+     *
+     *     returns: void.
+     *
+     * @param input The input to bulk-withdraw from a public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult bulkWithdraw(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexAddress = 1;
+        final int len = 33;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A bulk-withdraw operation can only execute if the caller is the owner of the contract.
+        if (!getContractOwner(contract).equals(caller)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A bulk-withdraw operation can only execute if the current state of the TRS contract is:
+        // contract is live (and obviously locked -- check this for sanity).
+        if (!isContractLocked(specs) || !isContractLive(specs)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Iterate over all depositors and withdraw on their behalf. Once here this is a success.
+        byte[] curr = getListHead(contract);
+        if (curr == null) { return new ContractExecutionResult(ResultCode.SUCCESS, 0); }
+
+        while (curr != null) {
+            curr[0] = AION_PREFIX;
+            Address currAcct = new Address(curr);
+            makeWithdrawal(contract, currAcct);
+            curr = getListNext(contract, currAcct);
+        }
+
+        track.flush();
+        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+    }
+
+    /**
      * Logic to refund funds for an account in an existing public-facing TRS contract.
      *
      * The input byte array format is defined as follows:
-     *     [<1b - 0x5> | <32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
+     *     [<1b - 0x4> | <32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
      *     total = 193 bytes
      *   where:
      *     contractAddress is the address of the public-facing TRS contract that the account given
@@ -376,6 +474,87 @@ public final class TRSuseContract extends AbstractTRS {
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
+    /**
+     * Logic to deposit funds on the behalf of an account in an existing public-facing TRS contract.
+     *
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x5> | <32b - contractAddress> | <32b - forAccount> | <128b - amount>]
+     *     total = 193 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
+     *     forAccount is the account that will be listed as having amount deposited into it if the
+     *       operation succeeds.
+     *     amount is the amount of funds to deposit into the contract on forAccount's behalf.
+     *
+     *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
+     *       must be the contract owner.
+     *
+     *     returns: void.
+     *
+     * @param input The input to deposit on the behalf of an account for a public-facing TRS contract
+     * logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult depositFor(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexContract = 1;
+        final int indexAccount = 33;
+        final int indexAmount = 65;
+        final int len = 193;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A depositFor operation can only execute if caller is owner.
+        if (!caller.equals(getContractOwner(contract))) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A depositFor operation can only execute if the current state of the TRS contract is:
+        // contract is unlocked (and obviously not live -- check this for sanity).
+        if (isContractLocked(specs) || isContractLive(specs)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
+        byte[] amountBytes = new byte[len - indexAmount + 1];
+        System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
+        BigInteger amount = new BigInteger(amountBytes);
+
+        // The caller must have adequate funds to make the proposed deposit.
+        BigInteger fundsAvailable = track.getBalance(caller);
+        if (fundsAvailable.compareTo(amount) < 0) {
+            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+        }
+
+        // Verify the account is an Aion address.
+        if (input[indexAccount] != AION_PREFIX) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+        Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+
+        // If deposit amount is larger than zero, update the curret deposit balance of the account
+        // for which this deposit is on the behalf of, and update the meta-deta etc.
+        if (amount.compareTo(BigInteger.ZERO) > 0) {
+            BigInteger currAmount = getDepositBalance(contract, account);
+            if (!setDepositBalance(contract, account, currAmount.add(amount))) {
+                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            }
+            listAddToHead(contract, account);
+            setTotalBalance(contract, getTotalBalance(contract).add(amount));
+            track.addBalance(caller, amount.negate());
+            track.flush();
+        }
+        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+    }
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
 
@@ -392,22 +571,38 @@ public final class TRSuseContract extends AbstractTRS {
      * @param contract The TRS contract to update.
      */
     private void listAddCallerToHead(Address contract) {
-        byte[] next = getListNextBytes(contract, caller);
+        listAddToHead(contract, caller);
+    }
+
+    /**
+     * Updates the linked list for the TRS contract given by contract, if necessary, in the following
+     * way:
+     *
+     * If account does not have a valid account in the TRS contract contract then that account is
+     * added to the head of the linked list for that contract.
+     *
+     * If the account is valid and already exists this method does nothing, since the account must
+     * already be in the list.
+     *
+     * @param contract The TRS contract to update.
+     */
+    private void listAddToHead(Address contract, Address account) {
+        byte[] next = getListNextBytes(contract, account);
         if (accountIsValid(next)) { return; }  // no update needed.
 
-        // Set caller's next entry to point to head.
+        // Set account's next entry to point to head.
         byte[] head = getListHead(contract);
-        setListNext(contract, caller, next[0], head, true);
+        setListNext(contract, account, next[0], head, true);
 
-        // If head was non-null set the head's previous entry to point to caller.
+        // If head was non-null set the head's previous entry to point to account.
         if (head != null) {
             head[0] = AION_PREFIX;
-            setListPrevious(contract, Address.wrap(head), Arrays.copyOf(caller.toBytes(), Address.ADDRESS_LEN));
+            setListPrevious(contract, Address.wrap(head), Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
         }
 
-        // Set the head of the list to point to caller and set caller's previous entry to null.
-        setListHead(contract, Arrays.copyOf(caller.toBytes(), Address.ADDRESS_LEN));
-        setListPrevious(contract, caller, null);
+        // Set the head of the list to point to account and set account's previous entry to null.
+        setListHead(contract, Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
+        setListPrevious(contract, account, null);
     }
 
     /**
@@ -429,8 +624,8 @@ public final class TRSuseContract extends AbstractTRS {
         byte[] next = getListNext(contract, account);
 
         // If account is head of list, set head to account's next entry.
-        byte[] head = getListHead(contract);
         //TODO: maybe decouple metadata from next so we dont have to do awkward things like this?
+        byte[] head = getListHead(contract);
         head[0] = AION_PREFIX;
         if (Arrays.equals(account.toBytes(), head)) {
             setListHead(contract, getListNext(contract, account));

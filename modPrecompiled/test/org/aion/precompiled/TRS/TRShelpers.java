@@ -267,7 +267,7 @@ class TRShelpers {
         byte[] amtBytes = amount.toByteArray();
         if (amtBytes.length > 128) { Assert.fail(); }
         byte[] input = new byte[193];
-        input[0] = 0x5;
+        input[0] = 0x4;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
         System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
