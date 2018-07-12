@@ -729,7 +729,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * tokens in the contract, then the account is eligible to receive a proportional share of C,
      * call this amount D, so that the ratio of D to C is the same as the ratio of B to the
      * contract's total balance when it went live.
-     * Then we have Q = (B / A) + D - |S|
+     * Then we have Q = ((B + D - |S|) / A)
      *
      * here we define |S| as S above except we assume that the account is always eligible to use
      * the special one-off amount.
@@ -739,12 +739,25 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return true only if a non-zero amount was withdrawn from the contract into account.
      */
     boolean makeWithdrawal(Address contract, Address account) {
-        // Grab period here since computations are dependent upon it and a new block may arrive,
-        // changing the period mid-computation.
-        //TODO double check documentation
         byte[] specs = getContractSpecs(contract);
         if (specs == null) { return false; }
+        //TODO: refactor this
+
+        // Grab period here since computations are dependent upon it and a new block may arrive,
+        // changing the period mid-computation.
         int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
+        if (getPeriods(specs) == currPeriod) {
+            // Then we are in the final withdrawal period and the account is eligible to claim the
+            // remainder of all outstanding owings.
+            BigInteger unclaimed = computeOutstadingOwings(contract, account);
+            if (unclaimed.compareTo(BigInteger.ZERO) > 0) {
+                track.addBalance(account, unclaimed);
+                updateAccountLastWithdrawalPeriod(contract, account, currPeriod);
+                setAccountIneligibleForSpecial(contract, account.toBytes());
+                return true;
+            }
+            return false;
+        }
 
         BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
         BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
@@ -859,11 +872,11 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * special one-off event.
      *
      * If account is ineligible to make a special withdrawal then this method returns zero.
-     * If account is eligible to make a special withdrawal then this method returns S = MB,
+     * If account is eligible to make a special withdrawal then this method returns S = MT,
      *
-     * where B is the balance that account has at the moment the contract goes live and M is the
-     * multiplier in the range [0,1] as defined by the contract owner which signifies the fraction
-     * of account's balance that account can claim in the one-off event.
+     * where T is the total amount that the contract owes to account over the lifetime of the
+     * contract and M is a multiplier in the range [0,1] as defined by the contract owner which
+     * signifies the fraction of account's balance that account can claim in the one-off event.
      *
      * @param contract The TRS contract to query.
      * @param account The account to query.
@@ -871,45 +884,52 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private BigInteger computeSpecialWithdrawalAmount(Address contract, Address account) {
         if (accountIsEligibleForSpecial(contract, account)) {
-            return computeBonusShare(contract, account);
+            BigDecimal owed = new BigDecimal(computeTotalOwed(contract, account));
+            BigDecimal percent = getPercentage(getContractSpecs(contract)).movePointLeft(2);
+            return owed.multiply(percent).toBigInteger();
         } else {
             return BigInteger.ZERO;
         }
     }
 
     /**
-     * Returns the number of withdrawal periods account is behind by in contract. That is, if the
-     * period that account last withdrew funds in was period T then this method returns:
+     * Returns the number of withdrawal periods that account is behind currPeriod by. That is, if
+     * the last period in which account had withdrawn funds was period Q then this method returns:
      *
-     *   currPeriod - T.
-     *
-     * where currPeriod >= T.
+     *   currPeriod - Q
      *
      * @param contract The TRS contract to query.
      * @param account The account to query.
      * @param currPeriod The current period the contract is in.
-     * @return the number of withdrawal periods account is behind by.
+     * @return the number of withdrawal periods account is behind currPeriod by.
      */
     private int computeNumberPeriodsBehind(Address contract, Address account, int currPeriod) {
-        return getPeriods(getContractSpecs(contract)) - currPeriod;
+        return currPeriod - getAccountLastWithdrawalPeriod(contract, account);
     }
 
     /**
      * Returns the amount of funds that account is eligible to withdraw from contract per each
-     * withdrawal period. This is not including bonus funds but only regular deposit funds.
+     * withdrawal period excluding the special withdrawal event. More precisely...
      *
-     * Let T be the deposit balance that account has at the moment the contract goes live. Let P be
-     * the number of periods the contract has.
+     * Let O be the total amount that account is "owed" by the contract - this is the amount account
+     * will receive once it has withdrawn on every period.
+     * Let S be the amount account is initially eligible to wwithdraw for the special one-off
+     * withdrawal event.
+     * Let P be the total number of periods the contract has.
      *
-     * Then account will be eligible to withdraw T / P funds per period.
+     * Then the account will be eligible to receive the following amount per each period:
+     *
+     *   (O - S) / P
      *
      * @param contract The TRS contract to query.
      * @param account The account to query.
      * @return the amount of funds account is eligible to withdraw each period, excluding special funds.
      */
     private BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
-        return getDepositBalance(contract, account).
-            divide(BigInteger.valueOf(getPeriods(getContractSpecs(contract))));
+        BigDecimal owedWithoutSpecial = new BigDecimal(computeTotalOwed(contract, account).
+            subtract(computeSpecialWithdrawalAmount(contract, account)));
+        BigDecimal totalPeriods = new BigDecimal(getPeriods(getContractSpecs(contract)));
+        return owedWithoutSpecial.divide(totalPeriods, 18, RoundingMode.HALF_DOWN).toBigInteger();
     }
 
     /**
@@ -954,6 +974,22 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         BigDecimal fraction = acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
         BigDecimal share = fraction.multiply(bonusFunds);
         return share.toBigInteger();
+    }
+
+    /**
+     * Returns the amount of funds that is still owed to account in the TRS contract contract. That
+     * is, if the account is owed T tokens over the lifetime of the contract and the account has
+     * already withdrawn R tokens then this method returns:
+     *
+     *   T - R
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the amount of unclaimed tokens account has yet to withdraw from their total owings.
+     */
+    private BigInteger computeOutstadingOwings(Address contract, Address account) {
+        //TODO
+        return BigInteger.ZERO;
     }
 
     /**
@@ -1036,7 +1072,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param currTime The time at which the contract is being queried for.
      * @return the period the contract is in at currTime.
      */
-    int calculatePeriod(Address contract, byte[] specs, long currTime) {
+    public int calculatePeriod(Address contract, byte[] specs, long currTime) {
         long timestamp = getTimestamp(contract);
         if (timestamp > currTime) { return 0; }
 

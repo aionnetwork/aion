@@ -58,11 +58,6 @@ public class TRSownerContractTest extends TRShelpers {
         return trs.getContractOwner(contract);
     }
 
-    // Returns the periods configured for the TRS contract.
-    private int getPeriods(AbstractTRS trs, Address contract) {
-        return AbstractTRS.getPeriods(trs.getContractSpecs(contract));
-    }
-
     // Returns true only if the TRS contract is in Test Mode.
     private boolean isTestContract(AbstractTRS trs, Address contract) {
         return AbstractTRS.isTestContract(trs.getContractSpecs(contract));
@@ -71,11 +66,6 @@ public class TRSownerContractTest extends TRShelpers {
     // Returns true only if the TRS contract has direct deposit enabled.
     private boolean getIsDirectDepositEnabled(AbstractTRS trs, Address contract) {
         return AbstractTRS.isDirDepositsEnabled(trs.getContractSpecs(contract));
-    }
-
-    // Returns the percentage configured for the TRS contract.
-    private BigDecimal getPercentage(AbstractTRS trs, Address contract) {
-        return AbstractTRS.getPercentage(trs.getContractSpecs(contract));
     }
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is locked.

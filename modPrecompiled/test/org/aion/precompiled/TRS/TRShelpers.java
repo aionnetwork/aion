@@ -4,6 +4,7 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSownerContract;
@@ -74,8 +76,8 @@ class TRShelpers {
         AionBlock previousBlock = bc.genesis;
 
         for (int i = 0; i < numBlocks; i++) {
-            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
             if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
+            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
         }
 
         blockchain = bc;
@@ -85,8 +87,8 @@ class TRShelpers {
     void addBlocks(int numBlocks, long sleepDuration) throws InterruptedException {
         AionBlock previousBlock = blockchain.getBestBlock();
         for (int i = 0; i < numBlocks; i++) {
-            previousBlock = createBundleAndCheck(((StandaloneBlockchain) blockchain), senderKey, previousBlock);
             if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
+            previousBlock = createBundleAndCheck(((StandaloneBlockchain) blockchain), senderKey, previousBlock);
         }
     }
 
@@ -135,11 +137,23 @@ class TRShelpers {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
         TRSownerContract trs = new TRSownerContract(repo, owner, blockchain);
-        Address contract = new Address(trs.execute(input, COST).getOutput());
+        ContractExecutionResult res = trs.execute(input, COST);
+        if (!res.getCode().equals(ResultCode.SUCCESS)) { fail("Unable to create contract!"); }
+        Address contract = new Address(res.getOutput());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
         repo.flush();
         return contract;
+    }
+
+    // Returns the percentage configured for the TRS contract.
+    BigDecimal getPercentage(AbstractTRS trs, Address contract) {
+        return AbstractTRS.getPercentage(trs.getContractSpecs(contract));
+    }
+
+    // Returns the periods configured for the TRS contract.
+    int getPeriods(AbstractTRS trs, Address contract) {
+        return AbstractTRS.getPeriods(trs.getContractSpecs(contract));
     }
 
     // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
@@ -365,6 +379,7 @@ class TRShelpers {
         return depositors;
     }
 
+    // Locks and makes contract live, where owner is owner of the contract.
     void lockAndStartContract(Address contract, Address owner) {
         byte[] input = getLockInput(contract);
         AbstractTRS trs = newTRSownerContract(owner);
@@ -375,6 +390,12 @@ class TRShelpers {
         if (!trs.execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             Assert.fail("Unable to start contract!");
         }
+    }
+
+    // Returns the period that contract is currently in.
+    int getContractCurrentPeriod(AbstractTRS trs, Address contract) {
+        long currTime = blockchain.getBestBlock().getTimestamp();
+        return trs.calculatePeriod(contract, trs.getContractSpecs(contract), currTime);
     }
 
     // Returns a DataWord that is the key corresponding to the contract specifications in storage.
