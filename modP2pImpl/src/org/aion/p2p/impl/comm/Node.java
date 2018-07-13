@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
+import org.aion.base.util.ByteUtil;
 import org.aion.p2p.INode;
 import org.aion.p2p.IPeerMetric;
 
@@ -320,4 +321,19 @@ public final class Node implements INode {
         this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
     }
 
+    @Override
+    public String toString() {
+        return "bootList:" + fromBootList + "\n"
+            + "idHash:" + idHash + "\n"
+            + "id:" + (id == null ? "null" : new String(id)) + "\n"
+            + "idShort:" + idShort + "\n"
+            + "peerhash:" + peerhash + "\n"
+            + "ipStr:" + ipStr + "\n"
+            + "port:" + port + "\n"
+            + "timestamp:" + timestamp + "\n"
+            + "bestBlockNumber:" + bestBlockNumber + "\n"
+            + "totalDifficulty:" + totalDifficulty.toString() + "\n"
+            + "bestBlockHash:" + (bestBlockHash == null ? "null" : ByteUtil.toHexString(bestBlockHash)) + "\n"
+            + "binaryVersion:" + binaryVersion + "\n\n";
+    }
 }

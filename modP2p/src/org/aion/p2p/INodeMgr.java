@@ -53,7 +53,7 @@ public interface INodeMgr {
 
 	INode getOutboundNode(int k);
 
-	String dumpNodeInfo(String selfShortId);
+	String dumpNodeInfo(String selfShortId, boolean complete);
 
 	void seedIpAdd(String _ip);
 
