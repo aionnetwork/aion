@@ -188,7 +188,9 @@
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 	</target>
 
-	<target name="clean_build" depends="logenv, clean, mod_build, build" />
+	<target name="clean_build" depends="logenv, clean, build" />
+
+        <target name="clean_sourcebuild" depends="logenv, clean, build" />
 
 	<target name="build_test" depends="build, test" />
 
@@ -330,6 +332,8 @@
 		<move file="native/linux/solidity_v${version}" tofile="native/linux/solidity" overwrite="true" />
 	</target>
 
+
+
 	<target name="clean">
 		<delete dir="./build" />
 		<delete dir="${test.report.dir}" />
@@ -345,6 +349,14 @@
 		</antcall>
 		<antcall target="pack" />
 	</target>
+
+        <target name="source_build" depends="logenv">
+                <antcall target="clean_sourcebuild">
+                        <param name="compile.debug" value="off" />
+                </antcall>
+                <antcall target="pack" />
+        </target>
+
 
 	<target name="pre_build">
 	        <echo message="execute prebuild script"/>
