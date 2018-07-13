@@ -212,6 +212,8 @@ public final class SyncMgr {
                                     statics,
                                     false,
                                     "", // TODO: fully remove
+                                    this.p2pMgr,
+                                    this.peerStates,
                                     AionLoggerFactory.getLogger(LogEnum.P2P.name())),
                             "sync-ss");
             syncSs.start();
