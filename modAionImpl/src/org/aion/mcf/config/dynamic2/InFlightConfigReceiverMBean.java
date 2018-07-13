@@ -10,9 +10,6 @@ import javax.xml.stream.XMLStreamReader;
  * (Not using "I" prefix convention here because need to follow interface-naming convention for MBean).
  */
 public interface InFlightConfigReceiverMBean {
-    /** JMX object name for this MBean */
-    String DEFAULT_JMX_OBJECTNAME = "org.aion.mcf.config.receiver:id=1";
-
     /**
      * Propose a new Aion kernel configuration to use.  The new config will be applied to the
      * kernel; an operation which will either entirely succeed or fail (no partial results; if

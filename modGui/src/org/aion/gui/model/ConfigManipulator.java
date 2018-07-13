@@ -186,16 +186,21 @@ public class ConfigManipulator {
 
     @VisibleForTesting
     static class JmxCaller {
-        public InFlightConfigReceiverMBean getInFlightConfigReceiver()
+        public InFlightConfigReceiverMBean getInFlightConfigReceiver(int port)
         throws IOException, MalformedObjectNameException {
             JMXServiceURL url = new JMXServiceURL(
-                    InFlightConfigReceiver.createJmxUrl(InFlightConfigReceiver.DEFAULT_JMX_PORT));
+                    InFlightConfigReceiver.createJmxUrl(port));
             try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
                 MBeanServerConnection mbeanServerConnection = conn.getMBeanServerConnection();
                 ObjectName objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
                 return MBeanServerInvocationHandler.newProxyInstance(
                         mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
             }
+        }
+
+        public InFlightConfigReceiverMBean getInFlightConfigReceiver()
+                throws IOException, MalformedObjectNameException {
+            return getInFlightConfigReceiver(InFlightConfigReceiver.DEFAULT_JMX_PORT);
         }
     }
 
