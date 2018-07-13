@@ -1,4 +1,4 @@
-package org.aion.mcf.config.applier;
+package org.aion.zero.impl.config.applier;
 
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.EventMgrModule;

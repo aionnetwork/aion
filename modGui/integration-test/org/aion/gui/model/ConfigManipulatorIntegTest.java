@@ -1,7 +1,7 @@
 package org.aion.gui.model;
 
-import org.aion.mcf.config.dynamic2.InFlightConfigReceiver;
-import org.aion.mcf.config.dynamic2.InFlightConfigReceiverMBean;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiver;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiverMBean;
 import org.junit.Test;
 
 import javax.management.MBeanServer;

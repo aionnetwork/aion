@@ -1,4 +1,4 @@
-package org.aion.mcf.config.applier;
+package org.aion.zero.impl.config.applier;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.equihash.EquihashMiner;
@@ -7,14 +7,11 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.config.Cfg;
-import org.aion.mcf.config.CfgConsensus;
-import org.aion.mcf.config.dynamic2.IDynamicConfigApplier;
-import org.aion.mcf.config.dynamic2.InFlightConfigChangeException;
-import org.aion.mcf.config.dynamic2.InFlightConfigChangeResult;
-import org.aion.zero.impl.AionHub;
+import org.aion.zero.impl.config.dynamic.IDynamicConfigApplier;
+import org.aion.zero.impl.config.dynamic.InFlightConfigChangeException;
+import org.aion.zero.impl.config.dynamic.InFlightConfigChangeResult;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.pow.AionPoW;

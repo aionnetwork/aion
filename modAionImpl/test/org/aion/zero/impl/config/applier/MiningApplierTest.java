@@ -1,14 +1,13 @@
-package org.aion.mcf.config.applier;
+package org.aion.zero.impl.config.applier;
 
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.mcf.blockchain.IPendingState;
-import org.aion.mcf.config.dynamic2.InFlightConfigChangeResult;
+import org.aion.zero.impl.config.dynamic.InFlightConfigChangeResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.IAionBlock;
 import org.junit.Before;
 import org.junit.Test;
 

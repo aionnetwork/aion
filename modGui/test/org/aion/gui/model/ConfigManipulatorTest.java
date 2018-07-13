@@ -1,33 +1,24 @@
 package org.aion.gui.model;
 
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.aion.mcf.config.Cfg;
-import org.aion.mcf.config.dynamic2.ConfigProposalResult;
-import org.aion.mcf.config.dynamic2.InFlightConfigReceiver;
-import org.aion.mcf.config.dynamic2.InFlightConfigReceiverMBean;
-import org.aion.mcf.config.dynamic2.RollbackException;
+import org.aion.zero.impl.config.dynamic.ConfigProposalResult;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiver;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiverMBean;
+import org.aion.zero.impl.config.dynamic.RollbackException;
 import org.aion.os.KernelLauncher;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
-import javax.xml.stream.XMLStreamException;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;

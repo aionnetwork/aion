@@ -1,4 +1,4 @@
-package org.aion.mcf.config.dynamic2;
+package org.aion.zero.impl.config.dynamic;
 
 public class InFlightConfigChangeResult {
     private final boolean success;

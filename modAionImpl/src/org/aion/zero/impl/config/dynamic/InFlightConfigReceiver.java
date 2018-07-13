@@ -1,4 +1,4 @@
-package org.aion.mcf.config.dynamic2;
+package org.aion.zero.impl.config.dynamic;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharSource;

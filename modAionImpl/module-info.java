@@ -25,6 +25,6 @@ module aion.zero.impl {
     exports org.aion.zero.impl.cli;
     exports org.aion.zero.impl.db;
     exports org.aion.zero.impl.sync;
-    exports org.aion.mcf.config.dynamic2;
-    exports org.aion.mcf.config.applier;
+    exports org.aion.zero.impl.config.dynamic;
+    exports org.aion.zero.impl.config.applier;
 }

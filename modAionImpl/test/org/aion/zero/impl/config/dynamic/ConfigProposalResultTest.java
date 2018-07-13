@@ -1,6 +1,5 @@
-package org.aion.mcf.config.dynamic2;
+package org.aion.zero.impl.config.dynamic;
 
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;

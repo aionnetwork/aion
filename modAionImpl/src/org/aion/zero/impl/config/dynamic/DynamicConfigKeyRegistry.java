@@ -1,14 +1,13 @@
-package org.aion.mcf.config.dynamic2;
+package org.aion.zero.impl.config.dynamic;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.mcf.config.Cfg;
-import org.aion.mcf.config.applier.MiningApplier;
+import org.aion.zero.impl.config.applier.MiningApplier;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgConsensusPow;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
