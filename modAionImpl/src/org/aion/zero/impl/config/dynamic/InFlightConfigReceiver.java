@@ -36,7 +36,7 @@ import java.util.function.Function;
  */
 public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
     /** Default JMX port */
-    public static final int DEFAULT_JMX_PORT = 11235; /* TODO put in config.xml */
+    public static final int DEFAULT_JMX_PORT = 11234; /* TODO put in config.xml */
     /** Default JMX object name */
     public static final String DEFAULT_JMX_OBJECT_NAME = "org.aion.mcf.config.receiver:id=1";
 

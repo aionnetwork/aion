@@ -174,28 +174,12 @@ public class AionHub {
 
         ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
 
-        this.pow = new AionPoW();
-        this.pow.init(blockchain, mempool, eventMgr);
-
         if (cfg.getReports().isHeapDumpEnabled()) {
             new Thread(
                 new TaskDumpHeap(this.start, cfg.getReports().getHeapDumpInterval(), reportsFolder),
                 "dump-heap")
                 .start();
         }
-    }
-
-    public void resumeOrStartPow() {
-        this.pow.init(blockchain, mempool, eventMgr); //idempotent
-        this.pow.resume();
-    }
-
-    public void pausePow() {
-        this.pow.pause();
-    }
-
-    public AionPoW getPoW() {
-        return this.pow;
     }
 
     private void registerCallback() {
@@ -467,10 +451,6 @@ public class AionHub {
             getPendingState().shutDown();
             genLOG.info("<shutdown-pendingState>");
         }
-
-        genLOG.info("shutting down consensus...");
-        pow.shutdown();
-        genLOG.info("shutdown consensus... Done!");
 
         if (repository != null) {
             genLOG.info("shutting down DB...");

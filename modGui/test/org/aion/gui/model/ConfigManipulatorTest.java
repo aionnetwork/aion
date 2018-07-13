@@ -60,9 +60,7 @@ public class ConfigManipulatorTest {
     public void testApplyNewConfig() throws Exception {
         String xml = "<anyGoodXml/>";
         ConfigProposalResult configProposalResult = new ConfigProposalResult(true);
-        InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.getInFlightConfigReceiver()).thenReturn(proxy);
-        when(proxy.propose(xml)).thenReturn(configProposalResult);
+        when(jmxCaller.sendConfigProposal(xml)).thenReturn(configProposalResult);
 
         ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
         ApplyConfigResult result = unit.applyNewConfig(xml);
@@ -75,8 +73,7 @@ public class ConfigManipulatorTest {
         Throwable proxyError = new ArrayIndexOutOfBoundsException();
         ConfigProposalResult configProposalResult = new ConfigProposalResult(false, proxyError);
         InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.getInFlightConfigReceiver()).thenReturn(proxy);
-        when(proxy.propose(xml)).thenReturn(configProposalResult);
+        when(jmxCaller.sendConfigProposal(xml)).thenReturn(configProposalResult);
 
         ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
         ApplyConfigResult result = unit.applyNewConfig(xml);
@@ -90,8 +87,7 @@ public class ConfigManipulatorTest {
         RollbackException rbe = new RollbackException("the sky is falling",
                 Collections.singletonList(new IOException()));
         InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.getInFlightConfigReceiver()).thenReturn(proxy);
-        when(proxy.propose(xml)).thenThrow(rbe);
+        when(jmxCaller.sendConfigProposal(xml)).thenThrow(rbe);
 
         ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
         ApplyConfigResult result = unit.applyNewConfig(xml);
@@ -103,7 +99,7 @@ public class ConfigManipulatorTest {
     public void testApplyNewConfigWhenJmxConnectionFails() throws Exception {
         String xml = "<anyGoodXml/>";
         Exception jmxError = new MalformedObjectNameException();
-        when(jmxCaller.getInFlightConfigReceiver()).thenThrow(jmxError);
+        when(jmxCaller.sendConfigProposal(xml)).thenThrow(jmxError);
 
         ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
         ApplyConfigResult result = unit.applyNewConfig(xml);
@@ -123,8 +119,7 @@ public class ConfigManipulatorTest {
         String xml = "<anyGoodXml/>";
         ConfigProposalResult configProposalResult = new ConfigProposalResult(true);
         InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.getInFlightConfigReceiver()).thenReturn(proxy);
-        when(proxy.propose(xml)).thenReturn(configProposalResult);
+        when(jmxCaller.sendConfigProposal(xml)).thenReturn(configProposalResult);
         doThrow(new IOException()).when(fileLoaderSaver).save(
                 any(),
                 eq(new File(cfg.getBasePath() + "/config/config.backup.xml"))
@@ -142,8 +137,7 @@ public class ConfigManipulatorTest {
         String xml = "<anyGoodXml/>";
         ConfigProposalResult configProposalResult = new ConfigProposalResult(true);
         InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.getInFlightConfigReceiver()).thenReturn(proxy);
-        when(proxy.propose(xml)).thenReturn(configProposalResult);
+        when(jmxCaller.sendConfigProposal(xml)).thenReturn(configProposalResult);
         doThrow(new IOException()).when(fileLoaderSaver).save(
                 any(),
                 eq(new File(cfg.getBasePath() + "/config/config.xml"))

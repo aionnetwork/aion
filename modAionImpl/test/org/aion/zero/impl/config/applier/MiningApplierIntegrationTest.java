@@ -64,7 +64,6 @@ public class MiningApplierIntegrationTest {
      * {@link AionPoW} workers and that doing so does not disrupt their ability to mine blocks
      * into a {@link IAionBlockchain}.
      */
-    @Ignore
     @Test
     public void testStartThenStopThenStartKernel() throws Throwable {
         // Set up test: start AionPoW and EquihashMiner with mining off
@@ -86,7 +85,7 @@ public class MiningApplierIntegrationTest {
         IPendingState<AionTransaction> pendingState = mock(IPendingState.class);
         EquihashMiner mineRunner = new EquihashMiner(eventMgr, CfgAion.inst());
         AionPoW pow = new AionPoW(new AionImpl(aionBlockchain, mineRunner,
-                new AionHub(), CfgAion.inst()));
+                new AionHub(), CfgAion.inst(), null));
         pow.init(aionBlockchain, pendingState, eventMgr);
 
         JSONObject genesisJson = new JSONObject(GENESIS_BLOCK_JSON);

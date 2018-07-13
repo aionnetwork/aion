@@ -149,7 +149,7 @@ public class ConfigManipulator {
     @VisibleForTesting
     ApplyConfigResult sendConfigProposal(String cfgText) {
         try {
-            ConfigProposalResult result = jmxCaller.getInFlightConfigReceiver().propose(cfgText);
+            ConfigProposalResult result = jmxCaller.sendConfigProposal(cfgText);
             LOG.debug("JMX propose call returned: " + result.toString());
             String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
 
@@ -186,21 +186,22 @@ public class ConfigManipulator {
 
     @VisibleForTesting
     static class JmxCaller {
-        public InFlightConfigReceiverMBean getInFlightConfigReceiver(int port)
-        throws IOException, MalformedObjectNameException {
+        public ConfigProposalResult sendConfigProposal(int port, String xmlConfig)
+        throws IOException, MalformedObjectNameException, RollbackException {
             JMXServiceURL url = new JMXServiceURL(
                     InFlightConfigReceiver.createJmxUrl(port));
             try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
                 MBeanServerConnection mbeanServerConnection = conn.getMBeanServerConnection();
                 ObjectName objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
-                return MBeanServerInvocationHandler.newProxyInstance(
+                InFlightConfigReceiverMBean proxy = MBeanServerInvocationHandler.newProxyInstance(
                         mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
+                return proxy.propose(xmlConfig);
             }
         }
 
-        public InFlightConfigReceiverMBean getInFlightConfigReceiver()
-                throws IOException, MalformedObjectNameException {
-            return getInFlightConfigReceiver(InFlightConfigReceiver.DEFAULT_JMX_PORT);
+        public ConfigProposalResult sendConfigProposal(String xmlConfig)
+            throws IOException, MalformedObjectNameException, RollbackException {
+            return this.sendConfigProposal(InFlightConfigReceiver.DEFAULT_JMX_PORT, xmlConfig);
         }
     }
 

@@ -43,6 +43,7 @@ import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -56,10 +57,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class AionImpl implements IAionChain {
-    public AionHub aionHub;
-
+    private AionHub aionHub;
     private CfgAion cfg;
     private TxCollector collector;
+    private AionPoW pow;
     private final IMineRunner blockMiner;
     private final IAionBlockchain blockchain;
 
@@ -75,7 +76,7 @@ public class AionImpl implements IAionChain {
      *
      * @param blockMiner Block miner
      */
-    public AionImpl(IAionBlockchain blockchain, IMineRunner blockMiner, AionHub aionHub, CfgAion cfg) {
+    public AionImpl(IAionBlockchain blockchain, IMineRunner blockMiner, AionHub aionHub, CfgAion cfg, AionPoW pow) {
         this.cfg = cfg;
         this.aionHub = aionHub;
         this.blockchain = blockchain;
@@ -84,24 +85,26 @@ public class AionImpl implements IAionChain {
 
         collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX); // should make this injectable also
         this.blockMiner = blockMiner;
+        this.pow = pow;
     }
 
     public AionImpl(AionHub aionHub, CfgAion cfg) {
         this(aionHub.getBlockchain(),
                 new EquihashMiner(aionHub.getEventMgr(), cfg),
                 aionHub,
-                cfg);
+                cfg, null);
+        this.pow = new AionPoW(this);
     }
 
     /**
-     * Use of singleton instance is discouraged.  Please use
-     * {@link #AionImpl(IAionBlockchain, IMineRunner, AionHub, CfgAion)} whenever possible.
+     * Use of singleton instance is discouraged.  Please use one of the public constructors
+     * whenever possible.
      */
     public static AionImpl inst() {
         return Holder.INSTANCE;
     }
 
-    protected AionImpl() {
+    private AionImpl() {
         this(new AionHub(), CfgAion.inst());
     }
 
@@ -135,9 +138,16 @@ public class AionImpl implements IAionChain {
         return blockMiner;
     }
 
+    public AionPoW getPow() {
+        return pow;
+    }
+
     @Override
     public void close() {
         aionHub.close();
+        LOG_GEN.info("shutting down consensus...");
+        pow.shutdown();
+        LOG_GEN.info("shutdown consensus... Done!");
     }
 
     @Override

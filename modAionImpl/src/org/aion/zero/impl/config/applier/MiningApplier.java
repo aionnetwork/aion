@@ -60,7 +60,7 @@ public class MiningApplier implements IDynamicConfigApplier {
      */
     public MiningApplier() {
         this((EquihashMiner)AionFactory.create().getBlockMiner(),
-                AionImpl.inst().getAionHub().getPoW(),
+                AionImpl.inst().getPow(),
                 AionImpl.inst().getAionHub().getBlockchain(),
                 AionImpl.inst().getAionHub().getPendingState(),
                 AionImpl.inst().getAionHub().getEventMgr());

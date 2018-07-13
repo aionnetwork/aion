@@ -13,13 +13,14 @@ import java.lang.management.ManagementFactory;
 import java.rmi.registry.LocateRegistry;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class ConfigManipulatorIntegTest {
     // should probably have some logic to randomly try ports in case some other process is using this one
     private final int JMX_PORT = 31234;
 
     /**
-     * Tests that {@link ConfigManipulator.JmxCaller#getInFlightConfigReceiver()}
+     * Tests that {@link ConfigManipulator.JmxCaller#sendConfigProposal(String)} ()}
      * creates a proxy that can talk to JMX.
      */
     @Test
@@ -36,10 +37,7 @@ public class ConfigManipulatorIntegTest {
         server.registerMBean(proxyTarget, objectName);
 
         ConfigManipulator.JmxCaller client = new ConfigManipulator.JmxCaller();
-        InFlightConfigReceiverMBean proxy = client.getInFlightConfigReceiver(JMX_PORT);
-        // if the above line didn't throw, the proxy was created successfully
-        // it would be nice to call proxy.propose() and verify that proxyTarget.propose()
-        // gets invoked as a result, but it seems mocking the MBean prevents it from
-        // being invoked correctly by JMX, so we'll leave it this way for now.
+        client.sendConfigProposal(JMX_PORT, "<myXml/>");
+        verify(proxyTarget).propose("<myXml/>");
     }
 }

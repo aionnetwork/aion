@@ -38,6 +38,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -72,7 +73,7 @@ public class AionPoW {
 
     private SyncMgr syncMgr;
     private EventExecuteService ees;
-    private AionImpl aionImpl;
+    private final AionImpl aionImpl;
 
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
@@ -90,12 +91,9 @@ public class AionPoW {
      * {@link #init(IAionBlockchain, IPendingState, IEventMgr)} to initialize
      * the instance.
      */
-    public AionPoW() {
-        this(AionImpl.inst());
-    }
-
     public AionPoW(AionImpl aionImpl) {
         this.aionImpl = aionImpl;
+        System.out.println("AionPow ctor2");
     }
 
     /**
