@@ -43,6 +43,8 @@ public class ConfigManipulator {
 
     private final Cfg cfg;
     private final KernelLauncher kernelLauncher;
+    private final FileLoaderSaver fileLoaderSaver;
+    private final JmxCaller jmxCaller;
 
     private String lastLoadContent;
 
@@ -56,18 +58,29 @@ public class ConfigManipulator {
      */
     public ConfigManipulator(Cfg cfg,
                              KernelLauncher kernelLauncher) {
+        this(cfg, kernelLauncher, new FileLoaderSaver(), new JmxCaller());
+    }
+
+    @VisibleForTesting
+    ConfigManipulator(Cfg cfg,
+                      KernelLauncher kernelLauncher,
+                      FileLoaderSaver fileLoaderSaver,
+                      JmxCaller jmxCaller) {
         this.cfg = cfg;
         this.kernelLauncher = kernelLauncher;
+        this.fileLoaderSaver = fileLoaderSaver;
+        this.jmxCaller = jmxCaller;
     }
 
     public String loadFromConfigFile() {
         try {
-            lastLoadContent = new FileLoaderSaver().load(configFile());
-            return lastLoadContent;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "<<error>>";
+            lastLoadContent = fileLoaderSaver.load(configFile());
+        } catch (IOException ioe) {
+            LOG.error("Couldn't load config file,", ioe);
+            return "<Could not load config file>";
+            // TODO throw/return something that UI will respond to by showing a graphical error
         }
+        return lastLoadContent;
     }
 
     public String getLastLoadedContent() {
@@ -88,11 +101,6 @@ public class ConfigManipulator {
             return new ApplyConfigResult(false, msg, null);
         }
 
-        ApplyConfigResult result = sendConfigProposal(cfgXml);
-        if (!result.isSucceeded()) {
-            return result;
-        }
-
         final String backupConfigFilename;
         try {
             backupConfigFilename = backupConfig();
@@ -104,15 +112,20 @@ public class ConfigManipulator {
             return new ApplyConfigResult(false, msg, null);
         }
 
+        ApplyConfigResult result = sendConfigProposal(cfgXml);
+        if (!result.isSucceeded()) {
+            return result;
+        }
+
         try {
-            new FileLoaderSaver().save(cfgXml, configFile());
+            fileLoaderSaver.save(cfgXml, configFile());
             LOG.info("Saving new config.xml");
         } catch (IOException ioe) {
             String msg =
-                    "Failed to write to the config file, so aborting operation.  Error during write:\n\n"
+                    "Config was successfully applied, but failed to save to config.xml:\n\n"
                             + ioe.getMessage();
-            ioe.printStackTrace();
-            return new ApplyConfigResult(false, msg, null);
+            LOG.error(msg, ioe);
+            return new ApplyConfigResult(true, msg, null);
         }
 
         return new ApplyConfigResult(result.isSucceeded(),
@@ -133,14 +146,10 @@ public class ConfigManipulator {
         }
     }
 
-    private ApplyConfigResult sendConfigProposal(String cfgText) {
-        return sendConfigProposal(new JmxCaller(), cfgText);
-    }
-
     @VisibleForTesting
-    ApplyConfigResult sendConfigProposal(JmxCaller jmx, String cfgText) {
+    ApplyConfigResult sendConfigProposal(String cfgText) {
         try {
-            ConfigProposalResult result = jmx.getInFlightConfigReceiver().propose(cfgText);
+            ConfigProposalResult result = jmxCaller.getInFlightConfigReceiver().propose(cfgText);
             LOG.debug("JMX propose call returned: " + result.toString());
             String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
 
@@ -160,7 +169,7 @@ public class ConfigManipulator {
     }
 
     private String backupConfig() throws IOException {
-        Files.write(lastLoadContent, backupConfigFile(), Charsets.UTF_8);
+        fileLoaderSaver.save(lastLoadContent, backupConfigFile());
         return backupConfigFile().getAbsolutePath();
     }
 
@@ -178,7 +187,7 @@ public class ConfigManipulator {
     @VisibleForTesting
     static class JmxCaller {
         public InFlightConfigReceiverMBean getInFlightConfigReceiver()
-                throws IOException, MalformedObjectNameException {
+        throws IOException, MalformedObjectNameException {
             JMXServiceURL url = new JMXServiceURL(
                     InFlightConfigReceiver.createJmxUrl(InFlightConfigReceiver.DEFAULT_JMX_PORT));
             try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
