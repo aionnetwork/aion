@@ -1,26 +1,27 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * Contributors to the aion source files in decreasing order of code volume:
  *
- ******************************************************************************/
+ * Aion foundation.
+ *
+ */
 
 package org.aion.api.server;
 
@@ -426,8 +427,8 @@ public abstract class ApiAion extends Api {
         return rec.getExecutionResult();
     }
 
-    protected long estimateGas(ArgTxCall params) {
-        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), params.getTo(),
+    protected long estimateNrg(ArgTxCall params) {
+        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), params.getFrom(), params.getTo(),
                 params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
         AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return receipt.getEnergyUsed();
@@ -487,40 +488,6 @@ public abstract class ApiAion extends Api {
 
     public BigInteger getNonce(Address _address) {
         return this.ac.getRepository().getNonce(_address);
-    }
-
-    // TODO: refactor these ad-hoc transaction creations - violates DRY and is messy
-
-    protected long estimateNrg(ArgTxCall _params) {
-        if (_params == null) {
-            throw new NullPointerException();
-        }
-
-        Address from = _params.getFrom();
-
-        if (from.equals(Address.EMPTY_ADDRESS())) {
-            LOG.error("<send-transaction msg=invalid-from-address>");
-            return -1L;
-        }
-
-        ECKey key = this.getAccountKey(from.toString());
-        if (key == null) {
-            LOG.error("<send-transaction msg=account-not-found>");
-            return -1L;
-        }
-
-        try {
-            // Transaction is executed as local transaction, no need to retrieve the real nonce.
-            byte[] nonce = BigInteger.ZERO.toByteArray();
-
-            AionTransaction tx = new AionTransaction(nonce, _params.getTo(), _params.getValue().toByteArray(),
-                    _params.getData(), _params.getNrg(), _params.getNrgPrice());
-            tx.sign(key);
-
-            return this.ac.estimateTxNrg(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
-        } catch (Exception ex) {
-            return -1L;
-        }
     }
 
     protected byte[] sendTransaction(ArgTxCall _params) {
@@ -693,7 +660,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getDefaultNrgLimit() {
-        return 500_000L;
+        return 2_000_000L;
     }
 
     protected void startES(String thName) {

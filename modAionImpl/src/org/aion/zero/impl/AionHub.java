@@ -25,6 +25,7 @@ package org.aion.zero.impl;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -367,6 +368,10 @@ public class AionHub {
 
             blockchain.setBestBlock(genesis);
             blockchain.setTotalDifficulty(genesis.getDifficultyBI());
+            if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
+                // setting the object runtime value
+                genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
+            }
 
             if (this.eventMgr != null) {
                 List<IEvent> evts = new ArrayList<>();
@@ -386,8 +391,13 @@ public class AionHub {
 
             blockchain.setBestBlock(bestBlock);
             blockchain.setTotalDifficulty(this.repository.getBlockStore().getTotalDifficulty());
+            if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
+                // setting the object runtime value
+                bestBlock.setCumulativeDifficulty(this.repository.getBlockStore().getTotalDifficulty());
+            }
+
             genLOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
-                LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
+                    LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
         }
 
         byte[] genesisHash = cfg.getGenesis().getHash();

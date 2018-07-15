@@ -41,9 +41,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class ReqHandshake1Test {
 
     private byte[] validNodeId = UUID.randomUUID().toString().getBytes();
@@ -66,7 +64,6 @@ public class ReqHandshake1Test {
 
     private List<Short> randomVersions;
 
-
     @Before
     public void ReqHandshake2Test() {
 
@@ -76,7 +73,6 @@ public class ReqHandshake1Test {
         for (byte i = 0; i < 127; i++) {
             randomVersions.add((short) ThreadLocalRandom.current().nextInt(Short.MAX_VALUE + 1));
         }
-
     }
 
     @Test
@@ -102,7 +98,7 @@ public class ReqHandshake1Test {
         assertArrayEquals(req1.getIp(), req2.getIp());
         assertEquals(req1.getNetId(), req2.getNetId());
         assertEquals(req1.getPort(), req2.getPort());
-
+        assertArrayEquals(req1.getRevision(),req2.getRevision());
     }
 
     @Test
@@ -112,5 +108,19 @@ public class ReqHandshake1Test {
             port, randomRevision, randomVersions);
         byte[] bytes = req1.encode();
         assertNull(bytes);
+
+        ReqHandshake1 req2 = ReqHandshake1.decode(bytes);
+        assertNull(req2);
+    }
+
+    @Test
+    public void testRepeatEncodeDecode() {
+
+        // Repeated Encode and Decode Units
+        for (int i = 0; i < 100; i++) {
+            testValidEncodeDecode();
+            testInvalidEncodeDecode();
+            testRoute();
+        }
     }
 }

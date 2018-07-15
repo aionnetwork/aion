@@ -29,6 +29,7 @@ import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
+import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -44,7 +45,6 @@ import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
-import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -339,6 +339,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.getRepository().getBlockStore().saveBlock(genesis, genesis.getDifficultyBI(), true);
             bc.setBestBlock(genesis);
             bc.setTotalDifficulty(genesis.getDifficultyBI());
+            if (genesis.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
+                // setting the object runtime value
+                genesis.setCumulativeDifficulty(genesis.getDifficultyBI());
+            }
 
             return new Bundle(this.defaultKeys, bc);
         }
@@ -351,8 +355,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public void assertEqualTotalDifficulty() {
         BigInteger tdForHash, tdCached, tdPublic;
+        byte[] bestBlockHash;
 
         synchronized (this) {
+            bestBlockHash = getBestBlock().getHash();
             tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
             tdCached = getCacheTD();
             tdPublic = getTotalDifficulty();
@@ -360,6 +366,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         assert (tdPublic.equals(tdForHash));
         assert (tdPublic.equals(tdCached));
+        assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
