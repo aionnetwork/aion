@@ -107,7 +107,7 @@ public final class SyncMgr {
     private Thread syncSs = null;
 
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-    private volatile long timeUpdated = System.currentTimeMillis();
+    private volatile long timeUpdated = 0;
     private AtomicBoolean queueFull = new AtomicBoolean(false);
 
     public static SyncMgr inst() {
