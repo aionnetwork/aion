@@ -197,6 +197,7 @@ public final class TRSuseContract extends AbstractTRS {
             case 1: return withdraw(input, nrgLimit);
             case 3: return bulkWithdraw(input, nrgLimit);
             case 4: return refund(input, nrgLimit);
+            case 5: return depositFor(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -484,7 +485,8 @@ public final class TRSuseContract extends AbstractTRS {
      *     contractAddress is the address of the public-facing TRS contract.
      *     forAccount is the account that will be listed as having amount deposited into it if the
      *       operation succeeds.
-     *     amount is the amount of funds to deposit into the contract on forAccount's behalf.
+     *     amount is the amount of funds to deposit into the contract on forAccount's behalf. This
+     *       value is interpreted as unsigned and strictly positive.
      *
      *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
      *       must be the contract owner.

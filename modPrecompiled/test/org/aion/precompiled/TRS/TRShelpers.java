@@ -246,11 +246,23 @@ class TRShelpers {
     // Returns a properly formatted byte array to be used as input for the deposit operation.
     byte[] getDepositInput(Address contract, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) { Assert.fail(); }
+        if (amtBytes.length > 128) { fail(); }
         byte[] input = new byte[161];
         input[0] = 0x0;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length , amtBytes.length);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to be used as input for the deposit-for operation.
+    byte[] getDepositForInput(Address contract, Address depositor, BigInteger amount) {
+        byte[] amtBytes = amount.toByteArray();
+        if (amtBytes.length > 128) { fail(); }
+        byte[] input = new byte[193];
+        input[0] = 0x5;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(depositor.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
     }
 
