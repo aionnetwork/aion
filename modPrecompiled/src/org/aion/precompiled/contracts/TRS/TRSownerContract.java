@@ -55,8 +55,7 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  *      create -- creates a new public TRS contract.
  *      lock -- locks the TRS contract so that no more deposits may be made.
  *      start -- starts the distribution of the savings in the TRS contract.
- *      nullify -- disables the TRS contract.
- *      mint -- informs the TRS contract about tokens that were minted to it on behalf of a depositor.
+ *      openFunds -- kills the TRS contract and unlocks all of the funds for depositors to withdraw.
  */
 public final class TRSownerContract extends AbstractTRS {
 
@@ -116,7 +115,8 @@ public final class TRSownerContract extends AbstractTRS {
      *
      *     conditions: the caller of this method must be the owner of the specified contract
      *       otherwise this method will fail. A contract cannot be locked until the total amount of
-     *       funds deposited into the contract is a strictly positive number.
+     *       funds deposited into the contract is a strictly positive number. A contract cannot be
+     *       locked if the contract's funds are open.
      *
      *     returns: void.
      *
@@ -131,7 +131,23 @@ public final class TRSownerContract extends AbstractTRS {
      *       contractAddress is the address of the public-facing TRS contract to start.
      *
      *     conditions: the caller of this method must be the owner of the specified contract
-     *       otherwise this method will fail.
+     *       otherwise this method will fail. A contract cannot be started if its funds are open.
+     *
+     *     returns: void.
+     *
+     *                                            ~~~***~~~
+     *
+     *     <b>operation 0x3</b> - kills the public-facing TRS contract so that it can never again be
+     *       locked or made live and unlocks all of the funds in it so that any account that has a
+     *       positive deposit balance in the contract is freely able to withdraw all of their funds
+     *       using one withdraw operation (bulkWithdraw will also produce the same effect).
+     *       [<32b - contractAddress>]
+     *       total = 33 bytes
+     *     where:
+     *       contractAddress is the address of the public-facing TRS contract to open up.
+     *
+     *     conditions: the caller of this method must be the owner of the specified contract
+     *       otherwise this method will fail. The contract must not already be live.
      *
      *     returns: void.
      *
@@ -159,6 +175,7 @@ public final class TRSownerContract extends AbstractTRS {
             case 0: return create(input, nrgLimit);
             case 1: return lock(input, nrgLimit);
             case 2: return start(input, nrgLimit);
+            case 3: return openFunds(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -273,7 +290,8 @@ public final class TRSownerContract extends AbstractTRS {
      *
      * conditions: the caller of this method must be the owner of the specified contract
      *   otherwise this method will fail. A contract cannot be locked until the total amount of funds
-     *   deposited into the contract is a strictly positive number.
+     *   deposited into the contract is a strictly positive number. A contract cannot be locked if
+     *   its funds are open.
      *
      * @param input The input to the lock public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -306,7 +324,9 @@ public final class TRSownerContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        if (isContractLocked(specs) || isContractLive(specs)) {
+        // A lock call can only execute if the contract is in the following state:
+        // contract is not locked and not live and its funds are not open.
+        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -326,7 +346,7 @@ public final class TRSownerContract extends AbstractTRS {
      *   contractAddress is the address of the public-facing TRS contract to lock.
      *
      * conditions: the caller of this method must be the owner of the specified contract
-     *   otherwise this method will fail.
+     *   otherwise this method will fail. A contract can only be started if its funds are not open.
      *
      * @param input The input to the lock public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -354,7 +374,9 @@ public final class TRSownerContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        if (!isContractLocked(specs) || isContractLive(specs)) {
+        // A contract can only be started if it is in the following state:
+        // the contract is locked and not live and its funds are not open.
+        if (!isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -363,6 +385,54 @@ public final class TRSownerContract extends AbstractTRS {
         setBonusBalance(contract);
         track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+    }
+
+    /**
+     * Logic to open up an existing public-facing TRS contract where caller is the owner of the
+     * contract.
+     *
+     * [<1b - 0x3> | <32b - contractAddress>]
+     *   total = 33 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to open up.
+     *
+     * conditions: the caller of this method must be the owner of the specified contract
+     *   otherwise this method will fail. The contract must not already be live.
+     *
+     * returns: void.
+     *
+     * @param input The input to the openFunds public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult openFunds(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexContract = 1;
+        final int len = 33;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, len));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // An openFunds operation can only execute if the caller is the owner of the contract.
+        if (!getContractOwner(contract).equals(caller)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // An openFunds operation can only execute if the current state of the TRS contract is:
+        // contract is not live.
+        if (isContractLive(specs)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        setIsOpenFunds(contract);
+        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
 
@@ -400,6 +470,7 @@ public final class TRSownerContract extends AbstractTRS {
         setListHead(contract, null);
         setTotalBalance(contract, BigInteger.ZERO);
         setTimestamp(contract, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()));
+        initOpenFunds(contract);
         track.flush();
     }
 

@@ -52,7 +52,7 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  * The following operations are supported:
  *      deposit -- deposits funds into a public-facing TRS contract.
  *      withdraw -- withdraws funds from a public-facing TRS contract.
- *      bulkDeposit -- bulk fund depositing on the behalf of depositors. Owner-only.
+ *      bulkDepositFor -- bulk fund depositing on the behalf of depositors. Owner-only.
  *      bulkWithdraw -- bulk fund withdrawal to all depositors. Owner-only.
  *      refund -- refunds funds to a depositor. Can only be called prior to locking. Owner-only.
  *      depositFor -- deposits funds into a public-facing TRS contract on an accout's behalf. Owner-only.
@@ -92,7 +92,8 @@ public final class TRSuseContract extends AbstractTRS {
      *
      *     conditions: the calling account must have enough balance to deposit amount otherwise this
      *       method effectively does nothing. The deposit operation is enabled only when the contract
-     *       is unlocked; once locked depositing is disabled.
+     *       is unlocked; once locked depositing is disabled. If a contract has its funds open then
+     *       this operation is disabled.
      *
      *     returns: void.
      *
@@ -104,6 +105,10 @@ public final class TRSuseContract extends AbstractTRS {
      *     account's first ever withdrawal. If an account has missed previous periods then the next
      *     call to this operation will withdraw for the current period as well as any previously
      *     missed periods.
+     *
+     *     In the special case that a contract has its funds open, the first call to this operation
+     *     after the funds are opened will withdraw all funds that the contract owes the caller
+     *     including bonus. Any subsequent calls will fail.
      *
      *     [<32b - contractAddress>]
      *     total = 33 bytes
@@ -117,9 +122,40 @@ public final class TRSuseContract extends AbstractTRS {
      *
      *                                          ~~~***~~~
      *
+     *   <b>operation 0x2</b> - deposits the specified funds into the contract on the behalf of
+     *     other accounts. This is a convenience operation for the owner to use the depositFor logic
+     *     in bulk. This operation supports depositing into the contract on behalf of up to 100
+     *     accounts.
+     *
+     *     Define "entry" as the following 160b array: [<32b - accountAddress> | <128b - amount>]
+     *     Then the arguments to this operation are:
+     *       32-byte contractAddress followed by a contiguous list of X 160-byte entry arrays,
+     *       where X is in [1, 100]
+     *     total = 193-16,033 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account is
+     *       attempting to deposit funds into.
+     *     and for each entry we have the following pair:
+     *       accountAddress is the address of an account the caller is attempting to deposit funds
+     *       into the contract for.
+     *       amount is the corresponding amount of funds to deposit on behalf of accountAddress.
+     *
+     *     conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit
+     *       into it. The caller must be the owner of the contract. Each accountAddress must be an
+     *       Aion account address. If a contract has its funds open then this operation is disabled.
+     *
+     *     returns: void.
+     *
+     *                                          ~~~***~~~
+     *
      *   <b>operation 0x3</b> - withdraws funds from the contract on behalf of each depositor in the
      *     contract. This operation is functionally equivalent to having each depositor in the
      *     contract perform a withdraw operation.
+     *
+     *     In the special case where a contract has its funds open, the first call to this operation
+     *     after the funds are opened will withdraw the total amounts the contract owes each
+     *     depositor. Any subsequent calls to this operation involving the same addresses as the
+     *     first time will have no effect.
      *
      *     [<32b - contractAddress>]
      *     total = 33 bytes
@@ -148,7 +184,7 @@ public final class TRSuseContract extends AbstractTRS {
      *       account accountAddress must have a deposit balannce into this TRS contract of at least
      *       amount. The refund operation is enabled only when the contract is unlocked; once locked
      *       refunding is disabled. If any of these conditions are not satisfied this method
-     *       effectively does nothing.
+     *       effectively does nothing. If a contract's funds are open then this method is disabled.
      *
      *     returns: void.
      *
@@ -168,7 +204,8 @@ public final class TRSuseContract extends AbstractTRS {
      *     amount is the amount of funds to deposit into the contract on forAccount's behalf.
      *
      *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
-     *       must be the contract owner.
+     *       must be the contract owner. If a contract's funds are open then this operation is
+     *       disabled.
      *
      *     returns: void.
      *
@@ -195,6 +232,7 @@ public final class TRSuseContract extends AbstractTRS {
         switch (operation) {
             case 0: return deposit(input, nrgLimit);
             case 1: return withdraw(input, nrgLimit);
+            case 2: return bulkDepositFor(input, nrgLimit);
             case 3: return bulkWithdraw(input, nrgLimit);
             case 4: return refund(input, nrgLimit);
             case 5: return depositFor(input, nrgLimit);
@@ -216,7 +254,8 @@ public final class TRSuseContract extends AbstractTRS {
      *   conditions: the calling account must have enough balance to deposit amount otherwise this
      *     method effectively does nothing. The deposit operation is enabled only when the contract
      *     is unlocked; once locked depositing is disabled. Note that if zero is deposited, the call
-     *     will succeed but the depositor will not be saved into the database.
+     *     will succeed but the depositor will not be saved into the database. If a contract has its
+     *     funds open then depositing is disabled.
      *
      *   returns: void.
      *
@@ -247,8 +286,8 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // A deposit operation can only execute if the current state of the TRS contract is:
-        // contract is unlocked (and obviously not live -- check this for sanity).
-        if (isContractLocked(specs) || isContractLive(specs)) {
+        // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
+        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -310,6 +349,100 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         track.flush();
+        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+    }
+
+    /**
+     * Logic to bulk-deposit-for funds into an existing public-facing TRS contract.
+     *
+     *   Define "entry" as the following 160b array: [<32b - accountAddress> | <128b - amount>]
+     *   Then the arguments to this operation are:
+     *      [ <1b - 0x2> | <32b - contractAddress> | E]
+     *   where E is a contiguous list of X 160-byte entry arrays, such that X is in [1, 100]
+     *     total = 193-16,033 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract that the account is
+     *       attempting to deposit funds into.
+     *     and for each entry we have the following pair:
+     *       accountAddress is the address of an account the caller is attempting to deposit funds
+     *       into the contract for.
+     *       amount is the corresponding amount of funds to deposit on behalf of accountAddress.
+     *
+     *     conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit
+     *       into it. The caller must be the owner of the contract. Each accountAddress must be an
+     *       Aion account address. If a contract has its funds open then this operation is disabled.
+     *
+     *     returns: void.
+     *
+     * @param input The input to bulk-deposit-for into a public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult bulkDepositFor(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexContract = 1;
+        final int indexEntries = 33;
+        final int entryLen = 160;
+        final int entryAddrLen = Address.ADDRESS_LEN;
+        final int maxEntries = 100;
+
+        // First ensure some basic properties about input hold: its lower and upper size limits and
+        // that the entries portion has a length that is a multiple of an entry length.
+        int len = input.length;
+        if ((len < indexEntries + entryLen) || (len > indexEntries + (entryLen * maxEntries))) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        } else if ((len - indexEntries) % entryLen != 0) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A bulk-deposit-for operation can only execute if the caller is the owner of the contract.
+        if (!getContractOwner(contract).equals(caller)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A bulkDepositFor operation can only execute if the current state of the TRS contract is:
+        // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
+        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Iterate over every entry in the entries list and attempt to deposit for them.
+        int amtLen = entryLen - entryAddrLen;
+        byte[] amountBytes;
+        BigInteger amount;
+        ContractExecutionResult result;
+        for (int index = indexEntries; index < len; index += entryLen) {
+            // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
+            amountBytes = new byte[amtLen + 1];
+            System.arraycopy(input, index, amountBytes, 1, amtLen);
+            amount = new BigInteger(amountBytes);
+
+            // The caller must have adequate funds to make the proposed deposit.
+            BigInteger fundsAvailable = track.getBalance(caller);
+            if (fundsAvailable.compareTo(amount) < 0) {
+                track.rollback();
+                return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            }
+
+            // Verify the account is an Aion address.
+            if (input[index] != AION_PREFIX) {
+                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            }
+
+            Address account = Address.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
+            result = makeDeposit(contract, account, amount, nrgLimit);
+            if (!result.getCode().equals(ResultCode.SUCCESS)) {
+                track.rollback();
+                return result;
+            }
+        }
+
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
@@ -389,7 +522,8 @@ public final class TRSuseContract extends AbstractTRS {
      *       account accountAddress must have a deposit balannce into this TRS contract of at least
      *       amount. The refund operation is enabled only when the contract is unlocked; once locked
      *       refunding is disabled. If any of these conditions are not satisfied this method
-     *       effectively does nothing.
+     *       effectively does nothing. If a contract has its funds open then this operation is
+     *       disabled.
      *
      *     returns: void.
      *
@@ -421,8 +555,8 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // A refund operation can only execute if the current state of the TRS contract is:
-        // contract is unlocked (and obviously not live -- check this for sanity).
-        if (isContractLocked(specs) || isContractLive(specs)) {
+        // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
+        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -477,7 +611,8 @@ public final class TRSuseContract extends AbstractTRS {
      *       value is interpreted as unsigned and strictly positive.
      *
      *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
-     *       must be the contract owner.
+     *       must be the contract owner. If a contract has its funds open then this operation is
+     *       disabled.
      *
      *     returns: void.
      *
@@ -509,8 +644,8 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // A depositFor operation can only execute if the current state of the TRS contract is:
-        // contract is unlocked (and obviously not live -- check this for sanity).
-        if (isContractLocked(specs) || isContractLive(specs)) {
+        // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
+        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 

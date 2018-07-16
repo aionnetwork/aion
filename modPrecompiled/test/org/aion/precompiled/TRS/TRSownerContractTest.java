@@ -1277,6 +1277,85 @@ public class TRSownerContractTest extends TRShelpers {
         checkOwingsGivenDepositsAndBonus(deposit1, BigInteger.TEN, deposit2);
     }
 
+    // <----------------------------------OPEN FUNDS TRS TESTS------------------------------------->
+
+    @Test
+    public void testOpenFundsInputTooShort() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsInputTooLong() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsCallerIsNotOwner() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsContractIsLive() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsContractNonExistent() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsWithdrawIsNowWithdrawAll() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsBulkWithdrawIsNowBulkWithdrawAll() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsLockContractNowDisabled() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsStartContractNowDisabled() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsIsLockedAndIsLive() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsDepositNowDisabled() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsDepositForNowDisabled() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsBulkDepositForNowDisabled() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsRefundNowDisabled() {
+        //TODO
+    }
+
+    @Test
+    public void testOpenFundsUpdateTotalNowDisabled() {
+        //TODO
+    }
+
+    // <----------------------------------------HELPERS-------------------------------------------->
+
     /**
      * A rigorous checking that the bonus shares and total owings per the two accounts in a contract
      * make sense and satisfy all the expected properties. This method is intended to be used to

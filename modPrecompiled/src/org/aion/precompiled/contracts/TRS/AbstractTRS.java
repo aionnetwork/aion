@@ -40,7 +40,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * for unchanging keys we store them as an IDataWord object directly.
      */
     private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, TIMESTAMP,
-        BONUS_SPECS_KEY, NULL32, INVALID;
+        BONUS_SPECS_KEY, OPEN_KEY, NULL32, INVALID;
     private static final byte BALANCE_PREFIX = (byte) 0xB0;
     private static final byte LIST_PREV_PREFIX = (byte) 0x60;
     private static final byte FUNDS_PREFIX = (byte) 0x90;
@@ -72,6 +72,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
         singleKey[0] = (byte) 0x20;
         BONUS_SPECS_KEY = toIDataWord(singleKey);
+
+        singleKey[0] = (byte) 0x10;
+        OPEN_KEY = toIDataWord(singleKey);
 
         byte[] value = new byte[DOUBLE_WORD_SIZE];
         value[0] = NULL_BIT;
@@ -1102,6 +1105,52 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             System.arraycopy(bonusVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(balance);
+    }
+
+    /**
+     * Initializes the open funds data so that the is-open-funds bit is not set. If an open funds
+     * entry in the database already exists then this method does nothing.
+     */
+    void initOpenFunds(Address contract) {
+        if (track.getStorageValue(contract, OPEN_KEY) != null) { return; }
+
+        byte[] fundsVal = new byte[SINGLE_WORD_SIZE];
+        fundsVal[0] = 0x0;
+        track.addStorageRow(contract, OPEN_KEY, toIDataWord(fundsVal));
+    }
+
+    /**
+     * Sets the is-open-funds bit to true for the specified contract. Setting this bit true has the
+     * following effect: the contract can never again be locked or live (both of these states are
+     * undefined from this point onwards), rendering the contract effectively dead, and any depositor
+     * with a positive deposit balance in the contract is able to withdraw that full balance with
+     * their next usage of the withdraw (or even bulkWithdraw) operation(s).
+     *
+     * Once this bit is set it cannot be unset. Care must be taken. This method should be called
+     * from only one place: in the openFunds operation logic. Nowhere else.
+     *
+     * If contract does not exist this method throws an exception for debugging. This should never
+     * happen.
+     */
+    void setIsOpenFunds(Address contract) {
+        IDataWord value = track.getStorageValue(contract, OPEN_KEY);
+        if (value == null) {
+            throw new IllegalStateException("contract does not exist: " +
+                ByteUtil.toHexString(contract.toBytes()));
+        }
+        byte[] valueBytes = value.getData();
+        valueBytes[0] = 0x1;
+        track.addStorageRow(contract, OPEN_KEY, toIDataWord(valueBytes));
+    }
+
+    /**
+     * Returns true if and only if the is-open-funds bit is set. Returns false otherwise.
+     *
+     * @return true only if the contract's funds are open and the contract has been killed.
+     */
+    public boolean isOpenFunds(Address contract) {
+        IDataWord value = track.getStorageValue(contract, OPEN_KEY);
+        return ((value != null) && (value.getData()[0] == 0x1));
     }
 
     /**

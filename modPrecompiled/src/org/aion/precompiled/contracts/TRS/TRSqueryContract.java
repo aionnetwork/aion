@@ -83,6 +83,7 @@ public final class TRSqueryContract extends AbstractTRS {
      * along with their expected arguments are outlined as follows:
      *
      *   <b>operation 0x0</b> - returns true iff the specified public-facing TRS contract is live.
+     *     Note that a contract with its funds open is not considered live.
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
@@ -97,6 +98,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *
      *   <b>operation 0x1</b> - returns true iff the specified public-facing TRS contract is locked.
      *     If a contract is live then it must also be locked and so a live contract will return true.
+     *     Note that a contract with its funds open is not considered locked.
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
@@ -111,6 +113,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *
      *   <b>operation 0x2</b> - returns true iff the specified public-facing TRS contract has direct
      *     deposits enabled.
+     *     Note that this operation returns false if the contract has its funds open.
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
@@ -126,6 +129,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *   <b>operation 0x3</b> - returns the current period that the specified public-facing TRS
      *     contract is in. The current time that is used to determine this period is the timestamp
      *     of the blockchain's best block.
+     *     Note that if a contract's funds are open then the returned value is meaningless.
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
@@ -145,6 +149,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *
      *   <b>operation 0x4</b> - returns the period that the specified public-facing TRS contract is
      *     in at the specified block number.
+     *     Note that if a contract's funds are open then the returned value is meaningless.
      *     [<32b - contractAddress> | <8b - blockNumber>]
      *     total = 41 bytes
      *   where:
@@ -221,7 +226,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] result = new byte[1];
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
-        if (isContractLive(getContractSpecs(contract))) {
+        if (!isOpenFunds(contract) && isContractLive(getContractSpecs(contract))) {
             result[0] = 0x1;
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
@@ -256,7 +261,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] result = new byte[1];
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
-        if (isContractLocked(getContractSpecs(contract))) {
+        if (isOpenFunds(contract) && isContractLocked(getContractSpecs(contract))) {
             result[0] = 0x1;
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
@@ -292,7 +297,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] result = new byte[1];
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
-        if (isDirDepositsEnabled(getContractSpecs(contract))) {
+        if (!isOpenFunds(contract) && isDirDepositsEnabled(getContractSpecs(contract))) {
             result[0] = 0x1;
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
