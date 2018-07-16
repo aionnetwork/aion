@@ -71,16 +71,12 @@ if $guard; then
 	echo "######################"
 	echo "  Watchguard Enabled  "
 	echo "######################"
+	echo
 
 	wait=300	# sec
 	sample=1	# sec
 	tolerance=1 	# sec
-	threadRate=1 	# rate
-
-	config=config/config.xml
-	logging=$(egrep -o "log-file.*log-file" $config | cut -d">" -f2 | cut -d"<" -f1)
-	logpath=$(egrep -o "log-path.*log-path" $config | cut -d">" -f2 | cut -d"<" -f1)
-	file=$logpath/aionCurrentLog.dat
+	threadRate=2 	# rate
 
 	noInterrupt=true
 	countRebounce=0
@@ -88,7 +84,7 @@ if $guard; then
 	watching=false
 	lastBoot=0
 
-	trap "exit" INT TERM
+	trap "exit" SIGINT SIGTERM
 	trap "interrupt" EXIT
 	function interrupt() {
 
@@ -105,17 +101,8 @@ if $guard; then
 		  noInterrupt=false
 		fi
 
-		# Removes remnant processes accessing kernel logfile
-		if $logging; then
-		  temp=$(lsof $file | egrep "java" | cut -c 9-13)
-		  remnants=($tep)
-		  for ((i=0; i<${#remnants[@]}; ++i)); do
-		    kill ${remnants[i]}
-		  done
-		fi
-
 		# Interrupts the watchguard (current process)
-		kill $$
+		kill -9 $$
 
 	}
 
@@ -140,6 +127,12 @@ if $guard; then
 		watching=true
 		checkRate=0
 		tPrev=0
+
+		# Locate logger detail
+		config=config/config.xml
+		logging=$(egrep -o "log-file.*log-file" $config | cut -d">" -f2 | cut -d"<" -f1)
+		logpath=$(egrep -o "log-path.*log-path" $config | cut -d">" -f2 | cut -d"<" -f1)
+		file=$logpath/aionCurrentLog.dat
 
 		# Watchguard
 		while $watching; do
@@ -182,10 +175,19 @@ if $guard; then
 		# Shutsdown Aion kernel
 		echo "## Killing Kernel ##"
 		kill $kPID
+		timer=0
 		temp=$(ps --pid $kPID | egrep -o "$kPID")
 		while [[ $temp -eq $kPID ]] ; do
+
+		  # If shutdown exceeds 1 minute
+		  ((timer+=2))
+		  if [[ $timer -ge 60 ]]; then
+		    kill -9 $kPID
+		  fi
+
 		  sleep 2s
 		  temp=$(ps --pid $kPID | egrep -o "$kPID")
+
 		done
 		running=false
 
