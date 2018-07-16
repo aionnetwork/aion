@@ -281,13 +281,13 @@ public final class TRSuseContract extends AbstractTRS {
 
         // A deposit operation can only execute if direct depositing is enabled or caller is owner.
         Address owner = getContractOwner(contract);
-        if (!caller.equals(owner) && !isDirDepositsEnabled(specs)) {
+        if (!caller.equals(owner) && !isDirDepositsEnabled(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A deposit operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
-        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+        if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -340,7 +340,7 @@ public final class TRSuseContract extends AbstractTRS {
 
         // A withdraw operation can only execute if the current state of the TRS contract is:
         // contract is live (and obviously locked -- check this for sanity).
-        if (!isContractLocked(specs) || !isContractLive(specs)) {
+        if (!isContractLocked(contract) || !isContractLive(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -408,7 +408,7 @@ public final class TRSuseContract extends AbstractTRS {
 
         // A bulkDepositFor operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
-        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+        if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -487,7 +487,7 @@ public final class TRSuseContract extends AbstractTRS {
 
         // A bulk-withdraw operation can only execute if the current state of the TRS contract is:
         // contract is live (and obviously locked -- check this for sanity).
-        if (!isContractLocked(specs) || !isContractLive(specs)) {
+        if (!isContractLocked(contract) || !isContractLive(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -556,7 +556,7 @@ public final class TRSuseContract extends AbstractTRS {
 
         // A refund operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
-        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+        if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -645,7 +645,7 @@ public final class TRSuseContract extends AbstractTRS {
 
         // A depositFor operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
-        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+        if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 

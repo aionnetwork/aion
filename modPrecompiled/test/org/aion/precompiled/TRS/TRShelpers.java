@@ -335,6 +335,14 @@ class TRShelpers {
         return input;
     }
 
+    // Returns a properly formatted byte array to be used as input for the open-funds operation.
+    byte[] getOpenFundsInput(Address contract) {
+        byte[] input = new byte[33];
+        input[0] = 0x3;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        return input;
+    }
+
     // Returns a byte array signalling false for a TRS contract query operation result.
     byte[] getFalseContractOutput() {
         out[0] = 0x0;
@@ -427,14 +435,6 @@ class TRShelpers {
     int getContractCurrentPeriod(AbstractTRS trs, Address contract) {
         long currTime = blockchain.getBestBlock().getTimestamp();
         return trs.calculatePeriod(contract, trs.getContractSpecs(contract), currTime);
-    }
-
-    // Returns a DataWord that is the key corresponding to the contract specifications in storage.
-    //TODO remove
-    IDataWord getSpecKey() {
-        byte[] specsKey = new byte[DataWord.BYTES];
-        specsKey[0] = (byte) 0xE0;
-        return new DataWord(specsKey);
     }
 
     // Returns a new IDataWord that wraps data. Here so we can switch types easy if needed.

@@ -326,7 +326,7 @@ public final class TRSownerContract extends AbstractTRS {
 
         // A lock call can only execute if the contract is in the following state:
         // contract is not locked and not live and its funds are not open.
-        if (isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+        if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -376,7 +376,7 @@ public final class TRSownerContract extends AbstractTRS {
 
         // A contract can only be started if it is in the following state:
         // the contract is locked and not live and its funds are not open.
-        if (!isContractLocked(specs) || isContractLive(specs) || isOpenFunds(contract)) {
+        if (!isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -427,7 +427,7 @@ public final class TRSownerContract extends AbstractTRS {
 
         // An openFunds operation can only execute if the current state of the TRS contract is:
         // contract is not live.
-        if (isContractLive(specs)) {
+        if (isContractLive(contract)) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 

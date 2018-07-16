@@ -226,7 +226,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] result = new byte[1];
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
-        if (!isOpenFunds(contract) && isContractLive(getContractSpecs(contract))) {
+        if (!isOpenFunds(contract) && isContractLive(contract)) {
             result[0] = 0x1;
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
@@ -261,7 +261,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] result = new byte[1];
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
-        if (isOpenFunds(contract) && isContractLocked(getContractSpecs(contract))) {
+        if (!isOpenFunds(contract) && isContractLocked(contract)) {
             result[0] = 0x1;
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
@@ -297,7 +297,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] result = new byte[1];
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
-        if (!isOpenFunds(contract) && isDirDepositsEnabled(getContractSpecs(contract))) {
+        if (!isOpenFunds(contract) && isDirDepositsEnabled(contract)) {
             result[0] = 0x1;
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
@@ -417,7 +417,7 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         // If contract is not yet live we are in period 0.
-        if (!isContractLive(specs)) {
+        if (!isContractLive(contract)) {
             output.putInt(0);
             return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrg, output.array());
         }

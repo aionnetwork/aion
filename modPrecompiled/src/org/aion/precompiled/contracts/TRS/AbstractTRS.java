@@ -751,10 +751,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
         boolean inFinalPeriod = (getPeriods(specs) == currPeriod);
 
-        // Calculate withdrawal amount. If we are in last period then account can withdraw all
-        // outstanding funds.
+        // Calculate withdrawal amount. If we are in last period or the contract has its funds open,
+        // then account can withdraw all outstanding funds.
         BigInteger amount;
-        if (inFinalPeriod) {
+        if ((inFinalPeriod) || isOpenFunds(contract)) {
             amount = computeOutstadingOwings(contract, account);
             setAccountIsDoneWithdrawing(contract, account);
         } else {
@@ -1186,39 +1186,39 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns true only if the is-locked bit in specs is set.
+     * Returns true only if contract is locked.
      *
-     * Assumption: specs is a byte array returned from the getContractSpecs method.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is locked.
+     * @param contract The TRS contract to query.
+     * @return true if contract is locked.
      */
-    public static boolean isContractLocked(byte[] specs) {
-        return ((specs != null) && (specs[LOCK_OFFSET] == (byte) 0x1));
+    public boolean isContractLocked(Address contract) {
+        if (isOpenFunds(contract)) { return false; }
+        IDataWord specs = track.getStorageValue(contract, SPECS_KEY);
+        return ((specs != null) && (specs.getData()[LOCK_OFFSET] == (byte) 0x1));
     }
 
     /**
-     * Returns true only if the is-live bit in specs is set.
+     * Returns true only if contract is live.
      *
-     * Assumption: specs is a byte array returned from the getContractSpecs method.
-     *
-     * @param specs The specifications of some TRS contract.
-     * @return true if the specs indicate the contract is live.
+     * @param contract The TRS contract to query.
+     * @return true if contract is live.
      */
-    public static boolean isContractLive(byte[] specs) {
-        return ((specs != null) && (specs[LIVE_OFFSET] == (byte) 0x1));
+    public boolean isContractLive(Address contract) {
+        if (isOpenFunds(contract)) { return false; }
+        IDataWord specs = track.getStorageValue(contract, SPECS_KEY);
+        return ((specs != null) && (specs.getData()[LIVE_OFFSET] == (byte) 0x1));
     }
 
     /**
-     * Returns true only if the bit in specs is set that represents direct deposits being enabled.
+     * Returns true only if contract has direct depositing enabled.
      *
-     * Assumption: specs is a byte array returned from the getContractSpecs method.
-     *
-     * @param specs The specifications of some TRS contract.
+     * @param contract The TRS contract to query.
      * @return true only if direct deposits are enabled.
      */
-    public static boolean isDirDepositsEnabled(byte[] specs) {
-        return ((specs != null) && (specs[DIR_DEPO_OFFSET] == (byte) 0x1));
+    public boolean isDirDepositsEnabled(Address contract) {
+        if (isOpenFunds(contract)) { return false; }
+        IDataWord specs = track.getStorageValue(contract, SPECS_KEY);
+        return ((specs != null) && (specs.getData()[DIR_DEPO_OFFSET] == (byte) 0x1));
     }
 
     /**
