@@ -40,16 +40,6 @@ enum BridgeFuncSig {
     }
 
     /**
-     * Utility, helper function may be help us log which signature caused
-     * the exception to throw.
-     *
-     * @return {@code string} representation of the signature (function call)
-     */
-    public String getFunctionCall() {
-        return this.signature;
-    }
-
-    /**
      * Maintains a 1-1 mapping between the function signature and the enum representation.
      *
      * @param arr 4-byte array input

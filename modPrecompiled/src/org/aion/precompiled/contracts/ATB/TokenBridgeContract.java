@@ -184,4 +184,16 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
         assert energyRemaining >= 0;
         return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
     }
+
+    /**
+     * For spitting out information about the contract itself
+     * @param args
+     */
+    public static void main(String[] args) {
+        System.out.println("TokenBridgeContract info");
+
+        System.out.println("function signatures");
+
+        System.out.println("event signatures");
+    }
 }
