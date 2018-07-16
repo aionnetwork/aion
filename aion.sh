@@ -74,8 +74,8 @@ if $guard; then
 	echo
 
 	wait=300	# sec
-	sample=1	# sec
-	tolerance=1 	# sec
+	sample=30	# sec
+	tolerance=60 	# sec
 	threadRate=2 	# rate
 
 	noInterrupt=true
