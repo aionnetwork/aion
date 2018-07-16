@@ -263,19 +263,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        // If deposit amount is larger than zero, update the depositor's current deposit balance and
-        // then update the deposit meta-data (linked list, count, etc.)
-        if (amount.compareTo(BigInteger.ZERO) > 0) {
-            BigInteger currAmount = getDepositBalance(contract, caller);
-            if (!setDepositBalance(contract, caller, currAmount.add(amount))) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-            }
-            listAddCallerToHead(contract);
-            setTotalBalance(contract, getTotalBalance(contract).add(amount));
-            track.addBalance(caller, amount.negate());
-            track.flush();
-        }
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+        return makeDeposit(contract, caller, amount, nrgLimit);
     }
 
     /**
@@ -541,7 +529,32 @@ public final class TRSuseContract extends AbstractTRS {
         if (input[indexAccount] != AION_PREFIX) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
+
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        return makeDeposit(contract, account, amount, nrgLimit);
+    }
+
+    // <-------------------------------------HELPER METHODS---------------------------------------->
+
+    /**
+     * Deposits amount into the TRS contract whose address is contract on behalf of account. If
+     * amount is zero then this method does nothing but return a successful execution result.
+     *
+     * This method transfers amount from the caller's balance into the contract. It does not take
+     * this amount from account (unless account is the caller). However, if this method succeeds
+     * then account will have a deposit balance in the contract of amount amount.
+     *
+     * The reason the funds are removed from the caller's account and placed into the contract on
+     * behalf of account is to faciliate both the deposit and depositFor functionalities.
+     *
+     * @param contract the TRS contract to update.
+     * @param account The beneficiary of the deposit.
+     * @param amount The amount to be deposited into the contract on behalf of account.
+     * @param nrgLimit The energy limit.
+     * @return an execution result of either success or internal error.
+     */
+    private ContractExecutionResult makeDeposit(Address contract, Address account, BigInteger amount,
+        long nrgLimit) {
 
         // If deposit amount is larger than zero, update the curret deposit balance of the account
         // for which this deposit is on the behalf of, and update the meta-deta etc.
@@ -557,8 +570,6 @@ public final class TRSuseContract extends AbstractTRS {
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
-
-    // <-------------------------------------HELPER METHODS---------------------------------------->
 
     /**
      * Updates the linked list for the TRS contract given by contract, if necessary, in the following
