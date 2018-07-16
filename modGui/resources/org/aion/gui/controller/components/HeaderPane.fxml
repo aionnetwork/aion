@@ -35,6 +35,9 @@
                 <VBox fx:id="homeButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
                     <fx:include source="buttons/HomeButton.fxml"/>
                 </VBox>
+                <VBox fx:id="accountsButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/AccountsButton.fxml"/>
+                </VBox>
 
                 <!--
                 <VBox fx:id="sendButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">

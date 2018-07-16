@@ -12,6 +12,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Builder;
+import javafx.util.BuilderFactory;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
@@ -19,13 +21,20 @@ import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.model.dto.SyncInfoDto;
+import org.aion.gui.util.AionConstants;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.os.KernelLauncher;
+import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.storage.WalletStorage;
+import org.aion.wallet.ui.components.account.AccountCellFactory;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.util.Currency;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -75,6 +84,8 @@ public class MainWindow extends Application {
 
     private final KernelUpdateTimer timer;
     private final KernelLauncher kernelLauncher;
+    private final AccountManager accountManager;
+    private final KernelConnection kc;
 
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
@@ -88,6 +99,10 @@ public class MainWindow extends Application {
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
         kernelLauncher = new KernelLauncher(CfgAion.inst().getGui().getCfgGuiLauncher(),
                 EventBusRegistry.INSTANCE);
+        kc = new KernelConnection(
+                CfgAion.inst().getApi(),
+                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
+        accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY);
     }
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
@@ -118,6 +133,7 @@ public class MainWindow extends Application {
         stage.show();
 
         panes.put(HeaderPaneButtonEvent.Type.OVERVIEW, scene.lookup("#overviewPane"));
+        panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
         panes.put(HeaderPaneButtonEvent.Type.SETTINGS, scene.lookup("#settingsPane"));
 
         // Set up event bus
@@ -125,10 +141,7 @@ public class MainWindow extends Application {
         kernelLauncher.tryResume();
     }
 
-    private FXMLLoader loader() {
-        KernelConnection kc = new KernelConnection(
-                CfgAion.inst().getApi(),
-                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
+    private FXMLLoader loader() throws IOException {
         FXMLLoader loader = new FXMLLoader((getClass().getResource(MAIN_WINDOW_FXML)));
         loader.setControllerFactory(new ControllerFactory()
                 .withKernelConnection(kc)
@@ -137,6 +150,12 @@ public class MainWindow extends Application {
                 .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc))
                 .withSyncInfoDto(new SyncInfoDto(kc))
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
+                .withAccountManager(accountManager)
+                .withWalletStorage(WalletStorage.getInstance())
+        );
+        System.out.println(String.format("XXX %s", loader.getBuilderFactory()));
+        loader.setBuilderFactory(new MyBuilderFactory()
+                .withAccountManager(accountManager)
         );
         return loader;
     }

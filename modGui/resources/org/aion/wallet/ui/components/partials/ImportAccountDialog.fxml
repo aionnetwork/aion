@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+<AnchorPane prefHeight="450.0" prefWidth="350.0" styleClass="anchor-pane" xmlns="http://javafx.com/javafx/8.0.121"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.aion.wallet.ui.components.partials.ImportAccountDialog">
+
+    <stylesheets>
+        <URL value="@addAccountDialog.css"/>
+    </stylesheets>
+
+    <VBox alignment="CENTER" prefWidth="300.0" spacing="6.0" style="-fx-padding: 0 25 0 25;">
+        <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
+            <Image url="@../icons/aion-icon.png"/>
+        </ImageView>
+        <fx:define>
+            <ToggleGroup fx:id="accountTypeToggleGroup"/>
+        </fx:define>
+        <VBox spacing="6.0">
+            <RadioButton fx:id="keystoreRadioButton" text="Keystore file" selected="true"
+                         toggleGroup="$accountTypeToggleGroup"
+                         onMouseClicked="#resetValidation"/>
+            <RadioButton fx:id="privateKeyRadioButton" text="Private key" toggleGroup="$accountTypeToggleGroup"
+                         onMouseClicked="#resetValidation"/>
+        </VBox>
+        <AnchorPane prefHeight="280.0">
+            <VBox fx:id="importKeystoreView" alignment="CENTER" spacing="6.0" AnchorPane.topAnchor="0">
+                <Label styleClass="create-account-text" text="Import keystore"/>
+                <TextField fx:id="keystoreTextView" onMouseClicked="#uploadKeystoreFile" editable="false"
+                           promptText="Keystore UTC File"/>
+                <PasswordField fx:id="keystorePassword"
+                               prefWidth="275.0" promptText="Password" styleClass="add-account-input-fields"
+                               onKeyPressed="#submitOnEnterPressed" onMouseClicked="#resetValidation"/>
+            </VBox>
+
+            <VBox fx:id="importPrivateKeyView" alignment="CENTER" spacing="6.0" AnchorPane.topAnchor="0"
+                  visible="false">
+                <Label styleClass="create-account-text" text="Import private key"/>
+
+                <TextField fx:id="privateKeyInput" promptText="Private key" styleClass="add-account-input-fields"
+                           onMouseClicked="#resetValidation"/>
+                <PasswordField fx:id="privateKeyPassword"
+                               prefWidth="275.0" promptText="Password" styleClass="add-account-input-fields"
+                               onKeyPressed="#submitOnEnterPressed" onMouseClicked="#resetValidation"/>
+            </VBox>
+            <AnchorPane AnchorPane.bottomAnchor="160">
+                <Label fx:id="validationError" text="ERROR" textFill="orangered" visible="false"/>
+            </AnchorPane>
+            <AnchorPane AnchorPane.bottomAnchor="135">
+                <CheckBox fx:id="rememberAccount" text="Remember me" />
+            </AnchorPane>
+            <AnchorPane AnchorPane.bottomAnchor="0">
+                <HBox spacing="10.0">
+                    <Button prefHeight="50.0" prefWidth="130.0" styleClass="add-account-buttons"
+                            text="Import" onMouseClicked="#importAccount"/>
+                    <Button prefHeight="50.0" prefWidth="130.0" styleClass="cancel-button"
+                            text="Close" onMouseClicked="#close"/>
+                </HBox>
+            </AnchorPane>
+        </AnchorPane>
+
+    </VBox>
+</AnchorPane>

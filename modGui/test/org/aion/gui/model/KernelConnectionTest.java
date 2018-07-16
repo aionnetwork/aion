@@ -4,12 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.io.CharSource;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
-import org.aion.api.type.Event;
 import org.aion.gui.events.AbstractUIEvent;
-import org.aion.gui.events.EventBusRegistry;
-import org.aion.gui.events.RefreshEvent;
 import org.aion.mcf.config.CfgApi;
-import org.aion.mcf.config.CfgApiZmq;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -20,10 +16,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.aion.gui.events.RefreshEvent.Type.OPERATION_FINISHED;
-import static org.hamcrest.Matchers.any;
+import static org.aion.gui.events.RefreshEvent.Type.CONNECTED;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -71,7 +67,7 @@ public class KernelConnectionTest {
         verify(api).connect(expectedConnectionString, expectedReconnect);
         ArgumentCaptor<AbstractUIEvent> captor = ArgumentCaptor.forClass(AbstractUIEvent.class);
         verify(eventBus).post(captor.capture());
-        assertThat((captor.getValue()).getType(), is(OPERATION_FINISHED));
+        assertThat((captor.getValue()).getType(), is(CONNECTED));
     }
 
     @Test

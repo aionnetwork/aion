@@ -52,6 +52,8 @@ public class HeaderPaneControls extends AbstractController {
     @FXML
     private VBox homeButton;
     @FXML
+    private VBox accountsButton;
+    @FXML
     private VBox settingsButton;
 
     private String accountAddress;
@@ -59,6 +61,7 @@ public class HeaderPaneControls extends AbstractController {
     @Override
     public void internalInit(URL location, ResourceBundle resources) {
         headerButtons.put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.OVERVIEW));
+        headerButtons.put(accountsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.ACCOUNTS));
         headerButtons.put(settingsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SETTINGS));
 
         clickButton(homeButton);

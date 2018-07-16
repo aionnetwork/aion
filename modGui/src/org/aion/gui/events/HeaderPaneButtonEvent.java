@@ -9,6 +9,6 @@ public class HeaderPaneButtonEvent extends AbstractUIEvent<HeaderPaneButtonEvent
     }
 
     public enum Type {
-        OVERVIEW, SEND, RECEIVE, HISTORY, CONTRACTS, SETTINGS
+        OVERVIEW, ACCOUNTS, SEND, RECEIVE, HISTORY, CONTRACTS, SETTINGS
     }
 }

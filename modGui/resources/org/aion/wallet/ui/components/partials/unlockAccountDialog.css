@@ -1,0 +1,24 @@
+.anchor-pane {
+    -fx-background-color: WHITE;
+    -fx-border-color: #ececec;
+    -fx-border-width: 1 1 1 1;
+}
+
+.main-text {
+    -fx-text-fill: BLACK;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 26px;
+}
+
+.submit-button {
+    -fx-background-color: #4221cc;
+    -fx-background-radius: 0,0,0,0;
+    -fx-text-fill: white;
+    -fx-font-family: 'Open Sans Bold';
+    -fx-font-size: 18px;
+}
+
+.error-input-fields {
+    -fx-text-box-border: red ;
+    -fx-focus-color: red ;
+}

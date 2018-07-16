@@ -6,6 +6,7 @@ import com.google.common.eventbus.EventBus;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
+import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
@@ -77,7 +78,9 @@ public class KernelConnection {
                     LOG.error("Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
                             msg.getErrorCode(), msg.getErrString());
                 } else {
-                    eventBus.post(new RefreshEvent(RefreshEvent.Type.OPERATION_FINISHED));
+//                    eventBus.post(new RefreshEvent(RefreshEvent.Type.TRANSACTION_FINISHED));
+                    EventPublisher.fireConnectionEstablished();
+                    // TODO: ApiBlockchainConnector#connect has processTRansactionsOnReconnect() here now.  Do we need that too?
                 }
             }
         });

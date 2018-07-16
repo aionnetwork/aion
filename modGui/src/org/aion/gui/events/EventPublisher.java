@@ -2,7 +2,14 @@ package org.aion.gui.events;
 
 import org.aion.gui.util.DataUpdater;
 import org.aion.log.AionLoggerFactory;
+import org.aion.wallet.dto.AccountDTO;
+import org.aion.wallet.events.AbstractAccountEvent;
+import org.aion.wallet.events.AccountEvent;
+import org.aion.wallet.events.AccountListEvent;
+import org.aion.wallet.events.UiMessageEvent;
 import org.slf4j.Logger;
+
+import java.util.Set;
 
 public class EventPublisher {
     public static final String ACCOUNT_CHANGE_EVENT_ID = "account.changed";
@@ -11,21 +18,56 @@ public class EventPublisher {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
-//    public static void fireAccountChanged(final AccountDTO account) {
-//        if (account != null) {
-//            EventBusRegistry.INSTANCE.getBus(ACCOUNT_CHANGE_EVENT_ID).post(account);
-//        }
-//    }
-//
-//    public static void fireUnlockAccount(final AccountDTO account) {
-//        if (account != null) {
-//            EventBusRegistry.INSTANCE.getBus(ACCOUNT_UNLOCK_EVENT_ID).post(account);
-//        }
+    public static void fireAccountChanged(final AccountDTO account) {
+        if (account != null) {
+            EventBusRegistry.INSTANCE.getBus(ACCOUNT_CHANGE_EVENT_ID).post(account);
+        }
+    }
+
+    public static void fireAccountUnlocked(final AccountDTO account) {
+        if (account != null) {
+            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.UNLOCKED, account));
+        }
+    }
+
+//    public static void fireOperationFinished(){
+//        LOG.trace("EventPublisher#fireOperationFinished");
+//        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).post(new RefreshEvent(RefreshEvent.Type.OPERATION_FINISHED));
 //    }
 
-    public static void fireOperationFinished(){
-        LOG.trace("EventPublisher#fireOperationFinished");
-        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).post(new RefreshEvent(RefreshEvent.Type.OPERATION_FINISHED));
+    public static void fireAccountExport(final AccountDTO account) {
+        if (account != null) {
+            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.EXPORT, account));
+        }
+    }
+
+    public static void fireAccountLocked(final AccountDTO account) {
+        if (account != null) {
+            EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountEvent(AbstractAccountEvent.Type.LOCKED, account));
+        }
+    }
+
+    public static void fireAccountAdded(final AccountDTO account) {
+        if (account != null) {
+            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.ADDED, account));
+        }
+    }
+
+    public static void fireAccountsRecovered(final Set<String> addresses) {
+        if (addresses != null && !addresses.isEmpty()) {
+            EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountListEvent(AbstractAccountEvent.Type.RECOVERED, addresses));
+        }
+    }
+
+    public static void fireMnemonicCreated(final String mnemonic) {
+        if (mnemonic != null) {
+            EventBusRegistry.INSTANCE.getBus(UiMessageEvent.ID)
+                    .post(new UiMessageEvent(UiMessageEvent.Type.MNEMONIC_CREATED, mnemonic));
+        }
+    }
+
+    public static void fireConnectionEstablished() {
+        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.CONNECTED));
     }
 
 //    public static void fireApplicationSettingsChanged(final LightAppSettings settings){

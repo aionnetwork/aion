@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.aion.wallet.ui.components.partials.UnlockAccountDialog"
+            prefHeight="450.0" prefWidth="350.0"
+            styleClass="anchor-pane">
+
+    <stylesheets>
+        <URL value="@unlockAccountDialog.css" />
+    </stylesheets>
+
+    <Label AnchorPane.topAnchor="100" AnchorPane.leftAnchor="90" text="Unlock account" styleClass="main-text"/>
+
+    <PasswordField fx:id="unlockPassword" AnchorPane.topAnchor="150" AnchorPane.leftAnchor="90" promptText="Password"
+                   onMouseClicked="#resetValidation" onKeyPressed="#submitOnEnterPressed"/>
+
+    <Label fx:id="validationError" AnchorPane.topAnchor="180" AnchorPane.leftAnchor="90" textFill="orangered" text="Validation error!" visible="false"/>
+
+    <Button AnchorPane.topAnchor="200"  AnchorPane.leftAnchor="130" onMouseClicked="#unlockAccount"
+            styleClass="submit-button" text="Submit"/>
+
+</AnchorPane>

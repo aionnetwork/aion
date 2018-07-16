@@ -3,19 +3,22 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <fx:root type="javafx.scene.control.ListCell" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
          stylesheets="@accountListViewItem.css" styleClass="account-item">
     <graphic>
-        <HBox alignment="TOP_LEFT" spacing="5">
+        <HBox spacing="5">
             <VBox prefWidth="120">
                 <TextField text="Name:" styleClass="copyable-label" editable="false"/>
                 <TextField text="Public address" styleClass="copyable-label" editable="false"/>
                 <TextField text="Balance" styleClass="copyable-label" editable="false"/>
             </VBox>
             <VBox>
-                <TextField fx:id="name" styleClass="name-input-fields" editable="false"/>
+                <HBox fx:id="nameBox">
+                    <TextField fx:id="importedLabel" text="Imported " editable="false"
+                               styleClass="name-input-fields" prefWidth="75"/>
+                    <TextField fx:id="name" styleClass="name-input-fields" editable="false" HBox.hgrow="ALWAYS"/>
+                </HBox>
                 <TextField fx:id="publicAddress" styleClass="copyable-label" editable="false"/>
                 <TextField fx:id="balance" styleClass="copyable-label" editable="false"/>
             </VBox>
@@ -33,6 +36,14 @@
                            styleClass="clickable"
                            onMouseClicked="#onDisconnectedClicked">
                     <Image url="@../icons/icon-disconnected-50.png"/>
+                </ImageView>
+            </HBox>
+            <HBox>
+                <ImageView fx:id="accountExportButton" fitHeight="30.0" fitWidth="30.0"
+                           pickOnBounds="true" preserveRatio="true"
+                           styleClass="clickable"
+                           onMouseClicked="#onExportClicked">
+                    <Image url="@../icons/icon-export.png"/>
                 </ImageView>
             </HBox>
         </HBox>

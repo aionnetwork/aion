@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import java.net.URL?>
+<AnchorPane prefHeight="450.0" prefWidth="350.0" styleClass="anchor-pane" xmlns="http://javafx.com/javafx/8.0.121"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog">
+
+    <stylesheets>
+        <URL value="@addAccountDialog.css"/>
+    </stylesheets>
+
+    <ImageView fitHeight="80.0" fitWidth="80.0" layoutX="135.0" layoutY="4.0" pickOnBounds="true" preserveRatio="true">
+        <Image url="@../icons/aion_logo.png"/>
+    </ImageView>
+
+    <Label layoutX="60.0" layoutY="100.0" styleClass="create-account-text" text="Unlock seed account"/>
+
+    <VBox layoutX="40.0" alignment="CENTER" spacing="6.0" AnchorPane.topAnchor="220.0">
+        <PasswordField fx:id="passwordField" onMouseClicked="#resetValidation" layoutX="40.0" prefWidth="275.0"
+                       promptText="Password"
+                       onKeyPressed="#submitOnEnterPressed" styleClass="add-account-input-fields"/>
+        <Label fx:id="validationError" layoutX="40.0" prefWidth="275.0" text="ERROR"
+               textFill="orangered"
+               visible="false"/>
+        <Button layoutX="40.0" layoutY="400.0" mnemonicParsing="false" onMouseClicked="#unlockMasterAccount"
+                prefWidth="275.0"
+                styleClass="add-account-buttons" text="Unlock"/>
+    </VBox>
+
+</AnchorPane>

@@ -1,6 +1,7 @@
 package org.aion.gui.controller;
 
 import javafx.util.Callback;
+import org.aion.gui.controller.partials.AccountsController;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
@@ -8,6 +9,12 @@ import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
+import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.storage.WalletStorage;
+import org.aion.wallet.ui.components.account.AccountCellFactory;
+import org.aion.wallet.ui.components.partials.AddAccountDialog;
+import org.aion.wallet.ui.components.partials.ImportAccountDialog;
+import org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
@@ -33,13 +40,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
     private ConfigManipulator configManipulator;
+    private AccountManager accountManager;
+    private WalletStorage walletStorage;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
 
     @FunctionalInterface
     protected interface BuildMethod {
-        AbstractController build();
+        Object build();
     }
 
     /**
@@ -53,19 +62,16 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelConnection,
                     kernelUpdateTimer,
                     generalKernelInfoRetriever,
-                    syncInfoDto
-            ));
+                    syncInfoDto));
             put(SettingsController.class, () -> new SettingsController(
-                    configManipulator
-            ));
-            /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
-                    kernelConnection));
-            put(PeerCountController.class, () -> new PeerCountController(
-                    kernelConnection
-            ));
-            put(SyncStatusController.class, () -> new SyncStatusController(
-                    kernelConnection
-            ));*/
+                    configManipulator));
+            put(AccountsController.class, () -> new AccountsController(
+                    accountManager, walletStorage));
+
+            // these ones probably should go in a separate factory
+            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
+            put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager));
+            put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager));
         }};
     }
 
@@ -192,5 +198,24 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
      */
     public ConfigManipulator getConfigManipulator() {
         return configManipulator;
+    }
+
+
+    public AccountManager getAccountManager() {
+        return accountManager;
+    }
+
+    public WalletStorage getWalletStorage() {
+        return walletStorage;
+    }
+
+    public ControllerFactory withAccountManager(AccountManager accountManager) {
+        this.accountManager = accountManager;
+        return this;
+    }
+
+    public ControllerFactory withWalletStorage(WalletStorage walletStorage) {
+        this.walletStorage = walletStorage;
+        return this;
     }
 }
