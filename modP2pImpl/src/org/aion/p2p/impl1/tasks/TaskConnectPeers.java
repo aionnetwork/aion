@@ -72,39 +72,28 @@ public class TaskConnectPeers implements Runnable {
     public void run() {
         Thread.currentThread().setName("p2p-tcp");
         while (this.start.get()) {
-            try {
-                Thread.sleep(PERIOD_CONNECT_OUTBOUND);
-            } catch (InterruptedException e) {
-                p2pLOG.warn("tcp-interrupted");
-            }
-
-            if (this.nodeMgr.activeNodesSize() >= this.maxActiveNodes) {
-                p2pLOG.warn("tcp-connect-peer pass max-active-nodes");
-                continue;
-            }
-
             INode node;
             try {
-                node = this.nodeMgr.tempNodesTake();
-                if (this.nodeMgr.isSeedIp(node.getIpStr())) {
-                    node.setFromBootList(true);
+                Thread.sleep(PERIOD_CONNECT_OUTBOUND);
+                if (this.nodeMgr.activeNodesSize() >= this.maxActiveNodes) {
+                    p2pLOG.warn("tcp-connect-peer pass max-active-nodes");
+                    continue;
                 }
+
+                node = this.nodeMgr.tempNodesTake();
+
                 if (node.getIfFromBootList()) {
                     this.nodeMgr.addTempNode(node);
                 }
                 // if (node.peerMetric.shouldNotConn()) {
                 // continue;
                 // }
-            } catch (InterruptedException e) {
-                p2pLOG.error("tcp-interrupted");
-                return;
             } catch (Exception e) {
-                e.printStackTrace();
-                p2pLOG.warn("tcp-Exception {}", e.getMessage());
+                p2pLOG.debug("tcp-Exception {}", e.toString());
                 continue;
             }
             int nodeIdHash = node.getIdHash();
-            if (!this.nodeMgr.getOutboundNodes().containsKey(nodeIdHash)
+            if (this.nodeMgr.notAtOutboundList(nodeIdHash)
                 && this.nodeMgr.notActiveNode(nodeIdHash)) {
                 int _port = node.getPort();
                 try {
@@ -119,7 +108,7 @@ public class TaskConnectPeers implements Runnable {
                     if (channel.isConnected()) {
 
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("success-connect node-id={} ip=", node.getIdShort(),
+                            p2pLOG.debug("success-connect node-id={} ip={}", node.getIdShort(),
                                 node.getIpStr());
                         }
 
@@ -158,15 +147,14 @@ public class TaskConnectPeers implements Runnable {
                     }
                 } catch (IOException e) {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("connect-outbound io-exception addr={}:{} result={}",
-                            node.getIpStr(), _port, e.getMessage());
+                        p2pLOG.debug("connect-outbound io-exception addr={}:{} reason={}",
+                            node.getIpStr(), _port, e.toString());
                     }
                     // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
-                    e.printStackTrace();
                     p2pLOG
-                        .debug("connect-outbound exception -> id={} ip={}", node.getIdShort(),
-                            node.getIpStr());
+                        .debug("connect-outbound exception -> id={} ip={} reason={}", node.getIdShort(),
+                            node.getIpStr(), e.toString());
                 }
             }
         }

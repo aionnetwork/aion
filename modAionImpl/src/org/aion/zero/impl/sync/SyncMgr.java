@@ -371,7 +371,6 @@ public final class SyncMgr {
     }
 
     private static final class AionSyncMgrHolder {
-
         static final SyncMgr INSTANCE = new SyncMgr();
     }
 }
