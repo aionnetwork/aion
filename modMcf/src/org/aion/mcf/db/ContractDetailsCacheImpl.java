@@ -27,7 +27,6 @@ import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 
 import java.util.*;
-import org.aion.mcf.vm.types.DoubleDataWord;
 
 /**
  * Contract details cache implementation.

@@ -30,9 +30,6 @@ import org.aion.base.util.Hex;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.DoubleDataWord;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;

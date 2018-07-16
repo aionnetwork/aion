@@ -2,28 +2,81 @@ package org.aion.db;
 
 import static org.junit.Assert.*;
 
+import java.util.Properties;
 import java.util.Random;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKeyFac;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.ContractDetailsAion;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Tests the DoubleDataWord class, mainly that it integrates well with the db.
  */
 public class DoubleDataWordTest {
-    private IRepository repo = AionRepositoryImpl.inst();
-    private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track = new AionRepositoryCache(repo);
-    private Random rand = new Random();
-    private Address addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+    private IRepositoryConfig repoConfig;
+    private IRepository repo;
+    private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
+    private Random rand;
+    private Address addr;
+
+    @Before
+    public void setup() {
+        this.repoConfig = new IRepositoryConfig() {
+            @Override
+            public String getDbPath() {
+                return "";
+            }
+
+            @Override
+            public IPruneConfig getPruneConfig() {
+                return new CfgPrune(false);
+            }
+
+            @Override
+            public IContractDetails contractDetailsImpl() {
+                return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+            }
+
+            @Override
+            public Properties getDatabaseConfig(String db_name) {
+                Properties props = new Properties();
+                props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                return props;
+            }
+        };
+
+        this.repo = AionRepositoryImpl.createForTesting(repoConfig);
+        this.track = new AionRepositoryCache(repo);
+        this.rand =  new Random();
+        this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+    }
+
+    @After
+    public void tearDown() {
+        this.repoConfig = null;
+        this.repo = null;
+        this.track = null;
+        this.rand = null;
+        this.addr = null;
+    }
 
     /**
      * Tests that a using a single key that is a prefix of a double key and also a single key that
