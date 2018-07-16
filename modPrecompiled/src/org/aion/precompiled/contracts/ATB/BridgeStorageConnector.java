@@ -8,6 +8,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.vm.TransactionExecutor;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
@@ -130,7 +131,7 @@ public class BridgeStorageConnector {
 
     public int getMinThresh() {
         // C1 covere by getWORD
-        byte[] threshWord = this.getWORD(S_OFFSET.MEMBER_COUNT.offset);
+        byte[] threshWord = this.getWORD(S_OFFSET.MIN_THRESH.offset);
         if (threshWord == null)
             return 0;
         return new BigInteger(1, threshWord).intValueExact();
@@ -255,29 +256,9 @@ public class BridgeStorageConnector {
         return dword;
     }
 
-    /**
-     * Performs a transfer of value from one account to the other, <b>without</b> executing
-     * contract logic. Therefore contracts will <i>not</i> be able to respond to transfers
-     * coming in from the bridge. Unsure of whether this is ideal.
-     *
-     * @implNote assumes that the {@code fromValue} derived from the track will never
-     * be null.
-     *
-     * @param to recipient address
-     * @param value to be sent (in base units)
-     * @return {@code true} if value was performed, {@code false} otherwise
-     */
-    public boolean transfer(@Nonnull final byte[] to,
-                            @Nonnull final BigInteger value) {
-        assert to.length == 32;
-        Address toAddress = new Address(to);
-
-        BigInteger fromValue = this.track.getBalance(this.contractAddress);
-        if (fromValue.compareTo(value) < 0)
-            return false;
-
-        this.track.addBalance(this.contractAddress, value.negate());
-        this.track.addBalance(toAddress, value);
-        return true;
+    public enum TransferResult {
+        SUCCESS,
+        CONTRACT_ACC,
+        TRANSFER_FAILED
     }
 }

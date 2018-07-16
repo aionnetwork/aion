@@ -38,8 +38,6 @@ public class BridgeControllerRingTest {
         return memberList;
     }
 
-
-
     @Before
     public void beforeEach() {
         DummyRepo repo = new DummyRepo();
