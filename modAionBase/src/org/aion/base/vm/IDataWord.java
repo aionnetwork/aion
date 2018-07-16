@@ -53,6 +53,9 @@ public interface IDataWord {
     /**
      * Returns true only if the underlying byte array consists only of zero bytes.
      *
+     * @apiNote An IDataWord whose underlying byte array consists only of zero bytes is interpreted
+     * as null by the database.
+     *
      * @return true only if the IDataWord consists of zero bytes.
      */
     boolean isZero();
