@@ -6,9 +6,11 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.ExecutionContext;
+import org.aion.zero.types.AionInternalTx;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
@@ -17,7 +19,7 @@ import java.util.Arrays;
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
-public class TokenBridgeContract extends StatefulPrecompiledContract {
+public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferrable {
 
     private static final int BUNDLE_PARAM_ACC = 0;
     private static final int BUNDLE_PARAM_VAL = 1;
@@ -27,12 +29,12 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
 
     // queries
 
-
     private final ExecutionContext context;
     private final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
 
     private final BridgeStorageConnector connector;
     private final BridgeController controller;
+    private final Address contractAddress;
 
     // some useful defaults
     // TODO: add passing returns (need more though on gas consumption)
@@ -46,6 +48,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller = new BridgeController(this.connector, this.context.result(), contractAddress, ownerAddress);
+        this.contractAddress = contractAddress;
     }
 
     @Override
@@ -133,11 +136,12 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
                             new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
                             bundleRequests[BUNDLE_PARAM_VAL][i]);
                 }
-                ErrCode code = this.controller.
+                BridgeController.ProcessedResults results = this.controller.
                         processBundles(this.context.caller().toBytes(), bundles, signatures);
-
-                if (code != ErrCode.NO_ERROR)
+                if (results.controllerResult != ErrCode.NO_ERROR)
                     return fail();
+
+                // at this point we know that the execution was successful
                 break;
             }
             case PURE_OWNER:
@@ -183,5 +187,97 @@ public class TokenBridgeContract extends StatefulPrecompiledContract {
         long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
         assert energyRemaining >= 0;
         return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
+    }
+
+    /**
+     * TODO: Need to revise result logic, pending changes
+     * TODO: Need review on {@code kind} and {@code flag} input
+     *
+     * @param recipient account to receive the desired amount
+     * @param value amount to be transferred
+     * @return {@code context} about the transaction, to be used to assemble internal tx
+     */
+    private ExecutionContext assembleContext(@Nonnull final byte[] recipient,
+                                             @Nonnull final BigInteger value) {
+        return new ExecutionContext(
+                this.context.transactionHash(),
+                new Address(recipient),
+                this.context.origin(),
+                this.contractAddress,
+                this.context.nrgPrice(),
+                ENERGY_CONSUME,
+                new DataWord(value),
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                this.context.depth() + 1,
+                0,
+                0,
+                this.context.blockCoinbase(),
+                this.context.blockNumber(),
+                this.context.blockTimestamp(),
+                this.context.blockNrgLimit(),
+                this.context.blockDifficulty(),
+                this.context.result());
+    }
+
+    /**
+     * Performs a transfer of value from one account to another, using a method that
+     * mimicks to the best of it's ability the {@code CALL} opcode. There are some
+     * assumptions that become important for any caller to know:
+     *
+     * @implNote this method will check that the recipient account has no code. This
+     * means that we <b>cannot</b> do a transfer to any contract account.
+     *
+     * @implNote assumes that the {@code fromValue} derived from the track will never
+     * be null.
+     *
+     * @param to recipient address
+     * @param value to be sent (in base units)
+     * @return {@code true} if value was performed, {@code false} otherwise
+     */
+    public ContractExecutionResult transfer(@Nonnull final byte[] to,
+                                            @Nonnull final BigInteger value) {
+        // some initial checks, treat as failure
+        if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
+            return new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
+
+        byte[] code = this.track.getCode(new Address(to));
+        if (code != null && code.length != 0)
+            return new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
+
+        // otherwise prepare for a transfer
+        ExecutionContext innerContext = assembleContext(to, value);
+        IRepositoryCache cache = this.track.startTracking();
+        // is a flush really needed here if we have no failure conditions?
+        AionInternalTx tx = newInternalTx(innerContext);
+        cache.addBalance(new Address(to), value);
+        cache.addBalance(this.contractAddress, value.negate());
+        cache.flush();
+        return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, 0);
+    }
+
+    /**
+     * Derived from {@link org.aion.fastvm.Callback}
+     *
+     * TODO: best if transaction execution path is unified
+     * TODO: what is "call"?
+     *
+     * @param context execution context to generate internal transaction
+     * @return {@code internal transaction}
+     */
+    private AionInternalTx newInternalTx(ExecutionContext context) {
+
+        byte[] parentHash = context.transactionHash();
+        int deep = context.depth();
+        int idx = context.result().getInternalTransactions().size();
+
+        return new AionInternalTx(parentHash,
+                deep,
+                idx,
+                new DataWord(this.track.getNonce(context.caller())).getData(),
+                context.caller(),
+                context.address(),
+                context.callValue().getData(),
+                context.callData(),
+                "call");
     }
 }

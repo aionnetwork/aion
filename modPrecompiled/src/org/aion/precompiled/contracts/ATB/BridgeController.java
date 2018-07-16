@@ -6,10 +6,14 @@ import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.ContractExecutionResult;
 import org.aion.vm.TransactionResult;
+
+import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.*;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,6 +28,7 @@ public class BridgeController {
     private TransactionResult result;
     private final Address contractAddress;
     private final Address ownerAddress;
+    private Transferrable transferrable;
 
     public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
                             @Nonnull final TransactionResult result,
@@ -33,6 +38,10 @@ public class BridgeController {
         this.result = result;
         this.contractAddress = contractAddress;
         this.ownerAddress = ownerAddress;
+    }
+
+    public void setTransferrable(Transferrable transferrable) {
+        this.transferrable = transferrable;
     }
 
     /**
@@ -200,17 +209,17 @@ public class BridgeController {
      * Since we're not charging cost for bundles we may want to look into
      * charging these properly.
      */
-    public ErrCode processBundles(@Nonnull final byte[] caller,
+    public ProcessedResults processBundles(@Nonnull final byte[] caller,
                                   @Nonnull final BridgeBundle[] bundles,
                                   @Nonnull final byte[][] signatures) {
         if (!isRingLocked())
-            return ErrCode.RING_NOT_LOCKED;
+            return processError(ErrCode.RING_NOT_LOCKED);
 
         if (!isRingMember(caller))
-            return ErrCode.NOT_RING_MEMBER;
+            return processError(ErrCode.NOT_RING_MEMBER);
 
         if (!isEnoughSignatures(signatures.length))
-            return ErrCode.NOT_ENOUGH_SIGNATURES;
+            return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // verify bundleHash
         byte[] hash = new byte[0];
@@ -228,22 +237,38 @@ public class BridgeController {
 
         int minThresh = this.connector.getMinThresh();
         if (signed < minThresh)
-            return ErrCode.NOT_ENOUGH_SIGNATURES;
+            return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // otherwise, we're clear to proceed with transfers
+        List<ContractExecutionResult> results = new ArrayList<>();
         for (BridgeBundle b : bundles) {
-            if (!this.connector.transfer(b.recipient, b.transferValue))
-                /*
-                 * Rationale behind throwing on transfer, one invalid transfer indicates
-                 * (to me atleast) a possible serialization or malicious error. The best
-                 * we could do is consider whoever sent this batch malicious, and reject.
-                 */
-                return ErrCode.INVALID_TRANSFER;
-            // otherwise transfer was successful
-            emitDistributed(b.recipient, b.transferValue);
+
+            /*
+             * Tricky here, we distinguish between two types of failures here:
+             *
+             * 1) A balance failure indicates we've failed to load the bridge with
+             * enough currency to execute, this means the whole transaction should
+             * fail and cause the bridge to exit
+             *
+             * 2) Any other failure indicates that either the contract had code,
+             * which means the contract is now considered null.
+             *
+             * For how this is documented, check the {@code Transferrable}
+             * interface documentation.
+             */
+            ContractExecutionResult result = null;
+            if ((result = transferrable.transfer(b.recipient, b.transferValue)).getCode()
+                    == ContractExecutionResult.ResultCode.FAILURE)
+                // no need to return list of transactions, since they're all being dropped
+                return processError(ErrCode.INVALID_TRANSFER);
+
+            // otherwise if transfer was successful
+            if (result.getCode() == ContractExecutionResult.ResultCode.SUCCESS)
+                emitDistributed(b.recipient, b.transferValue);
+            results.add(result);
         }
         emitProcessedBundle(hash);
-        return ErrCode.NO_ERROR;
+        return processSuccess(ErrCode.NO_ERROR, results);
     }
 
     private void addLog(List<byte[]> topics) {
@@ -276,5 +301,23 @@ public class BridgeController {
     private void emitProcessedBundle(@Nonnull final byte[] bundleHash) {
         List<byte[]> topics = Arrays.asList(BridgeEventSig.PROCESSED_BUNDLE.getHashed(), bundleHash);
         addLog(topics);
+    }
+
+    static class ProcessedResults {
+        public ErrCode controllerResult;
+        public List<ContractExecutionResult> internalResults;
+
+        private ProcessedResults(ErrCode code, List<ContractExecutionResult> internalResults) {
+            this.controllerResult = code;
+            this.internalResults = internalResults;
+        }
+
+        static ProcessedResults processError(ErrCode code) {
+            return new ProcessedResults(code, null);
+        }
+
+        static ProcessedResults processSuccess(ErrCode code, List<ContractExecutionResult> results) {
+            return new ProcessedResults(code, results);
+        }
     }
 }
