@@ -179,11 +179,20 @@ public final class SyncMgr {
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        syncGb = new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.downloadedHeaders,
-            this.headersWithBodiesRequested, this.peerStates, log), "sync-gb");
+        syncGb = new Thread(new TaskGetBodies(this.p2pMgr,
+                                              this.start,
+                                              this.downloadedHeaders,
+                                              this.headersWithBodiesRequested,
+                                              this.peerStates,
+                                              log), "sync-gb");
         syncGb.start();
-        syncIb = new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, statics,
-            this.downloadedBlocks, this.importedBlockHashes, this.peerStates, log), "sync-ib");
+        syncIb = new Thread(new TaskImportBlocks(this.chain,
+                                                 this.start,
+                                                 statics,
+                                                 this.downloadedBlocks,
+                                                 this.importedBlockHashes,
+                                                 this.peerStates,
+                                                 log), "sync-ib");
         syncIb.start();
         syncGs = new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs");
         syncGs.start();
