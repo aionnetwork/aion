@@ -85,7 +85,7 @@ public class Aion {
          * 00000000-0000-0000-0000-000000000000
          */
         String UUID = cfg.getId();
-        if (! UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+        if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
             exit(-1);
         }
