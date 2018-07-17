@@ -28,7 +28,11 @@ import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.io.Console;
 import java.util.ServiceLoader;
-import org.aion.api.server.http.NanoServer;
+
+import org.aion.api.server.http.RpcServer;
+import org.aion.api.server.http.RpcServerBuilder;
+import org.aion.api.server.http.nano.NanoRpcServer;
+import org.aion.api.server.http.undertow.UndertowRpcServer;
 import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
@@ -156,19 +160,28 @@ public class Aion {
             zmqThread.start();
         }
 
-        NanoServer rpcServer = null;
+        RpcServer rpcServer = null;
         if(cfg.getApi().getRpc().getActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
 
-            rpcServer = new NanoServer(
-                    rpcCfg.getIp(),
-                    rpcCfg.getPort(),
-                    rpcCfg.getCorsEnabled(),
-                    rpcCfg.getEnabled(),
-                    rpcCfg.getMaxthread(),
-                    sslCfg.getEnabled(),
-                    sslCfg.getCert(),
-                    sslPass);
+            // nano
+            // RpcServerBuilder rpcBuilder = new NanoRpcServer.Builder();
+
+            // undertow
+            RpcServerBuilder rpcBuilder = new UndertowRpcServer.Builder();
+
+            rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
+            rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
+            rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
+
+            if (rpcCfg.getCorsEnabled())
+                rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
+
+            CfgSsl cfgSsl = rpcCfg.getSsl();
+            if (cfgSsl.getEnabled())
+                rpcBuilder.enableSsl(cfgSsl.getCert(), cfgSsl.getPass());
+
+            rpcServer = rpcBuilder.build();
             rpcServer.start();
         }
 
@@ -181,10 +194,9 @@ public class Aion {
             private final Thread zmqThread;
             private final IMineRunner miner;
             private final ProtocolProcessor pp;
-            private final NanoServer rpc;
+            private final RpcServer rpc;
 
-            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp,
-                NanoServer rpc) {
+            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, RpcServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;
@@ -200,7 +212,7 @@ public class Aion {
 
             if (holder.rpc != null) {
                 genLog.info("Shutting down RpcServer");
-                holder.rpc.shutdown();
+                holder.rpc.stop();
                 genLog.info("Shutdown RpcServer ... Done!");
             }
 

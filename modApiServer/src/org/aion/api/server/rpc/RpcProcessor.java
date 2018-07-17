@@ -2,6 +2,7 @@ package org.aion.api.server.rpc;
 
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -18,11 +19,12 @@ public class RpcProcessor {
         this.apiHolder = new RpcMethods(enabled);
     }
 
-    public String process(String requestBody) {
+    public String process(String _requestBody) {
         String response = composeRpcResponse(new RpcMsg(null, RpcError.INVALID_REQUEST).toString());
 
         try {
-            if (requestBody != null) {
+            String requestBody = _requestBody.trim();
+            if (!StringUtils.isEmpty(requestBody)) {
                 char firstChar = requestBody.charAt(0);
                 if (firstChar == '{')
                     response = handleSingle(requestBody);
@@ -94,6 +96,7 @@ public class RpcProcessor {
     private String handleBatch(String _reqBody) {
         try {
             JSONArray reqBodies;
+
             try {
                 reqBodies = new JSONArray(_reqBody);
                 if (reqBodies.length() < 1) throw new Exception();

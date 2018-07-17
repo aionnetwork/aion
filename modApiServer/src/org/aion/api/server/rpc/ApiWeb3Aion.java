@@ -23,7 +23,7 @@
  *
  */
 
-package org.aion.api.server.http;
+package org.aion.api.server.rpc;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
 import static org.aion.base.util.ByteUtil.toHexString;

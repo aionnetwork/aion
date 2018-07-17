@@ -32,6 +32,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,7 +47,8 @@ public final class CfgApiRpc {
         this.port = 8545;
         this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
         this.corsEnabled = false;
-        this.maxthread = 1;
+        this.corsOrigin = "*";
+        this.maxthread = null;
         this.filtersEnabled = true;
         this.ssl = new CfgSsl();
     }
@@ -56,7 +58,8 @@ public final class CfgApiRpc {
     private int port;
     private List<String> enabled;
     private boolean corsEnabled;
-    private int maxthread;
+    private String corsOrigin;
+    private Integer maxthread;
     private boolean filtersEnabled;
     private CfgSsl ssl;
 
@@ -79,6 +82,14 @@ public final class CfgApiRpc {
                                 corsEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: aion.api.rpc.cors-enabled; using preset: " + corsEnabled);
+                                //e.printStackTrace();
+                            }
+                            break;
+                        case "cors-origin":
+                            try {
+                                corsOrigin = Cfg.readValue(sr).trim();
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.rpc.cors-origin; using preset: " + corsOrigin);
                                 //e.printStackTrace();
                             }
                             break;
@@ -191,10 +202,11 @@ public final class CfgApiRpc {
     public boolean getCorsEnabled() {
         return corsEnabled;
     }
+    public String getCorsOrigin() { return corsOrigin; }
     public List<String> getEnabled() {
         return enabled;
     }
-    public int getMaxthread() { return maxthread; }
+    public Integer getMaxthread() { return maxthread; }
     public boolean isFiltersEnabled() {
         return filtersEnabled;
     }
