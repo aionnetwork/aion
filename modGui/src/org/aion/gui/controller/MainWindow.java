@@ -17,6 +17,8 @@ import javafx.util.BuilderFactory;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
+import org.aion.gui.model.AccountChangeHandlers;
+import org.aion.gui.model.BlockTransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
@@ -86,6 +88,9 @@ public class MainWindow extends Application {
     private final KernelLauncher kernelLauncher;
     private final AccountManager accountManager;
     private final KernelConnection kc;
+    private final BlockTransactionProcessor blockTransactionProcessor;
+    private final AccountChangeHandlers accountChangeHandlers;
+
 
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
@@ -103,6 +108,8 @@ public class MainWindow extends Application {
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
         accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY);
+        blockTransactionProcessor = new BlockTransactionProcessor(kc, accountManager);
+        accountChangeHandlers = new AccountChangeHandlers(accountManager, blockTransactionProcessor);
     }
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
@@ -139,6 +146,7 @@ public class MainWindow extends Application {
         // Set up event bus
         registerEventBusConsumer();
         kernelLauncher.tryResume();
+
     }
 
     private FXMLLoader loader() throws IOException {

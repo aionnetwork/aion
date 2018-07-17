@@ -3,11 +3,16 @@ package org.aion.wallet.dto;
 import org.aion.base.util.TypeConverter;
 import org.aion.wallet.connector.dto.BlockDTO;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
-import org.aion.wallet.connector.dto.TransactionDTO;
 import org.aion.wallet.util.QRCodeUtils;
 
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class AccountDTO {
 

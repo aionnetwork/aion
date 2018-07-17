@@ -35,12 +35,22 @@ public abstract class AbstractAionApiClient {
      * to use this to execute critical sections that interact with the API.
      *
      * @param func a function that calls the Aion API
+     * @param throwIfError if true, throw {@link ApiDataRetrievalException} if API call returns an error
      * @return object returned by Aion API.
      */
-    protected ApiMsg callApi(ApiFunction func) {
+    protected ApiMsg callApi(ApiFunction func, boolean throwIfError) {
+        final ApiMsg resp;
         synchronized (api) {
-            return func.call(api);
+            resp = func.call(api);
         }
+        if(throwIfError) {
+            throwAndLogIfError(resp);
+        }
+        return resp;
+    }
+
+    protected ApiMsg callApi(ApiFunction func) {
+        return callApi(func, true);
     }
 
     /**

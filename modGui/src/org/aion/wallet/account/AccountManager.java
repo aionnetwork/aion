@@ -1,6 +1,5 @@
 package org.aion.wallet.account;
 
-import com.google.common.eventbus.Subscribe;
 import io.github.novacrypto.bip39.MnemonicGenerator;
 import io.github.novacrypto.bip39.Words;
 import io.github.novacrypto.bip39.wordlists.English;
@@ -15,12 +14,10 @@ import org.aion.mcf.account.KeystoreFormat;
 import org.aion.mcf.account.KeystoreItem;
 import org.aion.wallet.connector.dto.BlockDTO;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
-import org.aion.wallet.connector.dto.TransactionDTO;
 import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.crypto.MasterKey;
 import org.aion.wallet.dto.AccountDTO;
-import org.aion.wallet.events.AbstractAccountEvent;
-import org.aion.wallet.events.AccountListEvent;
+import org.aion.wallet.dto.TransactionDTO;
 import org.aion.wallet.exception.ValidationException;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.wallet.util.AddressUtils;
@@ -30,7 +27,6 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,7 +46,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -78,12 +73,12 @@ public class AccountManager {
 
 //    public AccountManager(final Function<String, BigInteger> balanceProvider, final Supplier<String> currencySupplier) {
     public AccountManager(final BalanceDto balanceProvider, final Supplier<String> currencySupplier) {
-
-    this.balanceProvider = balanceProvider;
+        this.balanceProvider = balanceProvider;
         this.currencySupplier = currencySupplier;
         for (String address : Keystore.list()) {
             addressToAccount.put(address, getNewAccount(address));
         }
+
     }
 
     public String createMasterAccount(final String password, final String name) throws ValidationException {
@@ -422,33 +417,27 @@ public class AccountManager {
     }
 
     // ----- stuff copied from aion_ui's ApiBlockchainConnector (right place?)
-//    @Subscribe
-//    private void handleAccountListEvent(final AccountListEvent event) {
-//        if (AbstractAccountEvent.Type.RECOVERED.equals(event.getType())) {
-//            final Set<String> addresses = event.getPayload();
-//            final BlockDTO oldestSafeBlock = getOldestSafeBlock(addresses, i -> {});
-//            backgroundExecutor.submit(() -> processTransactionsFromBlock(oldestSafeBlock, addresses));
-//            final Iterator<String> addressesIterator = addresses.iterator();
-//            AccountDTO account = getAccount(addressesIterator.next());
-//            account.setActive(true);
-//            EventPublisher.fireAccountChanged(account);
-//        }
-//    }
-//
-//    private BlockDTO getOldestSafeBlock(final Set<String> addresses, final Consumer<Iterator<String>> nullSafeBlockFilter) {
-//        BlockDTO oldestSafeBlock = null;
-//        final Iterator<String> addressIterator = addresses.iterator();
-//        while (addressIterator.hasNext()) {
-//            final String address = addressIterator.next();
-//            final BlockDTO lastSafeBlock = getLastSafeBlock(address);
-//            if (lastSafeBlock != null) {
-//                if (oldestSafeBlock == null || oldestSafeBlock.getNumber() > lastSafeBlock.getNumber()) {
-//                    oldestSafeBlock = lastSafeBlock;
-//                }
-//            } else {
-//                nullSafeBlockFilter.accept(addressIterator);
-//            }
-//        }
-//        return oldestSafeBlock;
-//    }
+
+    // XXX Moved this one to BlockTransactionProcessor
+    public BlockDTO getOldestSafeBlock(final Set<String> addresses, final Consumer<Iterator<String>> nullSafeBlockFilter) {
+        BlockDTO oldestSafeBlock = null;
+        final Iterator<String> addressIterator = addresses.iterator();
+        while (addressIterator.hasNext()) {
+            final String address = addressIterator.next();
+            final BlockDTO lastSafeBlock = getLastSafeBlock(address);
+            if (lastSafeBlock != null) {
+                if (oldestSafeBlock == null || oldestSafeBlock.getNumber() > lastSafeBlock.getNumber()) {
+                    oldestSafeBlock = lastSafeBlock;
+                }
+            } else {
+                nullSafeBlockFilter.accept(addressIterator);
+            }
+        }
+        return oldestSafeBlock;
+    }
+
+
+
+    // END OF stuff copied from aion_ui's ApiBlockchainConnector (right place?)
+
 }

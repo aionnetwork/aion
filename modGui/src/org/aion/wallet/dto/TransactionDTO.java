@@ -1,4 +1,4 @@
-package org.aion.wallet.connector.dto;
+package org.aion.wallet.dto;
 
 import org.aion.base.util.TypeConverter;
 

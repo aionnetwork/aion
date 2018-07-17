@@ -6,6 +6,7 @@ import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.events.AbstractAccountEvent;
 import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.events.AccountListEvent;
+import org.aion.wallet.events.ErrorEvent;
 import org.aion.wallet.events.UiMessageEvent;
 import org.slf4j.Logger;
 
@@ -20,7 +21,8 @@ public class EventPublisher {
 
     public static void fireAccountChanged(final AccountDTO account) {
         if (account != null) {
-            EventBusRegistry.INSTANCE.getBus(ACCOUNT_CHANGE_EVENT_ID).post(account);
+            System.out.println("EventPublisher#fireAccountChanged");
+            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.CHANGED, account));
         }
     }
 
@@ -70,7 +72,7 @@ public class EventPublisher {
         EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.CONNECTED));
     }
 
-//    public static void fireApplicationSettingsChanged(final LightAppSettings settings){
-//        EventBusRegistry.INSTANCE.getBus(SETTINGS_CHANGED_ID).post(settings);
-//    }
+    public static void fireFatalErrorEncountered(final String message) {
+        EventBusRegistry.INSTANCE.getBus(ErrorEvent.ID).post(new ErrorEvent(ErrorEvent.Type.FATAL, message));
+    }
 }
