@@ -57,6 +57,8 @@ public class UndertowRpcServer extends RpcServer {
     }
 
     public void handleRequest(HttpServerExchange ex0) throws Exception {
+        LOG.debug("handleRequest hit");
+
         Receiver.FullStringCallback rpcHandler = (ex3, body) -> {
             ex3.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             addCorsHeaders(ex3);

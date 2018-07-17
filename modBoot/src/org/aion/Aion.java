@@ -119,9 +119,16 @@ public class Aion {
                 "      .'.       |  .~     ~.  |..          |\n" +
                 "    .'   `.     | |         | |  ``..      |\n" +
                 "  .''''''''`.   | |         | |      ``..  |\n" +
-                ".'           `. |  `._____.'  |          ``|\n\n" +
-                "                 v" + KERNEL_VERSION +
-                "\n\n";
+                ".'           `. |  `._____.'  |          ``|\n\n";
+
+        // always print the version string in the center of the Aion logo
+        String versionStr = "v"+KERNEL_VERSION;
+        int leftPad = Math.round((44 - versionStr.length()) / 2.0f) + 1;
+        StringBuilder padVersionStr = new StringBuilder();
+        for (int i = 0; i < leftPad; i++) padVersionStr.append(" ");
+        padVersionStr.append(versionStr);
+        logo += padVersionStr.toString();
+        logo += "\n\n";
 
         genLog.info(logo);
 

@@ -32,6 +32,7 @@ public abstract class RpcServer {
         port = Objects.requireNonNull(builder.port);
 
         corsEnabled = builder.corsEnabled;
+        corsOrigin = builder.corsOrigin;
 
         List<String> enabledEndpoints = Collections.unmodifiableList(Objects.requireNonNull(builder.enabledEndpoints));
         rpcProcessor = new RpcProcessor(enabledEndpoints);
