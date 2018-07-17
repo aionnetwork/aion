@@ -39,7 +39,10 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
+
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.core.IBlockchain;
+
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
@@ -89,11 +92,13 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private static final String ALL_ADDR_KEY = "allAddressKey";
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
+
     private static Timer timer = new Timer();
     private AionBlock block;
     private static LRUMap lru = new LRUMap();
     private static org.apache.commons.collections4.map.LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap(4);
     private static org.apache.commons.collections4.map.LRUMap<String, Map<Address, BigInteger>> auctionBidsMap = new LRUMap(4);
+    protected final IBlockchain blockchain;
 
     /**
      * Constructs a Aion Auction Contract object, ready to execute.
@@ -101,9 +106,17 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param track The repository
      * @param address The address of the calling account
      */
-    public AionAuctionContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address) {
+    public AionAuctionContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, IBlockchain blockchain) {
         super(track);
         this.address = address;
+        this.blockchain = blockchain;
+
+
+//        long n = blockchain.getBestBlock().getNumber();
+//        long time = blockchain.getBestBlock().getTimestamp();
+//        System.out.println(n);
+//        System.out.println(time);
+//        System.out.println(new Date(time));
     }
 
     private static long getBlockTime(){
