@@ -122,11 +122,6 @@ public class TRSuseContractTest extends TRShelpers {
         return BigInteger.TWO.pow(4096).subtract(BigInteger.ONE);
     }
 
-    // Returns the deposit balance of account in the TRS contract contract.
-    private BigInteger getDepositBalance(AbstractTRS trs, Address contract, Address account) {
-        return trs.getDepositBalance(contract, account);
-    }
-
     // Returns true only if account is a valid account in contract.
     private boolean accountIsValid(AbstractTRS trs, Address contract, Address account) {
         try {
@@ -145,101 +140,6 @@ public class TRSuseContractTest extends TRShelpers {
     // Returns the last period in which account made a withdrawal or -1 if bad contract or account.
     private int getAccountLastWithdrawalPeriod(AbstractTRS trs, Address contract, Address account) {
         return trs.getAccountLastWithdrawalPeriod(contract, account);
-    }
-
-    /**
-     * Creates a contract with AION as the owner and has numDepositors deposit deposits amount
-     * each. A bonus deposit of bonus is made. Then the contract is locked and made live.
-     *
-     * The contract is set to be in testing mode. It has a total of periods periods and percentage
-     * is the percent of the total owings that an account can withdraw in the special one-off event.
-     *
-     * The owner does not deposit.
-     *
-     * @param numDepositors The number of depositors, excluding owner, who deposit into contract.
-     * @param deposits The amount each depositor deposits.
-     * @param bonus The bonus amount.
-     * @param periods The number of periods the contract has.
-     * @param percentage The percent of total owings that can be claimed in special event.
-     * @return the address of the contract.
-     */
-    private Address setupContract(int numDepositors, BigInteger deposits, BigInteger bonus,
-        int periods, BigDecimal percentage) {
-
-        int precision = percentage.scale();
-        BigInteger percent = percentage.movePointRight(precision).toBigInteger();
-        Address contract = createTRScontract(AION, true, true, periods,
-            percent, precision);
-
-        assertEquals(percentage, getPercentage(newTRSownerContract(AION), contract));
-        assertEquals(periods, getPeriods(newTRSownerContract(AION), contract));
-
-        byte[] input = getDepositInput(contract, deposits);
-        for (int i = 0; i < numDepositors; i++) {
-            Address acc = getNewExistentAccount(deposits);
-            assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
-        }
-        repo.addBalance(contract, bonus);
-
-        lockAndStartContract(contract, AION);
-        return contract;
-    }
-
-    // Grabs the current period contract is in as a BigInteger.
-    private BigInteger grabCurrentPeriod(AbstractTRS trs, Address contract) {
-        return BigInteger.valueOf(getContractCurrentPeriod(trs, contract));
-    }
-
-    // Grabs the amount owed to account if the following params are true.
-    private BigInteger grabOwings(BigDecimal accBalance, BigDecimal contractBalance, BigDecimal bonus) {
-        BigDecimal fraction = accBalance.divide(contractBalance, 18, RoundingMode.HALF_DOWN);
-        BigDecimal share = bonus.multiply(fraction);
-        return share.toBigInteger().add(accBalance.toBigInteger());
-    }
-
-    // Grabs the amount an account can withdraw in special event according to these params.
-    private BigInteger grabSpecialAmount(BigDecimal accBalance, BigDecimal contractBalance,
-        BigDecimal bonus, BigDecimal percent) {
-
-        BigDecimal owings = new BigDecimal(grabOwings(accBalance, contractBalance, bonus));
-        return (owings.multiply(percent.movePointLeft(2))).toBigInteger();
-    }
-
-    // Grabs the amount an account can withdraw regularly, not in special event, according to params.
-    private BigInteger grabWithdrawAmt(BigInteger owings, BigInteger specialAmt, int periods) {
-        BigDecimal periodsBI = new BigDecimal(BigInteger.valueOf(periods));
-        BigDecimal owingWithoutSpec = new BigDecimal(owings.subtract(specialAmt));
-        BigDecimal res = owingWithoutSpec.divide(periodsBI, 18, RoundingMode.HALF_DOWN);
-        return res.toBigInteger();
-    }
-
-    /**
-     * Returns the amount an account is expected to receive from a first withdrawal from a contract
-     * given that the params are true of the contract and the caller.
-     *
-     * This method is unreliable if the first withdraw is performed in the last period. There are
-     * roundoff errors that accrue and cause the non-final withdrawal amounts to be round down and
-     * their sum may be less than the total owed. The contract handles the final period specially to
-     * ensure all funds owed are paid out.
-     *
-     * @param trs An AbstractTRS instance.
-     * @param contract The contract in question.
-     * @param deposits The amount the caller deposited.
-     * @param total The total amount of deposits in the contract.
-     * @param bonus The bonus balance in the contract.
-     * @param percent The percentage of total owings the caller is eligible to receive in special event.
-     * @param periods The number of periods the contract has.
-     * @return the expected amount to withdraw on a first call to the contract.
-     */
-    private BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract, BigInteger deposits,
-        BigInteger total, BigInteger bonus, BigDecimal percent, int periods) {
-
-        BigInteger currPeriod = grabCurrentPeriod(trs, contract);
-        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
-        BigInteger expectedSpecial = grabSpecialAmount(new BigDecimal(deposits), new BigDecimal(total),
-            new BigDecimal(bonus), percent);
-        BigInteger expectedWithdraw = currPeriod.multiply(grabWithdrawAmt(owings, expectedSpecial, periods));
-        return expectedWithdraw.add(expectedSpecial);
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->

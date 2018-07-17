@@ -339,8 +339,8 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // A withdraw operation can only execute if the current state of the TRS contract is:
-        // contract is live (and obviously locked -- check this for sanity).
-        if (!isContractLocked(contract) || !isContractLive(contract)) {
+        // contract is live (and obviously locked -- check this for sanity) or contract funds are open.
+        if (!isOpenFunds(contract) && (!isContractLocked(contract) || !isContractLive(contract))) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
@@ -486,8 +486,8 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // A bulk-withdraw operation can only execute if the current state of the TRS contract is:
-        // contract is live (and obviously locked -- check this for sanity).
-        if (!isContractLocked(contract) || !isContractLive(contract)) {
+        // contract is live (and obviously locked -- check this for sanity) or the funds are open.
+        if (!isOpenFunds(contract) && (!isContractLocked(contract) || !isContractLive(contract))) {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 

@@ -4,14 +4,19 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.junit.After;
@@ -43,6 +48,27 @@ public class TRSqueryContractTest extends TRShelpers {
     }
 
     // <-----------------------------------HELPER METHODS BELOW------------------------------------>
+
+    // Checks that availableForWithdrawalAt returns expected results for the specified query.
+    private void checkAvailableForResults(AbstractTRS trs, Address contract, long timestamp,
+        int numDepositors, BigInteger deposits, BigInteger bonus, BigDecimal percent, int periods) {
+        BigInteger total = deposits.multiply(BigInteger.valueOf(numDepositors));
+        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
+        BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits,
+            total, bonus, percent, periods, timestamp);
+
+        BigDecimal expectedFraction = new BigDecimal(amt).
+            divide(new BigDecimal(owings), 18, RoundingMode.HALF_DOWN);
+
+        byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            ContractExecutionResult res = newTRSqueryContract(acc).execute(input, COST);
+            assertEquals(ResultCode.SUCCESS, res.getCode());
+            BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
+            assertEquals(expectedFraction, frac);
+        }
+    }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
 
@@ -585,6 +611,163 @@ public class TRSqueryContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
         assertEquals(BigInteger.ONE, new BigInteger(res.getOutput()));
+    }
+
+    // <-------------------------AVAILABLE FOR WITHDRAWAL AT TRS TESTS----------------------------->
+
+    @Test
+    public void testAvailableForInputTooShort() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 7,
+            BigInteger.ZERO, 0);
+        byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
+        byte[] shortInput = Arrays.copyOf(input, input.length - 1);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(shortInput, COST).getCode());
+    }
+
+    @Test
+    public void testAvailableForInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 7,
+            BigInteger.ZERO, 0);
+        byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
+        byte[] longInput = new byte[input.length + 1];
+        System.arraycopy(input, 0, longInput, 0, input.length);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(longInput, COST).getCode());
+    }
+
+    @Test
+    public void testAvailableForContractNonExistent() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = getAvailableForWithdrawalAtInput(acct, 0);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testAvailableForContractNotYetLive() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 7,
+            BigInteger.ZERO, 0);
+        byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testAvailableForNoSpecial() {
+        int numDepositors = 7;
+        int periods = 59;
+        BigInteger deposits = new BigInteger("3285423852334");
+        BigInteger bonus = new BigInteger("32642352");
+        BigDecimal percent = BigDecimal.ZERO;
+        Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        long timestamp = trs.getTimestamp(contract) + (periods / 5);
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+
+        timestamp = trs.getTimestamp(contract) + periods - 12;
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+    }
+
+    @Test
+    public void testAvailableForWithSpecial() {
+        int numDepositors = 9;
+        int periods = 71;
+        BigInteger deposits = new BigInteger("3245323");
+        BigInteger bonus = new BigInteger("34645");
+        BigDecimal percent = new BigDecimal("31.484645467");
+        Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        long timestamp = trs.getTimestamp(contract) + (periods / 3);
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+
+        timestamp = trs.getTimestamp(contract) + periods - 6;
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+    }
+
+    @Test
+    public void testAvailableForInFinalPeriod() {
+        int numDepositors = 21;
+        int periods = 92;
+        BigInteger deposits = new BigInteger("237523675328");
+        BigInteger bonus = new BigInteger("2356236434");
+        BigDecimal percent = new BigDecimal("19.213343253242");
+        Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        long timestamp = trs.getTimestamp(contract) + periods;
+
+        BigDecimal expectedFraction = new BigDecimal(1);
+        expectedFraction = expectedFraction.setScale(18, RoundingMode.HALF_DOWN);
+
+        byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            ContractExecutionResult res = newTRSqueryContract(acc).execute(input, COST);
+            assertEquals(ResultCode.SUCCESS, res.getCode());
+            BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
+            assertEquals(expectedFraction, frac);
+        }
+    }
+
+    @Test
+    public void testAvailableForAtStartTime() {
+        int numDepositors = 6;
+        int periods = 8;
+        BigInteger deposits = new BigInteger("2357862387523");
+        BigInteger bonus = new BigInteger("35625365");
+        BigDecimal percent = new BigDecimal("10.2353425");
+        Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        long timestamp = trs.getTimestamp(contract);
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+    }
+
+    @Test
+    public void testAvailableForTimePriorToStartTime() {
+        int numDepositors = 16;
+        int periods = 88;
+        BigInteger deposits = new BigInteger("43634346");
+        BigInteger bonus = new BigInteger("23532");
+        BigDecimal percent = new BigDecimal("11");
+        Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        long timestamp = trs.getTimestamp(contract) - 1;
+
+        BigDecimal expectedFraction = BigDecimal.ZERO;
+        expectedFraction = expectedFraction.setScale(18, RoundingMode.HALF_DOWN);
+
+        byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            ContractExecutionResult res = newTRSqueryContract(acc).execute(input, COST);
+            assertEquals(ResultCode.SUCCESS, res.getCode());
+            BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
+            assertEquals(expectedFraction, frac);
+        }
+    }
+
+    @Test
+    public void testAvailableForMaxPeriods() {
+        int numDepositors = 19;
+        int periods = 1200;
+        BigInteger deposits = new BigInteger("23869234762532654734875");
+        BigInteger bonus = new BigInteger("23434634634");
+        BigDecimal percent = new BigDecimal("6.1");
+        Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
+
+        AbstractTRS trs = newTRSownerContract(AION);
+        long timestamp = trs.getTimestamp(contract) + (periods / 7);
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+
+        timestamp = trs.getTimestamp(contract) + (periods / 3);
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+
+        timestamp = trs.getTimestamp(contract) + periods - 1;
+        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
     }
 
 }

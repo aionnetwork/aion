@@ -431,7 +431,14 @@ public final class TRSownerContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
+        // An openFunds operation can only execute if the contract does not already have its funds
+        // open - this is to protect against re-setting the bonus balance (not necessarily bad?).
+        if (isOpenFunds(contract)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
         setIsOpenFunds(contract);
+        setBonusBalance(contract);
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 

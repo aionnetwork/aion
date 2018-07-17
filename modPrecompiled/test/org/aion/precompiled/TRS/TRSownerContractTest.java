@@ -1353,13 +1353,115 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
-    public void testOpenFundsWithdrawIsNowWithdrawAll() {
-        //TODO
+    public void testOpenFundsMultipleTimes() {
+        // Currently any subsequent attempts are thwarted.
+        Address acct = getNewExistentAccount(BigInteger.TEN);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSownerContract(acct).execute(input, COST).getCode());
     }
 
     @Test
-    public void testOpenFundsBulkWithdrawIsNowBulkWithdrawAll() {
-        //TODO
+    public void testOpenFundsWithdrawIsNowWithdrawAll() throws InterruptedException {
+        createBlockchain(0, 0);
+        BigInteger bal1 = new BigInteger("2375628376523");
+        BigInteger bal2 = new BigInteger("438756347565782346578");
+        BigInteger bal3 = new BigInteger("98124329685948546");
+        BigInteger bonus = new BigInteger("325467523673432535248233278324346");
+        Address acct1 = getNewExistentAccount(bal1);
+        Address acct2 = getNewExistentAccount(bal2);
+        Address acct3 = getNewExistentAccount(bal3);
+        Address contract = createTRScontract(acct1, false, true, 100,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, bal1);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        input = getDepositInput(contract, bal2);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+        input = getDepositInput(contract, bal3);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getCode());
+        repo.addBalance(contract, bonus);
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct1));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct2));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct3));
+
+        // Now open the funds.
+        AbstractTRS trs = newTRSownerContract(acct1);
+        input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // Now each account should make 1 withdrawal and receive their total owings.
+        BigDecimal total = new BigDecimal(bal1.add(bal2).add(bal3));
+        BigInteger owings1 = grabOwings(new BigDecimal(bal1), total, new BigDecimal(bonus));
+        BigInteger owings2 = grabOwings(new BigDecimal(bal2), total, new BigDecimal(bonus));
+        BigInteger owings3 = grabOwings(new BigDecimal(bal3), total, new BigDecimal(bonus));
+        input = getWithdrawInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getCode());
+        assertEquals(owings1, repo.getBalance(acct1));
+        assertEquals(owings2, repo.getBalance(acct2));
+        assertEquals(owings3, repo.getBalance(acct3));
+
+        // A subsequent withdraw operation should not withdraw anything now.
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct1).execute(input, COST).getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct2).execute(input, COST).getCode());
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct3).execute(input, COST).getCode());
+        assertEquals(owings1, repo.getBalance(acct1));
+        assertEquals(owings2, repo.getBalance(acct2));
+        assertEquals(owings3, repo.getBalance(acct3));
+    }
+
+    @Test
+    public void testOpenFundsBulkWithdrawIsNowBulkWithdrawAll() throws InterruptedException {
+        createBlockchain(0, 0);
+        BigInteger bal1 = new BigInteger("4366234645");
+        BigInteger bal2 = new BigInteger("5454757853");
+        BigInteger bal3 = new BigInteger("43534654754342");
+        BigInteger bonus = new BigInteger("546547542332523534");
+        Address acct1 = getNewExistentAccount(bal1);
+        Address acct2 = getNewExistentAccount(bal2);
+        Address acct3 = getNewExistentAccount(bal3);
+        Address contract = createTRScontract(acct1, false, true, 100,
+            BigInteger.ZERO, 0);
+
+        byte[] input = getDepositInput(contract, bal1);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        input = getDepositInput(contract, bal2);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getCode());
+        input = getDepositInput(contract, bal3);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getCode());
+        repo.addBalance(contract, bonus);
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct1));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct2));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct3));
+
+        // Now open the funds.
+        AbstractTRS trs = newTRSownerContract(acct1);
+        input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // A bulk withdraw will withdraw all funds for all contributors.
+        BigDecimal total = new BigDecimal(bal1.add(bal2).add(bal3));
+        BigInteger owings1 = grabOwings(new BigDecimal(bal1), total, new BigDecimal(bonus));
+        BigInteger owings2 = grabOwings(new BigDecimal(bal2), total, new BigDecimal(bonus));
+        BigInteger owings3 = grabOwings(new BigDecimal(bal3), total, new BigDecimal(bonus));
+        input = getBulkWithdrawInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        assertEquals(owings1, repo.getBalance(acct1));
+        assertEquals(owings2, repo.getBalance(acct2));
+        assertEquals(owings3, repo.getBalance(acct3));
+
+        // A subsequent withdraw operation should not withdraw anything now.
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getCode());
+        assertEquals(owings1, repo.getBalance(acct1));
+        assertEquals(owings2, repo.getBalance(acct2));
+        assertEquals(owings3, repo.getBalance(acct3));
     }
 
     @Test
@@ -1415,13 +1517,57 @@ public class TRSownerContractTest extends TRShelpers {
     }
 
     @Test
+    public void testOpenFundsNoFundsWithdraw() {
+        Address acct = getNewExistentAccount(BigInteger.TEN);
+        Address contract = createTRScontract(acct, false, true, 10,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSownerContract(acct);
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // Now try to withdraw.
+        input = getWithdrawInput(contract);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.TEN, repo.getBalance(acct));
+    }
+
+    @Test
     public void testOpenFundsDepositNowDisabled() {
-        //TODO
+        Address acct = getNewExistentAccount(BigInteger.TEN);
+        Address contract = createTRScontract(acct, false, true, 10,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSownerContract(acct);
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // Now try to deposit.
+        input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.TEN, repo.getBalance(acct));
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
     }
 
     @Test
     public void testOpenFundsDepositForNowDisabled() {
-        //TODO
+        Address acct = getNewExistentAccount(BigInteger.TEN);
+        Address other = getNewExistentAccount(BigInteger.ZERO);
+        Address contract = createTRScontract(acct, false, true, 10,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSownerContract(acct);
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // Now try to deposit.
+        input = getDepositForInput(contract, other, BigInteger.ONE);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.TEN, repo.getBalance(acct));
+        assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, other));
     }
 
     @Test
@@ -1431,7 +1577,26 @@ public class TRSownerContractTest extends TRShelpers {
 
     @Test
     public void testOpenFundsRefundNowDisabled() {
-        //TODO
+        Address acct = getNewExistentAccount(BigInteger.TEN);
+        Address other = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, true, 10,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSownerContract(acct);
+        byte[] input = getDepositInput(contract, BigInteger.ONE);
+        assertEquals(ResultCode.SUCCESS, newTRSuseContract(other).execute(input, COST).getCode());
+        assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
+        assertEquals(BigInteger.ZERO, repo.getBalance(other));
+
+        input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // Now try to refund.
+        input = getRefundInput(contract, other, BigInteger.ONE);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
+        assertEquals(BigInteger.ZERO, repo.getBalance(other));
     }
 
     @Test

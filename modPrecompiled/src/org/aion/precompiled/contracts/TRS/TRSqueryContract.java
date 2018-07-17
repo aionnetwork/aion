@@ -22,6 +22,9 @@
  */
 package org.aion.precompiled.contracts.TRS;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
@@ -167,6 +170,26 @@ public final class TRSqueryContract extends AbstractTRS {
      *       this point onwards the contract remains in period P. The duration of a period is 30
      *       days.
      *
+     *                                           ~~~***~~~
+     *
+     *   <b>operation 0x5</b> - returns the fraction of the caller's total owings that is
+     *     withdrawable at some time given by a block's timestamp. The total owings is the amount
+     *     that the caller will collect over the full lifetime of the contract. The fraction
+     *     returned is cumulative, so it represents the fraction of funds that the caller will have
+     *     cumulatively collected by the specified time if they withdraw in the corresponding period.
+     *
+     *     [<32b - contractAddress> | <8b - timestamp>]
+     *     total = 41 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     timestamp is the timestamp (a long value denoting seconds) of a block in the blockchain.
+     *
+     *     coditions: contractAddress must be a valid TRS contract address.
+     *
+     *     returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
+     *       method). The returned BigInteger must then have its decimal point shifted 18 places to
+     *       the left to reconstruct the appropriate fraction, accurate to 18 decimal places.
+     *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
      * @return the result of calling execute on the specified input.
@@ -193,6 +216,7 @@ public final class TRSqueryContract extends AbstractTRS {
             case 2: return isDirectDepositEnabled(input, nrgLimit);
             case 3: return period(input, nrgLimit);
             case 4: return periodAt(input, nrgLimit);
+            case 5: return availableForWithdrawalAt(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -391,6 +415,86 @@ public final class TRSqueryContract extends AbstractTRS {
 
         return determinePeriod(contract, blockchain.getBlockByNumber(blockNum), nrgLimit);
     }
+
+    /**
+     * Logic to query a public-facing TRS contract to determine the fraction of total withdrawables
+     * available at a specified time.
+     *
+     * The input byte array format is defined as follows:
+     *   [<1b - 0x5> | <32b - contractAddress> | <8b - timestamp>]
+     *     total = 41 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to query.
+     *   timestamp is the timestamp (a long value denoting seconds) of a block in the blockchain.
+     *
+     * coditions: contractAddress must be a valid TRS contract address.
+     *
+     * returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
+     *   method). The returned BigInteger must then have its decimal point shifted 18 places to
+     *   the left to reconstruct the appropriate fraction, accurate to 18 decimal places.
+     *
+     * @param input The input to query a public-facing TRS contract for the fraction of withdrawables.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult availableForWithdrawalAt(byte[] input, long nrgLimit) {
+        // Some "constants"
+        final int indexContract = 1;
+        final int indexTimestamp = 33;
+        final int len = 41;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // If a contract has its funds open then the fraction is always 1.
+        if (isOpenFunds(contract)) {
+            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit,
+                (BigDecimal.ONE.movePointRight(18)).toBigInteger().toByteArray());
+        }
+
+        // This operation is only well-defined when the contract has a start time. Thus the contract
+        // must be in the following state: live.
+        if (!isContractLive(contract)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.put(Arrays.copyOfRange(input, indexTimestamp, len));
+        buffer.flip();
+        long timestamp = buffer.getLong();
+
+        int period = calculatePeriod(contract, getContractSpecs(contract), timestamp);
+        if (period >= getPeriods(getContractSpecs(contract))) {
+            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit,
+                (BigDecimal.ONE.movePointRight(18)).toBigInteger().toByteArray());
+        }
+
+        if (timestamp < getTimestamp(contract)) {
+            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit,
+                (BigDecimal.ZERO.movePointRight(18)).toBigInteger().toByteArray());
+        }
+
+        BigInteger owings = computeTotalOwed(contract, caller);
+        BigInteger amtPerPeriod = computeAmountWithdrawPerPeriod(contract, caller);
+        BigInteger specAmt = computeRawSpecialAmount(contract, caller);
+        BigInteger withdrawable = (amtPerPeriod.multiply(BigInteger.valueOf(period))).add(specAmt);
+
+        BigDecimal fraction = new BigDecimal(withdrawable).
+            divide(new BigDecimal(owings), 18, RoundingMode.HALF_DOWN);
+
+        fraction = fraction.movePointRight(18);
+        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit,
+            fraction.toBigInteger().toByteArray());
+    }
+
+    // <---------------------------------------HELPERS--------------------------------------------->
 
     /**
      * Attempts to determine the period that the TRS contract whose address is contract is in at

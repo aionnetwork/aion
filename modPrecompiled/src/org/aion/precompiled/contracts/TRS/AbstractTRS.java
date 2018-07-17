@@ -933,7 +933,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the amount account is eligible to withdraw in the special event.
      */
-    private BigInteger computeRawSpecialAmount(Address contract, Address account) {
+    BigInteger computeRawSpecialAmount(Address contract, Address account) {
         BigDecimal owed = new BigDecimal(computeTotalOwed(contract, account));
         BigDecimal percent = getPercentage(getContractSpecs(contract)).movePointLeft(2);
         return owed.multiply(percent).toBigInteger();
@@ -960,7 +960,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * Let O be the total amount that account is "owed" by the contract - this is the amount account
      * will receive once it has withdrawn on every period.
-     * Let S be the amount account is initially eligible to wwithdraw for the special one-off
+     * Let S be the amount account is initially eligible to withdraw for the special one-off
      * withdrawal event.
      * Let P be the total number of periods the contract has.
      *
@@ -972,7 +972,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the amount of funds account is eligible to withdraw each period, excluding special funds.
      */
-    private BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
+    BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
         BigDecimal owedWithoutSpecial = new BigDecimal(computeTotalOwed(contract, account).
             subtract(computeRawSpecialAmount(contract, account)));
         BigDecimal totalPeriods = new BigDecimal(getPeriods(getContractSpecs(contract)));
@@ -1055,7 +1055,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * If the bonus balance has already been set for the contract then this method does nothing.
      * The bonus balance can only be set once in a contract's lifetime and this method should only
-     * be called at exactly one point: when the contract first is started / goes live.
+     * be called in exactly two places: when the contract first is started / goes live; when the
+     * contrat's funds are opened.
      *
      * Throws an exception if contract has no balance, which should only happen if contract does
      * not exist in the database, here for debugging.
