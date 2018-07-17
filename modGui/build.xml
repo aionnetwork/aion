@@ -113,10 +113,10 @@
     </target>
 
     <target name="build">
-        <echo message="compiling with debug=${compile.debug}" />
+        <echo message="compiling with debug=on" />
         <mkdir dir="${dir.dest}"/>
         <javac
-                debug="${compile.debug}"
+                debug="on"
                 debuglevel="source,lines,vars"
                 includeantruntime="false"
                 release="10"

@@ -142,6 +142,7 @@ public class MainWindow extends Application {
         panes.put(HeaderPaneButtonEvent.Type.OVERVIEW, scene.lookup("#overviewPane"));
         panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
         panes.put(HeaderPaneButtonEvent.Type.SEND, scene.lookup("#sendPane"));
+        panes.put(HeaderPaneButtonEvent.Type.RECEIVE, scene.lookup("#receivePane"));
         panes.put(HeaderPaneButtonEvent.Type.SETTINGS, scene.lookup("#settingsPane"));
 
         // Set up event bus
@@ -230,8 +231,10 @@ public class MainWindow extends Application {
         // todo: refactor by adding a view controller
         for(Map.Entry<HeaderPaneButtonEvent.Type, Node> entry: panes.entrySet()) {
             if(event.getType().equals(entry.getKey())) {
+                System.out.println(entry.getValue() + " -> visible");
                 entry.getValue().setVisible(true);
             } else {
+                System.out.println(entry.getValue() + " -> not visible");
                 entry.getValue().setVisible(false);
             }
         }

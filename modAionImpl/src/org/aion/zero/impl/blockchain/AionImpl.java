@@ -94,6 +94,7 @@ public class AionImpl implements IAionChain {
                 aionHub,
                 cfg, null);
         this.pow = new AionPoW(this);
+        this.pow.init(aionHub.getBlockchain(), aionHub.getPendingState(), aionHub.getEventMgr());
     }
 
     /**

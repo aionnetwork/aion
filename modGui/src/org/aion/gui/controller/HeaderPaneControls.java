@@ -66,6 +66,8 @@ public class HeaderPaneControls extends AbstractController {
     @FXML
     private VBox sendButton;
     @FXML
+    private VBox receiveButton;
+    @FXML
     private VBox accountsButton;
     @FXML
     private VBox settingsButton;
@@ -77,6 +79,7 @@ public class HeaderPaneControls extends AbstractController {
         headerButtons.put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.OVERVIEW));
         headerButtons.put(accountsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.ACCOUNTS));
         headerButtons.put(sendButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SEND));
+        headerButtons.put(receiveButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.RECEIVE));
         headerButtons.put(settingsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SETTINGS));
 
         clickButton(homeButton);

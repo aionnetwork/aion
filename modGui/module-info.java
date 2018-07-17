@@ -11,6 +11,7 @@ module aion.boot {
     requires javafx.base;
     requires javafx.graphics;
     requires javafx.controls;
+    requires javafx.swing;
     requires java.desktop;
 
     requires java.management;

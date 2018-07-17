@@ -41,10 +41,10 @@
                 <VBox fx:id="sendButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
                     <fx:include source="buttons/SendButton.fxml"/>
                 </VBox>
+                <VBox fx:id="receiveButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/ReceiveButton.fxml"/>
+                </VBox>
                 <!--
-                    <VBox fx:id="receiveButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
-                        <fx:include source="buttons/ReceiveButton.fxml"/>
-                    </VBox>
                     <VBox fx:id="historyButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
                         <fx:include source="buttons/HistoryButton.fxml"/>
                     </VBox> -->
