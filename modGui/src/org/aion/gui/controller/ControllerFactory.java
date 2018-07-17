@@ -6,6 +6,7 @@ import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
@@ -67,8 +68,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     configManipulator));
             put(AccountsController.class, () -> new AccountsController(
                     accountManager, walletStorage));
-
-            // these ones probably should go in a separate factory
+            put(HeaderPaneControls.class, () -> new HeaderPaneControls(
+                    new BalanceDto(kernelConnection)));
             put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
             put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager));
             put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager));
