@@ -195,7 +195,9 @@ public class TaskInbound implements Runnable {
                 int port = channel.socket().getPort();
                 INode node = this.nodeMgr.allocNode(ip, port);
 
-                p2pLOG.debug("new-node : {}", node.toString());
+                if (p2pLOG.isTraceEnabled()) {
+                    p2pLOG.trace("new-node : {}", node.toString());
+                }
 
                 node.setChannel(channel);
 
@@ -524,10 +526,13 @@ public class TaskInbound implements Runnable {
         INode node = nodeMgr.getInboundNode(_channelHash);
         if (node != null && node.getPeerMetric().notBan()) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug("node {}", node.toString());
                 p2pLOG
                     .debug("netId={}, nodeId={} port={} rev={}", _netId, new String(_nodeId), _port,
                         _revision);
+            }
+
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("node {}", node.toString());
             }
             if (handshakeRuleCheck(_netId)) {
                 _buffer.setNodeIdHash(Arrays.hashCode(_nodeId));

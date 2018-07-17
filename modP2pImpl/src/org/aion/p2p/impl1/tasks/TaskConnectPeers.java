@@ -153,8 +153,10 @@ public class TaskConnectPeers implements Runnable {
                     }
 
                     if (channel != null) {
+                        if (p2pLOG.isTraceEnabled()) {
+                            p2pLOG.trace("close channel {}", node.toString());
+                        }
                         try {
-                            p2pLOG.debug("close channel {}", node.toString());
                             channel.close();
                         } catch (IOException e1) {
                             p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
@@ -163,13 +165,18 @@ public class TaskConnectPeers implements Runnable {
 
                     // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
-                    p2pLOG
-                        .debug("connect-outbound exception -> id={} ip={} reason={}", node.getIdShort(),
-                            node.getIpStr(), e.toString());
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG
+                            .debug("connect-outbound exception -> id={} ip={} reason={}", node.getIdShort(),
+                                node.getIpStr(), e.toString());
+                    }
+
+                    if (p2pLOG.isTraceEnabled()) {
+                        p2pLOG.trace("close channel {}", node.toString());
+                    }
 
                     if (channel != null) {
                         try {
-                            p2pLOG.debug("close channel {}", node.toString());
                             channel.close();
                         } catch (IOException e1) {
                             p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
