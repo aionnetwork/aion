@@ -47,7 +47,7 @@ import org.mockito.Mock;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class RandomTestForANS {
+public class MokitoTestForANS {
     private Address domainAddress1 = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private Address domainAddress2 = Address.wrap("a022222222222222222222222222222202020202020202020202020202020202");
     private String domainName1 = "bion.aion";
@@ -69,7 +69,7 @@ public class RandomTestForANS {
     public void setup() {
         repo = new DummyRepo();
         defaultKey = ECKeyFac.inst().create();
-        testAAC = new AionAuctionContract(repo, domainAddress1);
+        //testAAC = new AionAuctionContract(repo, domainAddress1);
         repo.createAccount(Address.wrap(defaultKey.getAddress()));
         repo.addBalance(Address.wrap(defaultKey.getAddress()), new BigInteger("4000000"));
 

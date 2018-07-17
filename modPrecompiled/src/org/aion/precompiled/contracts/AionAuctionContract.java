@@ -35,22 +35,13 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
-
-import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.core.IBlockchain;
-
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.db.ContractDetailsAion;
-import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.collections4.map.LRUMap;
 
 import static org.aion.crypto.HashUtil.blake128;
@@ -78,11 +69,10 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private Address domainNameAddressPair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000801");
     private Address domainAddressNamePair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000802");
 
-    private final Address address;
     private final static long COST = 20000L;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
-    private static final int AUCTION_TIME = 5000 * 2 * 1000;
+    private static final int AUCTION_TIME = 2 * 1000;
     private static final int ACTIVE_TIME = 4 * 1000;
     private static final BigInteger MINIMUM_AMOUNT =  new BigInteger("100");
 
@@ -92,13 +82,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private static final String ALL_ADDR_KEY = "allAddressKey";
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
-
+    private final Address address;
+    private final IBlockchain blockchain;
     private static Timer timer = new Timer();
-    private AionBlock block;
-    private static LRUMap lru = new LRUMap();
     private static org.apache.commons.collections4.map.LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap(4);
     private static org.apache.commons.collections4.map.LRUMap<String, Map<Address, BigInteger>> auctionBidsMap = new LRUMap(4);
-    protected final IBlockchain blockchain;
 
     /**
      * Constructs a Aion Auction Contract object, ready to execute.
@@ -110,36 +98,6 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         super(track);
         this.address = address;
         this.blockchain = blockchain;
-
-
-//        long n = blockchain.getBestBlock().getNumber();
-//        long time = blockchain.getBestBlock().getTimestamp();
-//        System.out.println(n);
-//        System.out.println(time);
-//        System.out.println(new Date(time));
-    }
-
-    private static long getBlockTime(){
-        //final int NUMBER_OF_BLOCKS = 6;
-        // build a blockchain with a few blocks
-        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
-
-        StandaloneBlockchain chain = bundle.bc;
-
-        ImportResult result = ImportResult.IMPORTED_BEST;
-        int counter = 0;
-
-        while (result.isBest()){
-            result = chain.tryToConnect(chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true));
-            System.out.println(result + "   " + chain.getBestBlock().getNumber());
-            AionBlock blk = chain.getRepository().getBlockStore().getBestBlock();
-            System.out.println(blk.getNumber() + " " + blk.getTimestamp());
-            counter++;
-        }
-
-        return chain.getBestBlock().getTimestamp();
-
     }
 
     /**
@@ -208,9 +166,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         offset = offset + SIG_LEN;
         offset ++;
 
-        String rawDomainName = new String(domainNameInBytes);
+        String domainNameRaw = new String(domainNameInBytes);
         // check if the domain name is valid to register
-        if (!isValidDomainName(rawDomainName))
+        if (!isValidDomainName(domainNameRaw))
             return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST);
 
         // add zeros for storing
@@ -278,15 +236,15 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // if this domain is already in auction state
         else if (isAuctionDomain(domainAddress)){
-            processBid(domainAddress, bidderAddress, bidValue);
+            processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
 
         // start the auction for the given domain
         else{
             storeNewAddress(domainAddress);
-            addToAuctionDomain(domainAddress, domainName);
-            processBid(domainAddress, bidderAddress, bidValue);
+            addToAuctionDomain(domainAddress, domainName, domainNameRaw);
+            processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
             return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
     }
@@ -298,14 +256,19 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      * @param domainAddress address of the domain bid for
      */
-    private void addToAuctionDomain(Address domainAddress, String domainName){
+    private void addToAuctionDomain(Address domainAddress, String domainName, String domainNameRaw){
         Date currentDate = new Date();
         Date finishDate = new Date(currentDate.getTime() + AUCTION_TIME); // 3 days later, 3s
 
+        //long time = blockchain.getBestBlock().getTimestamp();
+        //Date finishDate = new Date(time + AUCTION_TIME);
+
         addDateToStorage(auctionDomainsAddress, domainAddress, finishDate);
         addNameToStorage(auctionDomainsAddressName, domainAddress, domainName);
-        this.track.addStorageRow(auctionDomainsAddressName, new DataWord(blake128(domainAddress.toBytes())), new DataWord(domainName.substring(0, 16).getBytes()));
-        this.track.addStorageRow(auctionDomainsAddressName, new DataWord(blake128(blake128(domainAddress.toBytes()))), new DataWord(domainName.substring(16, 32).getBytes()));
+
+        // store in auction LRU map
+        AuctionDomainsData tempData = new AuctionDomainsData(domainNameRaw, domainAddress, finishDate, BigInteger.ZERO);
+        auctionsMap.put(domainNameRaw, tempData);
 
         TimerTask auctionTask = new finishAuction(domainAddress);
         timer.schedule(auctionTask, finishDate);
@@ -315,7 +278,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     // to see if it has been extended, if it has, schedule new task.
     private ContractExecutionResult extensionRequest(Address domainAddress, long nrg){
         Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
+        //Date currentDate = new Date(blockchain.getBestBlock().getTimestamp());
         Date currentDate = new Date();
+
         long difference = expireDateFromStorage.getTime() - currentDate.getTime();
 
         // check if domain is currently active, but have not been extended
@@ -340,6 +305,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         Date currentDate = new Date();
         Date finishDate = new Date(currentDate.getTime() + ACTIVE_TIME); // 1 year later, 5s
 
+        //long time = blockchain.getBestBlock().getTimestamp();
+        //Date finishDate = new Date(time + ACTIVE_TIME);
+
         addBigIntegerToStorage(activeDomainsAddressValue, domainAddress, value);
         addDateToStorage(activeDomainsAddressTime, domainAddress, finishDate);
         addAddressToStorage(activeDomainsAddress, domainAddress, ownerAddress);
@@ -353,17 +321,47 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * Process the given bid. Increment the number of bids counter of the
      * domain and call function to store.
      *
+     * @param domainNameRaw domain name with .aion
      * @param domainAddress domain to bid for
      * @param bidderAddress address of the bidder
      * @param value the bid value
      */
-    private void processBid(Address domainAddress, Address bidderAddress, BigInteger value){
+    private void processBid(String domainNameRaw, Address domainAddress, Address bidderAddress, BigInteger value){
         this.track.getAccountState(bidderAddress).subFromBalance(value);
         BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
 
         addBidToRepo(domainAddress, numberOfBids.intValue(), bidderAddress, value);
         numberOfBids = numberOfBids.add(BigInteger.valueOf(1));
         addBigIntegerToStorage(domainAddress, BID_KEY_COUNTER, numberOfBids);
+
+        // if domain is in auction LRUMap, update bid counter by 1
+        if (auctionsMap.containsKey(domainNameRaw)){
+            AuctionDomainsData oldData = auctionsMap.get(domainNameRaw);
+            AuctionDomainsData newData = new AuctionDomainsData(oldData.domainName, oldData.domainAddress, oldData.completeDate, oldData.numberOfBids.add(BigInteger.ONE));
+            auctionsMap.put(domainNameRaw, newData);
+        }
+
+        // if auction domain is not in auction LRUMap(overwritten by other auctions) get its data from repo.
+        // Add info to auction LRUMap and increment the number of bids counter by 1
+        else{
+            Date tempExpireDate = getDateFromStorage(auctionDomainsAddress, domainAddress);
+            BigInteger tempNumberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
+            AuctionDomainsData tempData = new AuctionDomainsData(domainNameRaw, domainAddress, tempExpireDate, tempNumberOfBids.add(BigInteger.ONE));
+            auctionsMap.put(domainNameRaw, tempData);
+        }
+
+        // if domain is in bids LRUMap, add current bid to data
+        if (auctionBidsMap.containsKey(domainNameRaw)){
+            auctionBidsMap.get(domainNameRaw).put(domainAddress, value);
+        }
+
+        // if domain is not in bids LRUMap
+        // create the map and put into bids LRUMap
+        else{
+            Map<Address, BigInteger> bids = new HashMap<>();
+            bids.put(bidderAddress, value);
+            auctionBidsMap.put(domainNameRaw, bids);
+        }
     }
 
     /**
@@ -887,7 +885,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             String tempDomainName = domain.domainName;
 
             auctionBidsMap.put(tempDomainName, getBidsForADomain(tempDomainAddress));
-                // if bidder is there
+            // if bidder is there
             if(auctionBidsMap.get(tempDomainName).containsKey(callerAddress)) {
                 printBid(tempDomainName, callerAddress);
                 hasNoBids = false;

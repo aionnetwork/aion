@@ -40,6 +40,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.apache.commons.collections4.map.LRUMap;
 
 /**
  * Aion Name Service Contract
@@ -87,6 +88,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private Address resolverAddressKey;
     private Address TTLKey;
     private String domainName;
+
+    private static org.apache.commons.collections4.map.LRUMap<String, AionAuctionContract.AuctionDomainsData> activeDomains = new LRUMap(4);
 
     /** Construct a new ANS Contract */
     public AionNameServiceContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, Address ownerAddress) { // byte
