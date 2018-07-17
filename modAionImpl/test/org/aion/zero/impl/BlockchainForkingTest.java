@@ -349,7 +349,6 @@ public class BlockchainForkingTest {
     public void testRollbackWithAddInvalidBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
-
         StandaloneBlockchain bc = b.bc;
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
@@ -370,4 +369,8 @@ public class BlockchainForkingTest {
         assertThat(bc.getTotalDifficulty())
                 .isEqualTo(bc.getRepository().getBlockStore().getTotalDifficultyForHash(block.getHash()));
     }
+
+    /*
+     * Tests VM update behaviour from an external perspective
+     */
 }
