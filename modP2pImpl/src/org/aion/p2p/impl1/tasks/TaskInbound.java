@@ -192,6 +192,12 @@ public class TaskInbound implements Runnable {
                     return;
                 }
 
+                // reject Self connect
+                if (this.mgr.getOutGoingIP().equals(ip)) {
+                    channel.close();
+                    return;
+                }
+
                 int port = channel.socket().getPort();
                 INode node = this.nodeMgr.allocNode(ip, port);
 
