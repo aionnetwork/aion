@@ -109,4 +109,5 @@ public interface INode {
 
     void setBinaryVersion(String _revision);
 
+    String toString();
 }

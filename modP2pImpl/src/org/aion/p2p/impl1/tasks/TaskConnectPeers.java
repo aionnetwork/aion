@@ -96,8 +96,9 @@ public class TaskConnectPeers implements Runnable {
             if (this.nodeMgr.notAtOutboundList(nodeIdHash)
                 && this.nodeMgr.notActiveNode(nodeIdHash)) {
                 int _port = node.getPort();
+                SocketChannel channel = null;
                 try {
-                    SocketChannel channel = SocketChannel.open();
+                    channel = SocketChannel.open();
 
                     channel.socket()
                         .connect(
@@ -150,11 +151,30 @@ public class TaskConnectPeers implements Runnable {
                         p2pLOG.debug("connect-outbound io-exception addr={}:{} reason={}",
                             node.getIpStr(), _port, e.toString());
                     }
+
+                    if (channel != null) {
+                        try {
+                            p2pLOG.debug("close channel {}", node.toString());
+                            channel.close();
+                        } catch (IOException e1) {
+                            p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
+                        }
+                    }
+
                     // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
                     p2pLOG
                         .debug("connect-outbound exception -> id={} ip={} reason={}", node.getIdShort(),
                             node.getIpStr(), e.toString());
+
+                    if (channel != null) {
+                        try {
+                            p2pLOG.debug("close channel {}", node.toString());
+                            channel.close();
+                        } catch (IOException e1) {
+                            p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
+                        }
+                    }
                 }
             }
         }

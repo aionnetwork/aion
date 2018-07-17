@@ -22,6 +22,7 @@
  */
 package org.aion;
 
+import static java.lang.System.exit;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
@@ -60,7 +61,7 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            System.exit(ret);
+            exit(ret);
         }
 
         /*
@@ -78,15 +79,26 @@ public class Aion {
             throw e;
         }
 
+        /*
+         * Ensuring valid UUID in the config.xml
+         * Valid UUID: 32 Hex in 5 Groups [0-9A-F]
+         * 00000000-0000-0000-0000-000000000000
+         */
+        String UUID = cfg.getId();
+        if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+            System.out.println("Invalid UUID; please check <id> setting in config.xml");
+            exit(-1);
+        }
+
         /* Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out
-                .println("Logger disabled; to enable please check log settings in config.xml\n");
+                .println("Logger disabled; to enable please check <log> settings in config.xml");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("File path is invalid; please check log setting in config.xml\n");
+            System.out.println("Invalid file path; please check <log> setting in config.xml");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
         }
 
         /*

@@ -107,7 +107,7 @@ public final class SyncMgr {
     private Thread syncSs = null;
 
     private BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-    private volatile long timeUpdated = System.currentTimeMillis();
+    private volatile long timeUpdated = 0;
     private AtomicBoolean queueFull = new AtomicBoolean(false);
 
     public static SyncMgr inst() {
@@ -181,11 +181,20 @@ public final class SyncMgr {
         long selfBest = this.chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        syncGb = new Thread(new TaskGetBodies(this.p2pMgr, this.start, this.downloadedHeaders,
-            this.headersWithBodiesRequested, this.peerStates, log), "sync-gb");
+        syncGb = new Thread(new TaskGetBodies(this.p2pMgr,
+                                              this.start,
+                                              this.downloadedHeaders,
+                                              this.headersWithBodiesRequested,
+                                              this.peerStates,
+                                              log), "sync-gb");
         syncGb.start();
-        syncIb = new Thread(new TaskImportBlocks(this.p2pMgr, this.chain, this.start, statics,
-            this.downloadedBlocks, this.importedBlockHashes, this.peerStates, log), "sync-ib");
+        syncIb = new Thread(new TaskImportBlocks(this.chain,
+                                                 this.start,
+                                                 statics,
+                                                 this.downloadedBlocks,
+                                                 this.importedBlockHashes,
+                                                 this.peerStates,
+                                                 log), "sync-ib");
         syncIb.start();
         syncGs = new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs");
         syncGs.start();
@@ -362,7 +371,6 @@ public final class SyncMgr {
     }
 
     private static final class AionSyncMgrHolder {
-
         static final SyncMgr INSTANCE = new SyncMgr();
     }
 }

@@ -213,7 +213,7 @@ public final class P2pMgr implements IP2pMgr {
                     TimeUnit.MILLISECONDS);
             }
 
-            if (p2pLOG.isDebugEnabled()) {
+            if (p2pLOG.isInfoEnabled()) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     getStatusInstance(),
                     2,
@@ -223,7 +223,7 @@ public final class P2pMgr implements IP2pMgr {
 
             if (!syncSeedsOnly) {
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskRequestActiveNodes(this),
+                    new TaskRequestActiveNodes(this, p2pLOG),
                     5000,
                     PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);

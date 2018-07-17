@@ -85,7 +85,7 @@ public class NodeMgr implements INodeMgr {
      * @param selfShortId String
      */
     @Override
-    public String dumpNodeInfo(String selfShortId) {
+    public String dumpNodeInfo(String selfShortId, boolean completeInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         sb.append(String.format(
@@ -94,19 +94,10 @@ public class NodeMgr implements INodeMgr {
         sb.append(String.format(
             "temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                                         s - seed node, td - total difficulty, # - block number, bv - binary version\n",
             tempNodesSize(), inboundNodes.size(), outboundNodes.size(), activeNodes.size()));
+
+        sb.append(appendColumnFormat());
         List<INode> sorted = new ArrayList<>(activeNodes.values());
         if (sorted.size() > 0) {
-            sb.append("\n          s"); // id & seed
-            sb.append("               td");
-            sb.append("          #");
-            sb.append("                                                             hash");
-            sb.append("              ip");
-            sb.append("  port");
-            sb.append("     conn");
-            sb.append("              bv");
-            sb.append("           ci\n");
-            sb.append(
-                "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             sorted.sort((n1, n2) -> {
                 int tdCompare = n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
                 if (tdCompare == 0) {
@@ -117,25 +108,45 @@ public class NodeMgr implements INodeMgr {
                     return tdCompare;
                 }
             });
+
             for (INode n : sorted) {
                 try {
-                    sb.append(String.format("id:%6s %c %16s %10d %64s %15s %5d %8s %15s %12s\n",
-                        n.getIdShort(),
-                        n.getIfFromBootList() ? 'y' : ' ', n.getTotalDifficulty().toString(10),
-                        n.getBestBlockNumber(),
-                        n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
-                        n.getIpStr(),
-                        n.getPort(),
-                        n.getConnection(),
-                        n.getBinaryVersion(),
-                        n.getChannel().hashCode())
-                    );
+                    if (!completeInfo && !n.getIfFromBootList()) {
+                        continue;
+                    }
+                    sb.append(appendNodeInfo(n));
                 } catch (Exception ex) {
                     p2pLOG.error("NodeMgr dumpNodeInfo exception.", ex);
                 }
             }
         }
         return sb.toString();
+    }
+
+    private static String appendColumnFormat() {
+        return "\n          s"
+            + "               td"
+            + "          #"
+            + "                                                             hash"
+            + "              ip"
+            + "  port"
+            + "     conn"
+            + "              bv"
+            + "           ci\n"
+            + "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
+    }
+
+    private String appendNodeInfo(INode n) {
+        return String.format("id:%6s %c %16s %10d %64s %15s %5d %8s %15s %12s\n",
+            n.getIdShort(),
+            n.getIfFromBootList() ? 'y' : ' ', n.getTotalDifficulty().toString(10),
+            n.getBestBlockNumber(),
+            n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
+            n.getIpStr(),
+            n.getPort(),
+            n.getConnection(),
+            n.getBinaryVersion(),
+            n.getChannel().hashCode());
     }
 
     /**
@@ -161,7 +172,8 @@ public class NodeMgr implements INodeMgr {
             putLock.lockInterruptibly();
 
             if (tempNodes.size() < maxTempNodes && !tempNodes
-                .containsKey(_n.getPeerId()) && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
+                .containsKey(_n.getPeerId()) && (notActiveNode(_n.getIdHash()) || _n
+                .getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
             }
         } catch (InterruptedException e) {
@@ -173,11 +185,17 @@ public class NodeMgr implements INodeMgr {
 
     @Override
     public void addInboundNode(final INode _n) {
+        if (p2pLOG.isTraceEnabled()) {
+            p2pLOG.trace("addInboundNode {}", _n.toString());
+        }
         inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
 
     @Override
     public void addOutboundNode(final INode _n) {
+        if (p2pLOG.isTraceEnabled()) {
+            p2pLOG.trace("addOutboundNode {}", _n.toString());
+        }
         outboundNodes.put(_n.getIdHash(), _n);
     }
 
@@ -296,7 +314,13 @@ public class NodeMgr implements INodeMgr {
             try {
                 return this.getActiveNode((Integer) keysArr[random.nextInt(keysArr.length)]);
             } catch (IllegalArgumentException e) {
-                p2pLOG.error("<p2p get-random-exception>", e);
+                p2pLOG.error("getRandom-IllegalArgumentException", e);
+                return null;
+            } catch (NullPointerException e) {
+                p2pLOG.error("<getRandom-NullPointerException", e);
+                return null;
+            } catch (ClassCastException e) {
+                p2pLOG.error("<getRandom-ClassCastException", e);
                 return null;
             }
         } else {
@@ -327,6 +351,10 @@ public class NodeMgr implements INodeMgr {
         Map<Integer, INode> nodes = (_type.contentEquals("inbound")) ? inboundNodes : outboundNodes;
         INode node = nodes.remove(_hash);
         if (node != null) {
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("movePeerToActive: {} {}", _type, node.toString());
+            }
+
             //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized (node) {
                 if (activeNodes.size() >= maxActiveNodes) {
@@ -354,6 +382,10 @@ public class NodeMgr implements INodeMgr {
                     p2pLOG.debug(_type + " -> active node-id={} ip={}", node.getIdShort(),
                         node.getIpStr());
                 }
+            }
+        } else {
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("movePeerToActive empty {} {}", _type, _hash);
             }
         }
     }

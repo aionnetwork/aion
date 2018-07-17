@@ -53,7 +53,7 @@ public interface INodeMgr {
 
 	INode getOutboundNode(int k);
 
-	String dumpNodeInfo(String selfShortId);
+	String dumpNodeInfo(String selfShortId, boolean complete);
 
 	void seedIpAdd(String _ip);
 
@@ -73,6 +73,11 @@ public interface INodeMgr {
 
 	INode getNodefromOutBoundList(int _nodeIdHash);
 
+	/**
+	 * move node object from the inbound or outbound list to the active list
+	 * @param _hash the hash of the node, see inboundNodes/outboundNodes use in the NodeMgr
+	 * @param _type the string represent "inbound" or "outbound"
+	 */
 	void movePeerToActive(int _hash, String _type);
 
 }
