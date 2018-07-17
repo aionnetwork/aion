@@ -553,14 +553,14 @@ public class TRSqueryContractTest extends TRShelpers {
             4, BigInteger.ZERO, 0);
         createBlockchain(2, TimeUnit.SECONDS.toMillis(1));
 
-        BigInteger expectedPeriod = grabPeriodAt(newTRSownerContract(AION), contract, 1);
+        BigInteger expectedPeriod = grabPeriodAt(newTRSstateContract(AION), contract, 1);
         byte[] input = getPeriodAtInput(contract, 1);
         ContractExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
         assertEquals(0, res.getNrgLeft());
         assertEquals(expectedPeriod, new BigInteger(res.getOutput()));
 
-        expectedPeriod = grabPeriodAt(newTRSownerContract(AION), contract, 2);
+        expectedPeriod = grabPeriodAt(newTRSstateContract(AION), contract, 2);
         input = getPeriodAtInput(contract, 2);
         res = newTRSqueryContract(AION).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getCode());
@@ -661,7 +661,7 @@ public class TRSqueryContractTest extends TRShelpers {
         BigDecimal percent = BigDecimal.ZERO;
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + (periods / 5);
         checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 
@@ -678,7 +678,7 @@ public class TRSqueryContractTest extends TRShelpers {
         BigDecimal percent = new BigDecimal("31.484645467");
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + (periods / 3);
         checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 
@@ -695,7 +695,7 @@ public class TRSqueryContractTest extends TRShelpers {
         BigDecimal percent = new BigDecimal("19.213343253242");
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + periods;
 
         BigDecimal expectedFraction = new BigDecimal(1);
@@ -720,7 +720,7 @@ public class TRSqueryContractTest extends TRShelpers {
         BigDecimal percent = new BigDecimal("10.2353425");
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract);
         checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
     }
@@ -734,7 +734,7 @@ public class TRSqueryContractTest extends TRShelpers {
         BigDecimal percent = new BigDecimal("11");
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) - 1;
 
         BigDecimal expectedFraction = BigDecimal.ZERO;
@@ -759,7 +759,7 @@ public class TRSqueryContractTest extends TRShelpers {
         BigDecimal percent = new BigDecimal("6.1");
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + (periods / 7);
         checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 

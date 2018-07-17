@@ -2,7 +2,6 @@ package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -27,8 +26,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // TODO: grab AION from CfgAion later and preferrably aion prefix too.
     static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final long COST = 21000L;    // temporary.
-    static final long TEST_DURATION = 1;
-    static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
+    private static final long TEST_DURATION = 1;
+    private static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
     static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
     final Address caller;
@@ -40,12 +39,15 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * for unchanging keys we store them as an IDataWord object directly.
      */
     private static final IDataWord OWNER_KEY, SPECS_KEY, LIST_HEAD_KEY, FUNDS_SPECS_KEY, TIMESTAMP,
-        BONUS_SPECS_KEY, OPEN_KEY, NULL32, INVALID;
+        BONUS_SPECS_KEY, OPEN_KEY, EXTRA_SPECS_KEY, NULL32, INVALID;
     private static final byte BALANCE_PREFIX = (byte) 0xB0;
     private static final byte LIST_PREV_PREFIX = (byte) 0x60;
     private static final byte FUNDS_PREFIX = (byte) 0x90;
     private static final byte WITHDRAW_PREFIX = (byte) 0x30;
     private static final byte BONUS_PREFIX = (byte) 0x21;
+    private static final byte EXTRA_WITH_PREFIX = (byte) 0x80;
+    private static final byte EXTRA_WITH_SPEC_PREFIX = (byte) 0x94;
+    private static final byte EXTRA_FUNDS_PREFIX = (byte) 0x92;
 
     private static final int DOUBLE_WORD_SIZE = DoubleDataWord.BYTES;
     private static final int SINGLE_WORD_SIZE = DataWord.BYTES;
@@ -60,6 +62,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
         singleKey[0] = (byte) 0xE0;
         SPECS_KEY = toIDataWord(singleKey);
+
+        singleKey[0] = (byte) 0x93;
+        EXTRA_SPECS_KEY = toIDataWord(singleKey);
 
         singleKey[0] = (byte) 0x91;
         FUNDS_SPECS_KEY = toIDataWord(singleKey);
@@ -593,6 +598,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             acctVal = new byte[DOUBLE_WORD_SIZE];
             acctVal[0] = (byte) (NULL_BIT | numRows);
             initWithdrawalStats(contract, account);
+            initExtraWithdrawalSpecs(contract, account);
         } else {
             // Set valid bit, row count and preserve the previous null bit setting.
             acctVal = acctData.getData();
@@ -753,15 +759,18 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
         // Calculate withdrawal amount. If we are in last period or the contract has its funds open,
         // then account can withdraw all outstanding funds.
+        BigDecimal fraction = getDepositorFraction(contract, account);
         BigInteger amount;
         if ((inFinalPeriod) || isOpenFunds(contract)) {
-            amount = computeOutstadingOwings(contract, account);
+            amount = computeOutstadingOwings(contract, account).add
+                (computeExtraFundsToWithdraw(contract, account, fraction, currPeriod));
             setAccountIsDoneWithdrawing(contract, account);
         } else {
             BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
             BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
             int numPeriodsBehind = computeNumberPeriodsBehind(contract, account, currPeriod);
-            amount = (fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind))).add(specialAmt);
+            amount = (fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind))).
+                add(specialAmt).add(computeExtraFundsToWithdraw(contract, account, fraction, currPeriod));
         }
 
         // If amount is non-zero then transfer the funds and update account's last withdrawal period.
@@ -1010,17 +1019,27 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     public BigInteger computeBonusShare(Address contract, Address account) {
         BigDecimal bonusFunds = new BigDecimal(getBonusBalance(contract));
-        BigDecimal acctBalance = new BigDecimal(getDepositBalance(contract, account));
+        BigDecimal fraction = getDepositorFraction(contract, account);
+        BigDecimal share = fraction.multiply(bonusFunds);
+        return share.toBigInteger();
+    }
 
+    /**
+     * Returns the fraction of the total deposits in contract that account owns. This fraction
+     * determines the fraction of bonus and extra funds that account is entitled to.
+     *
+     * @param contract The TRS contract.
+     * @param account The account.
+     * @return the fraction of the total deposits account owns.
+     */
+    private BigDecimal getDepositorFraction(Address contract, Address account) {
+        BigDecimal acctBalance = new BigDecimal(getDepositBalance(contract, account));
         BigInteger totalBalance = getTotalBalance(contract);
         if (totalBalance.compareTo(BigInteger.ZERO) <= 0) {
             throw new IllegalStateException("Contract has no balance, can't compute bonus share!");
         }
         BigDecimal totalBalanceDec = new BigDecimal(totalBalance);
-
-        BigDecimal fraction = acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
-        BigDecimal share = fraction.multiply(bonusFunds);
-        return share.toBigInteger();
+        return acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
     }
 
     /**
@@ -1045,6 +1064,48 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         BigInteger totalWithdrawn = (amtPerPeriod.multiply(BigInteger.valueOf(lastPeriod))).add(specialAmt);
         BigInteger owings = computeTotalOwed(contract, account);
         return owings.subtract(totalWithdrawn);
+    }
+
+    /**
+     * Returns the amount of extra funds that account is eligible to withdraw for the current
+     * period. If the contract has P periods and the amount of extra funds in it is E and account
+     * owns F fraction of the total deposit balance in the contract, then account will be eligible
+     * for FE (allowing round-off error) of the extra funds over the lifetime of the contract.
+     *
+     * Assume that the current period is U and account has already withdrawn W extra funds from the
+     * contract and that the last period account has withdrawn in was period L, where L <= U.
+     *
+     * Then this method returns the following:
+     *
+     *   (U - L)((FE - W) / (P - L))
+     *
+     * An exception to this is when U == P, in which case this method returns:
+     *
+     *   FE - W
+     *
+     * @param contract The TRS contract.
+     * @param account The account.
+     * @param currPeriod The current period we are in.
+     * @return the extra funds account is able to withdraw.
+     */
+    private BigInteger computeExtraFundsToWithdraw(Address contract, Address account,
+        BigDecimal fraction, int currPeriod) {
+
+        int periods = getPeriods(getContractSpecs(contract));
+        int lastPeriod = getAccountLastWithdrawalPeriod(contract, account);
+        BigInteger extraFunds = getExtraFunds(contract);
+        BigInteger extrasWithdrawn = getExtraWithdrawalBalance(contract, account);
+
+        BigDecimal owed = fraction.multiply(new BigDecimal(extraFunds));
+        BigDecimal owedLeft = owed.subtract(new BigDecimal(extrasWithdrawn));
+        if (lastPeriod == periods) {
+            return owedLeft.toBigInteger();
+        } else {
+            BigDecimal portion = owedLeft.divide(new BigDecimal(
+                BigInteger.valueOf(periods - lastPeriod)), 18, RoundingMode.HALF_DOWN);
+            return portion.multiply(new BigDecimal(BigInteger.valueOf(currPeriod - lastPeriod))).
+                toBigInteger();
+        }
     }
 
     /**
@@ -1106,6 +1167,124 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             System.arraycopy(bonusVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(balance);
+    }
+
+    /**
+     * Initializes the withdrawal specifications of account for the TRS contract contract. The
+     * initial specifications are set so that the number of rows that the amount of extra funds
+     * withdrawn is represented by zero rows (that is, this amount is zero).
+     *
+     * This method must only be called in exactly one place: in setDepositBalance, when a new account
+     * is depositing for the first time (perhaps after being removed prior).
+     *
+     * @param contract The TRS contract to update.
+     * @param account The account to update.
+     */
+    private void initExtraWithdrawalSpecs(Address contract, Address account) {
+        byte[] specs = new byte[SINGLE_WORD_SIZE];
+        specs[0] = 0x0;
+        track.addStorageRow(contract, toIDataWord(makeExtraSpecsKey(account)), toIDataWord(specs));
+    }
+
+    /**
+     * Returns the total amount of extra funds account has already withdrawn from the contract so
+     * far.
+     *
+     * If contract is invalid or account has no deposit balance in contract then zero is returned.
+     *
+     * @param contract The TRS contract to query.
+     * @param account The account to query.
+     * @return the extra funds account has already withdrawn from contract.
+     */
+    public BigInteger getExtraWithdrawalBalance(Address contract, Address account) {
+        IDataWord extraSpecs = track.getStorageValue(contract, toIDataWord(makeExtraSpecsKey(account)));
+        if (extraSpecs == null) { return BigInteger.ZERO; }
+        int numRows = extraSpecs.getData()[0];
+        if (numRows == 0) { return BigInteger.ZERO; }
+
+        byte[] extraFunds = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
+        for (int i = 0; i < numRows; i++) {
+            byte[] extraKey = makeExtraWithdrawnKey(account, i);
+            byte[] extraVal = track.getStorageValue(contract, toIDataWord(extraKey)).getData();
+            System.arraycopy(extraVal, 0, extraFunds, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
+        }
+        return new BigInteger(extraFunds);
+    }
+
+    /**
+     * Sets the amount of extra funds that account has already withdrawn from contract to amount.
+     *
+     * @param contract The TRS contract to update.
+     * @param account The TRS account to update.
+     */
+    private void setExtraWithdrawalBalance(Address contract, Address account, BigInteger amount) {
+        if (amount.compareTo(BigInteger.ONE) < 0) { return; }
+        byte[] bal = toDoubleWordAlignedArray(amount);
+        int numRows = bal.length / DOUBLE_WORD_SIZE;
+        if (numRows > MAX_DEPOSIT_ROWS) { return; }
+        for (int i = 0; i < numRows; i++) {
+            byte[] extraKey = makeExtraWithdrawnKey(account, i);
+            byte[] extraVal = new byte[DOUBLE_WORD_SIZE];
+            System.arraycopy(bal, i * DOUBLE_WORD_SIZE, extraVal, 0, DOUBLE_WORD_SIZE);
+            track.addStorageRow(contract, toIDataWord(extraKey), toIDataWord(extraVal));
+        }
+
+        // Update extra funds withdrawn specs.
+        byte[] extraSpec = new byte[SINGLE_WORD_SIZE];
+        extraSpec[0] = (byte) (numRows & 0x0F);
+        track.addStorageRow(contract, toIDataWord(makeExtraSpecsKey(account)), toIDataWord(extraSpec));
+    }
+
+    /**
+     * Returns the total extra funds available to the TRS contract whose address is contract.
+     *
+     * @param contract The TRS contract to query.
+     * @return the amount of extra funds contract has.
+     */
+    public BigInteger getExtraFunds(Address contract) {
+        IDataWord extraSpecs = track.getStorageValue(contract, EXTRA_SPECS_KEY);
+        if (extraSpecs == null) { return BigInteger.ZERO; }
+        int numRows = ByteBuffer.wrap(Arrays.copyOfRange(
+            extraSpecs.getData(), SINGLE_WORD_SIZE - Integer.BYTES, SINGLE_WORD_SIZE)).getInt();
+        if (numRows == 0) { return BigInteger.ZERO; }
+
+        byte[] extraFunds = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
+        for (int i = 0; i < numRows; i++) {
+            byte[] extraKey = makeExtraKey(i);
+            byte[] extraVal = track.getStorageValue(contract, toIDataWord(extraKey)).getData();
+            System.arraycopy(extraVal, 0, extraFunds, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
+        }
+        return new BigInteger(extraFunds);
+    }
+
+    /**
+     * Sets the total extra funds available in the TRS contract whose address is contract to amount.
+     * If amount is negative or if it requires more than MAX_DEPOSIT_ROWS rows to be represented
+     * then this method does nothing.
+     *
+     * This method should only ever be called by the updateTotal operation and nowhere else.
+     *
+     * @param contract The TRS contract to update.
+     * @param amount The amount of extra funds contract will now have.
+     */
+    void setExtraFunds(Address contract, BigInteger amount) {
+        if (amount.compareTo(BigInteger.ONE) < 0) { return; }
+        byte[] bal = toDoubleWordAlignedArray(amount);
+        int numRows = bal.length / DOUBLE_WORD_SIZE;
+        if (numRows > MAX_DEPOSIT_ROWS) { return; }
+        for (int i = 0; i < numRows; i++) {
+            byte[] extraKey = makeExtraKey(i);
+            byte[] extraVal = new byte[DOUBLE_WORD_SIZE];
+            System.arraycopy(bal, i * DOUBLE_WORD_SIZE, extraVal, 0, DOUBLE_WORD_SIZE);
+            track.addStorageRow(contract, toIDataWord(extraKey), toIDataWord(extraVal));
+        }
+
+        // Update extra funds specs.
+        byte[] extraSpec = new byte[SINGLE_WORD_SIZE];
+        for (int i = 0; i < Integer.BYTES; i++) {
+            extraSpec[SINGLE_WORD_SIZE - i - 1] = (byte) ((numRows >> (i * Byte.SIZE)) & 0xFF);
+        }
+        track.addStorageRow(contract, EXTRA_SPECS_KEY, toIDataWord(extraSpec));
     }
 
     /**
@@ -1248,6 +1427,51 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             bonusKey[SINGLE_WORD_SIZE - i - 1] = (byte) ((row >>> (i * Byte.SIZE)) & 0xFF);
         }
         return bonusKey;
+    }
+
+    /**
+     * Returns a key for the database to query the total extra funds for the contract at a row
+     * number of some TRS contract.
+     *
+     * @param row The extra funds row to make the key for.
+     * @return the key to access the specified extra funds row for some contract.
+     */
+    private byte[] makeExtraKey(int row) {
+        byte[] extraKey = new byte[SINGLE_WORD_SIZE];
+        extraKey[0] = EXTRA_FUNDS_PREFIX;
+        for (int i = 0; i < Integer.BYTES; i++) {
+            extraKey[SINGLE_WORD_SIZE - i - 1] = (byte) ((row >> (i * Byte.SIZE)) & 0xFF);
+        }
+        return extraKey;
+    }
+
+    /**
+     * Returns a key for the database to query the extra withdrawal specifications entry for account.
+     *
+     * @param account The account whose withdrawal specs this key is for.
+     * @return the key to access the specified withdrawal specifications entry.
+     */
+    private byte[] makeExtraSpecsKey(Address account) {
+        byte[] extraSpecKey = new byte[DOUBLE_WORD_SIZE];
+        extraSpecKey[0] = EXTRA_WITH_SPEC_PREFIX;
+        System.arraycopy(account.toBytes(), 1, extraSpecKey, 1, Address.ADDRESS_LEN - 1);
+        return extraSpecKey;
+    }
+
+    /**
+     * Returns a key for the database to query the extra funds withdrawn entry for a specific account
+     * at the specified row.
+     *
+     * @param account The account whose extras-withdrawn entry this key is for.
+     * @param row The row of the extras-withdrawn amount this key is for.
+     * @return the key to access the specified extras-withdrawn entry.
+     */
+    private byte[] makeExtraWithdrawnKey(Address account, int row) {
+        byte[] extraWithKey = new byte[DOUBLE_WORD_SIZE];
+        extraWithKey[0] = EXTRA_WITH_PREFIX;
+        extraWithKey[0] |= (row & 0x0F);
+        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, Address.ADDRESS_LEN);
+        return extraWithKey;
     }
 
     /**

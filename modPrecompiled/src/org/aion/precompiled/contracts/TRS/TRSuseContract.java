@@ -56,7 +56,7 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  *      bulkWithdraw -- bulk fund withdrawal to all depositors. Owner-only.
  *      refund -- refunds funds to a depositor. Can only be called prior to locking. Owner-only.
  *      depositFor -- deposits funds into a public-facing TRS contract on an accout's behalf. Owner-only.
- *      updateTotal -- updates the total balance, in case of subsequent sales. Owner-only.
+ *      addExtraFunds -- adds extra funds to contract, in case of subsequent sales. Owner-only.
  */
 public final class TRSuseContract extends AbstractTRS {
 
@@ -209,6 +209,25 @@ public final class TRSuseContract extends AbstractTRS {
      *
      *     returns: void.
      *
+     *                                          ~~~***~~~
+     *
+     *   <b>operation 0x6</b> - adds extra funds to the TRS contract that are split proportionally
+     *     among the contract's depositors according to the proportions each of them has contributed
+     *     compared to the total amount of user deposits (that is, excluding added extra funds and
+     *     bonus amounts). These extra funds are withdrawn by the depositors equally over the number
+     *     of remaining periods.
+     *
+     *     [<32b - contractAddress> | <128b - amount>]
+     *     total = 161 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
+     *     amount is the amount of extra funds to add to the contract.
+     *
+     *     conditions: the caller must be the contract owner. If a contract's funds are open then
+     *       this operation is disabled.
+     *
+     *     returns: void.
+     *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
      * @return the result of calling execute on the specified input.
@@ -236,6 +255,7 @@ public final class TRSuseContract extends AbstractTRS {
             case 3: return bulkWithdraw(input, nrgLimit);
             case 4: return refund(input, nrgLimit);
             case 5: return depositFor(input, nrgLimit);
+            case 6: return addExtraFunds(input, nrgLimit);
             default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
@@ -667,6 +687,70 @@ public final class TRSuseContract extends AbstractTRS {
 
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         return makeDeposit(contract, account, amount, nrgLimit);
+    }
+
+    /**
+     * Logic to add extra funds to an existing public-facing TRS contract.
+     *
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x6> | <32b - contractAddress> | <128b - amount>]
+     *     total = 161 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
+     *     amount is the amount of extra funds to add to the contract.
+     *
+     *   conditions: the caller must be the contract owner. If a contract's funds are open then
+     *     this operation is disabled.
+     *
+     *   returns: void.
+     *
+     * @param input The input to add extra funds into a public-facing TRS contract logic.
+     * @param nrgLimit The energy limit.
+     * @return the result of executing this logic on the specified input.
+     */
+    private ContractExecutionResult addExtraFunds(byte[] input, long nrgLimit) {
+        // Some "constants".
+        final int indexContract = 1;
+        final int indexAmount = 33;
+        final int len = 161;
+
+        if (input.length != len) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
+        byte[] specs = getContractSpecs(contract);
+        if (specs == null) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // A depositFor operation can only execute if caller is owner.
+        if (!caller.equals(getContractOwner(contract))) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // If contract has its funds open then this operation fails.
+        if (isOpenFunds(contract)) {
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        }
+
+        // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
+        byte[] amountBytes = new byte[len - indexAmount + 1];
+        System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
+        BigInteger amount = new BigInteger(amountBytes);
+
+        // The caller must have adequate funds to make the proposed deposit.
+        BigInteger fundsAvailable = track.getBalance(caller);
+        if (fundsAvailable.compareTo(amount) < 0) {
+            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+        }
+
+        if (amount.compareTo(BigInteger.ZERO) > 0) {
+            setExtraFunds(contract, getExtraFunds(contract).add(amount));
+            track.addBalance(caller, amount.negate());
+            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        }
+        return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
     }
 
     // <-------------------------------------HELPER METHODS---------------------------------------->

@@ -27,7 +27,7 @@ import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
-import org.aion.precompiled.contracts.TRS.TRSownerContract;
+import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -43,7 +43,7 @@ class TRShelpers {
     Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     long COST = 21000L;
     IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
-    IAionBlockchain blockchain = StandaloneBlockchain.inst();
+    private IAionBlockchain blockchain = StandaloneBlockchain.inst();
     List<Address> tempAddrs;
     ECKey senderKey;
     private static final byte[] out = new byte[1];
@@ -120,8 +120,13 @@ class TRShelpers {
     }
 
     // Returns the contract specifications byte array associated with contract.
-    byte[] getContractSpecs(AbstractTRS trs, Address contract) {
+    private byte[] getContractSpecs(AbstractTRS trs, Address contract) {
         return trs.getContractSpecs(contract);
+    }
+
+    // Returns the amount of extra funds that the TRS contract contract has.
+    BigInteger grabExtraFunds(AbstractTRS trs, Address contract) {
+        return trs.getExtraFunds(contract);
     }
 
     // Returns the period the contract is in at the block number blockNum.
@@ -130,9 +135,9 @@ class TRShelpers {
         return BigInteger.valueOf(trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
     }
 
-    // Returns a new TRSownerContract that calls the contract using caller.
-    TRSownerContract newTRSownerContract(Address caller) {
-        return new TRSownerContract(repo, caller, blockchain);
+    // Returns a new TRSstateContract that calls the contract using caller.
+    TRSstateContract newTRSstateContract(Address caller) {
+        return new TRSstateContract(repo, caller, blockchain);
     }
 
     // Returns a new TRSuseContract that calls the contract using caller.
@@ -148,7 +153,7 @@ class TRShelpers {
         int periods, BigInteger percent, int precision) {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
-        TRSownerContract trs = new TRSownerContract(repo, owner, blockchain);
+        TRSstateContract trs = new TRSstateContract(repo, owner, blockchain);
         ContractExecutionResult res = trs.execute(input, COST);
         if (!res.getCode().equals(ResultCode.SUCCESS)) { fail("Unable to create contract!"); }
         Address contract = new Address(res.getOutput());
@@ -179,7 +184,7 @@ class TRShelpers {
             fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo.getBalance(owner));
         }
         input = getLockInput(contract);
-        if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+        if (!newTRSstateContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         return contract;
@@ -196,11 +201,11 @@ class TRShelpers {
             fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo.getBalance(owner));
         }
         input = getLockInput(contract);
-        if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+        if (!newTRSstateContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         input = getStartInput(contract);
-        if (!newTRSownerContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
+        if (!newTRSstateContract(owner).execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to start contract!");
         }
         return contract;
@@ -356,6 +361,28 @@ class TRShelpers {
         return input;
     }
 
+    // Returns a properly formatted byte array to be used as input for the addExtraFunds operation.
+    byte[] getAddExtraInput(Address contract, BigInteger amount) {
+        byte[] input = new byte[161];
+        input[0] = 0x6;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        byte[] amtBytes = amount.toByteArray();
+        if (amtBytes.length > 128) { fail(); }
+        System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length, amtBytes.length);
+        return input;
+    }
+
+    // Returns a properly formatted byte array to add the max extra funds in one operation.
+    byte[] getAddExtraMaxInput(Address contract) {
+        byte[] input = new byte[161];
+        input[0] = 0x6;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        for (int i = 33; i < 161; i++) {
+            input[i] = (byte) 0xFF;
+        }
+        return input;
+    }
+
     // Returns a byte array signalling false for a TRS contract query operation result.
     byte[] getFalseContractOutput() {
         out[0] = 0x0;
@@ -376,6 +403,11 @@ class TRShelpers {
     // Returns the balance of bonus tokens in the TRS contract contract.
     BigInteger getBonusBalance(AbstractTRS trs, Address contract) {
         return trs.getBonusBalance(contract);
+    }
+
+    // Returns true only if the TRS contract has its funds open.
+    boolean getAreContractFundsOpen(AbstractTRS trs, Address contract) {
+        return trs.isOpenFunds(contract);
     }
 
     // Returns the total amount of tokens account can withdraw over the lifetime of the contract.
@@ -407,8 +439,8 @@ class TRShelpers {
         Address contract = createTRScontract(AION, true, true, periods,
             percent, precision);
 
-        assertEquals(percentage, getPercentage(newTRSownerContract(AION), contract));
-        assertEquals(periods, getPeriods(newTRSownerContract(AION), contract));
+        assertEquals(percentage, getPercentage(newTRSstateContract(AION), contract));
+        assertEquals(periods, getPeriods(newTRSstateContract(AION), contract));
 
         byte[] input = getDepositInput(contract, deposits);
         for (int i = 0; i < numDepositors; i++) {
@@ -563,7 +595,7 @@ class TRShelpers {
     // Locks and makes contract live, where owner is owner of the contract.
     void lockAndStartContract(Address contract, Address owner) {
         byte[] input = getLockInput(contract);
-        AbstractTRS trs = newTRSownerContract(owner);
+        AbstractTRS trs = newTRSstateContract(owner);
         if (!trs.execute(input, COST).getCode().equals(ResultCode.SUCCESS)) {
             Assert.fail("Unable to lock contract!");
         }

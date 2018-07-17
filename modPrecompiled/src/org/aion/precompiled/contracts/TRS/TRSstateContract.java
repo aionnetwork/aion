@@ -37,7 +37,7 @@ import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 
 /**
- * The TRSownerContract is 1 of 3 inter-dependent but separate contracts that together make up the
+ * The TRSstateContract is 1 of 3 inter-dependent but separate contracts that together make up the
  * public-facing TRS contract. A public-facing TRS contract can be owned by any user. In addition to
  * a regular user being able to own a public-facing TRS contract, there is also a special instance
  * of the public-facing TRS contract that is owned by The Aion Foundation itself, which differs from
@@ -47,7 +47,7 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  * TRS contract supports many operations, rather than have a single execute method and one very
  * large document specifying its use, the contract was split into 3 logical components instead.
  *
- * The TRSownerContract is the component of the public-facing TRS contract that the contract owner
+ * The TRSstateContract is the component of the public-facing TRS contract that the contract owner
  * interacts with primarily. The operations provided here are all operations that only the contract
  * owner can use and are related to the overall integrity of the contract itself.
  *
@@ -57,17 +57,17 @@ import org.aion.precompiled.ContractExecutionResult.ResultCode;
  *      start -- starts the distribution of the savings in the TRS contract.
  *      openFunds -- kills the TRS contract and unlocks all of the funds for depositors to withdraw.
  */
-public final class TRSownerContract extends AbstractTRS {
+public final class TRSstateContract extends AbstractTRS {
 
     /**
-     * Constructs a new TRSownerContract that will use track as the database cache to update its
+     * Constructs a new TRSstateContract that will use track as the database cache to update its
      * state with and is called by caller.
      *
      * @param track The database cache.
      * @param caller The calling address.
      * @throws NullPointerException if track or caller are null.
      */
-    public TRSownerContract(
+    public TRSstateContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
         IBlockchain blockchain) {
 

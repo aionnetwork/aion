@@ -10,7 +10,6 @@ import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -860,7 +859,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // Lock the contract.
         input = getLockInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getCode());
 
         input = getWithdrawInput(contract);
         ContractExecutionResult res = newTRSuseContract(acct).execute(input, COST);
@@ -899,7 +898,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // Test that locking changes nothing.
         input = getLockInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(owner).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(owner).execute(input, COST).getCode());
         assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
     }
 
@@ -914,9 +913,9 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
 
         input = getLockInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(owner).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(owner).execute(input, COST).getCode());
         input = getStartInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(owner).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(owner).execute(input, COST).getCode());
         assertEquals(0, getAccountLastWithdrawalPeriod(newTRSuseContract(owner), contract, acc));
     }
 
@@ -984,7 +983,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // We try to put the contract in a non-final period and withdraw.
         createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         BigInteger expectedAmt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
 
         Set<Address> depositors = getAllDepositors(trs, contract);
@@ -1016,7 +1015,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // We try to put the contract in a non-final period and withdraw.
         createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         BigInteger expectedAmt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
 
         Set<Address> contributors = getAllDepositors(trs, contract);
@@ -1041,7 +1040,7 @@ public class TRSuseContractTest extends TRShelpers {
         // there is no block that has been made after the contract went live. All depositors will
         // be eligible to withdraw only the special event amount.
         createBlockchain(0, 0);
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         BigInteger expectedAmt = grabSpecialAmount(new BigDecimal(deposits), new BigDecimal(total),
             new BigDecimal(bonus), percent);
 
@@ -1071,7 +1070,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // We try to put the contract in a non-final period greater than period 1 and withdraw.
         createBlockchain(3, TimeUnit.SECONDS.toMillis(1));
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         assertTrue(grabCurrentPeriod(trs, contract).compareTo(BigInteger.ONE) > 0);
         BigInteger expectedAmt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
 
@@ -1095,7 +1094,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // We try to put the contract in a final period and withdraw.
         createBlockchain(1, TimeUnit.SECONDS.toMillis(4));
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         assertEquals(BigInteger.valueOf(periods), grabCurrentPeriod(trs, contract));
         BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
 
@@ -1123,7 +1122,7 @@ public class TRSuseContractTest extends TRShelpers {
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(0, 0);
 
         boolean isAccNotDone;
@@ -1172,7 +1171,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // We try to put the contract in the final period and withdraw.
         createBlockchain(1, TimeUnit.SECONDS.toMillis(4));
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
 
         // We are in last period so we expect to withdraw our total owings.
         BigInteger currPeriod = grabCurrentPeriod(trs, contract);
@@ -1197,7 +1196,7 @@ public class TRSuseContractTest extends TRShelpers {
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(0, 0);
 
         boolean isAccNotDone;
@@ -1255,7 +1254,7 @@ public class TRSuseContractTest extends TRShelpers {
         repo.addBalance(contract, bonus);
         lockAndStartContract(contract, AION);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(0, 0);
 
         boolean isDone = false;
@@ -1297,7 +1296,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // We try to put the contract in a non-final period greater than period 1 and withdraw.
         createBlockchain(4, TimeUnit.SECONDS.toMillis(1));
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         assertEquals(BigInteger.valueOf(periods), grabCurrentPeriod(trs, contract));
         BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
 
@@ -1320,7 +1319,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // We try to put the contract in a non-final period and withdraw.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
         assertTrue(grabCurrentPeriod(trs, contract).compareTo(BigInteger.valueOf(periods)) < 0);
 
@@ -1357,7 +1356,7 @@ public class TRSuseContractTest extends TRShelpers {
         // No blocks, so only special withdrawal is available. Since special is 100% we claim our
         // total owings right here.
         createBlockchain(0,0);
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         assertEquals(0, grabCurrentPeriod(trs, contract).intValue());
         BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
 
@@ -1398,7 +1397,7 @@ public class TRSuseContractTest extends TRShelpers {
         // is in the range (0,1) and so all subsequent withdrawal periods should withdraw zero until
         // the final period, where the 1 token is finally claimed.
         createBlockchain(0,0);
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         assertEquals(0, grabCurrentPeriod(trs, contract).intValue());
         BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
         BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
@@ -1443,7 +1442,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Withdraw all funds and ensure it equals deposits, meaning the later bonus was ignored.
         createBlockchain(1, TimeUnit.SECONDS.toMillis(3));
         byte[] input = getWithdrawInput(contract);
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         Set<Address> contributors = getAllDepositors(trs, contract);
         for (Address acc : contributors) {
             assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
@@ -1466,7 +1465,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Move into final period and withdraw.
         createBlockchain(1, 0);
         byte[] input = getWithdrawInput(contract);
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         Set<Address> contributors = getAllDepositors(trs, contract);
         for (Address acc : contributors) {
             assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getCode());
@@ -1487,7 +1486,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Move into non-final period and withdraw.
         createBlockchain(1, 0);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
         assertTrue(grabCurrentPeriod(trs, contract).compareTo(BigInteger.valueOf(periods)) < 0);
 
@@ -1571,7 +1570,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // Try to do a bulk-withdraw calling as every depositor in the contract (owner is AION).
         byte[] input = getBulkWithdrawInput(contract);
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         Set<Address> contributors = getAllDepositors(trs, contract);
         for (Address acc : contributors) {
             assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acc).execute(input, COST).getCode());
@@ -1610,7 +1609,7 @@ public class TRSuseContractTest extends TRShelpers {
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getCode());
         input = getLockInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getCode());
 
         // Try to withdraw.
         input = getBulkWithdrawInput(contract);
@@ -1628,7 +1627,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // Verify depositor has no account balance.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         Address depositor = getAllDepositors(trs, contract).iterator().next();
         assertEquals(BigInteger.ZERO, repo.getBalance(depositor));
 
@@ -1650,7 +1649,7 @@ public class TRSuseContractTest extends TRShelpers {
         int depositors = 6;
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
         BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
@@ -1682,7 +1681,7 @@ public class TRSuseContractTest extends TRShelpers {
         int depositors = 5;
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(1, TimeUnit.SECONDS.toMillis(1));
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
         BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
@@ -1719,7 +1718,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // We have only a genesis block so by block timestamps we are not yet live.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(0, 0);
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
 
@@ -1745,7 +1744,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // Move contract into its final period.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(1, TimeUnit.SECONDS.toMillis(5));
         assertEquals(grabCurrentPeriod(trs, contract).intValue(), periods);
 
@@ -1772,7 +1771,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // We have only a genesis block so by block timestamps we are not yet live.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(0, 0);
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
 
@@ -1804,7 +1803,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // Move contract into a non-final period.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(1, TimeUnit.SECONDS.toMillis(2));
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
 
@@ -1835,7 +1834,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = setupContract(depositors, deposits, bonus, periods, percent);
 
         // Move contract into a non-final period.
-        AbstractTRS trs = newTRSownerContract(AION);
+        AbstractTRS trs = newTRSstateContract(AION);
         createBlockchain(1, TimeUnit.SECONDS.toMillis(3));
         BigInteger total = deposits.multiply(BigInteger.valueOf(depositors));
 
@@ -1965,7 +1964,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         // Now lock the contract.
         input = getLockInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getCode());
 
         // Now have contract owner try to refund acct2.
         input = getRefundInput(contract, acct2, BigInteger.ONE);
@@ -1987,9 +1986,9 @@ public class TRSuseContractTest extends TRShelpers {
 
         // Now lock the contract and make it live.
         input = getLockInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getCode());
         input = getStartInput(contract);
-        assertEquals(ResultCode.SUCCESS, newTRSownerContract(acct).execute(input, COST).getCode());
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getCode());
 
         // Now have contract owner try to refund acct2.
         input = getRefundInput(contract, acct2, BigInteger.ONE);
@@ -2475,6 +2474,189 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
         assertEquals(DEFAULT_BALANCE, getDepositBalance(trs, contract, owner));
         assertEquals(BigInteger.ZERO, repo.getBalance(owner));
+    }
+
+    // <-------------------------------TRS ADD EXTRA FUNDS TESTS----------------------------------->
+
+    @Test
+    public void testAddExtraInputTooShort() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getAddExtraInput(contract, DEFAULT_BALANCE);
+        byte[] shortInput = Arrays.copyOf(input, input.length - 1);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(shortInput, COST).getCode());
+    }
+
+    @Test
+    public void testAddExtraInputTooLong() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getAddExtraInput(contract, DEFAULT_BALANCE);
+        byte[] longInput = new byte[input.length + 1];
+        System.arraycopy(input, 0, longInput, 0, input.length);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(longInput, COST).getCode());
+    }
+
+    @Test
+    public void testAddExtraContractNonExistent() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        byte[] input = getAddExtraInput(acct, DEFAULT_BALANCE);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testAddExtraCallerIsNotOwner() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(AION, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getAddExtraInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testAddExtraCallHasInsufficientFunds() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getAddExtraInput(contract, DEFAULT_BALANCE.add(BigInteger.ONE));
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, newTRSuseContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testAddExtraFundsOpen() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(newTRSstateContract(acct), contract));
+
+        input = getAddExtraInput(contract, DEFAULT_BALANCE);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+    }
+
+    @Test
+    public void testExtraFundsNewContract() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(acct);
+        assertEquals(BigInteger.ZERO, grabExtraFunds(trs, contract));
+    }
+
+    @Test
+    public void testAddZeroExtraFunds() {
+        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(acct);
+        byte[] input = getAddExtraInput(contract, BigInteger.ZERO);
+        assertEquals(ResultCode.INTERNAL_ERROR, trs.execute(input, COST).getCode());
+        assertEquals(BigInteger.ZERO, grabExtraFunds(trs, contract));
+        assertEquals(DEFAULT_BALANCE, repo.getBalance(acct));
+    }
+
+    @Test
+    public void testAddExtraFundsUnlocked() {
+        BigInteger amt = new BigInteger("32985623956237896532753265332");
+        Address acct = getNewExistentAccount(amt);
+        Address contract = createTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(acct);
+        byte[] input = getAddExtraInput(contract, amt);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertEquals(amt, grabExtraFunds(trs, contract));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+    }
+
+    @Test
+    public void testAddExtraFundsLocked() {
+        BigInteger amt = new BigInteger("32985623956237896532753265332").add(BigInteger.ONE);
+        Address acct = getNewExistentAccount(amt);
+        Address contract = createAndLockTRScontract(acct, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(acct);
+        byte[] input = getAddExtraInput(contract, amt.subtract(BigInteger.ONE));
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertEquals(amt.subtract(BigInteger.ONE), grabExtraFunds(trs, contract));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+    }
+
+    @Test
+    public void testAddExtraFundsLive() {
+        BigInteger amt = new BigInteger("32985623956237896532753265332").add(BigInteger.ONE);
+        Address acct = getNewExistentAccount(amt);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true,
+            1, BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(acct);
+        byte[] input = getAddExtraInput(contract, amt.subtract(BigInteger.ONE));
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertEquals(amt.subtract(BigInteger.ONE), grabExtraFunds(trs, contract));
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+    }
+
+    @Test
+    public void testAddMaxExtraFunds() {
+        int times = 23;
+        BigInteger amt = getMaxOneTimeDeposit().multiply(BigInteger.valueOf(times));
+        Address acct = getNewExistentAccount(amt);
+        Address contract = createTRScontract(acct, false, true,
+            1, BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(acct);
+        byte[] input = getAddExtraMaxInput(contract);
+        for (int i = 0; i < times; i++) {
+            assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        }
+        assertEquals(BigInteger.ZERO, repo.getBalance(acct));
+        assertEquals(amt, grabExtraFunds(trs, contract));
+    }
+
+    @Test
+    public void testAddExtraSpecialWithdrawPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraNonFinalPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraFinalPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraMultipleTimesSameSpecialPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraMultipleTimesSameNonFinalPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraMultipleTimesFinalPeriod() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraMultipleDepositors() {
+        //TODO
+    }
+
+    @Test
+    public void testAddExtraMultipleTimesMultipleDepositorsOverContractLifetime() {
+        //TODO
     }
 
     // <----------------------------TRS DEPOSITOR LINKED LIST TESTS-------------------------------->
