@@ -158,10 +158,10 @@ if $guard; then
 			  checkRate=0
 			  for ((i=0; i<${#threads[@]}; ++i)); do
 			    tTime=$(ps --pid $kPID | egrep -o "[0-9]{2}\.[0-9]{2} ${threads[i]}" | cut -d" " -f1)
-			    tState=$(jstack -l $kPID | egrep -A1 "${threads[i]}" | egrep -o "State.*" | cut -d" " -f2)
+			    tState=$(./rt/bin/jstack -l $kPID | egrep -A1 "${threads[i]}" | egrep -o "State.*" | cut -d" " -f2)
 			    if [[ $tTime == ${tPrev[i]} ]] && [[ $tState == "BLOCKED" ]]; then 
 			      echo "## ${threads[i]} THREAD DEAD ##"
-			      (jstack -l $kPID | egrep -A1 "${threads[i]}") > threadDump_$countRebounce.txt
+			      (./rt/bin/jstack -l $kPID | egrep -A1 "${threads[i]}") > threadDump_$countRebounce.txt
 			      watching=false
 			    fi
 			    tPrev[i]=$tTime

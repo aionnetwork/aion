@@ -21,14 +21,15 @@ fi
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
   $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management --output $JDK_RT
+  cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
 
 # download the web3.js if can't find the web3.js env
-AION_WEB3_TAR="aion_web3_0.0.2_2018-02-05.tar.gz"
+AION_WEB3_TAR="aion_web3_0.0.3_2018-04-28.tar.gz"
 if [ ! -d "$WEB3JS_PATH" ]; then
-  wget -nc "https://github.com/aionnetwork/aion_web3/releases/download/v0.0.2/aion_web3_0.0.2_2018-02-05.tar.gz" -O $PACK_PATH/aion_web3_0.0.2_2018-02-05.tar.gz
+  wget -nc "https://github.com/aionnetwork/aion_web3/releases/download/v0.0.3/aion_web3_0.0.3_2018-04-28.tar.gz" -O $PACK_PATH/aion_web3_0.0.3_2018-04-28.tar.gz
   mkdir $WEB3JS_PATH
-  tar -xf $PACK_PATH/aion_web3_0.0.2_2018-02-05.tar.gz -C $WEB3JS_PATH
+  tar -xf $PACK_PATH/aion_web3_0.0.3_2018-04-28.tar.gz -C $WEB3JS_PATH
 fi
 
 # copy the config files if can't find the config env
