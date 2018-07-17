@@ -82,6 +82,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public int getPeerId() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void updateStatus(
             long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {
         }

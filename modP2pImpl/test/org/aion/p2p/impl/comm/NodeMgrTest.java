@@ -37,12 +37,15 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.UUID;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.p2p.INode;
 import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 
 /**
@@ -62,6 +65,8 @@ public class NodeMgrTest {
     private ServerSocketChannel tcpServer;
     private SocketChannel channel;
 
+    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
+
     private String[] nodes = new String[]{
         "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
         "p2p://" + nodeId2 + "@" + ip2 + ":" + port1,
@@ -79,7 +84,7 @@ public class NodeMgrTest {
         false,
         50);
 
-    private NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES);
+    private NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
 
 
     @Before
@@ -153,7 +158,7 @@ public class NodeMgrTest {
             "p2p://" + nodeId2 + "@" + ip1 + ":" + port1,
         };
 
-        NodeMgr mgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES);
+        NodeMgr mgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
 
         for (String nodeL : nodes) {
             Node node = Node.parseP2p(nodeL);
@@ -164,14 +169,10 @@ public class NodeMgrTest {
 
         INode node;
         while (mgr.tempNodesSize() != 0) {
-            try {
-                node = mgr.tempNodesTake();
-                assertEquals(ip1, node.getIpStr());
-                assertTrue(node.getIfFromBootList());
-                assertTrue(mgr.isSeedIp(ip1));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            node = mgr.tempNodesTake();
+            assertEquals(ip1, node.getIpStr());
+            assertTrue(node.getIfFromBootList());
+            assertTrue(mgr.isSeedIp(ip1));
         }
 
         assertEquals(0, mgr.tempNodesSize());
@@ -181,7 +182,7 @@ public class NodeMgrTest {
     @Test
     public void test_tempNodeMax_Any() {
 
-        NodeMgr mgr = new NodeMgr(p2p, 512, 512);
+        NodeMgr mgr = new NodeMgr(p2p, 512, 512, LOGGER);
         String[] nodes_max = new String[512];
 
         int ip = 0;
@@ -248,7 +249,7 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode());
+        nMgr.movePeerToActive(channel.hashCode(), "inbound");
         assertEquals(1, nMgr.activeNodesSize());
     }
 
@@ -266,7 +267,7 @@ public class NodeMgrTest {
         nMgr.addOutboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort());
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
         assertEquals(1, nMgr.activeNodesSize());
 
     }
@@ -274,7 +275,7 @@ public class NodeMgrTest {
     @Test
     public void test_getActiveNodesList() {
 
-        NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES);
+        NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
         INode node = nMgr.allocNode(ip2, 0);
 
         node.setChannel(channel);
@@ -287,7 +288,7 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode());
+        nMgr.movePeerToActive(channel.hashCode(), "inbound");
 
         assertEquals(1, nMgr.activeNodesSize());
 
@@ -313,7 +314,7 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode());
+        nMgr.movePeerToActive(channel.hashCode(), "inbound");
         assertEquals(1, nMgr.activeNodesSize());
 
         nMgr.dropActive(node.getIdHash(), "close");
@@ -335,7 +336,8 @@ public class NodeMgrTest {
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
 
-        nMgr.moveInboundToActive(channel.hashCode());
+        nMgr.movePeerToActive(channel.hashCode(), "inbound");
+
         assertEquals(1, nMgr.activeNodesSize());
 
         assertTrue(node.getPeerMetric().notBan());

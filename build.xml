@@ -16,6 +16,7 @@
 	<property name="dir.pack" value="./pack" />
 	<property name="test.report.dir" value="report" />
 	<property name="compile.debug" value="on" />
+        <property name="vm.version" value="0.2.1" />
 
 	<path id="cp">
 		<pathelement location="${dir.libfile}/slf4j-api-1.7.25.jar" />
@@ -67,8 +68,7 @@
 		<pathelement location="${dir.libfile}/JUnitParams-1.1.1.jar" />
 	</path>
 
-	<target name="test_modules">
-		 
+	<target name="test_modules">		 
 		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="test" />
@@ -188,7 +188,9 @@
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 	</target>
 
-	<target name="clean_build" depends="logenv, clean, mod_build, build" />
+	<target name="clean_build" depends="logenv, clean, fastbuild" />
+
+        <target name="clean_fullbuild" depends="logenv, clean, sourcebuild" />
 
 	<target name="build_test" depends="build, test" />
 
@@ -304,31 +306,50 @@
 
 		<!-- Set environment variable for LD_LIBRARY_PATH-->
 
-
 		<exec executable="g++" failonerror="true">
 			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -lsodium -o ./build/native/equiMiner.so "/> -->
 			<!-- <arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I./build/native -I${dir.native}/linux/sodium -march=native -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp ./build/native/blake/blake2b.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ./build/native/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium"/> -->
 			<arg line="-fPIC -shared -I${env.JAVA_HOME}/include -I${env.JAVA_HOME}/include/linux -I${dir.build.native} -I${dir.native}/linux/sodium -mtune=generic -m64 -std=c++11 -Wall -Wno-deprecated-declarations -D_POSIX_C_SOURCE=200112L -O3 ./build/native/equi.h ./build/native/equi_miner.h ./build/native/equiMiner.cpp -L${dir.workspace}/native/linux/sodium -lsodium -o ${dir.native}/linux/equihash/equiMiner.so -Wl,-rpath,${dir.native}/linux/sodium" />
 		</exec>
 
-		<property name="version" value="0.2.1" />
-
-		<exec executable="wget">
-			<arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${version}/fastvm_v${version}.tar.gz" />
-		</exec>
-		<exec executable="tar">
-			<arg line="-xf fastvm_v${version}.tar.gz -C native/linux" />
-		</exec>
-		<move file="native/linux/fastvm_v${version}" tofile="native/linux/fastvm" overwrite="true" />
-
-		<exec executable="wget">
-			<arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${version}/solidity_v${version}.tar.gz" />
-		</exec>
-		<exec executable="tar">
-			<arg line="-xf solidity_v${version}.tar.gz -C native/linux" />
-		</exec>
-		<move file="native/linux/solidity_v${version}" tofile="native/linux/solidity" overwrite="true" />
 	</target>
+
+	<target name="fastbuild" depends="build">
+		<exec executable="wget">
+                        <arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${vm.version}/fastvm_v${vm.version}.tar.gz" />
+                </exec>
+                <exec executable="tar">
+                        <arg line="-xf fastvm_v${vm.version}.tar.gz -C native/linux" />
+                </exec>
+                <move file="native/linux/fastvm_v${vm.version}" tofile="native/linux/fastvm" overwrite="true" />
+
+                <exec executable="wget">
+                        <arg line="-nc https://github.com/aionnetwork/aion_fastvm/releases/download/v${vm.version}/solidity_v${vm.version}.tar.gz" />
+                </exec>
+                <exec executable="tar">
+                        <arg line="-xf solidity_v${vm.version}.tar.gz -C native/linux" />
+                </exec>
+                <move file="native/linux/solidity_v${vm.version}" tofile="native/linux/solidity" overwrite="true" />
+        </target>
+
+        <target name="sourcebuild" depends="build">
+                <exec executable="/bin/bash">
+                        <arg value="${dir.workspace}/aion_fastvm/scripts/release.sh" />
+			<arg value="${vm.version}" />
+			<arg value="1" />
+                </exec>
+               
+                <exec executable="tar">
+                        <arg line="-xf fastvm_v${vm.version}.tar.gz -C native/linux" />
+                </exec>
+                <move file="native/linux/fastvm_v${vm.version}" tofile="native/linux/fastvm" overwrite="true" />
+
+                <exec executable="tar">
+                        <arg line="-xf solidity_v${vm.version}.tar.gz -C native/linux" />
+                </exec>
+                <move file="native/linux/solidity_v${vm.version}" tofile="native/linux/solidity" overwrite="true" />
+        </target>
+
 
 	<target name="clean">
 		<delete dir="./build" />
@@ -345,6 +366,14 @@
 		</antcall>
 		<antcall target="pack" />
 	</target>
+
+        <target name="full_build" depends="logenv">
+                <antcall target="clean_fullbuild">
+                        <param name="compile.debug" value="off" />
+                </antcall>
+                <antcall target="pack" />
+        </target>
+
 
 	<target name="pre_build">
 	        <echo message="execute prebuild script"/>

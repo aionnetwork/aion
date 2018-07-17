@@ -148,7 +148,7 @@ public final class P2pMgr implements IP2pMgr {
         this.syncSeedsOnly = _bootlistSyncOnly;
         this.errTolerance = _errorTolerance;
 
-        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes);
+        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes, p2pLOG);
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -157,6 +157,7 @@ public final class P2pMgr implements IP2pMgr {
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
         }
+
 
         // rem out for bug:
         // nodeMgr.loadPersistedNodes();
@@ -212,7 +213,7 @@ public final class P2pMgr implements IP2pMgr {
                     TimeUnit.MILLISECONDS);
             }
 
-            if (p2pLOG.isDebugEnabled()) {
+            if (p2pLOG.isInfoEnabled()) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     getStatusInstance(),
                     2,
@@ -222,7 +223,7 @@ public final class P2pMgr implements IP2pMgr {
 
             if (!syncSeedsOnly) {
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskRequestActiveNodes(this),
+                    new TaskRequestActiveNodes(this, p2pLOG),
                     5000,
                     PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
@@ -348,8 +349,8 @@ public final class P2pMgr implements IP2pMgr {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort =
                 !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
-            boolean notActive = nodeMgr.notActiveNode(_node.getIdHash());
-            boolean notOutbound = !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
+            boolean notActive = nodeMgr.notActiveNode(_node.getPeerId());
+            boolean notOutbound = nodeMgr.notAtOutboundList(_node.getPeerId());
             return notSelfId && notSameIpOrPort && notActive && notOutbound;
         } else {
             return false;

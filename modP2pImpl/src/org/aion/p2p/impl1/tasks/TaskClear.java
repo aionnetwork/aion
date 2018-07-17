@@ -29,7 +29,7 @@ import org.aion.p2p.INodeMgr;
 
 public class TaskClear implements Runnable {
 
-    private static final int PERIOD_CLEAR = 20000;
+    private static final int PERIOD_CLEAR = 10000;
 
     private final INodeMgr nodeMgr;
     private final AtomicBoolean start;
@@ -46,8 +46,7 @@ public class TaskClear implements Runnable {
                 Thread.sleep(PERIOD_CLEAR);
                 nodeMgr.timeoutCheck();
             } catch (Exception e) {
-                e.printStackTrace();
-                p2pLOG.error("TaskClear exception {}", e.getMessage());
+                p2pLOG.error("TaskClear exception {}", e.toString());
             }
         }
     }
