@@ -147,4 +147,21 @@ public class AccountDTO {
         return privateKey != null;
     }
 
+    @Override
+    public String toString() {
+        return "AccountDTO{" +
+                "currency='" + currency + '\'' +
+                ", publicAddress='" + publicAddress + '\'' +
+                ", isImported=" + isImported +
+                ", derivationIndex=" + derivationIndex +
+                ", qrCode=" + qrCode +
+                ", transactions=" + transactions +
+                ", timedOutTransactions=" + timedOutTransactions +
+                ", privateKey=" + privateKey +
+                ", balance='" + balance + '\'' +
+                ", name='" + name + '\'' +
+                ", active=" + active +
+                ", lastSafeBlock=" + lastSafeBlock +
+                '}';
+    }
 }

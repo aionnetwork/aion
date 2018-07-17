@@ -63,9 +63,10 @@ public class DashboardController extends AbstractController {
     protected void registerEventBusConsumer() {
         // TODO: Make injectable
         EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS).register(this);
-        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).register(this);
-    }
+//        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).register(this);
+        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).register(this);
 
+    }
     // -- Handlers for Events coming from Model ---------------------------------------------------
 //    @Subscribe
 //    private void handleAccountChanged(final AccountDTO account) {

@@ -2,19 +2,19 @@ package org.aion.gui.controller;
 
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
+import org.aion.gui.model.BlockTransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.model.dto.SyncInfoDto;
-import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.storage.WalletStorage;
-import org.aion.wallet.ui.components.account.AccountCellFactory;
 import org.aion.wallet.ui.components.partials.AddAccountDialog;
 import org.aion.wallet.ui.components.partials.ImportAccountDialog;
+import org.aion.wallet.ui.components.partials.TransactionResubmissionDialog;
 import org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog;
 import org.slf4j.Logger;
 
@@ -43,6 +43,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private ConfigManipulator configManipulator;
     private AccountManager accountManager;
     private WalletStorage walletStorage;
+    private BlockTransactionProcessor blockTransactionProcessor;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -70,9 +71,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     accountManager, walletStorage));
             put(HeaderPaneControls.class, () -> new HeaderPaneControls(
                     new BalanceDto(kernelConnection)));
+            put(SendController.class, () -> new SendController(
+                    kernelConnection,
+                    accountManager,
+                    blockTransactionProcessor));
             put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
             put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager));
             put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager));
+            put(TransactionResubmissionDialog.class, () -> new TransactionResubmissionDialog(
+                    accountManager));
         }};
     }
 
@@ -217,6 +224,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
 
     public ControllerFactory withWalletStorage(WalletStorage walletStorage) {
         this.walletStorage = walletStorage;
+        return this;
+    }
+
+    public BlockTransactionProcessor getBlockTransactionProcessor() {
+        return this.blockTransactionProcessor;
+    }
+
+    public ControllerFactory withBlockTransactionProcessor(BlockTransactionProcessor blockTransactionProcessor) {
+        this.blockTransactionProcessor = blockTransactionProcessor;
         return this;
     }
 }

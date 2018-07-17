@@ -101,9 +101,12 @@ public class SendTransactionDTO {
         if (nrgPrice == null || nrgPrice.longValue() < 0) {
             throw new ValidationException("Invalid nrg price");
         }
-        if(ConfigUtils.isEmbedded() && (password == null || password.equals(""))) {
-            throw new ValidationException("Password is invalid");
-        }
+
+        // it's always embedded currently, so not doing this for now
+//        if(ConfigUtils.isEmbedded() && (password == null || password.equals(""))) {
+//            throw new ValidationException("Password is invalid");
+//        }
+
         return true;
     }
 }

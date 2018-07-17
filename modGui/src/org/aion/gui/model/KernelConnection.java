@@ -79,6 +79,7 @@ public class KernelConnection {
                             msg.getErrorCode(), msg.getErrString());
                 } else {
 //                    eventBus.post(new RefreshEvent(RefreshEvent.Type.TRANSACTION_FINISHED));
+                    System.out.println("KernelConnection#connect() doing EventPublisher.fireConnectionEstablished()");
                     EventPublisher.fireConnectionEstablished();
                     // TODO: ApiBlockchainConnector#connect has processTRansactionsOnReconnect() here now.  Do we need that too?
                 }

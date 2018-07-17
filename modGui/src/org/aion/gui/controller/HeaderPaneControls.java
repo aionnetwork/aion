@@ -52,6 +52,7 @@ public class HeaderPaneControls extends AbstractController {
 
     public HeaderPaneControls(BalanceDto balanceDto) {
         this.balanceDto = balanceDto;
+        this.accountAddress = "";
     }
 
     @FXML
@@ -63,6 +64,8 @@ public class HeaderPaneControls extends AbstractController {
     @FXML
     private VBox homeButton;
     @FXML
+    private VBox sendButton;
+    @FXML
     private VBox accountsButton;
     @FXML
     private VBox settingsButton;
@@ -73,6 +76,7 @@ public class HeaderPaneControls extends AbstractController {
     public void internalInit(URL location, ResourceBundle resources) {
         headerButtons.put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.OVERVIEW));
         headerButtons.put(accountsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.ACCOUNTS));
+        headerButtons.put(sendButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SEND));
         headerButtons.put(settingsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SETTINGS));
 
         clickButton(homeButton);
@@ -153,15 +157,15 @@ public class HeaderPaneControls extends AbstractController {
             final String[] text = accountBalance.getText().split(BalanceUtils.CCY_SEPARATOR);
             final String currency = text[1];
 
-            Task<Void> getSyncInfoTask = getApiTask(o -> {
+            Task<Void> getBalanceTask = getApiTask(o -> {
                 balanceDto.setAddress(accountAddress); // TODO ugly
                 balanceDto.loadFromApi();
                 return null;
             }, null);
             runApiTask(
-                    getSyncInfoTask,
+                    getBalanceTask,
                     evt -> Platform.runLater(() -> updateNewBalance(currency, balanceDto.getBalance())),
-                    getErrorEvent(throwable -> {}, getSyncInfoTask),
+                    getErrorEvent(throwable -> {}, getBalanceTask),
                     getEmptyEvent()
             );
 //            final Task<BigInteger> getBalanceTask = getApiTask(blockchainConnector::getBalance, accountAddress);
@@ -176,6 +180,7 @@ public class HeaderPaneControls extends AbstractController {
 
     private void updateNewBalance(final String currency, final BigInteger bigInteger) {
         final String newBalance = BalanceUtils.formatBalance(bigInteger) + BalanceUtils.CCY_SEPARATOR + currency;
+        System.out.println("HeaderPaneControls#updateNewBalance -> accountBalance.setText -> " + newBalance);
         if (!newBalance.equalsIgnoreCase(accountBalance.getText())) {
             accountBalance.setText(newBalance);
             UIUtils.setWidth(accountBalance);

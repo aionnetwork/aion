@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class AbstractController implements Initializable {
-
+    protected static final String ERROR_STYLE = "error-label";
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     @FXML
@@ -39,14 +39,13 @@ public abstract class AbstractController implements Initializable {
     }
 
     protected void registerEventBusConsumer() {
-        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).register(this);
+//        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).register(this); // FIXME this one should go away and everything using it should use the one below
+        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).register(this);
     }
 
     @Subscribe
     private void handleRefreshEvent(final RefreshEvent event) {
-        if (isInView()) {
-            refreshView(event);
-        }
+        refreshView(event);
     }
 
     protected final <T, R> Task<R> getApiTask(final Function<T, R> consumer, T param) {

@@ -1,16 +1,26 @@
 package org.aion.gui.model;
 
-import org.aion.api.type.ApiMsg;
+import org.aion.api.impl.internal.Message;
 import org.aion.api.type.Block;
 import org.aion.api.type.BlockDetails;
+import org.aion.api.type.MsgRsp;
+import org.aion.api.type.TxArgs;
 import org.aion.api.type.TxDetails;
+import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventPublisher;
+import org.aion.gui.model.dto.BalanceDto;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.connector.dto.BlockDTO;
+import org.aion.wallet.connector.dto.SendTransactionDTO;
+import org.aion.wallet.connector.dto.TransactionResponseDTO;
+import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.dto.TransactionDTO;
+import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -25,6 +35,7 @@ import java.util.stream.LongStream;
 public class BlockTransactionProcessor extends AbstractAionApiClient {
     private final AccountManager accountManager;
     private final ExecutorService backgroundExecutor;
+    private final BalanceDto balanceDto;
 
     private static final int BLOCK_BATCH_SIZE = 300;
 
@@ -37,11 +48,12 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
      * @param kernelConnection connection containing the API instance to interact with
      */
     public BlockTransactionProcessor(KernelConnection kernelConnection,
-                                     AccountManager accountManager) {
+                                     AccountManager accountManager,
+                                     BalanceDto balanceDto) {
         super(kernelConnection);
         this.accountManager = accountManager;
         this.backgroundExecutor = Executors.newFixedThreadPool(getCores()); // TODO should be injected
-
+        this.balanceDto = balanceDto;
     }
 
     private AccountManager getAccountManager() {
@@ -193,4 +205,85 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
         }
         return cores;
     }
+
+    // --- stuff from from aion_ui ApiBlockchainConnector#sendTransactionInternal and BlockchainConnector#sendTrasaction
+    public final TransactionResponseDTO sendTransaction(final SendTransactionDTO dto) throws ValidationException {
+        if (dto == null || !dto.validate()) {
+            throw new ValidationException("Invalid transaction request data");
+        }
+        if (dto.estimateValue().compareTo(getBalance(dto.getFrom())) >= 0) {
+            throw new ValidationException("Insufficient funds");
+        }
+        return sendTransactionInternal(dto);
+    }
+
+    public final BigInteger getBalance(final String address) {
+        balanceDto.setAddress(address);
+        balanceDto.loadFromApi();
+        return balanceDto.getBalance();
+    }
+
+    protected TransactionResponseDTO sendTransactionInternal(final SendTransactionDTO dto) {
+        final BigInteger latestTransactionNonce = getLatestTransactionNonce(dto.getFrom());
+        TxArgs txArgs = new TxArgs.TxArgsBuilder()
+                .from(new Address(TypeConverter.toJsonHex(dto.getFrom())))
+                .to(new Address(TypeConverter.toJsonHex(dto.getTo())))
+                .value(dto.getValue())
+                .nonce(latestTransactionNonce)
+                .data(new ByteArrayWrapper(dto.getData()))
+                .nrgPrice(dto.getNrgPrice())
+                .nrgLimit(dto.getNrg())
+                .createTxArgs();
+        final MsgRsp response;
+
+        ConsoleManager.addLog("Sending transaction", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
+        response = callApi(api -> api.getTx().sendSignedTransaction(
+                txArgs,
+                new ByteArrayWrapper((getAccountManager().getAccount(dto.getFrom())).getPrivateKey())
+                )).getObject();
+
+//        lock();
+//        try {
+//            ConsoleManager.addLog("Sending transaction", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
+//            response = API.getTx().sendSignedTransaction(
+//                    txArgs,
+//                    new ByteArrayWrapper((getAccountManager().getAccount(dto.getFrom())).getPrivateKey())
+//            ).getObject();
+//        } finally {
+//            unLock();
+//        }
+
+        final TransactionResponseDTO transactionResponseDTO = mapTransactionResponse(response);
+        final int responseStatus = transactionResponseDTO.getStatus();
+        if (!ACCEPTED_TRANSACTION_RESPONSE_STATUSES.contains(responseStatus)) {
+            getAccountManager().addTimedOutTransaction(dto);
+        }
+        return transactionResponseDTO;
+    }
+
+    private BigInteger getLatestTransactionNonce(final String address) {
+        if(apiIsConnected()) {
+            return callApi(api -> api.getChain().getNonce(Address.wrap(address))).getObject();
+        } else {
+            return BigInteger.ZERO;
+        }
+//        lock();
+//        try {
+//            if (API.isConnected()) {
+//                txCount = API.getChain().getNonce(Address.wrap(address)).getObject();
+//            } else {
+//                txCount = BigInteger.ZERO;
+//            }
+//        } finally {
+//            unLock();
+//        }
+//        return txCount;
+    }
+
+    private TransactionResponseDTO mapTransactionResponse(final MsgRsp response) {
+        return new TransactionResponseDTO(response.getStatus(), response.getTxHash(), response.getError());
+    }
+
+    private static final List<Integer> ACCEPTED_TRANSACTION_RESPONSE_STATUSES = Arrays.asList(Message.Retcode.r_tx_Init_VALUE, Message.Retcode.r_tx_Recved_VALUE, Message.Retcode.r_tx_NewPending_VALUE, Message.Retcode.r_tx_Pending_VALUE, Message.Retcode.r_tx_Included_VALUE);
+
 }

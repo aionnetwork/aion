@@ -12,9 +12,9 @@ import java.util.TimerTask;
 public class DataUpdater extends TimerTask {
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
-    public static final String UI_DATA_REFRESH = "gui.data_refresh";
+//    public static final String UI_DATA_REFRESH = "gui.data_refresh";
 
-    private final EventBus eventBus = EventBusRegistry.INSTANCE.getBus(UI_DATA_REFRESH);
+    private final EventBus eventBus = /*EventBusRegistry.INSTANCE.getBus(UI_DATA_REFRESH)*/EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID);
 
     @Override
     public void run() {

@@ -287,7 +287,9 @@ public class AccountManager {
         final Collection<AccountDTO> filteredAccounts = addressToAccount.values().stream().filter(account -> account.isImported() || account.isUnlocked()).collect(Collectors.toList());
         for (AccountDTO account : filteredAccounts) {
             balanceProvider.setAddress(account.getPublicAddress());
+            balanceProvider.loadFromApi();
 //            account.setBalance(BalanceUtils.formatBalance(balanceProvider.apply(account.getPublicAddress())));
+            System.out.println("AccountManager#getAccounts -> account.setBalance -> " + BalanceUtils.formatBalance(balanceProvider.getBalance()));
             account.setBalance(BalanceUtils.formatBalance(balanceProvider.getBalance()));
         }
         List<AccountDTO> accounts = new ArrayList<>(filteredAccounts);

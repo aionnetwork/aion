@@ -109,6 +109,8 @@ public class AccountsController extends AbstractController {
 
     private void reloadAccountObservableList(List<AccountDTO> accounts) {
         for (AccountDTO account : accounts) {
+            //FIXME delete sout
+            System.out.println(account);
             account.setActive(this.account != null && this.account.equals(account));
         }
         accountListView.setItems(FXCollections.observableArrayList(accounts));

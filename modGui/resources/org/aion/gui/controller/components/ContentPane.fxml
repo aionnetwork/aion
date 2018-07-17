@@ -6,5 +6,6 @@
             AnchorPane.topAnchor="130" AnchorPane.rightAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.bottomAnchor="60">
     <fx:include source="Dashboard.fxml" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" />
     <fx:include source="partials/AccountsPane.fxml" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
+    <fx:include source="partials/SendPane.fxml" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
     <fx:include source="partials/SettingsPane.fxml" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
 </AnchorPane>

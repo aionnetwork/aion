@@ -108,7 +108,7 @@ public class MainWindow extends Application {
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
         accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY);
-        blockTransactionProcessor = new BlockTransactionProcessor(kc, accountManager);
+        blockTransactionProcessor = new BlockTransactionProcessor(kc, accountManager, new BalanceDto(kc));
         accountChangeHandlers = new AccountChangeHandlers(accountManager, blockTransactionProcessor);
     }
 
@@ -141,6 +141,7 @@ public class MainWindow extends Application {
 
         panes.put(HeaderPaneButtonEvent.Type.OVERVIEW, scene.lookup("#overviewPane"));
         panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
+        panes.put(HeaderPaneButtonEvent.Type.SEND, scene.lookup("#sendPane"));
         panes.put(HeaderPaneButtonEvent.Type.SETTINGS, scene.lookup("#settingsPane"));
 
         // Set up event bus
@@ -160,6 +161,7 @@ public class MainWindow extends Application {
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
                 .withAccountManager(accountManager)
                 .withWalletStorage(WalletStorage.getInstance())
+                .withBlockTransactionProcessor(blockTransactionProcessor)
         );
         System.out.println(String.format("XXX %s", loader.getBuilderFactory()));
         loader.setBuilderFactory(new MyBuilderFactory()
