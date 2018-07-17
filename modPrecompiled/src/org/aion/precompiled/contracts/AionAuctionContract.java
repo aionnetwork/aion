@@ -48,6 +48,8 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
+import org.apache.commons.collections4.map.LRUMap;
+
 import static org.aion.crypto.HashUtil.blake128;
 
 /**
@@ -77,7 +79,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private final static long COST = 20000L;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
-    private static final int AUCTION_TIME = 2 * 1000;
+    private static final int AUCTION_TIME = 5000 * 2 * 1000;
     private static final int ACTIVE_TIME = 4 * 1000;
     private static final BigInteger MINIMUM_AMOUNT =  new BigInteger("100");
 
@@ -89,6 +91,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     private static Timer timer = new Timer();
     private AionBlock block;
+    private static LRUMap lru = new LRUMap();
+    private static org.apache.commons.collections4.map.LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap(4);
+    private static org.apache.commons.collections4.map.LRUMap<String, Map<Address, BigInteger>> auctionBidsMap = new LRUMap(4);
 
     /**
      * Constructs a Aion Auction Contract object, ready to execute.
@@ -99,7 +104,6 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     public AionAuctionContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address) {
         super(track);
         this.address = address;
-
     }
 
     private static long getBlockTime(){
@@ -124,32 +128,6 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return chain.getBestBlock().getTimestamp();
 
     }
-
-    private static IRepositoryConfig repoConfig =
-            new IRepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
-
-                @Override
-                public IPruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
-
-                @Override
-                public IContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
-
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
 
     /**
      * For bidding, input parameter of this method is a byte array whose bytes should be supplied in the
@@ -256,7 +234,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // if request to extend time
         if (balanceLength < 1){
-            return extensionRequest(domainAddress, bidderAddress, nrg);
+            return extensionRequest(domainAddress, nrg);
         }
 
 
@@ -322,7 +300,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     // record to data base, change stuff, so when its time for task to execute, it will first check database
     // to see if it has been extended, if it has, schedule new task.
-    private ContractExecutionResult extensionRequest(Address domainAddress, Address ownerAddress, long nrg){
+    private ContractExecutionResult extensionRequest(Address domainAddress, long nrg){
         Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
         Date currentDate = new Date();
         long difference = expireDateFromStorage.getTime() - currentDate.getTime();
@@ -609,6 +587,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return domainAddress;
     }
 
+    // storage processing --------------------------------------------------------------------------------------------//
     /**
      * Get the corresponding address for the given domain name
      * @param domainName name of domain
@@ -632,7 +611,6 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         addAddressToStorage(allAddresses, ALL_ADDR_KEY + counter, domainAddress);
     }
 
-    // storage processing --------------------------------------------------------------------------------------------//
     private Address getAddressFromStorage(Address key, Address key2){
         byte[] addrFirstPart = this.track.getStorageValue(key, new DataWord(blake128(key2.toBytes()))).getData();
         byte[] addrSecondPart = this.track.getStorageValue(key, new DataWord(blake128(blake128(key2.toBytes())))).getData();
@@ -865,67 +843,6 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         System.out.println();
     }
 
-    public void displayMyBids(ECKey key){
-        Address callerAddress = Address.wrap(key.getAddress());
-        boolean hasNoBids = true;
-
-        System.out.println("-----------------------------AION NAME SERVICE QUERY: displayMyBids----------------------------");
-
-        if (!this.track.hasAccountState(callerAddress)){
-            System.out.println("    The given account: " + callerAddress + " is not registered\n");
-            return;
-        }
-
-        List<AuctionDomainsData> auctionDomainsList = getAllAuctionDomains();
-        for (AuctionDomainsData domain: auctionDomainsList){
-            Address tempDomainAddress = domain.domainAddress;
-            HashMap<Address, BigInteger> bids = getBidsForADomain(tempDomainAddress);
-            if(bids.containsKey(callerAddress)){
-                hasNoBids = false;
-                System.out.println("Domain name: " + domain.domainName );
-                System.out.println("    Your bid value: " + bids.get(callerAddress).intValue());
-            }
-        }
-
-        if(hasNoBids)
-            System.out.println("    You currently have no active bids");
-
-        System.out.println();
-    }
-
-    public void displayMyBidForDomain(String domainNameRaw, ECKey key){
-        Address callerAddress = Address.wrap(key.getAddress());
-        System.out.println("--------------------------AION NAME SERVICE QUERY: displayMyBidForDomain--------------------------");
-
-        if (!this.track.hasAccountState(callerAddress)){
-            System.out.println("    The given account: " + callerAddress + " is not registered\n");
-            return;
-        }
-
-        // process domain name
-        byte[] domainNameInBytes = domainNameRaw.substring(0, domainNameRaw.length() - 5).getBytes();
-        String domainName2 = new String(addLeadingZeros(domainNameInBytes));
-        String domainName = domainName2.substring(5, 37);
-
-        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
-
-        System.out.println("Domain name: " + domainNameRaw);
-
-        // check if this domain is currently in auction
-        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DataWord.ZERO)){
-            System.out.println("    This domain is not in auction\n");
-            return;
-        }
-
-        HashMap<Address, BigInteger> bids = getBidsForADomain(domainAddress);
-        if(bids.containsKey(callerAddress))
-            System.out.println("    Your bid value: " + bids.get(this.address)); // does not use 'callerAddress' so people cant check other's bid
-
-        else
-            System.out.println("    You do not have a bid for this domain: ");
-        System.out.println();
-    }
-
     class AuctionDomainsData{
         String domainName;
         Address domainAddress;
@@ -939,5 +856,133 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             this.numberOfBids = numberOfBids;
         }
     }
+
+    public void displayMyBidsLRU(ECKey key){
+        Address callerAddress = Address.wrap(key.getAddress());
+        boolean hasNoBids = true;
+
+        System.out.println("-----------------------------AION NAME SERVICE QUERY: displayMyBidsLRU----------------------------");
+
+        if (!this.track.hasAccountState(callerAddress)){
+            System.out.println("    The given account: " + callerAddress + " is not registered\n");
+            return;
+        }
+
+        List<AuctionDomainsData> auctionDomainsList = getAllAuctionDomains();
+        for (AuctionDomainsData domain: auctionDomainsList){
+            Address tempDomainAddress = domain.domainAddress;
+            String tempDomainName = domain.domainName;
+
+            auctionBidsMap.put(tempDomainName, getBidsForADomain(tempDomainAddress));
+                // if bidder is there
+            if(auctionBidsMap.get(tempDomainName).containsKey(callerAddress)) {
+                printBid(tempDomainName, callerAddress);
+                hasNoBids = false;
+            }
+        }
+
+        if(hasNoBids)
+            System.out.println("    You currently have no active bids");
+
+        System.out.println();
+    }
+
+    public void displayMyBidForDomainLRU(String domainNameRaw, ECKey key){
+        Address callerAddress = Address.wrap(key.getAddress());
+        System.out.println("--------------------------AION NAME SERVICE QUERY: displayMyBidForDomainLRU--------------------------");
+
+        if (!this.track.hasAccountState(callerAddress)){
+            System.out.println("    The given account: " + callerAddress + " is not registered\n");
+            return;
+        }
+
+        // process domain name
+        byte[] domainNameInBytes = domainNameRaw.substring(0, domainNameRaw.length() - 5).getBytes();
+        String domainName2 = new String(addLeadingZeros(domainNameInBytes));
+        String domainName = domainName2.substring(5, 37);
+        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
+
+        // if the domain is not in auction, print error and return
+        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DataWord.ZERO)){
+            System.out.println("    This domain is not in auction\n");
+            return;
+        }
+
+
+        // Todo: after modifying (update LRU during execution)
+        auctionBidsMap.put(domainNameRaw, getBidsForADomain(domainAddress));
+
+        if(auctionBidsMap.containsKey(domainNameRaw)){
+            if(auctionBidsMap.get(domainNameRaw).containsKey(callerAddress)){
+                printBid(domainNameRaw, callerAddress);
+            }
+        }
+
+        System.out.println();
+    }
+
+    public void displayAllAuctionDomainsLRU(){
+        BigInteger numberOfDomainsTotal = getBigIntegerFromStorage(allAddresses, ALL_ADDR_KEY);
+
+        List<String> auctionDomains = new ArrayList<>();
+        for(int i = 0; i < numberOfDomainsTotal.intValue(); i++){
+            Address tempDomainAddr = getAddressFromStorage(allAddresses, ALL_ADDR_KEY + i);
+            if(!this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(tempDomainAddr.toBytes()))).equals(DataWord.ZERO)) {
+                String tempDomainName = getNameFromStorage(domainAddressNamePair, tempDomainAddr);
+                auctionDomains.add(tempDomainName);
+            }
+        }
+
+        System.out.println("--------------------------AION NAME SERVICE QUERY: displayAllAuctionDomainsLRU (" + auctionDomains.size() + ")-----------------------------");
+
+        for (String domainName: auctionDomains)
+            printAuctionDomain(domainName);
+    }
+
+    public void displayAuctionDomainLRU(String domainNameRaw){
+        System.out.println("--------------------------AION NAME SERVICE QUERY: displayAuctionDomainLRU--------------------------");
+        // process domain name
+        byte[] domainNameInBytes = domainNameRaw.substring(0, domainNameRaw.length() - 5).getBytes();
+        String domainName2 = new String(addLeadingZeros(domainNameInBytes));
+        String domainName = domainName2.substring(5, 37);
+
+        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
+
+        // if the domain is not in auction, return
+        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DataWord.ZERO)) {
+            System.out.println("The given domain \'" + domainNameRaw + "\' is not in auction\n");
+            return;
+        }
+
+        // if domain is in LRUMap, print content
+        if (auctionsMap.containsKey(domainNameRaw)){
+            printAuctionDomain(domainNameRaw);
+            System.out.println();
+        }
+
+        // if domain is not in LRUMap get its data from repo. Add info to LRUMap and print content
+        else{
+            Date tempExpireDate = getDateFromStorage(auctionDomainsAddress, domainAddress);
+            String tempDomainName = getNameFromStorage(domainAddressNamePair, domainAddress);
+            BigInteger tempNumberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
+            AuctionDomainsData tempData = new AuctionDomainsData(tempDomainName, domainAddress, tempExpireDate, tempNumberOfBids);
+            auctionsMap.put(tempDomainName, tempData);
+            printAuctionDomain(tempDomainName);
+            System.out.println();
+        }
+    }
+
+    private void printAuctionDomain(String domainName){
+        System.out.println("Domain name: " + auctionsMap.get(domainName).domainName);
+        System.out.println("    Domain address: " + auctionsMap.get(domainName).domainAddress);
+        System.out.println("    Auction complete date: " + auctionsMap.get(domainName).completeDate);
+        System.out.println("    Number of bids for this domain: " + auctionsMap.get(domainName).numberOfBids);
+    }
+
+    private void printBid(String domainName, Address bidderAddress){
+        System.out.println("Domain name: " + domainName);
+        System.out.println("    Bid value: " + auctionBidsMap.get(domainName).get(bidderAddress));
+    }
+
 }
 

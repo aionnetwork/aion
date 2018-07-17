@@ -34,12 +34,14 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.contracts.AionAuctionContract;
 import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
+import org.apache.commons.collections4.map.LRUMap;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,6 +49,7 @@ import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.util.Map;
 import java.util.Properties;
 
 import static junit.framework.TestCase.assertEquals;
@@ -91,67 +94,6 @@ public class AionAuctionContractTest {
         repo.addBalance(Address.wrap(k2.getAddress()), new BigInteger("10000"));
         repo.addBalance(Address.wrap(k3.getAddress()), new BigInteger("10000"));
         repo.addBalance(Address.wrap(k4.getAddress()), new BigInteger("10000"));
-    }
-
-    @Test
-    public void demo(){
-        ECKey notRegisteredKey = ECKeyFac.inst().create();
-        BigInteger amount = new BigInteger("1000");
-        BigInteger amount2 = new BigInteger("2000");
-        BigInteger amount3 = new BigInteger("3000");
-        BigInteger amount4 = new BigInteger("4000");
-
-        byte[] combined = setupInputs("aion.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k); // k bid 1000
-        AionAuctionContract aac = new AionAuctionContract(repo, Address.wrap(k.getAddress()));
-        aac.execute(combined, DEFAULT_INPUT_NRG);
-
-        byte[] combined2 = setupInputs("aion.aion", Address.wrap(k2.getAddress()), amount2.toByteArray(), k2); // k2 bid 2000
-        AionAuctionContract aac2 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()));
-        aac2.execute(combined2, DEFAULT_INPUT_NRG);
-
-        byte[] combined3 = setupInputs("aion.aion", Address.wrap(k3.getAddress()), amount3.toByteArray(), k3); // k3 bid 3000
-        AionAuctionContract aac3 = new AionAuctionContract(repo, Address.wrap(k3.getAddress()));
-        aac3.execute(combined3, DEFAULT_INPUT_NRG);
-
-
-        // bid on another domain
-        byte[] combined4 = setupInputs("cion.bion.aion", Address.wrap(k4.getAddress()), amount3.toByteArray(), k4);
-        AionAuctionContract aac4 = new AionAuctionContract(repo, Address.wrap(k4.getAddress()));
-        aac4.execute(combined4, DEFAULT_INPUT_NRG);
-
-        byte[] combined5 = setupInputs("cion.bion.aion", Address.wrap(k.getAddress()), amount4.toByteArray(), k);
-        AionAuctionContract aac5 = new AionAuctionContract(repo, Address.wrap(k.getAddress()));
-        aac5.execute(combined5, DEFAULT_INPUT_NRG);
-
-        try {
-            Thread.sleep(1000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        aac.displayMyBidForDomain("aion.aion", k);
-        aac2.displayMyBidForDomain("aion.aion", k2);
-        aac3.displayMyBidForDomain("aion.aion", k3);
-        aac4.displayMyBidForDomain("aion.aion", k); // tries to check k's bid, should not display his bid
-        aac4.displayMyBidForDomain("aion.aion", k4); // k4 did not bid for "aion.aion"
-
-        aac.displayAllAuctionDomains(); // should have 2 auction domains
-        aac.displayMyBids(k); // k should have 2 bids running
-
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        aac.displayMyBids(k); // should have no bids
-        aac.displayAllAuctionDomains(); // should have 0 domains in auction
-
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
     }
 
@@ -192,8 +134,6 @@ public class AionAuctionContractTest {
         IRepositoryCache tracker = repo.startTracking();
         AionAuctionContract aac = new AionAuctionContract(tracker, Address.wrap(defaultKey.getAddress()));
         tracker.getBlockStore();
-
-
     }
 
     @Test()
@@ -218,6 +158,8 @@ public class AionAuctionContractTest {
         }
 
         assertEquals(ResultCode.SUCCESS, result.getCode());
+
+        LRUMap map = new LRUMap<Address, Map>(10);
     }
 
     //-------------------------------Auction Correctness Test------------------------------------//
@@ -407,6 +349,8 @@ public class AionAuctionContractTest {
     }
 
     //-------------------------------------Basic Tests ------------------------------------------//
+
+
     @Test()
     public void testQuery() {
         ECKey notRegisteredKey = ECKeyFac.inst().create();
@@ -428,6 +372,28 @@ public class AionAuctionContractTest {
         byte[] combined3 = setupInputs("bbbb.aaaa.aion", Address.wrap(k2.getAddress()), amount3.toByteArray(), k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()));
         aac.execute(combined3, DEFAULT_INPUT_NRG);
+
+        aac.displayMyBidsLRU(k);
+
+        aac.displayMyBidForDomainLRU("aion.aion", k);
+
+        //displayAuctionDomainLRU Tests, show with debug
+
+        aac.execute(setupInputs("111.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k), DEFAULT_INPUT_NRG);
+        aac.execute(setupInputs("222.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k), DEFAULT_INPUT_NRG);
+        aac.execute(setupInputs("333.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k), DEFAULT_INPUT_NRG);
+        aac.execute(setupInputs("444.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k), DEFAULT_INPUT_NRG);
+        aac.execute(setupInputs("555.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k), DEFAULT_INPUT_NRG);
+        aac.execute(setupInputs("666.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k), DEFAULT_INPUT_NRG);
+        aac.displayAuctionDomainLRU("111.aion"); // 1
+        aac.displayAuctionDomainLRU("222.aion"); // 1 2
+        aac.displayAuctionDomainLRU("333.aion"); // 1 2 3
+        aac.displayAuctionDomainLRU("444.aion"); // 1 2 3 4
+        aac.displayAuctionDomainLRU("111.aion"); // 2 3 4 1
+        aac.displayAuctionDomainLRU("555.aion"); // 3 4 1 5
+        aac.displayAuctionDomainLRU("666.aion"); // 4 1 5 6
+        aac.displayAuctionDomainLRU("555.aion"); // 4 1 6 5
+        aac.displayAuctionDomainLRU("nnn.aion");
 
         try {
             Thread.sleep(1000L);
@@ -451,16 +417,9 @@ public class AionAuctionContractTest {
         AionAuctionContract aac7 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()));
         aac.execute(combined7, DEFAULT_INPUT_NRG);
 
-        aac.displayMyBids(k); // bids
-        aac.displayMyBids(notRegisteredKey); // bids
-        aac.displayMyBids(k4); // bids
+        aac.displayMyBidForDomainLRU("aaaa.aion", k);
 
-        aac.displayMyBidForDomain("aion.aion", notRegisteredKey);
-        aac.displayMyBidForDomain("aion.aion", k);
-        aac.displayMyBidForDomain("asdgdfhdfhion.aion", k);
-        aac.displayMyBidForDomain("aion.aion", defaultKey);
-
-        aac.displayAllAuctionDomains();
+        //aac.displayAllAuctionDomains();
 
         try {
             Thread.sleep(1500L);
@@ -477,6 +436,7 @@ public class AionAuctionContractTest {
             e.printStackTrace();
         }
     }
+
 
     @Test(expected = IllegalArgumentException.class)
     public void unregisteredDomain(){
