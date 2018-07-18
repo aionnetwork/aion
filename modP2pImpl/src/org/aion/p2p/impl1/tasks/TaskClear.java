@@ -26,18 +26,15 @@ import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INodeMgr;
-import org.aion.p2p.IP2pMgr;
 
 public class TaskClear implements Runnable {
 
-    private static final int PERIOD_CLEAR = 20000;
+    private static final int PERIOD_CLEAR = 10000;
 
-    private final IP2pMgr mgr;
     private final INodeMgr nodeMgr;
     private final AtomicBoolean start;
 
-    public TaskClear(final IP2pMgr _mgr, final INodeMgr _nodeMgr, final AtomicBoolean _start) {
-        this.mgr = _mgr;
+    public TaskClear(final INodeMgr _nodeMgr, final AtomicBoolean _start) {
         this.nodeMgr = _nodeMgr;
         this.start = _start;
     }
@@ -49,8 +46,7 @@ public class TaskClear implements Runnable {
                 Thread.sleep(PERIOD_CLEAR);
                 nodeMgr.timeoutCheck();
             } catch (Exception e) {
-                e.printStackTrace();
-                p2pLOG.error("TaskClear exception {}", e.getMessage());
+                p2pLOG.error("TaskClear exception {}", e.toString());
             }
         }
     }

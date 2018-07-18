@@ -29,6 +29,7 @@ import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
+import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -354,8 +355,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public void assertEqualTotalDifficulty() {
         BigInteger tdForHash, tdCached, tdPublic;
+        byte[] bestBlockHash;
 
         synchronized (this) {
+            bestBlockHash = getBestBlock().getHash();
             tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
             tdCached = getCacheTD();
             tdPublic = getTotalDifficulty();
@@ -363,6 +366,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         assert (tdPublic.equals(tdForHash));
         assert (tdPublic.equals(tdCached));
+        assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {

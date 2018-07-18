@@ -1,6 +1,7 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
+<<<<<<< HEAD
  * <p>This file is part of the aion network project.
  *
  * <p>The aion network project is free software: you can redistribute it and/or modify it under the
@@ -13,11 +14,29 @@
  *
  * <p>You should have received a copy of the GNU General Public License along with the aion network
  * project source files. If not, see <https://www.gnu.org/licenses/>.
+=======
+ * This file is part of the aion network project.
  *
- * Contributors:
- *     Aion foundation.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- ******************************************************************************/
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
+>>>>>>> master-pre-merge
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
+ *
+ * Aion foundation.
+ *
+ */
 
 package org.aion.api.server.http;
 
@@ -419,7 +438,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -458,7 +477,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         DataWord key;
@@ -508,7 +527,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -589,7 +608,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -693,7 +712,7 @@ public class ApiWeb3Aion extends ApiAion {
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
-        if (_bnOrId != null)
+        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
             bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
@@ -726,7 +745,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
-        NumericalValue estimate = new NumericalValue(estimateGas(txParams));
+        NumericalValue estimate = new NumericalValue(estimateNrg(txParams));
 
         return new RpcMsg(estimate.toHexString());
     }
@@ -1136,7 +1155,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         int duration = 300;
-        if (_duration != null)
+        if (_duration != null && !_duration.equals(JSONObject.NULL))
             duration = new BigInteger(_duration + "").intValueExact();
 
         return new RpcMsg(unlockAccount(_account, _password, duration));
@@ -2248,12 +2267,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (nce != null
-                && soln != null
-                && hdrHash != null
-                && !nce.equals(null)
-                && !soln.equals(null)
-                && !hdrHash.equals(null)) {
+        if (nce != null && soln != null && hdrHash != null &&
+                !nce.equals(JSONObject.NULL) && !soln.equals(JSONObject.NULL) && !hdrHash.equals(JSONObject.NULL)) {
 
             try {
                 templateMapLock.writeLock().lock();
@@ -2311,7 +2326,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (_blockNum != null) {
+        if (_blockNum != null && !_blockNum.equals(JSONObject.NULL)) {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);
