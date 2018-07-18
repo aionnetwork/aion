@@ -32,6 +32,7 @@ public enum LogEnum {
 
     public static boolean contains(String _module) {
         for (LogEnum module : values())
+            // maybe use equalsIgnoreCase here?
             if (module.name().equals(_module))
                 return true;
         return false;

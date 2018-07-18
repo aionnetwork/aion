@@ -28,10 +28,12 @@ import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.io.Console;
+import java.util.Optional;
 import java.util.ServiceLoader;
 
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
+import org.aion.api.server.http.RpcServerVendor;
 import org.aion.api.server.http.nano.NanoRpcServer;
 import org.aion.api.server.http.undertow.UndertowRpcServer;
 import org.aion.api.server.pb.ApiAion0;
@@ -183,11 +185,18 @@ public class Aion {
         if(cfg.getApi().getRpc().getActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
 
-            // nano
-            // RpcServerBuilder rpcBuilder = new NanoRpcServer.Builder();
 
-            // undertow
-            RpcServerBuilder rpcBuilder = new UndertowRpcServer.Builder();
+            RpcServerBuilder rpcBuilder;
+
+            RpcServerVendor rpcVendor = RpcServerVendor.fromString(rpcCfg.getVendor()).orElse(RpcServerVendor.UNDERTOW);
+            switch (rpcVendor) {
+                case NANO:
+                    rpcBuilder = new NanoRpcServer.Builder();
+                    break;
+                default: // UNDERTOW
+                    rpcBuilder = new UndertowRpcServer.Builder();
+                    break;
+            }
 
             rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
             rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());

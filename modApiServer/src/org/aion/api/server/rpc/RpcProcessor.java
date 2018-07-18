@@ -77,10 +77,26 @@ public class RpcProcessor {
                 if (LOG.isDebugEnabled() && params != null)
                     LOG.debug("<request mth=[{}] params={}>", method, params.toString());
                 else
-                    LOG.debug("<request mth=[{}] params={}>", method);
-                
+                    LOG.debug("<request mth=[{}]>", method);
+
+                /**
+                 * Note about using System.nanoTime():
+                 * It's slower (~5x) than using System.currentTimeMillis() based on emperical tests across machines
+                 * and operating systems. But since this only runs in debug mode, it's probably OK?
+                 */
+                boolean shouldTime = LOG.isTraceEnabled();
+                long t0 = 0L;
+                if (shouldTime) t0 = System.nanoTime();
                 RpcMsg response = rpc.call(params);
+                if (shouldTime) {
+                    long t1 = System.nanoTime();
+                    LOG.debug("<request mth=[{}] rpc-process time: {}ms>", method, (t1 - t0) / 10e6f);
+                }
+
                 return response.setId(id).toJson();
+
+
+
             } catch (Exception e) {
                 LOG.debug("<rpc-server - internal error [2]>", e);
                 return new RpcMsg(null, RpcError.INTERNAL_ERROR).setId(id).toJson();

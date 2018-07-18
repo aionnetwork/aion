@@ -26,10 +26,11 @@ package org.aion.log;
 
 public enum LogLevels {
 
-    INFO, DEBUG, ERROR, TRACE;
+    ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF;
 
     public static boolean contains(String _level) {
         for (LogLevels LogLevel : values()) {
+            // maybe use equalsIgnoreCase here?
             if (LogLevel.name().equals(_level)) 
                 return true;
         }

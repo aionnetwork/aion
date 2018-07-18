@@ -45,11 +45,15 @@ public final class CfgApiRpc {
         this.active = true;
         this.ip = "127.0.0.1";
         this.port = 8545;
-        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
         this.corsEnabled = false;
         this.corsOrigin = "*";
         this.maxthread = null;
         this.filtersEnabled = true;
+        // using a strings here for the following 2 properties instead of referencing the associated enum value
+        // since don't want to add dependency to modApiServer just for this
+        this.vendor = "undertow";
+        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
+
         this.ssl = new CfgSsl();
     }
 
@@ -62,6 +66,7 @@ public final class CfgApiRpc {
     private Integer maxthread;
     private boolean filtersEnabled;
     private CfgSsl ssl;
+    private String vendor;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         // get the attributes
@@ -101,16 +106,23 @@ public final class CfgApiRpc {
                                     .collect(Collectors.toList())
                             );
                             break;
-                        case "threads":
-                            int t = 0;
+                        case "vendor":
                             try {
-                                t = Integer.parseInt(Cfg.readValue(sr));
+                                this.vendor = Cfg.readValue(sr).trim();
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            // filter out negative thread counts
-                            if (t > 0)
-                                this.maxthread = t;
+                            break;
+                        case "threads":
+                            try {
+                                int t = Integer.parseInt(Cfg.readValue(sr));
+                                // filter out negative counts
+                                if (t > 0) this.maxthread = t;
+                                // otherwise, accept default set in constructor
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
                             break;
                         case "filters-enabled":
                             try {
@@ -167,13 +179,6 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("size of thread pool allocated for rpc requests");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("threads");
-            xmlWriter.writeCharacters(this.maxthread + "");
-            xmlWriter.writeEndElement();
-
             xmlWriter.writeCharacters(this.ssl.toXML());
 
             xmlWriter.writeCharacters("\r\n\t\t");
@@ -211,4 +216,5 @@ public final class CfgApiRpc {
         return filtersEnabled;
     }
     public CfgSsl getSsl() { return this.ssl; }
+    public String getVendor() { return vendor; }
 }

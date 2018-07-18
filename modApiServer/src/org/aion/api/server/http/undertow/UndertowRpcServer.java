@@ -4,10 +4,14 @@ import io.undertow.Undertow;
 import io.undertow.io.Receiver;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.*;
+import io.undertow.server.handlers.BlockingHandler;
+import io.undertow.server.handlers.RequestBufferingHandler;
+import io.undertow.server.handlers.RequestDumpingHandler;
+import io.undertow.server.handlers.StuckThreadDetectionHandler;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.Methods;
+import io.undertow.util.StatusCodes;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.log.AionLoggerFactory;
@@ -26,6 +30,7 @@ public class UndertowRpcServer extends RpcServer {
 
     Undertow server;
 
+    private final int STUCK_THREAD_TIMEOUT = 600; // 10 min
     private final Map<HttpString, String> CORS_HEADERS = Map.of(
             HttpString.tryFromString("Access-Control-Allow-Origin"), corsOrigin,
             HttpString.tryFromString("Access-Control-Allow-Headers"), "origin,accept,content-type",
@@ -46,6 +51,10 @@ public class UndertowRpcServer extends RpcServer {
 
     private UndertowRpcServer(Builder builder) {
         super(builder);
+        // writes to System.error. Rationale: the alternative is to write to the slf4j facade and then manually
+        // hook up all the possible loggers defined (now and in future) by this library
+        // through our logback logger; this risks missing potentially important debug information from the library
+        System.setProperty("org.jboss.logging.provider", "slf4j");
     }
 
     private void addCorsHeaders(HttpServerExchange exchange) {
@@ -57,9 +66,14 @@ public class UndertowRpcServer extends RpcServer {
     }
 
     public void handleRequest(HttpServerExchange ex0) throws Exception {
-        LOG.debug("handleRequest hit");
-
         Receiver.FullStringCallback rpcHandler = (ex3, body) -> {
+            // only support post requests
+            if (!Methods.POST.equals(ex3.getRequestMethod())) {
+                ex3.setStatusCode(StatusCodes.METHOD_NOT_ALLOWED);
+                ex3.endExchange();
+                return;
+            }
+
             ex3.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             addCorsHeaders(ex3);
             ex3.getResponseSender().send(rpcProcessor.process(body));
@@ -75,16 +89,25 @@ public class UndertowRpcServer extends RpcServer {
                         .handleRequest(ex1);
             }
         };
-        AllowedMethodsHandler allowedMethodsHandler = new AllowedMethodsHandler(corsPreflightHandler, Methods.POST);
-        StuckThreadDetectionHandler stuckThreadDetectionHandler = new StuckThreadDetectionHandler(allowedMethodsHandler);
-        BlockingHandler blockingHandler = new BlockingHandler(stuckThreadDetectionHandler);
-        RequestDumpingHandler requestDumpingHandler = new RequestDumpingHandler(blockingHandler);
+        /**
+         * Opinion: StuckThreadDetectionHandler should be enabled by default, since in the grand-scheme of things, it's
+         * performance overhead is not too great and it could potentially help us catch implementation bugs in the API.
+         * Alternative: Allow the user to enable this from the config?
+         * See Impl:
+         * github.com/undertow-io/undertow/blob/master/core/src/main/java/io/undertow/server/handlers/StuckThreadDetectionHandler.java
+         */
+        StuckThreadDetectionHandler stuckThreadDetectionHandler = new StuckThreadDetectionHandler(STUCK_THREAD_TIMEOUT, corsPreflightHandler);
 
-        // on trace, dump the whole request
-        if (LOG.isTraceEnabled())
-            requestDumpingHandler.handleRequest(ex0);
-        else
-            blockingHandler.handleRequest(ex0);
+        // Only enabled if API is in TRACE mode
+        RequestDumpingHandler requestDumpingHandler = new RequestDumpingHandler(stuckThreadDetectionHandler);
+
+        HttpHandler firstHandler;
+        if (LOG.isTraceEnabled()) firstHandler = requestDumpingHandler;
+        else firstHandler = stuckThreadDetectionHandler;
+
+        BlockingHandler blockingHandler = new BlockingHandler(firstHandler);
+
+        blockingHandler.handleRequest(ex0);
     }
 
     private SSLContext sslContext() throws Exception {
