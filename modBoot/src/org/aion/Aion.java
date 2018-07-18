@@ -30,6 +30,7 @@ import static org.aion.zero.impl.Version.KERNEL_VERSION;
 import java.io.Console;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
 
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
@@ -185,31 +186,37 @@ public class Aion {
         if(cfg.getApi().getRpc().getActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
 
+            Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig = (rpcBuilder) -> {
+                rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
+                rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
+                rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
 
-            RpcServerBuilder rpcBuilder;
+                if (rpcCfg.getCorsEnabled())
+                    rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
 
+                CfgSsl cfgSsl = rpcCfg.getSsl();
+                if (cfgSsl.getEnabled())
+                    rpcBuilder.enableSsl(cfgSsl.getCert(), cfgSsl.getPass());
+            };
             RpcServerVendor rpcVendor = RpcServerVendor.fromString(rpcCfg.getVendor()).orElse(RpcServerVendor.UNDERTOW);
             switch (rpcVendor) {
-                case NANO:
-                    rpcBuilder = new NanoRpcServer.Builder();
+                case NANO: {
+                    NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder();
+                    commonRpcConfig.accept(rpcBuilder);
+                    rpcServer = rpcBuilder.build();
                     break;
-                default: // UNDERTOW
-                    rpcBuilder = new UndertowRpcServer.Builder();
+                }
+                default: { // UNDERTOW
+                    UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
+                    commonRpcConfig.accept(rpcBuilder);
+                    rpcServer = rpcBuilder.build();
                     break;
+                }
             }
 
-            rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
-            rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
-            rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
+            if (rpcServer == null)
+                throw new IllegalStateException("RPC server should have been initialized by now.");
 
-            if (rpcCfg.getCorsEnabled())
-                rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
-
-            CfgSsl cfgSsl = rpcCfg.getSsl();
-            if (cfgSsl.getEnabled())
-                rpcBuilder.enableSsl(cfgSsl.getCert(), cfgSsl.getPass());
-
-            rpcServer = rpcBuilder.build();
             rpcServer.start();
         }
 

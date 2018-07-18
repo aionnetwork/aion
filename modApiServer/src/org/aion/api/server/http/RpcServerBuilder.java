@@ -70,7 +70,7 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
         return self();
     }
 
-    public abstract RpcServer build();
+    protected abstract RpcServer build();
 
     // Subclasses must override this method to return "this"
     protected abstract T self();
