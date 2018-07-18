@@ -61,23 +61,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private static final String RESOLVER_HASH = "ResolverHash";
     private static final String OWNER_HASH = "OwnerHash";
     private static final String TTL_HASH = "TTLHash";
-    private static final String BID_KEY_COUNTER = "bidKeyCounterKey";
-    private static final String BID_KEY_ADDR_F = "bidderAddressKeyF";
-    private static final String BID_KEY_ADDR_S = "bidderAddressKeyS";
-    private static final String BID_KEY_VALUE = "bidValueKey";
     private static final String ALL_ADDR_KEY = "allAddressKey";
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
     private Address activeDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000600");
     private Address activeDomainsAddressTime = Address.wrap("0000000000000000000000000000000000000000000000000000000000000601");
-    private Address activeDomainsAddressName = Address.wrap("0000000000000000000000000000000000000000000000000000000000000602");
     private Address activeDomainsAddressValue = Address.wrap("0000000000000000000000000000000000000000000000000000000000000603");
-
-    private Address auctionDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000700");
-    private Address auctionDomainsAddressName = Address.wrap("0000000000000000000000000000000000000000000000000000000000000702");
-
     private Address allAddresses = Address.wrap("0000000000000000000000000000000000000000000000000000000000000800");
-    private Address domainNameAddressPair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000801");
     private Address domainAddressNamePair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000802");
     private Address registeredDomainAddressName =  Address.wrap("0000000000000000000000000000000000000000000000000000000000000803");
     private Address registeredDomainNameAddress =  Address.wrap("0000000000000000000000000000000000000000000000000000000000000804");
