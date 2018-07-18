@@ -206,7 +206,8 @@ public class Aion {
                     rpcServer = rpcBuilder.build();
                     break;
                 }
-                default: { // UNDERTOW
+                case UNDERTOW:
+                default: {
                     UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
                     commonRpcConfig.accept(rpcBuilder);
                     rpcServer = rpcBuilder.build();
