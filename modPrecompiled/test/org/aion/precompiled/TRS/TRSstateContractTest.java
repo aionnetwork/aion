@@ -1561,7 +1561,32 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testOpenFundsBulkDepositForNowDisabled() {
-        //TODO
+        Address owner = getNewExistentAccount(BigInteger.ZERO);
+        Address contract = createTRScontract(owner, false, true, 1,
+            BigInteger.ZERO, 0);
+
+        // Open all funds.
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, newTRSstateContract(owner).execute(input, COST).getCode());
+
+        // Now attempt to do a bulk deposit.
+        int numBeneficiaries = 2;
+        BigInteger deposit = new BigInteger("239785623");
+        Address[] beneficiaries = new Address[numBeneficiaries];
+        BigInteger[] amounts = new BigInteger[numBeneficiaries];
+        for (int i = 0; i < numBeneficiaries; i++) {
+            beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
+            amounts[i] = deposit;
+        }
+
+        AbstractTRS trs = newTRSuseContract(owner);
+        BigInteger total = deposit.multiply(BigInteger.valueOf(numBeneficiaries));
+        repo.addBalance(owner, total);
+        input = getBulkDepositForInput(contract, beneficiaries, amounts);
+        assertEquals(ResultCode.INTERNAL_ERROR, trs.execute(input, COST).getCode());
+        for (Address acc : beneficiaries) {
+            assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acc));
+        }
     }
 
     @Test
