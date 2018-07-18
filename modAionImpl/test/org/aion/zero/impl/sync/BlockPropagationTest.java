@@ -272,6 +272,11 @@ public class BlockPropagationTest {
             throw new IllegalStateException("not implemented.");
         }
 
+        @Override
+        public String getOutGoingIP() {
+            throw new IllegalStateException("not implemented.");
+        }
+
     }
 
     private static List<ECKey> generateDefaultAccounts() {
