@@ -168,12 +168,11 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
 
     public IDataWord getStorageValue(Address addr, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(addr);
-
-        if (details == null) {
+        IDataWord value = (details == null) ? null : details.get(key);
+        if (value == null) {
             return null;
         }
-
-        return details.get(key);
+        return (value.isZero()) ? null : value;
     }
 
     public void addStorageRow(Address addr, IDataWord key, IDataWord value) {

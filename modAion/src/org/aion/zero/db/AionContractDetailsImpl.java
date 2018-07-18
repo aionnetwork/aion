@@ -30,7 +30,6 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.vm.IDataWord;
-import org.aion.base.vm.IDataWord.WordType;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -82,29 +81,50 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         decode(code);
     }
 
+    /**
+     * Adds the key-value pair to the database unless value is an IDataWord whose underlying byte
+     * array consists only of zeros. In this case, if key already exists in the database it will be
+     * deleted.
+     *
+     * @param key The key.
+     * @param value The value.
+     */
     @Override
     public void put(IDataWord key, IDataWord value) {
-        WordType vType = value.getType();
+        // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
+        // we can differentiate between the two.
 
-        if (value.equals(vType)) {
+        if (value.isZero()) {
             storageTrie.delete(key.getData());
         } else {
-            storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
+            boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
+            byte[] data = (isDouble) ?
+                RLP.encodeElement(value.getData()) :
+                RLP.encodeElement(value.getNoLeadZeroesData());
+
+            storageTrie.update(key.getData(), data);
         }
 
         this.setDirty(true);
         this.rlpEncoded = null;
     }
 
+    /**
+     * Returns a DataWord whose 16 bytes consists of all zeros if key is not in the database.
+     * Otherwise returns the IDataWord value corresponding to key in the database.
+     *
+     * @param key The key to query.
+     * @return the corresponding value or a zero DataWord if no such value.
+     */
     @Override
     public IDataWord get(IDataWord key) {
-        WordType kType = key.getType();
-        IDataWord result = (kType.equals(WordType.DATA_WORD)) ? DataWord.ZERO : DoubleDataWord.ZERO;
+        IDataWord result = DataWord.ZERO;
 
         byte[] data = storageTrie.get(key.getData());
-        if (data.length > 0) {
-            byte[] dataDecoded = RLP.decode2(data).get(0).getRLPData();
-            result = new DataWord(dataDecoded);
+        if (data.length >= DoubleDataWord.BYTES) {
+            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData());
+        } else if (data.length > 0) {
+            result = new DataWord(RLP.decode2(data).get(0).getRLPData());
         }
 
         return result;
@@ -190,7 +210,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
-                if (value != null) {
+                if ((value != null) && (!value.isZero())) {
                     storage.put(key, value);
                 }
             }
