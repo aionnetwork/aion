@@ -1,0 +1,155 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+package org.aion.precompiled;
+
+import org.aion.base.db.*;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.aion.mcf.config.CfgPrune;
+import org.aion.precompiled.ContractExecutionResult.ResultCode;
+import org.aion.precompiled.contracts.Blake2bHash;
+import org.aion.precompiled.contracts.KeccakHash;
+import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.db.ContractDetailsAion;
+import org.junit.Before;
+import org.junit.Test;
+import java.io.UnsupportedEncodingException;
+import java.util.Properties;
+import static junit.framework.TestCase.assertEquals;
+
+public class HashTest {
+    private static final long INPUT_NRG = 1000;
+
+    private byte[] byteArray1 = "a0010101010101010101010101".getBytes();
+    private byte[] shortByteArray = "".getBytes();
+    private Blake2bHash blake2bHasher;
+    private KeccakHash keccakHasher;
+
+    @Before
+    public void setUp(){
+        IRepositoryCache repo = AionRepositoryImpl.createForTesting(repoConfig).startTracking();
+        blake2bHasher = new Blake2bHash(repo);
+        keccakHasher = new KeccakHash(repo);
+    }
+
+    @Test
+    public void testBlake256() throws UnsupportedEncodingException {
+        byte[] input = Blake2bHash.setupInput(0, byteArray1);
+        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        byte[] output = res.getOutput();
+
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(32, output.length);
+
+        System.out.println("The blake256 hash for '" + new String(byteArray1, "UTF-8") + "' is:");
+        System.out.print("      ");
+        for (byte b: output)
+            System.out.print(b + " ");
+        System.out.println();
+    }
+
+    @Test
+    public void testBlake128() throws UnsupportedEncodingException{
+        byte[] input = Blake2bHash.setupInput(1, byteArray1);
+        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        byte[] output = res.getOutput();
+
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(16, output.length);
+
+        System.out.println("The blake128 hash for '" + new String(byteArray1, "UTF-8") + "' is:");
+        System.out.print("      ");
+        for (byte b: output)
+            System.out.print(b + " ");
+        System.out.println();
+    }
+
+    @Test
+    public void testKeccak256() throws UnsupportedEncodingException{
+        ContractExecutionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
+        byte[] output = res.getOutput();
+
+        assertEquals(ResultCode.SUCCESS, res.getCode());
+        assertEquals(32, output.length);
+
+        System.out.println("The keccak256 hash for '" + new String(byteArray1, "UTF-8") + "' is:");
+        System.out.print("      ");
+        for (byte b: output)
+            System.out.print(b + " ");
+        System.out.println();
+    }
+
+    @Test
+    public void invalidInputLength(){
+        byte[] input = Blake2bHash.setupInput(0, shortByteArray);
+        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+
+        ContractExecutionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
+        assertEquals(ResultCode.INTERNAL_ERROR, res2.getCode());
+    }
+
+    @Test
+    public void insufficientNRG(){
+        byte[] input = Blake2bHash.setupInput(0, byteArray1);
+        ContractExecutionResult res = blake2bHasher.execute(input, 100);
+        assertEquals(ResultCode.OUT_OF_NRG, res.getCode());
+
+        ContractExecutionResult res2 = keccakHasher.execute(byteArray1, 100);
+        assertEquals(ResultCode.OUT_OF_NRG, res2.getCode());
+    }
+
+    @Test
+    public void testInvalidOperation(){
+        byte[] input = Blake2bHash.setupInput(3, byteArray1);
+        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getCode());
+    }
+
+    private static IRepositoryConfig repoConfig =
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
+
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
+
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
+
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
+
+}
