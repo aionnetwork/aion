@@ -133,7 +133,6 @@ public class SendController extends AbstractController {
 
     @Override
     protected void refreshView(final RefreshEvent event) {
-        System.out.println("SendController#refreshView. type = " + event.getType() + ". this.account = " + this.account);
         switch (event.getType()) {
             case CONNECTED:
                 connected = true;

@@ -61,7 +61,7 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
     }
 
     public void processTxnsFromBlockAsync(final BlockDTO lastSafeBlock, final Set<String> addresses) {
-        backgroundExecutor.submit(() -> processTxnsFromBlockAsync(lastSafeBlock, addresses));
+        backgroundExecutor.submit(() -> processTransactionsFromBlock(lastSafeBlock, addresses));
     }
 
     // original version from ApiBlockchainConnector.java of aion_ui
@@ -283,6 +283,21 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
     private TransactionResponseDTO mapTransactionResponse(final MsgRsp response) {
         return new TransactionResponseDTO(response.getStatus(), response.getTxHash(), response.getError());
     }
+
+    public Set<TransactionDTO> getLatestTransactions(final String address) {
+        backgroundExecutor.submit(this::processTransactionsFromOldestRegisteredSafeBlock);
+        return getAccountManager().getTransactions(address);
+    }
+
+    private void processTransactionsFromOldestRegisteredSafeBlock() {
+        final Set<String> addresses = getAccountManager().getAddresses();
+        final Consumer<Iterator<String>> nullSafeBlockFilter = Iterator::remove;
+        final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, nullSafeBlockFilter);
+        if (oldestSafeBlock != null) {
+            processTransactionsFromBlock(oldestSafeBlock, addresses);
+        }
+    }
+
 
     private static final List<Integer> ACCEPTED_TRANSACTION_RESPONSE_STATUSES = Arrays.asList(Message.Retcode.r_tx_Init_VALUE, Message.Retcode.r_tx_Recved_VALUE, Message.Retcode.r_tx_NewPending_VALUE, Message.Retcode.r_tx_Pending_VALUE, Message.Retcode.r_tx_Included_VALUE);
 

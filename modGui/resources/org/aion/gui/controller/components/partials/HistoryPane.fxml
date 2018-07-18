@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.ComboBox?>
+<AnchorPane id="historyPane" visible="false"
+            xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.aion.gui.controller.HistoryController" fx:id="parent">
+
+    <VBox AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="15"
+          alignment="TOP_CENTER" spacing="10">
+        <Label text="Transaction History" styleClass="tile-label" alignment="CENTER"/>
+        <HBox prefWidth="800" spacing="10">
+            <ImageView pickOnBounds="true" preserveRatio="true" fitHeight="20">
+                <Image url="@../icons/search_icon.png"/>
+            </ImageView>
+            <TextField fx:id="searchField" promptText="Search..." prefColumnCount="45"/>
+            <ComboBox fx:id="searchItem" prefWidth="200"/>
+        </HBox>
+        <ScrollPane VBox.vgrow="NEVER" hbarPolicy="NEVER" vbarPolicy="NEVER" prefViewportHeight="250" prefViewportWidth="830">
+            <TableView fx:id="txTable" styleClass="custom-scrollbar" prefHeight="250" />
+        </ScrollPane>
+    </VBox>
+</AnchorPane>

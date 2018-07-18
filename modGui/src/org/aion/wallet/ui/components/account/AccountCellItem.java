@@ -26,31 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class AccountCellItem extends ListCell<AccountDTO> {
-
-    private static final String ICON_CONNECTED = "/org/aion/wallet/ui/components/icons/icon-connected-50.png";
-
-    private static final String ICON_DISCONNECTED = "/org/aion/wallet/ui/components/icons/icon-disconnected-50.png";
-
-    private static final String ICON_EDIT = "/org/aion/wallet/ui/components/icons/pencil-edit-button.png";
-
-    private static final String ICON_CONFIRM = "/org/aion/wallet/ui/components/icons/icons8-checkmark-50.png";
-
-    private static final String NAME_INPUT_FIELDS_SELECTED_STYLE = "name-input-fields-selected";
-
-    private static final String NAME_INPUT_FIELDS_STYLE = "name-input-fields";
-
-    private static final Tooltip CONNECT_ACCOUNT_TOOLTIP = new Tooltip("Connect with this account");
-
-    private static final Tooltip CONNECTED_ACCOUNT_TOOLTIP = new Tooltip("Connected account");
-
-    private static final Tooltip EDIT_NAME_TOOLTIP = new Tooltip("Edit account name");
-
-    private static final Tooltip EXPORT_ACCOUNT_TOOLTIP = new Tooltip("Export to keystore");
-
-//    private final UnlockAccountDialog accountUnlockDialog = new UnlockAccountDialog();
-//
-//    private final SaveKeystoreDialog saveKeystoreDialog = new SaveKeystoreDialog();
-
     private final UnlockAccountDialog accountUnlockDialog;
     private final SaveKeystoreDialog saveKeystoreDialog;
 
@@ -72,6 +47,17 @@ public class AccountCellItem extends ListCell<AccountDTO> {
     private ImageView accountExportButton;
 
     private boolean nameInEditMode;
+
+    private static final String ICON_CONNECTED = "/org/aion/wallet/ui/components/icons/icon-connected-50.png";
+    private static final String ICON_DISCONNECTED = "/org/aion/wallet/ui/components/icons/icon-disconnected-50.png";
+    private static final String ICON_EDIT = "/org/aion/wallet/ui/components/icons/pencil-edit-button.png";
+    private static final String ICON_CONFIRM = "/org/aion/wallet/ui/components/icons/icons8-checkmark-50.png";
+    private static final String NAME_INPUT_FIELDS_SELECTED_STYLE = "name-input-fields-selected";
+    private static final String NAME_INPUT_FIELDS_STYLE = "name-input-fields";
+    private static final Tooltip CONNECT_ACCOUNT_TOOLTIP = new Tooltip("Connect with this account");
+    private static final Tooltip CONNECTED_ACCOUNT_TOOLTIP = new Tooltip("Connected account");
+    private static final Tooltip EDIT_NAME_TOOLTIP = new Tooltip("Edit account name");
+    private static final Tooltip EXPORT_ACCOUNT_TOOLTIP = new Tooltip("Export to keystore");
 
     public AccountCellItem(UnlockAccountDialog unlockAccountDialog, SaveKeystoreDialog saveKeystoreDialog) {
         this.accountUnlockDialog = unlockAccountDialog;

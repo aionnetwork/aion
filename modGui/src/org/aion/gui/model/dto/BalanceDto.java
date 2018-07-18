@@ -9,9 +9,10 @@ import java.math.BigInteger;
 /**
  * Adapted from ApiBlockchainConnector#getBalance(String) from https://github.com/aionnetwork/aion_ui
  *
- * Note: to get the balance for an account, need to setAddress(String) then getBalance().  Since these
- * two things don't happen atomically, don't share the same instance of this class between two UI elements
- * otherwise they could interfere with one another.
+ * Note: to get the balance for an account, need to setAddress(String) then loadFromApi then getBalance().  Since
+ * these things don't happen atomically, don't share the same instance of this class between two UI elements
+ * otherwise they could interfere with one another.  Should probably refactor this to just have a less
+ * complicated interface.
  */
 public class BalanceDto extends AbstractDto {
     private String address;

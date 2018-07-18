@@ -75,6 +75,10 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelConnection,
                     accountManager,
                     blockTransactionProcessor));
+            put(HistoryController.class, () -> new HistoryController(
+                    blockTransactionProcessor,
+                    accountManager,
+                    new SyncInfoDto(kernelConnection)));
             put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
             put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager));
             put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager));

@@ -44,11 +44,9 @@
                 <VBox fx:id="receiveButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
                     <fx:include source="buttons/ReceiveButton.fxml"/>
                 </VBox>
-                <!--
-                    <VBox fx:id="historyButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
-                        <fx:include source="buttons/HistoryButton.fxml"/>
-                    </VBox> -->
-
+                <VBox fx:id="historyButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/HistoryButton.fxml"/>
+                </VBox>
                 <!--<VBox alignment="BOTTOM_CENTER" fx:id="contractsButton" onMouseClicked="#handleButtonPressed">-->
                     <!--<fx:include source="buttons/ContractsButton.fxml"/>-->
                 <!--</VBox>-->

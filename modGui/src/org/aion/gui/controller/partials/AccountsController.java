@@ -1,5 +1,6 @@
 package org.aion.gui.controller.partials;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -11,6 +12,7 @@ import org.aion.gui.controller.AbstractController;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.RefreshEvent;
+import org.aion.log.AionLoggerFactory;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.dto.AccountDTO;
@@ -28,12 +30,11 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class AccountsController extends AbstractController {
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
-
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
     private final AccountManager accountManager;
     private final WalletStorage walletStorage;
+    private final AddAccountDialog addAccountDialog;
+    private final ImportAccountDialog importAccountDialog;
+    private final UnlockMasterAccountDialog unlockMasterAccountDialog;
 
     @FXML
     private Button addMasterAccountButton;
@@ -41,23 +42,10 @@ public class AccountsController extends AbstractController {
     private Button unlockMasterAccountButton;
     @FXML
     private ListView<AccountDTO> accountListView;
-    private AddAccountDialog addAccountDialog;
-    private ImportAccountDialog importAccountDialog;
-    private UnlockMasterAccountDialog unlockMasterAccountDialog;
 
     private AccountDTO account;
 
-    public AccountsController(AccountManager accountManager,
-                              WalletStorage walletStorage,
-                              AddAccountDialog addAccountDialog,
-                              ImportAccountDialog importAccountDialog,
-                              UnlockMasterAccountDialog unlockMasterAccountDialog) {
-        this.accountManager = accountManager;
-        this.walletStorage = walletStorage;
-        this.addAccountDialog = addAccountDialog;
-        this.importAccountDialog = importAccountDialog;
-        this.unlockMasterAccountDialog = unlockMasterAccountDialog;
-    }
+    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     public AccountsController(AccountManager accountManager,
                               WalletStorage walletStorage) {
@@ -67,11 +55,21 @@ public class AccountsController extends AbstractController {
                 new UnlockMasterAccountDialog(accountManager));
     }
 
+    @VisibleForTesting
+    AccountsController(AccountManager accountManager,
+                       WalletStorage walletStorage,
+                       AddAccountDialog addAccountDialog,
+                       ImportAccountDialog importAccountDialog,
+                       UnlockMasterAccountDialog unlockMasterAccountDialog) {
+        this.accountManager = accountManager;
+        this.walletStorage = walletStorage;
+        this.addAccountDialog = addAccountDialog;
+        this.importAccountDialog = importAccountDialog;
+        this.unlockMasterAccountDialog = unlockMasterAccountDialog;
+    }
+
     @Override
     public void internalInit(final URL location, final ResourceBundle resources) {
-//        addAccountDialog = new AddAccountDialog();
-//        importAccountDialog = new ImportAccountDialog();
-//        unlockMasterAccountDialog = new UnlockMasterAccountDialog();
         reloadAccounts();
     }
 
@@ -83,9 +81,6 @@ public class AccountsController extends AbstractController {
     }
 
     private void displayFooterActions() {
-//        if (blockchainConnector.hasMasterAccount() && !blockchainConnector.isMasterAccountUnlocked()) {
-
-        //FIXME: put me back
         if (walletStorage.hasMasterAccount() && !accountManager.isMasterAccountUnlocked()) {
             unlockMasterAccountButton.setVisible(true);
             addMasterAccountButton.setVisible(false);
@@ -109,8 +104,6 @@ public class AccountsController extends AbstractController {
 
     private void reloadAccountObservableList(List<AccountDTO> accounts) {
         for (AccountDTO account : accounts) {
-            //FIXME delete sout
-            System.out.println(account);
             account.setActive(this.account != null && this.account.equals(account));
         }
         accountListView.setItems(FXCollections.observableArrayList(accounts));
@@ -149,18 +142,14 @@ public class AccountsController extends AbstractController {
     }
 
     public void unlockMasterAccount(MouseEvent mouseEvent) {
-        System.out.println("XXX unlockMasterAccount");
         unlockMasterAccountDialog.open(mouseEvent);
     }
 
     public void openImportAccountDialog(MouseEvent mouseEvent) {
-
-        System.out.println("XXX openImportAccountDialog" );
         importAccountDialog.open(mouseEvent);
     }
 
     public void openAddAccountDialog(MouseEvent mouseEvent) {
-        System.out.println("XXX openAddAccountDialog" );
         if (this.walletStorage.hasMasterAccount()) {
             try {
                 accountManager.createAccount();

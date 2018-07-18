@@ -1,6 +1,6 @@
 #contentPane {
     -fx-background-color: WHITE;
-    -fx-border-color:#40bded;
+    -fx-border-color:#4221CC;
     -fx-border-width: 1 0 1 0;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .button {
-    -fx-background-color: #40bded;
+    -fx-background-color: #4221cc;
     -fx-background-radius: 0,0,0,0;
     -fx-text-fill: white;
     -fx-font-family: 'Open Sans Bold';
@@ -42,7 +42,7 @@
     -fx-background-color: #ececec;
 }
 
-.accounts-list{
+.accounts-list {
     -fx-background-insets: 0;
     -fx-padding: 0;
 }
@@ -55,7 +55,7 @@
 }
 
 .line{
-    -fx-stroke: #40bded;
+    -fx-stroke: #4221CC;
 }
 
 .header-text {
@@ -76,7 +76,7 @@
     -fx-font-family: 'Open Sans Regular';
     -fx-font-size: 16px;
     -fx-display-caret: false;
-    -fx-border-color: #40bded;
+    -fx-border-color: #4221CC;
     -fx-border-width: 0 0 1 0;
 }
 
@@ -86,3 +86,115 @@
     -fx-text-fill: BLACK;
     -fx-display-caret: false;
 }
+
+.link-style {
+    -fx-text-fill: blue;
+    -fx-underline: true ;
+    -fx-cursor: hand;
+}
+
+.error-label {
+    -fx-text-fill: RED;
+}
+
+.warning-link-style {
+    -fx-text-fill: #FF9900;
+    -fx-underline: true ;
+    -fx-cursor: hand;
+}
+
+/* Scrollbar */
+
+/* Scroll bar policy below */
+
+.custom-scrollbar .scroll-bar:horizontal ,
+.custom-scrollbar  .scroll-bar:vertical{
+    -fx-background-color: transparent;
+}
+
+/* ------------------------------------------------------------------------------------- */
+/** EVENT CSS **/
+/* ------------------------------------------------------------------------------------- */
+
+/* The main scrollbar **track** CSS class on event of "hover" and "pressed" */
+.custom-scrollbar .scroll-bar:vertical:hover .track,
+.custom-scrollbar .scroll-bar:vertical:pressed .track {
+     -fx-background-color: derive(#434343, 20%);
+	 -fx-opacity: 0.2;
+	 -fx-background-radius: 0em;
+}
+
+/* The main scrollbar **thumb** CSS class on event of "hover" and "pressed" */
+.custom-scrollbar .scroll-bar .thumb:hover,
+.custom-scrollbar .scroll-bar .thumb:pressed {
+    -fx-background-color: derive(black, 50%);
+}
+
+.custom-scrollbar .increment-button:hover ,.custom-scrollbar .decrement-button:hover {
+    -fx-background-color:derive(gray,100%);
+	-fx-border-color:derive(gray, 80%);
+	-fx-padding:10px;
+}
+
+/* The increment and decrement button CSS class of scrollbar */
+.custom-scrollbar .increment-button ,.custom-scrollbar .decrement-button {
+    -fx-background-color:transparent;
+	-fx-background-radius: 2em;
+}
+
+/* The main scrollbar **thumb** CSS class which we drag every time (movable) */
+.custom-scrollbar .scroll-bar:horizontal .thumb,
+.custom-scrollbar .scroll-bar:vertical .thumb {
+    -fx-background-color:derive(black, 90%);
+	-fx-background-insets: 2, 0, 0;
+	-fx-background-radius: 2em;
+}
+
+/* The main scrollbar **track** CSS class  */
+.custom-scrollbar .scroll-bar:horizontal .track,
+.custom-scrollbar .scroll-bar:vertical .track {
+	-fx-background-color:transparent;
+	-fx-border-color:transparent;
+	-fx-background-radius: 0em;
+	-fx-border-radius:2em;
+}
+
+/* The increment and decrement button CSS class of scrollbar */
+.custom-scrollbar .scroll-bar:horizontal .increment-button ,
+.custom-scrollbar .scroll-bar:horizontal .decrement-button {
+    -fx-background-color:transparent;
+	-fx-background-radius: 0em;
+	-fx-padding:0 0 10 0;
+}
+
+/* The increment and decrement button CSS class of scrollbar */
+.custom-scrollbar .scroll-bar:vertical .increment-button ,
+.custom-scrollbar .scroll-bar:vertical .decrement-button {
+    -fx-background-color:transparent;
+	-fx-background-radius: 0em;
+	-fx-padding:0 10 0 0;
+}
+
+.custom-scrollbar .scroll-bar .increment-arrow,
+.custom-scrollbar .scroll-bar .decrement-arrow {
+	-fx-padding:0;
+}
+
+/* Hide horizontal scroll-bar */
+.table-view *.scroll-bar:horizontal *.increment-button,
+.table-view *.scroll-bar:horizontal *.decrement-button {
+  -fx-background-color: null;
+  -fx-background-radius: 0;
+  -fx-background-insets: 0;
+  -fx-padding: 0;
+}
+
+.table-view *.scroll-bar:horizontal *.increment-arrow,
+.table-view *.scroll-bar:horizontal *.decrement-arrow {
+  -fx-background-color: null;
+  -fx-background-radius: 0;
+  -fx-background-insets: 0;
+  -fx-padding: 0;
+  -fx-shape: null;
+}
+

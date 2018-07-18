@@ -47,7 +47,7 @@ public class DashboardControllerIntegTest extends ApplicationTest {
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
     private EventBus kernelBus = EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS);
-    private EventBus uiRefreshBus = EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH);
+    private EventBus uiRefreshBus = EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID);
     private DashboardController controller;
 
     /**

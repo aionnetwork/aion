@@ -143,6 +143,7 @@ public class MainWindow extends Application {
         panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
         panes.put(HeaderPaneButtonEvent.Type.SEND, scene.lookup("#sendPane"));
         panes.put(HeaderPaneButtonEvent.Type.RECEIVE, scene.lookup("#receivePane"));
+        panes.put(HeaderPaneButtonEvent.Type.HISTORY, scene.lookup("#historyPane"));
         panes.put(HeaderPaneButtonEvent.Type.SETTINGS, scene.lookup("#settingsPane"));
 
         // Set up event bus
