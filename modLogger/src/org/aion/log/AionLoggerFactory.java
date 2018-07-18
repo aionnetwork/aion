@@ -22,7 +22,6 @@
  */
 package org.aion.log;
 
-import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
@@ -42,6 +41,14 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Used to override SimpleLogger current log level
+ *
+ * final public int TRACE_INT = 00; final public int DEBUG_INT = 10; finalConcurrentHashMap
+ * public int INFO_INT = 20; final public int WARN_INT = 30; final public int ERROR_INT = 40;
+ *
+ * Default set to 50 which ignore output
+ */
 public class AionLoggerFactory {
 
     /**
@@ -143,8 +150,8 @@ public class AionLoggerFactory {
     private static ConcurrentMap<String, Logger> loggerMap =
             new ConcurrentHashMap<String, Logger>();
 
-
     public static Logger getLogger(String label) {
+
         Logger logger = loggerMap.get(label);
         return logger == null ? newLogger(label) : logger;
     }
