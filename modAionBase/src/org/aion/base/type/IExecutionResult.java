@@ -30,6 +30,8 @@ public interface IExecutionResult {
 
     byte[] getOutput();
 
+    byte[] toBytes();
+
     long getNrgLeft();
 
     void setCode(int i);

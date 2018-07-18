@@ -16,12 +16,32 @@
         <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
         <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
         <pathelement location="${dir.lib}/guava-19.0.jar"/>
+        <pathelement location="${dir.lib}/leveldbjni-all-1.18.3.jar"/>
+        <pathelement location="${dir.lib}/commons-codec-1.10.jar"/>
+        <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
+        <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
         <pathelement location="${dir.mod}/modAion.jar"/>
+        <pathelement location="${dir.mod}/modEvtMgr.jar"/>
         <pathelement location="${dir.mod}/modAionApi.jar"/>
         <pathelement location="${dir.mod}/modRlp.jar"/>
+        <pathelement location="${dir.mod}/modPrecompiled.jar"/>
+        <pathelement location="${dir.mod}/modAionImpl.jar"/>
+        <pathelement location="${dir.mod}/modLogger.jar"/>
+        <pathelement location="${dir.mod}/modDbImpl.jar"/>
+        <pathelement location="${dir.mod}/modFastVM.jar"/>
+    </path>
+
+    <path id="classpath.dependency">
+        <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+        <pathelement location="${dir.lib}/guava-19.0.jar"/>
+        <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
+        <pathelement location="${dir.mod}/modMcf.jar"/>
+        <pathelement location="${dir.mod}/modAionBase.jar"/>
+        <pathelement location="${dir.mod}/modCrypto.jar"/>
+        <pathelement location="${dir.mod}/modAion.jar"/>
         <pathelement location="${dir.mod}/modPrecompiled.jar"/>
     </path>
 
@@ -37,7 +57,7 @@
 
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}" />
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/MSCdemoTest.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
             <classpath>
                 <path refid="classpath.test" />
             </classpath>
@@ -46,7 +66,7 @@
 
     <target name="ci_test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/MSCdemoTest.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
             <classpath>
                 <path refid="classpath.test"/>
             </classpath>
@@ -74,7 +94,8 @@
             <formatter type="xml" />
             <batchtest todir="${test.report.dir}">
                 <fileset dir="${src.test}">
-                    <include name="**/MSCdemoTest.java"/>
+                    <include name="**/*Test.java"/>
+                    <exclude name="**/AionTokenContractTest.java"/>
                 </fileset>
             </batchtest>
         </junit>
@@ -115,12 +136,7 @@
         <javac debug="${compile.debug}" debuglevel="source,lines,vars" includeAntRuntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <compilerarg line="--add-modules=java.xml.bind -h ${dir.native}"/>
             <modulepath>
-                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
-                <pathelement location="${dir.lib}/guava-19.0.jar"/>
-                <pathelement location="${dir.mod}/modMcf.jar"/>
-                <pathelement location="${dir.mod}/modAionBase.jar"/>
-                <pathelement location="${dir.mod}/modCrypto.jar"/>
-                <pathelement location="${dir.mod}/modAion.jar"/>
+                <path refid="classpath.dependency"/>
             </modulepath>
         </javac>
 
