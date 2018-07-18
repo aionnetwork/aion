@@ -1088,7 +1088,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param currPeriod The current period we are in.
      * @return the extra funds account is able to withdraw.
      */
-    private BigInteger computeExtraFundsToWithdraw(Address contract, Address account,
+     public BigInteger computeExtraFundsToWithdraw(Address contract, Address account,
         BigDecimal fraction, int currPeriod) {
 
         int periods = getPeriods(getContractSpecs(contract));

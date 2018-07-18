@@ -1589,8 +1589,22 @@ public class TRSstateContractTest extends TRShelpers {
     }
 
     @Test
-    public void testOpenFundsUpdateTotalNowDisabled() {
-        //TODO
+    public void testOpenFundsAddExtraNowDisabled() {
+        Address acct = getNewExistentAccount(BigInteger.TEN);
+        Address contract = createTRScontract(acct, false, true, 8,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSstateContract(acct);
+        byte[] input = getOpenFundsInput(contract);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getCode());
+        assertTrue(getAreContractFundsOpen(trs, contract));
+
+        // Now try to add some extra funds.
+        BigInteger extra = new BigInteger("23786523");
+        repo.addBalance(acct, extra);
+        input = getAddExtraInput(contract, extra);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getCode());
+        assertEquals(BigInteger.ZERO, grabExtraFunds(trs, contract));
     }
 
     // <----------------------------------------HELPERS-------------------------------------------->

@@ -383,6 +383,28 @@ class TRShelpers {
         return input;
     }
 
+    // Returns a properly formatted byte array to bulk deposit for each account in beneficiaries.
+    // This method does: deposit amounts[i] on behalf of beneficiaries[i]
+    byte[] getBulkDepositForInput(Address contract, Address[] beneficiaries, BigInteger[] amounts) {
+        int len = beneficiaries.length;
+        if ((len < 1) || (len > 100)) { fail("Imporper length: " + len); }
+        if (len != amounts.length) { fail("beneficiaries and amounts differ in length!"); }
+        int arrLen = 33 + (len * 32) + (len * 128);
+
+        byte[] input = new byte[arrLen];
+        input[0] = 0x2;
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        int index = 33;
+        for (int i = 0; i < len; i++) {
+            System.arraycopy(beneficiaries[i].toBytes(), 0, input, index, Address.ADDRESS_LEN);
+            index += 32 + 128;
+            byte[] amtBytes = amounts[i].toByteArray();
+            if (amtBytes.length > 128) { fail(); }
+            System.arraycopy(amtBytes, 0, input, index - amtBytes.length, amtBytes.length);
+        }
+        return input;
+    }
+
     // Returns a byte array signalling false for a TRS contract query operation result.
     byte[] getFalseContractOutput() {
         out[0] = 0x0;
@@ -482,9 +504,17 @@ class TRShelpers {
         return expectedWithdraw.add(expectedSpecial);
     }
 
+    // Returns the amount of extras account is able to withdraw in the current period.
+    BigInteger getExtraShare(AbstractTRS trs, Address contract, Address account, BigDecimal fraction,
+        int currPeriod) {
+        return trs.computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
+    }
+
     /**
      * Returns the amount an account is expected to receive from a first withdrawal from a contract
      * given that the params are true of the contract and the caller.
+     *
+     * This method uses timestamp to determine the current period the contract is in!
      *
      * This method is unreliable if the first withdraw is performed in the last period. There are
      * roundoff errors that accrue and cause the non-final withdrawal amounts to be round down and
@@ -498,6 +528,7 @@ class TRShelpers {
      * @param bonus The bonus balance in the contract.
      * @param percent The percentage of total owings the caller is eligible to receive in special event.
      * @param periods The number of periods the contract has.
+     * @param timestamp Timestamp for the current period the contract is in.
      * @return the expected amount to withdraw on a first call to the contract.
      */
     BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract, BigInteger deposits,
