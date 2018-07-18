@@ -95,6 +95,7 @@
             <batchtest todir="${test.report.dir}">
                 <fileset dir="${src.test}">
                     <include name="**/*Test.java"/>
+                    <exclude name="**/AionTokenContractTest.java"/>
                 </fileset>
             </batchtest>
         </junit>
