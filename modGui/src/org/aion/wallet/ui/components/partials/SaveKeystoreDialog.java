@@ -22,6 +22,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.aion.gui.controller.ControllerFactory;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.mcf.account.Keystore;
 import org.aion.wallet.account.AccountManager;
@@ -72,10 +73,14 @@ public class SaveKeystoreDialog implements Initializable {
     }
 
     public void open(final MouseEvent mouseEvent) {
+        System.out.println("SaveKeystoreDialog#open");
         final StackPane pane = new StackPane();
         final Pane saveKeystoreDialog;
         try {
-            saveKeystoreDialog = FXMLLoader.load(getClass().getResource("SaveKeystoreDialog.fxml"));
+//            saveKeystoreDialog = FXMLLoader.load(getClass().getResource("SaveKeystoreDialog.fxml"));
+            FXMLLoader loader = new FXMLLoader((getClass().getResource("SaveKeystoreDialog.fxml")));
+            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
+            saveKeystoreDialog = loader.load();
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             return;
@@ -120,7 +125,6 @@ public class SaveKeystoreDialog implements Initializable {
         final String password = keystorePassword.getText();
         if (isRemembered() || (password != null && !password.isEmpty())) {
             try {
-//                blockchainConnector.exportAccount(account, password, destinationDirectory);
                 accountManager.exportAccount(account, password, destinationDirectory);
                 final String infoMsg = "Account: " + account.getPublicAddress() + " exported to " + destinationDirectory;
                 ConsoleManager.addLog(infoMsg, ConsoleManager.LogType.ACCOUNT);

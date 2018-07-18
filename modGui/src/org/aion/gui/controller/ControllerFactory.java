@@ -14,7 +14,9 @@ import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.wallet.ui.components.partials.AddAccountDialog;
 import org.aion.wallet.ui.components.partials.ImportAccountDialog;
+import org.aion.wallet.ui.components.partials.SaveKeystoreDialog;
 import org.aion.wallet.ui.components.partials.TransactionResubmissionDialog;
+import org.aion.wallet.ui.components.partials.UnlockAccountDialog;
 import org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog;
 import org.slf4j.Logger;
 
@@ -82,8 +84,10 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
             put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager));
             put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager));
+            put(UnlockAccountDialog.class, () -> new UnlockAccountDialog(accountManager));
             put(TransactionResubmissionDialog.class, () -> new TransactionResubmissionDialog(
                     accountManager));
+            put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager));
         }};
     }
 

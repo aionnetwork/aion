@@ -14,6 +14,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Popup;
+import org.aion.gui.controller.ControllerFactory;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
@@ -58,7 +59,10 @@ public class UnlockAccountDialog implements Initializable {
 
         Pane unlockAccountDialog;
         try {
-            unlockAccountDialog = FXMLLoader.load(getClass().getResource("UnlockAccountDialog.fxml"));
+//            unlockAccountDialog = FXMLLoader.load(getClass().getResource("UnlockAccountDialog.fxml"));
+            FXMLLoader loader = new FXMLLoader((getClass().getResource("UnlockAccountDialog.fxml")));
+            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
+            unlockAccountDialog = loader.load();
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             return;

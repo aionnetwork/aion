@@ -169,6 +169,7 @@ public class AccountCellItem extends ListCell<AccountDTO> {
 
     @FXML
     public void onExportClicked(final MouseEvent mouseEvent){
+        System.out.println("AccountCellItem#onExportClicked");
         final AccountDTO account = getItem();
         if (!account.isUnlocked()) {
             accountUnlockDialog.open(mouseEvent);

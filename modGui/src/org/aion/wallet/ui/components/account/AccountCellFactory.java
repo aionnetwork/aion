@@ -8,8 +8,6 @@ import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.ui.components.partials.SaveKeystoreDialog;
 import org.aion.wallet.ui.components.partials.UnlockAccountDialog;
 
-import java.util.ConcurrentModificationException;
-
 public class AccountCellFactory implements Callback<ListView<AccountDTO>, ListCell<AccountDTO>> {
 
     private final UnlockAccountDialog accountUnlockDialog;

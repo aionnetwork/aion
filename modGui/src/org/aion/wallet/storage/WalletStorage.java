@@ -53,6 +53,7 @@ public class WalletStorage {
         STORAGE_DIR = storageDir;
 
         KEYSTORE_PATH = Paths.get(STORAGE_DIR + File.separator + "keystore");
+        System.out.println("WalletStorage.KEYSTORE_PATH = " + KEYSTORE_PATH);
 
         ACCOUNTS_FILE = STORAGE_DIR + File.separator + "accounts.properties";
 

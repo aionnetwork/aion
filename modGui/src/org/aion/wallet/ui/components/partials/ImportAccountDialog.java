@@ -177,7 +177,7 @@ public class ImportAccountDialog implements Initializable {
         try {
 //            importAccountDialog = FXMLLoader.load(getClass().getResource("ImportAccountDialog.fxml"));
             FXMLLoader loader = new FXMLLoader((getClass().getResource("ImportAccountDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory() /* TODO a specialization only has what we need */);
+            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
             importAccountDialog = loader.load();
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);

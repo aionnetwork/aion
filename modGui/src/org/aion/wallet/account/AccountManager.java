@@ -233,9 +233,11 @@ public class AccountManager {
         if (!remembered) {
             Keystore.create(password, ecKey);
         }
-        if (Files.isDirectory(WalletStorage.KEYSTORE_PATH)) {
+//        if (Files.isDirectory(WalletStorage.KEYSTORE_PATH)) {
+        if (Files.isDirectory(Keystore.PATH)) {
             final String fileNameRegex = getExportedFileNameRegex(account.getPublicAddress());
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(WalletStorage.KEYSTORE_PATH, fileNameRegex)) {
+//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(WalletStorage.KEYSTORE_PATH, fileNameRegex)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Keystore.PATH, fileNameRegex)) {
                 for (Path keystoreFile : stream) {
                     final String fileName = keystoreFile.getFileName().toString();
                     if (remembered) {
