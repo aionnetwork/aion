@@ -3,6 +3,7 @@ package org.aion.gui.controller;
 import com.google.common.eventbus.Subscribe;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -12,8 +13,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Builder;
-import javafx.util.BuilderFactory;
+import javafx.util.Duration;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
@@ -30,13 +30,12 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.os.KernelLauncher;
 import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.events.IdleMonitor;
 import org.aion.wallet.storage.WalletStorage;
-import org.aion.wallet.ui.components.account.AccountCellFactory;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.Currency;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -83,6 +82,7 @@ public class MainWindow extends Application {
     private double xOffset;
     private double yOffset;
     private Stage stage;
+    private Scene scene;
 
     private final KernelUpdateTimer timer;
     private final KernelLauncher kernelLauncher;
@@ -91,7 +91,6 @@ public class MainWindow extends Application {
     private final BlockTransactionProcessor blockTransactionProcessor;
     private final AccountChangeHandlers accountChangeHandlers;
 
-
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
     private static final String TITLE = "Aion Kernel";
@@ -99,6 +98,10 @@ public class MainWindow extends Application {
     private static final String AION_LOGO = "components/icons/aion_logo.png";
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+    private Duration lockDelayDuration = Duration.seconds(60);
+    private IdleMonitor idleMonitor;
+
+
 
     public MainWindow() {
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
@@ -130,8 +133,8 @@ public class MainWindow extends Application {
         root.setOnMousePressed(this::handleMousePressed);
         root.setOnMouseDragged(this::handleMouseDragged);
 
-        Scene scene = new Scene(root);
-        scene.setFill(Color.TRANSPARENT);
+        this.scene = new Scene(root);
+        this.scene.setFill(Color.TRANSPARENT);
 
         stage.setOnCloseRequest(t -> shutDown());
 
@@ -139,17 +142,18 @@ public class MainWindow extends Application {
         stage.setScene(scene);
         stage.show();
 
-        panes.put(HeaderPaneButtonEvent.Type.OVERVIEW, scene.lookup("#overviewPane"));
+        panes.put(HeaderPaneButtonEvent.Type.DASHBOARD, scene.lookup("#overviewPane"));
         panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
         panes.put(HeaderPaneButtonEvent.Type.SEND, scene.lookup("#sendPane"));
         panes.put(HeaderPaneButtonEvent.Type.RECEIVE, scene.lookup("#receivePane"));
         panes.put(HeaderPaneButtonEvent.Type.HISTORY, scene.lookup("#historyPane"));
         panes.put(HeaderPaneButtonEvent.Type.SETTINGS, scene.lookup("#settingsPane"));
 
+        registerIdleMonitor(accountManager);
+
         // Set up event bus
         registerEventBusConsumer();
         kernelLauncher.tryResume();
-
     }
 
     private FXMLLoader loader() throws IOException {
@@ -247,6 +251,18 @@ public class MainWindow extends Application {
 
     public Scene getScene() {
         return stage.getScene();
+    }
+
+    private void registerIdleMonitor(AccountManager accountManager) {
+        if (scene == null || lockDelayDuration == null) {
+            return;
+        }
+        if (idleMonitor != null) {
+            idleMonitor.stopMonitoring();
+            idleMonitor = null;
+        }
+        idleMonitor = new IdleMonitor(lockDelayDuration, accountManager::lockAll);
+        idleMonitor.register(scene, Event.ANY);
     }
 
 }

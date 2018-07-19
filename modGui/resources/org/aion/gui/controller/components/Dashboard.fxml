@@ -67,6 +67,9 @@
     </GridPane>
 
 
+    <HBox alignment="BASELINE_RIGHT" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="3">
+        <Button text="GUI Logs" onMouseClicked="#openConsole"/>
+    </HBox>
 </GridPane>
 <!--</AnchorPane>-->
 

@@ -136,7 +136,7 @@ public class AccountsController extends AbstractController {
 
     @Subscribe
     private void handleHeaderPaneButtonEvent(final HeaderPaneButtonEvent event) {
-        if (event.getType().equals(HeaderPaneButtonEvent.Type.OVERVIEW)) {
+        if (event.getType().equals(HeaderPaneButtonEvent.Type.DASHBOARD)) {
             reloadAccounts();
         }
     }

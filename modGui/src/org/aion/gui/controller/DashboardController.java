@@ -19,6 +19,7 @@ import org.aion.gui.util.DataUpdater;
 import org.aion.gui.util.SyncStatusFormatter;
 import org.aion.log.AionLoggerFactory;
 import org.aion.os.KernelLauncher;
+import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
 import java.net.URL;
@@ -165,6 +166,10 @@ public class DashboardController extends AbstractController {
         }
     }
 
+    public void openConsole() {
+        ConsoleManager.show();
+    }
+
     // -- Helpers methods -------------------------------------------------------------------------
     private void enableLaunchButton() {
         launchKernelButton.setDisable(false);
@@ -180,5 +185,6 @@ public class DashboardController extends AbstractController {
         launchKernelButton.setDisable(true);
         terminateKernelButton.setDisable(true);
     }
+
 
 }

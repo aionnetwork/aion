@@ -13,12 +13,10 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import org.aion.gui.events.EventBusRegistry;
-import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.util.BalanceUtils;
-import org.aion.gui.util.SyncStatusFormatter;
 import org.aion.gui.util.UIUtils;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -27,11 +25,7 @@ import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.util.URLManager;
 import org.slf4j.Logger;
 
-import java.awt.*;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -42,9 +36,9 @@ public class HeaderPaneControls extends AbstractController {
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
-    private static final String STYLE_DEFAULT = "default";
+    private static final String STYLE_DEFAULT = "header-button-default";
 
-    private static final String STYLE_PRESSED = "pressed";
+    private static final String STYLE_PRESSED = "header-button-pressed";
 
     private final BalanceDto balanceDto;
 
@@ -78,7 +72,7 @@ public class HeaderPaneControls extends AbstractController {
 
     @Override
     public void internalInit(URL location, ResourceBundle resources) {
-        headerButtons.put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.OVERVIEW));
+        headerButtons.put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.DASHBOARD));
         headerButtons.put(accountsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.ACCOUNTS));
         headerButtons.put(sendButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SEND));
         headerButtons.put(receiveButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.RECEIVE));
@@ -100,15 +94,16 @@ public class HeaderPaneControls extends AbstractController {
 
     public void handleButtonPressed(final MouseEvent pressed) {
         for (final Node headerButton : headerButtons.keySet()) {
-            ObservableList<String> styleClass = headerButton.getStyleClass();
-            styleClass.clear();
+            headerButton.getStyleClass().clear();
             if (pressed.getSource().equals(headerButton)) {
-                styleClass.add(STYLE_PRESSED);
+                System.out.println("pressed.getSource = " + pressed.getSource() + "-> pressed");
+                headerButton.getStyleClass().add(STYLE_PRESSED);
                 setStyleToChildren(headerButton, "header-button-label-pressed");
                 HeaderPaneButtonEvent headerPaneButtonEvent = headerButtons.get(headerButton);
                 sendPressedEvent(headerPaneButtonEvent);
             } else {
-                styleClass.add(STYLE_DEFAULT);
+                System.out.println("pressed.getSource = " + pressed.getSource() + "-> default");
+                headerButton.getStyleClass().add(STYLE_DEFAULT);
                 setStyleToChildren(headerButton, "header-button-label");
             }
         }
