@@ -25,18 +25,11 @@ package org.aion.precompiled;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.IPrecompiledContract;
-import org.aion.precompiled.contracts.AionNameServiceContract;
-import org.aion.precompiled.contracts.MultiSignatureContract;
-import org.aion.precompiled.contracts.TotalCurrencyContract;
 
 /**
  * A factory class that produces pre-compiled contract instances.
  */
 public class ContractFactory {
-    private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
-    private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
-    private static final String ANS = "0000000000000000000000000000000000000000000000000000000000000200";
-    private static final String MSC = "0000000000000000000000000000000000000000000000000000000000000400";
 
     private ContractFactory(){}
 
@@ -52,14 +45,7 @@ public class ContractFactory {
         IRepositoryCache track) {
 
         switch (address.toString()) {
-            case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, from, Address.wrap(OWNER));
-            case ANS:
-                return new AionNameServiceContract(track, from, Address.wrap(OWNER));
-            case MSC:
-                return new MultiSignatureContract(track, from);
-            default:
-                return null;
+            default: return null;
         }
     }
 
@@ -71,36 +57,8 @@ public class ContractFactory {
      */
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
-            case TOTAL_CURRENCY:
-            case ANS:
-            case MSC: return true;
             default: return false;
         }
     }
-
-    /**
-     * Returns the address of the TotalCurrencyContract contract.
-     *
-     * @return the contract address.
-     */
-    public static Address getTotalCurrencyContractAddress() {
-        return Address.wrap(TOTAL_CURRENCY);
-    }
-
-    /**
-     * Returns the address of the AionNameServiceContract contract.
-     *
-     * @return the contract address.
-     */
-    public static Address getAionNameServiceContractAddress() {
-        return Address.wrap(ANS);
-    }
-
-    /**
-     * Returns the address of the MultiSignatureContract contract.
-     *
-     * @return the contract address.
-     */
-    public static Address getMultiSignatureContractAddress() { return Address.wrap(MSC); }
 
 }
