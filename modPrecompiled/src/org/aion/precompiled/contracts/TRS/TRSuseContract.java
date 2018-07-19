@@ -322,7 +322,9 @@ public final class TRSuseContract extends AbstractTRS {
             return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        return makeDeposit(contract, caller, amount, nrgLimit);
+        ContractExecutionResult result = makeDeposit(contract, caller, amount, nrgLimit);
+        if (result.getResultCode().equals(ResultCode.SUCCESS)) { track.flush(); }
+        return result;
     }
 
     /**
@@ -433,36 +435,41 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // Iterate over every entry in the entries list and attempt to deposit for them.
+        int numEntries = (len - indexEntries) / entryLen;
         int amtLen = entryLen - entryAddrLen;
+        int index = indexEntries;
         byte[] amountBytes;
-        BigInteger amount;
-        ContractExecutionResult result;
-        for (int index = indexEntries; index < len; index += entryLen) {
+        Address[] beneficiaries = new Address[numEntries];
+        BigInteger[] amounts = new BigInteger[numEntries];
+        for (int i = 0; i < numEntries; i++) {
             // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
             amountBytes = new byte[amtLen + 1];
-            System.arraycopy(input, index, amountBytes, 1, amtLen);
-            amount = new BigInteger(amountBytes);
-
-            // The caller must have adequate funds to make the proposed deposit.
-            BigInteger fundsAvailable = track.getBalance(caller);
-            if (fundsAvailable.compareTo(amount) < 0) {
-                track.rollback();
-                return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
-            }
+            System.arraycopy(input, index + entryAddrLen, amountBytes, 1, amtLen);
+            amounts[i] = new BigInteger(amountBytes);
 
             // Verify the account is an Aion address.
             if (input[index] != AION_PREFIX) {
                 return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
 
-            Address account = Address.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
-            result = makeDeposit(contract, account, amount, nrgLimit);
-            if (!result.getResultCode().equals(ResultCode.SUCCESS)) {
-                track.rollback();
-                return result;
-            }
+            beneficiaries[i] = Address.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
+            index += 32 + 128;
         }
 
+        BigInteger totalAmounts = BigInteger.ZERO;
+        for (BigInteger amt : amounts) {
+            totalAmounts = totalAmounts.add(amt);
+        }
+
+        if (track.getBalance(caller).compareTo(totalAmounts) < 0) {
+            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+        }
+
+        for (int i = 0; i < numEntries; i++) {
+            makeDeposit(contract, beneficiaries[i], amounts[i], nrgLimit);
+        }
+
+        track.flush();
         return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
@@ -686,7 +693,9 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
-        return makeDeposit(contract, account, amount, nrgLimit);
+        ContractExecutionResult result = makeDeposit(contract, account, amount, nrgLimit);
+        if (result.getResultCode().equals(ResultCode.SUCCESS)) { track.flush(); }
+        return result;
     }
 
     /**
@@ -785,7 +794,6 @@ public final class TRSuseContract extends AbstractTRS {
             listAddToHead(contract, account);
             setTotalBalance(contract, getTotalBalance(contract).add(amount));
             track.addBalance(caller, amount.negate());
-            track.flush();
         }
         return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
