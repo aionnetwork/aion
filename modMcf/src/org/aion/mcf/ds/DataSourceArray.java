@@ -27,6 +27,7 @@ import org.aion.base.db.Flushable;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
+import java.io.Closeable;
 import java.util.Optional;
 
 /**
@@ -34,7 +35,7 @@ import java.util.Optional;
  *
  * @param <V>
  */
-public class DataSourceArray<V> implements Flushable {
+public class DataSourceArray<V> implements Flushable, Closeable {
 
     private final ObjectDataSource<V> src;
     private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
@@ -130,5 +131,10 @@ public class DataSourceArray<V> implements Flushable {
         } else {
             src.getSrc().put(sizeKey, ByteUtil.longToBytes(newSize));
         }
+    }
+
+    @Override
+    public void close() {
+        src.close();
     }
 }

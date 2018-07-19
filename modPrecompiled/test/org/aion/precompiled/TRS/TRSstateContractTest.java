@@ -1504,22 +1504,22 @@ public class TRSstateContractTest extends TRShelpers {
         assertArrayEquals(getFalseContractOutput(), res.getOutput());
     }
 
-    @Test
-    public void testOpenFundsNoFundsWithdraw() {
-        Address acct = getNewExistentAccount(BigInteger.TEN);
-        Address contract = createTRScontract(acct, false, true, 10,
-            BigInteger.ZERO, 0);
-
-        AbstractTRS trs = newTRSstateContract(acct);
-        byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertTrue(getAreContractFundsOpen(trs, contract));
-
-        // Now try to withdraw.
-        input = getWithdrawInput(contract);
-        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getResultCode());
-        assertEquals(BigInteger.TEN, repo.getBalance(acct));
-    }
+//    @Test
+//    public void testOpenFundsNoFundsWithdraw() {
+//        Address acct = getNewExistentAccount(BigInteger.TEN);
+//        Address contract = createTRScontract(acct, false, true, 10,
+//            BigInteger.ZERO, 0);
+//
+//        AbstractTRS trs = newTRSstateContract(acct);
+//        byte[] input = getOpenFundsInput(contract);
+//        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+//        assertTrue(getAreContractFundsOpen(trs, contract));
+//
+//        // Now try to withdraw.
+//        input = getWithdrawInput(contract);
+//        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getResultCode());
+//        assertEquals(BigInteger.TEN, repo.getBalance(acct));
+//    }
 
     @Test
     public void testOpenFundsDepositNowDisabled() {
