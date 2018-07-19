@@ -459,7 +459,6 @@ public abstract class ApiAion extends Api {
         return rec.getExecutionResult();
     }
 
-
     protected long estimateNrg(ArgTxCall params) {
         AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), params.getFrom(), params.getTo(),
                 params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());

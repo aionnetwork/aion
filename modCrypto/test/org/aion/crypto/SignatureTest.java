@@ -34,8 +34,6 @@
  ******************************************************************************/
 package org.aion.crypto;
 
-import org.aion.crypto.ecdsa.ECDSASignature;
-import org.aion.crypto.ed25519.Ed25519Signature;
 import org.junit.AfterClass;
 import org.junit.Test;
 

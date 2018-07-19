@@ -1297,7 +1297,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return headers;
     }
 
-
     private int getQty(long blockNumber, long bestNumber, int limit) {
         if (blockNumber + limit - 1 > bestNumber) {
             return (int) (bestNumber - blockNumber + 1);
@@ -1568,7 +1567,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
             other = dirtyBlocks.pop();
-
             LOG.info("Rebuilding block hash: {}, number: {}, txs: {}.",
                      other.getShortHash(),
                      other.getNumber(),
@@ -1649,7 +1647,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         // rebuild world state for dirty blocks
         while (!dirtyBlocks.isEmpty()) {
             other = dirtyBlocks.pop();
-
             LOG.info("Rebuilding index for block hash: {}, number: {}, txs: {}.",
                      other.getShortHash(),
                      other.getNumber(),
