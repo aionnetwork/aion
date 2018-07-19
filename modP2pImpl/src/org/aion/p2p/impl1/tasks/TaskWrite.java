@@ -114,7 +114,6 @@ public class TaskWrite implements Runnable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             p2pLOG.error("TaskWrite exception {}", e.getMessage());
         } finally {
             channelBuffer.lock.unlock();
