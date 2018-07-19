@@ -980,7 +980,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
 
         if (ContractFactory.isPrecompiledContract(tx.getTo())) {
-            ContractExecutor conExe = new ContractExecutor(tx, bestBlk, pendingState, LOGGER_VM);
+            TransactionExecutor conExe = new TransactionExecutor(tx, bestBlk, pendingState, LOGGER_VM);
 
             if (inPool) {
                 conExe.setBypassNonce();
