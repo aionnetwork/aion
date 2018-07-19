@@ -14,6 +14,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
@@ -179,6 +180,32 @@ public class TRSuseContractTest extends TRShelpers {
         // Verify that the contract has enough funds to pay out.
         BigInteger contractTotal = deposits.multiply(BigInteger.valueOf(numDepositors)).add(bonus).add(extra);
         assertTrue(collected.multiply(BigInteger.valueOf(numDepositors)).compareTo(contractTotal) <= 0);
+    }
+
+    // Makes input for numBeneficiaries beneficiaries who each receive a deposit amount deposits.
+    private byte[] makeBulkDepositForInput(Address contract, int numBeneficiaries, BigInteger deposits) {
+        Address[] beneficiaries = new Address[numBeneficiaries];
+        BigInteger[] amounts = new BigInteger[numBeneficiaries];
+        for (int i = 0; i < numBeneficiaries; i++) {
+            beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
+            amounts[i] = deposits;
+        }
+        return getBulkDepositForInput(contract, beneficiaries, amounts);
+    }
+
+    // Makes input for numOthers beneficiaries and self who each receive a deposit amount deposits.
+    private byte[] makeBulkDepositForInputwithSelf(Address contract, Address self, int numOthers,
+        BigInteger deposits) {
+
+        Address[] beneficiaries = new Address[numOthers + 1];
+        BigInteger[] amounts = new BigInteger[numOthers + 1];
+        for (int i = 0; i < numOthers; i++) {
+            beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
+            amounts[i] = deposits;
+        }
+        beneficiaries[numOthers] = self;
+        amounts[numOthers] = deposits;
+        return getBulkDepositForInput(contract, beneficiaries, amounts);
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
@@ -2949,6 +2976,225 @@ public class TRSuseContractTest extends TRShelpers {
         BigInteger contractTotal = deposits.multiply(BigInteger.valueOf(numDepositors)).
             add(bonus).add(extraSum);
         assertTrue((expectedAmt.multiply(BigInteger.valueOf(numDepositors))).compareTo(contractTotal) <= 0);
+    }
+
+    // <------------------------------TRS BULK-DEPOSIT-FOR TESTS----------------------------------->
+
+    @Test
+    public void testBulkDepositForInputTooShort() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+
+        int numBeneficiaries = 1;
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+        byte[] shortInput = Arrays.copyOf(input, input.length - 1);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(shortInput, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForInputTooLong() {
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+
+        int numBeneficiaries = 100;
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+        byte[] longInput = new byte[input.length + 1];
+        System.arraycopy(input, 0, longInput, 0, input.length);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(longInput, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForContractNonExistent() {
+        int numBeneficiaries = 3;
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        byte[] input = makeBulkDepositForInput(acct, numBeneficiaries, BigInteger.TEN);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForCallerIsNotOwner() {
+        int numBeneficiaries = 5;
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+        Address whoami = getNewExistentAccount(BigInteger.TEN.multiply(BigInteger.valueOf(numBeneficiaries)));
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(whoami).execute(input, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForContractLocked() {
+        int numBeneficiaries = 4;
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createAndLockTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForContractLive() {
+        int numBeneficiaries = 7;
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createLockedAndLiveTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(input, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForZeroBeneficiaries() {
+        int numBeneficiaries = 1;
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+
+        // Remove the 1 beneficiary.
+        byte[] noBeneficiaries = new byte[33];
+        System.arraycopy(input, 0, noBeneficiaries, 0, Address.ADDRESS_LEN + 1);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(noBeneficiaries, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForBeneficiaryLengthOff() {
+        int numBeneficiaries = 1;
+        Address acct = getNewExistentAccount(BigInteger.ONE);
+        Address contract = createTRScontract(acct, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
+
+        // Remove the last byte of the array.
+        byte[] inputOff = new byte[input.length - 1];
+        System.arraycopy(input, 0, inputOff, 0, input.length - 1);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(inputOff, COST).getResultCode());
+
+        // Add a byte to the array.
+        inputOff = new byte[input.length + 1];
+        System.arraycopy(input, 0, inputOff, 0, input.length);
+        assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acct).execute(inputOff, COST).getResultCode());
+    }
+
+    @Test
+    public void testBulkDepositForSelfIncluded() {
+        int numBeneficiaries = 12;
+        BigInteger deposits = new BigInteger("3462363223");
+        Address owner = getNewExistentAccount(deposits.multiply(BigInteger.valueOf(numBeneficiaries + 1)));
+        Address contract = createTRScontract(owner, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = makeBulkDepositForInputwithSelf(contract, owner, numBeneficiaries, deposits);
+
+        AbstractTRS trs = newTRSuseContract(owner);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        assertEquals(numBeneficiaries + 1, contributors.size());
+        assertTrue(contributors.contains(owner));
+        for (Address acc : contributors) {
+            assertEquals(deposits, getDepositBalance(trs, contract, acc));
+        }
+        assertEquals(deposits.multiply(BigInteger.valueOf(numBeneficiaries + 1)), getTotalBalance(trs, contract));
+    }
+
+    @Test
+    public void testBulkDepositForOneBeneficiary() {
+        BigInteger deposits = new BigInteger("111112222");
+        Address owner = getNewExistentAccount(deposits);
+        Address contract = createTRScontract(owner, false, false, 1,
+            BigInteger.ZERO, 0);
+        byte[] input = makeBulkDepositForInput(contract, 1, deposits);
+
+        AbstractTRS trs = newTRSuseContract(owner);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        assertEquals(1, contributors.size());
+        assertEquals(deposits, getDepositBalance(trs, contract, contributors.iterator().next()));
+        assertEquals(deposits, getTotalBalance(trs, contract));
+    }
+
+    @Test
+    public void testBulkDepositFor100Beneficiaries() {
+        BigInteger deposits = new BigInteger("345654399");
+        BigInteger total = deposits.multiply(BigInteger.valueOf(100));
+        Address owner = getNewExistentAccount(total);
+        Address contract = createTRScontract(owner, false, false, 1,
+            BigInteger.ZERO, 0);
+
+        byte[] input = makeBulkDepositForInput(contract, 100, deposits);
+        AbstractTRS trs = newTRSuseContract(owner);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        assertEquals(100, contributors.size());
+        for (Address acc : contributors) {
+            assertEquals(deposits, getDepositBalance(trs, contract, acc));
+        }
+        assertEquals(total, getTotalBalance(trs, contract));
+    }
+
+    @Test
+    public void testBulkDepositForInsufficientFundsFirstDeposit() {
+        int numBeneficiaries = 13;
+        BigInteger deposits = new BigInteger("111112222");
+        BigInteger amt = deposits.subtract(BigInteger.ONE);
+        Address owner = getNewExistentAccount(amt);
+        Address contract = createTRScontract(owner, false, false, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(owner);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, deposits);
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        assertTrue(contributors.isEmpty());
+        assertEquals(BigInteger.ZERO, getTotalBalance(trs, contract));
+    }
+
+    @Test
+    public void testBulkDepositForInsufficientFundsLastDeposit() {
+        int numBeneficiaries = 23;
+        BigInteger deposits = new BigInteger("111112222");
+        BigInteger amt = (deposits.multiply(BigInteger.valueOf(numBeneficiaries))).subtract(BigInteger.ONE);
+        Address owner = getNewExistentAccount(amt);
+        Address contract = createTRScontract(owner, false, false, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(owner);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, deposits);
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        assertTrue(contributors.isEmpty());
+        assertEquals(BigInteger.ZERO, getTotalBalance(trs, contract));
+    }
+
+    @Test
+    public void testBulkDepositForInsufficientFundsMidDeposit() {
+        int numBeneficiaries = 13;
+        int diff = 3;
+        BigInteger deposits = new BigInteger("111112222");
+        BigInteger amt = deposits.multiply(BigInteger.valueOf(numBeneficiaries - diff).subtract(BigInteger.ONE));
+        Address owner = getNewExistentAccount(amt);
+        Address contract = createTRScontract(owner, false, false, 1,
+            BigInteger.ZERO, 0);
+
+        AbstractTRS trs = newTRSuseContract(owner);
+        byte[] input = makeBulkDepositForInput(contract, numBeneficiaries - diff - 1, deposits);
+        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
+            assertEquals(deposits, getDepositBalance(trs, contract, acc));
+        }
+        assertEquals(deposits.multiply(BigInteger.valueOf(numBeneficiaries - diff - 1)), getTotalBalance(trs, contract));
+
+        // Verify no one received any deposits and that previous total is unchanged.
+        input = makeBulkDepositForInput(contract, diff, deposits);
+        assertEquals(ResultCode.INSUFFICIENT_BALANCE, trs.execute(input, COST).getResultCode());
+        Set<Address> contributors2 = getAllDepositors(trs, contract);
+        assertEquals(contributors.size(), contributors2.size());
+        assertEquals(contributors, contributors2);
+        for (Address acc : contributors) {
+            assertEquals(deposits, getDepositBalance(trs, contract, acc));
+        }
+        assertEquals(deposits.multiply(BigInteger.valueOf(numBeneficiaries - diff - 1)), getTotalBalance(trs, contract));
     }
 
     // <----------------------------TRS DEPOSITOR LINKED LIST TESTS-------------------------------->

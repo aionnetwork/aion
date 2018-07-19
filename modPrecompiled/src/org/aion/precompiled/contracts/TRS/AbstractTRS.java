@@ -1061,7 +1061,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         BigDecimal acctBalance = new BigDecimal(getDepositBalance(contract, account));
         BigInteger totalBalance = getTotalBalance(contract);
         if (totalBalance.compareTo(BigInteger.ZERO) <= 0) {
-            throw new IllegalStateException("Contract has no balance, can't compute bonus share!");
+            return BigDecimal.ZERO;
         }
         BigDecimal totalBalanceDec = new BigDecimal(totalBalance);
         return acctBalance.divide(totalBalanceDec, 18, RoundingMode.HALF_DOWN);
