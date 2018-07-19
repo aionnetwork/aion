@@ -24,12 +24,18 @@ package org.aion.precompiled;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.vm.IDataWord;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.IPrecompiledContract;
+import org.aion.precompiled.contracts.TotalCurrencyContract;
 
 /**
  * A factory class that produces pre-compiled contract instances.
  */
 public class ContractFactory {
+    private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
+    private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
 
     private ContractFactory(){}
 
@@ -42,9 +48,11 @@ public class ContractFactory {
      * @return the specified pre-compiled address.
      */
     public static IPrecompiledContract getPrecompiledContract(Address address, Address from,
-        IRepositoryCache track) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
 
         switch (address.toString()) {
+            case TOTAL_CURRENCY:
+                return new TotalCurrencyContract(track, from, Address.wrap(OWNER));
             default: return null;
         }
     }
@@ -57,8 +65,18 @@ public class ContractFactory {
      */
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
+            case TOTAL_CURRENCY: return true;
             default: return false;
         }
+    }
+
+    /**
+     * Returns the address of the TotalCurrencyContract contract.
+     *
+     * @return the contract address.
+     */
+    public static Address getTotalCurrencyContractAddress() {
+        return Address.wrap(TOTAL_CURRENCY);
     }
 
 }
