@@ -47,13 +47,24 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.regex.Matcher;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.aion.base.type.Address;
-import org.aion.base.util.*;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
+import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
@@ -194,7 +205,7 @@ public class Keystore {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.error("backupAccount exception {}", e.toString());
             }
         }
 
@@ -249,7 +260,7 @@ public class Keystore {
                         key = KeystoreFormat.fromKeystore(content, _password);
 
                     } catch (IOException e) {
-                        LOG.error("getKey exception! {}", e);
+                        LOG.error("getKey exception! {}", e.toString());
                     }
                     break;
                 }
@@ -326,7 +337,7 @@ public class Keystore {
     /*
      * Test method. Don't use it for the code dev.
      */
-    protected static File getAccountFile(String address, String password) {
+    static File getAccountFile(String address, String password) {
         List<File> files = getFiles();
         if (files == null) {
             if (LOG.isWarnEnabled()) {
@@ -343,7 +354,7 @@ public class Keystore {
             try {
                 content = Files.readAllBytes(matchedFile.get().toPath());
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.error("getAccountFile exception! {}", e.toString());
             }
 
             if (null != KeystoreFormat.fromKeystore(content, password)) {
