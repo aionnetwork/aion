@@ -58,7 +58,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AionNameServiceContractTest {
-
     private static final String RESOLVER_HASH = "ResolverHash";
     private static final String OWNER_HASH = "OwnerHash";
     private static final String TTL_HASH = "TTLHash";
@@ -71,6 +70,8 @@ public class AionNameServiceContractTest {
     private String domainName6 = "aion.aion.aion"; // subdomain of domainName1 and domainName2
     private String notSubdomain = "aion.bion"; // not a subdomain of domainName1
 
+    private static final Address AION =
+            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private Address emptyAddress =
             Address.wrap("0000000000000000000000000000000000000000000000000000000000000000");
     private Address domainAddress1 =
@@ -148,7 +149,7 @@ public class AionNameServiceContractTest {
 
         BigInteger amount = new BigInteger("1000");
         byte[] combined = setupInputs(domainName2, Address.wrap(defaultKey.getAddress()), amount.toByteArray(), defaultKey);
-        AionAuctionContract aac = new AionAuctionContract(repo, Address.wrap(defaultKey.getAddress()), blockchain);
+        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         ContractExecutionResult result = aac.execute(combined, 24000);
 
         try {
@@ -159,7 +160,7 @@ public class AionNameServiceContractTest {
 
         BigInteger amount2 = new BigInteger("2000");
         byte[] combined2 = setupInputs(domainName3, Address.wrap(defaultKey2.getAddress()), amount2.toByteArray(), defaultKey2);
-        AionAuctionContract aac2 = new AionAuctionContract(repo, Address.wrap(defaultKey2.getAddress()), blockchain);
+        AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         ContractExecutionResult result2 = aac2.execute(combined2, 24000);
 
         // wait for the domain to become active,
@@ -689,16 +690,16 @@ public class AionNameServiceContractTest {
         BigInteger amount3 = new BigInteger("3000");
 
         byte[] combined = setupInputs("cion.bion.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
-        AionAuctionContract aac = new AionAuctionContract(repo, Address.wrap(k.getAddress()), blockchain);
+        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         ContractExecutionResult result= aac.execute(combined, DEFAULT_INPUT_NRG);
         Address addr = Address.wrap(result.getOutput());
 
         byte[] combined2 = setupInputs("aaaa.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
-        AionAuctionContract aac2 = new AionAuctionContract(repo, Address.wrap(k.getAddress()), blockchain);
+        AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac2.execute(combined2, DEFAULT_INPUT_NRG);
 
         byte[] combined3 = setupInputs("bbbb.aaaa.aion", Address.wrap(k2.getAddress()), amount3.toByteArray(), k2);
-        AionAuctionContract aac3 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()), blockchain);
+        AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac3.execute(combined3, DEFAULT_INPUT_NRG);
 
 
@@ -724,11 +725,11 @@ public class AionNameServiceContractTest {
         ansc.displayAllActiveDomains();
 
         byte[] combined4 = setupInputs("cccc.aaaa.aion", Address.wrap(k.getAddress()), amount3.toByteArray(), k);
-        AionAuctionContract aac4 = new AionAuctionContract(repo, Address.wrap(k.getAddress()), blockchain);
+        AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac4.execute(combined4, DEFAULT_INPUT_NRG);
 
         byte[] combined5 = setupInputs("cccc.aaaa.aion", Address.wrap(k2.getAddress()), amount2.toByteArray(), k2);
-        AionAuctionContract aac5 = new AionAuctionContract(repo, Address.wrap(k2.getAddress()), blockchain);
+        AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
         aac5.execute(combined5, DEFAULT_INPUT_NRG);
 
         try {

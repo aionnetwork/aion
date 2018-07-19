@@ -44,6 +44,7 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.apache.commons.collections4.map.LRUMap;
@@ -87,11 +88,13 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     private BigInteger AUCTION_TIME = new BigInteger("259200000"); // 3 * 24 * 60 * 60 * 1000
     private BigInteger ACTIVE_TIME = new BigInteger("31536000000"); // 365 * 24 * 60 * 60 * 1000
+    private static int LRU_MAP_SIZE = 4; // this should be changed
+
     private final Address callerAddress;
     private final IBlockchain blockchain;
     private static Timer timer = new Timer();
-    private static LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap<>(4);
-    private static LRUMap<String, Map<Address, BigInteger>> auctionBidsMap = new LRUMap<>(4);
+    private static LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap<>(LRU_MAP_SIZE);
+    private static LRUMap<String, Map<Address, BigInteger>> auctionBidsMap = new LRUMap<>(LRU_MAP_SIZE);
     private static final Set<String> privateAionDomainNames =
             new HashSet<>(Arrays.asList("network.aion", "foundation.aion", "enterprise.aion"));
 
@@ -208,7 +211,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         }
 
         // if this domain name does not have an callerAddress
-        if (this.track.getStorageValue(domainNameAddressPair, new DataWord(blake128(domainName.getBytes()))).equals(DataWord.ZERO)){
+        if (this.track.getStorageValue(domainNameAddressPair, new DataWord(blake128(domainName.getBytes()))).equals(DoubleDataWord.ZERO)){
             domainAddress = createAddressForDomain(domainName);
         }
         else{ // extract the callerAddress corresponding to the domain name
@@ -442,7 +445,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         domainName = getNameFromStorage(auctionDomainsAddressName, domainAddress);
         addBigIntegerToStorage(domainAddress, BID_KEY_COUNTER, new BigInteger("0"));
         // remove from auction domains
-        this.track.addStorageRow(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), new DataWord(0));
+        this.track.addStorageRow(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
         addToActiveDomains(domainAddress, winnerAddress, domainName, secondHighestBid);
         printWinner(domainAddress, winnerAddress, secondHighestBid, domainName);
     }
@@ -469,7 +472,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      */
     private boolean isActiveDomain(Address domainAddress){
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
-        return !(this.track.getStorageValue(activeDomainsAddress,key).equals(DataWord.ZERO));
+        return !(this.track.getStorageValue(activeDomainsAddress,key).equals(DoubleDataWord.ZERO));
     }
 
     /**
@@ -480,7 +483,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     private boolean isAuctionDomain(Address domainAddress){
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
         IDataWord ret = this.track.getStorageValue(auctionDomainsAddress, key);
-        return !ret.equals(DataWord.ZERO);
+        return !ret.equals(DoubleDataWord.ZERO);
     }
 
     /**
@@ -550,12 +553,12 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         printRemoveActiveDomain(domainAddress);
         // erase
-        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DataWord.ZERO);
-        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(blake128(domainAddress.toBytes()))), DataWord.ZERO);
-        this.track.addStorageRow(activeDomainsAddressName, new DataWord(blake128(domainAddress.toBytes())), DataWord.ZERO);
-        this.track.addStorageRow(activeDomainsAddressName, new DataWord(blake128(blake128(domainAddress.toBytes()))), DataWord.ZERO);
-        this.track.addStorageRow(activeDomainsAddressValue, new DataWord(blake128(domainAddress.toBytes())), DataWord.ZERO);
-        this.track.addStorageRow(activeDomainsAddressTime, new DataWord(blake128(domainAddress.toBytes())), DataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(blake128(domainAddress.toBytes()))), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressName, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressName, new DataWord(blake128(blake128(domainAddress.toBytes()))), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressValue, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressTime, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
     }
 
     /**
@@ -818,7 +821,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             Address tempDomainAddr = getAddressFromStorage(allAddresses, ALL_ADDR_KEY + i);
 
             // if domain exists
-            if(!this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(tempDomainAddr.toBytes()))).equals(DataWord.ZERO)){
+            if(!this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(tempDomainAddr.toBytes()))).equals(DoubleDataWord.ZERO)){
                 Date tempExpireDate = getDateFromStorage(auctionDomainsAddress, tempDomainAddr);
                 String tempDomainName = getNameFromStorage(domainAddressNamePair, tempDomainAddr);
                 BigInteger tempNumberOfBids = getBigIntegerFromStorage(tempDomainAddr, BID_KEY_COUNTER);
@@ -913,7 +916,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
 
         // if the domain is not in auction, print error and return
-        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DataWord.ZERO)){
+        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DoubleDataWord.ZERO)){
             System.out.println("    This domain is not in auction\n");
             return;
         }
@@ -942,7 +945,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
 
         // if the domain is not in auction, return
-        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DataWord.ZERO)) {
+        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DoubleDataWord.ZERO)) {
             System.out.println("The given domain \'" + domainNameRaw + "\' is not in auction\n");
             return;
         }
