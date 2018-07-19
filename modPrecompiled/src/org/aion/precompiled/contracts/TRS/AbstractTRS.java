@@ -750,7 +750,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     boolean makeWithdrawal(Address contract, Address account) {
         byte[] specs = getContractSpecs(contract);
         if (specs == null) { return false; }
-        if (isAccountDoneWithdrawing(contract, account)) { return false; }
+        if (isAccountDoneWithdrawing(contract, account)) {
+            return attemptFinalPeriodExtraFundsWithdraw(contract, account);
+        }
 
         // Grab period here since computations are dependent upon it and a new block may arrive,
         // changing the period mid-computation.
@@ -760,24 +762,47 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         // Calculate withdrawal amount. If we are in last period or the contract has its funds open,
         // then account can withdraw all outstanding funds.
         BigDecimal fraction = getDepositorFraction(contract, account);
-        BigInteger amount;
+        BigInteger amount, extras;
         if ((inFinalPeriod) || isOpenFunds(contract)) {
-            amount = computeOutstadingOwings(contract, account).add
-                (computeExtraFundsToWithdraw(contract, account, fraction, currPeriod));
+            amount = computeOutstadingOwings(contract, account);
+            extras = computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
             setAccountIsDoneWithdrawing(contract, account);
         } else {
             BigInteger specialAmt = computeSpecialWithdrawalAmount(contract, account);
             BigInteger fundsPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
             int numPeriodsBehind = computeNumberPeriodsBehind(contract, account, currPeriod);
-            amount = (fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind))).
-                add(specialAmt).add(computeExtraFundsToWithdraw(contract, account, fraction, currPeriod));
+            amount = (fundsPerPeriod.multiply(BigInteger.valueOf(numPeriodsBehind))).add(specialAmt);
+            extras = computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
         }
 
         // If amount is non-zero then transfer the funds and update account's last withdrawal period.
         if (amount.compareTo(BigInteger.ZERO) > 0) {
-            track.addBalance(account, amount);
+            track.addBalance(account, amount.add(extras));
             updateAccountLastWithdrawalPeriod(contract, account, currPeriod);
+            setExtraWithdrawalBalance(contract, account, getExtraWithdrawalBalance(contract, account).add(extras));
             setAccountIneligibleForSpecial(contract, account.toBytes());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Attempts to withdraw any unclaimed extra funds in the contract that are still available for
+     * account to claim. If there are X unclaimed funds then all X funds are withdrawn by account.
+     * Once withdrawn, the total amount of extra funds account has withdrawn is updated.
+     *
+     * This method should only ever be called in the final period of the contract and specifically
+     * only once isAccountDoneWithdrawing == true. This precondition must hold.
+     */
+    private boolean attemptFinalPeriodExtraFundsWithdraw(Address contract, Address account) {
+        BigInteger extraFunds = getExtraFunds(contract);
+        BigDecimal fraction = getDepositorFraction(contract, account);
+        BigInteger extraShare = fraction.multiply(new BigDecimal(extraFunds)).toBigInteger();
+        BigInteger extrasWithdrawn = getExtraWithdrawalBalance(contract, account);
+        BigInteger unclaimed = extraShare.subtract(extrasWithdrawn);
+        if (unclaimed.compareTo(BigInteger.ZERO) > 0) {
+            track.addBalance(account, unclaimed);
+            setExtraWithdrawalBalance(contract, account, extraShare);
             return true;
         }
         return false;
@@ -1470,7 +1495,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] extraWithKey = new byte[DOUBLE_WORD_SIZE];
         extraWithKey[0] = EXTRA_WITH_PREFIX;
         extraWithKey[0] |= (row & 0x0F);
-        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, Address.ADDRESS_LEN);
+        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, Address.ADDRESS_LEN - 1);
         return extraWithKey;
     }
 
