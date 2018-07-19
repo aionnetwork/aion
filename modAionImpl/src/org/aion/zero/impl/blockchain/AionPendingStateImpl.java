@@ -43,7 +43,6 @@ import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
-import org.aion.precompiled.ContractExecutor;
 import org.aion.precompiled.ContractFactory;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;

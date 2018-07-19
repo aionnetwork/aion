@@ -20,29 +20,29 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
-
-import org.aion.mcf.vm.AbstractExecutionResult;
+package org.aion.vm;
 
 /**
- * The result of executing a pre-compiled contract.
+ * A ExecutionResult is the result of a VM execution. It contains the VM status
+ * code, nrg usage, output, etc.
+ *
+ * @author yulong
  */
-public class ContractExecutionResult extends AbstractExecutionResult {
+public class ExecutionResult extends AbstractExecutionResult {
 
-    public ContractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
+    public ExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
         super(code, nrgLeft, output);
     }
 
-    public ContractExecutionResult(ResultCode code, long nrgLeft) {
+    public ExecutionResult(ResultCode code, long nrgLeft) {
         super(code, nrgLeft);
     }
 
-    public ContractExecutionResult(byte[] result) {
+    public ExecutionResult(byte[] result) {
         super(result);
     }
 
-    public static ContractExecutionResult parse(byte[] result) {
-
-        return new ContractExecutionResult(result);
+    public static ExecutionResult parse(byte[] result) {
+        return new ExecutionResult(result);
     }
 }

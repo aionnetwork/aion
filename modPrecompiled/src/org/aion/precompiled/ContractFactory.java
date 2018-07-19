@@ -27,7 +27,7 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.IPrecompiledContract;
+import org.aion.vm.IPrecompiledContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 
 /**
