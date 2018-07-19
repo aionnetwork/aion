@@ -88,6 +88,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     private BigInteger AUCTION_TIME = new BigInteger("259200000"); // 3 * 24 * 60 * 60 * 1000
     private BigInteger ACTIVE_TIME = new BigInteger("31536000000"); // 365 * 24 * 60 * 60 * 1000
+    private int TEST_AUCTION_TIME = 2000;
+    private int TEST_ACTIVE_TIME = 2000;
+
     private static int LRU_MAP_SIZE = 4; // this should be changed
 
     private final Address callerAddress;
@@ -111,8 +114,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // if testing, set AUCTION_TIME and ACTIVE_TIME to test time periods
         if (callerAddress.equals(AION)){
-            AUCTION_TIME = BigInteger.valueOf(2000);
-            ACTIVE_TIME = BigInteger.valueOf(4000);
+            AUCTION_TIME = BigInteger.valueOf(TEST_AUCTION_TIME);
+            ACTIVE_TIME = BigInteger.valueOf(TEST_ACTIVE_TIME);
         }
     }
 
@@ -183,9 +186,14 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         offset ++;
 
         String domainNameRaw = new String(domainNameInBytes);
+
+        // check if the domain name already has active parent domain
+        if (hasActiveParentDomain(domainNameRaw))
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "the given domain name has a parent that is already active".getBytes());
+
         // check if the domain name is valid to register
         if (!isValidDomainName(domainNameRaw))
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST);
+            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "domain name is invalid".getBytes());
 
         // add zeros for storing
         byte[] domainNameInBytesWithZeros = addLeadingZeros(domainNameInBytes);
@@ -568,19 +576,54 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *      - end with .aion
      *      - are at max 4 levels including .aion head ("a.a.a.aion" is valid while a.a.a.a.aion is invalid"
      *
-     * @param domainName name of the domain
+     * @param domainNameRaw name of the domain
      */
-    private boolean isValidDomainName(String domainName){
-        if (domainName.length() < 8 || domainName.length() > 37)
+    private boolean isValidDomainName(String domainNameRaw){
+        if (domainNameRaw.length() < 8 || domainNameRaw.length() > 37)
             return false;
-        if (!domainName.matches("[a-zA-Z0-9.]*"))
+        if (!domainNameRaw.matches("[a-zA-Z0-9.]*"))
             return false;
-        String[] domainPartitioned = domainName.split("\\.");
+        String[] domainPartitioned = domainNameRaw.split("\\.");
         if (!domainPartitioned[domainPartitioned.length - 1].equals("aion"))
             return false;
-        if(privateAionDomainNames.contains(domainName))
+        if(privateAionDomainNames.contains(domainNameRaw))
             return false;
         return domainPartitioned.length <= 4;
+    }
+
+    /**
+     * Checks whether the given domain has a parent domain that is already active,
+     * if so, the given (sub) domain is not allowed to be auctioned.
+     *
+     * @param domainName
+     */
+    private boolean hasActiveParentDomain(String domainName){
+        String[] domainPartitioned = domainName.split("\\.");
+        int numberOfSplits = domainPartitioned.length;
+        if(numberOfSplits < 3)
+            return false;
+
+        // dont use the first and last partitioned string
+        for (int i = 1; i < numberOfSplits - 1; i++) {
+            String tempParentName = "";
+
+            // generate each possible parent domain
+            for (int j = i; j < numberOfSplits - 1; j++) {
+                tempParentName = tempParentName + domainPartitioned[i];
+            }
+
+            // check if domain exists, and if it is active
+            Address parentAddr = null;
+            try {
+                parentAddr = getAddressFromName(new String((addLeadingZeros(tempParentName.getBytes())),  "UTF-8").substring(5, 37));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            if (!parentAddr.equals(Address.ZERO_ADDRESS())) {
+                if (isActiveDomain(parentAddr)) return true;
+            }
+        }
+        return false;
     }
 
     // storage processing --------------------------------------------------------------------------------------------//
@@ -601,7 +644,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return domainAddress;
     }
     /**
-     * Get the corresponding callerAddress for the given domain name
+     * Get the corresponding domainAddress for the given domain name
+     *
      * @param domainName name of domain
      * @return callerAddress of domain
      */

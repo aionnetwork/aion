@@ -52,10 +52,7 @@ import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 public class AionNameServiceContractTest {
     private static final String RESOLVER_HASH = "ResolverHash";
@@ -117,13 +114,16 @@ public class AionNameServiceContractTest {
     private Address defaultAddress;
     private Address defaultAddress2;
     private long DEFAULT_INPUT_NRG = 24000;
-    IBlockchain blockchain;
+    static IBlockchain blockchain;
+
+    @BeforeClass
+    public static void setupBlockChain() throws InterruptedException {
+        // create standalone blockchain for testing
+        createBlockchain(2,  TimeUnit.SECONDS.toMillis(1));
+    }
 
     @Before
-    public void setup() throws InterruptedException {
-        // create standalone blockchain for testing
-        createBlockchain(5,  TimeUnit.SECONDS.toMillis(2));
-
+    public  void setup(){
         repo = populateRepo();
         defaultKey = ECKeyFac.inst().create();
         defaultKey2 = ECKeyFac.inst().create();
@@ -165,58 +165,13 @@ public class AionNameServiceContractTest {
 
         // wait for the domain to become active,
         try {
-            Thread.sleep(3 * 1000L);
+            Thread.sleep(2500L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         defaultAddress = Address.wrap(result.getOutput());
         defaultAddress2 = Address.wrap(result2.getOutput());
-    }
-
-    // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
-    // method creates a new block every sleepDuration milliseconds.
-    private void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-                .withDefaultAccounts()
-                .withValidatorConfiguration("simple")
-                .build();
-
-        StandaloneBlockchain bc = bundle.bc;
-        AionBlock previousBlock = bc.genesis;
-
-        for (int i = 0; i < numBlocks; i++) {
-            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
-            previousBlock = createBundleAndCheck(bc, bundle.privateKeys.get(0), previousBlock);
-        }
-
-        blockchain = bc;
-    }
-
-    private static AionBlock createBundleAndCheck(StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
-        byte[] ZERO_BYTE = new byte[0];
-
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
-        List<AionTransaction> transactions = new ArrayList<>();
-
-        // create 100 transactions per bundle
-        for (int i = 0; i < 100; i++) {
-            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
-            AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),
-                    destAddr, BigInteger.ONE.toByteArray(), ZERO_BYTE, 21000, 1);
-            sendTransaction.sign(key);
-            transactions.add(sendTransaction);
-            accountNonce = accountNonce.add(BigInteger.ONE);
-        }
-
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
-        Assert.assertEquals(100, block.getTransactionsList().size());
-        // clear the trie
-        bc.getRepository().flush();
-
-        ImportResult result = bc.tryToConnect(block);
-        Assert.assertEquals(ImportResult.IMPORTED_BEST, result);
-        return block;
     }
 
     @After
@@ -377,7 +332,7 @@ public class AionNameServiceContractTest {
     @Test
     public void testSetTTL(){
 
-        //initilize input paramaters
+        // initilize input parameters
         final long inputEnergy = 5000L;
         final long expectedEnergyLeft = 4000L;
 
@@ -684,6 +639,13 @@ public class AionNameServiceContractTest {
     public void testANSQuery() {
         ECKey notRegisteredKey = new ECKeyEd25519();
 
+        // wait for setup to pass
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         //register multiple domain names
         BigInteger amount = new BigInteger("1000");
         BigInteger amount2 = new BigInteger("2000");
@@ -704,13 +666,14 @@ public class AionNameServiceContractTest {
 
 
         try {
-            Thread.sleep(3000L);
+            Thread.sleep(2500L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         // register domain for name service
         AionNameServiceContract ansc = new AionNameServiceContract(repo, addr, Address.wrap(k.getAddress()));
+
         System.out.print("");
 
         try {
@@ -733,7 +696,7 @@ public class AionNameServiceContractTest {
         aac5.execute(combined5, DEFAULT_INPUT_NRG);
 
         try {
-            Thread.sleep(4000L);
+            Thread.sleep(2000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -742,7 +705,7 @@ public class AionNameServiceContractTest {
     }
 
     /** Helper functions for setup, conversion, and storage */
-
+    // for ans basic operation
     private byte[] setupInputs(Address ownerAddress, Address newAddress, byte id, byte operation, ECKey k) {
         ByteBuffer bb = ByteBuffer.allocate(34);
         bb.put(id) // chainID
@@ -758,6 +721,7 @@ public class AionNameServiceContractTest {
         return bb.array();
     }
 
+    // for ans subdomain operation
     private byte[] setupInputs(Address newAddress, byte id, byte operation, ECKey k, Address subdomainAddress, String domainName, String subdomainName) {
         ByteBuffer bb = ByteBuffer.allocate(34);
         bb.put(id) // chainID
@@ -787,6 +751,7 @@ public class AionNameServiceContractTest {
         return bb.array();
     }
 
+    // for auction setup
     private byte[] setupInputs(Address ownerAddress, Address newAddress, byte id, byte operation, ECKey k, Address subdomainAddress,String domainName, String subdomainName) {
         ByteBuffer bb = ByteBuffer.allocate(34);
         bb.put(id) // chainID
@@ -816,18 +781,8 @@ public class AionNameServiceContractTest {
         return bb.array();
     }
 
-    private byte[] combineTwoBytes(byte[] byte1, byte[] byte2) {
-        byte[] combined = new byte[32];
-        System.arraycopy(byte1, 0, combined, 0, 16);
-        System.arraycopy(byte2, 0, combined, 16, 16);
-        return combined;
-    }
+    // put some data into the database for testing
 
-    /**
-     * put some data into the database for testing
-     *
-     * <p>aion aion.aion aion.bion aion.bion.cion aion.bion.dion
-     */
     private DummyRepo populateRepo() {
         DummyRepo repo = new DummyRepo();
 
@@ -893,4 +848,50 @@ public class AionNameServiceContractTest {
 
         return ret;
     }
+
+    // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
+    // method creates a new block every sleepDuration milliseconds.
+    private static void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
+        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
+                .withDefaultAccounts()
+                .withValidatorConfiguration("simple")
+                .build();
+
+        StandaloneBlockchain bc = bundle.bc;
+        AionBlock previousBlock = bc.genesis;
+
+        for (int i = 0; i < numBlocks; i++) {
+            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
+            previousBlock = createBundleAndCheck(bc, bundle.privateKeys.get(0), previousBlock);
+        }
+
+        blockchain = bc;
+    }
+
+    private static AionBlock createBundleAndCheck(StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
+        byte[] ZERO_BYTE = new byte[0];
+
+        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+        List<AionTransaction> transactions = new ArrayList<>();
+
+        // create 100 transactions per bundle
+        for (int i = 0; i < 100; i++) {
+            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
+            AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),
+                    destAddr, BigInteger.ONE.toByteArray(), ZERO_BYTE, 21000, 1);
+            sendTransaction.sign(key);
+            transactions.add(sendTransaction);
+            accountNonce = accountNonce.add(BigInteger.ONE);
+        }
+
+        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
+        Assert.assertEquals(100, block.getTransactionsList().size());
+        // clear the trie
+        bc.getRepository().flush();
+
+        ImportResult result = bc.tryToConnect(block);
+        Assert.assertEquals(ImportResult.IMPORTED_BEST, result);
+        return block;
+    }
+
 }

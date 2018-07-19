@@ -40,6 +40,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.AionAuctionContract;
 import org.aion.precompiled.contracts.AionNameServiceContract;
+import org.aion.solidity.Compiler;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -47,6 +48,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -55,6 +57,8 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertSame;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test of the Aion Auction Contract
@@ -76,13 +80,16 @@ public class AionAuctionContractTest {
     private ECKey k2;
     private ECKey k3;
     private ECKey k4;
-    private IBlockchain blockchain;
+    private static IBlockchain blockchain;
+
+    @BeforeClass
+    public static void setupBlockChain() throws InterruptedException{
+        // create standalone blockchain for testing
+        createBlockchain(1,  TimeUnit.SECONDS.toMillis(1));
+    }
 
     @Before
-    public void setup() throws InterruptedException {
-        // create standalone blockchain for testing
-        createBlockchain(3,  TimeUnit.SECONDS.toMillis(2));
-
+    public void setup(){
         // setup repo
         repo = new DummyRepo();
         defaultKey = ECKeyFac.inst().create();
@@ -118,13 +125,6 @@ public class AionAuctionContractTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        try {
-            Thread.sleep(4 * 1000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         assertEquals(ResultCode.SUCCESS, result.getResultCode());
     }
 
@@ -169,77 +169,16 @@ public class AionAuctionContractTest {
         assertEquals(10000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
         assertEquals(10000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
         assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
-        assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
+        assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue()); // deposits 5000
 
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
                         repo, Address.wrap(result.getOutput()), Address.wrap(k4.getAddress()));
-        System.out.println();
-
-        try {
-            Thread.sleep(4 * 1000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        assertEquals(ResultCode.SUCCESS, result.getResultCode());
     }
 
     @Test
-    public void testExtendExtensionRequest() {
-        final long inputEnergy = 24000L;
-
-        BigInteger amount = new BigInteger("1000");
-        byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
-        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        aac.execute(combined, inputEnergy);
-
-        try {
-            Thread.sleep(4000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // try to extend - should work
-        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
-        ContractExecutionResult res = aac.execute(combined2, inputEnergy);
-
-        // try to extend 2nd time in a row - should be denied
-        byte[] combined3 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
-        ContractExecutionResult res2 = aac.execute(combined3, inputEnergy);
-
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
-        Assert.assertArrayEquals("already been extended".getBytes(), res2.getOutput());
-
-        try {
-            Thread.sleep(6000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testGetResultCodeExtensionRequest(){
-        final long inputEnergy = 24000L;
-
-        BigInteger amount = new BigInteger("1000");
-        byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
-        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        aac.execute(combined, inputEnergy);
-
-        try {
-            Thread.sleep(4000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // try to extend - should not work since owner is incorrect
-        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k2.getAddress()));
-        ContractExecutionResult res = aac.execute(combined2, inputEnergy);
-
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
-    }
-
-    @Test
-    public void testMain(){
+    public void testCheckBidBalances(){
         final long inputEnergy = 24000L;
         BigInteger amount = new BigInteger("1000");
         byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
@@ -291,7 +230,7 @@ public class AionAuctionContractTest {
         assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
 
         try {
-            Thread.sleep(3 * 1000L);
+            Thread.sleep(2500L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -303,7 +242,7 @@ public class AionAuctionContractTest {
         assertEquals(7000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
 
         try {
-            Thread.sleep(5 * 1000L);
+            Thread.sleep(2 * 1000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -336,6 +275,10 @@ public class AionAuctionContractTest {
         byte[] combined3 = setupInputs("bbbb.aaaa.aion", Address.wrap(k2.getAddress()), amount3.toByteArray(), k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined3, DEFAULT_INPUT_NRG);
+
+        byte[] combined8 = setupInputs("aion.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
+        AionAuctionContract aac8 = new AionAuctionContract(repo, AION, blockchain);
+        aac.execute(combined8, DEFAULT_INPUT_NRG);
 
         aac.displayMyBidsLRU(k);
         aac.displayMyBidForDomainLRU("aion.aion", k);
@@ -384,18 +327,107 @@ public class AionAuctionContractTest {
 
         aac.displayAllAuctionDomains();
 
+        // wait for some auction domains to finish
         try {
             Thread.sleep(1500L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        aac.displayAllAuctionDomains();
 
+        // wait for all auction to complete
+        try {
+            Thread.sleep(1000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         aac.displayAllAuctionDomains();
     }
 
     //-------------------------------------Basic Tests ------------------------------------------//
+    @Test
+    public void testActiveDomainTimeExtensionRequestPass() {
+        final long inputEnergy = 24000L;
+
+        BigInteger amount = new BigInteger("1000");
+        byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
+        aac.execute(combined, inputEnergy);
+
+        try {
+            Thread.sleep(2500L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // try to extend - should work
+        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
+        ContractExecutionResult res = aac.execute(combined2, inputEnergy);
+
+        // try to extend 2nd time in a row - should be denied
+        byte[] combined3 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
+        ContractExecutionResult res2 = aac.execute(combined3, inputEnergy);
+
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+
+        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
+        Assert.assertArrayEquals("already been extended".getBytes(), res2.getOutput());
+
+        // uncomment to see extension output
+        //        try {
+        //            Thread.sleep(2000L);
+        //        } catch (InterruptedException e) {
+        //            e.printStackTrace();
+        //        }
+    }
+
+    @Test
+    public void testActiveDomainTimeExtensionRequestFailure(){
+        final long inputEnergy = 24000L;
+
+        BigInteger amount = new BigInteger("1000");
+        byte[] combined = setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
+        aac.execute(combined, inputEnergy);
+
+        try {
+            Thread.sleep(2500L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // try to extend - should not work since owner is incorrect
+        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k2.getAddress()));
+        ContractExecutionResult res = aac.execute(combined2, inputEnergy);
+
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+    }
+
+    @Test
+    public void testHasActiveParentDomain(){
+        final long inputEnergy = 24000L;
+        BigInteger amount = new BigInteger("1000");
+
+        byte[] combined = setupInputs("parent.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
+        aac.execute(combined, inputEnergy);
+
+        // wait for parent domain to become active
+        try {
+            Thread.sleep(2500L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        byte[] combined2 = setupInputs("child.parent.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
+        AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
+        ContractExecutionResult result2 = aac2.execute(combined2, inputEnergy);
+
+        assertEquals(ResultCode.INTERNAL_ERROR, result2.getResultCode());
+    }
+
     @Test(expected = IllegalArgumentException.class)
-    public void unregisteredDomain(){
+    public void testUnregisteredDomain(){
         ECKey k = ECKeyFac.inst().create();
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
@@ -403,7 +435,7 @@ public class AionAuctionContractTest {
     }
 
     @Test()
-    public void testgetResultCodeDomainNames(){
+    public void testInvalidDomainNames(){
         byte[] combined = setupInputs("aa.aion", Address.wrap(defaultKey.getAddress()), defaultBidAmount.toByteArray(), defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         ContractExecutionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
@@ -431,7 +463,7 @@ public class AionAuctionContractTest {
     }
 
     @Test
-    public void bidderAddressDoesNotExist(){
+    public void testBidderAddressDoesNotExist(){
         ECKey notExistKey = ECKeyFac.inst().create();
         byte[] combined = setupInputs("bion.bion.aion", Address.wrap(notExistKey.getAddress()), defaultBidAmount.toByteArray(), notExistKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
@@ -441,7 +473,7 @@ public class AionAuctionContractTest {
     }
 
     @Test
-    public void insufficientBalance(){
+    public void testInsufficientBalance(){
         ECKey poorKey = ECKeyFac.inst().create();
         repo.createAccount(Address.wrap(poorKey.getAddress()));
         repo.addBalance(Address.wrap(poorKey.getAddress()), new BigInteger("100"));
@@ -529,7 +561,7 @@ public class AionAuctionContractTest {
         // wait more than 3 seconds for auction to finish and domainAddress1 to become active
         // times in the contract class need to be set for testing
         try {
-            Thread.sleep(3 * 1000L);
+            Thread.sleep(3000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -598,7 +630,7 @@ public class AionAuctionContractTest {
         // let the domain become inactive,
         // times in the contract class need to be set for testing
         try {
-            Thread.sleep(7 * 1000L);
+            Thread.sleep(4500L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -662,7 +694,7 @@ public class AionAuctionContractTest {
 
     // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
     // method creates a new block every sleepDuration milliseconds.
-    private void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
+    private static void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
         StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
                 .withDefaultAccounts()
                 .withValidatorConfiguration("simple")
