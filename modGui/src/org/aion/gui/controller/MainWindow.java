@@ -18,7 +18,8 @@ import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
 import org.aion.gui.model.AccountChangeHandlers;
-import org.aion.gui.model.BlockTransactionProcessor;
+import org.aion.gui.model.BalanceRetriever;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
@@ -88,7 +89,7 @@ public class MainWindow extends Application {
     private final KernelLauncher kernelLauncher;
     private final AccountManager accountManager;
     private final KernelConnection kc;
-    private final BlockTransactionProcessor blockTransactionProcessor;
+    private final TransactionProcessor transactionProcessor;
     private final AccountChangeHandlers accountChangeHandlers;
 
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
@@ -111,8 +112,8 @@ public class MainWindow extends Application {
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
         accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY);
-        blockTransactionProcessor = new BlockTransactionProcessor(kc, accountManager, new BalanceDto(kc));
-        accountChangeHandlers = new AccountChangeHandlers(accountManager, blockTransactionProcessor);
+        transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
+        accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
     }
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
@@ -167,7 +168,7 @@ public class MainWindow extends Application {
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
                 .withAccountManager(accountManager)
                 .withWalletStorage(WalletStorage.getInstance())
-                .withBlockTransactionProcessor(blockTransactionProcessor)
+                .withBlockTransactionProcessor(transactionProcessor)
         );
         System.out.println(String.format("XXX %s", loader.getBuilderFactory()));
         loader.setBuilderFactory(new MyBuilderFactory()

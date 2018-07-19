@@ -32,7 +32,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
-import org.aion.gui.model.BlockTransactionProcessor;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.gui.util.AionConstants;
 import org.aion.gui.util.BalanceUtils;
@@ -66,14 +66,14 @@ public class HistoryController extends AbstractController {
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd - HH.mm.ss");
 
 //    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
-    private final BlockTransactionProcessor blockTransactionProcessor;
+    private final TransactionProcessor transactionProcessor;
     private final AccountManager accountManager;
     private final SyncInfoDto syncInfoDto;
 
-    public HistoryController(BlockTransactionProcessor blockTransactionProcessor,
+    public HistoryController(TransactionProcessor transactionProcessor,
                              AccountManager accountManager,
                              SyncInfoDto syncInfoDto) {
-        this.blockTransactionProcessor = blockTransactionProcessor;
+        this.transactionProcessor = transactionProcessor;
         this.accountManager = accountManager;
         this.syncInfoDto = syncInfoDto;
     }
@@ -148,7 +148,7 @@ public class HistoryController extends AbstractController {
             return;
         }
         final Task<List<TxRow>> getTransactionsTask = getApiTask(
-                address -> blockTransactionProcessor.getLatestTransactions(address).stream()
+                address -> transactionProcessor.getLatestTransactions(address).stream()
                         .map(t -> new TxRow(address, t)).collect(Collectors.toList()),
                 account.getPublicAddress()
         );

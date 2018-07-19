@@ -39,6 +39,10 @@ public class ConsoleManager {
         LOGS_TEXT_FIELD.setScrollTop(Double.MAX_VALUE);
     }
 
+    public void addLog2(String log, LogType type, LogLevel level) {
+        addLog(log, type, level);
+    }
+
     public static void addLog(String log, LogType type) {
         addLog(log, type, LogLevel.INFO);
     }

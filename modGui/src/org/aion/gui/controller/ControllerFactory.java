@@ -2,7 +2,7 @@ package org.aion.gui.controller;
 
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
-import org.aion.gui.model.BlockTransactionProcessor;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
@@ -45,7 +45,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private ConfigManipulator configManipulator;
     private AccountManager accountManager;
     private WalletStorage walletStorage;
-    private BlockTransactionProcessor blockTransactionProcessor;
+    private TransactionProcessor transactionProcessor;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -76,9 +76,9 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(SendController.class, () -> new SendController(
                     kernelConnection,
                     accountManager,
-                    blockTransactionProcessor));
+                    transactionProcessor));
             put(HistoryController.class, () -> new HistoryController(
-                    blockTransactionProcessor,
+                    transactionProcessor,
                     accountManager,
                     new SyncInfoDto(kernelConnection)));
             put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
@@ -235,12 +235,12 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return this;
     }
 
-    public BlockTransactionProcessor getBlockTransactionProcessor() {
-        return this.blockTransactionProcessor;
+    public TransactionProcessor getTransactionProcessor() {
+        return this.transactionProcessor;
     }
 
-    public ControllerFactory withBlockTransactionProcessor(BlockTransactionProcessor blockTransactionProcessor) {
-        this.blockTransactionProcessor = blockTransactionProcessor;
+    public ControllerFactory withBlockTransactionProcessor(TransactionProcessor transactionProcessor) {
+        this.transactionProcessor = transactionProcessor;
         return this;
     }
 }

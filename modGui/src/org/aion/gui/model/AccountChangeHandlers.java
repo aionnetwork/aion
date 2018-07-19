@@ -16,12 +16,12 @@ import java.util.Set;
 
 public class AccountChangeHandlers {
     private final AccountManager accountManager;
-    private final BlockTransactionProcessor blockTransactionProcessor;
+    private final TransactionProcessor transactionProcessor;
 
     public AccountChangeHandlers(AccountManager accountManager,
-                                 BlockTransactionProcessor blockTransactionProcessor) {
+                                 TransactionProcessor transactionProcessor) {
         this.accountManager = accountManager;
-        this.blockTransactionProcessor = blockTransactionProcessor;
+        this.transactionProcessor = transactionProcessor;
         EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).register(this);
     }
 
@@ -36,7 +36,7 @@ public class AccountChangeHandlers {
         } else if (AbstractAccountEvent.Type.ADDED.equals(event.getType())) {
             System.out.println("AccountChangeHandlers#handleAccountEvent B");
 //            backgroundExecutor.submit(() -> processTransactionsFromBlock(null, Collections.singleton(account.getPublicAddress())));
-            blockTransactionProcessor.processTxnsFromBlockAsync(null, Collections.singleton(account.getPublicAddress()));
+            transactionProcessor.processTxnsFromBlockAsync(null, Collections.singleton(account.getPublicAddress()));
         }
     }
 
@@ -50,7 +50,7 @@ public class AccountChangeHandlers {
             final Set<String> addresses = event.getPayload();
             final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {});
 //            backgroundExecutor.submit(() -> processTransactionsFromBlock(oldestSafeBlock, addresses));
-            blockTransactionProcessor.processTxnsFromBlockAsync(oldestSafeBlock, addresses);
+            transactionProcessor.processTxnsFromBlockAsync(oldestSafeBlock, addresses);
             final Iterator<String> addressesIterator = addresses.iterator();
             AccountDTO account = accountManager.getAccount(addressesIterator.next());
             account.setActive(true);

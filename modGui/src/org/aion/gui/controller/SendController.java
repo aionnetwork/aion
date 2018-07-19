@@ -13,12 +13,11 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import org.aion.api.impl.internal.Message;
 import org.aion.base.util.TypeConverter;
-import org.aion.gui.controller.AbstractController;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.RefreshEvent;
-import org.aion.gui.model.BlockTransactionProcessor;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.util.AionConstants;
@@ -35,7 +34,6 @@ import org.aion.wallet.events.TransactionEvent;
 import org.aion.wallet.exception.ValidationException;
 import org.aion.wallet.ui.components.partials.TransactionResubmissionDialog;
 import org.aion.wallet.util.AddressUtils;
-import org.aion.wallet.util.ConfigUtils;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
@@ -87,15 +85,15 @@ public class SendController extends AbstractController {
 
     private final KernelConnection kernelConnection;
     private final AccountManager accountManager;
-    private final BlockTransactionProcessor blockTransactionProcessor;
+    private final TransactionProcessor transactionProcessor;
 
     public SendController(KernelConnection kernelConnection,
                           AccountManager accountManager,
-                          BlockTransactionProcessor blockTransactionProcessor) {
+                          TransactionProcessor transactionProcessor) {
         super();
         this.kernelConnection = kernelConnection;
         this.accountManager = accountManager;
-        this.blockTransactionProcessor = blockTransactionProcessor;
+        this.transactionProcessor = transactionProcessor;
         this.transactionResubmissionDialog = new TransactionResubmissionDialog(accountManager); // TODO should be injectable
         this.balanceDto = new BalanceDto(kernelConnection); // TODO should be injectable
     }
@@ -220,7 +218,7 @@ public class SendController extends AbstractController {
     private TransactionResponseDTO sendTransaction(final SendTransactionDTO sendTransactionDTO) {
         try {
 //            return blockchainConnector.sendTransaction(sendTransactionDTO);
-            return blockTransactionProcessor.sendTransaction(sendTransactionDTO);
+            return transactionProcessor.sendTransaction(sendTransactionDTO);
         } catch (ValidationException e) {
             throw new RuntimeException(e);
         }

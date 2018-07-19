@@ -1,5 +1,6 @@
 package org.aion.gui.model;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.aion.api.impl.internal.Message;
 import org.aion.api.type.Block;
 import org.aion.api.type.BlockDetails;
@@ -11,6 +12,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventPublisher;
 import org.aion.gui.model.dto.BalanceDto;
+import org.aion.log.AionLoggerFactory;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.connector.dto.BlockDTO;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
@@ -28,94 +30,103 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-public class BlockTransactionProcessor extends AbstractAionApiClient {
+public class TransactionProcessor extends AbstractAionApiClient {
     private final AccountManager accountManager;
     private final ExecutorService backgroundExecutor;
-    private final BalanceDto balanceDto;
+    private final BalanceRetriever balanceRetriever;
+    private final ConsoleManager consoleManager;
 
     private static final int BLOCK_BATCH_SIZE = 300;
+    private static final List<Integer> ACCEPTED_TRANSACTION_RESPONSE_STATUSES = Arrays.asList(
+            Message.Retcode.r_tx_Init_VALUE,
+            Message.Retcode.r_tx_Recved_VALUE,
+            Message.Retcode.r_tx_NewPending_VALUE,
+            Message.Retcode.r_tx_Pending_VALUE,
+            Message.Retcode.r_tx_Included_VALUE);
+    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
+    /**
+     * Constructor
+     *
+     * @param kernelConnection
+     * @param accountManager
+     * @param balanceRetriever
+     * @param executor
+     */
+    public TransactionProcessor(KernelConnection kernelConnection,
+                                AccountManager accountManager,
+                                BalanceRetriever balanceRetriever,
+                                ExecutorService executor,
+                                ConsoleManager consoleManager) {
+        super(kernelConnection);
+        this.accountManager = accountManager;
+        this.balanceRetriever = balanceRetriever;
+        this.backgroundExecutor = executor;
+        this.consoleManager = consoleManager;
+    }
 
     /**
      * Constructor
      *
      * @param kernelConnection connection containing the API instance to interact with
      */
-    public BlockTransactionProcessor(KernelConnection kernelConnection,
-                                     AccountManager accountManager,
-                                     BalanceDto balanceDto) {
-        super(kernelConnection);
-        this.accountManager = accountManager;
-        this.backgroundExecutor = Executors.newFixedThreadPool(getCores()); // TODO should be injected
-        this.balanceDto = balanceDto;
+    public TransactionProcessor(KernelConnection kernelConnection,
+                                AccountManager accountManager,
+                                BalanceRetriever balanceRetriever) {
+        this(kernelConnection, accountManager, balanceRetriever,
+                Executors.newFixedThreadPool(getCores()), new ConsoleManager());
     }
 
-    private AccountManager getAccountManager() {
-        return accountManager;
+    public Future<?> processTxnsFromBlockAsync(final BlockDTO lastSafeBlock, final Set<String> addresses) {
+        return backgroundExecutor.submit(() -> processTransactionsFromBlock(lastSafeBlock, addresses));
     }
 
-    public void processTxnsFromBlockAsync(final BlockDTO lastSafeBlock, final Set<String> addresses) {
-        backgroundExecutor.submit(() -> processTransactionsFromBlock(lastSafeBlock, addresses));
+    public Set<TransactionDTO> getLatestTransactions(final String address) {
+        backgroundExecutor.submit(this::processTransactionsFromOldestRegisteredSafeBlock);
+        // FIXME: should it wait until the execution is done before running the next line?
+        return accountManager.getTransactions(address);
     }
 
-    // original version from ApiBlockchainConnector.java of aion_ui
     private void processTransactionsFromBlock(final BlockDTO lastSafeBlock, final Set<String> addresses) {
         if(!apiIsConnected()) {
-            LOG.warn("WIll not process transactions from block: {} for addresses: {} because API is disconnected or no addresses",
+            LOG.warn("Will not process transactions from block: {} for addresses: {} because API is disconnected or no addresses",
                     lastSafeBlock, addresses);
             return;
         }
-
-        if (!addresses.isEmpty()) {
-            final long latest = getLatestBlock().getNumber();
-            final long previousSafe = lastSafeBlock != null ? lastSafeBlock.getNumber() : 0;
-            LOG.debug("Processing transactions from block: {} to block: {}, for addresses: {}", previousSafe, latest, addresses);
-            if (previousSafe > 0) {
-                final Block lastSupposedSafe = getBlock(previousSafe);
-                if (!Arrays.equals(lastSafeBlock.getHash(), (lastSupposedSafe.getHash().toBytes()))) {
-                    EventPublisher.fireFatalErrorEncountered("A re-organization happened too far back. Please restart Wallet!");
-                }
-                removeTransactionsFromBlock(addresses, previousSafe);
-            }
-            for (long i = latest; i > previousSafe; i -= BLOCK_BATCH_SIZE) {
-                List<Long> blockBatch = LongStream.iterate(i, j -> j - 1).limit(BLOCK_BATCH_SIZE).boxed().collect(Collectors.toList());
-                List<BlockDetails> blk = getBlockDetailsByNumbers(blockBatch);
-                blk.forEach(getBlockDetailsConsumer(addresses));
-            }
-            final long newSafeBlockNumber = latest - BLOCK_BATCH_SIZE;
-            final Block newSafe;
-            if (newSafeBlockNumber > 0) {
-                newSafe = getBlock(newSafeBlockNumber);
-                for (String address : addresses) {
-                    getAccountManager().updateLastSafeBlock(address, new BlockDTO(newSafe.getNumber(), newSafe.getHash().toBytes()));
-                }
-            }
-            LOG.debug("finished processing for addresses: {}", addresses);
+        if(addresses.isEmpty()) {
+            return;
         }
 
+        final long latest = getLatestBlock().getNumber();
+        final long previousSafe = lastSafeBlock != null ? lastSafeBlock.getNumber() : 0;
+        LOG.debug("Processing transactions from block: {} to block: {}, for addresses: {}", previousSafe, latest, addresses);
+        if (previousSafe > 0) {
+            final Block lastSupposedSafe = getBlock(previousSafe);
+            if (!Arrays.equals(lastSafeBlock.getHash(), (lastSupposedSafe.getHash().toBytes()))) {
+                EventPublisher.fireFatalErrorEncountered("A re-organization happened too far back. Please restart Wallet!");
+            }
+            removeTransactionsFromBlock(addresses, previousSafe);
+        }
+        for (long i = latest; i > previousSafe; i -= BLOCK_BATCH_SIZE) {
+            List<Long> blockBatch = LongStream.iterate(i, j -> j - 1).limit(BLOCK_BATCH_SIZE).boxed().collect(Collectors.toList());
+            List<BlockDetails> blk = getBlockDetailsByNumbers(blockBatch);
+            blk.forEach(getBlockDetailsConsumer(addresses));
+        }
+        final long newSafeBlockNumber = latest - BLOCK_BATCH_SIZE;
+        final Block newSafe;
+        if (newSafeBlockNumber > 0) {
+            newSafe = getBlock(newSafeBlockNumber);
+            for (String address : addresses) {
+                accountManager.updateLastSafeBlock(address, new BlockDTO(newSafe.getNumber(), newSafe.getHash().toBytes()));
+            }
+        }
+        LOG.debug("finished processing for addresses: {}", addresses);
     }
-
-//    private Block getLatestBlock_() {
-//        final Block block;
-//        lock();
-//        try {
-//            if (API.isConnected()) {
-//                final long latest = API.getChain().blockNumber().getObject();
-//                block = API.getChain().getBlockByNumber(latest).getObject();
-//            } else {
-//                block = null;
-//            }
-//        } finally {
-//            unLock();
-//        }
-//        return block;
-//    }
 
     private Block getLatestBlock() {
         final Block block;
@@ -128,35 +139,27 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
         return block;
     }
 
-//    private Block getBlock_(final long blockNumber) {
-//        final Block lastSupposedSafe;
-//        lock();
-//        try {
-//            lastSupposedSafe = API.getChain().getBlockByNumber(blockNumber).getObject();
-//        } finally {
-//            unLock();
-//        }
-//        return lastSupposedSafe;
-//    }
-
     private Block getBlock(final long blockNumber) {
         return callApi(api -> api.getChain().getBlockByNumber(blockNumber)).getObject();
     }
 
     private void removeTransactionsFromBlock(final Set<String> addresses, final long previousSafe) {
         for (String address : addresses) {
-            final List<TransactionDTO> txs = new ArrayList<TransactionDTO>(getAccountManager().getTransactions(address));
+            final List<TransactionDTO> txs = new ArrayList<TransactionDTO>(accountManager.getTransactions(address));
             final Iterator<TransactionDTO> iterator = txs.iterator();
             final List<TransactionDTO> oldTxs = new ArrayList<>();
             while (iterator.hasNext()) {
                 final TransactionDTO t = iterator.next();
                 if (t.getBlockNumber() > previousSafe) {
+                    System.out.println("t.getBlockNumber() > previousSafe --> " + t.getBlockNumber() + " > " + previousSafe + " --> oldTxs.add");
                     oldTxs.add(t);
                 } else {
-                    break;
+                    System.out.println("t.getBlockNumber() <= previousSafe --> " + t.getBlockNumber() + " <= " + previousSafe + " --> break");
+//                    break;
+                    continue; // TODO double check logic change... break would only work if the list was sorted from max to min
                 }
             }
-            getAccountManager().removeTransactions(address, oldTxs);
+            accountManager.removeTransactions(address, oldTxs);
         }
     }
 
@@ -175,7 +178,7 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
                                     || TypeConverter.toJsonHex(t.getTo().toString()).equals(address))
                             .map(t -> mapTransaction(t, timestamp, blockNumber))
                             .collect(Collectors.toList());
-                    getAccountManager().addTransactions(address, newTxs);
+                    accountManager.addTransactions(address, newTxs);
                 }
             }
         };
@@ -198,15 +201,6 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
                 transaction.getTxIndex());
     }
 
-    private int getCores() {
-        int cores = Runtime.getRuntime().availableProcessors();
-        if (cores > 1) {
-            cores = cores / 2;
-        }
-        return cores;
-    }
-
-    // --- stuff from from aion_ui ApiBlockchainConnector#sendTransactionInternal and BlockchainConnector#sendTrasaction
     public final TransactionResponseDTO sendTransaction(final SendTransactionDTO dto) throws ValidationException {
         if (dto == null || !dto.validate()) {
             throw new ValidationException("Invalid transaction request data");
@@ -217,13 +211,11 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
         return sendTransactionInternal(dto);
     }
 
-    public final BigInteger getBalance(final String address) {
-        balanceDto.setAddress(address);
-        balanceDto.loadFromApi();
-        return balanceDto.getBalance();
+    private final BigInteger getBalance(final String address) {
+        return balanceRetriever.getBalance(address);
     }
 
-    protected TransactionResponseDTO sendTransactionInternal(final SendTransactionDTO dto) {
+    private TransactionResponseDTO sendTransactionInternal(final SendTransactionDTO dto) {
         final BigInteger latestTransactionNonce = getLatestTransactionNonce(dto.getFrom());
         TxArgs txArgs = new TxArgs.TxArgsBuilder()
                 .from(new Address(TypeConverter.toJsonHex(dto.getFrom())))
@@ -239,24 +231,13 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
         ConsoleManager.addLog("Sending transaction", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
         response = callApi(api -> api.getTx().sendSignedTransaction(
                 txArgs,
-                new ByteArrayWrapper((getAccountManager().getAccount(dto.getFrom())).getPrivateKey())
+                new ByteArrayWrapper((accountManager.getAccount(dto.getFrom())).getPrivateKey())
                 )).getObject();
-
-//        lock();
-//        try {
-//            ConsoleManager.addLog("Sending transaction", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
-//            response = API.getTx().sendSignedTransaction(
-//                    txArgs,
-//                    new ByteArrayWrapper((getAccountManager().getAccount(dto.getFrom())).getPrivateKey())
-//            ).getObject();
-//        } finally {
-//            unLock();
-//        }
 
         final TransactionResponseDTO transactionResponseDTO = mapTransactionResponse(response);
         final int responseStatus = transactionResponseDTO.getStatus();
         if (!ACCEPTED_TRANSACTION_RESPONSE_STATUSES.contains(responseStatus)) {
-            getAccountManager().addTimedOutTransaction(dto);
+            accountManager.addTimedOutTransaction(dto);
         }
         return transactionResponseDTO;
     }
@@ -267,30 +248,14 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
         } else {
             return BigInteger.ZERO;
         }
-//        lock();
-//        try {
-//            if (API.isConnected()) {
-//                txCount = API.getChain().getNonce(Address.wrap(address)).getObject();
-//            } else {
-//                txCount = BigInteger.ZERO;
-//            }
-//        } finally {
-//            unLock();
-//        }
-//        return txCount;
     }
 
     private TransactionResponseDTO mapTransactionResponse(final MsgRsp response) {
         return new TransactionResponseDTO(response.getStatus(), response.getTxHash(), response.getError());
     }
 
-    public Set<TransactionDTO> getLatestTransactions(final String address) {
-        backgroundExecutor.submit(this::processTransactionsFromOldestRegisteredSafeBlock);
-        return getAccountManager().getTransactions(address);
-    }
-
     private void processTransactionsFromOldestRegisteredSafeBlock() {
-        final Set<String> addresses = getAccountManager().getAddresses();
+        final Set<String> addresses = accountManager.getAddresses();
         final Consumer<Iterator<String>> nullSafeBlockFilter = Iterator::remove;
         final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, nullSafeBlockFilter);
         if (oldestSafeBlock != null) {
@@ -298,7 +263,11 @@ public class BlockTransactionProcessor extends AbstractAionApiClient {
         }
     }
 
-
-    private static final List<Integer> ACCEPTED_TRANSACTION_RESPONSE_STATUSES = Arrays.asList(Message.Retcode.r_tx_Init_VALUE, Message.Retcode.r_tx_Recved_VALUE, Message.Retcode.r_tx_NewPending_VALUE, Message.Retcode.r_tx_Pending_VALUE, Message.Retcode.r_tx_Included_VALUE);
-
+    private static int getCores() {
+        int cores = Runtime.getRuntime().availableProcessors();
+        if (cores > 1) {
+            cores = cores / 2;
+        }
+        return cores;
+    }
 }

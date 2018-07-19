@@ -50,28 +50,20 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AccountManager {
-
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
-
     private final WalletStorage walletStorage = WalletStorage.getInstance();
-
     private final Map<String, AccountDTO> addressToAccount = new HashMap<>();
-
     private final Map<String, byte[]> addressToKeystoreContent = Collections.synchronizedMap(new HashMap<>());
-
     private final KeystoreFormat keystoreFormat = new KeystoreFormat();
-
-//    private final Function<String, BigInteger> balanceProvider;
     private final BalanceDto balanceProvider;
-
     private final Supplier<String> currencySupplier;
 
     private MasterKey root;
 
     private boolean isWalletLocked = false;
 
-//    public AccountManager(final Function<String, BigInteger> balanceProvider, final Supplier<String> currencySupplier) {
+    private static final Logger LOG = org.aion.log.AionLoggerFactory
+            .getLogger(org.aion.log.LogEnum.GUI.name());
+
     public AccountManager(final BalanceDto balanceProvider, final Supplier<String> currencySupplier) {
         this.balanceProvider = balanceProvider;
         this.currencySupplier = currencySupplier;
@@ -233,11 +225,10 @@ public class AccountManager {
         if (!remembered) {
             Keystore.create(password, ecKey);
         }
-//        if (Files.isDirectory(WalletStorage.KEYSTORE_PATH)) {
-        if (Files.isDirectory(Keystore.PATH)) {
+        if (Files.isDirectory(WalletStorage.KEYSTORE_PATH)) {
             final String fileNameRegex = getExportedFileNameRegex(account.getPublicAddress());
-//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(WalletStorage.KEYSTORE_PATH, fileNameRegex)) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Keystore.PATH, fileNameRegex)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(WalletStorage.KEYSTORE_PATH, fileNameRegex)) {
+//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Keystore.PATH, fileNameRegex)) {
                 for (Path keystoreFile : stream) {
                     final String fileName = keystoreFile.getFileName().toString();
                     if (remembered) {
@@ -422,7 +413,7 @@ public class AccountManager {
 
     // ----- stuff copied from aion_ui's ApiBlockchainConnector (right place?)
 
-    // XXX Moved this one to BlockTransactionProcessor
+    // XXX Moved this one to TransactionProcessor
     public BlockDTO getOldestSafeBlock(final Set<String> addresses, final Consumer<Iterator<String>> nullSafeBlockFilter) {
         BlockDTO oldestSafeBlock = null;
         final Iterator<String> addressIterator = addresses.iterator();

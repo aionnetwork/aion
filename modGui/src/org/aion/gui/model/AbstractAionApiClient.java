@@ -3,6 +3,7 @@ package org.aion.gui.model;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -13,7 +14,7 @@ import org.slf4j.Logger;
 public abstract class AbstractAionApiClient {
     private final IAionAPI api;
 
-    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     /**
      * Constructor
