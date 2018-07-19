@@ -77,7 +77,6 @@ public class AionAuctionContractTest {
     private ECKey k3;
     private ECKey k4;
     private IBlockchain blockchain;
-    private ECKey senderKey;
 
     @Before
     public void setup() throws InterruptedException {
@@ -218,7 +217,7 @@ public class AionAuctionContractTest {
     }
 
     @Test
-    public void testgetResultCodeExtensionRequest(){
+    public void testGetResultCodeExtensionRequest(){
         final long inputEnergy = 24000L;
 
         BigInteger amount = new BigInteger("1000");
@@ -339,7 +338,6 @@ public class AionAuctionContractTest {
         aac.execute(combined3, DEFAULT_INPUT_NRG);
 
         aac.displayMyBidsLRU(k);
-
         aac.displayMyBidForDomainLRU("aion.aion", k);
 
         //displayAuctionDomainLRU Tests, show with debug
@@ -384,9 +382,7 @@ public class AionAuctionContractTest {
         AionAuctionContract aac7 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined7, DEFAULT_INPUT_NRG);
 
-        aac.displayMyBidForDomainLRU("aaaa.aion", k);
-
-        //aac.displayAllAuctionDomains();
+        aac.displayAllAuctionDomains();
 
         try {
             Thread.sleep(1500L);
@@ -395,13 +391,6 @@ public class AionAuctionContractTest {
         }
 
         aac.displayAllAuctionDomains();
-
-
-        try {
-            Thread.sleep(1000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     //-------------------------------------Basic Tests ------------------------------------------//
@@ -485,8 +474,6 @@ public class AionAuctionContractTest {
         System.arraycopy(input, 0, wrongInput4, 0, input.length-2);
         ContractExecutionResult result3 = testAAC.execute(wrongInput5, DEFAULT_INPUT_NRG);
         ContractExecutionResult result4 = testAAC.execute(wrongInput4, DEFAULT_INPUT_NRG);
-
-        byte[]input2 = setupForExtension(domainName1, Address.wrap(defaultKey.getAddress()));
     }
 
     @Test
@@ -556,11 +543,6 @@ public class AionAuctionContractTest {
         assertEquals(ResultCode.FAILURE, result2.getResultCode());
         assertEquals(result2.getNrgLeft(), 4000);
         Assert.assertArrayEquals("requested domain is already active".getBytes(), result2.getOutput());
-    }
-
-    @Test
-    public void testNoBidsError(){
-        //currently not possible, since to start an auction, a first bid is needed
     }
 
     @Test
@@ -687,7 +669,7 @@ public class AionAuctionContractTest {
                 .build();
 
         StandaloneBlockchain bc = bundle.bc;
-        senderKey = bundle.privateKeys.get(0);
+        ECKey senderKey = bundle.privateKeys.get(0);
         AionBlock previousBlock = bc.genesis;
 
         for (int i = 0; i < numBlocks; i++) {
@@ -722,30 +704,4 @@ public class AionAuctionContractTest {
         assertEquals(ImportResult.IMPORTED_BEST, result);
         return block;
     }
-
-    private static IRepositoryConfig repoConfig =
-            new IRepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
-
-                @Override
-                public IPruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
-
-                @Override
-                public IContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
-
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
 }
