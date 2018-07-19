@@ -27,6 +27,7 @@ import org.aion.base.db.Flushable;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
+import java.io.Closeable;
 import java.util.Optional;
 
 /**
@@ -34,7 +35,7 @@ import java.util.Optional;
  *
  * @param <V>
  */
-public class DataSourceArray<V> implements Flushable {
+public class DataSourceArray<V> implements Flushable, Closeable {
 
     private final ObjectDataSource<V> src;
     private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
@@ -93,23 +94,31 @@ public class DataSourceArray<V> implements Flushable {
         return value;
     }
 
+    public long getStoredSize() {
+        long size;
+
+        // Read the value from the database directly and
+        // convert to the size, and if it doesn't exist, 0.
+        Optional<byte[]> optBytes = src.getSrc().get(sizeKey);
+        if (!optBytes.isPresent()) {
+            size = 0L;
+        } else {
+            byte[] bytes = optBytes.get();
+
+            if (bytes.length == 4) {
+                size = (long) ByteUtil.byteArrayToInt(bytes);
+            } else {
+                size = ByteUtil.byteArrayToLong(bytes);
+            }
+        }
+
+        return size;
+    }
+
     public long size() {
 
         if (size < 0) {
-            // Read the value from the database directly and
-            // convert to the size, and if it doesn't exist, 0.
-            Optional<byte[]> optBytes = src.getSrc().get(sizeKey);
-            if (!optBytes.isPresent()) {
-                size = 0L;
-            } else {
-                byte[] bytes = optBytes.get();
-
-                if (bytes.length == 4) {
-                    size = (long) ByteUtil.byteArrayToInt(bytes);
-                } else {
-                    size = ByteUtil.byteArrayToLong(bytes);
-                }
-            }
+            size = getStoredSize();
         }
 
         return size;
@@ -122,5 +131,10 @@ public class DataSourceArray<V> implements Flushable {
         } else {
             src.getSrc().put(sizeKey, ByteUtil.longToBytes(newSize));
         }
+    }
+
+    @Override
+    public void close() {
+        src.close();
     }
 }

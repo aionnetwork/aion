@@ -46,8 +46,8 @@ public final class CfgApiRpc {
         this.active = true;
         this.ip = "127.0.0.1";
         this.port = 8545;
-        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal"));
-        this.allowedOrigins = new ArrayList<>(Arrays.asList("false"));
+        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
+        this.corsEnabled = false;
         this.maxthread = 1;
         this.filtersEnabled = true;
     }
@@ -56,7 +56,7 @@ public final class CfgApiRpc {
     private String ip;
     private int port;
     private List<String> enabled;
-    private List<String> allowedOrigins;
+    private boolean corsEnabled;
     private int maxthread;
     private boolean filtersEnabled;
 
@@ -74,13 +74,13 @@ public final class CfgApiRpc {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
-                        case "corsdomain":
-                            String cors = Cfg.readValue(sr).trim();
-                            this.allowedOrigins = new ArrayList<>(
-                                    Stream.of(cors.split(","))
-                                            .map(String::trim)
-                                            .collect(Collectors.toList())
-                            );
+                        case "cors-enabled":
+                            try {
+                                corsEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.rpc.cors-enabled; using preset: " + corsEnabled);
+                                //e.printStackTrace();
+                            }
                             break;
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
@@ -140,10 +140,10 @@ public final class CfgApiRpc {
             xmlWriter.writeAttribute("port", this.port + "");
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("comma separated list, domains from which to accept cross origin requests (browser enforced)");
+            xmlWriter.writeComment("boolean, enable/disable cross origin requests (browser enforced)");
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("corsdomain");
-            xmlWriter.writeCharacters(String.join(",", this.getAllowedOrigins()));
+            xmlWriter.writeStartElement("cors-enabled");
+            xmlWriter.writeCharacters(String.valueOf(this.getCorsEnabled()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
@@ -158,13 +158,6 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("threads");
             xmlWriter.writeCharacters(this.maxthread + "");
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("enable web3 filters. some web3 clients depend on this and wont work as expected if turned off");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("filters-enabled");
-            xmlWriter.writeCharacters(String.valueOf(this.filtersEnabled));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
@@ -190,8 +183,8 @@ public final class CfgApiRpc {
     public int getPort() {
         return this.port;
     }
-    public List<String> getAllowedOrigins() {
-        return allowedOrigins;
+    public boolean getCorsEnabled() {
+        return corsEnabled;
     }
     public List<String> getEnabled() {
         return enabled;

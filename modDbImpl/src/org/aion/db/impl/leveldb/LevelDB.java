@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl.leveldb;
 
 import org.aion.base.util.ByteArrayWrapper;
@@ -86,14 +86,14 @@ public class LevelDB extends AbstractDB {
                    String path,
                    boolean enableCache,
                    boolean enableCompression) {
-        this(   name,
-                path,
-                enableCache,
-                enableCompression,
-                LevelDBConstants.MAX_OPEN_FILES,
-                LevelDBConstants.BLOCK_SIZE,
-                LevelDBConstants.WRITE_BUFFER_SIZE,
-                LevelDBConstants.CACHE_SIZE);
+        this(name,
+             path,
+             enableCache,
+             enableCompression,
+             LevelDBConstants.MAX_OPEN_FILES,
+             LevelDBConstants.BLOCK_SIZE,
+             LevelDBConstants.WRITE_BUFFER_SIZE,
+             LevelDBConstants.CACHE_SIZE);
     }
 
     @Override
@@ -142,7 +142,18 @@ public class LevelDB extends AbstractDB {
         try {
             db = JniDBFactory.factory.open(f, options);
         } catch (Exception e1) {
-            LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
+            if (e1.getMessage().contains("lock")) {
+                LOG.error("Failed to open the database " + this.toString() +
+                    "\nCheck if you have two instances running on the same database." +
+                    "\nFailure due to: ", e1);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
+            }
+
+            if (e1.getMessage() != null && e1.getMessage().contains("No space left on device")) {
+                LOG.error("Shutdown due to lack of disk space.");
+                System.exit(0);
+            }
 
             try {
                 // attempt repair
@@ -306,6 +317,42 @@ public class LevelDB extends AbstractDB {
             LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
         } catch (IOException e) {
             LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+        }
+    }
+
+    WriteBatch batch = null;
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        check(key);
+
+        check();
+
+        if (batch == null) {
+            batch = db.createWriteBatch();
+        }
+
+        if (value == null) {
+            batch.delete(key);
+        } else {
+            batch.put(key, value);
+        }
+    }
+
+    @Override
+    public void commitBatch() {
+        if (batch != null) {
+            try {
+                db.write(batch);
+            } catch (DBException e) {
+                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            }
+            try {
+                batch.close();
+            } catch (IOException e) {
+                LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+            }
+            batch = null;
         }
     }
 

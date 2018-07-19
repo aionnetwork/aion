@@ -30,6 +30,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.crypto.HashUtil;
 import org.aion.vm.PrecompiledContracts;
 import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.mcf.vm.types.DataWord;
@@ -38,6 +39,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,14 +88,18 @@ public class AionGenesis extends AionBlock {
      * not necessarily important to correctly set this value as it will rise to
      * based on the network hashing power.
      * 
-     * This value is set based on a number derived from a very optimistic (upper
+     * @implNote This value is set based on a number derived from a very optimistic (upper
      * bound) estimate of the projected hashrate. The predicted difficulty
      * number is: 189625700 (189M). It is unrealistic to expect this amount
      * during the test-net phase, therefore divide this number by 100, this
      * roughly accounts for ~440 GPUs, something attainable by the founation on
      * test-net launch.
+     *
+     * @implNote Updated April 7th, 2018. In light of changes to the original plan
+     * this value has been reduced to 1024 based on the heuristic data from the
+     * QA1 TestNet
      */
-    protected static final byte[] GENESIS_DIFFICULTY = ByteUtil.bigIntegerToBytes(BigInteger.valueOf(189625));
+    protected static final byte[] GENESIS_DIFFICULTY = ByteUtil.bigIntegerToBytes(BigInteger.valueOf(1024));
 
     /**
      * Corresponds to {@link AbstractBlockHeader#getNumber()} the number. This
@@ -107,14 +113,6 @@ public class AionGenesis extends AionBlock {
      * to 0.
      */
     protected static final long GENESIS_TIMESTAMP = 0;
-
-    /**
-     * Corresponds to {@link AbstractBlockHeader#getExtraData()} extra data
-     * (limited to 32 bytes), we arbitrarily set this to 0.
-     * 
-     * TODO: we may want to put something meaningful here
-     */
-    protected static final byte[] GENESIS_EXTRA_DATA = new byte[32];
 
     /**
      * Corresponds to {@link AbstractBlockHeader#getNonce()} nonce of the block,
@@ -152,6 +150,8 @@ public class AionGenesis extends AionBlock {
         GENESIS_NETWORK_BALANCE.put(0, new BigInteger("465934586660000000000000000"));
     }
 
+    // END DEFAULT VALUES
+
     private Map<Integer, BigInteger> networkBalances = new HashMap<>();
 
     /**
@@ -165,7 +165,7 @@ public class AionGenesis extends AionBlock {
     // TODO: set energyLimit to a correct value (after genesis loader is
     // completed)
     public AionGenesis(byte[] parentHash, Address coinbase, byte[] logsBloom, byte[] difficulty, long number,
-            long timestamp, byte[] extraData, byte[] nonce, long energyLimit) {
+            long timestamp, byte[] extraData, byte[] nonce, long energyLimit) throws HeaderStructureException {
         super(parentHash, coinbase, logsBloom, difficulty, number, timestamp, extraData, nonce, energyLimit);
     }
 
@@ -186,16 +186,28 @@ public class AionGenesis extends AionBlock {
     }
 
     /**
-     * Genesis will fallback to a set of default values given that the loader
+     * <p>ChainID is defined to be the last two bytes of the extra data field
+     * in the header of a genesis block.</p>
+     *
+     * <p>Note that this distinction is <b>ONLY</b> made for the genesis block,
+     * in any other block extraData field bits are not interpreted in any way.</p>
+     */
+    public int getChainId() {
+        return ByteBuffer.wrap(this.getExtraData())
+                .position(30).getShort() & 0xFFFF;
+    }
+
+    /**
+     * <p>Genesis will fallback to a set of default values given that the loader
      * does not override them, note that because a block by default is not
      * immutable we are required here to create a new instance of the genesis
-     * each time the builder produces a new block.
+     * each time the builder produces a new block.</p>
      * 
-     * Does not assume anything about the input data, will do the necessary
+     * <p>Does not assume anything about the input data, will do the necessary
      * checks to assert the specs. But will not do null checks, therefore it is
-     * up to the caller to ensure input values are non null
+     * up to the caller to ensure input values are non null</p>
      * 
-     * This class makes no assumptions about thread-safety.
+     * <p>This class makes no assumptions about thread-safety.</p>
      */
     public static class Builder {
         protected byte[] parentHash;
@@ -204,9 +216,16 @@ public class AionGenesis extends AionBlock {
         protected byte[] difficulty;
         protected Long number;
         protected Long timestamp;
-        protected byte[] extraData;
         protected byte[] nonce;
         protected Long energyLimit;
+
+        /**
+         * <p>With proposed changes to chainId, the extraData field
+         * is now segmented into the following</p>
+         *
+         * [30-byte FREE | 2-byte chainId (uint16)]
+         */
+        protected int chainId;
 
         protected Map<Integer, BigInteger> networkBalance;
         protected Map<Address, AccountState> premined;
@@ -242,11 +261,6 @@ public class AionGenesis extends AionBlock {
             return this;
         }
 
-        public Builder withExtraData(final byte[] extraData) {
-            this.extraData = extraData;
-            return this;
-        }
-
         public Builder withNonce(final byte[] nonce) {
             this.nonce = nonce;
             return this;
@@ -257,6 +271,17 @@ public class AionGenesis extends AionBlock {
                 throw new IllegalArgumentException("energyLimit cannot be negative");
 
             this.energyLimit = energyLimit;
+            return this;
+        }
+
+        public Builder withChainId(final int chainId) {
+            if (chainId < 0)
+                throw new IllegalArgumentException("chainId cannot be negative");
+
+            if (chainId > 0xFFFF)
+                throw new IllegalArgumentException("chainId cannot be larger than 0xFFFF");
+
+            this.chainId = chainId;
             return this;
         }
 
@@ -295,7 +320,7 @@ public class AionGenesis extends AionBlock {
          * Build the genesis block, after parameters have been set. Defaults
          * back to default genesis values if parameters are not specified.
          */
-        public AionGenesis build() {
+        public AionGenesis build() throws HeaderStructureException {
             if (this.parentHash == null)
                 this.parentHash = GENESIS_PARENT_HASH;
 
@@ -311,9 +336,6 @@ public class AionGenesis extends AionBlock {
             if (this.timestamp == null)
                 this.timestamp = GENESIS_TIMESTAMP;
 
-            if (this.extraData == null)
-                this.extraData = GENESIS_EXTRA_DATA;
-
             if (this.nonce == null)
                 this.nonce = GENESIS_NONCE;
 
@@ -326,8 +348,18 @@ public class AionGenesis extends AionBlock {
             if (this.networkBalance == null)
                 this.networkBalance = GENESIS_NETWORK_BALANCE;
 
-            AionGenesis genesis = new AionGenesis(this.parentHash, this.coinbase, this.logsBloom, this.difficulty,
-                    this.number, this.timestamp, this.extraData, this.nonce, this.energyLimit);
+            byte[] extraData = generateExtraData(this.chainId);
+
+            AionGenesis genesis = new AionGenesis(
+                    this.parentHash,
+                    this.coinbase,
+                    this.logsBloom,
+                    this.difficulty,
+                    this.number,
+                    this.timestamp,
+                    extraData,
+                    this.nonce,
+                    this.energyLimit);
 
             // temporary solution, so as not to disrupt the constructors
             genesis.setPremine(this.premined);
@@ -363,5 +395,36 @@ public class AionGenesis extends AionBlock {
 
             return worldTrie.getRootHash();
         }
+
+        private static byte[] generateExtraData(int chainId) {
+            byte[] extraData = new byte[32];
+            byte[] idBytes = new byte[] {
+                    (byte) ((chainId >> 8) & 0xFF),
+                    (byte) (chainId & 0xFF)
+            };
+            System.arraycopy(idBytes, 0, extraData, 30, 2);
+            return extraData;
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("GenesisBlockData [\n");
+
+        // header (encoded with 2 tabs)
+        builder.append(this.getHeader().toString());
+
+        // accounts
+        builder.append("  Premined Accounts: \n");
+        for (AccountState premined : this.premine.values()) {
+            builder.append(premined.toString());
+        }
+
+        // chainId
+
+        // footer
+        builder.append("]");
+        return builder.toString();
     }
 }

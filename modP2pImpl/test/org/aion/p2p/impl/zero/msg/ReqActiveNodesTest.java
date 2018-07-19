@@ -25,15 +25,14 @@
 
 package org.aion.p2p.impl.zero.msg;
 
+import static org.junit.Assert.assertEquals;
+
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class ReqActiveNodesTest {
     @Test
     public void testRoute() {
@@ -42,6 +41,5 @@ public class ReqActiveNodesTest {
         assertEquals(Ver.V0, req.getHeader().getVer());
         assertEquals(Ctrl.NET, req.getHeader().getCtrl());
         assertEquals(Act.REQ_ACTIVE_NODES, req.getHeader().getAction());
-
     }
 }

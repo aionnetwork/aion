@@ -24,13 +24,14 @@
 
 package org.aion.api.server;
 
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.api.server.pb.TxWaitingMappingUpdate;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.zero.types.AionTxReceipt;
+
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
 public interface IApiAion {
 
@@ -40,9 +41,9 @@ public interface IApiAion {
 
     Map<ByteArrayWrapper, AionTxReceipt> getPendingReceipts();
 
-    LinkedBlockingQueue<TxPendingStatus> getPendingStatus();
+    BlockingQueue<TxPendingStatus> getPendingStatus();
 
-    LinkedBlockingQueue<TxWaitingMappingUpdate> getTxWait();
+    BlockingQueue<TxWaitingMappingUpdate> getTxWait();
 
     // General Level
     byte getApiVersion();

@@ -19,27 +19,50 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.valid;
 
 import org.aion.base.type.Hash256;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.types.AionTransaction;
 import org.aion.log.LogEnum;
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.Map;
+
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 public class TXValidator {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.TX.name());
 
-    // TODO : MOVE ISignature to aionbase, and then use interface as an input
-    public static boolean isValid(AionTransaction tx) {
+    private static final Map<ByteArrayWrapper, Boolean> cache = Collections.synchronizedMap(new LRUMap<>(128 * 1024));
 
+    public static boolean isValid(AionTransaction tx) {
+        Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getHash()));
+        if (valid != null) {
+            return valid;
+        } else {
+            valid = isValid0(tx);
+            cache.put(ByteArrayWrapper.wrap(tx.getHash()), valid);
+            return valid;
+        }
+    }
+
+    public static boolean isInCache(ByteArrayWrapper hash) {
+        return cache.get(hash) != null;
+    }
+
+    public static boolean isValid0(AionTransaction tx) {
         byte[] check = tx.getNonce();
         if (check == null || check.length > DataWord.BYTES) {
             LOG.error("invalid tx nonce!");
@@ -65,9 +88,16 @@ public class TXValidator {
         }
 
         long nrg = tx.getNrg();
-        if (nrg < 0 || nrg > Long.MAX_VALUE) {
-            LOG.error("invalid tx nrg!");
-            return false;
+        if (tx.isContractCreation()) {
+            if (!isValidNrgContractCreate(nrg)) {
+                LOG.error("invalid contract create nrg!");
+                return false;
+            }
+        } else {
+            if (!isValidNrgTx(nrg)) {
+                LOG.error("invalid tx nrg!");
+                return false;
+            }
         }
 
         nrg = tx.getNrgPrice();

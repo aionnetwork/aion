@@ -41,8 +41,6 @@ import org.aion.mcf.mine.IMineRunner;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.tx.A0TxTask;
-import org.aion.zero.impl.tx.TxBroadcaster;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -52,7 +50,8 @@ import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 public class AionImpl implements IAionChain {
 
@@ -63,16 +62,14 @@ public class AionImpl implements IAionChain {
 
     private CfgAion cfg;
 
-    static private AionImpl inst;
-
     private TxCollector collector;
 
+    private static class Holder {
+        static final AionImpl INSTANCE = new AionImpl();
+    }
 
     public static AionImpl inst() {
-        if (inst == null) {
-            inst = new AionImpl();
-        }
-        return inst;
+        return Holder.INSTANCE;
     }
 
     private AionImpl() {
@@ -81,7 +78,7 @@ public class AionImpl implements IAionChain {
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
 
-        collector = new TxCollector(this.aionHub.getP2pMgr());
+        collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
     }
 
 

@@ -1,96 +1,103 @@
-/*******************************************************************************
+/**
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
+ * The aion network project leverages useful source code from other open source projects. We greatly
+ * appreciate the effort that was invested in these projects and we thank the individual
+ * contributors for their work. For provenance information and contributors.
+ * Please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * Contributors to the aion source files in decreasing order of code volume:
+ * Aion foundation.
+ * <ether.camp> team through the ethereumJ library.
+ * Ether.Camp Inc. (US) team through Ethereum Harmony.
+ * John Tromp through the Equihash solver.
+ * Samuel Neves through the BLAKE2 implementation.
+ * Zcash project team.
+ * Bitcoinj team.
+ */
 
 package org.aion.zero.api;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.Address;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 public class BlockConstants implements IBlockConstants {
 
-    /**
-     * Number of bytes that is allowed in {@link AbstractBlockHeader#extraData}
-     * field
-     */
+    /** Number of bytes that is allowed in {@link AbstractBlockHeader#extraData} field */
     private static final int MAXIMUM_EXTRA_DATA_SIZE = 32;
 
     /**
-     * The lower bound of difficulty, this value is currently set to 32 to
-     * accomodate for single node testing.
+     * The lower bound of difficulty, this value is currently set to 32 to accomodate for single
+     * node testing.
      */
     private static final long MINIMUM_DIFFICULTY_LONG = 16;
-    private static final BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(MINIMUM_DIFFICULTY_LONG);
 
-    /**
-     * Divisor for the maximum increase or decrease in energyLimit from one
-     * block to the next.
-     */
+    private static final BigInteger MINIMUM_DIFFICULTY =
+            BigInteger.valueOf(MINIMUM_DIFFICULTY_LONG);
+
+    /** Divisor for the maximum increase or decrease in energyLimit from one block to the next. */
     private static final long ENERGY_LIMIT_DIVISOR_LONG = 1024;
+
     private static final long DIFFICULTY_BOUND_DIVISOR_LONG = 2048;
-    private static final BigInteger ENERGY_LIMIT_DIVISOR = BigInteger.valueOf(ENERGY_LIMIT_DIVISOR_LONG);
-    private static final BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(DIFFICULTY_BOUND_DIVISOR_LONG);
+    private static final BigInteger ENERGY_LIMIT_DIVISOR =
+            BigInteger.valueOf(ENERGY_LIMIT_DIVISOR_LONG);
+    private static final BigInteger DIFFICULTY_BOUND_DIVISOR =
+            BigInteger.valueOf(DIFFICULTY_BOUND_DIVISOR_LONG);
 
     /**
      * The lowest possible value of energy, cannot be lower than this bound
+     *
+     * <p>This value is derived from (at minimum) the ability to send 50 Pure / Ambient-Cost
+     * transactions
      */
-    private static final long ENERGY_LOWER_BOUND_LONG = 5000;
-    private static final BigInteger ENERGY_LOWER_BOUND = BigInteger.valueOf(ENERGY_LOWER_BOUND_LONG);
+    private static final long ENERGY_LOWER_BOUND_LONG = 1050000;
+
+    private static final BigInteger ENERGY_LOWER_BOUND =
+            BigInteger.valueOf(ENERGY_LOWER_BOUND_LONG);
 
     public static int DURATION_LIMIT = 8;
 
-    /**
-     * Rewards not set yet, but this is the projected amount based on a 10
-     * second block time
-     */
-    private static final BigInteger BLOCK_REWARD = new BigInteger("1500000000000000000");
+    /** Rewards not set yet, but this is the projected amount based on a 10 second block time */
+    private static final BigInteger BLOCK_REWARD = new BigInteger("1497989283243310185");
 
     private static final int BLOCK_TIME_LOWER_BOUND = 5;
     private static final int BLOCK_TIME_UPPER_BOUND = 15;
 
-    /**
-     * Constants for ramp-up, the ramp-up function will apply within this range
-     * TODO: This will need to be revamped to actual values
-     */
+    /** Constants for ramp-up, the ramp-up function will apply within this range */
     private static final long RAMP_UP_LOWER_BOUND = 0;
+
     private static final long RAMP_UP_UPPER_BOUND = 259200; // 1 month
 
     /**
-     * Desired block time
-     * 
-     * @return
+     * Ramp-up initial parameter, this value is calculates based on the monetary policy paper,
+     * assuming:
      */
+    private static final BigInteger RAMP_UP_START_VALUE = new BigInteger("748994641621655092");
+
+    private static final BigInteger RAMP_UP_END_VALUE = BLOCK_REWARD;
+
+    /** Desired block time */
     private static final long EXPECTED_BLOCK_TIME = 10;
 
     /**
-     * Desired future elapsed time, when receiving a block, allow for at most this
-     * amount of seconds relative to local timestamp before rejecting the block
-     * as invalid. This accounts for clock drift between different clocks on the
-     * network.
+     * Desired future elapsed time, when receiving a block, allow for at most this amount of seconds
+     * relative to local timestamp before rejecting the block as invalid. This accounts for clock
+     * drift between different clocks on the network.
      */
     private static final long CLOCK_DRIFT_BUFFER_TIME = 1;
 
@@ -130,8 +137,8 @@ public class BlockConstants implements IBlockConstants {
     }
 
     /**
-     * TODO: the parameters supplied are currently TEST PARAMETERS For a
-     * production system this must be adjusted properly.
+     * TODO: the parameters supplied are currently TEST PARAMETERS For a production system this must
+     * be adjusted properly.
      */
     @Override
     public BigInteger getBlockReward() {
@@ -139,8 +146,8 @@ public class BlockConstants implements IBlockConstants {
     }
 
     /**
-     * TODO: the parameters supplied are currently TEST PARAMETERS For a
-     * production system this must be adjusted properly.
+     * TODO: the parameters supplied are currently TEST PARAMETERS For a production system this must
+     * be adjusted properly.
      */
     @Override
     public long getBlockTimeLowerBound() {
@@ -148,8 +155,8 @@ public class BlockConstants implements IBlockConstants {
     }
 
     /**
-     * TODO: the parameters supplied are currently TEST PARAMETERS For a
-     * production system this must be adjusted properly.
+     * TODO: the parameters supplied are currently TEST PARAMETERS For a production system this must
+     * be adjusted properly.
      */
     @Override
     public long getBlockTimeUpperBound() {
@@ -158,9 +165,9 @@ public class BlockConstants implements IBlockConstants {
 
     /**
      * The lower bound for calculation of the ramp-up function
-     * 
-     * TODO: the parameters supplied here are TEST PARAMETERS For a production
-     * system this must be adjusted properly.
+     *
+     * <p>TODO: the parameters supplied here are TEST PARAMETERS For a production system this must
+     * be adjusted properly.
      */
     public long getRampUpLowerBound() {
         return RAMP_UP_LOWER_BOUND;
@@ -168,18 +175,15 @@ public class BlockConstants implements IBlockConstants {
 
     /**
      * The upper bound for calculation of the ramp-up function
-     * 
-     * TODO: the parameters supplied here are TEST PARAMETERS. For a production
-     * system this must be adjusted properly.
+     *
+     * <p>TODO: the parameters supplied here are TEST PARAMETERS. For a production system this must
+     * be adjusted properly.
      */
     public long getRampUpUpperBound() {
         return RAMP_UP_UPPER_BOUND;
     }
 
-    /**
-     * The lower bound for energy calculations, energy should not go below this
-     * value
-     */
+    /** The lower bound for energy calculations, energy should not go below this value */
     public long getEnergyLowerBoundLong() {
         return ENERGY_LOWER_BOUND_LONG;
     }
@@ -199,15 +203,23 @@ public class BlockConstants implements IBlockConstants {
     /**
      * TODO: this address needs to be defined
      *
-     * Public portion of the keypair that is held by bridging nodes. How the key
-     * is derived is left up to bridging implementation. All messages concerning
-     * token movement into the network must be accompanied by a signature signed
-     * with the private portion of this keypair.
+     * <p>Public portion of the keypair that is held by bridging nodes. How the key is derived is
+     * left up to bridging implementation. All messages concerning token movement into the network
+     * must be accompanied by a signature signed with the private portion of this keypair.
      *
-     * @return {@code address} of the sk owning this pair. Also referred to as
-     *         the owner's address.
+     * @return {@code address} of the sk owning this pair. Also referred to as the owner's address.
      */
     public Address getTokenBridgingAddress() {
         return Address.ZERO_ADDRESS();
+    }
+
+    @Override
+    public BigInteger getRampUpStartValue() {
+        return RAMP_UP_START_VALUE;
+    }
+
+    @Override
+    public BigInteger getRampUpEndValue() {
+        return RAMP_UP_END_VALUE;
     }
 }

@@ -4,7 +4,6 @@ import org.aion.api.server.http.ApiWeb3Aion;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.json.JSONArray;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -31,7 +30,8 @@ public class RpcMethods {
                 Map.entry("personal", personal),
                 Map.entry("eth", eth),
                 Map.entry("stratum", stratum),
-                Map.entry("ops", ops)
+                Map.entry("ops", ops),
+                Map.entry("priv", priv)
         );
 
         enabledEndpoints = composite(enabledGroups);
@@ -69,7 +69,7 @@ public class RpcMethods {
 
     // jdk8 lambdas infer interface method, making our constant declaration pretty.
     public interface RpcMethod {
-        RpcMsg call(JSONArray params);
+        RpcMsg call(Object params);
     }
 
     /**
@@ -77,7 +77,10 @@ public class RpcMethods {
      */
     private final Map<String, RpcMethod> ops = Map.ofEntries(
             Map.entry("ops_getAccountState", (params) -> api.ops_getAccountState(params)),
-            Map.entry("ops_getChainHeadView", (params) -> api.ops_getChainHeadView(params)),
+            Map.entry("ops_getChainHeadViewBestBlock", (params) -> api.ops_getChainHeadViewBestBlock()),
+            Map.entry("ops_getTransaction", (params) -> api.ops_getTransaction(params)),
+            Map.entry("ops_getBlock", (params) -> api.ops_getBlock(params)),
+            Map.entry("ops_getChainHeadView", (params) -> api.ops_getChainHeadView()),
             Map.entry("eth_getBalance", (params) -> api.eth_getBalance(params)),
             Map.entry("eth_sendRawTransaction", (params) -> api.eth_sendRawTransaction(params)),
             Map.entry("eth_getBlockByNumber", (params) -> api.eth_getBlockByNumber(params)),
@@ -121,7 +124,9 @@ public class RpcMethods {
      */
     private final Map<String, RpcMethod> personal = Map.ofEntries(
             Map.entry("personal_unlockAccount", (params) -> api.personal_unlockAccount(params)),
-            Map.entry("personal_listAccounts", (params) -> api.eth_accounts())
+            Map.entry("personal_listAccounts", (params) -> api.eth_accounts()),
+            Map.entry("personal_lockAccount", (params) -> api.personal_lockAccount(params)),
+            Map.entry("personal_newAccount", (params) -> api.personal_newAccount(params))
     );
 
     /**
@@ -131,7 +136,7 @@ public class RpcMethods {
             Map.entry("eth_getCompilers", (params) -> api.eth_getCompilers()),
             Map.entry("eth_compileSolidity", (params) -> api.eth_compileSolidity(params)),
 
-            //Map.entry("eth_accounts", (params) -> api.eth_accounts()), // belongs to the personal api
+            Map.entry("eth_accounts", (params) -> api.eth_accounts()), // belongs to the personal api
             Map.entry("eth_blockNumber", (params) -> api.eth_blockNumber()),
             Map.entry("eth_coinbase", (params) -> api.eth_coinbase()),
             Map.entry("eth_call", (params) -> api.eth_call(params)),
@@ -177,7 +182,24 @@ public class RpcMethods {
             Map.entry("getinfo", (params) -> api.stratum_getinfo()),
             Map.entry("getmininginfo", (params) -> api.stratum_getmininginfo()),
             Map.entry("submitblock", (params) -> api.stratum_submitblock(params)),
-            Map.entry("getblocktemplate", (params) -> api.stratum_getblocktemplate()),
-            Map.entry("getHeaderByBlockNumber", (params) -> api.stratum_getHeaderByBlockNumber(params))
+            Map.entry("getblocktemplate", (params) -> api.stratum_getwork()),
+            Map.entry("getHeaderByBlockNumber", (params) -> api.stratum_getHeaderByBlockNumber(params)),
+            Map.entry("getMinerStats", (params) -> api.stratum_getMinerStats(params))
+    );
+
+    /**
+     * priv
+     */
+    private final Map<String, RpcMethod> priv = Map.ofEntries(
+            Map.entry("priv_peers", (params) -> api.priv_peers()),
+            Map.entry("priv_p2pConfig", (params) -> api.priv_p2pConfig()),
+            Map.entry("priv_getPendingTransactions", (params) -> api.priv_getPendingTransactions(params)),
+            Map.entry("priv_getPendingSize", (params) -> api.priv_getPendingSize()),
+            Map.entry("priv_dumpTransaction", (params) -> api.priv_dumpTransaction(params)),
+            Map.entry("priv_dumpBlockByHash", (params) -> api.priv_dumpBlockByHash(params)),
+            Map.entry("priv_dumpBlockByNumber", (params) -> api.priv_dumpBlockByNumber(params)),
+            Map.entry("priv_shortStats", (params) -> api.priv_shortStats()),
+            Map.entry("priv_config", (params) -> api.priv_config()),
+            Map.entry("priv_syncPeers", (params) -> api.priv_syncPeers())
     );
 }

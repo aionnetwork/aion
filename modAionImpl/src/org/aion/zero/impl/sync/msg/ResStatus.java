@@ -41,12 +41,10 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
-/**
- * @author Chris
- */
+/** @author Chris */
 public final class ResStatus extends Msg {
 
-    private final static int minLen = 8 + 1 + 1 + 32 + 32;
+    private static final int minLen = 8 + 1 + 1 + 32 + 32;
 
     private final long bestBlockNumber; // 8
 
@@ -59,55 +57,47 @@ public final class ResStatus extends Msg {
     private final byte[] genesisHash; // 32
 
     /**
-     *
      * @param bestBlockNumber long
      * @param _totalDifficulty byte[]
      * @param _bestHash byte[]
      * @param _genesisHash byte[]
      */
-    public ResStatus(long bestBlockNumber, final byte[] _totalDifficulty, final byte[] _bestHash, final byte[] _genesisHash) {
+    public ResStatus(
+            long bestBlockNumber,
+            final byte[] _totalDifficulty,
+            final byte[] _bestHash,
+            final byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.bestBlockNumber = bestBlockNumber;
-        this.totalDifficultyLen = _totalDifficulty.length > Byte.MAX_VALUE ? 1 : (byte)_totalDifficulty.length;
+        this.totalDifficultyLen =
+                _totalDifficulty.length > Byte.MAX_VALUE ? 1 : (byte) _totalDifficulty.length;
         this.totalDifficulty = _totalDifficulty;
         this.bestHash = _bestHash;
         this.genesisHash = _genesisHash;
     }
 
-    /**
-     * @return long
-     */
+    /** @return long */
     public long getBestBlockNumber() {
         return this.bestBlockNumber;
     }
 
-    /**
-     * @return byte[]
-     */
+    /** @return byte[] */
     public byte[] getBestHash() {
         return this.bestHash;
     }
 
-    /**
-     * @return byte[]
-     */
-    public byte[] getTotalDifficulty() { return this.totalDifficulty; }
+    /** @return byte[] */
+    public byte[] getGenesisHash() {
+        return this.genesisHash;
+    }
 
-    /**
-     * @return byte[]
-     */
-    public byte[] getGenesisHash() { return this.genesisHash; }
-
-    /**
-     * @return byte[]
-     */
-    public byte[] getTotalDiff() {
+    /** @return byte[] */
+    public byte[] getTotalDifficulty() {
         return this.totalDifficulty;
     }
 
     public static ResStatus decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length < minLen)
-            return null;
+        if (_bytes == null || _bytes.length < minLen) return null;
         ByteBuffer bb = ByteBuffer.wrap(_bytes);
         bb.clear();
         long _bestBlockNumber = bb.getLong();
@@ -132,5 +122,4 @@ public final class ResStatus extends Msg {
         bb.put(this.genesisHash);
         return bb.array();
     }
-
 }

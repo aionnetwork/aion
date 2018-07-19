@@ -38,8 +38,9 @@ import org.aion.base.type.Address;
 
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import org.aion.base.vm.IDataWord;
 
 /**
  * Repository interface for information retrieval.
@@ -158,25 +159,25 @@ public interface IRepositoryQuery<AS, DW> {
      */
     Map<DW, DW> getStorage(Address address, Collection<DW> keys);
 
-    /**
-     * Retrieves the storage size the account associated with the given address.
-     *
-     * @param address
-     *            the address of the account of interest
-     * @return the number of storage entries for the given account
-     */
-    int getStorageSize(Address address);
-
-    /**
-     * Retrieves all the storage keys for the account associated with the given
-     * address.
-     *
-     * @param address
-     *            the address of the account of interest
-     * @return the set of storage keys, or an empty set if the given account
-     *         address does not exist
-     */
-    Set<DW> getStorageKeys(Address address);
+//    /**
+//     * Retrieves the storage size the account associated with the given address.
+//     *
+//     * @param address
+//     *            the address of the account of interest
+//     * @return the number of storage entries for the given account
+//     */
+//    int getStorageSize(Address address);
+//
+//    /**
+//     * Retrieves all the storage keys for the account associated with the given
+//     * address.
+//     *
+//     * @param address
+//     *            the address of the account of interest
+//     * @return the set of storage keys, or an empty set if the given account
+//     *         address does not exist
+//     */
+//    Set<DW> getStorageKeys(Address address);
 
     /**
      * Retrieves the stored value for the specified key stored at the account
@@ -190,4 +191,17 @@ public interface IRepositoryQuery<AS, DW> {
      */
     DW getStorageValue(Address address, DW key);
 
+    /**
+     * Retrieves the stored transactions for recovering pool tx.
+     *
+     * @return the list of transactions encoded bytes.
+     */
+    List<byte[]> getPoolTx();
+
+    /**
+     * Retrieves the stored transactions for recovering caching tx.
+     *
+     * @return the list of transactions encoded bytes.
+     */
+    List<byte[]> getCacheTx();
 }

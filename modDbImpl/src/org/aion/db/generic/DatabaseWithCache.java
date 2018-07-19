@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -44,8 +44,10 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.iq80.leveldb.DBException;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -75,8 +77,10 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     /** Flag for determining how to handle commits. */
     private boolean enableAutoCommit;
 
-    public DatabaseWithCache(AbstractDB _database, boolean enableAutoCommit, String max_cache_size,
-            boolean enableStats) {
+    public DatabaseWithCache(AbstractDB _database,
+                             boolean enableAutoCommit,
+                             String max_cache_size,
+                             boolean enableStats) {
         this(enableAutoCommit, max_cache_size, enableStats);
         database = _database;
     }
@@ -159,14 +163,8 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
         return this.loadingCache.stats();
     }
 
-    /**
-     * Checks that the database connection is open.
-     * Throws a {@link RuntimeException} if the database connection is closed.
-     *
-     * @implNote Always do this check after acquiring a lock on the class/data.
-     *         Otherwise it might produce inconsistent results due to lack of synchronization.
-     */
-    private void check() {
+    @Override
+    public void check() {
         if (!database.isOpen()) {
             throw new RuntimeException("Database is not opened: " + this);
         }
@@ -450,6 +448,24 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     @Override
+    public void putToBatch(byte[] k, byte[] v) {
+        AbstractDB.check(k);
+
+        check();
+
+        ByteArrayWrapper key = ByteArrayWrapper.wrap(k);
+
+        this.loadingCache.put(key, Optional.ofNullable(v));
+        // keeping track of dirty data
+        this.dirtyEntries.put(key, v);
+    }
+
+    @Override
+    public void commitBatch() {
+        flushInternal();
+    }
+
+    @Override
     public void deleteBatch(Collection<byte[]> keys) {
         AbstractDB.check(keys);
 
@@ -466,6 +482,15 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
         if (enableAutoCommit) {
             flushInternal();
         }
+    }
+
+    @Override
+    public void drop() {
+        check();
+
+        this.loadingCache.invalidateAll();
+        this.dirtyEntries.clear();
+        this.database.drop();
     }
 
     /**

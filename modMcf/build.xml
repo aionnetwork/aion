@@ -15,6 +15,7 @@
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 		<!-- pathelement location="${dir.lib}/modRlp.jar" / -->
 		<pathelement location="${dir.libfile}/commons-collections4-4.0.jar" />
+		<pathelement location="${dir.mod}/modP2p.jar" />
 	</path>
 
 	<path id="classpath.test">
@@ -39,7 +40,8 @@
 		<pathelement location="${dir.mod}/modAionBase.jar" />
 		<pathelement location="${dir.mod}/modAionImpl.jar" />
 		<pathelement location="${dir.mod}/modDbImpl.jar" />
-		<pathelement location="${dir.mod}/modLogger.jar" />		
+		<pathelement location="${dir.mod}/modLogger.jar" />
+		<pathelement location="${dir.mod}/modP2p.jar" />
 	</path>
 
 	<target name="clean_build" depends="clean">
@@ -57,7 +59,7 @@
 
 	<target name="test_build" depends="build">
 		<mkdir dir="${dir.test}" />
-		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
 			<classpath>
 				<path refid="classpath.test" />
 				<path refid="classpath.dependency" />
@@ -67,7 +69,7 @@
 
 	<target name="ci_test_build" depends="build">
 		<mkdir dir="${dir.test}" />
-		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
 			<classpath>
 				<path refid="classpath.test" />
 				<path refid="classpath.dependency" />
@@ -122,17 +124,19 @@
 	</target>
 
 	<target name="build">
+		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}" />
-		<javac failonerror="true" debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
+		<javac failonerror="true" debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
 			<compilerarg line="--add-modules java.xml" />
 			<modulepath>
 				<!-- pathelement location="${dir.lib}/libnsc.jar" / -->
 				<!-- pathelement location="${dir.lib}/modAionBase.jar" / -->
+				<pathelement location="${dir.mod}/modP2p.jar" />
 				<pathelement location="${dir.mod}/modCrypto.jar" />
 				<pathelement location="${dir.mod}/modRlp.jar" />
 				<pathelement location="${dir.mod}/modAionBase.jar" />
 				<pathelement location="${dir.mod}/modLogger.jar" />
-                                <pathelement location="${dir.mod}/modDbImpl.jar" />
+				<pathelement location="${dir.mod}/modDbImpl.jar" />
 				<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 				<pathelement location="${dir.lib}/libnsc.jar" />
 				<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />

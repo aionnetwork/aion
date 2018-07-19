@@ -38,7 +38,7 @@
 
 	<target name="test_build" depends="build">
 		<mkdir dir="${dir.test}" />
-		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
 			<classpath>
 				<path refid="classpath.dependency" />
 				<path refid="classpath.test" />
@@ -48,7 +48,7 @@
 
 	<target name="ci_test_build" depends="build">
 		<mkdir dir="${dir.test}" />
-		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*Test.java">
 			<classpath>
 				<path refid="classpath.dependency" />
 				<path refid="classpath.test" />
@@ -105,8 +105,9 @@
 		<delete file="${dir.mod}/modTxPoolImpl.jar" />
 	</target>
 	<target name="build">
+		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}" />
-		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
+		<javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./" destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
 			<modulepath>
 				<path refid="classpath.dependency" />
 			</modulepath>

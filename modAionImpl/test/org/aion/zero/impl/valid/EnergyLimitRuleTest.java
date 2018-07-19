@@ -36,6 +36,7 @@ package org.aion.zero.impl.valid;
 
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.api.BlockConstants;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
@@ -53,15 +54,15 @@ public class EnergyLimitRuleTest {
     private final BlockConstants constants = new BlockConstants();
 
     @Test
-    public void testEnergyLimitBounds() {
-        final long INITIAL_VAL = 1000000l;
+    public void testEnergyLimitBounds() throws HeaderStructureException {
+        final long INITIAL_VAL = 2000000L;
         final long DIVISOR = 1024;
         EnergyLimitRule rule = new EnergyLimitRule(
                 constants.getEnergyDivisorLimitLong(),
                 constants.getEnergyLowerBoundLong());
 
         A0BlockHeader parentHeader = new A0BlockHeader.Builder()
-                .withEnergyLimit(1000000l)
+                .withEnergyLimit(INITIAL_VAL)
                 .build();
 
         long boundShiftLimit = INITIAL_VAL / DIVISOR;
@@ -108,7 +109,7 @@ public class EnergyLimitRuleTest {
     }
 
     @Test
-    public void testEnergyLimitLowerBound() {
+    public void testEnergyLimitLowerBound() throws HeaderStructureException {
         final long INITIAL_VAL = 0l;
 
         A0BlockHeader parentHeader = new A0BlockHeader.Builder()

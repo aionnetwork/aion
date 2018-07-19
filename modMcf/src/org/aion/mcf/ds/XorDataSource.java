@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -34,12 +34,10 @@
  ******************************************************************************/
 package org.aion.mcf.ds;
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
+import java.util.*;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-
-import java.util.*;
 
 public class XorDataSource implements IByteArrayKeyValueStore {
     IByteArrayKeyValueStore source;
@@ -89,8 +87,9 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     }
 
     public void updateBatch(Map<ByteArrayWrapper, byte[]> rows, boolean erasure) {
-        //not supported
-        throw new UnsupportedOperationException("ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
+        // not supported
+        throw new UnsupportedOperationException(
+                "ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
     }
 
     @Override
@@ -105,9 +104,23 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     }
 
     @Override
+    public void check() {
+        source.check();
+    }
+
+    @Override
     public boolean isEmpty() {
         // TODO Auto-generated method stub
         return false;
     }
 
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void commitBatch() {
+        throw new UnsupportedOperationException();
+    }
 }

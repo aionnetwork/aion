@@ -50,6 +50,8 @@ public class Utils {
 
     private static SecureRandom random = new SecureRandom();
 
+    public static final Object dummy = new Object();
+
     /**
      * @param number
      *            should be in form '0x34fabd34....'
@@ -123,6 +125,28 @@ public class Utils {
 
     public static boolean isValidAddress(byte[] addr) {
         return addr != null && addr.length == 20;
+    }
+
+    /**
+     * Validate a passed hex string is a valid address
+     *
+     *
+     */
+    public static boolean isValidAddress(String address) {
+        if(address == null || address.isEmpty() || address.length() < 64) {
+            return false;
+        }
+
+        if(address.startsWith("0x")) {
+            address = address.substring(2);
+        }
+
+        // Will need to change this for a1, a2....
+        if(address.startsWith("a0")) {
+            return address.length() == 64 && address.substring(2).matches("^[0-9A-Fa-f]+$");
+        }else {
+            return false;
+        }
     }
 
     /**

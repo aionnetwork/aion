@@ -37,6 +37,7 @@ package org.aion.zero.impl.types;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
 
@@ -60,8 +61,11 @@ public class A0BlockHeaderTest {
     private byte[] ENERGY_CONSUMED_BYTES = ByteUtil.longToBytes(100);
     private byte[] ENERGY_LIMIT_BYTES = ByteUtil.longToBytes(6700000);
 
+    // randomly selected
+    private byte[] NONCE_BYTES = ByteUtil.longToBytes(42);
+
     @Test
-    public void testBlockHeaderFromSafeBuilder() {
+    public void testBlockHeaderFromSafeBuilder() throws Exception {
         long time = System.currentTimeMillis() / 1000;
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
@@ -75,7 +79,8 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withNonce(NONCE_BYTES);
 
         A0BlockHeader header = builder.build();
 
@@ -89,10 +94,11 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
+        assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
     }
 
     @Test
-    public void testBlockHeaderFromUnsafeSource() {
+    public void testBlockHeaderFromUnsafeSource() throws Exception {
         long time = System.currentTimeMillis() / 1000;
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
@@ -121,6 +127,8 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyConsumed()).isEqualTo(ENERGY_CONSUMED);
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
+        assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
+        assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
     }
 
     // Test is a self referencing
@@ -139,7 +147,8 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withNonce(NONCE_BYTES);
 
         A0BlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();
@@ -154,5 +163,26 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getEnergyConsumed()).isEqualTo(header.getEnergyConsumed());
         assertThat(reconstructed.getEnergyLimit()).isEqualTo(header.getEnergyLimit());
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
+        assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
+        assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
+
+        byte[] difficulty = reconstructed.getDifficulty();
+    }
+
+    // verification tests, test that no properties are being violated
+
+    @Test(expected = HeaderStructureException.class)
+    public void testInvalidNonceLong() throws Exception {
+        byte[] invalidNonceLength = new byte[33];
+        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        builder.fromUnsafeSource();
+        builder.withNonce(invalidNonceLength);
+    }
+
+    @Test(expected = HeaderStructureException.class)
+    public void testInvalidNonceNull() throws Exception {
+        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        builder.fromUnsafeSource();
+        builder.withNonce(null);
     }
 }

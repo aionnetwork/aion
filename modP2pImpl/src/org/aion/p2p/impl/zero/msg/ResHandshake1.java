@@ -29,11 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-/**
- *
- * @author chris
- *
- */
+/** @author chris */
 public final class ResHandshake1 extends ResHandshake {
 
     // success(byte) + binary version len (byte)
@@ -43,50 +39,73 @@ public final class ResHandshake1 extends ResHandshake {
 
     public ResHandshake1(boolean _success, String _binaryVersion) {
         super(_success);
-        // utf-8
-        this.binaryVersion = _binaryVersion.length() > 63 ? _binaryVersion.substring(0, 62) : _binaryVersion;
+        // utf-8 - Max 4 bytes per character
+        // Since we are restricting the max byte length to 127,
+        // we will restrict this to under 32
+        this.binaryVersion =
+                _binaryVersion.length() > 31 ? _binaryVersion.substring(0, 31) : _binaryVersion;
+    }
+
+    public static ResHandshake1 decode(final byte[] _bytes) {
+        if (_bytes == null || _bytes.length < MIN_LEN) {
+            return null;
+        } else {
+
+            try {
+
+                // decode success
+                boolean success = _bytes[0] == 0x00 ? false : true;
+
+                // decode binary version
+                byte len = _bytes[1];
+                String binaryVersion = "unknown";
+                int binaryVersionBytesLen = _bytes.length;
+                if (len > 0 && binaryVersionBytesLen >= MIN_LEN + len) {
+                    byte[] binaryVersionBytes = Arrays.copyOfRange(_bytes, MIN_LEN, MIN_LEN + len);
+                    try {
+                        binaryVersion = new String(binaryVersionBytes, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        System.out.println(
+                                "<p2p res-handshake-decode error=" + e.getMessage() + ">");
+                    }
+                }
+                return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
+
+            } catch (Exception e) {
+                System.out.println("<p2p res-handshake-decode error=" + e.getMessage() + ">");
+                return null;
+            }
+        }
     }
 
     public String getBinaryVersion() {
         return this.binaryVersion;
     }
 
-    public static ResHandshake1 decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length < MIN_LEN)
-            return null;
-        else {
-
-            // decode success
-            boolean success = _bytes[0] == 0x00 ? false : true;
-
-            // decode binary version
-            byte len = _bytes[1];
-            String binaryVersion = "unknown";
-            int binaryVersionBytesLen = _bytes.length;
-            if(len > 0 && binaryVersionBytesLen >= MIN_LEN + len){
-                byte[] binaryVersionBytes = Arrays.copyOfRange(_bytes, MIN_LEN, MIN_LEN + len);
-                try{
-                    binaryVersion = new String(binaryVersionBytes, "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-
-                }
-            }
-            return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
-        }
-    }
-
     @Override
     public byte[] encode() {
         byte[] superBytes = super.encode();
-        byte[] binaryVersionBytes = this.binaryVersion.getBytes();
+        byte[] binaryVersionBytes = new byte[0];
+        try {
+            binaryVersionBytes = this.binaryVersion.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            System.out.println("<p2p res-handshake-encode error=" + e.getMessage() + ">");
+        }
+
         int len = binaryVersionBytes.length;
-        if(len > Byte.MAX_VALUE){
-            binaryVersionBytes = Arrays.copyOfRange(binaryVersionBytes, 0 , Byte.MAX_VALUE - 1);
+        if (len > Byte.MAX_VALUE) {
+            binaryVersionBytes = Arrays.copyOfRange(binaryVersionBytes, 0, Byte.MAX_VALUE);
             len = Byte.MAX_VALUE;
+            // Update the Version
+            try {
+                this.binaryVersion = new String(binaryVersionBytes, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                System.out.println("<p2p res-handshake-encode error=" + e.getMessage() + ">");
+            }
         }
         ByteBuffer buf = ByteBuffer.allocate(superBytes.length + 1 + len);
         buf.put(superBytes);
-        buf.put((byte)len);
+        buf.put((byte) len);
         buf.put(binaryVersionBytes);
         return buf.array();
     }

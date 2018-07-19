@@ -27,14 +27,16 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 
@@ -72,8 +74,8 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
             }
 
             // determine which contracts should get stored
-            for (Map.Entry<Address, IContractDetails<DataWord>> entry : cachedDetails.entrySet()) {
-                IContractDetails<DataWord> ctd = entry.getValue();
+            for (Map.Entry<Address, IContractDetails<IDataWord>> entry : cachedDetails.entrySet()) {
+                IContractDetails<IDataWord> ctd = entry.getValue();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
                 if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
@@ -103,7 +105,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public void updateBatch(Map<Address, AccountState> accounts, Map<Address, IContractDetails<DataWord>> details) {
+    public void updateBatch(Map<Address, AccountState> accounts, Map<Address, IContractDetails<IDataWord>> details) {
         fullyWriteLock();
         try {
 
@@ -111,7 +113,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
 
-            for (Map.Entry<Address, IContractDetails<DataWord>> ctdEntry : details.entrySet()) {
+            for (Map.Entry<Address, IContractDetails<IDataWord>> ctdEntry : details.entrySet()) {
                 ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctdEntry.getValue();
                 if (contractDetailsCache.origContract != null
                         && !(contractDetailsCache.origContract instanceof AionContractDetailsImpl)) {
@@ -158,7 +160,36 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
+    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
+        throw new UnsupportedOperationException(
+                "addTxBatch should be called on the tracked repository.");
+    }
+
+    @Override
+    public void removeTxBatch(Set<byte[]> pendingTx, boolean isPool) {
+        throw new UnsupportedOperationException(
+                "removeTxBatch should be called on the tracked repository.");
+    }
+
+    @Override
     public boolean isValidRoot(byte[] root) {
         return this.repository.isValidRoot(root);
+    }
+
+    @Override
+    public boolean isIndexed(byte[] hash, long level) {
+        return repository.isIndexed(hash, level);
+    }
+
+    @Override
+    public List<byte[]> getPoolTx() {
+        throw new UnsupportedOperationException(
+                "getPoolTx should be called on the tracked repository.");
+    }
+
+    @Override
+    public List<byte[]> getCacheTx() {
+        throw new UnsupportedOperationException(
+                "getCachelTx should be called on the tracked repository.");
     }
 }

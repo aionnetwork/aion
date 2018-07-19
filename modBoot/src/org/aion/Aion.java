@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,42 +17,38 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- * 
+ * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion;
 
+import static java.lang.System.exit;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.util.ServiceLoader;
-
-import org.aion.api.server.http.HttpServer;
+import org.aion.api.server.http.NanoServer;
 import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.log.AionLoggerFactory;
 import org.aion.evtmgr.EventMgrModule;
+import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
-import org.aion.zero.impl.blockchain.PoolDumpUtils;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
 public class Aion {
 
-    public static void main(String args[]) throws InterruptedException {
+    public static void main(String args[]) {
 
         /*
          * @ATTENTION: ECKey have two layer: tx layer is KeyFac optional,
@@ -65,17 +61,17 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            System.exit(ret);
+            exit(ret);
         }
 
         /*
          * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]
          * return true which means should save back to xml config
          */
-        if(cfg.fromXML())
-            cfg.toXML(new String[]{ "--id=" + cfg.getId() });
+        if (cfg.fromXML()) {
+            cfg.toXML(new String[]{"--id=" + cfg.getId()});
+        }
 
-        
         try {
             ServiceLoader.load(AionLoggerFactory.class);
         } catch (Exception e) {
@@ -83,24 +79,52 @@ public class Aion {
             throw e;
         }
 
+        /*
+         * Ensuring valid UUID in the config.xml
+         * Valid UUID: 32 Hex in 5 Groups [0-9A-F]
+         * 00000000-0000-0000-0000-000000000000
+         */
+        String UUID = cfg.getId();
+        if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+            System.out.println("Invalid UUID; please check <id> setting in config.xml");
+            exit(-1);
+        }
 
-        // If commit this out, the config setting will be ignore. all log module been set to "INFO" Level
-        AionLoggerFactory.init(cfg.getLog().getModules());
-        Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
+        /* Outputs relevant logger configuration */
+        if (!cfg.getLog().getLogFile()) {
+            System.out
+                .println("Logger disabled; to enable please check <log> settings in config.xml");
+        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("Invalid file path; please check <log> setting in config.xml");
+            return;
+        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
+        }
 
-        System.out.println(                
-                        "                     _____                  \n" +
-                        "      .'.       |  .~     ~.  |..          |\n" +
-                        "    .'   `.     | |         | |  ``..      |\n" +
-                        "  .''''''''`.   | |         | |      ``..  |\n" +
-                        ".'           `. |  `._____.'  |          ``|\n\n" +
-                        "                    NETWORK  v" + KERNEL_VERSION +
-                                "\n\n"
-                );
+        /*
+         * Logger initialize with LOGFILE and LOGPATH (user config inputs)
+         */
+        AionLoggerFactory
+            .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
+        Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
+        String logo ="\n                     _____                  \n" +
+                "      .'.       |  .~     ~.  |..          |\n" +
+                "    .'   `.     | |         | |  ``..      |\n" +
+                "  .''''''''`.   | |         | |      ``..  |\n" +
+                ".'           `. |  `._____.'  |          ``|\n\n" +
+                "                    NETWORK  v" + KERNEL_VERSION +
+                "\n\n";
+
+        genLog.info(logo);
 
         IAionChain ac = AionFactory.create();
-                
-        IMineRunner nm = ac.getBlockMiner();
+
+        IMineRunner nm = null;
+
+        if (!cfg.getConsensus().isSeed()) {
+            nm = ac.getBlockMiner();
+        }
 
         if (nm != null) {
             nm.delayedStartMining(10);
@@ -114,22 +138,19 @@ public class Aion {
         if (cfg.getApi().getZmq().getActive()) {
             IHdlr handler = new HdlrZmq(new ApiAion0(ac));
             processor = new ProtocolProcessor(handler, cfg.getApi().getZmq());
-            ProtocolProcessor finalProcessor = processor;
-            zmqThread = new Thread(() -> {
-                finalProcessor.run();
-            }, "zmq-api");
+            zmqThread = new Thread(processor, "zmq-api");
             zmqThread.start();
         }
 
-        HttpServer rpcServer = null;
-        if(cfg.getApi().getRpc().getActive()) {
-            CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
-            rpcServer = new HttpServer(
-                    rpcCfg.getIp(),
-                    rpcCfg.getPort(),
-                    rpcCfg.getAllowedOrigins(),
-                    rpcCfg.getEnabled(),
-                    rpcCfg.getMaxthread());
+        NanoServer rpcServer = null;
+        if (cfg.getApi().getRpc().getActive()) {
+            CfgApiRpc rpcCfg = cfg.getApi().getRpc();
+            rpcServer = new NanoServer(
+                rpcCfg.getIp(),
+                rpcCfg.getPort(),
+                rpcCfg.getCorsEnabled(),
+                rpcCfg.getEnabled(),
+                rpcCfg.getMaxthread());
             rpcServer.start();
         }
 
@@ -138,12 +159,14 @@ public class Aion {
          * Shutdown hook for Ctrl+C
          */
         class ShutdownThreadHolder {
-            final Thread zmqThread;
-            final IMineRunner miner;
-            final ProtocolProcessor pp;
-            final HttpServer rpc;
-            
-            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, HttpServer rpc) {
+
+            private final Thread zmqThread;
+            private final IMineRunner miner;
+            private final ProtocolProcessor pp;
+            private final NanoServer rpc;
+
+            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp,
+                NanoServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;
@@ -152,41 +175,52 @@ public class Aion {
         }
 
         ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
-        
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 
-            LOG.info("Starting shutdown process...");
+            genLog.info("Starting shutdown process...");
 
             if (holder.rpc != null) {
-                LOG.info("Shutting down RpcServer");
+                genLog.info("Shutting down RpcServer");
                 holder.rpc.shutdown();
-                LOG.info("Shutdown RpcServer ... Done!");
+                genLog.info("Shutdown RpcServer ... Done!");
             }
 
             if (holder.pp != null) {
-                LOG.info("Shutting down zmq ProtocolProcessor");
+                genLog.info("Shutting down zmq ProtocolProcessor");
                 try {
                     holder.pp.shutdown();
-                    LOG.info("Shutdown zmq ProtocolProcessor... Done!");
+                    genLog.info("Shutdown zmq ProtocolProcessor... Done!");
                 } catch (InterruptedException e) {
-                    LOG.info("Shutdown zmq ProtocolProcessor failed! {}", e.getMessage());
+                    genLog.info("Shutdown zmq ProtocolProcessor failed! {}", e.getMessage());
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            if (holder.zmqThread != null) {
+                genLog.info("Shutting down zmq thread");
+                try {
+                    holder.zmqThread.interrupt();
+                    genLog.info("Shutdown zmq thread... Done!");
+                } catch (Exception e) {
+                    genLog.info("Shutdown zmq thread failed! {}", e.getMessage());
                     Thread.currentThread().interrupt();
                 }
             }
 
             if (holder.miner != null) {
-                LOG.info("Shutting down sealer");
+                genLog.info("Shutting down sealer");
                 holder.miner.stopMining();
                 holder.miner.shutdown();
-                LOG.info("Shutdown sealer... Done!");
+                genLog.info("Shutdown sealer... Done!");
             }
 
-            LOG.info("Shutting down the AionHub...");
+            genLog.info("Shutting down the AionHub...");
             ac.getAionHub().close();
 
-            LOG.info("---------------------------------------------");
-            LOG.info("| Aion kernel graceful shutdown successful! |");
-            LOG.info("---------------------------------------------");
+            genLog.info("---------------------------------------------");
+            genLog.info("| Aion kernel graceful shutdown successful! |");
+            genLog.info("---------------------------------------------");
 
         }, "shutdown"));
     }

@@ -38,12 +38,12 @@ public final class CfgNetP2p {
         this.ip = "127.0.0.1";
         this.port = 30303;
         this.discover = false;
-        this.showStatus = false;
-        this.showLog = false;
         this.bootlistSyncOnly = false;
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
         this.errorTolerance = 50;
+        this.clusterNodeMode = false;
+        this.syncOnlyMode = false;
     }
 
     private String ip;
@@ -52,11 +52,11 @@ public final class CfgNetP2p {
 
     private boolean discover;
 
-    private boolean showStatus;
-
-    private boolean showLog;
+    private boolean clusterNodeMode;
 
     private boolean bootlistSyncOnly;
+
+    private boolean syncOnlyMode;
 
     private int maxTempNodes;
 
@@ -81,14 +81,14 @@ public final class CfgNetP2p {
                 case "discover":
                     this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
-                case "show-status":
-                    this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "show-log":
-                    this.showLog = Boolean.parseBoolean(Cfg.readValue(sr));
+                case "cluster-node-mode":
+                    this.clusterNodeMode = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
+                case "sync-only-mode":
+                    this.syncOnlyMode = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "max-temp-nodes":
                     this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
@@ -96,7 +96,7 @@ public final class CfgNetP2p {
                 case "max-active-nodes":
                     this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
                     break;
-                case "error-tolerance":
+                case "err-tolerance":
                     this.errorTolerance = Integer.parseInt(Cfg.readValue(sr));
                     break;
                 default:
@@ -133,11 +133,6 @@ public final class CfgNetP2p {
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("discover");
             xmlWriter.writeCharacters(this.discover + "");
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("show-status");
-            xmlWriter.writeCharacters(this.showStatus + "");
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
@@ -183,14 +178,6 @@ public final class CfgNetP2p {
         return this.discover;
     }
 
-    public boolean getShowStatus() {
-        return this.showStatus;
-    }
-
-    public boolean getShowLog() {
-        return this.showLog;
-    }
-
     public boolean getBootlistSyncOnly() { return bootlistSyncOnly; }
 
     public int getMaxTempNodes() {
@@ -203,5 +190,11 @@ public final class CfgNetP2p {
 
     public int getErrorTolerance() {
         return errorTolerance;
+    }
+
+    public boolean inClusterNodeMode() { return clusterNodeMode; }
+
+    public boolean inSyncOnlyMode() {
+        return syncOnlyMode;
     }
 }

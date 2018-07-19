@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.db.impl.rocksdb;
 
 import org.aion.base.util.ByteArrayWrapper;
@@ -90,7 +112,13 @@ public class RocksDBWrapper extends AbstractDB {
         try {
             db = RocksDB.open(options, f.getAbsolutePath());
         } catch (RocksDBException e) {
-            LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
+            if (e.getMessage().contains("lock")) {
+                LOG.error("Failed to open the database " + this.toString()
+                    + "\nCheck if you have two instances running on the same database."
+                    + "\nFailure due to: ", e);
+            } else {
+                LOG.error("Failed to open the database " + this.toString() + " due to: ", e);
+            }
 
             // close the connection and cleanup if needed
             close();
@@ -236,6 +264,47 @@ public class RocksDBWrapper extends AbstractDB {
             db.delete(k);
         } catch (RocksDBException e) {
             LOG.error("Unable to delete key " + Arrays.toString(k) + ". " + e);
+        }
+    }
+
+    WriteBatch batch = null;
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        check(key);
+
+        check();
+
+        if (batch == null) {
+            batch = new WriteBatch();
+        }
+
+        try {
+            if (value == null) {
+                batch.delete(key);
+            } else {
+                batch.put(key, value);
+            }
+        } catch (RocksDBException e) {
+            LOG.error("Unable to add to batch operation on " + this.toString() + ".", e);
+        } finally {
+            // attempting to write directly since batch operation didn't work
+            put(key, value);
+            batch.close();
+            batch = null;
+        }
+    }
+
+    @Override
+    public void commitBatch() {
+        if (batch != null) {
+            try {
+                db.write(new WriteOptions(), batch);
+            } catch (RocksDBException e) {
+                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            }
+            batch.close();
+            batch = null;
         }
     }
 

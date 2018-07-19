@@ -4,19 +4,17 @@
 	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
 		<rpc active="true" ip="127.0.0.1" port="8545">
-			<!--comma separated list, domains from which to accept cross origin requests (browser enforced)-->
-			<corsdomain>false</corsdomain>
+			<!--boolean, enable/disable cross origin requests (browser enforced)-->
+			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
-			<apis-enabled> web3,eth,personal</apis-enabled>
+			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
 			<!--size of thread pool allocated for rpc requests-->
 			<threads>1</threads>
-			<!--enable web3 filters. some web3 clients depend on this and wont work as expected if turned off-->
-			<filters-enabled>true</filters-enabled>
 		</rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
 		<nrg-recommendation>
 			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
-			<default>1E9</default>
+			<default>10E9</default>
 			<!--max NRG price recommended by oracle-->
 			<max>100E9</max>
 			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
@@ -24,30 +22,30 @@
 		</nrg-recommendation>
 	</api>
 	<net>
-		<id>0</id>
+		<id>256</id>
 		<nodes>
-			<node>p2p://2da62542-999f-4405-bdb3-50d8c61bed61@52.237.31.69:30303</node>
-			<node>p2p://c1f42646-279a-441e-bba7-bfebfc1eec63@52.179.100.107:30303</node>
-			<node>p2p://d9242b38-cf4e-4654-9995-2727fee3dd9d@13.95.218.95:30303</node>
-			<node>p2p://0466a78b-814b-4a5d-844e-7054e48f0d28@191.232.176.213:30303</node>
-			<node>p2p://f9ea8c08-6f2d-4e64-91a2-d7186d76e096@52.231.206.150:30303</node>
+			<node>p2p://c33d1066-8c7e-496c-9c4e-c89318280274@13.92.155.115:30303</node>
+			<node>p2p://c33d2207-729a-4584-86f1-e19ab97cf9ce@51.144.42.220:30303</node>
+			<node>p2p://c33d302f-216b-47d4-ac44-5d8181b56e7e@52.231.187.227:30303</node>
+			<node>p2p://c33d4c07-6a29-4ca6-8b06-b2781ba7f9bf@191.232.164.119:30303</node>
+			<node>p2p://c33d5a94-20d8-49d9-97d6-284f88da5c21@13.89.244.125:30303</node>
+			<node>p2p://741b979e-6a06-493a-a1f2-693cafd37083@66.207.217.190:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
 			<port>30303</port>
 			<discover>false</discover>
-			<show-status>false</show-status>
 			<max-active-nodes>128</max-active-nodes>
 		</p2p>
 	</net>
 	<sync>
-		<blocks-backward-max>16</blocks-backward-max>
-		<blocks-import-max>32</blocks-import-max>
-		<blocks-queue-max>48</blocks-queue-max>
-		<show-status>true</show-status>
+		<!-- Downloaded blocks queue limit. This affects memory footprint -->
+		<blocks-queue-max>32</blocks-queue-max>
+		<!-- Display syncing status -->
+		<show-status>false</show-status>
 	</sync>
 	<consensus>
-		<mining>true</mining>
+		<mining>false</mining>
 		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
 		<cpu-mine-threads>2</cpu-mine-threads>
 		<extra-data>AION</extra-data>
@@ -55,26 +53,36 @@
 			<!-- <monotonic-increase></monotonic-increase> -->
 			<!-- <decaying></decaying> -->
 			<!-- <targetted target="10000000"></targetted> -->
-			<clamped-decay upper-bound="15000000" lower-bound="7000000"></clamped-decay>
+			<clamped-decay upper-bound="20000000" lower-bound="15000000"></clamped-decay>
 		</nrg-strategy>
 	</consensus>
 	<db>
+		<!--Sets the physical location on disk where data will be stored.-->
 		<path>database</path>
+		<!--Boolean value. Enable/disable database integrity check run at startup.-->
+		<check_integrity>true</check_integrity>
+		<!--Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.-->
+		<!--FULL: the state is not pruned-->
+		<!--TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks-->
+		<!--SPREAD: the state is kept for the top K blocks and at regular block intervals-->
+		<state-storage>FULL</state-storage>
+		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
+		<!--Caution: changing implementation requires re-syncing from genesis!-->
 		<vendor>leveldb</vendor>
-		<enable_heap_cache>false</enable_heap_cache>
-		<max_heap_cache_size>1024</max_heap_cache_size>
-		<enable_db_cache>true</enable_db_cache>
+		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
 		<enable_db_compression>false</enable_db_compression>
-		<max_fd_alloc_size>1024</max_fd_alloc_size>
-		<block_size>16mB</block_size>
-		<write_buffer_size>64mB</write_buffer_size>
-		<cache_size>128mB</cache_size>
 	</db>
 	<log>
+		<!--Enable/Disable logback service; if disabled, output will not be logged -->
+		<log-file>true</log-file>
+		<!--Sets the physical location on disk where log files will be stored.-->
+		<log-path>log</log-path>
 		<GEN>INFO</GEN>
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>
 		<CONS>INFO</CONS>
 		<DB>ERROR</DB>
+		<API>INFO</API>
+		<P2P>INFO</P2P>
 	</log>
 </aion>

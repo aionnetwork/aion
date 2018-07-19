@@ -38,18 +38,15 @@ import java.io.Writer;
  */
 public final class CfgSync {
 
-    private int blocksBackwardMax;
-    private int blocksImportMax;
-
     private int blocksQueueMax;
 
     private boolean showStatus;
 
-    public CfgSync() {
-        this.blocksBackwardMax = 16;
-        this.blocksImportMax = 32;
+    private static int BLOCKS_QUEUE_MAX = 32;
 
-        this.blocksQueueMax = 48;
+    public CfgSync() {
+        this.blocksQueueMax = BLOCKS_QUEUE_MAX;
+
         this.showStatus = false;
     }
 
@@ -61,12 +58,6 @@ public final class CfgSync {
             case XMLStreamReader.START_ELEMENT:
                 String elementName = sr.getLocalName().toLowerCase();
                 switch (elementName) {
-                case "blocks-backward-max":
-                    this.blocksBackwardMax = Integer.parseInt(Cfg.readValue(sr));
-                    break;
-                case "blocks-import-max":
-                    this.blocksImportMax = Integer.parseInt(Cfg.readValue(sr));
-                    break;
                 case "blocks-queue-max":
                     this.blocksQueueMax = Integer.parseInt(Cfg.readValue(sr));
                     break;
@@ -96,22 +87,10 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeStartElement("sync");
 
-            // sub-element blocks-backward-max
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("blocks-backward-max");
-            xmlWriter.writeCharacters(this.getBlocksBackwardMax() + "");
-            xmlWriter.writeEndElement();
-
-            // sub-element blocks-import-max
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("blocks-import-max");
-            xmlWriter.writeCharacters(this.getBlocksImportMax() + "");
-            xmlWriter.writeEndElement();
-
             // sub-element blocks-queue-max
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("blocks-queue-max");
-            xmlWriter.writeCharacters(this.getBlocksQueueMax() + "");
+            xmlWriter.writeCharacters(BLOCKS_QUEUE_MAX + "");
             xmlWriter.writeEndElement();
 
             // sub-element show-status
@@ -133,14 +112,6 @@ public final class CfgSync {
         } catch (IOException | XMLStreamException e) {
             return "";
         }
-    }
-
-    public int getBlocksBackwardMax() {
-        return this.blocksBackwardMax;
-    }
-
-    public int getBlocksImportMax() {
-        return this.blocksImportMax;
     }
 
     public int getBlocksQueueMax() {

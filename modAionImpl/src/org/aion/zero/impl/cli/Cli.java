@@ -31,6 +31,9 @@
 
 package org.aion.zero.impl.cli;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -129,11 +132,66 @@ public class Cli {
                         }
                     }
                     break;
+                case "--state": {
+                    String pruning_type = "full";
+                    if (args.length >= 2) {
+                        pruning_type = args[1];
+                    }
+                    try {
+                        RecoveryUtils.pruneOrRecoverState(pruning_type);
+                    } catch (Throwable t) {
+                        System.out.println("Reorganizing the state storage FAILED due to:");
+                        t.printStackTrace();
+                        return 1;
+                    }
+                    break;
+                }
+                case "--dump-state-size":
+                    long block_count = 2L;
+
+                    if (args.length < 2) {
+                        System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                        RecoveryUtils.printStateTrieSize(block_count);
+                    } else {
+                        try {
+                            block_count = Long.parseLong(args[1]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                        }
+                        if (block_count < 1) {
+                            System.out.println("The given argument <" + args[1] + "> is not valid.");
+                            block_count = 2L;
+                        }
+
+                        System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                        RecoveryUtils.printStateTrieSize(block_count);
+                    }
+                    break;
+                case "--dump-state":
+                    long level = -1L;
+
+                    if (args.length < 2) {
+                        System.out.println("Retrieving state for top main chain block...");
+                        RecoveryUtils.printStateTrieDump(level);
+                    } else {
+                        try {
+                            level = Long.parseLong(args[1]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                        }
+                        if (level == -1L) {
+                            System.out.println("Retrieving state for top main chain block...");
+                        } else {
+                            System.out.println("Retrieving state for main chain block at level " + level + "...");
+                        }
+                        RecoveryUtils.printStateTrieDump(level);
+                    }
+                    break;
                 case "--db-compact":
                     RecoveryUtils.dbCompact();
                     break;
                 case "--dump-blocks":
-                    long count = 100L;
+                    long count = 10L;
 
                     if (args.length < 2) {
                         System.out.println("Printing top " + count + " blocks from database.");
@@ -144,10 +202,14 @@ public class Cli {
                         } catch (NumberFormatException e) {
                             System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
                         }
+                        if (count < 1) {
+                            System.out.println("The given argument <" + args[1] + "> is not valid.");
+                            count = 10L;
+                        }
+
                         System.out.println("Printing top " + count + " blocks from database.");
                         RecoveryUtils.dumpBlocks(count);
                     }
-                    System.out.println("Finished printing blocks.");
                     break;
                 case "-v":
                     System.out.println("\nVersion");
@@ -196,11 +258,17 @@ public class Cli {
     /**
      * Creates a new account.
      *
-     * @return boolean
+     * @return true only if the new account was successfully created, otherwise false.
      */
     private boolean createAccount() {
-        String password = readPassword("Please enter a password: ");
-        String password2 = readPassword("Please re-enter your password: ");
+        String password = null, password2 = null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            password = readPassword("Please enter a password: ", reader);
+            password2 = readPassword("Please re-enter your password: ", reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
 
         if (!password2.equals(password)) {
             System.out.println("Passwords do not match!");
@@ -244,7 +312,13 @@ public class Cli {
             return false;
         }
 
-        String password = readPassword("Please enter your password: ");
+        String password = null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            password = readPassword("Please enter your password: ", reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
         ECKey key = Keystore.getKey(address, password);
 
         if (key != null) {
@@ -273,9 +347,21 @@ public class Cli {
         }
 
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
+        if (key == null) {
+            System.out.println("Unable to recover private key."
+                    + "Are you sure you did not import a public key?");
+            return false;
+        }
 
-        String password = readPassword("Please enter a password: ");
-        String password2 = readPassword("Please re-enter your password: ");
+        String password = null, password2 = null;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            password = readPassword("Please enter a password: ", reader);
+            password2 = readPassword("Please re-enter your password: ", reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         if (!password2.equals(password)) {
             System.out.println("Passwords do not match!");
             return false;
@@ -292,14 +378,47 @@ public class Cli {
     }
 
     /**
-     * Reads a password from the console.
+     * Returns a password after prompting the user to enter it. This method attempts first to read
+     * user input from a console evironment and if one is not available it instead attempts to read
+     * from reader.
      *
-     * @param prompt String
-     * @return boolean
+     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
+     * @param prompt The read-password prompt to display to the user.
+     * @return The user-entered password.
      */
-    public String readPassword(String prompt) {
+    public String readPassword(String prompt, BufferedReader reader) {
+        if (prompt == null) {
+            throw new NullPointerException("readPassword given null prompt.");
+        }
+
         Console console = System.console();
+        if (console == null) {
+            return readPasswordFromReader(prompt, reader);
+        }
         return new String(console.readPassword(prompt));
+    }
+
+    /**
+     * Returns a password after prompting the user to enter it from reader.
+     *
+     * @throws NullPointerException if reader is null.
+     * @param prompt The read-password prompt to display to the user.
+     * @param reader The BufferedReader to read input from.
+     * @return The user-entered password.
+     */
+    private String readPasswordFromReader(String prompt, BufferedReader reader) {
+        if (reader == null) {
+            throw new NullPointerException("readPasswordFromReader given null reader.");
+        }
+        System.out.println(prompt);
+        try {
+            return reader.readLine();
+        } catch (IOException e) {
+            System.err.println("Error reading from BufferedReader: " + reader);
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null; // Make compiler happy; never get here.
     }
 
     private RecoveryUtils.Status revertTo(String blockNumber) {

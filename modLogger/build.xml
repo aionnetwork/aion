@@ -16,12 +16,13 @@
 	</target>
 
 	<target name="build">
+		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}"/>
 		<javac 
 			debug="${compile.debug}"
 			debuglevel="source,lines,vars" 
 			includeantruntime="false" 
-			release="9"
+			release="10"
 			srcdir="./"
 			destdir="${dir.dest}"
 			includes="src/**/*.java,module-info.java"

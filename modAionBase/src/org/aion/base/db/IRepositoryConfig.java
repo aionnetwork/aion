@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -34,49 +34,22 @@
  ******************************************************************************/
 package org.aion.base.db;
 
+import java.util.Properties;
+
 /**
- * Represents a configuration interface accepted that should be accepted by the
- * repository to implement necessary configs
+ * Represents a configuration interface accepted that should be accepted by the repository to
+ * implement necessary configs
  *
  * @author yao
  */
 public interface IRepositoryConfig {
 
-    String[] getVendorList();
-
-    String getActiveVendor();
-
-    /**
-     * @return absolute path to the DB folder containing files
-     */
+    /** @return absolute path to the DB folder containing files */
     String getDbPath();
 
-    int getPrune();
+    IPruneConfig getPruneConfig();
 
     IContractDetails contractDetailsImpl();
 
-    boolean isAutoCommitEnabled();
-
-    boolean isDbCacheEnabled();
-
-    boolean isDbCompressionEnabled();
-
-    boolean isHeapCacheEnabled();
-
-    boolean isHeapCacheStatsEnabled();
-
-    /**
-     * Size 0 corresponds to unlimited size.
-     *
-     * @return
-     */
-    String getMaxHeapCacheSize();
-
-    int getMaxFdAllocSize();
-
-    int getBlockSize();
-
-    int getWriteBufferSize();
-
-    int getCacheSize();
+    Properties getDatabaseConfig(String db_name);
 }

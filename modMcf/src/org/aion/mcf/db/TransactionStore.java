@@ -39,10 +39,11 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static org.aion.base.util.Utils.dummy;
+
 public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>>
         implements Flushable, Closeable {
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
-    private final Object object = new Object();
     private final ObjectDataSource<List<INFO>> source;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -51,14 +52,14 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
         source = new ObjectDataSource(src, serializer);
     }
 
-    public boolean put(INFO tx) {
+    public boolean putToBatch(INFO tx) {
         lock.writeLock().lock();
 
         try {
             byte[] txHash = tx.getReceipt().getTransaction().getHash();
 
             List<INFO> existingInfos = null;
-            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), object) != null || !lastSavedTxHash.isFull()) {
+            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null || !lastSavedTxHash.isFull()) {
                 existingInfos = source.get(txHash);
             }
 
@@ -72,12 +73,16 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
                 }
             }
             existingInfos.add(tx);
-            source.put(txHash, existingInfos);
+            source.putToBatch(txHash, existingInfos);
 
             return true;
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    public void flushBatch(){
+        source.flushBatch();
     }
 
     public INFO get(byte[] txHash, byte[] blockHash) {

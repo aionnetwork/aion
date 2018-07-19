@@ -39,7 +39,7 @@
                 debug="on"
                 debuglevel="source,lines,vars"
                 includeantruntime="false"
-                release="9"
+                release="10"
                 srcdir="./test"
                 destdir="${dir.test}"
                 includes="**/*Test.java"
@@ -68,12 +68,13 @@
     </target>
 
     <target name="build">
+        <echo message="compiling with debug=${compile.debug}" />
         <mkdir dir="${dir.dest}"/>
         <javac
                 debug="${compile.debug}"
                 debuglevel="source,lines,vars"
                 includeantruntime="false"
-                release="9"
+                release="10"
                 srcdir="./"
                 destdir="${dir.dest}"
                 includes="src/**/*.java,module-info.java"
@@ -101,42 +102,5 @@
         <move includeemptydirs="false" todir="${dir.mod}">
             <file file="modBoot.jar"/>
         </move>
-    </target>
-
-
-    <target name="build_v8">
-        <mkdir dir="${dir.dest}"/>
-        <javac
-                debug="true"
-                debuglevel="source,lines,vars"
-                includeantruntime="false"
-                srcdir="./src"
-                destdir="${dir.dest}"
-                includes="**/*.java"
-        >
-            <classpath>
-                <pathelement location="${dir.lib}/libnsc.jar"/>
-                <pathelement location="${dir.javaAPIlib}/libAionBase.jar"/>
-            </classpath>
-        </javac>
-
-        <jar
-                destfile="libRlp.jar"
-                filesetmanifest="mergewithoutmain"
-                basedir="${dir.dest}"
-        />
-        <move includeemptydirs="false" todir="${dir.javaAPIlib}">
-            <file file="libRlp.jar"/>
-        </move>
-    </target>
-
-    <target name="clean_build_v8" depends="clean_v8, build_v8"/>
-
-    <target name="clean_v8">
-        <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/"/>
-        <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
-        <delete dir="${test.report.dir}"/>
-        <delete file="Rlp.jar"/>
-        <delete file="${dir.javaAPIlib}/libRlp.jar"/>
     </target>
 </project>

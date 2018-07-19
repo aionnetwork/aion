@@ -28,14 +28,12 @@ package org.aion.p2p;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class Header {
 
-    public final static int LEN = 8;
+    public static final int LEN = 8;
 
-    private final static int MAX_BODY_LEN_BYTES = 16 * 1024 * 1024;
+    private static final int MAX_BODY_LEN_BYTES = P2pConstant.MAX_BODY_SIZE;
     private final short ver;
     private final byte ctrl;
     private final byte action;
@@ -54,45 +52,36 @@ public final class Header {
         this.len = _len < 0 ? 0 : _len;
     }
 
-    /**
-     * @return short
-     */
+    /** @return short */
     public short getVer() {
         return this.ver;
     }
 
-    /**
-     * @return byte
-     */
+    /** @return byte */
     public byte getCtrl() {
         return this.ctrl;
     }
 
-    /**
-     * @return byte
-     */
-    public byte getAction() { return this.action; }
+    /** @return byte */
+    public byte getAction() {
+        return this.action;
+    }
 
-    /**
-     * @return int
-     */
+    /** @return int */
     public int getRoute() {
         return (ver << 16) | (ctrl << 8) | action;
     }
-    /**
-     * @return int
-     */
+
+    /** @return int */
     public int getLen() {
         return this.len;
     }
 
-    public void setLen(int _len){
+    public void setLen(int _len) {
         this.len = _len;
     }
 
-    /**
-     * @return byte[]
-     */
+    /** @return byte[] */
     public byte[] encode() {
         return ByteBuffer.allocate(LEN).putInt(this.getRoute()).putInt(len).array();
     }
@@ -111,8 +100,7 @@ public final class Header {
             byte ctrl = bb1.get();
             byte action = bb1.get();
             int len = bb1.getInt();
-            if(len > MAX_BODY_LEN_BYTES)
-                throw new IOException("exceed-max-body-size");
+            if (len > MAX_BODY_LEN_BYTES) throw new IOException("exceed-max-body-size");
             return new Header(ver, ctrl, action, len);
         }
     }

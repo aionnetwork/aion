@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.txpool;
@@ -38,16 +38,16 @@ import java.util.Map;
  */
 public interface ITxPool<TX extends ITransaction> {
 
-    String PROP_TXN_TIMEOUT = "txn-timeout";
+    String PROP_TX_TIMEOUT = "tx-timeout";
     String PROP_BLOCK_SIZE_LIMIT = "blk-size-limit";
     String PROP_BLOCK_NRG_LIMIT = "blk-nrg-limit";
+    String PROP_TX_SEQ_MAX = "tx-seq-max";
 
     List<TX> add(List<TX> tx);
 
     // return TX if the TX add success, if the pool already has the same nonce tx. return the old tx.
     TX add(TX tx);
 
-    @Deprecated
     List<TX> remove(List<TX> tx);
 
     List<TX> remove(Map<Address, BigInteger> accNonce);
@@ -64,10 +64,10 @@ public interface ITxPool<TX extends ITransaction> {
 
     void updateBlkNrgLimit(long nrg);
 
-    @SuppressWarnings("SameReturnValue")
-    String getVersion();
+    @SuppressWarnings("SameReturnValue") String getVersion();
 
     List<TX> snapshotAll();
 
     TX getPoolTx(Address from, BigInteger txNonce);
+
 }

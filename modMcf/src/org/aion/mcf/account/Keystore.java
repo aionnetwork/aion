@@ -1,23 +1,39 @@
-/*******************************************************************************
+/*
+ ******************************************************************************
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *******************************************************************************/
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
+ *****************************************************************************
+ */
 package org.aion.mcf.account;
 
 import java.io.File;
@@ -33,8 +49,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.*;
 import org.aion.crypto.ECKey;
@@ -43,15 +60,26 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/**
- *  key store class.
- */
+/** key store class. */
 public class Keystore {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
-    private static final String KEYSTORE_PATH = System.getProperty("user.dir") + "/keystore";
-    private static final Path PATH = Paths.get(KEYSTORE_PATH);
     private static final FileDateTimeComparator COMPARE = new FileDateTimeComparator();
+    private static final Pattern HEX_64 = Pattern.compile("^[\\p{XDigit}]{64}$");
+    private static final String ADDR_PREFIX = "0x";
+    private static final String AION_PREFIX = "a0";
+    private static final int IMPORT_LIMIT = 100;
+    private static final String KEYSTORE_PATH;
+    private static final Path PATH;
+
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        KEYSTORE_PATH = storageDir + "/keystore";
+        PATH = Paths.get(KEYSTORE_PATH);
+    }
 
     private static List<File> getFiles() {
         File[] files = PATH.toFile().listFiles();
@@ -71,34 +99,31 @@ public class Keystore {
             try {
                 Files.createDirectory(PATH, attr);
             } catch (IOException e) {
-                LOG.debug("keystore folder create failed!");
+                LOG.error("keystore folder create failed!");
                 return "";
             }
         }
 
         String address = ByteUtil.toHexString(key.getAddress());
         if (exist(address)) {
-            return "0x";
+            return ADDR_PREFIX;
         } else {
-            KeystoreFormat format = new KeystoreFormat();
-            byte[] content = format.toKeystore(key, password);
-            TimeZone tz = TimeZone.getTimeZone("UTC");
+            byte[] content = new KeystoreFormat().toKeystore(key, password);
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-            df.setTimeZone(tz);
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
             String iso_date = df.format(new Date(System.currentTimeMillis()));
             String fileName = "UTC--" + iso_date + "--" + address;
             try {
                 Path keyFile = PATH.resolve(fileName);
-                if (!Files.exists(keyFile))
-                    keyFile = Files.createFile(keyFile, attr);
+                if (!Files.exists(keyFile)) keyFile = Files.createFile(keyFile, attr);
                 String path = keyFile.toString();
                 FileOutputStream fos = new FileOutputStream(path);
                 fos.write(content);
                 fos.close();
                 return TypeConverter.toJsonHex(address);
             } catch (IOException e) {
-                LOG.debug("fail to create keystore");
-                return "0x";
+                LOG.error("fail to create keystore");
+                return ADDR_PREFIX;
             }
         }
     }
@@ -132,23 +157,39 @@ public class Keystore {
             return new java.util.HashMap<>();
         }
 
-        List<File> matchedFile = files.parallelStream().filter(file -> account.entrySet().parallelStream()
-                .filter(ac -> file.getName().contains(ac.getKey().toString())).findFirst().isPresent())
-                .collect(Collectors.toList());
+        List<File> matchedFile =
+                files.parallelStream()
+                        .filter(
+                                file ->
+                                        account.entrySet()
+                                                .parallelStream()
+                                                .anyMatch(
+                                                        ac ->
+                                                                file.getName()
+                                                                        .contains(
+                                                                                ac.getKey()
+                                                                                        .toString())))
+                        .collect(Collectors.toList());
 
         Map<Address, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
             try {
                 String[] frags = file.getName().split("--");
                 if (frags.length == 3) {
-                    Address addr = Address.wrap(frags[2]);
-                    byte[] content = Files.readAllBytes(file.toPath());
+                    if (frags[2].startsWith(AION_PREFIX)) {
+                        Address addr = Address.wrap(frags[2]);
+                        byte[] content = Files.readAllBytes(file.toPath());
 
-                    String pw = account.get(addr);
-                    if (pw != null) {
-                        ECKey key = KeystoreFormat.fromKeystore(content, pw);
-                        if (key != null) {
-                            res.put(addr, ByteArrayWrapper.wrap(content));
+                        String pw = account.get(addr);
+                        if (pw != null) {
+                            ECKey key = KeystoreFormat.fromKeystore(content, pw);
+                            if (key != null) {
+                                res.put(addr, ByteArrayWrapper.wrap(content));
+                            }
+                        }
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Wrong address format: {}", frags[2]);
                         }
                     }
                 }
@@ -161,69 +202,81 @@ public class Keystore {
     }
 
     public static String[] list() {
-        List<String> addresses = new ArrayList<>();
-        List<File> files = getFiles();
+        return addAddrs(getFiles()).toArray(new String[0]);
+    }
 
-        files.forEach((file) -> {
-            String[] frags = file.getName().split("--");
-            if (frags.length == 3) {
-                addresses.add(TypeConverter.toJsonHex(frags[2]));
-            }
-        });
-        return addresses.toArray(new String[addresses.size()]);
+    private static List<String> addAddrs(List<File> files) {
+        List<String> addresses = new ArrayList<>();
+        files.forEach(
+                (file) -> {
+                    String[] frags = file.getName().split("--");
+                    if (frags.length == 3) {
+                        if (frags[2].startsWith(AION_PREFIX)) {
+                            addresses.add(TypeConverter.toJsonHex(frags[2]));
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Wrong address format: {}", frags[2]);
+                            }
+                        }
+                    }
+                });
+        return addresses;
     }
 
     /**
      * Returns a sorted list of account addresses
      *
-     * @return
+     * @return address represent by String as a List
      */
     public static List<String> accountsSorted() {
-        List<String> addresses = new ArrayList<>();
         List<File> files = getFiles();
-
         files.sort(COMPARE);
-
-        files.forEach((file) -> {
-            String[] frags = file.getName().split("--");
-            if (frags.length == 3) {
-                addresses.add(TypeConverter.toJsonHex(frags[2]));
-            }
-        });
-        return addresses;
+        return addAddrs(files);
     }
 
     public static ECKey getKey(String _address, String _password) {
-        if (_address.startsWith("0x")) {
+        if (_address.startsWith(ADDR_PREFIX)) {
             _address = _address.substring(2);
         }
-        ECKey key = null;
-        List<File> files = getFiles();
-        for (File file : files) {
-            if (file.getName().contains(_address)) {
-                try {
-                    byte[] content = Files.readAllBytes(file.toPath());
-                    key = KeystoreFormat.fromKeystore(content, _password);
 
-                } catch (IOException e) {
-                    key = null;
+        ECKey key = null;
+        if (_address.startsWith(AION_PREFIX)) {
+            List<File> files = getFiles();
+            for (File file : files) {
+                if (HEX_64.matcher(_address).find() && file.getName().contains(_address)) {
+                    try {
+                        byte[] content = Files.readAllBytes(file.toPath());
+                        key = KeystoreFormat.fromKeystore(content, _password);
+
+                    } catch (IOException e) {
+                        LOG.error("getKey exception! {}", e);
+                    }
+                    break;
                 }
-                break;
             }
         }
         return key;
     }
 
+    /**
+     * Returns true if the address _address exists, false otherwise.
+     *
+     * @param _address the address whose existence is to be tested.
+     * @return true only if _address exists.
+     */
     public static boolean exist(String _address) {
-        if (_address.startsWith("0x")) {
+        if (_address.startsWith(ADDR_PREFIX)) {
             _address = _address.substring(2);
         }
-        List<File> files = getFiles();
+
         boolean flag = false;
-        for (File file : files) {
-            if (file.getName().contains(_address)) {
-                flag = true;
-                break;
+        if (_address.startsWith(AION_PREFIX)) {
+            List<File> files = getFiles();
+            for (File file : files) {
+                if (HEX_64.matcher(_address).find() && file.getName().contains(_address)) {
+                    flag = true;
+                    break;
+                }
             }
         }
         return flag;
@@ -237,29 +290,67 @@ public class Keystore {
         Set<String> rtn = new HashSet<>();
         int count = 0;
         for (Map.Entry<String, String> keySet : importKey.entrySet()) {
-            if (count < 100) {
-                byte[] raw = Hex
-                        .decode(keySet.getKey().startsWith("0x") ? keySet.getKey().substring(2) : keySet.getKey());
-                ECKey key = KeystoreFormat.fromKeystore(raw, keySet.getValue());
-                String address = Keystore.create(keySet.getValue(), key);
-                if (!address.equals("0x")) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("The private key was imported, the address is: {}", address);
+            if (count < IMPORT_LIMIT) {
+                ECKey key =
+                        KeystoreFormat.fromKeystore(Hex.decode(keySet.getKey()), keySet.getValue());
+                if (key != null) {
+                    String address = Keystore.create(keySet.getValue(), key);
+                    if (!address.equals(ADDR_PREFIX)) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug(
+                                    "The private key was imported, the address is {}",
+                                    keySet.getKey());
+                        }
+                    } else {
+                        LOG.error(
+                                "Failed to import the private key {}. Already exists?",
+                                keySet.getKey());
+                        // only return the failed import privateKey.
+                        rtn.add(keySet.getKey());
                     }
-
-                } else {
-                    if (LOG.isErrorEnabled()) {
-                        LOG.error("Failed to import the private key. Already exists?");
-                    }
-                    // only return the failed import privateKey.
-                    rtn.add(keySet.getKey());
                 }
             } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
+                            "The account import limit was reached, the address didn't import into keystore {}",
+                            keySet.getKey());
+                }
                 rtn.add(keySet.getKey());
             }
             count++;
         }
 
         return rtn;
+    }
+
+    /*
+     * Test method. Don't use it for the code dev.
+     */
+    protected static File getAccountFile(String address, String password) {
+        List<File> files = getFiles();
+        if (files == null) {
+            if (LOG.isWarnEnabled()) {
+                LOG.warn("No key file been stored in the kernel.");
+            }
+            return null;
+        }
+
+        Optional<File> matchedFile =
+                files.parallelStream().filter(file -> file.getName().contains(address)).findFirst();
+
+        if (matchedFile.isPresent()) {
+            byte[] content = new byte[0];
+            try {
+                content = Files.readAllBytes(matchedFile.get().toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (null != KeystoreFormat.fromKeystore(content, password)) {
+                return matchedFile.get();
+            }
+        }
+
+        return null;
     }
 }

@@ -37,6 +37,7 @@ package org.aion.base.db;
 import org.aion.base.type.Address;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Database-like functionality.
@@ -94,13 +95,22 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     // --------------------------------------------------------------------------------------
 
     /**
-     * Used to check for corruption in the database.
+     * Used to check for corruption in the state database.
      *
      * @param root
      *         a world state trie root
      * @return {@code true} if the root is valid, {@code false} otherwise
      */
     boolean isValidRoot(byte[] root);
+
+    /**
+     * Used to check for corruption in the index database.
+     *
+     * @param hash
+     *         a block hash
+     * @return {@code true} if the block hash has a corresponding index, {@code false} otherwise
+     */
+    boolean isIndexed(byte[] hash, long level);
 
     byte[] getRoot();
 
@@ -120,7 +130,21 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      */
     IRepository getSnapshotTo(byte[] root);
 
+    /**
+     * @return {@code true} if the repository is a snapshot (with limited functionality), {@code false} otherwise
+     */
+    boolean isSnapshot();
+
     // TODO: perhaps remove
     BSB getBlockStore();
 
+    /**
+     * Performs batch transactions add.
+     */
+    void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool);
+
+    /**
+     * Performs batch transactions remove.
+     */
+    void removeTxBatch(Set<byte[]> pendingTx, boolean isPool);
 }

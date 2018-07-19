@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 
 import java.util.Properties;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
+
 /**
  * Mock implementation of a key value database using a ConcurrentHashMap as our
  * underlying implementation, mostly for testing, when the Driver API interface
@@ -22,17 +24,14 @@ public class MockDBDriver implements IDriver {
     private static final int MAJOR_VERSION = 1;
     private static final int MINOR_VERSION = 0;
 
-    private static final String PROP_DB_TYPE = "db_type";
-    private static final String PROP_DB_NAME = "db_name";
-
     /**
      * @inheritDoc
      */
     @Override
     public IByteArrayKeyValueDatabase connect(Properties info) {
 
-        String dbType = info.getProperty(PROP_DB_TYPE);
-        String dbName = info.getProperty(PROP_DB_NAME);
+        String dbType = info.getProperty(Props.DB_TYPE);
+        String dbName = info.getProperty(Props.DB_NAME);
 
         if (!dbType.equals(this.getClass().getName())) {
             LOG.error("Invalid dbType provided: {}", dbType);

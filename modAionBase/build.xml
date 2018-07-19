@@ -28,6 +28,7 @@
     <!-- Build Related -->
 
     <target name="compile">
+        <echo message="compiling with debug=${compile.debug}" />
         <mkdir dir="${main.build.dir}" />
         <copy includeemptydirs="false" todir="${main.src.dir}">
             <file file="module-info.java" />
@@ -36,7 +37,7 @@
             debug="${compile.debug}"
             debuglevel="source,lines,vars"
             includeantruntime="false"
-            release="9"
+            release="10"
             srcdir="${main.src.dir}"
             destdir="${main.build.dir}"
             includes="**/*.java, module-info.java"
@@ -71,7 +72,7 @@
             debug="true"
             debuglevel="source,lines,vars"
             includeantruntime="false"
-            release="9"
+            release="10"
             srcdir="${test.src.dir}"
             destdir="${test.build.dir}"
             >
@@ -85,7 +86,7 @@
             debug="true"
             debuglevel="source,lines,vars"
             includeantruntime="false"
-            release="9"
+            release="10"
             srcdir="${test.src.dir}"
             destdir="${test.build.dir}"
             >
@@ -104,19 +105,6 @@
             includes="**/*.java"
             />
     </target>
-
-    <target name="build_v8" depends="compile_v8">
-        <jar
-            destfile="libAionBase.jar"
-            filesetmanifest="mergewithoutmain"
-            basedir="${main.build.dir}"
-            />
-        <copy includeemptydirs="false" todir="${dir.javaAPIlib}">
-            <file file="libAionBase.jar"/>
-        </copy>
-    </target>
-
-    <target name="clean_build_v8" depends="clean, build_v8" />
 
     <!-- Test Related -->
     <target name="test" depends="test-compile">

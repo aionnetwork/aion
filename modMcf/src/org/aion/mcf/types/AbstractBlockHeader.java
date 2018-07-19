@@ -30,12 +30,14 @@ import org.aion.base.type.Address;
 import org.spongycastle.util.BigIntegers;
 
 /**
- * Abstract BlcokHeader.
+ * Abstract BlockHeader.
  */
 public abstract class AbstractBlockHeader {
 
-    public static final int NONCE_LENGTH = 8;
+    public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
+
+    protected byte version;
 
     /* The SHA3 256-bit hash of the parent block, in its entirety */
     protected byte[] parentHash;
@@ -97,20 +99,21 @@ public abstract class AbstractBlockHeader {
     protected byte[] nonce;
 
     /////////////////////////////////////////////////////////////////
-    protected byte[] solutionSize; // Size of the equihash solution in bytes
     // (1344 in 200-9, 1408 in 210,9)
     protected byte[] solution; // The equihash solution in compressed format
 
-    public byte[] getSolutionSize() {
-        return solutionSize;
-    }
+    /*
+    * A long value containing energy consumed within this block
+     */
+    protected long energyConsumed;
+
+    /*
+     * A long value containing energy limit of this block
+     */
+    protected long energyLimit;
 
     public byte[] getSolution() {
         return solution;
-    }
-
-    public void setSolutionSize(byte[] solutionSize) {
-        this.solutionSize = solutionSize;
     }
 
     public void setSolution(byte[] solution) {
@@ -222,5 +225,13 @@ public abstract class AbstractBlockHeader {
 
     public BigInteger getPowBoundaryBI() {
         return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
+    }
+
+    public byte getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(byte version) {
+        this.version = version;
     }
 }

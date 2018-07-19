@@ -49,6 +49,7 @@ import org.junit.runner.RunWith;
 import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.db.impl.DatabaseFactory.Props.DB_NAME;
 
 @RunWith(JUnitParamsRunner.class)
 public class AccessWithExceptionTest {
@@ -89,7 +90,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testIsEmptyWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -101,7 +102,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testKeysWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -113,7 +114,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testGetWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -125,7 +126,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -137,7 +138,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -149,7 +150,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutBatchWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -166,7 +167,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteBatchWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -183,7 +184,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testCommitWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -196,7 +197,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testSizeWithClosedDatabase(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
@@ -208,7 +209,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testGetWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -220,7 +221,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -232,7 +233,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -244,7 +245,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testPutBatchWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
@@ -261,7 +262,7 @@ public class AccessWithExceptionTest {
     @Parameters(method = "databaseInstanceDefinitions")
     public void testDeleteBatchWithNullKey(Properties dbDef) {
         // create database
-        dbDef.setProperty("db_name", DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
