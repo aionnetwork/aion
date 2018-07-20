@@ -22,9 +22,7 @@
  */
 package org.aion.precompiled.contracts;
 
-//import static org.aion.crypto.HashUtil.blake128;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.Timer;
@@ -42,11 +40,11 @@ import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 import org.apache.commons.collections4.map.LRUMap;
 
 import static org.aion.crypto.HashUtil.blake128;
@@ -144,27 +142,27 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrg) {
+    public ExecutionResult execute(byte[] input, long nrg) {
         if (nrg < COST)
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0, "insufficient energy".getBytes());
+            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0, "insufficient energy".getBytes());
 
         // check length for both operations
         if(input.length < 131){
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
         }
 
         int domainNameLength = input[0];
         if (domainNameLength < 0)
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
 
         // check if input is too short for extension function
         if (input.length < 130 + domainNameLength)
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
         int balanceLength = input[129 + domainNameLength];
 
         if(balanceLength > 0){
             if(input.length < 130 + domainNameLength + balanceLength){
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
             }
         }
 
@@ -189,11 +187,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // check if the domain name already has active parent domain
         if (hasActiveParentDomain(domainNameRaw))
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "the given domain name has a parent that is already active".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "the given domain name has a parent that is already active".getBytes());
 
         // check if the domain name is valid to register
         if (!isValidDomainName(domainNameRaw))
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "domain name is invalid".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "domain name is invalid".getBytes());
 
         // add zeros for storing
         byte[] domainNameInBytesWithZeros = addLeadingZeros(domainNameInBytes);
@@ -211,11 +209,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // verify public key matches owner
         if (!b) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect signature".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect signature".getBytes());
         }
 
         if (!bidderAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect key".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect key".getBytes());
         }
 
         // if this domain name does not have an callerAddress
@@ -238,28 +236,28 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // check if bidValue is valid (greater than 0)
         if (bidValue.compareTo(new BigInteger("0")) < 0)
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "negative bid value".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "negative bid value".getBytes());
 
         // check bidder addr and its balance
         if(this.track.hasAccountState(bidderAddress)){
             if (this.track.getAccountState(bidderAddress).getBalance().compareTo(bidValue) < 0){
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "insufficient balance".getBytes());
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "insufficient balance".getBytes());
             }
         }
         else
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "bidder account does not exist".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "bidder account does not exist".getBytes());
 
 
 
         // if this domain is already active
         if (isActiveDomain(domainAddress)) {
-            return new ContractExecutionResult(ResultCode.FAILURE, nrg - COST, "requested domain is already active".getBytes());
+            return new ExecutionResult(ResultCode.FAILURE, nrg - COST, "requested domain is already active".getBytes());
         }
 
         // if this domain is already in auction state
         else if (isAuctionDomain(domainAddress)){
             processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
-            return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
+            return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
 
         // start the auction for the given domain
@@ -267,7 +265,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             storeNewAddress(domainAddress);
             addToAuctionDomain(domainAddress, domainName, domainNameRaw);
             processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
-            return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
+            return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
     }
 
@@ -298,7 +296,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     // record to data base, change stuff, so when its time for task to execute, it will first check database
     // to see if it has been extended, if it has, schedule new task.
-    private ContractExecutionResult extensionRequest(Address domainAddress, long nrg){
+    private ExecutionResult extensionRequest(Address domainAddress, long nrg){
         Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
         //Date currentDate = new Date(blockchain.getBestBlock().getTimestamp());
         Date currentDate = new Date();
@@ -307,13 +305,13 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // check if domain is currently active, but have not been extended
         if(expireDateFromStorage.getTime() < currentDate.getTime() || difference > ACTIVE_TIME.intValue()) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, COST - nrg, "already been extended".getBytes());
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, COST - nrg, "already been extended".getBytes());
         }
 
         // add the new expire date
         Date finishDate = new Date(expireDateFromStorage.getTime() + ACTIVE_TIME.intValue()); //extend for 1 period
         addDateToStorage(activeDomainsAddressTime, domainAddress, finishDate);
-        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrg );
+        return new ExecutionResult(ResultCode.SUCCESS, COST - nrg );
     }
 
     /**

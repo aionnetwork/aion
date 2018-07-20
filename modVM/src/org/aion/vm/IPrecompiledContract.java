@@ -19,7 +19,7 @@
  *  Contributors:
  *      Aion foundation.
  */
-package org.aion.mcf.vm;
+package org.aion.vm;
 
 import org.aion.base.type.IExecutionResult;
 

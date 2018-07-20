@@ -26,9 +26,10 @@ import org.aion.base.db.*;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.precompiled.contracts.Blake2bHash;
 import org.aion.precompiled.contracts.KeccakHash;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.Before;
@@ -55,7 +56,7 @@ public class HashTest {
     @Test
     public void testBlake256() throws UnsupportedEncodingException {
         byte[] input = Blake2bHash.setupInput(0, byteArray1);
-        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -71,7 +72,7 @@ public class HashTest {
     @Test
     public void testBlake128() throws UnsupportedEncodingException{
         byte[] input = Blake2bHash.setupInput(1, byteArray1);
-        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -86,7 +87,7 @@ public class HashTest {
 
     @Test
     public void testKeccak256() throws UnsupportedEncodingException{
-        ContractExecutionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
+        ExecutionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -102,27 +103,27 @@ public class HashTest {
     @Test
     public void invalidInputLength(){
         byte[] input = Blake2bHash.setupInput(0, shortByteArray);
-        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
 
-        ContractExecutionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
+        ExecutionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
     }
 
     @Test
     public void insufficientNRG(){
         byte[] input = Blake2bHash.setupInput(0, byteArray1);
-        ContractExecutionResult res = blake2bHasher.execute(input, 100);
+        ExecutionResult res = blake2bHasher.execute(input, 100);
         assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
 
-        ContractExecutionResult res2 = keccakHasher.execute(byteArray1, 100);
+        ExecutionResult res2 = keccakHasher.execute(byteArray1, 100);
         assertEquals(ResultCode.OUT_OF_NRG, res2.getResultCode());
     }
 
     @Test
     public void testInvalidOperation(){
         byte[] input = Blake2bHash.setupInput(3, byteArray1);
-        ContractExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
     }
 

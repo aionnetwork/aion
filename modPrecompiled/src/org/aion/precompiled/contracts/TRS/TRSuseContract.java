@@ -30,8 +30,8 @@ import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
-import org.aion.precompiled.ContractExecutionResult;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 
 /**
  * The TRSuseContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -233,18 +233,18 @@ public final class TRSuseContract extends AbstractTRS {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrgLimit) {
+    public ExecutionResult execute(byte[] input, long nrgLimit) {
         if (input == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (input.length == 0) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (nrgLimit < COST) {
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
         }
         if (!isValidTxNrg(nrgLimit)) {
-            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, 0);
+            return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, 0);
         }
 
         int operation = input[0];
@@ -256,7 +256,7 @@ public final class TRSuseContract extends AbstractTRS {
             case 4: return refund(input, nrgLimit);
             case 5: return depositFor(input, nrgLimit);
             case 6: return addExtraFunds(input, nrgLimit);
-            default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            default: return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
@@ -283,32 +283,32 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult deposit(byte[] input, long nrgLimit) {
+    private ExecutionResult deposit(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int indexAmount = 33;
         final int len = 161;
 
         if (input.length != len) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A deposit operation can only execute if direct depositing is enabled or caller is owner.
         Address owner = getContractOwner(contract);
         if (!caller.equals(owner) && !isDirDepositsEnabled(contract)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A deposit operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -319,10 +319,10 @@ public final class TRSuseContract extends AbstractTRS {
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
-            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        ContractExecutionResult result = makeDeposit(contract, caller, amount, nrgLimit);
+        ExecutionResult result = makeDeposit(contract, caller, amount, nrgLimit);
         if (result.getResultCode().equals(ResultCode.SUCCESS)) { track.flush(); }
         return result;
     }
@@ -345,33 +345,33 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult withdraw(byte[] input, long nrgLimit) {
+    private ExecutionResult withdraw(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A withdraw operation can only execute if the current state of the TRS contract is:
         // contract is live (and obviously locked -- check this for sanity) or contract funds are open.
         if (!isOpenFunds(contract) && (!isContractLocked(contract) || !isContractLive(contract))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         if (!makeWithdrawal(contract, caller)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         track.flush();
-        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -400,7 +400,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult bulkDepositFor(byte[] input, long nrgLimit) {
+    private ExecutionResult bulkDepositFor(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexEntries = 33;
@@ -412,26 +412,26 @@ public final class TRSuseContract extends AbstractTRS {
         // that the entries portion has a length that is a multiple of an entry length.
         int len = input.length;
         if ((len < indexEntries + entryLen) || (len > indexEntries + (entryLen * maxEntries))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         } else if ((len - indexEntries) % entryLen != 0) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A bulk-deposit-for operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A bulkDepositFor operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Iterate over every entry in the entries list and attempt to deposit for them.
@@ -449,7 +449,7 @@ public final class TRSuseContract extends AbstractTRS {
 
             // Verify the account is an Aion address.
             if (input[index] != AION_PREFIX) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
 
             beneficiaries[i] = Address.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
@@ -462,7 +462,7 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         if (track.getBalance(caller).compareTo(totalAmounts) < 0) {
-            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         for (int i = 0; i < numEntries; i++) {
@@ -470,7 +470,7 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         track.flush();
-        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -492,35 +492,35 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult bulkWithdraw(byte[] input, long nrgLimit) {
+    private ExecutionResult bulkWithdraw(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A bulk-withdraw operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A bulk-withdraw operation can only execute if the current state of the TRS contract is:
         // contract is live (and obviously locked -- check this for sanity) or the funds are open.
         if (!isOpenFunds(contract) && (!isContractLocked(contract) || !isContractLive(contract))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Iterate over all depositors and withdraw on their behalf. Once here this is a success.
         byte[] curr = getListHead(contract);
-        if (curr == null) { return new ContractExecutionResult(ResultCode.SUCCESS, 0); }
+        if (curr == null) { return new ExecutionResult(ResultCode.SUCCESS, 0); }
 
         while (curr != null) {
             curr[0] = AION_PREFIX;
@@ -530,7 +530,7 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         track.flush();
-        return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -558,7 +558,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult refund(byte[] input, long nrgLimit) {
+    private ExecutionResult refund(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexAccount = 33;
@@ -566,32 +566,32 @@ public final class TRSuseContract extends AbstractTRS {
         final int len = 193;
 
         if (input.length != len) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A refund operation can only execute if the caller is the contract owner.
         Address owner = getContractOwner(contract);
         if (!caller.equals(owner)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A refund operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Ensure the account exists (ie. has a positive deposit balance for the contract).
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         BigInteger accountBalance = getDepositBalance(contract, account);
         if (accountBalance.equals(BigInteger.ZERO)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -602,14 +602,14 @@ public final class TRSuseContract extends AbstractTRS {
         // The account must have a deposit balance large enough to make the refund.
         BigInteger newBalance = accountBalance.subtract(amount);
         if (newBalance.compareTo(BigInteger.ZERO) < 0) {
-            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         // If refund amount is larger than zero, update the depositor's current deposit balance and
         // then update the deposit meta-data (linked list, count, etc.) and refund the account.
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             if (!setDepositBalance(contract, account, newBalance)) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
             setTotalBalance(contract, getTotalBalance(contract).subtract(amount));
 
@@ -621,7 +621,7 @@ public final class TRSuseContract extends AbstractTRS {
             track.addBalance(account, amount);
             track.flush();
         }
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**
@@ -648,7 +648,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult depositFor(byte[] input, long nrgLimit) {
+    private ExecutionResult depositFor(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexAccount = 33;
@@ -656,24 +656,24 @@ public final class TRSuseContract extends AbstractTRS {
         final int len = 193;
 
         if (input.length != len) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A depositFor operation can only execute if caller is owner.
         if (!caller.equals(getContractOwner(contract))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A depositFor operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -684,16 +684,16 @@ public final class TRSuseContract extends AbstractTRS {
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
-            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         // Verify the account is an Aion address.
         if (input[indexAccount] != AION_PREFIX) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
-        ContractExecutionResult result = makeDeposit(contract, account, amount, nrgLimit);
+        ExecutionResult result = makeDeposit(contract, account, amount, nrgLimit);
         if (result.getResultCode().equals(ResultCode.SUCCESS)) { track.flush(); }
         return result;
     }
@@ -717,30 +717,30 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ContractExecutionResult addExtraFunds(byte[] input, long nrgLimit) {
+    private ExecutionResult addExtraFunds(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexAmount = 33;
         final int len = 161;
 
         if (input.length != len) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // A depositFor operation can only execute if caller is owner.
         if (!caller.equals(getContractOwner(contract))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // If contract has its funds open then this operation fails.
         if (isOpenFunds(contract)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -751,15 +751,15 @@ public final class TRSuseContract extends AbstractTRS {
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
-            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             setExtraFunds(contract, getExtraFunds(contract).add(amount));
             track.addBalance(caller, amount.negate());
-            return new ContractExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+            return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
         }
-        return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
     }
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
@@ -781,7 +781,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return an execution result of either success or internal error.
      */
-    private ContractExecutionResult makeDeposit(Address contract, Address account, BigInteger amount,
+    private ExecutionResult makeDeposit(Address contract, Address account, BigInteger amount,
         long nrgLimit) {
 
         // If deposit amount is larger than zero, update the curret deposit balance of the account
@@ -789,13 +789,13 @@ public final class TRSuseContract extends AbstractTRS {
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             BigInteger currAmount = getDepositBalance(contract, account);
             if (!setDepositBalance(contract, account, currAmount.add(amount))) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
             listAddToHead(contract, account);
             setTotalBalance(contract, getTotalBalance(contract).add(amount));
             track.addBalance(caller, amount.negate());
         }
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**

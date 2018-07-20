@@ -36,11 +36,11 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
@@ -80,7 +80,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private Address TTLKey;
     private String domainName;
 
-    private static org.apache.commons.collections4.map.LRUMap<String, AionAuctionContract.AuctionDomainsData> activeDomains = new LRUMap(4);
+    private static LRUMap<String, AionAuctionContract.AuctionDomainsData> activeDomains = new LRUMap(4);
 
     /** Construct a new ANS Contract */
     public AionNameServiceContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, Address ownerAddress) { // byte
@@ -136,10 +136,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
      *      130 + 32 + 32 + 32 = 226
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrg) {
+    public ExecutionResult execute(byte[] input, long nrg) {
         // check for correct input length
         if (input.length != 130 && input.length != 226)
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
 
         // declare variables for parsing the byte[] input and storing each value
         byte[] addressFirstPart = new byte[16];
@@ -178,12 +178,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
 
                 if(!isValidDomainName(this.domainName)){
-                    return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                    return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
                 }
 
                 domains.put(this.domainName, this.address);
             } catch (UnsupportedEncodingException a) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
         }
 
@@ -194,12 +194,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         boolean b = ECKeyEd25519.verify(data, sig.getSignature(), sig.getPubkey(null));
         if (!b) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // operation: {1-setResolver, 2-setTTL, 3-transferOwnership, 4-transferSubdomainOwnership}
@@ -230,15 +230,15 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         addressSecondPart,
                         subdomainName);
             default:
-                return new ContractExecutionResult(
+                return new ExecutionResult(
                         ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
         }
     }
 
     /** Set Resolver for this domain */
-    private ContractExecutionResult setResolver(
+    private ExecutionResult setResolver(
             byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < SET_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+        if (nrg < SET_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
 
@@ -246,13 +246,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined = combineTwoBytes(hash1, hash2);
         this.resolverAddressKey = new Address(combined);
 
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - SET_COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - SET_COST);
     }
 
     /** Set Time to Live for this domain */
-    private ContractExecutionResult setTTL(
+    private ExecutionResult setTTL(
             byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < SET_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+        if (nrg < SET_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
 
@@ -260,16 +260,16 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined = combineTwoBytes(hash1, hash2);
         this.TTLKey = new Address(combined);
 
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - SET_COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - SET_COST);
     }
 
     /** Transfer the ownership of this domain */
-    private ContractExecutionResult transferOwnership(
+    private ExecutionResult transferOwnership(
             byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < TRANSFER_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+        if (nrg < TRANSFER_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
 
         Address.wrap(combineTwoBytes(addr1, addr2));
         storeResult(hash1, hash2, addr1, addr2);
@@ -278,11 +278,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined = combineTwoBytes(hash1, hash2);
         this.ownerAddressKey = new Address(combined);
 
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - TRANSFER_COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - TRANSFER_COST);
     }
 
     /** Transfer the ownership of subdomain */
-    private ContractExecutionResult transferSubdomainOwnership(
+    private ExecutionResult transferSubdomainOwnership(
             byte[] subdomainAddress,
             long nrg,
             byte[] hash1,
@@ -290,19 +290,19 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             byte[] addr1,
             byte[] addr2,
             String subdomain) {
-        if (nrg < TRANSFER_COST) return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+        if (nrg < TRANSFER_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
 
         Address sdAddress = Address.wrap(subdomainAddress);
 
         if (isSubdomain(subdomain)) {
             this.track.addStorageRow(sdAddress, new DataWord(hash1), new DataWord(addr1));
             this.track.addStorageRow(sdAddress, new DataWord(hash2), new DataWord(addr2));
-            return new ContractExecutionResult(ResultCode.SUCCESS, nrg - TRANSFER_COST);
+            return new ExecutionResult(ResultCode.SUCCESS, nrg - TRANSFER_COST);
         }
-        return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
     }
 
     /**
@@ -514,12 +514,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     /**
      * Query Functions
      */
-    private List<AionNameServiceContract.ActiveDomainsData> getAllActiveDomains() {
+    private List<ActiveDomainsData> getAllActiveDomains() {
         IDataWord numberOfDomainsTotalData = this.track.getStorageValue(allAddresses, new DataWord(blake128(ALL_ADDR_COUNTER_KEY.getBytes())));
         BigInteger numberOfDomainsTotal = new BigInteger(numberOfDomainsTotalData.getData());
 
         int counter = numberOfDomainsTotal.intValue();
-        List<AionNameServiceContract.ActiveDomainsData> actives = new ArrayList<>();
+        List<ActiveDomainsData> actives = new ArrayList<>();
 
         for (int i = 0; i < counter; i++){
             byte[] firstHash = blake128((ALL_ADDR_KEY + i).getBytes());
@@ -557,7 +557,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 byte[] valueData = this.track.getStorageValue(activeDomainsAddressValue, new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
                 BigInteger tempValue = new BigInteger(valueData);
 
-                AionNameServiceContract.ActiveDomainsData tempData = new AionNameServiceContract.ActiveDomainsData(tempDomainName, tempDomainAddr, tempOwnerAddr, tempExpireDate, tempValue);
+                ActiveDomainsData tempData = new ActiveDomainsData(tempDomainName, tempDomainAddr, tempOwnerAddr, tempExpireDate, tempValue);
                 actives.add(tempData);
             }
         }

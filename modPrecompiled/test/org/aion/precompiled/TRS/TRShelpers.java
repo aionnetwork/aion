@@ -22,14 +22,14 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -154,7 +154,7 @@ class TRShelpers {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
         TRSstateContract trs = new TRSstateContract(repo, owner, blockchain);
-        ContractExecutionResult res = trs.execute(input, COST);
+        ExecutionResult res = trs.execute(input, COST);
         if (!res.getResultCode().equals(ResultCode.SUCCESS)) { fail("Unable to create contract!"); }
         Address contract = new Address(res.getOutput());
         tempAddrs.add(contract);

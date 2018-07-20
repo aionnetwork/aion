@@ -26,9 +26,9 @@ import org.aion.base.db.*;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 
 import static org.aion.crypto.HashUtil.keccak256;
 
@@ -47,17 +47,17 @@ public class KeccakHash extends StatefulPrecompiledContract{
      *
      * the returned hash is in ContractExecutionResult.getOutput
      */
-    public ContractExecutionResult execute(byte[] input, long nrg){
+    public ExecutionResult execute(byte[] input, long nrg){
         // check input nrg
         long additionalNRG = Math.round(Math.sqrt(input.length));
         if (nrg < DEFAULT_COST + additionalNRG)
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         // check length
         if (input.length < 1)
-            return  new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - DEFAULT_COST, "input too short".getBytes());
+            return  new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - DEFAULT_COST, "input too short".getBytes());
 
         byte[] hash = keccak256(input);
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);
     }
 }

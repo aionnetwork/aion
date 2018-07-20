@@ -22,7 +22,6 @@
  */
 package org.aion.precompiled.contracts;
 
-import java.math.BigInteger;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.BIUtil;
@@ -31,10 +30,12 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
+
+import java.math.BigInteger;
 
 /**
  * A pre-compiled contract for retrieving and updating the total amount of currency.
@@ -99,7 +100,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * </pre>
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrg) {
+    public ExecutionResult execute(byte[] input, long nrg) {
         // query portion (pure)
         if (input.length == 1) {
             return queryNetworkBalance(input[0], nrg);
@@ -108,24 +109,24 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
     }
 
-    private ContractExecutionResult queryNetworkBalance(int input, long nrg) {
+    private ExecutionResult queryNetworkBalance(int input, long nrg) {
         if (nrg < COST) {
             // TODO: should this cost be the same as updating state (probably not?)
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
         }
 
         IDataWord balanceData = this.track.getStorageValue(this.address, new DataWord(input));
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, balanceData.getData());
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, balanceData.getData());
     }
 
-    private ContractExecutionResult executeUpdateTotalBalance(byte[] input, long nrg) {
+    private ExecutionResult executeUpdateTotalBalance(byte[] input, long nrg) {
         // update total portion
         if (nrg < COST) {
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
         }
 
         if (input.length < 114) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // process input data
@@ -146,7 +147,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
         if (sig == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         byte[] payload = new byte[18];
@@ -154,12 +155,12 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
 
         if (!b) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         // payload processing
@@ -168,7 +169,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         BigInteger finalValue;
@@ -178,7 +179,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         } else {
             // subtraction
             if (value.compareTo(totalCurrBI) > 0) {
-                return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
 
             finalValue = totalCurrBI.subtract(value);
@@ -186,6 +187,6 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
 
         // store result and successful exit
         this.track.addStorageRow(this.address, chainId, new DataWord(finalValue.toByteArray()));
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST);
     }
 }

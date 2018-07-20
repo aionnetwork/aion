@@ -40,6 +40,7 @@
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
         <pathelement location="${dir.mod}/modP2p.jar"/>
+        <pathelement location="${dir.mod}/modVM.jar"/>
         <pathelement location="${dir.mod}/modFastVM.jar"/>
         <pathelement location="${dir.mod}/modPrecompiled.jar"/>
         <pathelement location="${dir.mod}/modP2pImpl.jar"/>
@@ -156,6 +157,7 @@
                 <pathelement location="${dir.mod}/modDbImpl.jar"/>
                 <pathelement location="${dir.mod}/modAion.jar"/>
                 <pathelement location="${dir.mod}/modTxPool.jar"/>
+	            <pathelement location="${dir.mod}/modVM.jar"/>
                 <pathelement location="${dir.mod}/modFastVM.jar"/>
                 <pathelement location="${dir.mod}/modPrecompiled.jar"/>
                 <pathelement location="${dir.lib}/libJson.jar"/>
