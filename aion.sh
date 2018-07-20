@@ -134,7 +134,6 @@ if $guard; then
 
 		# Watchguard
 		while $watching; do
-
 			sleep $sample
 
 			# [1] Log timestamp (last 60 sec) OR [2] PID process state ZOMBIE/DEAD
@@ -196,8 +195,18 @@ if $guard; then
 	done
 
 else
+	trap "exit" INT TERM
+	trap "exit_kernel" EXIT
+
+	exit_kernel() {
+		if [ ! -z "$kernel_pid" ]; then
+			kill "$kernel_pid" &> /dev/null
+		fi
+		exit 1
+	}
 
   	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-  		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
-
+  		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
+    kernel_pid=$!
+    wait
 fi
