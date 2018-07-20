@@ -54,6 +54,7 @@
 		<pathelement location="${dir.modfile}/modMcf.jar" />
 		<pathelement location="${dir.modfile}/modBoot.jar" />
 		<pathelement location="${dir.modfile}/modPrecompiled.jar" />
+                <pathelement location="${dir.modfile}/modVM.jar" />
 	</path>
 
 	<path id="test.lib">
@@ -268,6 +269,11 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
+                <echo message="building modVM" />
+                <ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+
 		<echo message="building modPrecompiled" />
 		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
@@ -297,6 +303,7 @@
                 <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
                         <property name="compile.debug" value="${compile.debug}" />
                 </ant>
+
 	</target>
 
 	<target name="build" depends="mod_build">

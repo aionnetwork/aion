@@ -32,6 +32,7 @@
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modDbImpl.jar"/>
         <pathelement location="${dir.mod}/modFastVM.jar"/>
+        <pathelement location="${dir.mod}/modVM.jar"/>
     </path>
 
     <path id="classpath.dependency">
@@ -43,6 +44,7 @@
         <pathelement location="${dir.mod}/modCrypto.jar"/>
         <pathelement location="${dir.mod}/modAion.jar"/>
         <pathelement location="${dir.mod}/modPrecompiled.jar"/>
+        <pathelement location="${dir.mod}/modVM.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>
