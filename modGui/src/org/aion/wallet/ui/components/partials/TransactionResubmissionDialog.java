@@ -32,16 +32,17 @@ public class TransactionResubmissionDialog implements Initializable {
 
     private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
     private final Popup popup = new Popup();
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
-
+    private ConsoleManager consoleManager;
     private AccountManager accountManager;
-
-    public TransactionResubmissionDialog(AccountManager accountManager) {
-        this.accountManager = accountManager;
-    }
 
     @FXML
     private VBox transactions;
+
+    public TransactionResubmissionDialog(AccountManager accountManager,
+                                         ConsoleManager consoleManager) {
+        this.consoleManager = consoleManager;
+        this.accountManager = accountManager;
+    }
 
     public void open(final MouseEvent mouseEvent) {
         popup.setAutoHide(true);
@@ -109,7 +110,7 @@ public class TransactionResubmissionDialog implements Initializable {
                 resubmitTransaction.setOnMouseClicked(event -> {
                     close(event);
                     accountManager.removeTimedOutTransaction(unsentTransaction);
-                    ConsoleManager.addLog("Transaction timeout treated", ConsoleManager.LogType.TRANSACTION);
+                    consoleManager.addLog("Transaction timeout treated", ConsoleManager.LogType.TRANSACTION);
                     EventPublisher.fireTransactionResubmited(unsentTransaction);
                 });
                 row.getChildren().add(resubmitTransaction);

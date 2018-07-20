@@ -86,16 +86,20 @@ public class SendController extends AbstractController {
     private final KernelConnection kernelConnection;
     private final AccountManager accountManager;
     private final TransactionProcessor transactionProcessor;
+    private final ConsoleManager consoleManager;
 
     public SendController(KernelConnection kernelConnection,
                           AccountManager accountManager,
-                          TransactionProcessor transactionProcessor) {
+                          TransactionProcessor transactionProcessor,
+                          ConsoleManager consoleManager) {
         super();
         this.kernelConnection = kernelConnection;
         this.accountManager = accountManager;
         this.transactionProcessor = transactionProcessor;
-        this.transactionResubmissionDialog = new TransactionResubmissionDialog(accountManager); // TODO should be injectable
+        this.transactionResubmissionDialog = new TransactionResubmissionDialog(
+                accountManager, consoleManager); // TODO should be injectable
         this.balanceDto = new BalanceDto(kernelConnection); // TODO should be injectable
+        this.consoleManager = consoleManager;
     }
 
     @Override
@@ -195,12 +199,12 @@ public class SendController extends AbstractController {
                 failReason = "timeout";
             }
             final String errorMessage = "Transaction " + failReason;
-            ConsoleManager.addLog(errorMessage, ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog(errorMessage, ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.WARNING);
             SendController.LOGGER.error("{}: {}", errorMessage, response);
             displayStatus(errorMessage, false);
         } else {
             LOGGER.info("{}: {}", SUCCESS_MESSAGE, response);
-            ConsoleManager.addLog("Transaction sent", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog("Transaction sent", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.WARNING);
             displayStatus(SUCCESS_MESSAGE, false);
             EventPublisher.fireTransactionFinished();
         }

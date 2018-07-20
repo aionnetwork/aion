@@ -35,6 +35,7 @@ public class AccountsController extends AbstractController {
     private final AddAccountDialog addAccountDialog;
     private final ImportAccountDialog importAccountDialog;
     private final UnlockMasterAccountDialog unlockMasterAccountDialog;
+    private final ConsoleManager consoleManager;
 
     @FXML
     private Button addMasterAccountButton;
@@ -48,11 +49,13 @@ public class AccountsController extends AbstractController {
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     public AccountsController(AccountManager accountManager,
-                              WalletStorage walletStorage) {
+                              WalletStorage walletStorage,
+                              ConsoleManager consoleManager) {
         this(accountManager, walletStorage,
-                new AddAccountDialog(accountManager),
-                new ImportAccountDialog(accountManager),
-                new UnlockMasterAccountDialog(accountManager));
+                new AddAccountDialog(accountManager, consoleManager),
+                new ImportAccountDialog(accountManager, consoleManager),
+                new UnlockMasterAccountDialog(accountManager, consoleManager),
+                consoleManager);
     }
 
     @VisibleForTesting
@@ -60,12 +63,14 @@ public class AccountsController extends AbstractController {
                        WalletStorage walletStorage,
                        AddAccountDialog addAccountDialog,
                        ImportAccountDialog importAccountDialog,
-                       UnlockMasterAccountDialog unlockMasterAccountDialog) {
+                       UnlockMasterAccountDialog unlockMasterAccountDialog,
+                       ConsoleManager consoleManager) {
         this.accountManager = accountManager;
         this.walletStorage = walletStorage;
         this.addAccountDialog = addAccountDialog;
         this.importAccountDialog = importAccountDialog;
         this.unlockMasterAccountDialog = unlockMasterAccountDialog;
+        this.consoleManager = consoleManager;
     }
 
     @Override
@@ -153,9 +158,9 @@ public class AccountsController extends AbstractController {
         if (this.walletStorage.hasMasterAccount()) {
             try {
                 accountManager.createAccount();
-                ConsoleManager.addLog("New address created", ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog("New address created", ConsoleManager.LogType.ACCOUNT);
             } catch (ValidationException e) {
-                ConsoleManager.addLog("Address cannot be created", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Address cannot be created", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 LOG.error(e.getMessage(), e);
                 // todo: display on yui
             }

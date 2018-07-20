@@ -29,6 +29,7 @@ public class DashboardController extends AbstractController {
     private final KernelLauncher kernelLauncher;
     private final KernelConnection kernelConnection;
     private final KernelUpdateTimer kernelUpdateTimer;
+    private final ConsoleManager consoleManager;
 
     private final GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private final SyncInfoDto syncInfoDTO;
@@ -48,12 +49,14 @@ public class DashboardController extends AbstractController {
                                KernelConnection kernelConnection,
                                KernelUpdateTimer kernelUpdateTimer,
                                GeneralKernelInfoRetriever generalKernelInfoRetriever,
-                               SyncInfoDto syncInfoDTO) {
+                               SyncInfoDto syncInfoDTO,
+                               ConsoleManager consoleManager) {
         this.kernelConnection = kernelConnection;
         this.kernelLauncher = kernelLauncher;
         this.kernelUpdateTimer = kernelUpdateTimer;
         this.generalKernelInfoRetriever = generalKernelInfoRetriever;
         this.syncInfoDTO = syncInfoDTO;
+        this.consoleManager = consoleManager;
     }
 
     @Override
@@ -167,7 +170,7 @@ public class DashboardController extends AbstractController {
     }
 
     public void openConsole() {
-        ConsoleManager.show();
+        consoleManager.show();
     }
 
     // -- Helpers methods -------------------------------------------------------------------------

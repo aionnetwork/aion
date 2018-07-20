@@ -14,6 +14,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Popup;
 import org.aion.gui.controller.ControllerFactory;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
@@ -24,17 +26,21 @@ import java.util.ResourceBundle;
 
 public class UnlockMasterAccountDialog implements Initializable {
 
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());    private final Popup popup = new Popup();
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
     private final AccountManager accountManager;
+    private final ConsoleManager consoleManager;
+
     @FXML
     private PasswordField passwordField;
     @FXML
     private Label validationError;
 
-    public UnlockMasterAccountDialog(AccountManager accountManager) {
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+    private final Popup popup = new Popup();
+
+    public UnlockMasterAccountDialog(AccountManager accountManager,
+                                     ConsoleManager consoleManager) {
         this.accountManager = accountManager;
+        this.consoleManager = consoleManager;
     }
 
     @Override
@@ -81,10 +87,10 @@ public class UnlockMasterAccountDialog implements Initializable {
     private void unlockMasterAccount(final InputEvent mouseEvent) {
         try {
             accountManager.unlockMasterAccount(passwordField.getText());
-            ConsoleManager.addLog("Master account unlocked", ConsoleManager.LogType.ACCOUNT);
+            consoleManager.addLog("Master account unlocked", ConsoleManager.LogType.ACCOUNT);
             close(mouseEvent);
         } catch (Exception e) {
-            ConsoleManager.addLog("Could not unlock master account", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog("Could not unlock master account", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
             showInvalidFieldsError(e.getMessage());
         }
     }

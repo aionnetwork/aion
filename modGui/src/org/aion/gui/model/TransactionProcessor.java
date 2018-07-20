@@ -228,7 +228,7 @@ public class TransactionProcessor extends AbstractAionApiClient {
                 .createTxArgs();
         final MsgRsp response;
 
-        ConsoleManager.addLog("Sending transaction", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
+        consoleManager.addLog("Sending transaction", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
         response = callApi(api -> api.getTx().sendSignedTransaction(
                 txArgs,
                 new ByteArrayWrapper((accountManager.getAccount(dto.getFrom())).getPrivateKey())

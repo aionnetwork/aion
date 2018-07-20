@@ -48,6 +48,7 @@ public class SaveKeystoreDialog implements Initializable {
     private static final String CHOOSER_TITLE = "Keystore Destination";
 
     private final AccountManager accountManager;
+    private final ConsoleManager consoleManager;
     private AccountDTO account;
     private String destinationDirectory;
 
@@ -58,8 +59,9 @@ public class SaveKeystoreDialog implements Initializable {
     @FXML
     private TextField keystoreTextView;
 
-    public SaveKeystoreDialog(AccountManager accountManager) {
+    public SaveKeystoreDialog(AccountManager accountManager, ConsoleManager consoleManager) {
         this.accountManager = accountManager;
+        this.consoleManager = consoleManager;
     }
 
     @Override
@@ -127,11 +129,11 @@ public class SaveKeystoreDialog implements Initializable {
             try {
                 accountManager.exportAccount(account, password, destinationDirectory);
                 final String infoMsg = "Account: " + account.getPublicAddress() + " exported to " + destinationDirectory;
-                ConsoleManager.addLog(infoMsg, ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog(infoMsg, ConsoleManager.LogType.ACCOUNT);
                 LOGGER.info(infoMsg);
                 close(event);
             } catch (ValidationException e) {
-                ConsoleManager.addLog("Account: " + account.getPublicAddress() + " could not be exported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Account: " + account.getPublicAddress() + " could not be exported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 validationError.setText(e.getMessage());
                 validationError.setVisible(true);
                 LOGGER.error(e.getMessage(), e);

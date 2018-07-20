@@ -31,6 +31,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.os.KernelLauncher;
 import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.events.IdleMonitor;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.zero.impl.config.CfgAion;
@@ -91,6 +92,7 @@ public class MainWindow extends Application {
     private final KernelConnection kc;
     private final TransactionProcessor transactionProcessor;
     private final AccountChangeHandlers accountChangeHandlers;
+    private final ConsoleManager consoleManager;
 
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
@@ -103,15 +105,15 @@ public class MainWindow extends Application {
     private IdleMonitor idleMonitor;
 
 
-
     public MainWindow() {
+        consoleManager = new ConsoleManager();
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
         kernelLauncher = new KernelLauncher(CfgAion.inst().getGui().getCfgGuiLauncher(),
                 EventBusRegistry.INSTANCE);
         kc = new KernelConnection(
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
-        accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY);
+        accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY, consoleManager);
         transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
         accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
     }
@@ -169,10 +171,12 @@ public class MainWindow extends Application {
                 .withAccountManager(accountManager)
                 .withWalletStorage(WalletStorage.getInstance())
                 .withBlockTransactionProcessor(transactionProcessor)
+                .withConsoleManager(consoleManager)
         );
         System.out.println(String.format("XXX %s", loader.getBuilderFactory()));
         loader.setBuilderFactory(new MyBuilderFactory()
                 .withAccountManager(accountManager)
+                .withConsoleManager(consoleManager)
         );
         return loader;
     }

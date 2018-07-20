@@ -9,24 +9,27 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ConsoleManager {
+    private StackPane root;
+    private final TextArea logsTextField;
+    private Stage consoleLogWindow;
+    private StringBuilder logs = new StringBuilder();
+
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-YY - HH.mm.ss");
 
-    private static final TextArea LOGS_TEXT_FIELD = new TextArea();
-    private static Stage CONSOLE_LOG_WINDOW;
-    private static StringBuilder logs = new StringBuilder();
+    public ConsoleManager() {
+        logsTextField = new TextArea();
+        logsTextField.setEditable(false);
 
-    static {
-        LOGS_TEXT_FIELD.setEditable(false);
-        StackPane root = new StackPane();
-        root.getChildren().add(ConsoleManager.LOGS_TEXT_FIELD);
+        root = new StackPane();
+        root.getChildren().add(logsTextField);
         Scene scene = new Scene(root, 600, 350);
 
-        CONSOLE_LOG_WINDOW = new Stage();
-        CONSOLE_LOG_WINDOW.setTitle("Console");
-        CONSOLE_LOG_WINDOW.setScene(scene);
+        consoleLogWindow = new Stage();
+        consoleLogWindow.setTitle("Console");
+        consoleLogWindow.setScene(scene);
     }
 
-    public static void addLog(String log, LogType type, LogLevel level) {
+    public void addLog(String log, LogType type, LogLevel level) {
         logs.append(SIMPLE_DATE_FORMAT.format(new Date()));
         logs.append(" ");
         logs.append(level.toString());
@@ -35,20 +38,16 @@ public class ConsoleManager {
         logs.append("]: ");
         logs.append(log);
         logs.append("\n");
-        LOGS_TEXT_FIELD.setText(logs.toString());
-        LOGS_TEXT_FIELD.setScrollTop(Double.MAX_VALUE);
+        logsTextField.setText(logs.toString());
+        logsTextField.setScrollTop(Double.MAX_VALUE);
     }
-
-    public void addLog2(String log, LogType type, LogLevel level) {
-        addLog(log, type, level);
-    }
-
-    public static void addLog(String log, LogType type) {
+    
+    public void addLog(String log, LogType type) {
         addLog(log, type, LogLevel.INFO);
     }
 
-    public static void show() {
-        CONSOLE_LOG_WINDOW.show();
+    public void show() {
+        consoleLogWindow.show();
     }
 
     public enum LogType {

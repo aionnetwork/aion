@@ -23,6 +23,7 @@ import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
+import java.io.Console;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -33,9 +34,8 @@ public class UnlockAccountDialog implements Initializable {
             .getLogger(org.aion.log.LogEnum.GUI.name());
 
     private final Popup popup = new Popup();
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
     private final AccountManager accountManager;
-
+    private final ConsoleManager consoleManager;
 
     @FXML
     private PasswordField unlockPassword;
@@ -43,8 +43,10 @@ public class UnlockAccountDialog implements Initializable {
     private Label validationError;
     private AccountDTO account;
 
-    public UnlockAccountDialog(AccountManager accountManager) {
+    public UnlockAccountDialog(AccountManager accountManager,
+                               ConsoleManager consoleManager) {
         this.accountManager = accountManager;
+        this.consoleManager = consoleManager;
     }
 
     @Override
@@ -86,10 +88,10 @@ public class UnlockAccountDialog implements Initializable {
         if (password != null && !password.isEmpty()) {
             try {
                 accountManager.unlockAccount(account, password);
-                ConsoleManager.addLog("Account" + account.getPublicAddress() + " unlocked", ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog("Account" + account.getPublicAddress() + " unlocked", ConsoleManager.LogType.ACCOUNT);
                 close(event);
             } catch (ValidationException e) {
-                ConsoleManager.addLog("Account" + account.getPublicAddress() + " could not be unlocked", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Account" + account.getPublicAddress() + " could not be unlocked", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 validationError.setText(e.getMessage());
                 validationError.setVisible(true);
             }

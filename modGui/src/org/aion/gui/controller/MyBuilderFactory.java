@@ -1,5 +1,6 @@
 package org.aion.gui.controller;
 
+import com.google.common.annotations.VisibleForTesting;
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.util.Builder;
 import javafx.util.BuilderFactory;
@@ -13,11 +14,13 @@ import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.wallet.ui.components.account.AccountCellFactory;
 import org.aion.wallet.ui.components.partials.AddAccountDialog;
 import org.slf4j.Logger;
 
+import java.io.Console;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,13 +37,26 @@ import java.util.Map;
 public class MyBuilderFactory implements BuilderFactory {
     /** maps a class to a method that constructs an instance of it */
     private final Map<Class, Builder<?>> builderChooser;
+    private final BuilderFactory fallback;
 
     private AccountManager accountManager;
-
-    private JavaFXBuilderFactory fallback = new JavaFXBuilderFactory();
+    private ConsoleManager consoleManager;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
+
+    @VisibleForTesting
+    MyBuilderFactory(BuilderFactory fallback) {
+        this.fallback = fallback;
+        this.builderChooser = new HashMap<>() {{
+            put(AccountCellFactory.class, () -> new AccountCellFactory(accountManager, consoleManager));
+            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager, consoleManager));
+        }};
+    }
+
+    public MyBuilderFactory() {
+        this(new JavaFXBuilderFactory());
+    }
 
     @Override
     public Builder<?> getBuilder(Class<?> clazz) {
@@ -56,17 +72,6 @@ public class MyBuilderFactory implements BuilderFactory {
         }
     }
 
-    /**
-     * Constructor.  See "withXXX" methods for setting factory parameters, i.e.
-     * {@link #withKernelConnection(KernelConnection)}
-     */
-    public MyBuilderFactory() {
-        this.builderChooser = new HashMap<>() {{
-            put(AccountCellFactory.class, () -> new AccountCellFactory(accountManager));
-            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
-        }};
-    }
-
     public MyBuilderFactory withAccountManager(AccountManager accountManager) {
         this.accountManager = accountManager;
         return this;
@@ -76,5 +81,13 @@ public class MyBuilderFactory implements BuilderFactory {
         return this.accountManager;
     }
 
+    public ConsoleManager getConsoleManager() {
+        return this.consoleManager;
+    }
+
+    public MyBuilderFactory withConsoleManager(ConsoleManager consoleManager) {
+        this.consoleManager = consoleManager;
+        return this;
+    }
 
 }

@@ -56,6 +56,7 @@ public class AccountManager {
     private final KeystoreFormat keystoreFormat = new KeystoreFormat();
     private final BalanceDto balanceProvider;
     private final Supplier<String> currencySupplier;
+    private final ConsoleManager consoleManager;
 
     private MasterKey root;
 
@@ -64,13 +65,16 @@ public class AccountManager {
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
 
-    public AccountManager(final BalanceDto balanceProvider, final Supplier<String> currencySupplier) {
+    public AccountManager(final BalanceDto balanceProvider,
+                          final Supplier<String> currencySupplier,
+                          ConsoleManager consoleManager) {
         this.balanceProvider = balanceProvider;
         this.currencySupplier = currencySupplier;
+        this.consoleManager = consoleManager;
+        
         for (String address : Keystore.list()) {
             addressToAccount.put(address, getNewAccount(address));
         }
-
     }
 
     public String createMasterAccount(final String password, final String name) throws ValidationException {
@@ -344,7 +348,7 @@ public class AccountManager {
             return;
         }
         isWalletLocked = true;
-        ConsoleManager.addLog("Wallet has been locked due to inactivity", ConsoleManager.LogType.ACCOUNT);
+        consoleManager.addLog("Wallet has been locked due to inactivity", ConsoleManager.LogType.ACCOUNT);
         root = null;
         for (AccountDTO account : addressToAccount.values()) {
             account.setPrivateKey(null);

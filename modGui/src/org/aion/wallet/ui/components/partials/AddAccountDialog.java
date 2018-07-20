@@ -28,13 +28,9 @@ import org.slf4j.Logger;
 import java.io.IOException;
 
 public class AddAccountDialog {
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
-
     private final MnemonicDialog mnemonicDialog = new MnemonicDialog();
-
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
     private final AccountManager accountManager;
+    private final ConsoleManager consoleManager;
 
     @FXML
     public TextField mnemonicTextField;
@@ -49,8 +45,13 @@ public class AddAccountDialog {
     @FXML
     private Label validationError;
 
-    public AddAccountDialog(AccountManager accountManager) {
+    private static final Logger LOG = org.aion.log.AionLoggerFactory
+            .getLogger(org.aion.log.LogEnum.GUI.name());
+
+    public AddAccountDialog(AccountManager accountManager,
+                            ConsoleManager consoleManager) {
        this.accountManager = accountManager;
+       this.consoleManager = consoleManager;
     }
 
     public void createAccount(final InputEvent mouseEvent) {
@@ -70,7 +71,7 @@ public class AddAccountDialog {
         try {
 //            String mnemonic = blockchainConnector.createMasterAccount(newPassword.getText(), newAccountName.getText());
             String mnemonic = accountManager.createMasterAccount(newPassword.getText(), newAccountName.getText());
-            ConsoleManager.addLog("Master account created -> name: " + newAccountName.getText(), ConsoleManager.LogType.ACCOUNT);
+            consoleManager.addLog("Master account created -> name: " + newAccountName.getText(), ConsoleManager.LogType.ACCOUNT);
 
 
             if (mnemonic != null) {
@@ -78,7 +79,7 @@ public class AddAccountDialog {
                 EventPublisher.fireMnemonicCreated(mnemonic);
             }
         } catch (ValidationException e) {
-            ConsoleManager.addLog("Master account could not be created", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog("Master account could not be created", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
             showInvalidFieldsError(e.getMessage());
         }
     }
@@ -91,12 +92,11 @@ public class AddAccountDialog {
                 MnemonicValidator
                         .ofWordList(English.INSTANCE)
                         .validate(mnemonic);
-//                blockchainConnector.importMasterAccount(mnemonic, mnemonicPassword);
                 accountManager.importMasterAccount(mnemonic, mnemonicPassword);
-                ConsoleManager.addLog("Master account imported", ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog("Master account imported", ConsoleManager.LogType.ACCOUNT);
                 this.close(mouseEvent);
             } catch (UnexpectedWhiteSpaceException | InvalidWordCountException | InvalidChecksumException | WordNotFoundException | ValidationException e) {
-                ConsoleManager.addLog("Could not import master account", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Could not import master account", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 showInvalidFieldsError(getMnemonicValidationErrorMessage(e));
                 LOG.error(e.getMessage(), e);
             }

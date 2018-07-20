@@ -11,6 +11,7 @@ import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.os.KernelLauncher;
 import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.wallet.ui.components.partials.AddAccountDialog;
 import org.aion.wallet.ui.components.partials.ImportAccountDialog;
@@ -46,6 +47,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private AccountManager accountManager;
     private WalletStorage walletStorage;
     private TransactionProcessor transactionProcessor;
+    private ConsoleManager consoleManager;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -66,28 +68,31 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelConnection,
                     kernelUpdateTimer,
                     generalKernelInfoRetriever,
-                    syncInfoDto));
+                    syncInfoDto,
+                    consoleManager));
             put(SettingsController.class, () -> new SettingsController(
                     configManipulator));
             put(AccountsController.class, () -> new AccountsController(
-                    accountManager, walletStorage));
+                    accountManager, walletStorage,
+                    consoleManager));
             put(HeaderPaneControls.class, () -> new HeaderPaneControls(
                     new BalanceDto(kernelConnection)));
             put(SendController.class, () -> new SendController(
                     kernelConnection,
                     accountManager,
-                    transactionProcessor));
+                    transactionProcessor,
+                    consoleManager));
             put(HistoryController.class, () -> new HistoryController(
                     transactionProcessor,
                     accountManager,
                     new SyncInfoDto(kernelConnection)));
-            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager));
-            put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager));
-            put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager));
-            put(UnlockAccountDialog.class, () -> new UnlockAccountDialog(accountManager));
+            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager, consoleManager));
+            put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager, consoleManager));
+            put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager, consoleManager));
+            put(UnlockAccountDialog.class, () -> new UnlockAccountDialog(accountManager, consoleManager));
             put(TransactionResubmissionDialog.class, () -> new TransactionResubmissionDialog(
-                    accountManager));
-            put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager));
+                    accountManager, consoleManager));
+            put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager, consoleManager));
         }};
     }
 
@@ -241,6 +246,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
 
     public ControllerFactory withBlockTransactionProcessor(TransactionProcessor transactionProcessor) {
         this.transactionProcessor = transactionProcessor;
+        return this;
+    }
+
+    public ConsoleManager getConsoleManager() {
+        return consoleManager;
+    }
+
+    public ControllerFactory withConsoleManager(ConsoleManager consoleManager) {
+        this.consoleManager = consoleManager;
         return this;
     }
 }

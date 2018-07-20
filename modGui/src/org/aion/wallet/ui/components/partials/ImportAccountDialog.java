@@ -41,6 +41,33 @@ import java.nio.file.Files;
 import java.util.ResourceBundle;
 
 public class ImportAccountDialog implements Initializable {
+    private final AccountManager accountManager;
+    private final ConsoleManager consoleManager;
+
+    @FXML
+    public TextField privateKeyInput;
+    @FXML
+    private PasswordField privateKeyPassword;
+    @FXML
+    private TextField keystoreTextView;
+    @FXML
+    private PasswordField keystorePassword;
+    @FXML
+    private RadioButton privateKeyRadioButton;
+    @FXML
+    private RadioButton keystoreRadioButton;
+    @FXML
+    private ToggleGroup accountTypeToggleGroup;
+    @FXML
+    private VBox importKeystoreView;
+    @FXML
+    private VBox importPrivateKeyView;
+    @FXML
+    private CheckBox rememberAccount;
+    @FXML
+    private Label validationError;
+
+    private byte[] keystoreFile;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -49,46 +76,11 @@ public class ImportAccountDialog implements Initializable {
 
     private static final String KEYSTORE_RADIO_BUTTON_ID = "KEYSTORE_RB";
 
-    private final AccountManager accountManager;
-
-    public ImportAccountDialog(AccountManager accountManager) {
+    public ImportAccountDialog(AccountManager accountManager,
+                               ConsoleManager consoleManager) {
         this.accountManager = accountManager;
+        this.consoleManager = consoleManager;
     }
-
-    @FXML
-    public TextField privateKeyInput;
-
-    @FXML
-    private PasswordField privateKeyPassword;
-
-    @FXML
-    private TextField keystoreTextView;
-
-    @FXML
-    private PasswordField keystorePassword;
-
-    @FXML
-    private RadioButton privateKeyRadioButton;
-
-    @FXML
-    private RadioButton keystoreRadioButton;
-
-    @FXML
-    private ToggleGroup accountTypeToggleGroup;
-
-    @FXML
-    private VBox importKeystoreView;
-
-    @FXML
-    private VBox importPrivateKeyView;
-
-    @FXML
-    private CheckBox rememberAccount;
-
-    @FXML
-    private Label validationError;
-
-    private byte[] keystoreFile;
 
     public void uploadKeystoreFile() throws IOException {
         resetValidation();
@@ -122,12 +114,11 @@ public class ImportAccountDialog implements Initializable {
         String password = keystorePassword.getText();
         if (!password.isEmpty() && keystoreFile != null) {
             try {
-//                AccountDTO dto = blockchainConnector.importKeystoreFile(keystoreFile, password, shouldKeep);
                 AccountDTO dto = accountManager.importKeystore(keystoreFile, password, shouldKeep);
-                ConsoleManager.addLog("Keystore imported", ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog("Keystore imported", ConsoleManager.LogType.ACCOUNT);
                 return dto;
             } catch (final ValidationException e) {
-                ConsoleManager.addLog("Keystore could not be imported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Keystore could not be imported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 LOG.error(e.getMessage(), e);
                 displayError(e.getMessage());
                 return null;
@@ -150,12 +141,11 @@ public class ImportAccountDialog implements Initializable {
                 return null;
             }
             try {
-//                AccountDTO dto = blockchainConnector.importPrivateKey(raw, password, shouldKeep);
                 AccountDTO dto = accountManager.importPrivateKey(raw, password, shouldKeep);
-                ConsoleManager.addLog("Private key imported", ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog("Private key imported", ConsoleManager.LogType.ACCOUNT);
                 return dto;
             } catch (ValidationException e) {
-                ConsoleManager.addLog("Private key could not be imported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Private key could not be imported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 LOG.error(e.getMessage(), e);
                 displayError(e.getMessage());
                 return null;
@@ -175,7 +165,6 @@ public class ImportAccountDialog implements Initializable {
         StackPane pane = new StackPane();
         Pane importAccountDialog;
         try {
-//            importAccountDialog = FXMLLoader.load(getClass().getResource("ImportAccountDialog.fxml"));
             FXMLLoader loader = new FXMLLoader((getClass().getResource("ImportAccountDialog.fxml")));
             loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
             importAccountDialog = loader.load();
@@ -217,7 +206,6 @@ public class ImportAccountDialog implements Initializable {
             importAccount(event);
         }
     }
-
 
     public void resetValidation() {
         validationError.setVisible(false);
