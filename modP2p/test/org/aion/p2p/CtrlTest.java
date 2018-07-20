@@ -25,9 +25,10 @@
 
 package org.aion.p2p;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import java.util.concurrent.ThreadLocalRandom;
-import static junit.framework.Assert.assertEquals;
 
 /**
  * @author  chris

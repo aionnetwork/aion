@@ -27,7 +27,6 @@ package org.aion.p2p;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.prefs.InvalidPreferencesFormatException;
 
 /**
  * @author chris
@@ -106,7 +105,7 @@ public final class Header {
      * @return Header
      * @throws IOException when exeeds MAX_BODY_LEN_BYTES
      */
-    public static Header decode(final byte[] _headerBytes) throws Exception {
+    public static Header decode(final byte[] _headerBytes) {
         if (_headerBytes == null || _headerBytes.length != LEN) {
             throw new IllegalArgumentException("invalid-header-bytes");
         } else {
@@ -116,7 +115,7 @@ public final class Header {
             byte action = bb1.get();
             int len = bb1.getInt();
             if (len > MAX_BODY_LEN_BYTES) {
-                throw new InvalidPreferencesFormatException("exceed-max-body-size");
+                throw new IndexOutOfBoundsException("exceed-max-body-size");
             }
             return new Header(ver, ctrl, action, len);
         }
