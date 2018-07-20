@@ -2,7 +2,6 @@ package org.aion.p2p.impl;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.nio.channels.SocketChannel;
 
 public class TestUtilities {
     private TestUtilities() {}
