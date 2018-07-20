@@ -30,11 +30,12 @@ import org.junit.Test;
 public class TRSstateContractTest extends TRShelpers {
 
     @Before
-    public void setup() {
+    public void setup() throws InterruptedException {
         repo = new DummyRepo();
         ((DummyRepo) repo).storageErrorReturn = null;
         tempAddrs = new ArrayList<>();
         repo.addBalance(AION, BigInteger.ONE);
+        createBlockchain(0, 0);
     }
 
     @After
