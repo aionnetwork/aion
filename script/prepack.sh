@@ -16,6 +16,7 @@ if [ ! -d "$JDK_PATH" ]; then
   wget -nc --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz" -O "${PACK_PATH}/${JDK_VER}_linux-x64_bin.tar.gz"
   tar -xf "${PACK_PATH}/${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
   mv "${PACK_PATH}/${JDK_VER}" $JDK_PATH
+fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
