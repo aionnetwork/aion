@@ -195,6 +195,16 @@ if $guard; then
 	done
 
 else
+
+	JAVA_CMD=java
+	if [ -d "./rt" ]; then
+			JAVA_CMD="./rt/bin/java"
+	elif [ -d "./pack/rt" ]; then
+			JAVA_CMD="./pack/rt/bin/java"
+	elif [ -d "$JAVA_HOME" ]; then
+			JAVA_CMD="$JAVA_HOME/bin/java"
+	fi
+
 	trap "exit" INT TERM
 	trap "exit_kernel" EXIT
 
@@ -205,7 +215,7 @@ else
 		exit 1
 	}
 
-  	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
+  	env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
   		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
     kernel_pid=$!
     wait
