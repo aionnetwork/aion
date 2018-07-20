@@ -24,7 +24,6 @@ package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -132,7 +131,7 @@ class ChannelBuffer {
         buf.get(bsHead);
         try {
             header = Header.decode(bsHead);
-        } catch (IOException e) {
+        } catch (Exception e) {
             if (p2pLOG.isDebugEnabled()) {
                 p2pLOG
                     .debug("ChannelBuffer readHead exception. {}", e.toString());

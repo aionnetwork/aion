@@ -28,7 +28,6 @@ package org.aion.p2p;
 import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.prefs.InvalidPreferencesFormatException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -67,7 +66,7 @@ public class HeaderTest {
     }
 
     @Test
-    public void encodeDecode() throws Exception {
+    public void encodeDecode() {
         byte[] bytes = hd.encode();
         Header hdr = Header.decode(bytes);
         assertEquals(version, hdr.getVer());
@@ -78,7 +77,7 @@ public class HeaderTest {
     }
 
     @Test
-    public void encodeDecode2() throws Exception {
+    public void encodeDecode2() {
         hd.setLen(P2pConstant.MAX_BODY_SIZE);
         byte[] bytes = hd.encode();
         Header hdr = Header.decode(bytes);
@@ -89,27 +88,27 @@ public class HeaderTest {
         assertEquals(route, hd.getRoute());
     }
 
-    @Test(expected = InvalidPreferencesFormatException.class)
-    public void encodeDecode3() throws Exception {
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void encodeDecode3() {
         hd.setLen(P2pConstant.MAX_BODY_SIZE + 1);
         byte[] bytes = hd.encode();
         Header.decode(bytes);
     }
 
     @Test
-    public void repeatEncodeDecode() throws Exception {
+    public void repeatEncodeDecode() {
         for (int i = 0; i < 100; i++) {
             encodeDecode();
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void decodeThrow() throws Exception {
+    public void decodeThrow() {
         Header.decode(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void decodeThrow2() throws Exception {
+    public void decodeThrow2() {
         byte[] data = new byte[length - 1];
         Header.decode(data);
     }
