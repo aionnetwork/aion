@@ -2815,10 +2815,11 @@ public class TRSuseContractTest extends TRShelpers {
         int periods = 8;
         BigInteger deposits = new BigInteger("43436454575475437");
         BigInteger bonus = new BigInteger("325436346546345634634634346");
-        BigInteger extra = new BigInteger("543435325634674563434");
+        BigInteger extra = new BigInteger("1000");
         BigDecimal percent = new BigDecimal("18.888");
         Address contract = setupContract(numDepositors, deposits, bonus, periods, percent);
 
+        // We add some extra funds and half the accounts make a withdrawal, half don't.
         AbstractTRS trs = newTRSuseContract(AION);
         repo.addBalance(AION, extra);
         byte[] input = getAddExtraInput(contract, extra);
@@ -2826,11 +2827,6 @@ public class TRSuseContractTest extends TRShelpers {
         createBlockchain(1, TimeUnit.SECONDS.toMillis(2));
         int currPeriod = getContractCurrentPeriod(trs, contract);
         assertTrue(currPeriod < periods);
-
-        // We add some extra funds and half the accounts make a withdrawal, half don't.
-        repo.addBalance(AION, extra);
-        input = getAddExtraInput(contract, extra);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         Set<Address> contributors = getAllDepositors(trs, contract);
         BigInteger total = deposits.multiply(BigInteger.valueOf(numDepositors));
@@ -2858,21 +2854,31 @@ public class TRSuseContractTest extends TRShelpers {
         input = getAddExtraInput(contract, extra);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
+        BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
         input = getWithdrawInput(contract);
         withdraw = true;
         for (Address acc : contributors) {
             BigInteger extraShare = getExtraShare(trs, contract, acc, fraction, currPeriod);
-            BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
             if (withdraw) {
                 // These have already withdrawn.
-                assertEquals(ResultCode.INTERNAL_ERROR, newTRSuseContract(acc).execute(input, COST).getResultCode());
-                assertEquals(prevAmt, repo.getBalance(acc));
+                assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getResultCode());
+                assertEquals(prevAmt.add(extraShare), repo.getBalance(acc));
             } else {
                 assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getResultCode());
                 assertEquals(amt.add(extraShare), repo.getBalance(acc));
                 assertTrue(prevAmt.compareTo(amt.add(extraShare)) < 0);
             }
             withdraw = !withdraw;
+        }
+
+        // Verify that after this everyone has collected the same amount.
+        BigInteger bal = null;
+        for (Address acc : contributors) {
+            if (bal == null) {
+                bal = repo.getBalance(acc);
+            } else {
+                assertEquals(bal, repo.getBalance(acc));
+            }
         }
     }
 

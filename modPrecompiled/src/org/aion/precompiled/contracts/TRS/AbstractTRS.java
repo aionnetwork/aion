@@ -750,19 +750,29 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     boolean makeWithdrawal(Address contract, Address account) {
         byte[] specs = getContractSpecs(contract);
         if (specs == null) { return false; }
-        if (isAccountDoneWithdrawing(contract, account)) {
-            return attemptFinalPeriodExtraFundsWithdraw(contract, account);
-        }
 
         // Grab period here since computations are dependent upon it and a new block may arrive,
         // changing the period mid-computation.
         int currPeriod = calculatePeriod(contract, specs, blockchain.getBestBlock().getTimestamp());
         boolean inFinalPeriod = (getPeriods(specs) == currPeriod);
+        BigDecimal fraction = getDepositorFraction(contract, account);
+
+        BigInteger amount, extras;
+        if (isAccountDoneWithdrawing(contract, account)) {
+            extras = computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
+            if (extras.compareTo(BigInteger.ZERO) > 0) {
+                track.addBalance(account, extras);
+                updateAccountLastWithdrawalPeriod(contract, account, currPeriod);
+                setExtraWithdrawalBalance(contract, account,
+                    getExtraWithdrawalBalance(contract, account).add(extras));
+                setAccountIneligibleForSpecial(contract, account.toBytes());
+                return true;
+            }
+            return false;
+        }
 
         // Calculate withdrawal amount. If we are in last period or the contract has its funds open,
         // then account can withdraw all outstanding funds.
-        BigDecimal fraction = getDepositorFraction(contract, account);
-        BigInteger amount, extras;
         if ((inFinalPeriod) || isOpenFunds(contract)) {
             amount = computeOutstadingOwings(contract, account);
             extras = computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
@@ -776,33 +786,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         }
 
         // If amount is non-zero then transfer the funds and update account's last withdrawal period.
-        if (amount.compareTo(BigInteger.ZERO) > 0) {
-            track.addBalance(account, amount.add(extras));
+        BigInteger claimed = amount.add(extras);
+        if (claimed.compareTo(BigInteger.ZERO) > 0) {
+            track.addBalance(account, claimed);
             updateAccountLastWithdrawalPeriod(contract, account, currPeriod);
             setExtraWithdrawalBalance(contract, account, getExtraWithdrawalBalance(contract, account).add(extras));
             setAccountIneligibleForSpecial(contract, account.toBytes());
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Attempts to withdraw any unclaimed extra funds in the contract that are still available for
-     * account to claim. If there are X unclaimed funds then all X funds are withdrawn by account.
-     * Once withdrawn, the total amount of extra funds account has withdrawn is updated.
-     *
-     * This method should only ever be called in the final period of the contract and specifically
-     * only once isAccountDoneWithdrawing == true. This precondition must hold.
-     */
-    private boolean attemptFinalPeriodExtraFundsWithdraw(Address contract, Address account) {
-        BigInteger extraFunds = getExtraFunds(contract);
-        BigDecimal fraction = getDepositorFraction(contract, account);
-        BigInteger extraShare = fraction.multiply(new BigDecimal(extraFunds)).toBigInteger();
-        BigInteger extrasWithdrawn = getExtraWithdrawalBalance(contract, account);
-        BigInteger unclaimed = extraShare.subtract(extrasWithdrawn);
-        if (unclaimed.compareTo(BigInteger.ZERO) > 0) {
-            track.addBalance(account, unclaimed);
-            setExtraWithdrawalBalance(contract, account, extraShare);
             return true;
         }
         return false;
@@ -1093,43 +1082,42 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
     /**
      * Returns the amount of extra funds that account is eligible to withdraw for the current
-     * period. If the contract has P periods and the amount of extra funds in it is E and account
-     * owns F fraction of the total deposit balance in the contract, then account will be eligible
-     * for FE (allowing round-off error) of the extra funds over the lifetime of the contract.
+     * period. Let's assume that:
+     * P = total number of periods in the contract
+     * E(t) = total amount of extra funds in the contract at some time t
+     * F = fraction of total deposits owned by account
+     * W = amount of extra funds already withdrawn by account
      *
-     * Assume that the current period is U and account has already withdrawn W extra funds from the
-     * contract and that the last period account has withdrawn in was period L, where L <= U.
+     * Then this method returns the following when currPeriod < P:
      *
-     * Then this method returns the following:
+     *   ((currPeriod x F x E(t))/P) - W
      *
-     *   (U - L)((FE - W) / (P - L))
+     * This is the total amount of extra funds owed to account over periods 0 to currPeriod minus
+     * the amount that account has already claimed of this sum. This formula ensures that as E(t)
+     * possibly changes over time that whatever uncollected difference remains is always collected.
      *
-     * An exception to this is when U == P, in which case this method returns:
+     * When currPeriod == P this method returns:
      *
-     *   FE - W
+     *   (F x E(t)) - W
+     *
+     * (where x denotes multiplication, not a variable)
      *
      * @param contract The TRS contract.
      * @param account The account.
      * @param currPeriod The current period we are in.
      * @return the extra funds account is able to withdraw.
      */
-     public BigInteger computeExtraFundsToWithdraw(Address contract, Address account,
-        BigDecimal fraction, int currPeriod) {
+    public BigInteger computeExtraFundsToWithdraw(Address contract, Address account, BigDecimal fraction,
+        int currPeriod) {
 
+        BigInteger share = fraction.multiply(new BigDecimal(getExtraFunds(contract))).toBigInteger();
         int periods = getPeriods(getContractSpecs(contract));
-        int lastPeriod = getAccountLastWithdrawalPeriod(contract, account);
-        BigInteger extraFunds = getExtraFunds(contract);
-        BigInteger extrasWithdrawn = getExtraWithdrawalBalance(contract, account);
-
-        BigDecimal owed = fraction.multiply(new BigDecimal(extraFunds));
-        BigDecimal owedLeft = owed.subtract(new BigDecimal(extrasWithdrawn));
-        if (lastPeriod == periods) {
-            return owedLeft.toBigInteger();
+        if (currPeriod == periods) {
+            return share.subtract(getExtraWithdrawalBalance(contract, account));
         } else {
-            BigDecimal portion = owedLeft.divide(new BigDecimal(
-                BigInteger.valueOf(periods - lastPeriod)), 18, RoundingMode.HALF_DOWN);
-            return portion.multiply(new BigDecimal(BigInteger.valueOf(currPeriod - lastPeriod))).
-                toBigInteger();
+            BigDecimal owed = new BigDecimal(share.multiply(BigInteger.valueOf(currPeriod)));
+            BigDecimal portion = owed.divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN);
+            return portion.toBigInteger().subtract(getExtraWithdrawalBalance(contract, account));
         }
     }
 
