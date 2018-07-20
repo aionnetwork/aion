@@ -21,7 +21,7 @@
  *     Aion foundation.
  */
 
-package org.aion.mcf.vm;
+package org.aion.vm;
 
 import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
 import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
@@ -35,7 +35,7 @@ import org.aion.base.type.IExecutionResult;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.base.type.ITxReceipt;
-import org.aion.mcf.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {

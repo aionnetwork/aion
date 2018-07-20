@@ -38,6 +38,7 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -150,6 +151,7 @@ public class AionImpl implements IAionChain {
 
         try {
             TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true, LOG_VM);
+            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             return executor.execute().getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -169,6 +171,7 @@ public class AionImpl implements IAionChain {
 
         try {
             TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true, LOG_VM);
+            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             return executor.execute().getReceipt();
         } finally {
             repository.rollback();
