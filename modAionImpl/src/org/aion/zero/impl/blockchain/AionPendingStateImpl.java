@@ -46,7 +46,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.precompiled.ContractFactory;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
-import org.aion.vm.AionExecutorProvider;
+import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
