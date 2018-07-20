@@ -1,6 +1,8 @@
 package org.aion.p2p.impl.zero.msg;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +13,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
-import org.junit.Assert;
 import org.junit.Test;
 
 /** @author chris */
@@ -58,12 +59,12 @@ public class ResActiveNodesTest {
             INode srcNode = srcNodes.get(i);
             INode tarNode = tarNodes.get(i);
 
-            Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
-            Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
-            Assert.assertArrayEquals(srcNode.getIp(), tarNode.getIp());
+            assertArrayEquals(srcNode.getId(), tarNode.getId());
+            assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
+            assertArrayEquals(srcNode.getIp(), tarNode.getIp());
 
-            Assert.assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
-            Assert.assertEquals(srcNode.getPort(), tarNode.getPort());
+            assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
+            assertEquals(srcNode.getPort(), tarNode.getPort());
         }
     }
 
@@ -85,12 +86,12 @@ public class ResActiveNodesTest {
             INode srcNode = srcNodes.get(i);
             INode tarNode = tarNodes.get(i);
 
-            Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
-            Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
-            Assert.assertArrayEquals(srcNode.getIp(), tarNode.getIp());
+            assertArrayEquals(srcNode.getId(), tarNode.getId());
+            assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
+            assertArrayEquals(srcNode.getIp(), tarNode.getIp());
 
-            Assert.assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
-            Assert.assertEquals(srcNode.getPort(), tarNode.getPort());
+            assertEquals(srcNode.getIpStr(), tarNode.getIpStr());
+            assertEquals(srcNode.getPort(), tarNode.getPort());
         }
     }
 }

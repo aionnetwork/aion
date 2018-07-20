@@ -28,11 +28,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
@@ -40,11 +36,11 @@ import java.util.UUID;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.p2p.INode;
-import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl1.P2pMgr;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 
@@ -72,60 +68,69 @@ public class NodeMgrTest {
         "p2p://" + nodeId2 + "@" + ip2 + ":" + port1,
     };
 
-    private final P2pMgr p2p = new P2pMgr(0,
-        "",
-        nodeId1,
-        ip1,
-        port1,
-        nodes,
-        false,
-        128,
-        128,
-        false,
-        50);
+    @Mock
+    private P2pMgr p2p;
 
-    private NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
+    @Mock
+    private Node node;
+
+    private NodeMgr nMgr;
 
 
     @Before
-    public void mock_connection() throws IOException {
+    public void Setup() {
+        MockitoAnnotations.initMocks(this);
 
-        tcpServer = ServerSocketChannel.open();
-        Selector selector = Selector.open();
-        tcpServer = ServerSocketChannel.open();
-        tcpServer.configureBlocking(false);
-        tcpServer.socket().setReuseAddress(true);
-        tcpServer.socket().bind(new InetSocketAddress(ip1, port1));
-        tcpServer.register(selector, SelectionKey.OP_ACCEPT);
+        nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
 
-        channel = SocketChannel.open();
-        channel.socket().connect(new InetSocketAddress(ip1, port1), 10000);
-        channel.configureBlocking(false);
-        channel.socket().setSoTimeout(10000);
-
-        // set buffer to 256k.
-        channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
-        channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
-
+//        tcpServer = ServerSocketChannel.open();
+//        Selector selector = Selector.open();
+//        tcpServer = ServerSocketChannel.open();
+//        tcpServer.configureBlocking(false);
+//        tcpServer.socket().setReuseAddress(true);
+//        tcpServer.socket().bind(new InetSocketAddress(ip1, port1));
+//        tcpServer.register(selector, SelectionKey.OP_ACCEPT);
+//
+//        channel = SocketChannel.open();
+//        channel.socket().connect(new InetSocketAddress(ip1, port1), 10000);
+//        channel.configureBlocking(false);
+//        channel.socket().setSoTimeout(10000);
+//
+//        // set buffer to 256k.
+//        channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
+//        channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
     }
 
-    @After
-    public void close() throws IOException {
+//    private final P2pMgr p2p = new P2pMgr(0,
+//        "",
+//        nodeId1,
+//        ip1,
+//        port1,
+//        nodes,
+//        false,
+//        128,
+//        128,
+//        false,
+//        50);
 
-        tcpServer.close();
-        channel.socket().close();
-    }
+//    @Before
+//    public void mock_connection() throws IOException {
+//
+//    }
+
+//    @After
+//    public void close() throws IOException {
+//        tcpServer.close();
+//        channel.socket().close();
+//    }
 
     @Test
     public void test_tempNode() {
+        nMgr.addTempNode(node);
+        assertEquals(1, nMgr.tempNodesSize());
 
-        for (String nodeL : nodes) {
-            Node node = Node.parseP2p(nodeL);
-            nMgr.addTempNode(node);
-            assert node != null;
-            nMgr.seedIpAdd(node.getIpStr());
-        }
-        assertEquals(2, nMgr.tempNodesSize());
+
+        //nMgr.addTempNode();
 
     }
 
@@ -163,6 +168,7 @@ public class NodeMgrTest {
         for (String nodeL : nodes) {
             Node node = Node.parseP2p(nodeL);
             mgr.addTempNode(node);
+            assert node != null;
             mgr.seedIpAdd(node.getIpStr());
         }
         assertEquals(2, mgr.tempNodesSize());

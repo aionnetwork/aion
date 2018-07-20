@@ -25,12 +25,13 @@
 
 package org.aion.p2p.impl.zero.msg;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.junit.Test;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author chris

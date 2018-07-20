@@ -25,12 +25,12 @@
 
 package org.aion.p2p.impl.zero.msg;
 
+import static org.junit.Assert.assertEquals;
+
 import org.aion.p2p.Ctrl;
-import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author chris

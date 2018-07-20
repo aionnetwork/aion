@@ -45,9 +45,8 @@ import org.slf4j.Logger;
 public class NodeMgr implements INodeMgr {
 
     private final static int TIMEOUT_INBOUND_NODES = 10000;
-
-    private static final int TIMEOUT_OUTBOUND_NODES = 20000;
-    private static final Random random = new SecureRandom();
+    private final static int TIMEOUT_OUTBOUND_NODES = 20000;
+    private final static Random random = new SecureRandom();
     private final static char[] hexArray = "0123456789abcdef".toCharArray();
     private static Logger p2pLOG;
     private final int maxActiveNodes;
@@ -57,7 +56,6 @@ public class NodeMgr implements INodeMgr {
     private final ReentrantLock takeLock = new ReentrantLock();
     private final ReentrantLock putLock = new ReentrantLock();
     private final Condition notEmpty = takeLock.newCondition();
-    //private final BlockingQueue<INode> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, INode> tempNodes = Collections
         .synchronizedMap(new LinkedHashMap<>());
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
