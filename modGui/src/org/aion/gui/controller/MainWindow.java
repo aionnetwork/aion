@@ -93,6 +93,7 @@ public class MainWindow extends Application {
     private final TransactionProcessor transactionProcessor;
     private final AccountChangeHandlers accountChangeHandlers;
     private final ConsoleManager consoleManager;
+    private final WalletStorage walletStorage;
 
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
@@ -113,10 +114,18 @@ public class MainWindow extends Application {
         kc = new KernelConnection(
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
-        accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY, consoleManager);
+        try {
+            walletStorage = new WalletStorage();
+        } catch (IOException ioe) {
+            // XXX Handle it properly
+            throw new RuntimeException(ioe);
+        }
+
+        accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
         transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
         accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
     }
+
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
     @Override
@@ -169,11 +178,10 @@ public class MainWindow extends Application {
                 .withSyncInfoDto(new SyncInfoDto(kc))
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
                 .withAccountManager(accountManager)
-                .withWalletStorage(WalletStorage.getInstance())
+                .withWalletStorage(new WalletStorage())
                 .withBlockTransactionProcessor(transactionProcessor)
                 .withConsoleManager(consoleManager)
         );
-        System.out.println(String.format("XXX %s", loader.getBuilderFactory()));
         loader.setBuilderFactory(new MyBuilderFactory()
                 .withAccountManager(accountManager)
                 .withConsoleManager(consoleManager)

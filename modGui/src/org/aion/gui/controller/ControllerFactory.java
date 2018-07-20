@@ -73,8 +73,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(SettingsController.class, () -> new SettingsController(
                     configManipulator));
             put(AccountsController.class, () -> new AccountsController(
-                    accountManager, walletStorage,
-                    consoleManager));
+                    accountManager, walletStorage, consoleManager));
             put(HeaderPaneControls.class, () -> new HeaderPaneControls(
                     new BalanceDto(kernelConnection)));
             put(SendController.class, () -> new SendController(

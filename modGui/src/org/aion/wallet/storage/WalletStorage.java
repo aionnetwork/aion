@@ -23,64 +23,42 @@ public class WalletStorage {
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
 
-    public static final Path KEYSTORE_PATH;
+    public final Path KEYSTORE_PATH;
 
     private static final String BLANK = "";
-
     private static final String ACCOUNT_NAME_PROP = ".name";
-
     private static final String MASTER_DERIVATIONS_PROP = "master.derivations";
-
     private static final String MASTER_MNEMONIC_PROP = "master.mnemonic";
-
     private static final String MNEMONIC_ENCRYPTION_ALGORITHM = "Blowfish";
-
     private static final String MNEMONIC_STRING_CONVERSION_CHARSET_NAME = "ISO-8859-1";
 
-    private static final WalletStorage INST;
+//    private static final WalletStorage INST;
 
-    private static final String STORAGE_DIR;
+    private final String storageDir;
+    private final String accountsFile;
+    private final String walletFile;
 
-    private static final String ACCOUNTS_FILE;
+    private final Properties accountsProperties;
+    private final Properties lightAppProperties;
 
-    private static final String WALLET_FILE;
-
-    static {
+    public WalletStorage() throws IOException {
         String storageDir = System.getProperty("local.storage.dir");
         if (storageDir == null || storageDir.equalsIgnoreCase("")) {
             storageDir = System.getProperty("user.home") + File.separator + ".aion";
         }
-        STORAGE_DIR = storageDir;
+        this.storageDir = storageDir;
 
-        KEYSTORE_PATH = Paths.get(STORAGE_DIR + File.separator + "keystore");
+        KEYSTORE_PATH = Paths.get(this.storageDir + File.separator + "keystore");
         System.out.println("WalletStorage.KEYSTORE_PATH = " + KEYSTORE_PATH);
 
-        ACCOUNTS_FILE = STORAGE_DIR + File.separator + "accounts.properties";
+        accountsFile = this.storageDir + File.separator + "accounts.properties";
 
-        WALLET_FILE = STORAGE_DIR + File.separator + "wallet.properties";
-    }
+        walletFile = this.storageDir + File.separator + "wallet.properties";
 
-    static {
-        try {
-            INST = new WalletStorage();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private final Properties accountsProperties;
-
-    private final Properties lightAppProperties;
-
-    private WalletStorage() throws IOException {
-        final Path dir = Paths.get(STORAGE_DIR);
+        final Path dir = Paths.get(this.storageDir);
         ensureExistence(dir, true);
-        accountsProperties = getPropertiesFomFIle(ACCOUNTS_FILE);
-        lightAppProperties = getPropertiesFomFIle(WALLET_FILE);
-    }
-
-    public static WalletStorage getInstance() {
-        return INST;
+        accountsProperties = getPropertiesFomFIle(accountsFile);
+        lightAppProperties = getPropertiesFomFIle(walletFile);
     }
 
     private Properties getPropertiesFomFIle(final String fullPath) throws IOException {
@@ -108,7 +86,7 @@ public class WalletStorage {
     }
 
     private void saveAccounts() {
-        try (final OutputStream writer = Files.newOutputStream(Paths.get(ACCOUNTS_FILE))) {
+        try (final OutputStream writer = Files.newOutputStream(Paths.get(accountsFile))) {
             accountsProperties.store(writer, LocalDateTime.now().toString());
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
@@ -116,7 +94,7 @@ public class WalletStorage {
     }
 
     private void saveSettings() {
-        try (final OutputStream writer = Files.newOutputStream(Paths.get(WALLET_FILE))) {
+        try (final OutputStream writer = Files.newOutputStream(Paths.get(walletFile))) {
             lightAppProperties.store(writer, LocalDateTime.now().toString());
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);

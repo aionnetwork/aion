@@ -54,9 +54,10 @@ public class UnlockMasterAccountDialog implements Initializable {
 
         Pane addAccountDialog;
         try {
-//            addAccountDialog = FXMLLoader.load(getClass().getResource("UnlockMasterAccountDialog.fxml"));
             FXMLLoader loader = new FXMLLoader((getClass().getResource("UnlockMasterAccountDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
+            loader.setControllerFactory(new ControllerFactory()
+                    .withAccountManager(accountManager)
+                    .withConsoleManager(consoleManager)/* TODO a specialization only has what we need */);
             addAccountDialog = loader.load();
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);

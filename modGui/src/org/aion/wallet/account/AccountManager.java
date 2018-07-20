@@ -50,8 +50,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AccountManager {
-    private final WalletStorage walletStorage = WalletStorage.getInstance();
-    private final Map<String, AccountDTO> addressToAccount = new HashMap<>();
+    private final WalletStorage walletStorage;
+    private final Map<String, AccountDTO> addressToAccount;
     private final Map<String, byte[]> addressToKeystoreContent = Collections.synchronizedMap(new HashMap<>());
     private final KeystoreFormat keystoreFormat = new KeystoreFormat();
     private final BalanceDto balanceProvider;
@@ -67,11 +67,21 @@ public class AccountManager {
 
     public AccountManager(final BalanceDto balanceProvider,
                           final Supplier<String> currencySupplier,
-                          ConsoleManager consoleManager) {
+                          ConsoleManager consoleManager,
+                          WalletStorage walletStorage,
+                          Map<String, AccountDTO> addressToAccount) {
         this.balanceProvider = balanceProvider;
         this.currencySupplier = currencySupplier;
         this.consoleManager = consoleManager;
-        
+        this.walletStorage = walletStorage;
+        this.addressToAccount = addressToAccount;
+    }
+
+    public AccountManager(final BalanceDto balanceProvider,
+                          final Supplier<String> currencySupplier,
+                          ConsoleManager consoleManager,
+                          WalletStorage walletStorage) {
+        this(balanceProvider, currencySupplier, consoleManager, walletStorage, new HashMap<>());
         for (String address : Keystore.list()) {
             addressToAccount.put(address, getNewAccount(address));
         }
@@ -229,10 +239,9 @@ public class AccountManager {
         if (!remembered) {
             Keystore.create(password, ecKey);
         }
-        if (Files.isDirectory(WalletStorage.KEYSTORE_PATH)) {
+        if (Files.isDirectory(walletStorage.KEYSTORE_PATH)) {
             final String fileNameRegex = getExportedFileNameRegex(account.getPublicAddress());
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(WalletStorage.KEYSTORE_PATH, fileNameRegex)) {
-//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Keystore.PATH, fileNameRegex)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(walletStorage.KEYSTORE_PATH, fileNameRegex)) {
                 for (Path keystoreFile : stream) {
                     final String fileName = keystoreFile.getFileName().toString();
                     if (remembered) {
@@ -251,7 +260,7 @@ public class AccountManager {
                 throw new ValidationException(e);
             }
         } else {
-            LOG.error("Could not find Keystore directory: " + WalletStorage.KEYSTORE_PATH);
+            LOG.error("Could not find Keystore directory: " + walletStorage.KEYSTORE_PATH);
         }
 
     }

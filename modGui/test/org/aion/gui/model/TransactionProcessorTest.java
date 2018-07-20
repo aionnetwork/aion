@@ -1,9 +1,12 @@
 package org.aion.gui.model;
 
 import org.aion.api.IAionAPI;
+import org.aion.api.impl.internal.Message;
 import org.aion.api.type.ApiMsg;
 import org.aion.api.type.Block;
 import org.aion.api.type.BlockDetails;
+import org.aion.api.type.MsgRsp;
+import org.aion.api.type.TxArgs;
 import org.aion.api.type.TxDetails;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
@@ -11,7 +14,9 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.connector.dto.BlockDTO;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
+import org.aion.wallet.connector.dto.TransactionResponseDTO;
 import org.aion.wallet.console.ConsoleManager;
+import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.dto.TransactionDTO;
 import org.aion.wallet.exception.ValidationException;
 import org.junit.Before;
@@ -52,7 +57,7 @@ public class TransactionProcessorTest {
     public void before() {
         this.api = mock(IAionAPI.class, RETURNS_DEEP_STUBS);
         this.kernelConnection = mock(KernelConnection.class);
-        this.accountManager = mock(AccountManager.class);
+        this.accountManager = mock(AccountManager.class, RETURNS_DEEP_STUBS);
         this.balanceRetriever = mock(BalanceRetriever.class);
         this.executor = Executors.newFixedThreadPool(1);
         this.consoleManager = mock(ConsoleManager.class);
@@ -253,30 +258,50 @@ public class TransactionProcessorTest {
 
     @Test
     public void testSendTransaction() throws Exception {
+        when(api.isConnected()).thenReturn(true);
         String senderAddress = "0xa0c0ffee11111111111111111111111111111111111111111111111111111111";
         String receiverAddress = "0xa0cafecafe111111111111111111111111111111111111111111111111111111";
-        BigInteger value = new BigInteger("1337");
-        BigInteger nrgPrice = new BigInteger("31337");
-        long nrg = 12;
-        BigInteger latestNonce = new BigInteger("4829392");
+        BigInteger value = new BigInteger("10000000");
+        BigInteger nrgPrice = new BigInteger("10000000000");
+        long nrg = 21_000L;
+        BigInteger latestNonce = new BigInteger("1337");
 
+        // set up input
         SendTransactionDTO dto = new SendTransactionDTO();
         dto.setFrom(senderAddress);
         dto.setTo(receiverAddress);
         dto.setValue(value);
         dto.setNrgPrice(nrgPrice);
         dto.setNrg(nrg);
+        when(balanceRetriever.getBalance(senderAddress))
+                .thenReturn(new BigInteger("100000000000000000000"));
 
+        // mock getting latest transaction nonce
         ApiMsg latestNonceApiMsg = mock(ApiMsg.class);
         when(api.getChain().getNonce(Address.wrap(senderAddress))).thenReturn(latestNonceApiMsg);
         when(latestNonceApiMsg.getObject()).thenReturn(latestNonce);
 
-        when(balanceRetriever.getBalance(senderAddress)).thenReturn(new BigInteger("999999999"));
+        // mock responding to the send request
+        ApiMsg sendSignedTransactionApiMsg = mock(ApiMsg.class);
+        byte[] privateKey = "pk".getBytes();
+        when(accountManager.getAccount(senderAddress).getPrivateKey()).thenReturn(privateKey);
+        ArgumentCaptor<TxArgs> argsArgumentCaptor = ArgumentCaptor.forClass(TxArgs.class);
+        when(api.getTx().sendSignedTransaction(argsArgumentCaptor.capture(), eq(ByteArrayWrapper.wrap(privateKey))))
+                .thenReturn(sendSignedTransactionApiMsg);
+
+        MsgRsp sendSignedTransactionMsgResp = mock(MsgRsp.class);
+        when(sendSignedTransactionApiMsg.getObject()).thenReturn(sendSignedTransactionMsgResp);
+
+        when(sendSignedTransactionMsgResp.getStatus()).thenReturn((byte)Message.Retcode.r_tx_Init_VALUE);
+        Hash256 txHash = new Hash256("0x8badf00d99999999999999999999999999999999999999999999999999999999");
+        when(sendSignedTransactionMsgResp.getTxHash()).thenReturn(txHash);
+        when(sendSignedTransactionMsgResp.getError()).thenReturn("NotAnError");
 
         TransactionProcessor unit = new TransactionProcessor(
                 kernelConnection, accountManager, balanceRetriever, executor, consoleManager);
-        unit.sendTransaction(dto);
-
-
+        TransactionResponseDTO response = unit.sendTransaction(dto);
+        assertThat(response.getStatus(), is((byte)Message.Retcode.r_tx_Init_VALUE));
+        assertThat(response.getTxHash(), is(txHash));
+        assertThat(response.getError(), is("NotAnError"));
     }
 }
