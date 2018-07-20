@@ -27,8 +27,11 @@ package org.aion.p2p;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.prefs.InvalidPreferencesFormatException;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public final class Header {
 
     public static final int LEN = 8;
@@ -52,27 +55,37 @@ public final class Header {
         this.len = _len < 0 ? 0 : _len;
     }
 
-    /** @return short */
+    /**
+     * @return short
+     */
     public short getVer() {
         return this.ver;
     }
 
-    /** @return byte */
+    /**
+     * @return byte
+     */
     public byte getCtrl() {
         return this.ctrl;
     }
 
-    /** @return byte */
+    /**
+     * @return byte
+     */
     public byte getAction() {
         return this.action;
     }
 
-    /** @return int */
+    /**
+     * @return int
+     */
     public int getRoute() {
         return (ver << 16) | (ctrl << 8) | action;
     }
 
-    /** @return int */
+    /**
+     * @return int
+     */
     public int getLen() {
         return this.len;
     }
@@ -81,7 +94,9 @@ public final class Header {
         this.len = _len;
     }
 
-    /** @return byte[] */
+    /**
+     * @return byte[]
+     */
     public byte[] encode() {
         return ByteBuffer.allocate(LEN).putInt(this.getRoute()).putInt(len).array();
     }
@@ -91,16 +106,18 @@ public final class Header {
      * @return Header
      * @throws IOException when exeeds MAX_BODY_LEN_BYTES
      */
-    public static Header decode(final byte[] _headerBytes) throws IOException {
-        if (_headerBytes == null || _headerBytes.length != LEN)
-            throw new IOException("invalid-header-bytes");
-        else {
+    public static Header decode(final byte[] _headerBytes) throws Exception {
+        if (_headerBytes == null || _headerBytes.length != LEN) {
+            throw new IllegalArgumentException("invalid-header-bytes");
+        } else {
             ByteBuffer bb1 = ByteBuffer.wrap(_headerBytes);
             short ver = bb1.getShort();
             byte ctrl = bb1.get();
             byte action = bb1.get();
             int len = bb1.getInt();
-            if (len > MAX_BODY_LEN_BYTES) throw new IOException("exceed-max-body-size");
+            if (len > MAX_BODY_LEN_BYTES) {
+                throw new InvalidPreferencesFormatException("exceed-max-body-size");
+            }
             return new Header(ver, ctrl, action, len);
         }
     }
