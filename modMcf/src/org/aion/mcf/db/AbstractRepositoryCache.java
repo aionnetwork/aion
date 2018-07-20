@@ -24,17 +24,16 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.vm.types.DataWord;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -47,7 +46,7 @@ import static org.aion.crypto.HashUtil.h256;
  * @author Alexandra Roatis
  */
 public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
-        implements IRepositoryCache<AccountState, DataWord, BSB> {
+        implements IRepositoryCache<AccountState, IDataWord, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -55,7 +54,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     /**
      * the repository being tracked
      */
-    protected IRepository<AccountState, DataWord, BSB> repository;
+    protected IRepository<AccountState, IDataWord, BSB> repository;
 
     /**
      * local accounts cache
@@ -65,7 +64,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     /**
      * local contract details cache
      */
-    protected Map<Address, IContractDetails<DataWord>> cachedDetails;
+    protected Map<Address, IContractDetails<IDataWord>> cachedDetails;
     protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
     @Override
@@ -76,7 +75,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
             cachedAccounts.put(address, accountState);
 
             // TODO: unify contract details initialization from Impl and Track
-            IContractDetails<DataWord> contractDetails = new ContractDetailsCacheImpl(null);
+            IContractDetails<IDataWord> contractDetails = new ContractDetailsCacheImpl(null);
             // TODO: refactor to use makeDirty() from AbstractState
             contractDetails.setDirty(true);
             cachedDetails.put(address, contractDetails);
@@ -141,11 +140,11 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public IContractDetails<DataWord> getContractDetails(Address address) {
+    public IContractDetails<IDataWord> getContractDetails(Address address) {
         lockDetails.readLock().lock();
 
         try {
-            IContractDetails<DataWord> contractDetails = this.cachedDetails.get(address);
+            IContractDetails<IDataWord> contractDetails = this.cachedDetails.get(address);
 
             if (contractDetails == null) {
                 // loads the address into cache
@@ -173,7 +172,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         lockDetails.readLock().lock();
 
         try {
-            IContractDetails<DataWord> contractDetails = cachedDetails.get(address);
+            IContractDetails<IDataWord> contractDetails = cachedDetails.get(address);
 
             if (contractDetails == null) {
                 // ask repository when not cached
@@ -192,13 +191,13 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
      */
     @Override
     public void loadAccountState(Address address, Map<Address, AccountState> accounts,
-            Map<Address, IContractDetails<DataWord>> details) {
+            Map<Address, IContractDetails<IDataWord>> details) {
         fullyReadLock();
 
         try {
             // check if the account is cached locally
             AccountState accountState = this.cachedAccounts.get(address);
-            IContractDetails<DataWord> contractDetails = this.cachedDetails.get(address);
+            IContractDetails<IDataWord> contractDetails = this.cachedDetails.get(address);
 
             // when account not cached load from repository
             if (accountState == null) {
@@ -293,7 +292,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         try {
             // save the code
             // TODO: why not create contract here directly? also need to check that there is no preexisting code!
-            IContractDetails<DataWord> contractDetails = getContractDetails(address);
+            IContractDetails<IDataWord> contractDetails = getContractDetails(address);
             contractDetails.setCode(code);
             // TODO: ensure that setDirty is done by the class itself
             contractDetails.setDirty(true);
@@ -318,7 +317,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public void addStorageRow(Address address, DataWord key, DataWord value) {
+    public void addStorageRow(Address address, IDataWord key, IDataWord value) {
         lockDetails.writeLock().lock();
         try {
             getContractDetails(address).put(key, value);
@@ -328,13 +327,15 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public DataWord getStorageValue(Address address, DataWord key) {
-        return getContractDetails(address).get(key);
+    public IDataWord getStorageValue(Address address, IDataWord key) {
+        IDataWord value = getContractDetails(address).get(key);
+        if (value == null) { return null; }
+        return (value.isZero()) ? null : value;
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage(Address address, Collection<DataWord> keys) {
-        IContractDetails<DataWord> details = getContractDetails(address);
+    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
+        IContractDetails<IDataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 

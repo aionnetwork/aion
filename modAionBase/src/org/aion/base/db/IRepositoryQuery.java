@@ -40,7 +40,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import org.aion.base.vm.IDataWord;
 
 /**
  * Repository interface for information retrieval.

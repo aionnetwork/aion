@@ -86,10 +86,12 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         this(wrapper.getData());
     }
 
+    @Override
     public byte[] getData() {
         return data;
     }
 
+    @Override
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);
     }
@@ -118,6 +120,7 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         return v;
     }
 
+    @Override
     public boolean isZero() {
         for (int i = 0; i < BYTES; i++) {
             if (data[BYTES - 1 - i] != 0) {
@@ -133,7 +136,8 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     }
 
 
-    public DataWord clone() {
+    @Override
+    public DataWord copy() {
         byte[] bs = new byte[BYTES];
         System.arraycopy(data, 0, bs, 0, BYTES);
         return new DataWord(bs);
