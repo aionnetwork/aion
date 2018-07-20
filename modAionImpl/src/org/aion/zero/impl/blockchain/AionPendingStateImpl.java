@@ -83,8 +83,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         public TransactionSortedSet() {
             super((tx1, tx2) -> {
-                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) - ByteUtil
-                    .byteArrayToLong(tx2.getNonce());
+                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
+                    ByteUtil.byteArrayToLong(tx2.getNonce());
                 if (nonceDiff != 0) {
                     return nonceDiff > 0 ? 1 : -1;
                 }

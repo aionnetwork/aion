@@ -124,7 +124,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             transactionStore;
     private AionBlock bestBlock;
 
-    private static final  Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
+    private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
