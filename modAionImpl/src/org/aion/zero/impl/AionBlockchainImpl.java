@@ -71,6 +71,7 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
+import org.aion.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -1056,6 +1057,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (AionTransaction tx : block.getTransactionsList()) {
             TransactionExecutor executor =
                     new TransactionExecutor(tx, block, track, false, energyRemaining, LOGGER_VM);
+            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             AionTxExecSummary summary = executor.execute();
 
             if (!summary.isRejected()) {
@@ -1092,6 +1094,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         for (AionTransaction tx : block.getTransactionsList()) {
             TransactionExecutor executor = new TransactionExecutor(tx, block, track, LOGGER_VM);
+            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             AionTxExecSummary summary = executor.execute();
 
             track.flush();

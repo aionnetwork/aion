@@ -46,6 +46,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.precompiled.ContractFactory;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
+import org.aion.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -981,6 +982,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         if (ContractFactory.isPrecompiledContract(tx.getTo())) {
             TransactionExecutor conExe = new TransactionExecutor(tx, bestBlk, pendingState, LOGGER_VM);
+            conExe.setExecutorProvider(AionExecutorProvider.getInstance());
 
             if (inPool) {
                 conExe.setBypassNonce();
@@ -990,6 +992,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         } else {
             TransactionExecutor txExe = new TransactionExecutor(tx, bestBlk, pendingState,
                 LOGGER_VM);
+            txExe.setExecutorProvider(AionExecutorProvider.getInstance());
 
             if (inPool) {
                 txExe.setBypassNonce();
