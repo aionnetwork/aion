@@ -78,6 +78,7 @@
 		<log-file>true</log-file>
 		<!--Sets the physical location on disk where log files will be stored.-->
 		<log-path>log</log-path>
+		<ROOT>INFO</ROOT>
 		<GEN>INFO</GEN>
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>

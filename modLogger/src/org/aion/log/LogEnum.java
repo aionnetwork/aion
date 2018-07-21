@@ -25,10 +25,10 @@
 package org.aion.log;
 
 /**
- *
+ * Logger modules available to classes in the kernel
  */
 public enum LogEnum {
-    GEN, CONS, SYNC, API, VM, NET, DB, EVTMGR, TXPOOL, TX, P2P;
+    GEN, CONS, SYNC, API, VM, NET, DB, EVTMGR, TXPOOL, TX, P2P, ROOT;
 
     public static boolean contains(String _module) {
         for (LogEnum module : values())
