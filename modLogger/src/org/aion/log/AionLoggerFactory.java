@@ -86,10 +86,8 @@ public class AionLoggerFactory {
             String modName = mod.name().toUpperCase();
             String modLevel = moduleToLevelMap.get(modName);
             if (modLevel != null) {
-                // if we can't translate log-level for some reason, be safe and return the highest level available
-                // rationale: we want to be conservative and not loose any logging information
-                // alternative: default to Level.OFF to avoid overwhelming the logger
-                Level level = Level.toLevel(modLevel, Level.TRACE);
+                // if we can't translate log-level for some reason, default to INFO
+                Level level = Level.toLevel(modLevel, Level.INFO);
                 modules.put(mod, level);
             } else {
                 modules.put(mod, Level.INFO);
