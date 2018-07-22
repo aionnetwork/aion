@@ -84,7 +84,7 @@ public class RpcProcessor {
                  * It's slower (~5x) than using System.currentTimeMillis() based on emperical tests across machines
                  * and operating systems. But since this only runs in debug mode, it's probably OK?
                  */
-                boolean shouldTime = LOG.isTraceEnabled();
+                boolean shouldTime = LOG.isDebugEnabled();
                 long t0 = 0L;
                 if (shouldTime) t0 = System.nanoTime();
                 RpcMsg response = rpc.call(params);
