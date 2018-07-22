@@ -42,7 +42,7 @@ public class CfgSsl {
 
     CfgSsl() {
         this.enabled = false;
-        this.cert = "identity.jks";
+        this.cert = "ssl_keystore/identity.jks";
         this.pass = null;
     }
 
@@ -105,7 +105,7 @@ public class CfgSsl {
             xmlWriter.writeStartElement("ssl");
 
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
-            xmlWriter.writeComment("toggle ssl on-off " +
+            xmlWriter.writeComment("toggle ssl on/off " +
                 "(if you to access json-rpc over https)");
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
             xmlWriter.writeStartElement(ENABLED_TAG);
@@ -113,7 +113,7 @@ public class CfgSsl {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
-            xmlWriter.writeComment("file name of jks-format certificate (eg. identity.jks)");
+            xmlWriter.writeComment("path to jks or pkcs12 ssl certificate");
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
             xmlWriter.writeStartElement(CERTIFICATE_TAG);
             xmlWriter.writeCharacters(this.cert);

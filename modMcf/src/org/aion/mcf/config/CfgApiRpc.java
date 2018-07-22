@@ -179,7 +179,8 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters(this.ssl.toXML());
+            // don't write-back ssl. (keep it hidden for now)
+            // xmlWriter.writeCharacters(this.ssl.toXML());
 
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
