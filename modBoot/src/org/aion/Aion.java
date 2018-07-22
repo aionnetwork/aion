@@ -110,6 +110,13 @@ public class Aion {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
         }
 
+        // get the ssl password synchronously from the console, only if required
+        // do this here, before writes to logger because if we don't do this here, then
+        // it gets presented to console out of order with the rest of the logging ...
+        final char[] sslPass = getSslPassword(cfg);
+
+        // from now on, all logging to console and file happens asynchronously
+
         /*
          * Logger initialize with LOGFILE and LOGPATH (user config inputs)
          */
@@ -134,8 +141,6 @@ public class Aion {
         logo += "\n\n";
 
         genLog.info(logo);
-
-        final char[] sslPass = getSslPassword(cfg);
 
         IAionChain ac = AionFactory.create();
 
