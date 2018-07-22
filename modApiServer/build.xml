@@ -83,8 +83,13 @@
                 <pathelement location="${dir.lib}/libJson.jar"/>
                 <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar"/>
                 <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
-                <pathelement location="${dir.lib}/guava-19.0.jar" />
-                <pathelement location="${dir.lib}/nanohttpd-2.3.1-with-deps.jar" />
+                <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
+                <pathelement location="${dir.lib}/guava-19.0.jar"/>
+                <pathelement location="${dir.lib}/nanohttpd-2.3.1-with-deps.jar"/>
+                <pathelement location="${dir.lib}/jboss-logging-3.3.0.Final.jar"/>
+                <pathelement location="${dir.lib}/xnio-nio-3.3.8.Final.jar"/>
+                <pathelement location="${dir.lib}/xnio-api-3.3.8.Final.jar"/>
+                <pathelement location="${dir.lib}/undertow-core-2.0.10.Final.jar"/>
             </modulepath>
         </javac>
 

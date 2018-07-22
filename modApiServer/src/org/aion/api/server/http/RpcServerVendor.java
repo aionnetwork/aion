@@ -1,6 +1,5 @@
 package org.aion.api.server.http;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 // @ThreadSafe

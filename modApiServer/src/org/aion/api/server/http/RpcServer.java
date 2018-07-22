@@ -41,11 +41,7 @@ public abstract class RpcServer {
         if (sslEnabled) {
             String certPath = Objects.requireNonNull(builder.sslCertPath);
             try {
-                if (new File(certPath).isAbsolute()) {
-                    sslCertCanonicalPath = new File(certPath).getCanonicalPath();
-                } else {
-                    sslCertCanonicalPath = new File(CfgAion.inst().getBasePath(), certPath).getCanonicalPath();
-                }
+                sslCertCanonicalPath = new File(certPath).getCanonicalPath();
             } catch (Exception e) {
                 // rethrow checked exceptions from File
                 throw new RuntimeException("Could not locate SSL file at path: "+certPath);

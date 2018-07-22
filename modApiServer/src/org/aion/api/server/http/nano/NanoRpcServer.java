@@ -110,7 +110,7 @@ public class NanoRpcServer extends RpcServer {
 
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
-            LOG.info("<rpc-server - started on {}:{}>", hostName, port);
+            LOG.info("<rpc-server - (NANO) started on {}:{}>", hostName, port);
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");

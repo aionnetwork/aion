@@ -70,8 +70,8 @@ public class AionLoggerFactory {
         context = (LoggerContext) LoggerFactory.getILoggerFactory();
     }
 
-    public static void init(Map<String, String> moduleToLevelMap) {
-        init(moduleToLevelMap, false, "");
+    public static void init(Map<String, String> requestedLogLevels) {
+        init(requestedLogLevels, false, "");
     }
 
     private static Map<LogEnum, Level> constructModuleLoglevelMap(Map<String, String> _moduleToLevelMap) {

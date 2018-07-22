@@ -30,7 +30,7 @@ public class UndertowRpcServer extends RpcServer {
 
     Undertow server;
 
-    private final int STUCK_THREAD_TIMEOUT = 600; // 10 min
+    private final int STUCK_THREAD_TIMEOUT_SECONDS = 600; // 10 min
     private final Map<HttpString, String> CORS_HEADERS = Map.of(
             HttpString.tryFromString("Access-Control-Allow-Origin"), corsOrigin,
             HttpString.tryFromString("Access-Control-Allow-Headers"), "origin,accept,content-type",
@@ -65,7 +65,7 @@ public class UndertowRpcServer extends RpcServer {
         }
     }
 
-    public void handleRequest(HttpServerExchange ex0) throws Exception {
+    private void handleRequest(HttpServerExchange ex0) throws Exception {
         Receiver.FullStringCallback rpcHandler = (ex3, body) -> {
             // only support post requests
             if (!Methods.POST.equals(ex3.getRequestMethod())) {
@@ -96,7 +96,7 @@ public class UndertowRpcServer extends RpcServer {
          * See Impl:
          * github.com/undertow-io/undertow/blob/master/core/src/main/java/io/undertow/server/handlers/StuckThreadDetectionHandler.java
          */
-        StuckThreadDetectionHandler stuckThreadDetectionHandler = new StuckThreadDetectionHandler(STUCK_THREAD_TIMEOUT, corsPreflightHandler);
+        StuckThreadDetectionHandler stuckThreadDetectionHandler = new StuckThreadDetectionHandler(STUCK_THREAD_TIMEOUT_SECONDS, corsPreflightHandler);
 
         // Only enabled if API is in TRACE mode
         RequestDumpingHandler requestDumpingHandler = new RequestDumpingHandler(stuckThreadDetectionHandler);
@@ -155,7 +155,7 @@ public class UndertowRpcServer extends RpcServer {
             server = undertowBuilder.build();
             server.start();
 
-            LOG.info("<rpc-server - started on {}:{}>", hostName, port);
+            LOG.info("<rpc-server - (UNDERTOW) started on {}:{}>", hostName, port);
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");
