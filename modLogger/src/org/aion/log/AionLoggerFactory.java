@@ -62,6 +62,16 @@ public class AionLoggerFactory {
     private static final String DEFAULT_LOG_FILE_CURRENT = "aion.log";
     private static final String DEFAULT_LOG_PATTERN = "%date{yy-MM-dd HH:mm:ss.SSS} %-5level %-4c [%thread]: %message%n";
 
+    // async appender settings. if running into performance issues or lost logs, here is what needs tweaking:
+    // https://logging.apache.org/log4j/2.x/manual/async.html#Performance
+    // https://logback.qos.ch/manual/appenders.html#AsyncAppender
+    // https://stackoverflow.com/questions/46411704/configuration-and-performance-of-the-asyncappender-in-logback-framework
+    private static final boolean ASYNC_LOGGER_INCLUDE_CALLER_DATA = false;
+    private static final boolean ASYNC_LOGGER_NEVER_BLOCK = true; // may loose logging events, maybe worth exposing out through config
+    private static final int ASYNC_LOGGER_MAX_FLUSH_TIME_MS = 10_000; // 10s, logback default is 1s
+    private static final int ASYNC_LOGGER_DISCARDING_THRESHOLD = 0;
+    private static final int ASYNC_LOGGER_QUEUE_SIZE = 8192;
+
     private static final LoggerContext context;
 
     // static class initialization guaranteed to be thread-safe;
@@ -111,15 +121,20 @@ public class AionLoggerFactory {
 
         ConsoleAppender<ILoggingEvent> consoleSync = new ConsoleAppender<>();
         consoleSync.setContext(context);
-        consoleSync.setName("consoleSyncAppender");
+        consoleSync.setName("consoleSyncAppender"); // for logger debugging
         consoleSync.setEncoder(encoder);
         consoleSync.start();
 
         AsyncAppender consoleAsync = new AsyncAppender();
         consoleAsync.setContext(context);
-        consoleAsync.setName("consoleAsyncAppender");
+        consoleAsync.setName("consoleAsyncAppender"); // for logger debugging
         consoleAsync.addAppender(consoleSync);
-        consoleAsync.setNeverBlock(true);
+
+        consoleAsync.setIncludeCallerData(ASYNC_LOGGER_INCLUDE_CALLER_DATA);
+        consoleAsync.setNeverBlock(ASYNC_LOGGER_NEVER_BLOCK);
+        consoleAsync.setMaxFlushTime(ASYNC_LOGGER_MAX_FLUSH_TIME_MS);
+        consoleAsync.setDiscardingThreshold(ASYNC_LOGGER_DISCARDING_THRESHOLD);
+        consoleAsync.setQueueSize(ASYNC_LOGGER_QUEUE_SIZE);
         consoleAsync.start();
 
         appenders.add(consoleAsync);
@@ -143,7 +158,7 @@ public class AionLoggerFactory {
         rp.setParent(fileSync);
         rp.start();
 
-        fileSync.setName("fileSyncAppender");
+        fileSync.setName("fileSyncAppender"); // for logger debugging
         fileSync.setContext(context);
         fileSync.setTriggeringPolicy(tp);
         fileSync.setRollingPolicy(rp);
@@ -154,9 +169,14 @@ public class AionLoggerFactory {
 
         AsyncAppender fileAsync = new AsyncAppender();
         fileAsync.setContext(context);
-        fileAsync.setName("fileAsyncAppender");
+        fileAsync.setName("fileAsyncAppender"); // for logger debugging
         fileAsync.addAppender(fileSync);
-        fileAsync.setNeverBlock(true);
+
+        fileAsync.setIncludeCallerData(ASYNC_LOGGER_INCLUDE_CALLER_DATA);
+        fileAsync.setNeverBlock(ASYNC_LOGGER_NEVER_BLOCK);
+        fileAsync.setMaxFlushTime(ASYNC_LOGGER_MAX_FLUSH_TIME_MS);
+        fileAsync.setDiscardingThreshold(ASYNC_LOGGER_DISCARDING_THRESHOLD);
+        fileAsync.setQueueSize(ASYNC_LOGGER_QUEUE_SIZE);
         fileAsync.start();
 
         appenders.add(fileAsync);
