@@ -50,8 +50,6 @@ import org.slf4j.Logger;
  */
 final class TaskImportBlocks implements Runnable {
 
-    private final IP2pMgr p2p;
-
     private final AionBlockchainImpl chain;
 
     private final AtomicBoolean start;
@@ -67,7 +65,6 @@ final class TaskImportBlocks implements Runnable {
     private final Logger log;
 
     TaskImportBlocks(
-            final IP2pMgr p2p,
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final SyncStatics _statis,
@@ -75,7 +72,6 @@ final class TaskImportBlocks implements Runnable {
             final Map<ByteArrayWrapper, Object> importedBlockHashes,
             final Map<Integer, PeerState> peerStates,
             final Logger log) {
-        this.p2p = p2p;
         this.chain = _chain;
         this.start = _start;
         this.statis = _statis;
@@ -104,8 +100,9 @@ final class TaskImportBlocks implements Runnable {
 
             PeerState state = peerStates.get(bw.getNodeIdHash());
             if (state == null) {
-                log.warn(
-                        "This is not supposed to happen, but the peer is sending us blocks without ask");
+                log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
+                // ignoring these blocks
+                continue;
             }
 
             ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;

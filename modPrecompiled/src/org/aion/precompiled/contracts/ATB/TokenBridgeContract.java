@@ -7,14 +7,13 @@ import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.ExecutionContext;
+import org.aion.vm.ExecutionResult;
 import org.aion.zero.types.AionInternalTx;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
@@ -52,7 +51,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     }
 
     @Override
-    public ContractExecutionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
+    public ExecutionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
         if (nrgLimit < ENERGY_CONSUME)
             return THROW;
 
@@ -171,22 +170,22 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         throw new RuntimeException("should never reach here");
     }
 
-    private static ContractExecutionResult THROW =
-            new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
-    private ContractExecutionResult fail() {
+    private static ExecutionResult THROW =
+            new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
+    private ExecutionResult fail() {
         return THROW;
     }
 
-    private ContractExecutionResult success() {
+    private ExecutionResult success() {
         long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
-        return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, energyRemaining);
+        return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, energyRemaining);
     }
 
-    private ContractExecutionResult success(@Nonnull final byte[] response) {
+    private ExecutionResult success(@Nonnull final byte[] response) {
         // should always be positive
         long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
         assert energyRemaining >= 0;
-        return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
+        return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
     }
 
 
@@ -227,15 +226,15 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
-    public ContractExecutionResult transfer(@Nonnull final byte[] to,
+    public ExecutionResult transfer(@Nonnull final byte[] to,
                                             @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
-            return new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
+            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
         byte[] code = this.track.getCode(new Address(to));
         if (code != null && code.length != 0)
-            return new ContractExecutionResult(ContractExecutionResult.ResultCode.FAILURE, 0);
+            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
         // otherwise prepare for a transfer
         ExecutionContext innerContext = assembleContext(to, value);
@@ -245,7 +244,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         cache.addBalance(new Address(to), value);
         cache.addBalance(this.contractAddress, value.negate());
         cache.flush();
-        return new ContractExecutionResult(ContractExecutionResult.ResultCode.SUCCESS, 0);
+        return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, 0);
     }
 
     /**

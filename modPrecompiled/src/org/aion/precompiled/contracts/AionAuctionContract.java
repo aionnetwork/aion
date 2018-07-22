@@ -22,217 +22,447 @@
  */
 package org.aion.precompiled.contracts;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.Timer;
+
 import com.google.common.primitives.Longs;
-import org.aion.base.db.*;
+import java.util.Date;
+import java.util.TimerTask;
+import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
+import org.apache.commons.collections4.map.LRUMap;
+
 import static org.aion.crypto.HashUtil.blake128;
 
 /**
  * The AionAuctionContract is used to register domain names. Accounts can start and bid in an
  * auction for each domain name. Auctions begin when a user puts in the first bid and the auction
- * will last for 72 hours. After the auction period, the results are calculate. The user with the
+ * will last for 72 hours. After the auction period, the results are calculated. The user with the
  * highest bid value will deposit the amount of the second highest bid, and become the owner of
- * the domain for a 1 year period.
+ * the domain for a 1 year period, everyone else will get their bid value back.
  *
  * @author William
  */
 
 public class AionAuctionContract extends StatefulPrecompiledContract {
+    private static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private Address activeDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000600");
     private Address activeDomainsAddressTime = Address.wrap("0000000000000000000000000000000000000000000000000000000000000601");
-    private Address auctionDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000700");
+    private Address activeDomainsAddressName = Address.wrap("0000000000000000000000000000000000000000000000000000000000000602");
+    private Address activeDomainsAddressValue = Address.wrap("0000000000000000000000000000000000000000000000000000000000000603");
 
-    private final Address address;
+    private Address auctionDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000700");
+    private Address auctionDomainsAddressName = Address.wrap("0000000000000000000000000000000000000000000000000000000000000702");
+
+    private Address allAddresses = Address.wrap("0000000000000000000000000000000000000000000000000000000000000800");
+    private Address domainNameAddressPair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000801");
+    private Address domainAddressNamePair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000802");
+
     private final static long COST = 20000L;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
-    private static final int AUCTION_TIME = 5 * 1000;
-    private static final int ACTIVE_TIME = 10 * 1000;
+    private static final BigInteger MINIMUM_AMOUNT =  new BigInteger("100");
 
     private static final String BID_KEY_COUNTER = "bidKeyCounterKey";
-    private static final String BID_KEY_ADDR_F = "bidderAddressKeyF";
-    private static final String BID_KEY_ADDR_S = "bidderAddressKeyS";
+    private static final String BID_KEY_ADDR = "bidderAddressKey";
     private static final String BID_KEY_VALUE = "bidValueKey";
+    private static final String ALL_ADDR_KEY = "allAddressKey";
+    private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
-    private Timer timer = new Timer();
+    private BigInteger AUCTION_TIME = new BigInteger("259200000"); // 3 * 24 * 60 * 60 * 1000
+    private BigInteger ACTIVE_TIME = new BigInteger("31536000000"); // 365 * 24 * 60 * 60 * 1000
+    private int TEST_AUCTION_TIME = 2000;
+    private int TEST_ACTIVE_TIME = 2000;
+
+    private static int LRU_MAP_SIZE = 4; // this should be changed
+
+    private final Address callerAddress;
+    private final IBlockchain blockchain;
+    private static Timer timer = new Timer();
+    private static LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap<>(LRU_MAP_SIZE);
+    private static LRUMap<String, Map<Address, BigInteger>> auctionBidsMap = new LRUMap<>(LRU_MAP_SIZE);
+    private static final Set<String> privateAionDomainNames =
+            new HashSet<>(Arrays.asList("network.aion", "foundation.aion", "enterprise.aion"));
 
     /**
      * Constructs a Aion Auction Contract object, ready to execute.
      *
      * @param track The repository
-     * @param address The address of the calling account
+     * @param address The callerAddress of the calling account, use AION address for testing
      */
-    public AionAuctionContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address) {
+    public AionAuctionContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, IBlockchain blockchain) {
         super(track);
-        this.address = address;
+        this.callerAddress = address;
+        this.blockchain = blockchain;
+
+        // if testing, set AUCTION_TIME and ACTIVE_TIME to test time periods
+        if (callerAddress.equals(AION)){
+            AUCTION_TIME = BigInteger.valueOf(TEST_AUCTION_TIME);
+            ACTIVE_TIME = BigInteger.valueOf(TEST_ACTIVE_TIME);
+        }
     }
 
     /**
-     * Call this function to put a bid in the domain address
-     *
-     * The input parameter of this method is a byte array whose bytes should be supplied in the
+     * For bidding, input parameter of this method is a byte array whose bytes should be supplied in the
      * following expected format:
      *
-     * [32b domainAddress] address of the domain to bid
-     * [32b bidderAddress] address of the bidder, must be the same as the address from the constructor
+     * [1b domainNameLength] length of the byte array containing the domain name
+     * [mb domainName] the domain name to bid, m > 0
+     * [32b bidderAddress] callerAddress of the bidder, must be the same as the callerAddress from the constructor
      * [96b signature] signature of the bidder
-     * [1b length] the length of the bytes containing the bid value
+     * [1b balanceLength] the length of the byte[] containing the bid value
      * [nb balance] where n > 0
      *
-     * 32 + 32 + 96 + 1 + n > 161
+     * 1 + m + 32 + 96 + 1 + n = 130 + m + n
+     *
+     * For time extension request  on active domain, input parameter of this method should be supplied as:
+     *
+     * [1b domainNameLength] length of the byte array containing the domain name
+     * [mb domainName] the domain to time extend, m > 0
+     * [32b callerAddress] should be the owner of the domain
+     * [96b signature] signature of the caller
+     * [1b operator] set this to 0 for time extension
+     *
+     * 1 + m + 32 + 96 + 1 = 130 + m
+     *
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrg) {
+    public ExecutionResult execute(byte[] input, long nrg) {
         if (nrg < COST)
-            return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        if(input.length <= 161)
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST);
+            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0, "insufficient energy".getBytes());
+
+        // check length for both operations
+        if(input.length < 131){
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+        }
+
+        int domainNameLength = input[0];
+        if (domainNameLength < 0)
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+
+        // check if input is too short for extension function
+        if (input.length < 130 + domainNameLength)
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+        int balanceLength = input[129 + domainNameLength];
+
+        if(balanceLength > 0){
+            if(input.length < 130 + domainNameLength + balanceLength){
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+            }
+        }
 
         // sort and store the input data
-        int offset = 0;
-        byte[] domainAddressInByte = new byte[ADDR_LEN];
         byte[] bidderAddressInByte = new byte[ADDR_LEN];
         byte[] sign = new byte[SIG_LEN];
-        int balanceLength = input[160];
-        byte[] balance = new byte[balanceLength];
+        byte[] domainNameInBytes = new byte[domainNameLength];
+        String domainName;
+        Address domainAddress;
 
-        System.arraycopy(input, offset, domainAddressInByte, 0, ADDR_LEN);
-        offset = offset + ADDR_LEN;
+        int offset = 0;
+        offset++;
+        System.arraycopy(input, offset, domainNameInBytes, 0, domainNameLength);
+        offset = offset + domainNameLength;
         System.arraycopy(input, offset, bidderAddressInByte, 0, ADDR_LEN);
         offset = offset + ADDR_LEN;
         System.arraycopy(input, offset, sign, 0,SIG_LEN);
         offset = offset + SIG_LEN;
         offset ++;
-        System.arraycopy(input, offset, balance, 0, balanceLength);
+
+        String domainNameRaw = new String(domainNameInBytes);
+
+        // check if the domain name already has active parent domain
+        if (hasActiveParentDomain(domainNameRaw))
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "the given domain name has a parent that is already active".getBytes());
+
+        // check if the domain name is valid to register
+        if (!isValidDomainName(domainNameRaw))
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "domain name is invalid".getBytes());
+
+        // add zeros for storing
+        byte[] domainNameInBytesWithZeros = addLeadingZeros(domainNameInBytes);
+        domainName = new String(domainNameInBytesWithZeros);
+        // remove the last part (.aion) before storing
+        domainName = domainName.substring(0, 32);
 
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
-        Address domainAddress = Address.wrap(domainAddressInByte);
         Address bidderAddress = Address.wrap(bidderAddressInByte);
-        BigInteger bidValue = new BigInteger(balance);
 
-        // user should have the signature signed with its address
+        // user should have the signature signed with its callerAddress
         byte[] data = new byte[ADDR_LEN];
         System.arraycopy(bidderAddressInByte, 0, data, 0, ADDR_LEN);
         boolean b = ECKeyEd25519.verify(data, sig.getSignature(), sig.getPubkey(null));
 
         // verify public key matches owner
         if (!b) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect signature".getBytes());
         }
 
         if (!bidderAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect key".getBytes());
         }
+
+        // if this domain name does not have an callerAddress
+        if (this.track.getStorageValue(domainNameAddressPair, new DataWord(blake128(domainName.getBytes()))).equals(DoubleDataWord.ZERO)){
+            domainAddress = createAddressForDomain(domainName);
+        }
+        else{ // extract the callerAddress corresponding to the domain name
+            domainAddress = getAddressFromName(domainName);
+        }
+
+        // if request to extend time
+        if (balanceLength < 1){
+            return extensionRequest(domainAddress, nrg);
+        }
+
+        // get the bid value
+        byte[] balance = new byte[balanceLength];
+        System.arraycopy(input, offset, balance, 0, balanceLength);
+        BigInteger bidValue = new BigInteger(balance);
+
+        // check if bidValue is valid (greater than 0)
+        if (bidValue.compareTo(new BigInteger("0")) < 0)
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "negative bid value".getBytes());
+
+        // check bidder addr and its balance
+        if(this.track.hasAccountState(bidderAddress)){
+            if (this.track.getAccountState(bidderAddress).getBalance().compareTo(bidValue) < 0){
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "insufficient balance".getBytes());
+            }
+        }
+        else
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, "bidder account does not exist".getBytes());
+
+
 
         // if this domain is already active
         if (isActiveDomain(domainAddress)) {
-            return new ContractExecutionResult(ResultCode.FAILURE, nrg - COST);
+            return new ExecutionResult(ResultCode.FAILURE, nrg - COST, "requested domain is already active".getBytes());
         }
 
         // if this domain is already in auction state
         else if (isAuctionDomain(domainAddress)){
-            storeBid(domainAddress, bidderAddress, bidValue);
-            return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
+            processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
+            return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
 
         // start the auction for the given domain
         else{
-            storeBid(domainAddress, bidderAddress, bidValue);
-            addToAuctionDomain(domainAddress);
-            return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
+            storeNewAddress(domainAddress);
+            addToAuctionDomain(domainAddress, domainName, domainNameRaw);
+            processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
+            return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
     }
 
     /**
+     * Store the given domain callerAddress in the collection of domains in auction
+     * process. Set a new task, scheduling the auction to run for 3 days and
+     * then completed.
      *
-     * @param domainAddress address of the domain bid for
+     * @param domainAddress callerAddress of the domain bid for
      */
-    private void addToAuctionDomain(Address domainAddress){
+    private void addToAuctionDomain(Address domainAddress, String domainName, String domainNameRaw){
         Date currentDate = new Date();
-        Date finishDate = new Date(currentDate.getTime() + AUCTION_TIME); // 3 days later, 5s
-        byte[] date = Longs.toByteArray(finishDate.getTime());
+        Date finishDate = new Date(currentDate.getTime() + AUCTION_TIME.intValue()); // 3 days later, 3s
 
-        this.track.addStorageRow(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), new DataWord(fillByteArray(date)));
+        //long time = blockchain.getBestBlock().getTimestamp();
+        //Date finishDate = new Date(time + AUCTION_TIME);
+
+        addDateToStorage(auctionDomainsAddress, domainAddress, finishDate);
+        addNameToStorage(auctionDomainsAddressName, domainAddress, domainName);
+
+        // store in auction LRU map
+        AuctionDomainsData tempData = new AuctionDomainsData(domainNameRaw, domainAddress, finishDate, BigInteger.ZERO);
+        auctionsMap.put(domainNameRaw, tempData);
 
         TimerTask auctionTask = new finishAuction(domainAddress);
         timer.schedule(auctionTask, finishDate);
     }
 
-    private void addToActiveDomains(Address domainAddress, Address ownerAddress){
+    // record to data base, change stuff, so when its time for task to execute, it will first check database
+    // to see if it has been extended, if it has, schedule new task.
+    private ExecutionResult extensionRequest(Address domainAddress, long nrg){
+        Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
+        //Date currentDate = new Date(blockchain.getBestBlock().getTimestamp());
         Date currentDate = new Date();
-        Date finishDate = new Date(currentDate.getTime() + ACTIVE_TIME); // 1 year later, 10s
-        byte[] date = Longs.toByteArray(finishDate.getTime());
 
-        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())),new DataWord(blake128(ownerAddress.toBytes())));
-        this.track.addStorageRow(activeDomainsAddressTime, new DataWord(blake128(domainAddress.toBytes())), new DataWord(fillByteArray(date)));
+        long difference = expireDateFromStorage.getTime() - currentDate.getTime();
 
-        TimerTask removeActiveDomainTask = new removeActiveDomain(domainAddress);
+        // check if domain is currently active, but have not been extended
+        if(expireDateFromStorage.getTime() < currentDate.getTime() || difference > ACTIVE_TIME.intValue()) {
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, COST - nrg, "already been extended".getBytes());
+        }
+
+        // add the new expire date
+        Date finishDate = new Date(expireDateFromStorage.getTime() + ACTIVE_TIME.intValue()); //extend for 1 period
+        addDateToStorage(activeDomainsAddressTime, domainAddress, finishDate);
+        return new ExecutionResult(ResultCode.SUCCESS, COST - nrg );
+    }
+
+    /**
+     * Store the given domain callerAddress in the collection of active domains. Set
+     * a new task, scheduling the domain to be active for a period of 1 year.
+     *
+     * @param domainAddress callerAddress of the domain to be added
+     * @param ownerAddress new owner of the given domain
+     */
+    private void addToActiveDomains(Address domainAddress, Address ownerAddress, String domainName, BigInteger value){
+        Date currentDate = new Date();
+        Date finishDate = new Date(currentDate.getTime() + ACTIVE_TIME.intValue()); // 1 year later, 5s
+
+        //long time = blockchain.getBestBlock().getTimestamp();
+        //Date finishDate = new Date(time + ACTIVE_TIME);
+
+        addBigIntegerToStorage(activeDomainsAddressValue, domainAddress, value);
+        addDateToStorage(activeDomainsAddressTime, domainAddress, finishDate);
+        addAddressToStorage(activeDomainsAddress, domainAddress, ownerAddress);
+        addNameToStorage2(activeDomainsAddressName, domainAddress, domainName);
+
+        TimerTask removeActiveDomainTask = new removeActiveDomain(domainAddress, finishDate.getTime());
         timer.schedule(removeActiveDomainTask, finishDate);
     }
 
     /**
-     * Process the auction at the given domain address and find:
+     * Process the given bid. Increment the number of bids counter of the
+     * domain and call function to store.
+     *
+     * @param domainNameRaw domain name with .aion
+     * @param domainAddress domain to bid for
+     * @param bidderAddress callerAddress of the bidder
+     * @param value the bid value
+     */
+    private void processBid(String domainNameRaw, Address domainAddress, Address bidderAddress, BigInteger value){
+        this.track.getAccountState(bidderAddress).subFromBalance(value);
+        BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
+
+        addBidToRepo(domainAddress, numberOfBids.intValue(), bidderAddress, value);
+        numberOfBids = numberOfBids.add(BigInteger.valueOf(1));
+        addBigIntegerToStorage(domainAddress, BID_KEY_COUNTER, numberOfBids);
+
+        // if domain is in auction LRUMap, update bid counter by 1
+        if (auctionsMap.containsKey(domainNameRaw)){
+            AuctionDomainsData oldData = auctionsMap.get(domainNameRaw);
+            AuctionDomainsData newData = new AuctionDomainsData(oldData.domainName, oldData.domainAddress, oldData.completeDate, oldData.numberOfBids.add(BigInteger.ONE));
+            auctionsMap.put(domainNameRaw, newData);
+        }
+
+        // if auction domain is not in auction LRUMap(overwritten by other auctions) get its data from repo.
+        // Add info to auction LRUMap and increment the number of bids counter by 1
+        else{
+            Date tempExpireDate = getDateFromStorage(auctionDomainsAddress, domainAddress);
+            BigInteger tempNumberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
+            AuctionDomainsData tempData = new AuctionDomainsData(domainNameRaw, domainAddress, tempExpireDate, tempNumberOfBids.add(BigInteger.ONE));
+            auctionsMap.put(domainNameRaw, tempData);
+        }
+
+        // if domain is in bids LRUMap, add current bid to data
+        if (auctionBidsMap.containsKey(domainNameRaw)){
+            auctionBidsMap.get(domainNameRaw).put(domainAddress, value);
+        }
+
+        // if domain is not in bids LRUMap
+        // create the map and put into bids LRUMap
+        else{
+            Map<Address, BigInteger> bids = new HashMap<>();
+            bids.put(bidderAddress, value);
+            auctionBidsMap.put(domainNameRaw, bids);
+        }
+    }
+
+    /**
+     * Process the auction at the given domain callerAddress and find:
      *      - bidder with the highest big (Address)
      *      - second highest bid value (BigInteger)
-     * Record information in repository and clean up auction values in repo
+     * Record information in repository and clean up auction values in repo.
      *
-     * @param domainAddress The domain address of the auction to be processed
+     * @param domainAddress The domain callerAddress of the auction to be processed
      */
     private void processAuction(Address domainAddress){
-        byte[] counterHash = blake128(BID_KEY_COUNTER.getBytes());
-        IDataWord numberOfBidsData = this.track.getStorageValue(domainAddress, new DataWord(counterHash));
-        BigInteger numberOfBids = new BigInteger(numberOfBidsData.getData());
-        //int numberOfBids = Integer.parseInt(Arrays.toString(numberOfBidsData.getData()));
+        BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
 
+        // if there are no bids, cancel the auction, no one wins, this should never happen
+        // since a first bid is needed to begin an auction
+        if (numberOfBids.intValue() < 1)
+            return;
+
+        String domainName;
         Address winnerAddress = null;
-        BigInteger highestBid = new BigInteger("0");
+        BigInteger highestBid = MINIMUM_AMOUNT;
         BigInteger secondHighestBid = new BigInteger("0");
 
         Address tempAddress;
-        byte[] bidderKey1;
-        byte[] bidderKey2;
-        byte[] bidderKeyVal;
         BigInteger tempAmount;
 
         for (int i = 0; i < numberOfBids.intValue(); i++){
-            bidderKey1 = blake128((BID_KEY_ADDR_F + i).getBytes());
-            bidderKey2 = blake128((BID_KEY_ADDR_S + i).getBytes());
-            bidderKeyVal = blake128((BID_KEY_VALUE + i).getBytes());
+            tempAddress = getAddressFromStorage(domainAddress, BID_KEY_ADDR + i);
+            tempAmount = getBigIntegerFromStorage(domainAddress, BID_KEY_VALUE + i);
 
-            IDataWord addr1 = this.track.getStorageValue(domainAddress, new DataWord(bidderKey1));
-            IDataWord addr2 = this.track.getStorageValue(domainAddress, new DataWord(bidderKey2));
-            tempAddress = new Address(combineTwoBytes(addr1.getData(), addr2.getData()));
-            IDataWord data1 = this.track.getStorageValue(domainAddress, new DataWord(bidderKeyVal));
-            tempAmount = new BigInteger(data1.getData());
-
-            if(tempAmount.compareTo(highestBid) > 0){
-                secondHighestBid = highestBid;
-                highestBid = tempAmount;
-                winnerAddress = tempAddress;
+            // if current winner and temp are same person, only update the highest bid
+            if (winnerAddress != null && Arrays.equals(tempAddress.toBytes(), winnerAddress.toBytes())){
+                // return the smaller amount to account
+                if (tempAmount.compareTo(highestBid) > 0) {
+                    this.track.addBalance(tempAddress, highestBid);
+                    highestBid = tempAmount;
+                }
+                else{
+                    this.track.addBalance(tempAddress, tempAmount);
+                }
             }
 
-            else if (tempAmount.compareTo(secondHighestBid) > 0){
-                secondHighestBid = tempAmount;
+            // if temp callerAddress is different from winner callerAddress
+            else{
+                if (tempAmount.compareTo(highestBid) > 0){
+                    //return previous winner and amount to its bidder
+                    this.track.addBalance(winnerAddress, highestBid);
+                    //set winner variables
+                    secondHighestBid = highestBid;
+                    highestBid = tempAmount;
+                    winnerAddress = tempAddress;
+                }
+                else if (tempAmount.compareTo(secondHighestBid) > 0){
+                    this.track.addBalance(tempAddress, tempAmount);
+                    secondHighestBid = tempAmount;
+                }
+                else{
+                    this.track.addBalance(tempAddress, tempAmount);
+                }
             }
-
-            this.track.addStorageRow(domainAddress, new DataWord(bidderKeyVal), new DataWord(new BigInteger("0")));
+            // erase it after
+            addBigIntegerToStorage(domainAddress, BID_KEY_VALUE + i, new BigInteger("0"));
         }
-        this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(new BigInteger("0")));
-        addToActiveDomains(domainAddress, winnerAddress);
-        printWinner(domainAddress, winnerAddress, highestBid);
+        // return difference between the top 2 bids to winner
+        this.track.addBalance(winnerAddress, highestBid.subtract(secondHighestBid));
+
+        domainName = getNameFromStorage(auctionDomainsAddressName, domainAddress);
+        addBigIntegerToStorage(domainAddress, BID_KEY_COUNTER, new BigInteger("0"));
+        // remove from auction domains
+        this.track.addStorageRow(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        addToActiveDomains(domainAddress, winnerAddress, domainName, secondHighestBid);
+        printWinner(domainAddress, winnerAddress, secondHighestBid, domainName);
     }
 
+    /**
+     * insert (16 - length of input) 0s to the beginning of the byte, used to
+     * store into Dataword.
+     *
+     * @param inputBytes the byte[] to be filled to 16 length
+     * @return the filled byte array
+     */
     private byte[] fillByteArray(byte[] inputBytes){
         byte[] ret = new byte[16];
         int length = inputBytes.length;
@@ -240,56 +470,52 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return ret;
     }
 
+    /**
+     * Checks if the domain given is an active domain.
+     *
+     * @param domainAddress a domain callerAddress
+     * @return the trimmed byte array
+     */
     private boolean isActiveDomain(Address domainAddress){
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
-        return !(this.track.getStorageValue(activeDomainsAddress,key).equals(DataWord.ZERO));
+        return !(this.track.getStorageValue(activeDomainsAddress,key).equals(DoubleDataWord.ZERO));
     }
 
+    /**
+     * Checks if the given domain is in auction process
+     *
+     * @param domainAddress a domain callerAddress
+     */
     private boolean isAuctionDomain(Address domainAddress){
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
         IDataWord ret = this.track.getStorageValue(auctionDomainsAddress, key);
-        boolean a = !ret.equals(DataWord.ZERO);
-        return a;
+        return !ret.equals(DoubleDataWord.ZERO);
     }
 
-    private void storeBid(Address domainAddress, Address bidderAddress, BigInteger value){
-
-        byte[] counterHash = blake128(BID_KEY_COUNTER.getBytes());
-        BigInteger counter;
-
-        IDataWord numberOfBidsData = this.track.getStorageValue(domainAddress, new DataWord(counterHash));
-        BigInteger numberOfBids = new BigInteger(numberOfBidsData.getData());
-
-        // if this is the first bid, add the counter to database
-        if(numberOfBids.intValue() == 0){
-            counter = new BigInteger("1");
-            this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(counter));
-        }
-
-        numberOfBids = numberOfBids.add(BigInteger.valueOf(1));
-        this.track.addStorageRow(domainAddress, new DataWord(counterHash), new DataWord(numberOfBids));
-
-        addBidToRepo(domainAddress, numberOfBids.intValue(), bidderAddress, value);
-    }
-
+    /**
+     * Store the given bid in the repository under the given domain callerAddress.
+     * Stores bidder callerAddress and the bid value with corresponding hash key.
+     *
+     * @param domainAddress domain of the bid
+     * @param offset index for storage key
+     * @param bidderAddress callerAddress of the bidder
+     * @param value the bid value
+     */
     private void addBidToRepo(Address domainAddress, int offset, Address bidderAddress, BigInteger value) {
-        byte[] bidderKey1 = blake128((BID_KEY_ADDR_F + offset).getBytes());
-        byte[] bidderKey2 = blake128((BID_KEY_ADDR_S + offset).getBytes());
-        byte[] bidderKeyVal = blake128((BID_KEY_VALUE + offset).getBytes());
-
-        byte[] addrFirstPart = new byte[16];
-        byte[] addrSecondPart = new byte[16];
-
-        System.arraycopy(bidderAddress.toBytes(), 0, addrFirstPart, 0, 16);
-        System.arraycopy(bidderAddress.toBytes(), 16, addrSecondPart, 0, 16);
-
-        this.track.addStorageRow(domainAddress, new DataWord(bidderKey1), new DataWord(addrFirstPart));
-        this.track.addStorageRow(domainAddress, new DataWord(bidderKey2), new DataWord(addrSecondPart));
-        this.track.addStorageRow(domainAddress, new DataWord(bidderKeyVal), new DataWord(value));
+        addBigIntegerToStorage(domainAddress, BID_KEY_VALUE + offset, value);
+        addAddressToStorage(domainAddress, BID_KEY_ADDR + offset, bidderAddress);
     }
 
-    private void printWinner (Address domainAddress, Address winnerAddress, BigInteger value){
+    /**
+     * Prints out information for the auction of the given domain.
+     *
+     * @param domainAddress callerAddress of the domain
+     * @param winnerAddress callerAddress of the auction winner (new owner of domain)
+     * @param value the value (second highest) to deposit
+     */
+    private void printWinner (Address domainAddress, Address winnerAddress, BigInteger value, String domainName){
         System.out.println("Auction result for domain at: '" + domainAddress + "'");
+        System.out.println("    Domain name: " + domainName);
         System.out.println("    New domain owner: " + winnerAddress);
         Date terminateDate = new Date();
         System.out.println("    Auction complete date: " + terminateDate.toString());
@@ -297,6 +523,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         System.out.println();
     }
 
+    /**
+     * Print out information for removing an active domain
+     *
+     * @param domainAddress callerAddress of the domain
+     */
     private void printRemoveActiveDomain(Address domainAddress){
         System.out.println("Removing active domain at: " + domainAddress);
         Date terminateDate = new Date();
@@ -304,11 +535,282 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         System.out.println();
     }
 
-    private void removeActiveDomain(Address domainAddress){
+    /**
+     * Removes the given domain from the collection of active domains in repo.
+     *
+     * @param domainAddress callerAddress of the domain
+     */
+    private void removeActiveDomain(Address domainAddress, long expireTime){
+        // retrieve expire time from storage
+        Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
+
+        // if domain active time has been extended, schedule new task and return
+        if(expireDateFromStorage.getTime() > expireTime){
+            System.out.println("    domain active time has been extended, schedule new task for : " + expireDateFromStorage + "\n");
+            TimerTask removeActiveDomainTask = new removeActiveDomain(domainAddress, expireDateFromStorage.getTime());
+            timer.schedule(removeActiveDomainTask, expireDateFromStorage);
+            return;
+        }
+
+        // return deposit
+        Address ownerAddress = getAddressFromStorage(activeDomainsAddress, domainAddress);
+        BigInteger tempValue = getBigIntegerFromStorage(activeDomainsAddressValue, domainAddress);
+        this.track.addBalance(ownerAddress, tempValue);
+
         printRemoveActiveDomain(domainAddress);
-        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DataWord.ZERO);
+        // erase
+        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddress, new DataWord(blake128(blake128(domainAddress.toBytes()))), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressName, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressName, new DataWord(blake128(blake128(domainAddress.toBytes()))), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressValue, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
+        this.track.addStorageRow(activeDomainsAddressTime, new DataWord(blake128(domainAddress.toBytes())), DoubleDataWord.ZERO);
     }
 
+    /**
+     * Checks if the domain name follows the rules:
+     *      - between 8-37 characters in length (including the .aion at the end)
+     *      - follows the ascii base code
+     *      - end with .aion
+     *      - are at max 4 levels including .aion head ("a.a.a.aion" is valid while a.a.a.a.aion is invalid"
+     *
+     * @param domainNameRaw name of the domain
+     */
+    private boolean isValidDomainName(String domainNameRaw){
+        if (domainNameRaw.length() < 8 || domainNameRaw.length() > 37)
+            return false;
+        if (!domainNameRaw.matches("[a-zA-Z0-9.]*"))
+            return false;
+        String[] domainPartitioned = domainNameRaw.split("\\.");
+        if (!domainPartitioned[domainPartitioned.length - 1].equals("aion"))
+            return false;
+        if(privateAionDomainNames.contains(domainNameRaw))
+            return false;
+        return domainPartitioned.length <= 4;
+    }
+
+    /**
+     * Checks whether the given domain has a parent domain that is already active,
+     * if so, the given (sub) domain is not allowed to be auctioned.
+     *
+     * @param domainName
+     */
+    private boolean hasActiveParentDomain(String domainName){
+        String[] domainPartitioned = domainName.split("\\.");
+        int numberOfSplits = domainPartitioned.length;
+        if(numberOfSplits < 3)
+            return false;
+
+        // dont use the first and last partitioned string
+        for (int i = 1; i < numberOfSplits - 1; i++) {
+            String tempParentName = "";
+
+            // generate each possible parent domain
+            for (int j = i; j < numberOfSplits - 1; j++) {
+                tempParentName = tempParentName + domainPartitioned[i];
+            }
+
+            // check if domain exists, and if it is active
+            Address parentAddr = null;
+            try {
+                parentAddr = getAddressFromName(new String((addLeadingZeros(tempParentName.getBytes())),  "UTF-8").substring(5, 37));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            if (!parentAddr.equals(Address.ZERO_ADDRESS())) {
+                if (isActiveDomain(parentAddr)) return true;
+            }
+        }
+        return false;
+    }
+
+    // storage processing --------------------------------------------------------------------------------------------//
+
+    /**
+     * Create an aion callerAddress for the given domain name and store it
+     *
+     * @param domainName name of the domain
+     * @return callerAddress generated for  the domain
+     */
+    private Address createAddressForDomain(String domainName){
+        ECKey domainAddr = ECKeyFac.inst().create();
+        Address domainAddress = Address.wrap(domainAddr.getAddress());
+
+        // store callerAddress -> name pair & name -> callerAddress pair
+        addNameToStorage(domainAddressNamePair, domainAddress, domainName);
+        addAddressToStorage(domainNameAddressPair, domainName, domainAddress);
+        return domainAddress;
+    }
+    /**
+     * Get the corresponding domainAddress for the given domain name
+     *
+     * @param domainName name of domain
+     * @return callerAddress of domain
+     */
+    private Address getAddressFromName(String domainName){
+        byte[] addrFirstPart = this.track.getStorageValue(domainNameAddressPair, new DataWord(blake128(domainName.getBytes()))).getData();
+        byte[] addrSecondPart = this.track.getStorageValue(domainNameAddressPair, new DataWord(blake128(blake128(domainName.getBytes())))).getData();
+        return Address.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
+    }
+
+    /**
+     * Stores the domain callerAddress into a collection of all domain addresses
+     * also increment the count by 1
+     *
+     * @param domainAddress callerAddress of domain
+     */
+    private void storeNewAddress(Address domainAddress){
+        BigInteger counter = getBigIntegerFromStorage(allAddresses, ALL_ADDR_COUNTER_KEY);
+        this.track.addStorageRow(allAddresses, new DataWord(blake128(ALL_ADDR_COUNTER_KEY.getBytes())), new DataWord(counter.add(BigInteger.ONE)));
+        addAddressToStorage(allAddresses, ALL_ADDR_KEY + counter, domainAddress);
+    }
+
+    private Address getAddressFromStorage(Address key, Address key2){
+        byte[] addrFirstPart = this.track.getStorageValue(key, new DataWord(blake128(key2.toBytes()))).getData();
+        byte[] addrSecondPart = this.track.getStorageValue(key, new DataWord(blake128(blake128(key2.toBytes())))).getData();
+        return Address.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
+    }
+
+    private Address getAddressFromStorage(Address key, String key2){
+        byte[] addrFirstPart = this.track.getStorageValue(key, new DataWord(blake128(key2.getBytes()))).getData();
+        byte[] addrSecondPart = this.track.getStorageValue(key, new DataWord(blake128(blake128(key2.getBytes())))).getData();
+        return Address.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
+    }
+
+    private BigInteger getBigIntegerFromStorage(Address key, String key2){
+        IDataWord data = this.track.getStorageValue(key, new DataWord(blake128(key2.getBytes())));
+        return new BigInteger(data.getData());
+    }
+
+    private BigInteger getBigIntegerFromStorage(Address key, Address key2){
+        IDataWord data = this.track.getStorageValue(key, new DataWord(blake128(key2.toBytes())));
+        return new BigInteger(data.getData());
+    }
+
+    private String getNameFromStorage(Address key, Address key2){
+        byte[] domainNameFirstPart = this.track.getStorageValue(key, new DataWord(blake128(key2.toBytes()))).getData();
+        byte[] domainNameSecondPart = this.track.getStorageValue(key, new DataWord(blake128(blake128(key2.toBytes())))).getData();
+        String tempDomainName;
+        try {
+            tempDomainName = new String(trimLeadingZeros(combineTwoBytes(domainNameFirstPart, domainNameSecondPart)), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            tempDomainName = "";
+        }
+        return tempDomainName + ".aion";
+    }
+
+    private Date getDateFromStorage(Address key, Address key2){
+        byte[] expireDateData = this.track.getStorageValue(key, new DataWord(blake128(key2.toBytes()))).getData();
+        byte[] trimmedExpireDateData = trimLeadingZeros16(expireDateData);
+        String expireDateStr;
+        try {
+            expireDateStr = new String(trimmedExpireDateData, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            expireDateStr = "";
+        }
+        return new Date(Long.parseLong(expireDateStr));
+    }
+
+    private void addAddressToStorage(Address key, Address key2, Address value){
+        byte[] addrFirstPart = new byte[16];
+        byte[] addrSecondPart = new byte[16];
+        System.arraycopy(value.toBytes(), 0, addrFirstPart, 0, 16);
+        System.arraycopy(value.toBytes(), 16, addrSecondPart, 0, 16);
+
+        this.track.addStorageRow(key, new DataWord(blake128(key2.toBytes())), new DataWord(addrFirstPart));
+        this.track.addStorageRow(key, new DataWord(blake128(blake128(key2.toBytes()))), new DataWord(addrSecondPart));
+
+    }
+
+    private void addAddressToStorage(Address key, String key2, Address value){
+        byte[] addrFirstPart = new byte[16];
+        byte[] addrSecondPart = new byte[16];
+        System.arraycopy(value.toBytes(), 0, addrFirstPart, 0, 16);
+        System.arraycopy(value.toBytes(), 16, addrSecondPart, 0, 16);
+
+        this.track.addStorageRow(key, new DataWord(blake128(key2.getBytes())), new DataWord(addrFirstPart));
+        this.track.addStorageRow(key, new DataWord(blake128(blake128(key2.getBytes()))), new DataWord(addrSecondPart));
+    }
+
+    private void addDateToStorage(Address key, Address key2, Date value){
+        long dateInLong =  value.getTime();
+        String dateString = String.valueOf(dateInLong);
+        byte[] date;
+
+        try {
+            date = dateString.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            date = Longs.toByteArray(value.getTime());
+            System.out.println("Could not resolve date properly");
+            e.printStackTrace();
+        }
+        this.track.addStorageRow(key, new DataWord(blake128(key2.toBytes())), new DataWord(fillByteArray(date)));
+    }
+
+    private void addNameToStorage(Address key, Address key2, String name){
+        byte[] nameFirstPart = name.substring(0,16).getBytes();
+        byte[] nameSecondPart = name.substring(16,32).getBytes();
+        this.track.addStorageRow(key, new DataWord(blake128(key2.toBytes())), new DataWord(nameFirstPart));
+        this.track.addStorageRow(key, new DataWord(blake128(blake128(key2.toBytes()))), new DataWord(nameSecondPart));
+    }
+
+    private void addNameToStorage2(Address key, Address key2, String name){
+        byte[] addZeros = addLeadingZeros(name.getBytes());
+        byte[] value1 = new byte[16], value2 = new byte[16];
+        System.arraycopy(addZeros, 0, value1, 0, 16);
+        System.arraycopy(addZeros, 16, value2, 0, 16);
+        this.track.addStorageRow(key, new DataWord(blake128(key2.toBytes())), new DataWord(value1));
+        this.track.addStorageRow(key, new DataWord(blake128(key2.toBytes())), new DataWord(value2));
+    }
+
+    private void addBigIntegerToStorage(Address key, String key2, BigInteger value){
+        this.track.addStorageRow(key, new DataWord(blake128(key2.getBytes())), new DataWord(value));
+    }
+
+    private void addBigIntegerToStorage(Address key, Address key2, BigInteger value){
+        this.track.addStorageRow(key, new DataWord(blake128(key2.toBytes())), new DataWord(value));
+    }
+
+    // tasks ---------------------------------------------------------------------------------------------------------//
+    class finishAuction extends TimerTask {
+        Address domainAddress;
+
+        finishAuction(Address input){
+            domainAddress = input;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("--------------------------PERFORMING TASK: finishAuction--------------------------");
+            processAuction(domainAddress);
+        }
+    }
+
+    class removeActiveDomain extends TimerTask {
+        Address domainAddress;
+        long time;
+
+        removeActiveDomain(Address input, long time) {
+            domainAddress = input;
+            this.time = time;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("--------------------------PERFORMING TASK: removeActiveDomain--------------------------");
+            removeActiveDomain(domainAddress, time);
+        }
+    }
+
+    // data processing helpers ---------------------------------------------------------------------------------------//
+    /**
+     * Combines two length 16 byte[] (usually retrieved from repo as a
+     * DataWord(length 16) into a length 32 byte[].
+     *
+     * @param byte1 input1
+     * @param byte2 input2
+     * @return the combined length 32 byte[]
+     */
     private byte[] combineTwoBytes(byte[] byte1, byte[] byte2) {
         byte[] combined = new byte[32];
         System.arraycopy(byte1, 0, combined, 0, 16);
@@ -316,34 +818,222 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return combined;
     }
 
-    /**
-     * tasks
-     */
-    public class finishAuction extends TimerTask {
-        Address domainAddress;
+    private byte[] trimLeadingZeros(byte[] b) {
+        if (b == null) return null;
 
-        public finishAuction(Address input){
-            domainAddress = input;
+        int counter = 0;
+        for (int i = 0; i < 32; i++) {
+            if (b[i] != 0)
+                break;
+            counter++;
         }
 
-        @Override
-        public void run() {
-            System.out.println("                                PERFORMING TASK: finishAuction");
-            processAuction(domainAddress);
+        byte[] ret = new byte[32 - counter];
+        System.arraycopy(b, counter, ret, 0, 32 - counter);
+        return ret;
+    }
+
+    private byte[] trimLeadingZeros16(byte[] b) {
+        if (b == null) return null;
+
+        int counter = 0;
+        for (int i = 0; i < 16; i++) {
+            if (b[i] != 0)
+                break;
+            counter++;
+        }
+
+        byte[] ret = new byte[16 - counter];
+        System.arraycopy(b, counter, ret, 0, 16 - counter);
+        return ret;
+    }
+
+    private byte[] addLeadingZeros(byte[] b) {
+        byte[] ret = new byte[37];
+        System.arraycopy(b, 0, ret, 37 - b.length, b.length);
+        return ret;
+    }
+
+    // Query functions and helpers -----------------------------------------------------------------------------------//
+    private List<AuctionDomainsData> getAllAuctionDomains(){
+        BigInteger numberOfDomainsTotal = getBigIntegerFromStorage(allAddresses, ALL_ADDR_COUNTER_KEY);
+
+        List<AuctionDomainsData> auctions = new ArrayList<>();
+        for (int i = 0; i < numberOfDomainsTotal.intValue(); i++){
+            Address tempDomainAddr = getAddressFromStorage(allAddresses, ALL_ADDR_KEY + i);
+
+            // if domain exists
+            if(!this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(tempDomainAddr.toBytes()))).equals(DoubleDataWord.ZERO)){
+                Date tempExpireDate = getDateFromStorage(auctionDomainsAddress, tempDomainAddr);
+                String tempDomainName = getNameFromStorage(domainAddressNamePair, tempDomainAddr);
+                BigInteger tempNumberOfBids = getBigIntegerFromStorage(tempDomainAddr, BID_KEY_COUNTER);
+                AuctionDomainsData tempData = new AuctionDomainsData(tempDomainName, tempDomainAddr, tempExpireDate, tempNumberOfBids);
+                auctions.add(tempData);
+            }
+        }
+        return  auctions;
+    }
+
+    private HashMap<Address, BigInteger> getBidsForADomain(Address domainAddress){
+        HashMap<Address, BigInteger> bids = new HashMap<>();
+        BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
+
+        for (int i = 0; i < numberOfBids.intValue(); i++){
+            Address bidderAddr = getAddressFromStorage(domainAddress, BID_KEY_ADDR + i);
+            BigInteger bidAmount = getBigIntegerFromStorage(domainAddress, BID_KEY_VALUE + i);
+
+            // check if there is multiple bids from same callerAddress
+            if (bids.containsKey(bidderAddr)){
+                if(bidAmount.compareTo(bids.get(bidderAddr)) > 0)
+                    bids.put(bidderAddr, bidAmount);
+            }
+            else {
+                bids.put(bidderAddr, bidAmount);
+            }
+        }
+        return bids;
+    }
+
+    public void displayAllAuctionDomains(){
+        List<AuctionDomainsData> auctionDomainsList = getAllAuctionDomains();
+        int counter = 0;
+
+        System.out.println("--------------------------AION NAME SERVICE QUERY: displayAllAuctionDomains (" + auctionDomainsList.size() + ")-----------------------------");
+        for (AuctionDomainsData domain: auctionDomainsList){
+            System.out.println("Domain name: " + domain.domainName);
+            System.out.println("    Domain callerAddress: " + domain.domainAddress);
+            System.out.println("    Expire Date: " + domain.completeDate);
+            System.out.println("    Number of bids for this domain: " + domain.numberOfBids);
+            counter++;
+        }
+
+        if (counter == 0)
+            System.out.println("Currently there no domains in auction");
+        System.out.println();
+    }
+
+    public void displayMyBidsLRU(ECKey key){
+        Address callerAddress = Address.wrap(key.getAddress());
+        boolean hasNoBids = true;
+
+        System.out.println("-----------------------------AION NAME SERVICE QUERY: displayMyBidsLRU----------------------------");
+
+        if (!this.track.hasAccountState(callerAddress)){
+            System.out.println("    The given account: " + callerAddress + " is not registered\n");
+            return;
+        }
+
+        List<AuctionDomainsData> auctionDomainsList = getAllAuctionDomains();
+        for (AuctionDomainsData domain: auctionDomainsList){
+            Address tempDomainAddress = domain.domainAddress;
+            String tempDomainName = domain.domainName;
+
+            auctionBidsMap.put(tempDomainName, getBidsForADomain(tempDomainAddress));
+            // if bidder is there
+            if(auctionBidsMap.get(tempDomainName).containsKey(callerAddress)) {
+                printBid(tempDomainName, callerAddress);
+                hasNoBids = false;
+            }
+        }
+
+        if(hasNoBids)
+            System.out.println("    You currently have no active bids");
+
+        System.out.println();
+    }
+
+    public void displayMyBidForDomainLRU(String domainNameRaw, ECKey key){
+        Address callerAddress = Address.wrap(key.getAddress());
+        System.out.println("--------------------------AION NAME SERVICE QUERY: displayMyBidForDomainLRU--------------------------");
+
+        if (!this.track.hasAccountState(callerAddress)){
+            System.out.println("    The given account: " + callerAddress + " is not registered\n");
+            return;
+        }
+
+        // process domain name
+        byte[] domainNameInBytes = domainNameRaw.substring(0, domainNameRaw.length() - 5).getBytes();
+        String domainName2 = new String(addLeadingZeros(domainNameInBytes));
+        String domainName = domainName2.substring(5, 37);
+        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
+
+        // if the domain is not in auction, print error and return
+        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DoubleDataWord.ZERO)){
+            System.out.println("    This domain is not in auction\n");
+            return;
+        }
+
+        auctionBidsMap.put(domainNameRaw, getBidsForADomain(domainAddress));
+
+        if(auctionBidsMap.containsKey(domainNameRaw)){
+            if(auctionBidsMap.get(domainNameRaw).containsKey(callerAddress)){
+                printBid(domainNameRaw, callerAddress);
+            }
+            else{
+                System.out.println("You have no bids for: " + domainNameRaw);
+            }
+        }
+
+        System.out.println();
+    }
+
+    public void displayAuctionDomainLRU(String domainNameRaw){
+        System.out.println("--------------------------AION NAME SERVICE QUERY: displayAuctionDomainLRU--------------------------");
+        // process domain name
+        byte[] domainNameInBytes = domainNameRaw.substring(0, domainNameRaw.length() - 5).getBytes();
+        String domainName2 = new String(addLeadingZeros(domainNameInBytes));
+        String domainName = domainName2.substring(5, 37);
+
+        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
+
+        // if the domain is not in auction, return
+        if(this.track.getStorageValue(auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes()))).equals(DoubleDataWord.ZERO)) {
+            System.out.println("The given domain \'" + domainNameRaw + "\' is not in auction\n");
+            return;
+        }
+
+        // if domain is in LRUMap, print content
+        if (auctionsMap.containsKey(domainNameRaw)){
+            printAuctionDomain(domainNameRaw);
+            System.out.println();
+        }
+
+        // if domain is not in LRUMap get its data from repo. Add info to LRUMap and print content
+        else{
+            Date tempExpireDate = getDateFromStorage(auctionDomainsAddress, domainAddress);
+            String tempDomainName = getNameFromStorage(domainAddressNamePair, domainAddress);
+            BigInteger tempNumberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
+            AuctionDomainsData tempData = new AuctionDomainsData(tempDomainName, domainAddress, tempExpireDate, tempNumberOfBids);
+            auctionsMap.put(tempDomainName, tempData);
+            printAuctionDomain(tempDomainName);
+            System.out.println();
         }
     }
 
-    class removeActiveDomain extends TimerTask {
+    private void printAuctionDomain(String domainName){
+        System.out.println("Domain name: " + auctionsMap.get(domainName).domainName);
+        System.out.println("    Domain callerAddress: " + auctionsMap.get(domainName).domainAddress);
+        System.out.println("    Auction complete date: " + auctionsMap.get(domainName).completeDate);
+        System.out.println("    Number of bids for this domain: " + auctionsMap.get(domainName).numberOfBids);
+    }
+
+    private void printBid(String domainName, Address bidderAddress){
+        System.out.println("Domain name: " + domainName);
+        System.out.println("    Bid value: " + auctionBidsMap.get(domainName).get(bidderAddress));
+    }
+
+    class AuctionDomainsData{
+        String domainName;
         Address domainAddress;
+        Date completeDate;
+        BigInteger numberOfBids;
 
-        public removeActiveDomain(Address input) {
-            domainAddress = input;
-        }
-
-        @Override
-        public void run() {
-            System.out.println("                                PERFORMING TASK: removeActiveDomain");
-            removeActiveDomain(domainAddress);
+        AuctionDomainsData(String domainName, Address domainAddress, Date completeDate, BigInteger numberOfBids){
+            this.domainName = domainName;
+            this.domainAddress = domainAddress;
+            this.completeDate = completeDate;
+            this.numberOfBids = numberOfBids;
         }
     }
 }
+

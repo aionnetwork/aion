@@ -27,8 +27,8 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.precompiled.ContractExecutionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.ExecutionResult;
 
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
@@ -66,7 +66,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrgLimit) {
+    public ExecutionResult execute(byte[] input, long nrgLimit) {
         //TODO
         return null;
     }

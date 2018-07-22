@@ -20,23 +20,29 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled.type;
-
-import org.aion.precompiled.ContractExecutionResult;
+package org.aion.vm;
 
 /**
- * A pre-compiled contract.
+ * A ExecutionResult is the result of a VM execution. It contains the VM status
+ * code, nrg usage, output, etc.
+ *
+ * @author yulong
  */
-public interface IPrecompiledContract {
+public class ExecutionResult extends AbstractExecutionResult {
 
-    /**
-     * Returns the result of executing the pre-compiled contract. The contract will be executed
-     * using the input arguments input and the energy limit nrgLimit.
-     *
-     * @param input The input arguments for the contract.
-     * @param nrgLimit The energy limit.
-     * @return the contract execution result.
-     */
-    ContractExecutionResult execute(byte[] input, long nrgLimit);
+    public ExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
+        super(code, nrgLeft, output);
+    }
 
+    public ExecutionResult(ResultCode code, long nrgLeft) {
+        super(code, nrgLeft);
+    }
+
+    public ExecutionResult(byte[] result) {
+        super(result);
+    }
+
+    public static ExecutionResult parse(byte[] result) {
+        return new ExecutionResult(result);
+    }
 }

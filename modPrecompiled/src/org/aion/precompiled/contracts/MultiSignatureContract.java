@@ -40,9 +40,9 @@ import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.ContractExecutionResult;
-import org.aion.precompiled.ContractExecutionResult.ResultCode;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -227,7 +227,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      *
      * Important: the output of a successful call to this method using operation 0x0 will return a
-     * ContractExecutionResult whose output field is the address of the newly created wallet. This
+     * ExecutionResult whose output field is the address of the newly created wallet. This
      * address is the walletId that is required by operation 0x1 in order to send a transaction
      * successfully.
      *
@@ -243,30 +243,30 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * so that all parties can be sure they are signing identical transactions.
      */
     @Override
-    public ContractExecutionResult execute(byte[] input, long nrg) {
-        if (nrg < COST) { return new ContractExecutionResult(ResultCode.OUT_OF_NRG, 0); }
-        if (input == null) { return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0); }
-        if (input.length < 1) { return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0); }
+    public ExecutionResult execute(byte[] input, long nrg) {
+        if (nrg < COST) { return new ExecutionResult(ResultCode.OUT_OF_NRG, 0); }
+        if (input == null) { return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0); }
+        if (input.length < 1) { return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0); }
 
         int operation = input[0];
 
         switch (operation) {
             case 0: return createWallet(input, nrg);
             case 1: return sendTransaction(input, nrg);
-            default: return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            default: return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
     /**
-     * Returns a ContractExecutionResult that is the result of the create wallet operation.
+     * Returns a ExecutionResult that is the result of the create wallet operation.
      *
      * @param input The full input byte array.
      * @param nrg The energy to use.
      * @return the result of the create operation.
      */
-    private ContractExecutionResult createWallet(byte[] input, long nrg) {
+    private ExecutionResult createWallet(byte[] input, long nrg) {
         if (input.length < 1 + Long.BYTES) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         ByteBuffer thresh = ByteBuffer.allocate(Long.BYTES);
@@ -276,35 +276,35 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Set<Address> owners = extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
         if (!isValidTxNrg(nrg)) {
-            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+            return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (owners == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
             // sanity check... owners should be null in both these cases really
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address wallet = initNewWallet(owners, threshold);
         track.flush();
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST, wallet.toBytes());
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, wallet.toBytes());
     }
 
     /**
-     * Returns a ContractExecutionResult that is the result of the send transaction operation.
+     * Returns a ExecutionResult that is the result of the send transaction operation.
      *
      * @param input The full input byte array.
      * @param nrg The energy to use.
      * @return the result of the send operation.
      */
-    private ContractExecutionResult sendTransaction(byte[] input, long nrg) {
+    private ExecutionResult sendTransaction(byte[] input, long nrg) {
         int length = input.length;
         if (length > 1 + ADDR_LEN + (SIG_LEN * MAX_OWNERS) + AMOUNT_LEN + Long.BYTES + ADDR_LEN) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         int walletStart = 1;
@@ -315,7 +315,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
         // Ensures input is min expected size except possibly signatures, which is checked below.
         if (sigsStart > amountStart) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         Address wallet = new Address(Arrays.copyOfRange(input, walletStart, sigsStart));
@@ -329,34 +329,34 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Long nrgPrice = buffer.getLong();
 
         if (!isValidTxNrg(nrg)) {
-            return new ContractExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+            return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
             // Then wallet is not the address of a multi-sig wallet.
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (sigs == null) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
         byte[] msg = constructMsg(wallet, track.getNonce(wallet), recipient, amount, nrgPrice);
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             // Attempt to transfer negative amount.
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (!areValidSignatures(wallet, sigs, msg)) {
-            return new ContractExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (track.getBalance(wallet).compareTo(amount) < 0) {
             // Attempt to transfer more than available balance.
-            return new ContractExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         track.incrementNonce(wallet);
         track.addBalance(wallet, amount.negate());
         track.addBalance(recipient, amount);
         track.flush();
-        return new ContractExecutionResult(ResultCode.SUCCESS, nrg - COST);
+        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST);
     }
 
     /**

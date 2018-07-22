@@ -6,7 +6,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
-import org.aion.precompiled.ContractExecutionResult;
+import org.aion.vm.ExecutionResult;
 import org.aion.vm.TransactionResult;
 
 import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.*;
@@ -240,7 +240,7 @@ public class BridgeController {
             return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // otherwise, we're clear to proceed with transfers
-        List<ContractExecutionResult> results = new ArrayList<>();
+        List<ExecutionResult> results = new ArrayList<>();
         for (BridgeBundle b : bundles) {
 
             /*
@@ -256,14 +256,14 @@ public class BridgeController {
              * For how this is documented, check the {@code Transferrable}
              * interface documentation.
              */
-            ContractExecutionResult result = null;
-            if ((result = transferrable.transfer(b.recipient, b.transferValue)).getCode()
-                    == ContractExecutionResult.ResultCode.FAILURE)
+            ExecutionResult result = null;
+            if ((result = transferrable.transfer(b.recipient, b.transferValue)).getResultCode()
+                    == ExecutionResult.ResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
-            if (result.getCode() == ContractExecutionResult.ResultCode.SUCCESS)
+            if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
                 emitDistributed(b.recipient, b.transferValue);
             results.add(result);
         }
@@ -305,9 +305,9 @@ public class BridgeController {
 
     static class ProcessedResults {
         public ErrCode controllerResult;
-        public List<ContractExecutionResult> internalResults;
+        public List<ExecutionResult> internalResults;
 
-        private ProcessedResults(ErrCode code, List<ContractExecutionResult> internalResults) {
+        private ProcessedResults(ErrCode code, List<ExecutionResult> internalResults) {
             this.controllerResult = code;
             this.internalResults = internalResults;
         }
@@ -316,7 +316,7 @@ public class BridgeController {
             return new ProcessedResults(code, null);
         }
 
-        static ProcessedResults processSuccess(ErrCode code, List<ContractExecutionResult> results) {
+        static ProcessedResults processSuccess(ErrCode code, List<ExecutionResult> results) {
             return new ProcessedResults(code, results);
         }
     }
