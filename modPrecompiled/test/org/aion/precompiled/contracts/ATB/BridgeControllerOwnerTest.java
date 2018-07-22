@@ -1,4 +1,4 @@
-package org.aion.precompiled.ATB;
+package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -6,9 +6,6 @@ import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.DummyRepo;
-import org.aion.precompiled.contracts.ATB.BridgeController;
-import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
-import org.aion.precompiled.contracts.ATB.ErrCode;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.TransactionResult;
 import org.junit.Before;
@@ -17,7 +14,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.precompiled.ATB.BridgeTestUtils.*;
+import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.*;
 
 public class BridgeControllerOwnerTest {
 

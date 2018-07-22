@@ -1,4 +1,4 @@
-package org.aion.precompiled.ATB;
+package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.type.Address;
 import org.aion.crypto.AddressSpecs;

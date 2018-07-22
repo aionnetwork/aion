@@ -185,9 +185,9 @@ public class BridgeController {
 
     // bridge
 
-    private boolean isEnoughSignatures(int signatureLength) {
+    private boolean isWithinSignatureBounds(int signatureLength) {
         int thresh = this.connector.getMinThresh();
-        return signatureLength >= thresh;
+        return signatureLength >= thresh && signatureLength <= this.connector.getMemberCount();
     }
 
     /**
@@ -210,6 +210,7 @@ public class BridgeController {
      * charging these properly.
      */
     public ProcessedResults processBundles(@Nonnull final byte[] caller,
+                                  @Nonnull final byte[] blockHash,
                                   @Nonnull final BridgeBundle[] bundles,
                                   @Nonnull final byte[][] signatures) {
         if (!isRingLocked())
@@ -218,11 +219,11 @@ public class BridgeController {
         if (!isRingMember(caller))
             return processError(ErrCode.NOT_RING_MEMBER);
 
-        if (!isEnoughSignatures(signatures.length))
-            return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
+        if (!isWithinSignatureBounds(signatures.length))
+            return processError(ErrCode.INVALID_SIGNATURE_BOUNDS);
 
         // verify bundleHash
-        byte[] hash = new byte[0];
+        byte[] hash = HashUtil.h256(blockHash);
         for (BridgeBundle b : bundles) {
             hash = HashUtil.h256(ByteUtil.merge(hash, b.recipient, b.transferValue.toByteArray()));
         }
@@ -303,7 +304,7 @@ public class BridgeController {
         addLog(topics);
     }
 
-    static class ProcessedResults {
+    protected static class ProcessedResults {
         public ErrCode controllerResult;
         public List<ExecutionResult> internalResults;
 

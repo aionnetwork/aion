@@ -47,7 +47,16 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller = new BridgeController(this.connector, this.context.result(), contractAddress, ownerAddress);
+        this.controller.setTransferrable(this);
         this.contractAddress = contractAddress;
+    }
+
+    public BridgeController getController() {
+        return this.controller;
+    }
+
+    public BridgeStorageConnector getConnector() {
+        return this.connector;
     }
 
     @Override
@@ -116,32 +125,32 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 break;
             }
             case SIG_SUBMIT_BUNDLE: {
-                // TODO: possible attack vector, unsecure deserialization
-                byte[][][] bundleRequests = parseBundleRequest(input);
-
-                if (bundleRequests == null)
-                    return fail();
-
-                byte[][] signatures = bundleRequests[BUNDLE_PARAM_SIG];
-
-                // more of a sanity check
-                if (bundleRequests[0].length != bundleRequests[1].length)
-                    return fail();
-
-                int bundleLen = bundleRequests[0].length;
-                BridgeBundle[] bundles = new BridgeBundle[bundleLen];
-                for (int i = 0; i < bundleLen; i++) {
-                    bundles[i] = new BridgeBundle(
-                            new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
-                            bundleRequests[BUNDLE_PARAM_VAL][i]);
-                }
-                BridgeController.ProcessedResults results = this.controller.
-                        processBundles(this.context.caller().toBytes(), bundles, signatures);
-                if (results.controllerResult != ErrCode.NO_ERROR)
-                    return fail();
-
-                // at this point we know that the execution was successful
-                break;
+//                // TODO: possible attack vector, unsecure deserialization
+//                byte[][][] bundleRequests = parseBundleRequest(input);
+//
+//                if (bundleRequests == null)
+//                    return fail();
+//
+//                byte[][] signatures = bundleRequests[BUNDLE_PARAM_SIG];
+//
+//                // more of a sanity check
+//                if (bundleRequests[0].length != bundleRequests[1].length)
+//                    return fail();
+//
+//                int bundleLen = bundleRequests[0].length;
+//                BridgeBundle[] bundles = new BridgeBundle[bundleLen];
+//                for (int i = 0; i < bundleLen; i++) {
+//                    bundles[i] = new BridgeBundle(
+//                            new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
+//                            bundleRequests[BUNDLE_PARAM_VAL][i]);
+//                }
+//                BridgeController.ProcessedResults results = this.controller.
+//                        processBundles(this.context.caller().toBytes(), bundles, signatures);
+//                if (results.controllerResult != ErrCode.NO_ERROR)
+//                    return fail();
+//
+//                // at this point we know that the execution was successful
+//                break;
             }
             case PURE_OWNER:
                 return success(orDefaultDword(this.connector.getOwner()));

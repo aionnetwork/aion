@@ -1,17 +1,14 @@
-package org.aion.precompiled.ATB;
+package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
-import org.aion.precompiled.contracts.ATB.BridgeController;
-import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
-import org.aion.precompiled.contracts.ATB.ErrCode;
 import org.junit.Before;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.precompiled.ATB.BridgeTestUtils.dummyContext;
+import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 public class BridgeRingInitializationTest {
 
