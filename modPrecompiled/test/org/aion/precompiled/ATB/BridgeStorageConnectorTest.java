@@ -2,6 +2,7 @@ package org.aion.precompiled.ATB;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
 import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
@@ -23,12 +24,12 @@ public class BridgeStorageConnectorTest {
     // should be null
     @Test
     public void testDefaultOwnerAddress() {
-        assertThat(this.connector.getOwner()).isNull();
+        assertThat(this.connector.getOwner()).isEqualTo(ByteUtil.EMPTY_WORD);
     }
 
     @Test
     public void testDefaultNewOwnerAddress() {
-        assertThat(this.connector.getNewOwner()).isNull();
+        assertThat(this.connector.getNewOwner()).isEqualTo(ByteUtil.EMPTY_WORD);
     }
 
     @Test
