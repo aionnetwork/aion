@@ -58,7 +58,7 @@ public class ExecutionContext {
     private long blockNrgLimit;
     private DataWord blockDifficulty;
 
-    private TransactionResult result;
+    private ExecutionHelper helper;
 
     /**
      * Create a VM execution context.
@@ -79,12 +79,10 @@ public class ExecutionContext {
      * @param blockTimestamp
      * @param blockNrgLimit
      * @param blockDifficulty
-     * @param result
      */
     public ExecutionContext(byte[] txHash, Address address, Address origin, Address caller, DataWord nrgPrice,
                             long nrgLimit, DataWord callValue, byte[] callData, int depth, int kind, int flags, Address blockCoinbase,
-                            long blockNumber, long blockTimestamp, long blockNrgLimit, DataWord blockDifficulty,
-                            TransactionResult result) {
+                            long blockNumber, long blockTimestamp, long blockNrgLimit, DataWord blockDifficulty) {
         super();
         this.address = address;
         this.origin = origin;
@@ -106,7 +104,7 @@ public class ExecutionContext {
         this.blockDifficulty = blockDifficulty;
 
         this.txHash = txHash;
-        this.result = result;
+        this.helper = new ExecutionHelper();
     }
 
     /**
@@ -299,11 +297,11 @@ public class ExecutionContext {
     // =============================
 
     /**
-     * Returns the transaction result.
+     * Returns the transaction helper.
      *
      * @return
      */
-    public TransactionResult result() {
-        return result;
+    public ExecutionHelper helper() {
+        return helper;
     }
 }

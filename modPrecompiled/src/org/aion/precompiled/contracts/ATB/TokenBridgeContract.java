@@ -46,7 +46,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.context = context;
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
-        this.controller = new BridgeController(this.connector, this.context.result(), contractAddress, ownerAddress);
+        this.controller = new BridgeController(this.connector, this.context.helper(), contractAddress, ownerAddress);
         this.contractAddress = contractAddress;
     }
 
@@ -207,8 +207,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 this.context.blockNumber(),
                 this.context.blockTimestamp(),
                 this.context.blockNrgLimit(),
-                this.context.blockDifficulty(),
-                this.context.result());
+                this.context.blockDifficulty());
     }
 
     /**
@@ -260,7 +259,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
         byte[] parentHash = context.transactionHash();
         int deep = context.depth();
-        int idx = context.result().getInternalTransactions().size();
+        int idx = context.helper().getInternalTransactions().size();
 
         return new AionInternalTx(parentHash,
                 deep,

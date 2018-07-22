@@ -8,7 +8,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.TransactionExecutor;
 
 import javax.annotation.Nonnull;
 import java.math.BigInteger;

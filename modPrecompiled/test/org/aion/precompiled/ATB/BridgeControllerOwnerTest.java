@@ -10,20 +10,20 @@ import org.aion.precompiled.contracts.ATB.BridgeController;
 import org.aion.precompiled.contracts.ATB.BridgeStorageConnector;
 import org.aion.precompiled.contracts.ATB.ErrCode;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.TransactionResult;
+import org.aion.vm.ExecutionHelper;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.precompiled.ATB.BridgeTestUtils.*;
+import static org.aion.precompiled.ATB.BridgeTestUtils.dummyContext;
 
 public class BridgeControllerOwnerTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private TransactionResult result;
+    private ExecutionHelper result;
 
     private static final Address CONTRACT_ADDR = new Address(HashUtil.h256("contractAddress".getBytes()));
     private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
@@ -34,7 +34,7 @@ public class BridgeControllerOwnerTest {
         this.connector = new BridgeStorageConnector((IRepositoryCache) repo, CONTRACT_ADDR);
 
         ExecutionContext context = dummyContext();
-        this.result = context.result();
+        this.result = context.helper();
         this.controller = new BridgeController(connector,
                 this.result, CONTRACT_ADDR, OWNER_ADDR);
     }

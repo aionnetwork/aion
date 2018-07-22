@@ -6,6 +6,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.ExecutionHelper;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.TransactionResult;
 
@@ -25,17 +26,17 @@ import java.util.List;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private TransactionResult result;
+    private ExecutionHelper result;
     private final Address contractAddress;
     private final Address ownerAddress;
     private Transferrable transferrable;
 
     public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
-                            @Nonnull final TransactionResult result,
+                            @Nonnull final ExecutionHelper helper,
                             @Nonnull final Address contractAddress,
                             @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
-        this.result = result;
+        this.result = helper;
         this.contractAddress = contractAddress;
         this.ownerAddress = ownerAddress;
     }
