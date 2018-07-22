@@ -24,12 +24,12 @@ public class BridgeStorageConnectorTest {
     // should be null
     @Test
     public void testDefaultOwnerAddress() {
-        assertThat(this.connector.getOwner()).isEqualTo(ByteUtil.EMPTY_WORD);
+        assertThat(this.connector.getOwner()).isNull();
     }
 
     @Test
     public void testDefaultNewOwnerAddress() {
-        assertThat(this.connector.getNewOwner()).isEqualTo(ByteUtil.EMPTY_WORD);
+        assertThat(this.connector.getNewOwner()).isNull();
     }
 
     @Test

@@ -8,6 +8,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.vm.TransactionExecutor;
 
 import javax.annotation.Nonnull;
@@ -213,18 +214,7 @@ public class BridgeStorageConnector {
     private void setDWORD(@Nonnull final DataWord key,
                           @Nonnull final byte[] dword) {
         assert dword.length > 16;
-
-        byte[] lowerKeyBytes = ByteUtil.chop(
-                HashUtil.h256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
-        DataWord lowerKey = new DataWord(lowerKeyBytes);
-
-        byte[] upper = new byte[dword.length - 16];
-        byte[] lower = new byte[16];
-        System.arraycopy(dword, 0, upper, 0, dword.length - 16);
-        System.arraycopy(dword, dword.length - 16, lower, 0, 16);
-
-        this.track.addStorageRow(contractAddress, key, new DataWord(upper));
-        this.track.addStorageRow(contractAddress, lowerKey, new DataWord(lower));
+        this.track.addStorageRow(contractAddress, key, new DoubleDataWord(dword));
     }
 
     private byte[] getDWORD(@Nonnull final DataWord key) {
@@ -232,28 +222,9 @@ public class BridgeStorageConnector {
         if (word == null)
             return null;
 
-        byte[] upper = word.getData();
-        if (upper == null)
+        if (word.isZero())
             return null;
-
-        byte[] lowerKeyBytes = ByteUtil.chop(
-                HashUtil.h256(ByteUtil.appendByte(key.getData(), (byte) 0x1)));
-        DataWord lowerKey = new DataWord(lowerKeyBytes);
-        word = this.track.getStorageValue(contractAddress, lowerKey);
-
-        if (word == null)
-            return null;
-
-        byte[] lower = word.getData();
-        if (lower == null)
-            return null;
-
-        byte[] dword = ByteUtil.merge(upper, lower);
-
-        // C1
-        if (Arrays.equals(dword, ByteUtil.EMPTY_WORD))
-            return null;
-        return dword;
+        return word.getData();
     }
 
     public enum TransferResult {
