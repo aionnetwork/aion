@@ -92,14 +92,18 @@ public final class ReqStatusHandler extends Handler {
                                     bestBlock.getHash(),
                                     this.genesisHash);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    if (log.isDebugEnabled()) {
+                        log.debug("ReqStatus exception {}", e.toString());
+                    }
                 }
                 cacheTs = now;
             }
         }
 
         this.mgr.send(_nodeIdHashcode, _displayId, cache);
-        this.log.debug(
+        if (log.isDebugEnabled()) {
+            this.log.debug(
                 "<req-status node={} return-blk={}>", _displayId, cache.getBestBlockNumber());
+        }
     }
 }

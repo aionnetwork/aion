@@ -74,4 +74,6 @@ public interface IP2pMgr {
     boolean validateNode(INode _node);
 
     int getSelfNetId();
+
+    String getOutGoingIP();
 }

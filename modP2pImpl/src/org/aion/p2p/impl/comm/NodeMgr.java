@@ -442,6 +442,10 @@ public class NodeMgr implements INodeMgr {
 
     public void dropActive(int nodeIdHash, String _reason) {
 
+        if (p2pLOG.isDebugEnabled()) {
+            p2pLOG.debug("dropActive idHash:{} reason:{}", nodeIdHash, _reason);
+        }
+
         INode node = null;
         try {
             node = activeNodes.remove(nodeIdHash);

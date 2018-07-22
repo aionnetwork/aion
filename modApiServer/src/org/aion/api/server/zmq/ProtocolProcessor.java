@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server.zmq;
 
@@ -160,10 +159,11 @@ public class ProtocolProcessor implements Runnable {
                 if (f.getType() == Fltr.Type.EVENT) {
                     Object[] objs = f.poll();
                     List<Message.t_EventCt> al = new ArrayList<>();
-                    for (int idx = 0; idx < objs.length; idx++) {
-                        al.add(((EvtContract) objs[idx]).getMsgEventCt());
+                    for (Object obj : objs) {
+                        al.add(((EvtContract) obj).getMsgEventCt());
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace("ProtocolProcessor.eventRun fltr event[{}]", ((EvtContract) objs[idx]).toJSON());
+                            LOG.trace("ProtocolProcessor.eventRun fltr event[{}]",
+                                ((EvtContract) obj).toJSON());
                         }
                     }
 
@@ -184,8 +184,7 @@ public class ProtocolProcessor implements Runnable {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error("eventRun InterruptedException {}", e);
             }
         }
         sock.close();

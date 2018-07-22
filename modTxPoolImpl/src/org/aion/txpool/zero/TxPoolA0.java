@@ -457,8 +457,6 @@ import java.util.stream.Collectors;
                                     firstTx = false;
                                 }
                             } catch (Exception ex) {
-                                ex.printStackTrace();
-
                                 if (LOG.isErrorEnabled()) {
                                     LOG.error("TxPoolA0.snapshot  exception[{}], return [{}] TX", ex.toString(),
                                             rtn.size());
@@ -497,8 +495,6 @@ import java.util.stream.Collectors;
                                         firstTx = false;
                                     }
                                 } catch (Exception ex) {
-                                    ex.printStackTrace();
-
                                     if (LOG.isErrorEnabled()) {
                                         LOG.error("TxPoolA0.snapshot  exception[{}], return [{}] TX", ex.toString(),
                                                 rtn.size());
