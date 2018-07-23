@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
@@ -27,7 +28,7 @@ import org.junit.Test;
  * Tests the TRSqueryContract API.
  */
 public class TRSqueryContractTest extends TRShelpers {
-    private static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
+    private static final int MAX_OP = 5;
 
     @Before
     public void setup() {
@@ -45,29 +46,6 @@ public class TRSqueryContractTest extends TRShelpers {
         tempAddrs = null;
         repo = null;
         senderKey = null;
-    }
-
-    // <-----------------------------------HELPER METHODS BELOW------------------------------------>
-
-    // Checks that availableForWithdrawalAt returns expected results for the specified query.
-    private void checkAvailableForResults(AbstractTRS trs, Address contract, long timestamp,
-        int numDepositors, BigInteger deposits, BigInteger bonus, BigDecimal percent, int periods) {
-        BigInteger total = deposits.multiply(BigInteger.valueOf(numDepositors));
-        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
-        BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits,
-            total, bonus, percent, periods, timestamp);
-
-        BigDecimal expectedFraction = new BigDecimal(amt).
-            divide(new BigDecimal(owings), 18, RoundingMode.HALF_DOWN);
-
-        byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
-        Set<Address> contributors = getAllDepositors(trs, contract);
-        for (Address acc : contributors) {
-            ExecutionResult res = newTRSqueryContract(acc).execute(input, COST);
-            assertEquals(ResultCode.SUCCESS, res.getResultCode());
-            BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
-            assertEquals(expectedFraction, frac);
-        }
     }
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
@@ -99,7 +77,7 @@ public class TRSqueryContractTest extends TRShelpers {
         TRSqueryContract trs = newTRSqueryContract(addr);
         byte[] input = getDepositInput(addr, BigInteger.ZERO);
         ExecutionResult res;
-        for (int i = 0; i <= useCurrMaxOp; i++) {
+        for (int i = 0; i <= MAX_OP; i++) {
             res = trs.execute(input, COST - 1);
             assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
             assertEquals(0, res.getNrgLeft());
@@ -112,7 +90,7 @@ public class TRSqueryContractTest extends TRShelpers {
         TRSqueryContract trs = newTRSqueryContract(addr);
         byte[] input = getDepositInput(addr, BigInteger.ZERO);
         ExecutionResult res;
-        for (int i = 0; i <= useCurrMaxOp; i++) {
+        for (int i = 0; i <= MAX_OP; i++) {
             res = trs.execute(input, StatefulPrecompiledContract.TX_NRG_MAX + 1);
             assertEquals(ResultCode.INVALID_NRG_LIMIT, res.getResultCode());
             assertEquals(0, res.getNrgLeft());
@@ -121,7 +99,15 @@ public class TRSqueryContractTest extends TRShelpers {
 
     @Test
     public void testInvalidOperation() {
-        //TODO - need all ops implemented first
+        Address addr = getNewExistentAccount(BigInteger.ONE);
+        TRSqueryContract trs = newTRSqueryContract(addr);
+        byte[] input = new byte[DoubleDataWord.BYTES];
+        for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
+            if ((i < 0) || (i > MAX_OP)) {
+                input[0] = (byte) i;
+                assertEquals(ResultCode.INTERNAL_ERROR, trs.execute(input, COST).getResultCode());
+            }
+        }
     }
 
     // <-----------------------------------IS STARTED TRS TESTS------------------------------------>
@@ -553,14 +539,14 @@ public class TRSqueryContractTest extends TRShelpers {
             4, BigInteger.ZERO, 0);
         createBlockchain(2, TimeUnit.SECONDS.toMillis(1));
 
-        BigInteger expectedPeriod = grabPeriodAt(newTRSstateContract(AION), contract, 1);
+        BigInteger expectedPeriod = getPeriodAt(newTRSstateContract(AION), contract, 1);
         byte[] input = getPeriodAtInput(contract, 1);
         ExecutionResult res = newTRSqueryContract(AION).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertEquals(expectedPeriod, new BigInteger(res.getOutput()));
 
-        expectedPeriod = grabPeriodAt(newTRSstateContract(AION), contract, 2);
+        expectedPeriod = getPeriodAt(newTRSstateContract(AION), contract, 2);
         input = getPeriodAtInput(contract, 2);
         res = newTRSqueryContract(AION).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
