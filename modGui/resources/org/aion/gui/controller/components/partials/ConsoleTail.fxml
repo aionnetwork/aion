@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import java.net.URL?>
+<?import javafx.scene.layout.AnchorPane?>
+<VBox xmlns="http://javafx.com/javafx/8.0.121"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.aion.gui.controller.partials.ConsoleTailController"
+      fx:id="parent"
+      prefWidth="150.0" alignment="CENTER_LEFT" AnchorPane.leftAnchor="0.0" style="-fx-background-color: red;">
+    <stylesheets>
+        <URL value="@../footer-pane.css" />
+    </stylesheets>
+    <HBox spacing="10" AnchorPane.rightAnchor="0.0" style="-fx-background-color: green;">
+    <Label fx:id="tail" styleClass="footer-pane-text" text="hello world" onMouseClicked="#onClick"/>
+</HBox>
+
+</VBox>

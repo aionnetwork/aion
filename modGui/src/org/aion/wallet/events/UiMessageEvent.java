@@ -16,6 +16,7 @@ public class UiMessageEvent extends AbstractEvent<UiMessageEvent.Type> {
     }
 
     public enum Type {
-        MNEMONIC_CREATED
+        MNEMONIC_CREATED,
+        CONSOLE_LOG
     }
 }

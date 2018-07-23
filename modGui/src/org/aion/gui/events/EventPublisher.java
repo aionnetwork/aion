@@ -1,6 +1,5 @@
 package org.aion.gui.events;
 
-import org.aion.gui.util.DataUpdater;
 import org.aion.log.AionLoggerFactory;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
 import org.aion.wallet.dto.AccountDTO;
@@ -84,5 +83,10 @@ public class EventPublisher {
 
     public static void fireTransactionResubmited(final SendTransactionDTO transaction) {
         EventBusRegistry.INSTANCE.getBus(TransactionEvent.ID).post(new TransactionEvent(TransactionEvent.Type.RESUBMIT, transaction));
+    }
+
+    public static void fireConsoleLogged(final String message) {
+        EventBusRegistry.INSTANCE.getBus(UiMessageEvent.ID)
+                .post(new UiMessageEvent(UiMessageEvent.Type.CONSOLE_LOG, message));
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import java.net.URL?>
+<?import javafx.scene.layout.AnchorPane?>
+<VBox xmlns="http://javafx.com/javafx/8.0.121"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.aion.wallet.ui.components.partials.ConnectivityStatusController"
+      fx:id="parent"
+      prefWidth="150.0" alignment="CENTER_RIGHT" AnchorPane.rightAnchor="0.0" style="-fx-background-color: red;">
+    <stylesheets>
+        <URL value="@../footer-pane.css" />
+    </stylesheets>
+    <HBox spacing="10" AnchorPane.rightAnchor="0.0" style="-fx-background-color: green;">
+        <Label fx:id="connectivityLabel" styleClass="connected-label" text="Connecting.."/>
+    </HBox>
+</VBox>

@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.*?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121"
             stylesheets="@footer-pane.css" styleClass="anchor-pane"
-            AnchorPane.topAnchor="520" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" prefWidth="500">
+            AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0.0">
 
-        <!--<fx:include source="partials/ConnectivityStatus.fxml"/>
-        <fx:include source="partials/PeerCount.fxml"/>
-        <fx:include source="partials/SyncStatus.fxml"/>-->
-        <Label AnchorPane.topAnchor="10" AnchorPane.leftAnchor="655" styleClass="footer-pane-text" text="AION Kernel UI v0.1"/>
+    <!--<HBox alignment="CENTER_LEFT" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" prefHeight="60.0" style="-fx-background-color: purple  ;">-->
+        <fx:include source="partials/ConsoleTail.fxml"/>
+    <!--</HBox>-->
 
+    <HBox alignment="CENTER_RIGHT" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" prefHeight="60.0" style="-fx-background-color: blue;">
+        <fx:include source="partials/ConnectivityStatus.fxml"/>
+    </HBox>
 
 </AnchorPane>

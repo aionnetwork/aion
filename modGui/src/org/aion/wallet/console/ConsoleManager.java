@@ -4,6 +4,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.events.EventPublisher;
+import org.aion.gui.events.WindowControlsEvent;
+import org.aion.wallet.events.UiMessageEvent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -40,6 +44,7 @@ public class ConsoleManager {
         logs.append("\n");
         logsTextField.setText(logs.toString());
         logsTextField.setScrollTop(Double.MAX_VALUE);
+        EventPublisher.fireConsoleLogged(log);
     }
     
     public void addLog(String log, LogType type) {

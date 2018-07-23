@@ -2,6 +2,8 @@ package org.aion.gui.controller;
 
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
+import org.aion.gui.controller.partials.ConsoleTailController;
+import org.aion.gui.model.ConsoleTail;
 import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
@@ -14,6 +16,7 @@ import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.wallet.ui.components.partials.AddAccountDialog;
+import org.aion.wallet.ui.components.partials.ConnectivityStatusController;
 import org.aion.wallet.ui.components.partials.ImportAccountDialog;
 import org.aion.wallet.ui.components.partials.SaveKeystoreDialog;
 import org.aion.wallet.ui.components.partials.TransactionResubmissionDialog;
@@ -92,6 +95,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(TransactionResubmissionDialog.class, () -> new TransactionResubmissionDialog(
                     accountManager, consoleManager));
             put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager, consoleManager));
+            put(ConsoleTailController.class, () -> new ConsoleTailController(new ConsoleTail(), consoleManager));
+            put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(kernelConnection));
         }};
     }
 

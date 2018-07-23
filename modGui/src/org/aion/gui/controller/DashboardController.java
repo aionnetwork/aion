@@ -83,11 +83,6 @@ public class DashboardController extends AbstractController {
     }
 
     @Subscribe
-    private void handleRefreshEvent(final RefreshEvent event){
-        LOG.warn("Implement me!");
-    }
-
-    @Subscribe
     private void handleUiTimerTick(RefreshEvent event) {
         LOG.trace("DashboardController#handleUiTimerTick");
         // peer count
