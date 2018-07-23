@@ -86,7 +86,6 @@ public class ExecutionContext {
 
         super();
 
-        if (txHash == null) { throw new NullPointerException(NULL_MSG + " txHash."); }
         if (recipient == null) { throw new NullPointerException(NULL_MSG + " recipient."); }
         if (origin == null) { throw new NullPointerException(NULL_MSG + " origin."); }
         if (caller == null) { throw new NullPointerException(NULL_MSG + " caller."); }
@@ -95,7 +94,7 @@ public class ExecutionContext {
         if (callData == null) { throw new NullPointerException(NULL_MSG + " callData."); }
         if (blockCoinbase == null) { throw new NullPointerException(NULL_MSG + " blockCoinbase."); }
         if (blockDifficulty == null) { throw new NullPointerException(NULL_MSG + " blockDifficulty."); }
-        if (txHash.length != 32) { throw new IllegalArgumentException("txHash must be length 32."); }
+        if ((txHash != null) && (txHash.length != 32)) { throw new IllegalArgumentException("txHash must be length 32."); }
         if (nrgLimit < 0) { throw new IllegalArgumentException("nrgLimit " + NEG_MSG); }
         if (depth < 0) { throw new IllegalArgumentException("depth " + NEG_MSG); }
         if (blockNumber < 0) { throw new IllegalArgumentException("blockNumber " + NEG_MSG); }

@@ -22,6 +22,8 @@
  */
 package org.aion.vm;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionInternalTx;
@@ -79,6 +81,23 @@ public class TransactionResult extends AbstractExecutionResult {
      */
     public TransactionResult() {
         super(ResultCode.SUCCESS, 0);
+    }
+
+    /**
+     * Returns a big-endian binary encoding of this TransactionResult.
+     *
+     * @return a big-endian binary encoding of this TransactionResult.
+     */
+    public final byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 8 + 4 + (output == null ? 0 : output.length));
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(code.toInt());
+        buffer.putLong(nrgLeft);
+        buffer.putInt(output == null ? 0 : output.length);
+        if (output != null) {
+            buffer.put(output);
+        }
+        return buffer.array();
     }
 
     /**
