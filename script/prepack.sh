@@ -20,7 +20,7 @@ fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management --output $JDK_RT
+  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,jdk.management,jdk.management.agent,java.instrument --output $JDK_RT
   cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
 
