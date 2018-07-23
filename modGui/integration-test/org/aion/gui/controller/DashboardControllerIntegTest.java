@@ -52,8 +52,9 @@ public class DashboardControllerIntegTest extends ApplicationTest {
 
     /**
      * Not using Mockito's @Before because JavaFX's start() runs first and that needs member
-     * vars already set up.  Will just call this init method from start.
+     * vars already set up.
      */
+    @Override
     public void init() {
         kernelLauncher = mock(KernelLauncher.class);
         kernelConnection = mock(KernelConnection.class);

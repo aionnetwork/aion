@@ -15,13 +15,13 @@ import javafx.stage.StageStyle;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
+import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.CfgGuiLauncher;
 import org.aion.os.KernelLauncher;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
@@ -122,7 +122,6 @@ public class MainWindow extends Application {
 
         // Set up event bus
         registerEventBusConsumer();
-
         kernelLauncher.tryResume();
     }
 
@@ -137,6 +136,7 @@ public class MainWindow extends Application {
                 .withTimer(timer)
                 .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc))
                 .withSyncInfoDto(new SyncInfoDto(kc))
+                .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
         );
         return loader;
     }
@@ -159,7 +159,7 @@ public class MainWindow extends Application {
 
     private void registerEventBusConsumer() {
         EventBusRegistry.INSTANCE.getBus(WindowControlsEvent.ID).register(this);
-//        EventBusRegistry.getBus(HeaderPaneButtonEvent.ID).register(this);
+        EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
     }
 
     private void handleMouseDragged(final MouseEvent event) {
@@ -175,7 +175,7 @@ public class MainWindow extends Application {
         timer.stop();
     }
 
-    private void handleMousePressed(final MouseEvent event) {
+    void handleMousePressed(final MouseEvent event) {
         xOffset = event.getSceneX();
         yOffset = event.getSceneY();
     }
@@ -215,4 +215,5 @@ public class MainWindow extends Application {
     public Scene getScene() {
         return stage.getScene();
     }
+
 }

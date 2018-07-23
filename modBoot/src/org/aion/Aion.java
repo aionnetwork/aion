@@ -27,7 +27,9 @@ import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
+import java.lang.management.ManagementFactory;
 import java.util.ServiceLoader;
+
 import org.aion.api.server.http.NanoServer;
 import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
@@ -39,12 +41,21 @@ import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiRpc;
+import org.aion.zero.impl.config.dynamic.DynamicConfigKeyRegistry;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiver;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 public class Aion {
 
@@ -128,6 +139,25 @@ public class Aion {
 
         if (nm != null) {
             nm.delayedStartMining(10);
+        }
+
+        /*
+         * Create JMX server and register in-flight config receiver MBean
+         */
+        InFlightConfigReceiver inFlightConfigReceiver = new InFlightConfigReceiver(
+                cfg, new DynamicConfigKeyRegistry());
+        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+        ObjectName objectName = null;
+        try {
+            objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
+            server.registerMBean(inFlightConfigReceiver, objectName);
+        } catch (MalformedObjectNameException
+                | NotCompliantMBeanException
+                | InstanceAlreadyExistsException
+                | MBeanRegistrationException ex) {
+            genLog.error(
+                    "Failed to initialize JMX server.  In-flight configuration changes will not be available.",
+                    ex);
         }
 
         /*
@@ -223,5 +253,6 @@ public class Aion {
             genLog.info("---------------------------------------------");
 
         }, "shutdown"));
+
     }
 }
