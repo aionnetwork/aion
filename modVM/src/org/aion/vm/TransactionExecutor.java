@@ -160,7 +160,7 @@ public class TransactionExecutor extends AbstractExecutor {
      * Prepares contract call.
      */
     protected void call() {
-        IPrecompiledContract pc = this.provider.getPrecompiledContract(tx.getTo(), tx.getFrom(), this.repoTrack);
+        IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, this.repoTrack);
         if (pc != null) {
             exeResult = pc.execute(tx.getData(), ctx.nrgLimit());
         } else {

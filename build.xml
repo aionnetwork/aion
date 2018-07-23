@@ -16,7 +16,7 @@
 	<property name="dir.pack" value="./pack" />
 	<property name="test.report.dir" value="report" />
 	<property name="compile.debug" value="on" />
-        <property name="vm.version" value="0.2.1" />
+    <property name="vm.version" value="0.2.1" />
 
 	<path id="cp">
 		<pathelement location="${dir.libfile}/slf4j-api-1.7.25.jar" />
@@ -54,7 +54,7 @@
 		<pathelement location="${dir.modfile}/modMcf.jar" />
 		<pathelement location="${dir.modfile}/modBoot.jar" />
 		<pathelement location="${dir.modfile}/modPrecompiled.jar" />
-                <pathelement location="${dir.modfile}/modVM.jar" />
+        <pathelement location="${dir.modfile}/modVM.jar" />
 	</path>
 
 	<path id="test.lib">
@@ -70,7 +70,7 @@
 		<pathelement location="${dir.libfile}/JUnitParams-1.1.1.jar" />
 	</path>
 
-	<target name="test_modules">		 
+	<target name="test_modules">
 		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="test" />
@@ -96,7 +96,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
-		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
@@ -196,7 +196,7 @@
 
 	<target name="clean_build" depends="logenv, clean, fastbuild" />
 
-        <target name="clean_fullbuild" depends="logenv, clean, sourcebuild" />
+    <target name="clean_fullbuild" depends="logenv, clean, sourcebuild" />
 
 	<target name="build_test" depends="build, test" />
 
@@ -269,10 +269,10 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
-                <echo message="building modVM" />
-                <ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
-                        <property name="compile.debug" value="${compile.debug}" />
-                </ant>
+        <echo message="building modVM" />
+        <ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
+            <property name="compile.debug" value="${compile.debug}" />
+        </ant>
 
 		<echo message="building modPrecompiled" />
 		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
@@ -303,7 +303,6 @@
                 <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
                         <property name="compile.debug" value="${compile.debug}" />
                 </ant>
-
 	</target>
 
 	<target name="build" depends="mod_build">
@@ -356,7 +355,7 @@
 			<arg value="${vm.version}" />
 			<arg value="1" />
                 </exec>
-               
+
                 <exec executable="tar">
                         <arg line="-xf fastvm_v${vm.version}.tar.gz -C native/linux" />
                 </exec>
