@@ -29,10 +29,12 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.vm.IDataWord;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -45,7 +47,7 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
-public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
+public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
 
     private IByteArrayKeyValueStore dataSource;
 
@@ -79,26 +81,50 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
         decode(code);
     }
 
+    /**
+     * Adds the key-value pair to the database unless value is an IDataWord whose underlying byte
+     * array consists only of zeros. In this case, if key already exists in the database it will be
+     * deleted.
+     *
+     * @param key The key.
+     * @param value The value.
+     */
     @Override
-    public void put(DataWord key, DataWord value) {
-        if (value.equals(DataWord.ZERO)) {
+    public void put(IDataWord key, IDataWord value) {
+        // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
+        // we can differentiate between the two.
+
+        if (value.isZero()) {
             storageTrie.delete(key.getData());
         } else {
-            storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
+            boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
+            byte[] data = (isDouble) ?
+                RLP.encodeElement(value.getData()) :
+                RLP.encodeElement(value.getNoLeadZeroesData());
+
+            storageTrie.update(key.getData(), data);
         }
 
         this.setDirty(true);
         this.rlpEncoded = null;
     }
 
+    /**
+     * Returns a DataWord whose 16 bytes consists of all zeros if key is not in the database.
+     * Otherwise returns the IDataWord value corresponding to key in the database.
+     *
+     * @param key The key to query.
+     * @return the corresponding value or a zero DataWord if no such value.
+     */
     @Override
-    public DataWord get(DataWord key) {
-        DataWord result = DataWord.ZERO;
+    public IDataWord get(IDataWord key) {
+        IDataWord result = DataWord.ZERO;
 
         byte[] data = storageTrie.get(key.getData());
-        if (data.length > 0) {
-            byte[] dataDecoded = RLP.decode2(data).get(0).getRLPData();
-            result = new DataWord(dataDecoded);
+        if (data.length >= DoubleDataWord.BYTES) {
+            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData());
+        } else if (data.length > 0) {
+            result = new DataWord(RLP.decode2(data).get(0).getRLPData());
         }
 
         return result;
@@ -174,17 +200,17 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-        Map<DataWord, DataWord> storage = new HashMap<>();
+    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
+        Map<IDataWord, IDataWord> storage = new HashMap<>();
         if (keys == null) {
             throw new IllegalArgumentException("Input keys can't be null");
         } else {
-            for (DataWord key : keys) {
-                DataWord value = get(key);
+            for (IDataWord key : keys) {
+                IDataWord value = get(key);
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
-                if (value != null) {
+                if ((value != null) && (!value.isZero())) {
                     storage.put(key, value);
                 }
             }
@@ -194,15 +220,15 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
         for (int i = 0; i < storageKeys.size(); ++i) {
             put(storageKeys.get(i), storageValues.get(i));
         }
     }
 
     @Override
-    public void setStorage(Map<DataWord, DataWord> storage) {
-        for (DataWord key : storage.keySet()) {
+    public void setStorage(Map<IDataWord, IDataWord> storage) {
+        for (IDataWord key : storage.keySet()) {
             put(key, storage.get(key));
         }
     }
@@ -244,7 +270,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<DataWord> {
     }
 
     @Override
-    public IContractDetails<DataWord> getSnapshotTo(byte[] hash) {
+    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
 
         IByteArrayKeyValueStore keyValueDataSource = this.storageTrie.getCache().getDb();
 

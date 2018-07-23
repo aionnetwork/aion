@@ -42,7 +42,8 @@ public final class CfgNetP2p {
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
         this.errorTolerance = 50;
-        this.isSyncOnlyNode = false;
+        this.clusterNodeMode = false;
+        this.syncOnlyMode = false;
     }
 
     private String ip;
@@ -51,9 +52,11 @@ public final class CfgNetP2p {
 
     private boolean discover;
 
+    private boolean clusterNodeMode;
+
     private boolean bootlistSyncOnly;
 
-    private boolean isSyncOnlyNode;
+    private boolean syncOnlyMode;
 
     private int maxTempNodes;
 
@@ -78,11 +81,14 @@ public final class CfgNetP2p {
                 case "discover":
                     this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
+                case "cluster-node-mode":
+                    this.clusterNodeMode = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
-                case "sync-only-node":
-                    this.isSyncOnlyNode = Boolean.parseBoolean(Cfg.readValue(sr));
+                case "sync-only-mode":
+                    this.syncOnlyMode = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "max-temp-nodes":
                     this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
@@ -186,7 +192,9 @@ public final class CfgNetP2p {
         return errorTolerance;
     }
 
-    public boolean isSyncOnlyNode() {
-        return isSyncOnlyNode;
+    public boolean inClusterNodeMode() { return clusterNodeMode; }
+
+    public boolean inSyncOnlyMode() {
+        return syncOnlyMode;
     }
 }

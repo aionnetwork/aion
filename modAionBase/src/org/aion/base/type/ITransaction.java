@@ -82,4 +82,5 @@ public interface ITransaction extends Cloneable {
 
     void setNrgConsume(long _nrg);
 
+    boolean isContractCreation();
 }

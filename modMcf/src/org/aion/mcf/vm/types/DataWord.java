@@ -1,41 +1,42 @@
-/*******************************************************************************
- *
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     This file is part of the aion network project.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.vm.types;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 /**
- * Data word is the basic unit data used by virtual machine. The size of a data word is
- * 128 bits.
+ * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.
  */
 public class DataWord implements Comparable<DataWord>, IDataWord {
 
-    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
+    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128)
+        .subtract(BigInteger.ONE);
 
     public static final DataWord ZERO = new DataWord(0);
     public static final DataWord ONE = new DataWord(1);
@@ -86,10 +87,12 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         this(wrapper.getData());
     }
 
+    @Override
     public byte[] getData() {
         return data;
     }
 
+    @Override
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);
     }
@@ -118,6 +121,7 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         return v;
     }
 
+    @Override
     public boolean isZero() {
         for (int i = 0; i < BYTES; i++) {
             if (data[BYTES - 1 - i] != 0) {
@@ -133,7 +137,8 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     }
 
 
-    public DataWord clone() {
+    @Override
+    public DataWord copy() {
         byte[] bs = new byte[BYTES];
         System.arraycopy(data, 0, bs, 0, BYTES);
         return new DataWord(bs);
@@ -141,8 +146,12 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         DataWord dataWord = (DataWord) o;
 
