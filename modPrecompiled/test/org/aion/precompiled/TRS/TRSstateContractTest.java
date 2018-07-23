@@ -573,7 +573,7 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testCreateTRSaddressDeterministic() {
-        // The TRS contract address returned must be deterministic, based on owner's addr + nonce.
+        // The TRS contract getRecipient returned must be deterministic, based on owner's addr + nonce.
         Address caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(caller);
@@ -586,7 +586,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
 
-        // Different caller, should be different addr returned.
+        // Different getCaller, should be different addr returned.
         trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         res = trs.execute(input, COST);
 
@@ -599,7 +599,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
 
-        // Same caller as original & nonce hasn't changed, should be same contract addr returned.
+        // Same getCaller as original & nonce hasn't changed, should be same contract addr returned.
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         contract = Address.wrap(res.getOutput());
@@ -610,7 +610,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
 
-        // Same caller as original but nonce changed, should be different addr returned.
+        // Same getCaller as original but nonce changed, should be different addr returned.
         repo.incrementNonce(caller);
         repo.flush();
         trs = newTRSstateContract(caller);
@@ -663,7 +663,7 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testLockAddressTooSmall() {
-        // Test on empty address.
+        // Test on empty getRecipient.
         Address acct = getNewExistentAccount(BigInteger.ZERO);
         createTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
@@ -674,7 +674,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test on address size 31.
+        // Test on getRecipient size 31.
         input = new byte[32];
         input[0] = (byte) 0x1;
         trs = newTRSstateContract(acct);
@@ -709,7 +709,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test attempt to lock what looks like a TRS address (proper prefix).
+        // Test attempt to lock what looks like a TRS getRecipient (proper prefix).
         input = getLockInput(contract);
         input[input.length - 1] = (byte) ~input[input.length - 1];
         trs = newTRSstateContract(acct);
@@ -720,7 +720,7 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testLockNotContractOwner() {
-        // Test not in test mode: owner is acct, caller is AION.
+        // Test not in test mode: owner is acct, getCaller is AION.
         Address acct = getNewExistentAccount(BigInteger.ZERO);
         Address contract = createTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
@@ -730,7 +730,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test in test mode: owner is AION, caller is acct.
+        // Test in test mode: owner is AION, getCaller is acct.
         contract = createTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
         input = getLockInput(contract);
@@ -911,7 +911,7 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testStartAddressTooSmall() {
-        // Test on empty address.
+        // Test on empty getRecipient.
         Address acct = getNewExistentAccount(BigInteger.ONE);
         createAndLockTRScontract(acct, false, false, 1, BigInteger.ZERO,
             0);
@@ -922,7 +922,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test on address size 31.
+        // Test on getRecipient size 31.
         input = new byte[32];
         input[0] = (byte) 0x1;
         trs = newTRSstateContract(acct);
@@ -948,7 +948,7 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testStartNotTRScontractAddress() {
-        // Test regular address as a TRS address.
+        // Test regular getRecipient as a TRS getRecipient.
         Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false,
             1, BigInteger.ZERO, 0);
@@ -963,7 +963,7 @@ public class TRSstateContractTest extends TRShelpers {
         repo.incrementNonce(acct);
         repo.flush();
 
-        // Test what looks like a proper TRS address (has TRS prefix).
+        // Test what looks like a proper TRS getRecipient (has TRS prefix).
         input[input.length - 1] = (byte) ~input[input.length - 1];  // flip a bit
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
@@ -973,7 +973,7 @@ public class TRSstateContractTest extends TRShelpers {
 
     @Test
     public void testStartNotContractOwner() {
-        // Test not in test mode: owner is acct, caller is AION.
+        // Test not in test mode: owner is acct, getCaller is AION.
         Address acct = getNewExistentAccount(BigInteger.ONE);
         Address contract = createAndLockTRScontract(acct, false, false, 1,
             BigInteger.ZERO, 0);
@@ -983,7 +983,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test in test mode: owner is AION, caller is acct.
+        // Test in test mode: owner is AION, getCaller is acct.
         contract = createAndLockTRScontract(AION, true, false, 1,
             BigInteger.ZERO, 0);
         input = getLockInput(contract);

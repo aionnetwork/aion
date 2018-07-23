@@ -62,7 +62,7 @@ public class MultiSignatureContractTest {
 
     // <--------------------------------------HELPER METHODS--------------------------------------->
 
-    // Executes a MSC with input and NRG_LIMIT args, calls it with address caller, and expects
+    // Executes a MSC with input and NRG_LIMIT args, calls it with getRecipient getCaller, and expects
     // code and nrg as results of the execution. Returns the result.
     private ExecutionResult execute(Address caller, byte[] input, long nrgLimit,
         ResultCode code, long nrg) {
@@ -235,7 +235,7 @@ public class MultiSignatureContractTest {
         return keys;
     }
 
-    // Returns the address of the new multi-sig wallet that uses the addresses in the keys of owners
+    // Returns the getRecipient of the new multi-sig wallet that uses the addresses in the keys of owners
     // as the owners, requires at least threshold signatures and has initial balance balance.
     private Address createMultiSigWallet(List<ECKeyEd25519> owners, long threshold, BigInteger balance) {
         if (owners.isEmpty()) { fail(); }
@@ -580,7 +580,7 @@ public class MultiSignatureContractTest {
         addrsToClean.add(walletCaller);
         checkAccountState(walletCaller, BigInteger.ZERO, BigInteger.ZERO);
 
-        // Now try to create a wallet using this wallet as the caller and an owner.
+        // Now try to create a wallet using this wallet as the getCaller and an owner.
         owners = getExistentAddresses(
             MultiSignatureContract.MAX_OWNERS - 1, walletCaller, BigInteger.ZERO);
         input = MultiSignatureContract.constructCreateWalletInput(
@@ -1343,7 +1343,7 @@ public class MultiSignatureContractTest {
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
 
-    // This is ok: caller is owner and so their absent sig does not matter if all sigs are ok.
+    // This is ok: getCaller is owner and so their absent sig does not matter if all sigs are ok.
     @Test
     public void testSendTxSignedProperlyButNotSignedByOwnerCaller() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
@@ -1351,7 +1351,7 @@ public class MultiSignatureContractTest {
         Address wallet = createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH,
             DEFAULT_BALANCE);
 
-        // Adequate number of signees but we skip signee 0 since they are caller.
+        // Adequate number of signees but we skip signee 0 since they are getCaller.
         byte[] txMsg = MultiSignatureContract.constructMsg(wallet, repo.getNonce(wallet), to, AMOUNT, NRG_PRICE);
         List<ISignature> signatures = produceSignatures(owners, MultiSignatureContract.MIN_THRESH, txMsg);
 
@@ -1365,7 +1365,7 @@ public class MultiSignatureContractTest {
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
 
-    // This is bad: only want transactions triggered by a calling owner, even if caller doesn't sign.
+    // This is bad: only want transactions triggered by a calling owner, even if getCaller doesn't sign.
     @Test
     public void testSendTxSignedProperlyButCallerIsNotOwner() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
@@ -1423,7 +1423,7 @@ public class MultiSignatureContractTest {
         byte[] txMsg = MultiSignatureContract.constructMsg(wallet, repo.getNonce(wallet), to, AMOUNT, NRG_PRICE);
         List<ISignature> signatures = produceSignatures(owners, MultiSignatureContract.MIN_THRESH, txMsg);
 
-        // Input gets shifted to lose 1 byte of the wallet address.
+        // Input gets shifted to lose 1 byte of the wallet getRecipient.
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
         int sigsStart = 1 + Address.ADDRESS_LEN;
@@ -1447,7 +1447,7 @@ public class MultiSignatureContractTest {
         byte[] txMsg = MultiSignatureContract.constructMsg(wallet, repo.getNonce(wallet), to, AMOUNT, NRG_PRICE);
         List<ISignature> signatures = produceSignatures(owners, MultiSignatureContract.MIN_THRESH, txMsg);
 
-        // Input gets shifted to lose 1 byte of the recipient address.
+        // Input gets shifted to lose 1 byte of the recipient getRecipient.
         byte[] input = MultiSignatureContract.constructSendTxInput(wallet, signatures, AMOUNT,
             NRG_PRICE, to);
         int end = input.length;

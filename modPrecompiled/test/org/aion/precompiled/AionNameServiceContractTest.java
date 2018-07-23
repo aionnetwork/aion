@@ -197,7 +197,7 @@ public class AionNameServiceContractTest {
                 "on", "aion.aion");
         byte[] combined2 = setupInputs(Address.wrap(defaultKey2.getAddress()), newAddress2, (byte) 0x0, (byte) 0x4, defaultKey2, newAddress3, "aion", "aion.aion");
 
-        //trying to access domain with wrong address
+        //trying to access domain with wrong getRecipient
         ExecutionResult res = ansc.execute(combined, inputEnergy);
         ExecutionResult res2 = ansc2.execute(combined2, inputEnergy);
 
@@ -230,7 +230,7 @@ public class AionNameServiceContractTest {
         DummyRepo repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
 
-        // The owner address need to exist in the given repoistory, as an account or smart contract
+        // The owner getRecipient need to exist in the given repoistory, as an account or smart contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(repo, domainAddress2, newAddress1);
         assertNull(ansc);
@@ -242,7 +242,7 @@ public class AionNameServiceContractTest {
         DummyRepo repo = populateRepo();
         createAccounts(repo, new ECKey[] {k});
 
-        // check that the given owner address is the same as the owner address in the repository.
+        // check that the given owner getRecipient is the same as the owner getRecipient in the repository.
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
                         repo, domainAddress2, Address.wrap(k.getAddress()));
@@ -298,7 +298,7 @@ public class AionNameServiceContractTest {
                         defaultAddress2,
                         domainName2,
                         domainName6);
-        // change subdomain owner address
+        // change subdomain owner getRecipient
         ExecutionResult res = ansc.execute(combined, inputEnergy);
 
         // check for success and failure
@@ -519,12 +519,12 @@ public class AionNameServiceContractTest {
         ExecutionResult res2 = ansc.execute(combined2, inputEnergy);
         Address actualReturnedAddress2 = ansc.getOwnerAddress();
 
-        // check for success and failure for execute with valid new address
+        // check for success and failure for execute with valid new getRecipient
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(newAddress1, actualReturnedAddress);
 
-        // check for success and failure for execute with invalid new address
+        // check for success and failure for execute with invalid new getRecipient
         assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
         assertEquals(inputEnergy, res2.getNrgLeft());
         assertEquals(newAddress1, actualReturnedAddress2);

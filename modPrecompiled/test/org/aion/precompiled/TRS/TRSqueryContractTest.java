@@ -132,7 +132,7 @@ public class TRSqueryContractTest extends TRShelpers {
 
     @Test
     public void testIsLiveNonExistentContract() {
-        // Test on a contract address that is just a regular account address.
+        // Test on a contract getRecipient that is just a regular account getRecipient.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getIsLiveInput(acct);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
@@ -140,7 +140,7 @@ public class TRSqueryContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
         assertArrayEquals(getFalseContractOutput(), res.getOutput());
 
-        // Test on a contract address that looks real, uses TRS prefix.
+        // Test on a contract getRecipient that looks real, uses TRS prefix.
         byte[] phony = acct.toBytes();
         phony[0] = (byte) 0xC0;
         input = getIsLiveInput(new Address(phony));
@@ -210,7 +210,7 @@ public class TRSqueryContractTest extends TRShelpers {
 
     @Test
     public void testIsLockedNonExistentContract() {
-        // Test on a contract address that is just a regular account address.
+        // Test on a contract getRecipient that is just a regular account getRecipient.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getIsLockedInput(acct);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
@@ -218,7 +218,7 @@ public class TRSqueryContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
         assertArrayEquals(getFalseContractOutput(), res.getOutput());
 
-        // Test on a contract address that looks real, uses TRS prefix.
+        // Test on a contract getRecipient that looks real, uses TRS prefix.
         byte[] phony = acct.toBytes();
         phony[0] = (byte) 0xC0;
         input = getIsLockedInput(new Address(phony));
@@ -288,7 +288,7 @@ public class TRSqueryContractTest extends TRShelpers {
 
     @Test
     public void testIsDepoEnabledNonExistentContract() {
-        // Test on a contract address that is just a regular account address.
+        // Test on a contract getRecipient that is just a regular account getRecipient.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getIsDirDepoEnabledInput(acct);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
@@ -296,7 +296,7 @@ public class TRSqueryContractTest extends TRShelpers {
         assertEquals(0, res.getNrgLeft());
         assertArrayEquals(getFalseContractOutput(), res.getOutput());
 
-        // Test on a contract address that looks real, uses TRS prefix.
+        // Test on a contract getRecipient that looks real, uses TRS prefix.
         byte[] phony = acct.toBytes();
         phony[0] = (byte) 0xC0;
         input = getIsDirDepoEnabledInput(new Address(phony));

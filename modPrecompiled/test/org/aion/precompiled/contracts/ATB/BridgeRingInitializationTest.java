@@ -1,6 +1,5 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
@@ -22,7 +21,7 @@ public class BridgeRingInitializationTest {
         DummyRepo repo = new DummyRepo();
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
         this.controller = new BridgeController(connector,
-                dummyContext().helper(), CONTRACT_ADDR, OWNER_ADDR);
+                dummyContext().getHelper(), CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
     }
 

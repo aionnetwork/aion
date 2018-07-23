@@ -27,13 +27,13 @@ public class BridgeDeserializer {
     }
 
     /**
-     * Parses a call with one owner address, externally this is known as
+     * Parses a call with one owner getRecipient, externally this is known as
      * {@code changeOwner}
      *
      * @implNote assume that input contains function signature
      *
      * @param call input call with function signature
-     * @return {@code address} of new owner, {@code null} if anything is invalid
+     * @return {@code getRecipient} of new owner, {@code null} if anything is invalid
      */
     public static byte[] parseAddressFromCall(@Nonnull final byte[] call) {
         byte[] address = parseDwordFromCall(call);
@@ -51,8 +51,8 @@ public class BridgeDeserializer {
         if (addressList == null)
             return null;
 
-        // do a final check for address validity, if you're not sure what is
-        // considered a valid address in this contract please see the function
+        // do a final check for getRecipient validity, if you're not sure what is
+        // considered a valid getRecipient in this contract please see the function
         // below, note the implications with regards to the bridge design
         for (final byte[] l : addressList) {
             if (!checkAddressValidity(l))
@@ -195,12 +195,12 @@ public class BridgeDeserializer {
     private static byte ADDRESS_HEADER = ByteUtil.hexStringToBytes("0xa0")[0];
 
     /**
-     * @implNote something interesting here: enforcing 0xa0 in our address checks
+     * @implNote something interesting here: enforcing 0xa0 in our getRecipient checks
      * prevents people from sending transactions to random addresses (that do not contain
      * the header), not sure if this will cause some unintended consquences.
      *
      * @param address
-     * @return {@code true} if address valid, {@code false} otherwise
+     * @return {@code true} if getRecipient valid, {@code false} otherwise
      */
     private static boolean checkAddressValidity(byte[] address) {
         if (address.length != 32)

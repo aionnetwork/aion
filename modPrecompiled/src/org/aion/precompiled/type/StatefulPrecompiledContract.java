@@ -52,10 +52,10 @@ public abstract class StatefulPrecompiledContract implements IPrecompiledContrac
     }
 
     /**
-     * Returns true only if nrgLimit is a valid energy limit for the transaction.
+     * Returns true only if getNrgLimit is a valid energy limit for the transaction.
      *
      * @param nrgLimit The limit to check.
-     * @return true only if nrgLimit is a valid limit.
+     * @return true only if getNrgLimit is a valid limit.
      */
     protected boolean isValidTxNrg(long nrgLimit) {
         return (nrgLimit > TX_NRG_MIN) && (nrgLimit < TX_NRG_MAX);

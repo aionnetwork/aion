@@ -93,7 +93,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     AbstractTRS(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
         IBlockchain blockchain) {
         super(track);
-        if (caller == null) { throw new NullPointerException("Construct TRS with null caller."); }
+        if (caller == null) { throw new NullPointerException("Construct TRS with null getCaller."); }
         this.caller = caller;
         this.blockchain = blockchain;
     }
@@ -112,12 +112,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     private static final int LIVE_OFFSET = 15;
 
     /**
-     * Returns the contract specifications for the TRS contract whose address is contract if this is
-     * a valid contract address.
+     * Returns the contract specifications for the TRS contract whose getRecipient is contract if this is
+     * a valid contract getRecipient.
      *
-     * Returns null if contract is not a valid TRS contract address and thus there are no specs.
+     * Returns null if contract is not a valid TRS contract getRecipient and thus there are no specs.
      *
-     * @param contract The TRS contract address to query.
+     * @param contract The TRS contract getRecipient to query.
      * @return the contract specifications or null if not a TRS contract.
      */
     public byte[] getContractSpecs(Address contract) {
@@ -127,7 +127,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the contract specifications for the TRS contract whose address is contract to record the
+     * Sets the contract specifications for the TRS contract whose getRecipient is contract to record the
      * parameters listed in this method's signature.
      *
      * If percent requires more than 9 bytes to represent it then it will be truncated down to 9
@@ -166,10 +166,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the owner of the TRS contract whose address is contract or null if contract has no
+     * Returns the owner of the TRS contract whose getRecipient is contract or null if contract has no
      * owner.
      *
-     * @param contract The TRS contract address to query.
+     * @param contract The TRS contract getRecipient to query.
      * @return the owner of the contract or null if not a TRS contract.
      */
     public Address getContractOwner(Address contract) {
@@ -178,7 +178,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the current caller to be the owner of the TRS contract given by contract.
+     * Sets the current getCaller to be the owner of the TRS contract given by contract.
      *
      * This method only succeeds if the owner entry for contract is empty. Thus this method can be
      * called successfully at most once per contract.
@@ -197,7 +197,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * contract or null if the head of the list is null.
      *
      * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
-     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     * last 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * This method throws an exception if there is no head entry for contract. This should never
      * happen and is here only for debugging.
@@ -216,7 +216,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     /**
      * Sets the head of the linked list to head, where head is assumed to be correctly formatted so
      * that the first byte of head is 0x80 iff the head is null, and so that the following 31 bytes
-     * of head are the 31 bytes of a valid Aion account address without the Aion prefix.
+     * of head are the 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * If head is null this method will set the head of the linked list to null.
      * If head is not null this method will set the head to head and will ensure that the null bit
@@ -243,7 +243,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * contract given by contract or null if the previous entry is null.
      *
      * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
-     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     * last 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * This method throws an exception if there is no previous entry for account. This should never
      * happen and is here only for debugging.
@@ -266,7 +266,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     /**
      * Sets account's previous entry in the linked list to prev, where prev is assumed to be
      * correctly formatted so that the first byte of prev is 0x80 iff the previous entry is null,
-     * and so that the following 31 bytes of prev are the 31 bytes of a valid Aion account address
+     * and so that the following 31 bytes of prev are the 31 bytes of a valid Aion account getRecipient
      * without the Aion prefix.
      *
      * If prev is null this method will set the previous entry for account to null.
@@ -288,7 +288,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     /**
      * Sets account's previous entry in the linked list to prev, where prev is assumed to be
      * correctly formatted so that the first byte of prev is 0x80 iff the previous entry is null,
-     * and so that the following 31 bytes of prev are the 31 bytes of a valid Aion account address
+     * and so that the following 31 bytes of prev are the 31 bytes of a valid Aion account getRecipient
      * without the Aion prefix.
      *
      * If prev is null this method will set the previous entry for account to null.
@@ -321,7 +321,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * is null.
      *
      * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
-     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     * last 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * This method throws an exception if there is no next entry for account. This should never
      * happen and is here only for debugging.
@@ -340,7 +340,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * is null.
      *
      * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
-     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     * last 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * This method throws an exception if there is no next entry for account. This should never
      * happen and is here only for debugging.
@@ -366,7 +366,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * bit, which the null return value of getListNext may hide.
      *
      * The returned array will be length 32 and the bytes in the index range [1, 31] will be the
-     * last 31 bytes of a valid Aion account address without the Aion prefix.
+     * last 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * This method throws an exception if there is no previous entry for account. This should never
      * happen and is here only for debugging.
@@ -386,7 +386,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * Sets account's next entry in the linked list to next, where next is assumed to be correctly
      * formatted so that the first byte of head has its most significant bit set if next is null and
      * its second most significant bit set if it is invalid, and so that the following 31 bytes of
-     * head are the 31 bytes of a valid Aion account address without the Aion prefix.
+     * head are the 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * If isValid is false then the next entry is set to invalid, indicating that this account has
      * been deleted.
@@ -417,7 +417,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * Sets account's next entry in the linked list to next, where next is assumed to be correctly
      * formatted so that the first byte of head has its most significant bit set if next is null and
      * its second most significant bit set if it is invalid, and so that the following 31 bytes of
-     * head are the 31 bytes of a valid Aion account address without the Aion prefix.
+     * head are the 31 bytes of a valid Aion account getRecipient without the Aion prefix.
      *
      * If isValid is false then the next entry is set to invalid, indicating that this account has
      * been deleted.
@@ -473,7 +473,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the total deposit balance for the TRS contract given by the address contract.
+     * Returns the total deposit balance for the TRS contract given by the getRecipient contract.
      *
      * @param contract The TRS contract to query.
      * @return the total balance of the contract.
@@ -494,7 +494,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the total balance of the TRS contract whose address is contract.
+     * Sets the total balance of the TRS contract whose getRecipient is contract.
      *
      * If the contract does not have a total balance entry this method will create the entries
      * sufficient to hold it and update the total balance specifications corresponding to it.
@@ -532,7 +532,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the deposit balance for account in the TRS contract given by the address contract.
+     * Returns the deposit balance for account in the TRS contract given by the getRecipient contract.
      *
      * If account does not have a valid entry in this TRS contract, either because it does not exist
      * or its valid bit is unset, then zero is returned.
@@ -558,14 +558,14 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the deposit balance for the account account in the TRS contract given by the address
+     * Sets the deposit balance for the account account in the TRS contract given by the getRecipient
      * contract to the amount specified by balance and updates the account's 'next' specs to have
      * the number of rows needed to represent this balance.
      *
      * If this is the first deposit for account and account doesn't yet exist then the next entry
      * will have the null bit set, the valid bit unset and the number of rows. Otherwise, for an
      * existing account, the previous setting of the null bit will be persisted and the valid bit
-     * will be set and the number of rows will be there along with the address of the next entry.
+     * will be set and the number of rows will be there along with the getRecipient of the next entry.
      *
      * If balance requires more than MAX_DEPOSIT_ROWS storage rows to store, then no update to the
      * account in question will be made and the method will return false.
@@ -609,12 +609,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the specifications associated with the TRS contract whose address is contract so that
+     * Sets the specifications associated with the TRS contract whose getRecipient is contract so that
      * the is-locked bit will be set. If the bit is already set this method effectively does nothing.
      *
-     * Assumption: contract IS a valid TRS contract address.
+     * Assumption: contract IS a valid TRS contract getRecipient.
      *
-     * @param contract The address of the TRS contract.
+     * @param contract The getRecipient of the TRS contract.
      */
     void setLock(Address contract) {
         byte[] spec = getContractSpecs(contract);
@@ -623,12 +623,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the specifications associated with the TRS contract whose address is contract so that
+     * Sets the specifications associated with the TRS contract whose getRecipient is contract so that
      * the is-live bit will be set. If the bit is already set this method effectively does nothing.
      *
-     * Assumption: contract IS a valid TRS contract address.
+     * Assumption: contract IS a valid TRS contract getRecipient.
      *
-     * @param contract The address of the TRS contract.
+     * @param contract The getRecipient of the TRS contract.
      */
     void setLive(Address contract) {
         byte[] spec = getContractSpecs(contract);
@@ -692,7 +692,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * This is the timestamp that was placed on this contract when it was created.
      *
      * Returns a negative timestamp if contract has no timestamp set. The TRS logic guarantees this
-     * happens only when contract is not a valid TRS contract address.
+     * happens only when contract is not a valid TRS contract getRecipient.
      *
      * @param contract The TRS contract to query.
      * @return The timestamp for the TRS contract contract.
@@ -1124,7 +1124,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     /**
      * Sets the bonus balance for the TRS contract contract to the balance that that account has at
      * the moment this method is called. By "the balance that that account has" we mean the amount
-     * of balance directly associated with the address contract in the database, and not the total
+     * of balance directly associated with the getRecipient contract in the database, and not the total
      * deposit balance that the contract itself stores over multiple storage rows in the database.
      *
      * If the bonus balance has already been set for the contract then this method does nothing.
@@ -1249,7 +1249,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the total extra funds available to the TRS contract whose address is contract.
+     * Returns the total extra funds available to the TRS contract whose getRecipient is contract.
      *
      * @param contract The TRS contract to query.
      * @return the amount of extra funds contract has.
@@ -1271,7 +1271,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Sets the total extra funds available in the TRS contract whose address is contract to amount.
+     * Sets the total extra funds available in the TRS contract whose getRecipient is contract to amount.
      * If amount is negative or if it requires more than MAX_DEPOSIT_ROWS rows to be represented
      * then this method does nothing.
      *
@@ -1347,7 +1347,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the period that the TRS contract given by the address contract is in at the time
+     * Returns the period that the TRS contract given by the getRecipient contract is in at the time
      * specified by currTime.
      *
      * All contracts have some fixed number of periods P and this method returns a value in the
@@ -1359,7 +1359,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * Once this method returns P for some currTime value it will return P for all values greater or
      * equal to that currTime.
      *
-     * Assumption: contract is the address of a valid TRS contract that has a timestamp.
+     * Assumption: contract is the getRecipient of a valid TRS contract that has a timestamp.
      *
      * @param contract The TRS contract to query.
      * @param specs The result of the getContractSpecs method.

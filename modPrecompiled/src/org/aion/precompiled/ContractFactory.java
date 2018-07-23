@@ -45,18 +45,18 @@ public class ContractFactory {
     private ContractFactory(){}
 
     /**
-     * Returns a new pre-compiled contract such that the address of the new contract is address.
-     * Returns null if address does not map to any known contracts.
+     * Returns a new pre-compiled contract such that the getRecipient of the new contract is getRecipient.
+     * Returns null if getRecipient does not map to any known contracts.
      *
      * @param context Passed in execution context.
      * @param track The repo.
-     * @return the specified pre-compiled address.
+     * @return the specified pre-compiled getRecipient.
      */
     public static IPrecompiledContract getPrecompiledContract(ExecutionContext context,
                                                               IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
-        switch (context.address().toString()) {
+        switch (context.getRecipient().toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, context.caller(), Address.wrap(OWNER));
+                return new TotalCurrencyContract(track, context.getCaller(), Address.wrap(OWNER));
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract = new TokenBridgeContract(context,
                         track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));
@@ -66,10 +66,10 @@ public class ContractFactory {
     }
 
     /**
-     * Returns true if address is the address of a pre-compiled contract and false otherwise.
+     * Returns true if getRecipient is the getRecipient of a pre-compiled contract and false otherwise.
      *
-     * @param address The address to check.
-     * @return true iff address is address of a pre-compiled contract.
+     * @param address The getRecipient to check.
+     * @return true iff getRecipient is getRecipient of a pre-compiled contract.
      */
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
@@ -80,9 +80,9 @@ public class ContractFactory {
     }
 
     /**
-     * Returns the address of the TotalCurrencyContract contract.
+     * Returns the getRecipient of the TotalCurrencyContract contract.
      *
-     * @return the contract address.
+     * @return the contract getRecipient.
      */
     public static Address getTotalCurrencyContractAddress() {
         return Address.wrap(TOTAL_CURRENCY);

@@ -1273,7 +1273,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Finds up to limit blocks starting from blockNumber on main chain
+     * Finds up to limit blocks starting from getBlockNumber on main chain
      *
      * @param bestNumber
      *         Number of best block
@@ -1378,11 +1378,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //    }
     //
     //    /**
-    //     * Finds up to limit blocks starting from blockNumber on main chain
+    //     * Finds up to limit blocks starting from getBlockNumber on main chain
     //     *
     //     * @param bestNumber
     //     *            Number of best block
-    //     * @param blockNumber
+    //     * @param getBlockNumber
     //     *            Number of block to start search (included in return)
     //     * @param limit
     //     *            Maximum number of headers in response
@@ -1390,10 +1390,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //     *            Order of search
     //     * @return headers found by query or empty list if none
     //     */
-    //    private List<A0BlockHeader> getContinuousHeaders(long bestNumber, long blockNumber, int limit, boolean reverse) {
-    //        int qty = getQty(blockNumber, bestNumber, limit, reverse);
+    //    private List<A0BlockHeader> getContinuousHeaders(long bestNumber, long getBlockNumber, int limit, boolean reverse) {
+    //        int qty = getQty(getBlockNumber, bestNumber, limit, reverse);
     //
-    //        byte[] startHash = getStartHash(blockNumber, qty, reverse);
+    //        byte[] startHash = getStartHash(getBlockNumber, qty, reverse);
     //
     //        if (startHash == null) {
     //            return emptyList();
@@ -1446,26 +1446,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //    }
     //
     //
-    //    private int getQty(long blockNumber, long bestNumber, int limit, boolean reverse) {
+    //    private int getQty(long getBlockNumber, long bestNumber, int limit, boolean reverse) {
     //        if (reverse) {
-    //            return blockNumber - limit + 1 < 0 ? (int) (blockNumber + 1) : limit;
+    //            return getBlockNumber - limit + 1 < 0 ? (int) (getBlockNumber + 1) : limit;
     //        } else {
-    //            if (blockNumber + limit - 1 > bestNumber) {
-    //                return (int) (bestNumber - blockNumber + 1);
+    //            if (getBlockNumber + limit - 1 > bestNumber) {
+    //                return (int) (bestNumber - getBlockNumber + 1);
     //            } else {
     //                return limit;
     //            }
     //        }
     //    }
     //
-    //    private byte[] getStartHash(long blockNumber, int qty, boolean reverse) {
+    //    private byte[] getStartHash(long getBlockNumber, int qty, boolean reverse) {
     //
     //        long startNumber;
     //
     //        if (reverse) {
-    //            startNumber = blockNumber;
+    //            startNumber = getBlockNumber;
     //        } else {
-    //            startNumber = blockNumber + qty - 1;
+    //            startNumber = getBlockNumber + qty - 1;
     //        }
     //
     //        IAionBlock block = getBlockByNumber(startNumber);

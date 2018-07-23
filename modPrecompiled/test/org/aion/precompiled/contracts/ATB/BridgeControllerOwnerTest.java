@@ -30,7 +30,7 @@ public class BridgeControllerOwnerTest {
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
 
         ExecutionContext context = dummyContext();
-        this.result = context.helper();
+        this.result = context.getHelper();
         this.controller = new BridgeController(connector,
                 this.result, CONTRACT_ADDR, OWNER_ADDR);
     }
@@ -43,7 +43,7 @@ public class BridgeControllerOwnerTest {
 
     @Test
     public void testTransferOwnership() {
-        byte[] transferOwnership = HashUtil.keccak256("ChangedOwner(address)".getBytes());
+        byte[] transferOwnership = HashUtil.keccak256("ChangedOwner(getRecipient)".getBytes());
         byte[] newOwner = HashUtil.h256("newOwner".getBytes());
         this.controller.initialize();
         this.controller.setNewOwner(OWNER_ADDR.toBytes(), newOwner);

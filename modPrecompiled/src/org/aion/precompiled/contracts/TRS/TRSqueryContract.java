@@ -65,10 +65,10 @@ public final class TRSqueryContract extends AbstractTRS {
 
     /**
      * Constructs a new TRSqueryContract that will use repo as the database cache to update its
-     * state with and is called by caller.
+     * state with and is called by getCaller.
      *
      * @param repo The database cache.
-     * @param caller The calling address.
+     * @param caller The calling getRecipient.
      */
     public TRSqueryContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller,
@@ -90,7 +90,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
      *
      *     conditions: none.
      *
@@ -105,7 +105,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
      *
      *     conditions: none.
      *
@@ -120,7 +120,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
      *
      *     coditions: none.
      *
@@ -136,7 +136,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
      *
      *     coditions: none.
      *
@@ -153,14 +153,14 @@ public final class TRSqueryContract extends AbstractTRS {
      *   <b>operation 0x4</b> - returns the period that the specified public-facing TRS contract is
      *     in at the specified block number.
      *     Note that if a contract's funds are open then the returned value is meaningless.
-     *     [<32b - contractAddress> | <8b - blockNumber>]
+     *     [<32b - contractAddress> | <8b - getBlockNumber>]
      *     total = 41 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
-     *     blockNumber is the block number at which time to assess what period the contract is in.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
+     *     getBlockNumber is the block number at which time to assess what period the contract is in.
      *       This value will be interpreted as signed.
      *
-     *     coditions: blockNumber must be non-negative.
+     *     coditions: getBlockNumber must be non-negative.
      *
      *     returns: a byte array of length 4 that is the byte representation of a signed integer.
      *       This value is equal to the period the contract is in at the specified block. The
@@ -172,19 +172,19 @@ public final class TRSqueryContract extends AbstractTRS {
      *
      *                                           ~~~***~~~
      *
-     *   <b>operation 0x5</b> - returns the fraction of the caller's total owings that is
+     *   <b>operation 0x5</b> - returns the fraction of the getCaller's total owings that is
      *     withdrawable at some time given by a block's timestamp. The total owings is the amount
-     *     that the caller will collect over the full lifetime of the contract. The fraction
-     *     returned is cumulative, so it represents the fraction of funds that the caller will have
+     *     that the getCaller will collect over the full lifetime of the contract. The fraction
+     *     returned is cumulative, so it represents the fraction of funds that the getCaller will have
      *     cumulatively collected by the specified time if they withdraw in the corresponding period.
      *
      *     [<32b - contractAddress> | <8b - timestamp>]
      *     total = 41 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
      *     timestamp is the timestamp (a long value denoting seconds) of a block in the blockchain.
      *
-     *     coditions: contractAddress must be a valid TRS contract address.
+     *     coditions: contractAddress must be a valid TRS contract getRecipient.
      *
      *     returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
      *       method). The returned BigInteger must then have its decimal point shifted 18 places to
@@ -228,7 +228,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<1b - 0x0> | <32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
+     *     contractAddress is the getRecipient of the public-facing TRS contract.
      *
      *     conditions: none.
      *
@@ -263,7 +263,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<1b - 0x0> | <32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
+     *     contractAddress is the getRecipient of the public-facing TRS contract.
      *
      *     conditions: none.
      *
@@ -299,7 +299,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<1b - 0x2> | <32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
+     *     contractAddress is the getRecipient of the public-facing TRS contract.
      *
      *     conditions: none.
      *
@@ -336,7 +336,7 @@ public final class TRSqueryContract extends AbstractTRS {
      *     [<1b - 0x3> | <32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
      *
      *     coditions: none.
      *
@@ -360,7 +360,7 @@ public final class TRSqueryContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // Grab the contract address and block number and determine the period.
+        // Grab the contract getRecipient and block number and determine the period.
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
 
         return determinePeriod(contract, blockchain.getBestBlock(), nrgLimit);
@@ -371,14 +371,14 @@ public final class TRSqueryContract extends AbstractTRS {
      * the specified block number.
      *
      * The input byte array format is defined as follows:
-     *     [<1b - 0x4> | <32b - contractAddress> | <8b - blockNumber>]
+     *     [<1b - 0x4> | <32b - contractAddress> | <8b - getBlockNumber>]
      *     total = 41 bytes
      *   where:
-     *     contractAddress is the address of the public-facing TRS contract to query.
-     *     blockNumber is the block number at which time to assess what period the contract is in.
+     *     contractAddress is the getRecipient of the public-facing TRS contract to query.
+     *     getBlockNumber is the block number at which time to assess what period the contract is in.
      *       This value will be interpreted as signed.
      *
-     *     coditions: blockNumber must be non-negative.
+     *     coditions: getBlockNumber must be non-negative.
      *
      *     returns: a byte array of length 4 that is the byte representation of a signed integer.
      *       This value is equal to the period the contract is in at the specified block. The
@@ -401,7 +401,7 @@ public final class TRSqueryContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // Grab the contract address and block number and determine the period.
+        // Grab the contract getRecipient and block number and determine the period.
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
 
         ByteBuffer blockBuf = ByteBuffer.allocate(Long.BYTES);
@@ -424,10 +424,10 @@ public final class TRSqueryContract extends AbstractTRS {
      *   [<1b - 0x5> | <32b - contractAddress> | <8b - timestamp>]
      *     total = 41 bytes
      * where:
-     *   contractAddress is the address of the public-facing TRS contract to query.
+     *   contractAddress is the getRecipient of the public-facing TRS contract to query.
      *   timestamp is the timestamp (a long value denoting seconds) of a block in the blockchain.
      *
-     * coditions: contractAddress must be a valid TRS contract address.
+     * coditions: contractAddress must be a valid TRS contract getRecipient.
      *
      * returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
      *   method). The returned BigInteger must then have its decimal point shifted 18 places to
@@ -497,7 +497,7 @@ public final class TRSqueryContract extends AbstractTRS {
     // <---------------------------------------HELPERS--------------------------------------------->
 
     /**
-     * Attempts to determine the period that the TRS contract whose address is contract is in at
+     * Attempts to determine the period that the TRS contract whose getRecipient is contract is in at
      * the time denoted by the timestamp of block.
      *
      * If the contract does not exist or block is null then this method returns a result with an

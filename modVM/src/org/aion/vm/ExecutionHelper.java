@@ -27,7 +27,7 @@ import org.aion.zero.types.AionInternalTx;
 import java.util.*;
 
 /**
- * An internal helper class which holds all the dynamically generated effects:
+ * An internal getHelper class which holds all the dynamically generated effects:
  * <p>
  * <ol>
  * <li>logs created</li>

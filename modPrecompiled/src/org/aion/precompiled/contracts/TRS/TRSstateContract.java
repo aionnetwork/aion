@@ -61,11 +61,11 @@ public final class TRSstateContract extends AbstractTRS {
 
     /**
      * Constructs a new TRSstateContract that will use track as the database cache to update its
-     * state with and is called by caller.
+     * state with and is called by getCaller.
      *
      * @param track The database cache.
-     * @param caller The calling address.
-     * @throws NullPointerException if track or caller are null.
+     * @param caller The calling getRecipient.
+     * @throws NullPointerException if track or getCaller are null.
      */
     public TRSstateContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller,
@@ -101,7 +101,7 @@ public final class TRSstateContract extends AbstractTRS {
      *       to percent the resulting percentage must be in the range [0, 1]. periods must be in the
      *       range [1, 1200].
      *
-     *     returns: the address of the newly created TRS contract in the output field of the
+     *     returns: the getRecipient of the newly created TRS contract in the output field of the
      *       ExecutionResult.
      *
      *                                          ~~~***~~~
@@ -111,9 +111,9 @@ public final class TRSstateContract extends AbstractTRS {
      *       [<32b - contractAddress>]
      *       total = 33 bytes
      *     where:
-     *       contractAddress is the address of the public-facing TRS contract to lock.
+     *       contractAddress is the getRecipient of the public-facing TRS contract to lock.
      *
-     *     conditions: the caller of this method must be the owner of the specified contract
+     *     conditions: the getCaller of this method must be the owner of the specified contract
      *       otherwise this method will fail. A contract cannot be locked until the total amount of
      *       funds deposited into the contract is a strictly positive number. A contract cannot be
      *       locked if the contract's funds are open.
@@ -128,9 +128,9 @@ public final class TRSstateContract extends AbstractTRS {
      *       [<32b - contractAddress>]
      *       total = 33 bytes
      *     where:
-     *       contractAddress is the address of the public-facing TRS contract to start.
+     *       contractAddress is the getRecipient of the public-facing TRS contract to start.
      *
-     *     conditions: the caller of this method must be the owner of the specified contract
+     *     conditions: the getCaller of this method must be the owner of the specified contract
      *       otherwise this method will fail. A contract cannot be started if its funds are open.
      *
      *     returns: void.
@@ -144,9 +144,9 @@ public final class TRSstateContract extends AbstractTRS {
      *       [<32b - contractAddress>]
      *       total = 33 bytes
      *     where:
-     *       contractAddress is the address of the public-facing TRS contract to open up.
+     *       contractAddress is the getRecipient of the public-facing TRS contract to open up.
      *
-     *     conditions: the caller of this method must be the owner of the specified contract
+     *     conditions: the getCaller of this method must be the owner of the specified contract
      *       otherwise this method will fail. The contract must not already be live.
      *
      *     returns: void.
@@ -181,7 +181,7 @@ public final class TRSstateContract extends AbstractTRS {
     }
 
     /**
-     * Logic to create a new public-facing TRS contract where caller is the owner of the contract.
+     * Logic to create a new public-facing TRS contract where getCaller is the owner of the contract.
      *
      * The input byte array format is defined as follows:
      *   [<1b - 0x0> | <1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
@@ -230,7 +230,7 @@ public final class TRSstateContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // If request for a test contract, verify caller is Aion.
+        // If request for a test contract, verify getCaller is Aion.
         boolean isTestContract = (deposit == 2 || deposit == 3);
         if (isTestContract && !caller.equals(AION)) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -266,7 +266,7 @@ public final class TRSstateContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // All checks OK. Generate contract address, save the new contract & return to caller.
+        // All checks OK. Generate contract getRecipient, save the new contract & return to getCaller.
         byte[] ownerNonce = track.getNonce(caller).toByteArray();
         byte[] hashInfo = new byte[ownerNonce.length + Address.ADDRESS_LEN];
         System.arraycopy(ownerNonce, 0, hashInfo, 0, ownerNonce.length);
@@ -280,15 +280,15 @@ public final class TRSstateContract extends AbstractTRS {
     }
 
     /**
-     * Logic to lock an existing public-facing TRS contract where caller is the owner of the contract.
+     * Logic to lock an existing public-facing TRS contract where getCaller is the owner of the contract.
      *
      * The input byte array format is defined as follows:
      *   [<1b - 0x1> | <32b - contractAddress>]
      *   total = 33 bytes
      * where:
-     *   contractAddress is the address of the public-facing TRS contract to lock.
+     *   contractAddress is the getRecipient of the public-facing TRS contract to lock.
      *
-     * conditions: the caller of this method must be the owner of the specified contract
+     * conditions: the getCaller of this method must be the owner of the specified contract
      *   otherwise this method will fail. A contract cannot be locked until the total amount of funds
      *   deposited into the contract is a strictly positive number. A contract cannot be locked if
      *   its funds are open.
@@ -306,7 +306,7 @@ public final class TRSstateContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // The caller must also be the owner of this contract.
+        // The getCaller must also be the owner of this contract.
         Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
         if (!caller.equals(getContractOwner(contract))) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -337,15 +337,15 @@ public final class TRSstateContract extends AbstractTRS {
     }
 
     /**
-     * Logic to start an existing public-facing TRS contract where caller is the owner of the contract.
+     * Logic to start an existing public-facing TRS contract where getCaller is the owner of the contract.
      *
      * The input byte array format is defined as follows:
      *   [<1b - 0x2> | <32b - contractAddress>]
      *   total = 33 bytes
      * where:
-     *   contractAddress is the address of the public-facing TRS contract to lock.
+     *   contractAddress is the getRecipient of the public-facing TRS contract to lock.
      *
-     * conditions: the caller of this method must be the owner of the specified contract
+     * conditions: the getCaller of this method must be the owner of the specified contract
      *   otherwise this method will fail. A contract can only be started if its funds are not open.
      *
      * @param input The input to the lock public-facing TRS contract logic.
@@ -361,7 +361,7 @@ public final class TRSstateContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // The caller must also be the owner of this contract.
+        // The getCaller must also be the owner of this contract.
         Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
         if (!caller.equals(getContractOwner(contract))) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -388,15 +388,15 @@ public final class TRSstateContract extends AbstractTRS {
     }
 
     /**
-     * Logic to open up an existing public-facing TRS contract where caller is the owner of the
+     * Logic to open up an existing public-facing TRS contract where getCaller is the owner of the
      * contract.
      *
      * [<1b - 0x3> | <32b - contractAddress>]
      *   total = 33 bytes
      * where:
-     *   contractAddress is the address of the public-facing TRS contract to open up.
+     *   contractAddress is the getRecipient of the public-facing TRS contract to open up.
      *
-     * conditions: the caller of this method must be the owner of the specified contract
+     * conditions: the getCaller of this method must be the owner of the specified contract
      *   otherwise this method will fail. The contract must not already be live.
      *
      * returns: void.
@@ -420,7 +420,7 @@ public final class TRSstateContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // An openFunds operation can only execute if the caller is the owner of the contract.
+        // An openFunds operation can only execute if the getCaller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -446,12 +446,12 @@ public final class TRSstateContract extends AbstractTRS {
     // <------------------------------------HELPER METHODS----------------------------------------->
 
     /**
-     * Saves a new public-facing TRS contract whose contract address is contract and whose direct
+     * Saves a new public-facing TRS contract whose contract getRecipient is contract and whose direct
      * deposit option is isDirectDeposit. The new contract will have periods number of withdrawable
      * periods and the percentage that is derived from percent and precision as outlined in create()
      * is the percentage of total funds withdrawable in the one-off special event. The isTest
      * parameter tells this method whether to save the new contract as a test contract (using 30
-     * second periods) or not (using 30 day periods). The owner of the contract is caller.
+     * second periods) or not (using 30 day periods). The owner of the contract is getCaller.
      *
      * Assumption: all parameters are non-null.
      *
@@ -460,7 +460,7 @@ public final class TRSstateContract extends AbstractTRS {
      *
      * If contract already exists then this method does nothing.
      *
-     * @param contract The address of the new TRS contract.
+     * @param contract The getRecipient of the new TRS contract.
      * @param isTest True only if this new TRS contract is a test contract.
      * @param isDirectDeposit True only if direct depositing is enabled for this TRS contract.
      * @param periods The number of withdrawable periods this TRS contract is live for.

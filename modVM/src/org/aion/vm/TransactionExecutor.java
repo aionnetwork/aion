@@ -151,7 +151,7 @@ public class TransactionExecutor extends AbstractExecutor {
      * Execute the transaction
      */
     public AionTxExecSummary execute() {
-        return (AionTxExecSummary) execute(tx, ctx.nrgLimit());
+        return (AionTxExecSummary) execute(tx, ctx.getNrgLimit());
     }
 
     /**
@@ -160,7 +160,7 @@ public class TransactionExecutor extends AbstractExecutor {
     protected void call() {
         IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, this.repoTrack);
         if (pc != null) {
-            exeResult = pc.execute(tx.getData(), ctx.nrgLimit());
+            exeResult = pc.execute(tx.getData(), ctx.getNrgLimit());
         } else {
             // execute code
             byte[] code = repoTrack.getCode(tx.getTo());
@@ -213,7 +213,7 @@ public class TransactionExecutor extends AbstractExecutor {
 
         ExecutionHelper rootHelper = new ExecutionHelper();
 
-        rootHelper.merge(ctx.helper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
+        rootHelper.merge(ctx.getHelper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
 
 
         AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
@@ -260,7 +260,7 @@ public class TransactionExecutor extends AbstractExecutor {
 //        AionTxReceipt receipt = new AionTxReceipt();
 //        receipt.setTransaction(tx);
 //        receipt.setLogs(txResult.getLogs());
-//        receipt.setNrgUsed(getNrgUsed(tx.nrgLimit()));
+//        receipt.setNrgUsed(getNrgUsed(tx.getNrgLimit()));
 //        receipt.setExecutionResult(exeResult.getOutput());
 //        receipt
 //            .setError(exeResult.getCode() == ResultCode.SUCCESS ? "" : exeResult.getCode().name());

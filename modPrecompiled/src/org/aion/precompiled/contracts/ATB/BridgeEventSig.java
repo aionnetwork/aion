@@ -7,11 +7,11 @@ import javax.annotation.Nonnull;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
 enum BridgeEventSig {
-    CHANGE_OWNER        ("ChangedOwner(address)"),
-    ADD_MEMBER          ("AddMember(address)"),
-    REMOVE_MEMBER       ("RemoveMember(address)"),
+    CHANGE_OWNER        ("ChangedOwner(getRecipient)"),
+    ADD_MEMBER          ("AddMember(getRecipient)"),
+    REMOVE_MEMBER       ("RemoveMember(getRecipient)"),
     PROCESSED_BUNDLE    ("ProcessedBundle(bytes32,bytes32)"),
-    DISTRIBUTED         ("Distributed(address,uint128)");
+    DISTRIBUTED         ("Distributed(getRecipient,uint128)");
 
     private final byte[] hashed;
     BridgeEventSig(@Nonnull final String eventSignature) {

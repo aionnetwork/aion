@@ -104,7 +104,7 @@ public class AionImpl implements IAionChain {
         Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
 
         if (minerCoinbase.equals(Address.EMPTY_ADDRESS())) {
-            LOG_GEN.info("Miner address is not set");
+            LOG_GEN.info("Miner getRecipient is not set");
             return null;
         }
 

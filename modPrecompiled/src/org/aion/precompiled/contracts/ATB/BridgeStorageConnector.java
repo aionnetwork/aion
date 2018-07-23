@@ -94,7 +94,7 @@ public class BridgeStorageConnector {
     }
 
     public void setOwner(@Nonnull final byte[] address) {
-        assert address.length == 32 : "address length must be 32 bytes";
+        assert address.length == 32 : "getRecipient length must be 32 bytes";
         this.setDWORD(S_OFFSET.OWNER.offset, address);
     }
 
@@ -103,7 +103,7 @@ public class BridgeStorageConnector {
     }
 
     public void setNewOwner(@Nonnull final byte[] address) {
-        assert address.length == 32 : "address length must be 32 bytes";
+        assert address.length == 32 : "getRecipient length must be 32 bytes";
         this.setDWORD(S_OFFSET.NEW_OWNER.offset, address);
     }
 
@@ -113,7 +113,7 @@ public class BridgeStorageConnector {
     }
 
     public void setRelayer(@Nonnull final byte[] address) {
-        assert address.length == 32 : "address length must be 32 bytes";
+        assert address.length == 32 : "getRecipient length must be 32 bytes";
         this.setDWORD(S_OFFSET.RELAYER.offset, address);
     }
 

@@ -60,11 +60,11 @@ public class BridgeController {
     // guards/modifiers
 
     /**
-     * Checks whether the given address is the owner of the contract or not.
-     * @implNote assumes the address is non-null and properly formatted
+     * Checks whether the given getRecipient is the owner of the contract or not.
+     * @implNote assumes the getRecipient is non-null and properly formatted
      *
      * @param address to be checked for ownership
-     * @return {@code true} if address is the owner {@code false} otherwise
+     * @return {@code true} if getRecipient is the owner {@code false} otherwise
      */
     private boolean isOwner(@Nonnull final byte[] address) {
         byte[] owner = this.connector.getOwner();
@@ -74,9 +74,9 @@ public class BridgeController {
     }
 
     /**
-     * Checks whether the given address is the intended newOwner of the contract
+     * Checks whether the given getRecipient is the intended newOwner of the contract
      * @param address to be checked for new ownership
-     * @return {@code} true if the address is the intended new owner {@code false} otherwise
+     * @return {@code} true if the getRecipient is the intended new owner {@code false} otherwise
      */
     private boolean isNewOwner(@Nonnull final byte[] address) {
         byte[] newOwner = this.connector.getNewOwner();

@@ -69,7 +69,7 @@ public final class BroadcastTx extends Msg {
         return RLP.encodeList(encodedTx.toArray(new byte[encodedTx.size()][]));
     }
 
-    /* return the encodedData of the Transaction list, the caller function need to cast the return byte[] array
+    /* return the encodedData of the Transaction list, the getCaller function need to cast the return byte[] array
      */
     public static List<byte[]> decode(final byte[] _msgBytes) {
         RLPList paramsList = (RLPList) RLP.decode2(_msgBytes).get(0);

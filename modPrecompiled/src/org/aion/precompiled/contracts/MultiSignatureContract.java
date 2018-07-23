@@ -54,8 +54,8 @@ import org.aion.vm.ExecutionResult;
  * least N of the wallet's owners.
  *
  * The MultiSignatureContract allows for a total of 10 owners per wallet. Each wallet is given a
- * unique id or address and funds can be transferred to the wallet the same way funds are
- * transferred to any other account address.
+ * unique id or getRecipient and funds can be transferred to the wallet the same way funds are
+ * transferred to any other account getRecipient.
  *
  * @author nick nadeau
  */
@@ -76,14 +76,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * an instance of the class that facilitates interaction with the wallet.
      *
      * @param track The repository.
-     * @param caller The address of the calling account.
-     * @throws IllegalArgumentException if track or caller are null.
+     * @param caller The getRecipient of the calling account.
+     * @throws IllegalArgumentException if track or getCaller are null.
      */
     public MultiSignatureContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
         super(track);
-        if (caller == null) { throw new IllegalArgumentException("Null caller."); }
+        if (caller == null) { throw new IllegalArgumentException("Null getCaller."); }
         this.caller = caller;
     }
 
@@ -117,7 +117,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * contract's execute method when the desired operation to be performed is to send a transaction
      * from a multi-sig wallet.
      *
-     * @param wallet The address of the multi-sig wallet.
+     * @param wallet The getRecipient of the multi-sig wallet.
      * @param signatures The signatures for the proposed transaction.
      * @param amount The proposed amount to transfer from the wallet.
      * @param nrgPrice The proposed energy price for the transaction.
@@ -174,9 +174,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * This method constructs and returns this transaction as a byte array message.
      *
-     * @param walletId The address of the multi-sig wallet.
+     * @param walletId The getRecipient of the multi-sig wallet.
      * @param nonce The nonce of the multi-sig wallet.
-     * @param to The address of the recipient.
+     * @param to The getRecipient of the recipient.
      * @param amount The amount to transfer.
      * @param nrgPrice The energy price.
      * @return the transaction message that was signed.
@@ -222,22 +222,22 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * operation 0x1 - send a transaction (minimum 1 signature):
      *   arguments:
-     * [<32b - walletId> | <96b to 960b - signatures> | <128b - amount> | <8b - nrgPrice> | <32b - to>]
+     * [<32b - walletId> | <96b to 960b - signatures> | <128b - amount> | <8b - getNrgPrice> | <32b - to>]
      *   total: 297-1161 bytes
      *
      *
      * Important: the output of a successful call to this method using operation 0x0 will return a
-     * ExecutionResult whose output field is the address of the newly created wallet. This
-     * address is the walletId that is required by operation 0x1 in order to send a transaction
+     * ExecutionResult whose output field is the getRecipient of the newly created wallet. This
+     * getRecipient is the walletId that is required by operation 0x1 in order to send a transaction
      * successfully.
      *
-     * The account address that calls this execute method must be one of the owners of the wallet
+     * The account getRecipient that calls this execute method must be one of the owners of the wallet
      * for all supported operations.
      *
      *
      * The signatures must all sign the exact same message that must obey the following format:
      *
-     *   | nonce | recipientAddr | amount | nrgLimit | nrgPrice |
+     *   | nonce | recipientAddr | amount | getNrgLimit | getNrgPrice |
      *
      * It is <b>highly recommended</b> that the constructMsg method be used to produce this message
      * so that all parties can be sure they are signing identical transactions.
@@ -332,7 +332,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
-            // Then wallet is not the address of a multi-sig wallet.
+            // Then wallet is not the getRecipient of a multi-sig wallet.
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
         if (sigs == null) {
@@ -367,10 +367,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *   1. addresses is an empty array.
      *   2. The length of addresses is incorrect (not a multiple of ADDR_LEN).
      *   3. The length of addresses is too long (more than ADDR_LEN * MAX_OWNERS).
-     *   4. An address appears more than once in addresses.
-     *   5. The address of the account that called execute is not in addresses.
-     *   6. An address does not exist in the repository.
-     *   7. An address is the address of a multi-sig wallet.
+     *   4. An getRecipient appears more than once in addresses.
+     *   5. The getRecipient of the account that called execute is not in addresses.
+     *   6. An getRecipient does not exist in the repository.
+     *   7. An getRecipient is the getRecipient of a multi-sig wallet.
      *
      * @param addresses A byte array of consecutive addresses.
      * @return The addresses extracted from the byte array.
@@ -427,13 +427,13 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * Initializes a new multi-sig wallet whose set of owners is owners and whose minimum signature
      * threshold is threshold.
      *
-     * Returns the address of the newly created wallet.
+     * Returns the getRecipient of the newly created wallet.
      *
      * This method assumes the follow condition holds: 1 <= threshold <= |owners| <= MAX_OWNERS
      *
      * @param owners The owners of the wallet.
      * @param threshold The minimum number of signatures required per transaction.
-     * @return the address of the newly created wallet.
+     * @return the getRecipient of the newly created wallet.
      */
     private Address initNewWallet(Set<Address> owners, long threshold) {
         List<byte[]> ownerAddrs = new ArrayList<>();
@@ -480,7 +480,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * The KEY for this entry is a 128-bit data word whose most significant bit is 1 and all other
      * bits are 0.
      *
-     * @param walletId The address of the multi-sig wallet.
+     * @param walletId The getRecipient of the multi-sig wallet.
      * @param threshold The minimum number of signatures required.
      * @param numOwners The number of owners for this wallet.
      */
@@ -500,18 +500,18 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Saves the wallet's owners. Each 32 byte owner address is split into two 16 byte portions.
+     * Saves the wallet's owners. Each 32 byte owner getRecipient is split into two 16 byte portions.
      * The 128-bit KEY for each owner has the following format:
      *
      *   | bit 127: <zero> | bit 126: portion | bits 125-0: ownerId |
      *
      * where 0 is the least significant bit and bit 127 is always set to 0.
-     * If bit 126 is 0 then the corresponding VALUE is the first half of the owner's address.
-     * If bit 126 is 1 then the corresponding VALUE is the second half of the owner's address.
+     * If bit 126 is 0 then the corresponding VALUE is the first half of the owner's getRecipient.
+     * If bit 126 is 1 then the corresponding VALUE is the second half of the owner's getRecipient.
      * The remaining bits are the ownerId, which is simply a counter from 0 up to numOwners - 1.
      * The ordering is arbitrary.
      *
-     * @param walletId The address of the multi-sig wallet.
+     * @param walletId The getRecipient of the multi-sig wallet.
      * @param owners The owners of the multi-sig wallet.
      */
     private void saveWalletOwners(Address walletId, Set<Address> owners) {
@@ -537,14 +537,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     /**
      * Returns true only if the following conditions are met:
      *   1. ALL signatures have been signed by unique signers.
-     *   2. ALL signers are owners of the multi-sig wallet whose address is wallet.
+     *   2. ALL signers are owners of the multi-sig wallet whose getRecipient is wallet.
      *   3. ALL signatures are valid signatures that sign the current transaction.
      *   4. The number of signatures is at least the threshold value of the multi-sig wallet wallet.
      *   5. The account that called execute is one of the owners of the wallet.
      *
      * Returns false otherwise.
      *
-     * @param wallet The address of the multi-sig wallet.
+     * @param wallet The getRecipient of the multi-sig wallet.
      * @param signatures The signatures on the transaction.
      * @param msg The byte array form of the transaction that each signee had to sign.
      * @return true only if the signatures are valid for this wallet.
@@ -585,11 +585,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns a set of all of the addresses that own the multi-sig wallet whose address is walletId.
+     * Returns a set of all of the addresses that own the multi-sig wallet whose getRecipient is walletId.
      *
      * This method assumes that walletId is a valid multi-sig wallet.
      *
-     * @param walletId The address of the multi-sig wallet.
+     * @param walletId The getRecipient of the multi-sig wallet.
      * @return the set of owners.
      */
     private Set<Address> getOwners(Address walletId) {
@@ -608,15 +608,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the address of the owner whose owner id is ownerId for the multi-sig wallet whose
-     * address is walletId.
+     * Returns the getRecipient of the owner whose owner id is ownerId for the multi-sig wallet whose
+     * getRecipient is walletId.
      *
      * This method assumes that walletId is a valid multi-sig wallet and that ownerId is a valid
      * owner id.
      *
-     * @param walletId The address of the multi-sig wallet.
+     * @param walletId The getRecipient of the multi-sig wallet.
      * @param ownerId The owner id.
-     * @return the address of the owner.
+     * @return the getRecipient of the owner.
      */
     private Address getOwner(Address walletId, long ownerId) {
         byte[] address = new byte[ADDR_LEN];
@@ -646,7 +646,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     /**
      * Returns the key to query a multi-sig wallet for its owner data value.
      *
-     * @param isFirstHalf True if querying first half of address.
+     * @param isFirstHalf True if querying first half of getRecipient.
      * @param ownerId The owner id.
      * @return the owner data query key.
      */
