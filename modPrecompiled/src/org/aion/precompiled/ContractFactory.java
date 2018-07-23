@@ -27,6 +27,8 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
+import org.aion.vm.ExecutionContext;
 import org.aion.vm.IPrecompiledContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 
@@ -36,7 +38,9 @@ import org.aion.precompiled.contracts.TotalCurrencyContract;
 public class ContractFactory {
     private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
+
     private static final String TOKEN_BRIDGE = "0000000000000000000000000000000000000000000000000000000000000200";
+    private static final String TOKEN_BRIDGE_INITIAL_OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
 
     private ContractFactory(){}
 
@@ -44,16 +48,19 @@ public class ContractFactory {
      * Returns a new pre-compiled contract such that the address of the new contract is address.
      * Returns null if address does not map to any known contracts.
      *
-     * @param address The contract address.
+     * @param context Passed in execution context.
      * @param track The repo.
      * @return the specified pre-compiled address.
      */
-    public static IPrecompiledContract getPrecompiledContract(Address address, Address from,
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
-        switch (address.toString()) {
+    public static IPrecompiledContract getPrecompiledContract(ExecutionContext context,
+                                                              IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
+        switch (context.address().toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, from, Address.wrap(OWNER));
+                return new TotalCurrencyContract(track, context.caller(), Address.wrap(OWNER));
             case TOKEN_BRIDGE:
+                TokenBridgeContract contract = new TokenBridgeContract(context,
+                        track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));
+                return contract;
             default: return null;
         }
     }

@@ -51,6 +51,14 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.contractAddress = contractAddress;
     }
 
+    /**
+     * @implNote rationale for separating from constructor is this function may
+     * incur an I/O call to the database.
+     */
+    public void initialize() {
+        this.controller.initialize();
+    }
+
     public BridgeController getController() {
         return this.controller;
     }

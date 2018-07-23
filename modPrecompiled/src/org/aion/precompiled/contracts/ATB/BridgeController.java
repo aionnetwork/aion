@@ -6,6 +6,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.TransactionResult;
 
@@ -295,7 +296,7 @@ public class BridgeController {
     private void emitDistributed(@Nonnull final byte[] recipient,
                                  @Nonnull final BigInteger value) {
         List<byte[]> topics = Arrays.asList(BridgeEventSig.DISTRIBUTED.getHashed(),
-                recipient, BridgeUtilities.pad(value.toByteArray(), 32));
+                recipient, PrecompiledUtilities.pad(value.toByteArray(), 32));
         addLog(topics);
     }
 

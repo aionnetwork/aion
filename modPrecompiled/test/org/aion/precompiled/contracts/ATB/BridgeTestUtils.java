@@ -9,14 +9,13 @@ import org.aion.vm.TransactionResult;
 
 public class BridgeTestUtils {
     static ExecutionContext dummyContext() {
-        return context(Address.ZERO_ADDRESS(), new byte[0]);
+        return context(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), new byte[0]);
     }
 
-    static ExecutionContext context(Address contractAddress, byte[] txData) {
+    static ExecutionContext context(Address from, Address to, byte[] txData) {
         final byte[] transactionHash = HashUtil.h256("transaction".getBytes());
-        final Address address = contractAddress;
-        final Address origin = new Address(AddressSpecs.computeA0Address(
-                HashUtil.h256("originAddress".getBytes())));
+        final Address address = to;
+        final Address origin = from;
         final Address caller = origin;
         final DataWord nrgPrice = DataWord.ONE;
         final long nrgLimit = 21000L;

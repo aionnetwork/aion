@@ -53,4 +53,12 @@ enum BridgeFuncSig {
 
         return enumSet.get(new ByteArrayWrapper(arr));
     }
+
+    public byte[] getBytes() {
+        return this.sigWrapper.toBytes();
+    }
+
+    public String getSignature() {
+        return this.signature;
+    }
 }

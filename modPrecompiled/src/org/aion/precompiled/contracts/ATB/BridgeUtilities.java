@@ -2,7 +2,7 @@ package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.PrecompiledUtilities;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -60,18 +60,7 @@ public class BridgeUtilities {
         return input ? TRUE : ByteUtil.EMPTY_HALFWORD;
     }
 
-    static byte[] pad(@Nonnull final byte[] input,
-                      final int length) {
-        assert input.length <= length;
-        if (input.length == length)
-            return input;
-
-        byte[] out = new byte[length];
-        System.arraycopy(input, 0, out, out.length - input.length, input.length);
-        return out;
-    }
-
     static byte[] intToResultBytes(final int input) {
-        return pad(BigInteger.valueOf(input).toByteArray(), 16);
+        return PrecompiledUtilities.pad(BigInteger.valueOf(input).toByteArray(), 16);
     }
 }
