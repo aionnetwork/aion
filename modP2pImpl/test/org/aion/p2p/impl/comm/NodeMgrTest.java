@@ -58,9 +58,6 @@ public class NodeMgrTest {
     private String ip2 = "192.168.0.11";
     private int port1 = 30304;
     private int port2 = 30305;
-    private ServerSocketChannel tcpServer;
-    private SocketChannel channel;
-
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
     private String[] nodes = new String[]{
@@ -73,6 +70,12 @@ public class NodeMgrTest {
 
     @Mock
     private Node node;
+
+    @Mock
+    private ServerSocketChannel tcpServer;
+
+    @Mock
+    private SocketChannel channel;
 
     private NodeMgr nMgr;
 
@@ -129,9 +132,15 @@ public class NodeMgrTest {
         nMgr.addTempNode(node);
         assertEquals(1, nMgr.tempNodesSize());
 
+        nMgr.addTempNode(node);
+        assertEquals(1, nMgr.tempNodesSize());
 
-        //nMgr.addTempNode();
+        String nl = "p2p://" + nodeId1 + "@" + ip1 + ":" + port1;
 
+        INode node = Node.parseP2p(nl);
+
+        nMgr.addTempNode(node);
+        assertEquals(2, nMgr.tempNodesSize());
     }
 
     @Test
