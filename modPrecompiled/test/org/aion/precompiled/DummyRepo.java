@@ -50,7 +50,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
 
     public DummyRepo() {}
 
-    private DummyRepo(DummyRepo parent) {
+    public DummyRepo(DummyRepo parent) {
         // Note: only references are copied
         accounts.putAll(parent.accounts);
         contracts.putAll(parent.contracts);
