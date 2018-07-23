@@ -36,6 +36,7 @@ import org.aion.precompiled.contracts.TotalCurrencyContract;
 public class ContractFactory {
     private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
+    private static final String TOKEN_BRIDGE = "0000000000000000000000000000000000000000000000000000000000000200";
 
     private ContractFactory(){}
 
@@ -49,10 +50,10 @@ public class ContractFactory {
      */
     public static IPrecompiledContract getPrecompiledContract(Address address, Address from,
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
-
         switch (address.toString()) {
             case TOTAL_CURRENCY:
                 return new TotalCurrencyContract(track, from, Address.wrap(OWNER));
+            case TOKEN_BRIDGE:
             default: return null;
         }
     }
@@ -66,6 +67,7 @@ public class ContractFactory {
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
             case TOTAL_CURRENCY: return true;
+            case TOKEN_BRIDGE: return true;
             default: return false;
         }
     }
