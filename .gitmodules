@@ -1,6 +1,7 @@
 [submodule "aion_fastvm"]
 	path = aion_fastvm
 	url = https://github.com/aionnetwork/aion_fastvm
+    branch = precompiled
 [submodule "aion_api"]
 	path = aion_api
     url = https://github.com/aionnetwork/aion_api

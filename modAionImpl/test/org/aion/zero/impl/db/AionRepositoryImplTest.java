@@ -207,7 +207,7 @@ public class AionRepositoryImplTest {
         repoTrack.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
 
         DataWord retrievedStorageValue =
-                repoTrack.getStorageValue(defaultAccount, new DataWord(key));
+            (DataWord) repoTrack.getStorageValue(defaultAccount, new DataWord(key));
         assertThat(retrievedStorageValue).isEqualTo(new DataWord(value));
 
         // commit changes, then check that the root has updated

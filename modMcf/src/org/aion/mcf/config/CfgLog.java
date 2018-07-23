@@ -103,7 +103,7 @@ public class CfgLog {
 
             /*
              * XML - Displays tag/entry in the config.xml
-             * Boolean value to allow logger to be toggled ON and OFF
+             * Boolean value to allow LOGGER to be toggled ON and OFF
              */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeComment("Enable/Disable logback service; if disabled, output will not be logged.");
@@ -149,12 +149,12 @@ public class CfgLog {
         return this.modules;
     }
 
-    /** Method checks whether logger is enabled/disabled */
+    /** Method checks whether LOGGER is enabled/disabled */
     public boolean getLogFile() {
         return this.logFile;
     }
 
-    /** Method returns user input folder path of logger */
+    /** Method returns user input folder path of LOGGER */
     public String getLogPath() {
         return this.logPath;
     }
