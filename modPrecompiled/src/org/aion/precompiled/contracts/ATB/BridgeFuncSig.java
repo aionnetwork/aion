@@ -14,7 +14,7 @@ enum BridgeFuncSig {
     SIG_RING_INITIALIZE     ("initializeRing(address[])"),
     SIG_RING_ADD_MEMBER     ("addRingMember(address)"),
     SIG_RING_REMOVE_MEMBER  ("removeRingMember(address)"),
-    SIG_SUBMIT_BUNDLE       ("submitBundle(address[],uint128[],bytes32[],bytes32[])"),
+    SIG_SUBMIT_BUNDLE       ("submitBundle(bytes32,address[],uint128[],bytes32[],bytes32[],bytes32)"),
     PURE_OWNER              ("owner()"),
     PURE_NEW_OWNER          ("newOwner()"),
     PURE_ACTION_MAP         ("actionMap(bytes32)"),

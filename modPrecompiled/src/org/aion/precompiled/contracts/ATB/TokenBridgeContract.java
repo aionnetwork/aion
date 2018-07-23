@@ -133,32 +133,21 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 break;
             }
             case SIG_SUBMIT_BUNDLE: {
-//                // TODO: possible attack vector, unsecure deserialization
-//                byte[][][] bundleRequests = parseBundleRequest(input);
-//
-//                if (bundleRequests == null)
-//                    return fail();
-//
-//                byte[][] signatures = bundleRequests[BUNDLE_PARAM_SIG];
-//
-//                // more of a sanity check
-//                if (bundleRequests[0].length != bundleRequests[1].length)
-//                    return fail();
-//
-//                int bundleLen = bundleRequests[0].length;
-//                BridgeBundle[] bundles = new BridgeBundle[bundleLen];
-//                for (int i = 0; i < bundleLen; i++) {
-//                    bundles[i] = new BridgeBundle(
-//                            new BigInteger(1,bundleRequests[BUNDLE_PARAM_ACC][i]),
-//                            bundleRequests[BUNDLE_PARAM_VAL][i]);
-//                }
-//                BridgeController.ProcessedResults results = this.controller.
-//                        processBundles(this.context.caller().toBytes(), bundles, signatures);
-//                if (results.controllerResult != ErrCode.NO_ERROR)
-//                    return fail();
-//
-//                // at this point we know that the execution was successful
-//                break;
+                // TODO: possible attack vector, unsecure deserialization
+                BundleRequestCall bundleRequests = parseBundleRequest(input);
+
+                if (bundleRequests == null)
+                    return fail();
+
+                BridgeController.ProcessedResults results = this.controller.processBundles(
+                        this.context.caller().toBytes(),
+                        bundleRequests.blockHash,
+                        bundleRequests.bundles,
+                        bundleRequests.signatures);
+
+                if (results.controllerResult != ErrCode.NO_ERROR)
+                    return fail();
+                return success();
             }
             case PURE_OWNER:
                 return success(orDefaultDword(this.connector.getOwner()));
@@ -244,7 +233,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * @return {@code true} if value was performed, {@code false} otherwise
      */
     public ExecutionResult transfer(@Nonnull final byte[] to,
-                                            @Nonnull final BigInteger value) {
+                                    @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);

@@ -101,6 +101,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     @Test
@@ -125,6 +126,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ONE);
     }
 
     @Test
@@ -149,6 +151,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     private static byte[] generateSignature(byte[] blockHash, BridgeBundle[] bundles) {

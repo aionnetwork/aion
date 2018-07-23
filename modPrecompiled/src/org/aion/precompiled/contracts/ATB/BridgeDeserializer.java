@@ -19,7 +19,7 @@ public class BridgeDeserializer {
     private static final BigInteger INT_MAX_VAL = BigInteger.valueOf(Integer.MAX_VALUE);
 
     public static byte[] parseDwordFromCall(@Nonnull final byte[] call) {
-        if (call.length != (DWORD_SIZE + CALL_OFFSET))
+        if (call.length < (DWORD_SIZE + CALL_OFFSET))
             return null;
         final byte[] dword = new byte[DWORD_SIZE];
         System.arraycopy(call, CALL_OFFSET, dword, 0, ADDR_SIZE);
@@ -43,7 +43,7 @@ public class BridgeDeserializer {
     }
 
     public static byte[][] parseAddressList(@Nonnull final byte[] call) {
-        if (call.length < CALL_OFFSET + (LIST_META * LIST_PT))
+        if (call.length < CALL_OFFSET + LIST_META + LIST_PT)
             return null;
 
         final byte[][] addressList = parseList(call, CALL_OFFSET, 32);
@@ -69,41 +69,58 @@ public class BridgeDeserializer {
      * check later as other deserialization would be a waste.
      *
      * @param call input data
-     * @return {@code 3D byte array}, containing address, value, signature lists
+     * @return {@code BundleRequestCall} containing deserialized data
      * {@code null} if anything regarding deserialization is wrong
      */
-    public static byte[][][] parseBundleRequest(@Nonnull final byte[] call) {
-        // TODO
-        if (call.length < CALL_OFFSET + (LIST_META * LIST_PT) * 4)
+    public static BundleRequestCall parseBundleRequest(@Nonnull final byte[] call) {
+        // TODOs
+        if (call.length < CALL_OFFSET + DWORD_SIZE + (LIST_META + LIST_PT) * 4)
             return null;
 
-        final byte[][] addressList = parseList(call, CALL_OFFSET, 32);
+        final byte[] blockHash = parseDwordFromCall(call);
+
+        if (blockHash == null)
+            return null;
+
+        final byte[][] addressList = parseList(call, CALL_OFFSET + DWORD_SIZE, 32);
         if (addressList == null)
             return null;
 
-        final byte[][] uintList = parseList(call, CALL_OFFSET + LIST_PT, 16);
+        final byte[][] uintList = parseList(call, CALL_OFFSET + LIST_PT + DWORD_SIZE, 16);
         if (uintList == null)
             return null;
 
         if (addressList.length != uintList.length)
             return null;
 
-        final byte[][] signatureUpperList = parseList(call, CALL_OFFSET + LIST_PT * 2, 32);
-        if (signatureUpperList == null)
+        final byte[][] signatureChunk1 = parseList(call, CALL_OFFSET + LIST_PT * 2 + DWORD_SIZE, 32);
+        if (signatureChunk1 == null)
             return null;
 
-        final byte[][] signatureLowerList = parseList(call, CALL_OFFSET + LIST_PT * 3, 32);
-        if (signatureLowerList == null)
+        final byte[][] signatureChunk2 = parseList(call, CALL_OFFSET + LIST_PT * 3 + DWORD_SIZE, 32);
+        if (signatureChunk2 == null)
             return null;
 
-        if (signatureLowerList.length != signatureUpperList.length)
+        final byte[][] signatureChunk3 = parseList(call, CALL_OFFSET + LIST_PT * 4 + DWORD_SIZE, 32);
+        if (signatureChunk3 == null)
             return null;
 
-        final byte[][] mergedSignatureList = new byte[signatureLowerList.length][];
-        for (int i = 0; i < signatureLowerList.length; i++) {
-            mergedSignatureList[i] = ByteUtil.merge(signatureUpperList[i], signatureLowerList[i]);
+        if (signatureChunk2.length != signatureChunk1.length || signatureChunk1.length != signatureChunk3.length)
+            return null;
+
+        final byte[][] mergedSignatureList = new byte[signatureChunk2.length][];
+        for (int i = 0; i < signatureChunk2.length; i++) {
+            mergedSignatureList[i] = ByteUtil.merge(signatureChunk1[i], signatureChunk2[i], signatureChunk3[i]);
         }
-        return new byte[][][] {addressList, uintList, mergedSignatureList};
+
+        // assemble bundle
+
+        BridgeBundle[] bundles = new BridgeBundle[uintList.length];
+        for (int i = 0; i < uintList.length; i++) {
+            bundles[i] = new BridgeBundle(new BigInteger(1, uintList[i]), addressList[i]);
+        }
+
+        return new BundleRequestCall(blockHash, bundles, mergedSignatureList);
     }
 
     /**
@@ -130,7 +147,7 @@ public class BridgeDeserializer {
         if (callLength < CALL_OFFSET + LIST_META + LIST_PT)
             return null;
 
-        final int listOffset = parseMeta(call, offset);
+        final int listOffset = parseMeta(call, offset) + CALL_OFFSET;
         if (listOffset == ERR_INT)
             return null;
 
@@ -150,7 +167,7 @@ public class BridgeDeserializer {
 
         // yuck
         int counter = 0;
-        for (int i = listOffset + LIST_META; i < listLength * elementLength; i += elementLength) {
+        for (int i = listOffset + LIST_META; i < (listOffset + LIST_META) + (listLength * elementLength); i += elementLength) {
             byte[] element = new byte[elementLength];
             System.arraycopy(call, i, element, 0, elementLength);
             output[counter] = element;

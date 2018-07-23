@@ -3,6 +3,7 @@ package org.aion.precompiled.encoding;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
+import org.aion.precompiled.PrecompiledUtilities;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
@@ -51,7 +52,8 @@ public class AbiEncoder {
         // second iteration, go through each element assembling
         for (BaseTypeFVM type : this.params) {
             if (type.isDynamic()) {
-                b.append(new ByteArrayWrapper(BigInteger.valueOf(offset).toByteArray()).toString());
+                byte[] off = PrecompiledUtilities.pad(BigInteger.valueOf(offset).toByteArray(), 16);
+                b.append(ByteUtil.toHexString(off));
                 offset += type.serialize().length;
             } else {
                 b.append(ByteUtil.toHexString(type.serialize()));
