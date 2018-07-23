@@ -225,6 +225,10 @@ else
 	}
 
   	env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
+        -Dcom.sun.management.jmxremote=true  \
+        -Dcom.sun.management.jmxremote.port=11234 \
+        -Dcom.sun.management.jmxremote.authenticate=false \
+        -Dcom.sun.management.jmxremote.ssl=false \
   		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
     kernel_pid=$!
     wait
