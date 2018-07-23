@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121"
             stylesheets="@footer-pane.css" styleClass="anchor-pane"
             AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0.0">
-
-    <!--<HBox alignment="CENTER_LEFT" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" prefHeight="60.0" style="-fx-background-color: purple  ;">-->
+    <HBox alignment="CENTER_LEFT" AnchorPane.leftAnchor="10" prefHeight="60.0">
         <fx:include source="partials/ConsoleTail.fxml"/>
-    <!--</HBox>-->
-
-    <HBox alignment="CENTER_RIGHT" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" prefHeight="60.0" style="-fx-background-color: blue;">
+    </HBox>
+    <HBox alignment="CENTER_RIGHT" AnchorPane.rightAnchor="10" prefHeight="60.0">
         <fx:include source="partials/ConnectivityStatus.fxml"/>
     </HBox>
-
 </AnchorPane>

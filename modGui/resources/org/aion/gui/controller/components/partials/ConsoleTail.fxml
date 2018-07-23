@@ -9,12 +9,12 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.aion.gui.controller.partials.ConsoleTailController"
       fx:id="parent"
-      prefWidth="150.0" alignment="CENTER_LEFT" AnchorPane.leftAnchor="0.0" style="-fx-background-color: red;">
+      prefWidth="Infinity" alignment="CENTER_LEFT" AnchorPane.leftAnchor="0.0">
     <stylesheets>
         <URL value="@../footer-pane.css" />
     </stylesheets>
-    <HBox spacing="10" AnchorPane.rightAnchor="0.0" style="-fx-background-color: green;">
-    <Label fx:id="tail" styleClass="footer-pane-text" text="hello world" onMouseClicked="#onClick"/>
+    <HBox spacing="10" AnchorPane.rightAnchor="0.0">
+    <Label fx:id="tail" styleClass="footer-pane-text" text="" onMouseClicked="#onClick"/>
 </HBox>
 
 </VBox>
