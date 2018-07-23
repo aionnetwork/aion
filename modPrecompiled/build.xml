@@ -11,6 +11,7 @@
     <path id="classpath.test">
         <pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
         <pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar"/>
+        <pathelement location="${dir.lib}/truth-0.36.jar"/>
         <pathelement location="${dir.lib}/libnsc.jar"/>
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
         <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
@@ -20,6 +21,7 @@
         <pathelement location="${dir.lib}/commons-codec-1.10.jar"/>
         <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
         <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
+        <pathelement location="${dir.lib}/jsr305-3.0.2.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
@@ -39,6 +41,7 @@
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
         <pathelement location="${dir.lib}/guava-19.0.jar"/>
         <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
+        <pathelement location="${dir.lib}/jsr305-3.0.2.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
