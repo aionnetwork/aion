@@ -46,8 +46,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.context = context;
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
-        this.controller = new BridgeController(this.connector, this.context.result(), contractAddress, ownerAddress);
+        this.controller = new BridgeController(this.connector, this.context.helper(), contractAddress, ownerAddress);
         this.controller.setTransferrable(this);
+
         this.contractAddress = contractAddress;
     }
 
@@ -222,8 +223,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 this.context.blockNumber(),
                 this.context.blockTimestamp(),
                 this.context.blockNrgLimit(),
-                this.context.blockDifficulty(),
-                this.context.result());
+                this.context.blockDifficulty());
     }
 
     /**
@@ -255,7 +255,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         ExecutionContext innerContext = assembleContext(to, value);
         IRepositoryCache cache = this.track;
         AionInternalTx tx = newInternalTx(innerContext);
-        this.context.result().addInternalTransaction(tx);
+        this.context.helper().addInternalTransaction(tx);
 
         cache.addBalance(new Address(to), value);
         cache.addBalance(this.contractAddress, value.negate());
@@ -271,11 +271,12 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * @param context execution context to generate internal transaction
      * @return {@code internal transaction}
      */
+    @SuppressWarnings("JavadocReference")
     private AionInternalTx newInternalTx(ExecutionContext context) {
 
         byte[] parentHash = context.transactionHash();
         int deep = context.depth();
-        int idx = context.result().getInternalTransactions().size();
+        int idx = context.helper().getInternalTransactions().size();
 
         return new AionInternalTx(parentHash,
                 deep,

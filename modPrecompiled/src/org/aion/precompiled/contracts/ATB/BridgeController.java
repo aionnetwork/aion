@@ -1,5 +1,13 @@
 package org.aion.precompiled.contracts.ATB;
 
+import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.processError;
+import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.processSuccess;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import javax.annotation.Nonnull;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
@@ -7,16 +15,8 @@ import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.vm.ExecutionHelper;
 import org.aion.vm.ExecutionResult;
-import org.aion.vm.TransactionResult;
-
-import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.*;
-
-import javax.annotation.Nonnull;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed
@@ -26,17 +26,17 @@ import java.util.List;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private TransactionResult result;
+    private ExecutionHelper result;
     private final Address contractAddress;
     private final Address ownerAddress;
     private Transferrable transferrable;
 
     public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
-                            @Nonnull final TransactionResult result,
+                            @Nonnull final ExecutionHelper helper,
                             @Nonnull final Address contractAddress,
                             @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
-        this.result = result;
+        this.result = helper;
         this.contractAddress = contractAddress;
         this.ownerAddress = ownerAddress;
     }

@@ -31,7 +31,6 @@ public class BridgeTestUtils {
         long blockNrgLimit = 0;
         DataWord blockDifficulty = DataWord.ZERO;
 
-        final TransactionResult result = new TransactionResult();
         return new ExecutionContext(transactionHash,
                 address,
                 origin,
@@ -47,7 +46,6 @@ public class BridgeTestUtils {
                 blockNumber,
                 blockTimestamp,
                 blockNrgLimit,
-                blockDifficulty,
-                result);
+                blockDifficulty);
     }
 }
