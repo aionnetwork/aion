@@ -2,15 +2,19 @@ package org.aion.p2p.impl.comm;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import org.aion.p2p.IPeerMetric;
 import org.junit.Test;
 
 /**
@@ -152,7 +156,7 @@ public class NodeTest {
     public void testNodeToString() {
         int port = 30303;
         Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + port);
-
+        assertNotNull(n);
     }
 
     @Test
@@ -171,5 +175,38 @@ public class NodeTest {
 
         assertTrue((curr_time < validNode.getTimestamp()));
 
+    }
+
+    @Test
+    public void testGetPeerMetric() {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+
+        IPeerMetric pm = n.getPeerMetric();
+        assertNotNull(pm);
+        assertTrue(pm.notBan());
+        assertFalse(pm.shouldNotConn());
+    }
+
+    @Test
+    public void testChannel() throws IOException {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+
+        SocketChannel sc = SocketChannel.open();
+        n.setChannel(sc);
+        assertNotNull(n.getChannel());
+        assertEquals(sc, n.getChannel());
+    }
+
+    @Test
+    public void testConnection() throws IOException {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+
+        String cn = "inbound";
+        n.setConnection(cn);
+        assertNotNull(n.getConnection());
+        assertEquals(cn, n.getConnection());
     }
 }

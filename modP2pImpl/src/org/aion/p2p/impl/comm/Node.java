@@ -35,7 +35,7 @@ import org.aion.p2p.IPeerMetric;
  * @author Chris p2p://{node-id}@{ip}:{port}
  * node-id could be any non-empty string update to 36 bytes
  */
-public final class Node implements INode {
+public class Node implements INode {
 
     private static final String REGEX_PROTOCOL = "^p2p://"; // Protocol eg. p2p://
     private static final String REGEX_NODE_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"; // Node-Id
@@ -48,7 +48,7 @@ public final class Node implements INode {
     private static final Pattern PATTERN_P2P = Pattern
         .compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
     private static final int SIZE_BYTES_IPV4 = 8;
-    public IPeerMetric peerMetric = new PeerMetric();
+    private IPeerMetric peerMetric = new PeerMetric();
     private boolean fromBootList;
     private byte[] id; // 36 bytes
     private int idHash;
