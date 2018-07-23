@@ -111,7 +111,7 @@ public class HeaderPaneControls extends AbstractController {
     }
 
     private void sendPressedEvent(final HeaderPaneButtonEvent event) {
-//        EventBusRegistry.getBus(HeaderPaneButtonEvent.ID).post(event);
+        EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).post(event);
     }
 
 //    @Subscribe

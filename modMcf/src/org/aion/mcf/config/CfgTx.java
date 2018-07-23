@@ -22,6 +22,8 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -129,6 +131,22 @@ public class CfgTx {
 
     public boolean getPoolBackup() {
         return poolBackup;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgTx cfgTx = (CfgTx) o;
+        return cacheMax == cfgTx.cacheMax &&
+                buffer == cfgTx.buffer &&
+                poolDump == cfgTx.poolDump &&
+                poolBackup == cfgTx.poolBackup;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(cacheMax, buffer, poolDump, poolBackup);
     }
 }
 

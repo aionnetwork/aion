@@ -179,4 +179,5 @@ public class DashboardController extends AbstractController {
         launchKernelButton.setDisable(true);
         terminateKernelButton.setDisable(true);
     }
+
 }
