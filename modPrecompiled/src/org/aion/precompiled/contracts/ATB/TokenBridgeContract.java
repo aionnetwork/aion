@@ -244,12 +244,12 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
         // otherwise prepare for a transfer
         ExecutionContext innerContext = assembleContext(to, value);
-        IRepositoryCache cache = this.track.startTracking();
-        // is a flush really needed here if we have no failure conditions?
+        IRepositoryCache cache = this.track;
         AionInternalTx tx = newInternalTx(innerContext);
+        this.context.result().addInternalTransaction(tx);
+
         cache.addBalance(new Address(to), value);
         cache.addBalance(this.contractAddress, value.negate());
-        cache.flush();
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, 0);
     }
 
