@@ -1,26 +1,25 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.base.db.IRepositoryCache;
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
+
+import java.util.List;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.DummyRepo;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.TransactionResult;
+import org.aion.vm.ExecutionHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.*;
 
 public class BridgeControllerOwnerTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private TransactionResult result;
+    private ExecutionHelper result;
 
     private static final Address CONTRACT_ADDR = new Address(HashUtil.h256("contractAddress".getBytes()));
     private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
@@ -28,10 +27,10 @@ public class BridgeControllerOwnerTest {
     @Before
     public void beforeEach() {
         DummyRepo repo = new DummyRepo();
-        this.connector = new BridgeStorageConnector((IRepositoryCache) repo, CONTRACT_ADDR);
+        this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
 
         ExecutionContext context = dummyContext();
-        this.result = context.result();
+        this.result = context.helper();
         this.controller = new BridgeController(connector,
                 this.result, CONTRACT_ADDR, OWNER_ADDR);
     }

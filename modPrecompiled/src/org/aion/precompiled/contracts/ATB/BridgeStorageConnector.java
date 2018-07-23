@@ -1,5 +1,8 @@
 package org.aion.precompiled.contracts.ATB;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import javax.annotation.Nonnull;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -9,11 +12,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.TransactionExecutor;
-
-import javax.annotation.Nonnull;
-import java.math.BigInteger;
-import java.util.Arrays;
 
 /**
  * Storage layout mapping as the following:
