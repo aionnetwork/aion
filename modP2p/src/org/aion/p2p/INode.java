@@ -72,6 +72,8 @@ public interface INode {
      */
     BigInteger getTotalDifficulty();
 
+    int getPeerId();
+
     long getTimestamp();
 
     /**
@@ -107,4 +109,5 @@ public interface INode {
 
     void setBinaryVersion(String _revision);
 
+    String toString();
 }
