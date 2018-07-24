@@ -25,10 +25,13 @@
 
 package org.aion.p2p.impl.zero.msg;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
@@ -65,7 +68,6 @@ public class ResHandshake1Test {
 
     @Test
     public void testMultiple() {
-
         // Repeat the test multiple times to ensure validity
         for (int i = 0; i < 30; i++) {
             try {
@@ -78,6 +80,59 @@ public class ResHandshake1Test {
 
     @Test
     public void testDecodeNull() {
-        assertNull(ResActiveNodes.decode(null));
+        assertNull(ResHandshake1.decode(null));
+        assertNull(ResHandshake1.decode(new byte[1]));
+
+        byte[] msg = new byte[2];
+        msg[1] = 2;
+        assertNull(ResHandshake1.decode(msg));
+    }
+
+    @Test
+    public void testEncode() {
+        String bv = "0.2.9";
+        ResHandshake1 rs1 = new ResHandshake1(true, bv);
+        assertNotNull(rs1);
+
+        byte[] ec = rs1.encode();
+        assertNotNull(ec);
+        assertEquals( 7, ec.length);
+        assertEquals( 0x01, ec[0]);
+        assertEquals( bv.length(), (int)ec[1]);
+        byte[] cmp = Arrays.copyOfRange(ec, 2, ec.length);
+
+        assertArrayEquals(bv.getBytes(), cmp);
+    }
+
+    @Test
+    public void testEncodeVerTruncated() {
+
+//        String myString
+//        String bv = new String()
+//
+//        StringBuilder bv = new StringBuilder();
+//        String truncatedBv;
+//
+//        char[] chars = Character.toChars(0x1F701);
+//        char[] chars2 = Character.toChars(0x1F702);
+//
+//
+//        for (int i=0; i< 63; i++) {
+//            bv.append(chars);
+//        }
+//        truncatedBv = bv.toString();
+//        bv.append(chars2);
+//
+//        ResHandshake1 rs1 = new ResHandshake1(true, bv.toString());
+//        assertNotNull(rs1);
+//
+//        byte[] ec = rs1.encode();
+//        assertNotNull(ec);
+//        assertEquals( 7, ec.length);
+//        assertEquals( 0x01, ec[0]);
+//        assertEquals( bv.length(), (int)ec[1]);
+//        byte[] cmp = Arrays.copyOfRange(ec, 2, ec.length);
+
+        //assertArrayEquals(bv.getBytes(), cmp);
     }
 }

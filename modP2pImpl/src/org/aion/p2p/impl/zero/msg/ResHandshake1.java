@@ -41,11 +41,14 @@ public final class ResHandshake1 extends ResHandshake {
 
     public ResHandshake1(boolean _success, String _binaryVersion) {
         super(_success);
-        // utf-8 - Max 4 bytes per character
+        // String coder has LATIN1 & UTF16
         // Since we are restricting the max byte length to 127,
-        // we will restrict this to under 32
+        // we will restrict this to under 63
+
+        int i = _binaryVersion.length();
+
         this.binaryVersion =
-                _binaryVersion.length() > 31 ? _binaryVersion.substring(0, 31) : _binaryVersion;
+                _binaryVersion.length() > 63 ? _binaryVersion.substring(0, 63) : _binaryVersion;
     }
 
     public static ResHandshake1 decode(final byte[] _bytes) {
@@ -55,10 +58,9 @@ public final class ResHandshake1 extends ResHandshake {
             try {
                 // decode binary version
                 byte len = _bytes[1];
-                String binaryVersion = "unknown";
-                int binaryVersionBytesLen = _bytes.length;
-                if (len > 0 && binaryVersionBytesLen >= MIN_LEN + len) {
+                if (len > 0 && _bytes.length >= MIN_LEN + len) {
                     byte[] binaryVersionBytes = Arrays.copyOfRange(_bytes, MIN_LEN, MIN_LEN + len);
+                    String binaryVersion;
                     try {
                         binaryVersion = new String(binaryVersionBytes, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
@@ -67,11 +69,17 @@ public final class ResHandshake1 extends ResHandshake {
                         }
                         return null;
                     }
+                    return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
+                } else {
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG.debug("res-handshake-decode length error. verLen={} msgLen={}" , len, _bytes.length);
+                    }
+                    return null;
                 }
-                return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
-
             } catch (Exception e) {
-                System.out.println("<p2p res-handshake-decode error=" + e.getMessage() + ">");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("res-handshake-decode error={}", e.getMessage());
+                }
                 return null;
             }
         }
