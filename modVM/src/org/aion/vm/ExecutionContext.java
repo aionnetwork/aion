@@ -78,14 +78,14 @@ public class ExecutionContext {
      * @throws IllegalArgumentException if any numeric quantities are negative or txHash is not
      * length 32.
      */
-    public ExecutionContext(@Nonnull byte[] txHash,@Nonnull Address recipient, @Nonnull Address origin,
+    public ExecutionContext(byte[] txHash, @Nonnull Address recipient, @Nonnull Address origin,
         @Nonnull Address caller, @Nonnull DataWord nrgPrice, long nrgLimit, @Nonnull DataWord callValue,
         @Nonnull byte[] callData, int depth, int kind, int flags, @Nonnull Address blockCoinbase,
         long blockNumber, long blockTimestamp, long blockNrgLimit, @Nonnull DataWord blockDifficulty) {
 
         super();
 
-        if (txHash.length != 32) { throw new IllegalArgumentException("txHash must be length 32."); }
+        if ((txHash != null) && (txHash.length != 32)) { throw new IllegalArgumentException("txHash must be length 32."); }
         if (nrgLimit < 0) { throw new IllegalArgumentException("nrgLimit " + NEG_MSG); }
         if (depth < 0) { throw new IllegalArgumentException("depth " + NEG_MSG); }
         if (blockNumber < 0) { throw new IllegalArgumentException("blockNumber " + NEG_MSG); }

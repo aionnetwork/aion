@@ -39,7 +39,6 @@ import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {
-
     protected static Logger LOGGER;
     protected static Object lock = new Object();
     protected IRepository repo;
@@ -49,8 +48,7 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
-    public AbstractExecutor(IRepository _repo,
-        boolean _localCall, long _blkRemainingNrg, Logger _logger) {
+    public AbstractExecutor(IRepository _repo, boolean _localCall, long _blkRemainingNrg, Logger _logger) {
         this.repo = _repo;
         this.repoTrack = repo.startTracking();
         this.isLocalCall = _localCall;
@@ -177,19 +175,20 @@ public abstract class AbstractExecutor {
      */
     @SuppressWarnings("unchecked")
     protected ITxReceipt buildReceipt(ITxReceipt receipt, ITransaction tx, List logs) {
+        //TODO probably remove receipt and instantiate a new empty one here?
         receipt.setTransaction(tx);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(getNrgUsed(tx.getNrg()));
-        receipt.setExecutionResult(exeResult.getOutput());
-        receipt
-            .setError(exeResult.getCode() == ResultCode.SUCCESS.toInt() ? ""
-                : ResultCode.fromInt(exeResult.getCode()).name());
+        receipt.setNrgUsed(getNrgUsed(tx.getNrg()));    // amount of energy used to execute tx
+        receipt.setExecutionResult(exeResult.getOutput());  // misnomer -> output is named result
+        receipt.setError(exeResult.getCode() == ResultCode.SUCCESS.toInt() ? ""
+            : ResultCode.fromInt(exeResult.getCode()).name());
 
         return receipt;
     }
 
-    protected void updateRepo(ITxExecSummary summary, ITransaction tx,
-        Address coinbase, List<Address> deleteAccounts) {
+    protected void updateRepo(ITxExecSummary summary, ITransaction tx, Address coinbase,
+        List<Address> deleteAccounts) {
+
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
             // refund nrg left
