@@ -71,7 +71,6 @@ public class Aion {
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
             if (!args[0].equals("--network")) {
-                System.out.println("Will Exit");
                 exit(ret);
             }
         }
@@ -130,7 +129,8 @@ public class Aion {
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         String logo =
-              "\n                     _____                  \n" +
+                "\n                                          \n" +
+                "                     _____                  \n" +
                 "      .'.       |  .~     ~.  |..          |\n" +
                 "    .'   `.     | |         | |  ``..      |\n" +
                 "  .''''''''`.   | |         | |      ``..  |\n" +
@@ -143,6 +143,15 @@ public class Aion {
         for (int i = 0; i < leftPad; i++) padVersionStr.append(" ");
         padVersionStr.append(versionStr);
         logo += padVersionStr.toString();
+        logo += "\n\n";
+
+        // always print the network string in the center of the Aion logo
+        String networkStr = CfgAion.getNetwork();
+        int leftPad2 = Math.round((44 - networkStr.length()) / 2.0f) + 1;
+        StringBuilder padNetworkStr = new StringBuilder();
+        for (int i = 0; i < leftPad2; i++) padNetworkStr.append(" ");
+        padNetworkStr.append(networkStr);
+        logo += padNetworkStr.toString();
         logo += "\n\n";
 
         genLog.info(logo);

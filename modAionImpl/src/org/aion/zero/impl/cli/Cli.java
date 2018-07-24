@@ -233,12 +233,14 @@ public class Cli {
                         switch (args[1].toLowerCase()) {
                             case "mainnet": {
                                 System.out.println("Path set to config/mainnet");
+                                CfgAion.setNetwork("mainnet");
                                 CfgAion.setConfFilePath("/home/joey/Desktop/IDE/aion/config/mainnet/config.xml");
                                 CfgAion.setGenesisFilePath("/home/joey/Desktop/IDE/aion/config/mainnet/genesis.json");
                                 break;
                             }
                             case "conquest": {
                                 System.out.println("Path set to config/conquest");
+                                CfgAion.setNetwork("conquest");
                                 CfgAion.setConfFilePath("/home/joey/Desktop/IDE/aion/config/conquest/config.xml");
                                 CfgAion.setGenesisFilePath("/home/joey/Desktop/IDE/aion/config/conquest/genesis.json");
                                 break;
@@ -248,6 +250,11 @@ public class Cli {
                         System.out.println("Invalid number of arguments");
                         return 1;
                     }
+                    break;
+                }
+
+                // TODO: Determine database folder path
+                case "--datadir": {
                     break;
                 }
 
