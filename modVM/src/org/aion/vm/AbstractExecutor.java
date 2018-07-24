@@ -28,6 +28,7 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.math.BigInteger;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -48,7 +49,8 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
-    public AbstractExecutor(IRepository _repo, boolean _localCall, long _blkRemainingNrg, Logger _logger) {
+    public AbstractExecutor(@Nonnull IRepository _repo, boolean _localCall, long _blkRemainingNrg,
+        @Nonnull Logger _logger) {
         this.repo = _repo;
         this.repoTrack = repo.startTracking();
         this.isLocalCall = _localCall;
@@ -149,32 +151,43 @@ public abstract class AbstractExecutor {
     protected abstract void create();
 
     /**
-     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is
-     * called.
+     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is called.
      */
     public void setBypassNonce() {
         this.askNonce = false;
     }
 
     /**
-     * Returns the nrg left after execution.
+     * Returns the energy remaining after the transaction was executed. Prior to execution this
+     * method simply returns the energy limit for the transaction.
+     *
+     * @return The energy left after the transaction executes or its energy limit prior to execution.
      */
     protected long getNrgLeft() {
         return exeResult.getNrgLeft();
     }
 
     /**
-     * Returns the nrg used after execution.
+     * Returns the energy remaining after the amount of leftover energy from the transaction
+     * execution is deducted from limit.
+     *
+     * @param limit The upper bound to deduct the transaction energy remainder from.
+     * @return the energy used as defined above.
      */
     private long getNrgUsed(long limit) {
         return limit - exeResult.getNrgLeft();
     }
 
     /**
-     * Returns the transaction receipt.
+     * Builds a new transaction receipt on top of receipt out of tx and logs.
+     *
+     * @param receipt The receipt to build off of.
+     * @param tx The transaction to which this receipt corresponds.
+     * @param logs The logs relating to the transaction execution.
+     * @return receipt with the new receipt added to it.
      */
     @SuppressWarnings("unchecked")
-    protected ITxReceipt buildReceipt(ITxReceipt receipt, ITransaction tx, List logs) {
+    protected ITxReceipt buildReceipt(@Nonnull ITxReceipt receipt, ITransaction tx, List logs) {
         //TODO probably remove receipt and instantiate a new empty one here?
         receipt.setTransaction(tx);
         receipt.setLogs(logs);
@@ -186,8 +199,20 @@ public abstract class AbstractExecutor {
         return receipt;
     }
 
-    protected void updateRepo(ITxExecSummary summary, ITransaction tx, Address coinbase,
-        List<Address> deleteAccounts) {
+    /**
+     * Updates the repository only if the call is not local and the transaction summary was not
+     * marked as rejected. If the repository qualifies for an update then it is updated as follows.
+     * The transaction sender is refunded for whatever outstanding energy was not consumed and the
+     * transaction energy consumption is set appropriately. The coinbase is paid its fee and all
+     * accounts marked for deletion (given that the transaction was successful) are deleted.
+     *
+     * @param summary The transaction summary.
+     * @param tx The transaction.
+     * @param coinbase The coinbase for the block in which the transaction was sealed.
+     * @param deleteAccounts The list of accounts to be deleted if tx was successful.
+     */
+    protected void updateRepo(@Nonnull ITxExecSummary summary, @Nonnull ITransaction tx,
+        @Nonnull Address coinbase, @Nonnull List<Address> deleteAccounts) {
 
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();

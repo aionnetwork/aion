@@ -79,7 +79,7 @@ public class AionTxExecSummary implements ITxExecSummary {
     private byte[] rlpEncoded;
     private boolean parsed;
 
-    protected AionTxExecSummary(AionTxReceipt receipt) {
+    public AionTxExecSummary(AionTxReceipt receipt) {
         this.parsed = true;
         this.receipt = receipt;
         this.value = toBI(this.getReceipt().getTransaction().getValue());
