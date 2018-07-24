@@ -130,6 +130,13 @@ public class TokenBridgeContractTest {
         ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
         assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
 
+        //set relayer
+        byte[] callPayload = new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
+                new AddressFVM(new ByteArrayWrapper(members[0].getAddress()))).encodeBytes();
+
+        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
         this.contract = new TokenBridgeContract(context(new Address(members[0].getAddress()),
@@ -171,15 +178,21 @@ public class TokenBridgeContractTest {
             sigChunk3.add(new AddressFVM(new ByteArrayWrapper(Arrays.copyOfRange(sig, 64, 96))));
         }
 
-        byte[] callPayload = new AbiEncoder(BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
+        callPayload = new AbiEncoder(BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
                 new AddressFVM(new ByteArrayWrapper(blockHash)),
                 addressList,
                 uintList,
                 sigChunk1,
                 sigChunk2,
                 sigChunk3).encodeBytes();
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+
+
+
+
+
     }
 
     private static byte[] generateSignature(byte[] blockHash, BridgeBundle[] bundles) {
