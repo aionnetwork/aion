@@ -34,6 +34,7 @@ import org.aion.mcf.types.AbstractBlock;
  */
 public abstract class Cfg {
 
+    // Removed abstract declarations of CONFIG and GENESIS paths
     protected static final String BASE_PATH = System.getProperty("user.dir");
 
     protected String mode;

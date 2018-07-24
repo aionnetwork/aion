@@ -31,6 +31,7 @@ import java.util.*;
 import org.aion.base.db.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.Hex;
+import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
@@ -52,6 +53,8 @@ public class AionRepositoryImpl
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
+    private static String dbPath = CfgDb.getPath();
+
     /**
      * used by getSnapShotTo
      *
@@ -72,7 +75,8 @@ public class AionRepositoryImpl
         private static final AionRepositoryImpl inst =
                 new AionRepositoryImpl(
                         new RepositoryConfig(
-                                new File(config.getBasePath(), config.getDb().getPath())
+                                // Allow path to be set by --datadir or config file
+                                new File(config.getBasePath(), dbPath)
                                         .getAbsolutePath(),
                                 ContractDetailsAion.getInstance(),
                                 config.getDb()));
@@ -753,5 +757,13 @@ public class AionRepositoryImpl
         } finally {
             rwLock.writeLock().unlock();
         }
+    }
+
+    public static void setDatabasePath(String value) {
+        dbPath = value;
+    }
+
+    public static String getDatabasePath() {
+        return dbPath;
     }
 }

@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +40,7 @@ import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
@@ -53,7 +53,7 @@ import java.util.UUID;
  */
 public class Cli {
 
-    protected static final String BASE_PATH = System.getProperty("user.dir");
+    private static final String BASE_PATH = System.getProperty("user.dir");
 
     public int call(final String[] args, final Cfg cfg) {
         try {
@@ -231,7 +231,7 @@ public class Cli {
 
                 // Determines network config folder path
                 case "--network": {
-                    if (args.length == 2) {
+                    if (args.length == 2 && isValid(args[1])) {
                         switch (args[1].toLowerCase()) {
                             case "mainnet": {
                                 CfgAion.setNetwork("mainnet");
@@ -253,14 +253,20 @@ public class Cli {
                             }
                         }
                     } else {
-                        System.out.println("Invalid number of arguments: Defaulted to mainnet");
+                        System.out.println("Invalid arguments: Defaulted to mainnet");
                         return 1;
                     }
                     break;
                 }
 
-                // TODO: Determine database folder path
+                // Determine database folder path
                 case "--datadir": {
+                    if (args.length == 2 && isValid(args[1])) {
+                        AionRepositoryImpl.setDatabasePath(args[1]);
+                    } else {
+                        System.out.println("Invalid arguments; Defaulted database path");
+                        return 1;
+                    }
                     break;
                 }
 
@@ -531,5 +537,9 @@ public class Cli {
         }
 
         return RecoveryUtils.revertTo(block);
+    }
+
+    public static boolean isValid (String value) {
+        return value.length() > 0 && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 }

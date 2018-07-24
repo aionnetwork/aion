@@ -70,12 +70,10 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            if (!args[0].equals("--network")) {
+            if (!args[0].matches("--network|--datadir")) {
                 exit(ret);
             }
         }
-        System.out.println("CONFIG: " + CfgAion.getConfFilePath());
-        System.out.println("GENESIS: " + CfgAion.getGenesisFilePath());
 
         /*
          * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]
@@ -99,19 +97,19 @@ public class Aion {
          */
         String UUID = cfg.getId();
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
-            System.out.println("Invalid UUID; please check <id> setting in config.xml");
+            System.out.println("Invalid UUID; please check config settings");
             exit(-1);
         }
 
         /* Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out
-                .println("Logger disabled; to enable please check <log> settings in config.xml");
+                .println("Logger disabled; enable under config settings");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Invalid file path; please check <log> setting in config.xml");
+            System.out.println("Invalid log path; please check config settings");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
+            System.out.println("Log Folder: " + cfg.getLog().getLogPath());
         }
 
         // get the ssl password synchronously from the console, only if required
