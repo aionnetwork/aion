@@ -25,6 +25,7 @@ package org.aion.vm;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -84,8 +85,7 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      * @throws NullPointerException if code is null.
      * @throws IllegalArgumentException if nrgLeft is negative.
      */
-    public AbstractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
-        if (code == null) { throw new NullPointerException("create with null code."); }
+    public AbstractExecutionResult(@Nonnull ResultCode code, long nrgLeft, byte[] output) {
         if (nrgLeft < 0) { throw new IllegalArgumentException("create with negative nrgLeft."); }
         this.code = code;
         this.nrgLeft = nrgLeft;

@@ -25,6 +25,7 @@ package org.aion.vm;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import javax.annotation.Nonnull;
 
 /**
  * A ExecutionResult is the result of a VM execution. It contains the VM status
@@ -41,7 +42,7 @@ public final class ExecutionResult extends AbstractExecutionResult {
      * @param nrgLeft The energy remaining after the execution.
      * @param output The output of the execution.
      */
-    public ExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
+    public ExecutionResult(@Nonnull ResultCode code, long nrgLeft, byte[] output) {
         super(code, nrgLeft, output);
     }
 
@@ -51,7 +52,7 @@ public final class ExecutionResult extends AbstractExecutionResult {
      * @param code The result code of the execution.
      * @param nrgLeft The energy remaining after the execution.
      */
-    public ExecutionResult(ResultCode code, long nrgLeft) {
+    public ExecutionResult(@Nonnull ResultCode code, long nrgLeft) {
         super(code, nrgLeft);
     }
 
@@ -61,7 +62,7 @@ public final class ExecutionResult extends AbstractExecutionResult {
      *
      * @param encoding A big-endian binary encoding of an ExecutionResult.
      */
-    public static ExecutionResult parse(byte[] encoding) {
+    public static ExecutionResult parse(@Nonnull byte[] encoding) {
         ByteBuffer buffer = ByteBuffer.wrap(encoding);
         buffer.order(ByteOrder.BIG_ENDIAN);
 

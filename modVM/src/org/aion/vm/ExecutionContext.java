@@ -22,6 +22,7 @@ package org.aion.vm;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import javax.annotation.Nonnull;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.DataWord;
 
@@ -31,7 +32,6 @@ import org.aion.mcf.vm.types.DataWord;
  * @author yulong
  */
 public class ExecutionContext {
-    private static final String NULL_MSG = "create ExecutionContext with null ";
     private static final String NEG_MSG = "must be non-negative.";
     public static int CALL = 0;
     public static int DELEGATECALL = 1;
@@ -75,26 +75,17 @@ public class ExecutionContext {
      * @param blockTimestamp The block timestamp.
      * @param blockNrgLimit The block energy limit.
      * @param blockDifficulty The block difficulty.
-     * @throws NullPointerException if any of the parameter objects are null.
      * @throws IllegalArgumentException if any numeric quantities are negative or txHash is not
      * length 32.
      */
-    public ExecutionContext(byte[] txHash, Address recipient, Address origin, Address caller,
-        DataWord nrgPrice, long nrgLimit, DataWord callValue, byte[] callData, int depth, int kind,
-        int flags, Address blockCoinbase, long blockNumber, long blockTimestamp, long blockNrgLimit,
-        DataWord blockDifficulty) {
+    public ExecutionContext(@Nonnull byte[] txHash,@Nonnull Address recipient, @Nonnull Address origin,
+        @Nonnull Address caller, @Nonnull DataWord nrgPrice, long nrgLimit, @Nonnull DataWord callValue,
+        @Nonnull byte[] callData, int depth, int kind, int flags, @Nonnull Address blockCoinbase,
+        long blockNumber, long blockTimestamp, long blockNrgLimit, @Nonnull DataWord blockDifficulty) {
 
         super();
 
-        if (recipient == null) { throw new NullPointerException(NULL_MSG + " recipient."); }
-        if (origin == null) { throw new NullPointerException(NULL_MSG + " origin."); }
-        if (caller == null) { throw new NullPointerException(NULL_MSG + " caller."); }
-        if (nrgPrice == null) { throw new NullPointerException(NULL_MSG + " nrgPrice."); }
-        if (callValue == null) { throw new NullPointerException(NULL_MSG + " callValue."); }
-        if (callData == null) { throw new NullPointerException(NULL_MSG + " callData."); }
-        if (blockCoinbase == null) { throw new NullPointerException(NULL_MSG + " blockCoinbase."); }
-        if (blockDifficulty == null) { throw new NullPointerException(NULL_MSG + " blockDifficulty."); }
-        if ((txHash != null) && (txHash.length != 32)) { throw new IllegalArgumentException("txHash must be length 32."); }
+        if (txHash.length != 32) { throw new IllegalArgumentException("txHash must be length 32."); }
         if (nrgLimit < 0) { throw new IllegalArgumentException("nrgLimit " + NEG_MSG); }
         if (depth < 0) { throw new IllegalArgumentException("depth " + NEG_MSG); }
         if (blockNumber < 0) { throw new IllegalArgumentException("blockNumber " + NEG_MSG); }
@@ -277,8 +268,7 @@ public class ExecutionContext {
      *
      * @param recipient The new recipient.
      */
-    public void setRecipient(Address recipient) {
-        if (recipient == null) { throw new NullPointerException("set null recipient."); }
+    public void setRecipient(@Nonnull Address recipient) {
         this.recipient = recipient;
     }
 
