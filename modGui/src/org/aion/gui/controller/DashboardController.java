@@ -11,6 +11,7 @@ import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.KernelProcEvent;
 import org.aion.gui.events.RefreshEvent;
+import org.aion.gui.events.UnexpectedApiDisconnectedEvent;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
@@ -18,9 +19,12 @@ import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.gui.util.DataUpdater;
 import org.aion.gui.util.SyncStatusFormatter;
 import org.aion.log.AionLoggerFactory;
+import org.aion.os.KernelControlException;
 import org.aion.os.KernelLauncher;
+import org.aion.os.UnixKernelProcessHealthChecker;
 import org.slf4j.Logger;
 
+import java.awt.image.Kernel;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -28,8 +32,8 @@ public class DashboardController extends AbstractController {
     private final KernelLauncher kernelLauncher;
     private final KernelConnection kernelConnection;
     private final KernelUpdateTimer kernelUpdateTimer;
-
     private final GeneralKernelInfoRetriever generalKernelInfoRetriever;
+    private final UnixKernelProcessHealthChecker unixKernelProcessHealthChecker;
     private final SyncInfoDto syncInfoDTO;
 
     @FXML private Button launchKernelButton;
@@ -47,11 +51,13 @@ public class DashboardController extends AbstractController {
                                KernelConnection kernelConnection,
                                KernelUpdateTimer kernelUpdateTimer,
                                GeneralKernelInfoRetriever generalKernelInfoRetriever,
+                               UnixKernelProcessHealthChecker unixKernelProcessHealthChecker,
                                SyncInfoDto syncInfoDTO) {
         this.kernelConnection = kernelConnection;
         this.kernelLauncher = kernelLauncher;
         this.kernelUpdateTimer = kernelUpdateTimer;
         this.generalKernelInfoRetriever = generalKernelInfoRetriever;
+        this.unixKernelProcessHealthChecker = unixKernelProcessHealthChecker;
         this.syncInfoDTO = syncInfoDTO;
     }
 
@@ -84,7 +90,7 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleUiTimerTick(RefreshEvent event) {
-        LOG.trace("DashboardController#handleUiTimerTick");
+        System.out.println("DashboardController#handleUiTimerTick -> " + event.getType());
         // peer count
         final Task<Integer> getPeerCountTask = getApiTask(o -> generalKernelInfoRetriever.getPeerCount(), null);
         runApiTask(
@@ -113,7 +119,6 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleKernelLaunched(final KernelProcEvent.KernelLaunchedEvent ev) {
-        LOG.trace("handleKernelLaunched");
         kernelConnection.connect(); // TODO: what if we launched the process but can't connect?
         kernelUpdateTimer.start();
         Platform.runLater( () -> {
@@ -134,6 +139,31 @@ public class DashboardController extends AbstractController {
         });
     }
 
+    @Subscribe
+    private void handleUnexpectedApiDisconnect(UnexpectedApiDisconnectedEvent event) {
+        final boolean isRunning;
+        try {
+            isRunning = unixKernelProcessHealthChecker.checkIfKernelRunning(
+                    kernelLauncher.getLaunchedInstance().getPid());
+        } catch (KernelControlException kce) {
+            // If we get here we're so broken we don't know how to proceed; either the OS
+            // is in a broken state or there's a bug/defect within our code.
+            LOG.error("Detected disconnection from Kernel API, but was not able to determine state of Kernel process.  " +
+                    "It is recommended that you restart the GUI.");
+            return;
+        }
+
+        if(isRunning) {
+            LOG.error("Detected disconnection from Kernel API, but Kernel process is still running.  " +
+                    "It is recommended that you terminate the kernel and re-launch it.");
+        } else {
+            LOG.info("Detected unexpected termination of Kernel API.  Internal resources will be cleaned up.");
+            kernelUpdateTimer.stop();
+            kernelConnection.disconnect();
+            kernelLauncher.cleanUpDeadProcess();
+        }
+    }
+
     // -- Handlers for View components ------------------------------------------------------------
     public void launchKernel(MouseEvent ev) throws Exception {
         disableLaunchTerminateButtons();
@@ -146,28 +176,30 @@ public class DashboardController extends AbstractController {
     }
 
     public void terminateKernel(MouseEvent ev) throws Exception {
-        LOG.info("terminateKernel");
         disableLaunchTerminateButtons();
         kernelStatusLabel.setText("Terminating...");
 
-        try {
-            if (kernelLauncher.hasLaunchedInstance()
-                    || (!kernelLauncher.hasLaunchedInstance() && kernelLauncher.tryResume())) {
-                kernelUpdateTimer.stop();
-//                runApiTask(
-//                        () -> {
-//
-//                        },
-//                        evt -> Platform.runLater(() -> isMining.setText(String.valueOf(getMiningStatusTask.getValue()))),
-//                        getErrorEvent(throwable -> {}, getSyncInfoTask),
-//                        getEmptyEvent()
-//                );
+        if (kernelLauncher.hasLaunchedInstance()
+                || (!kernelLauncher.hasLaunchedInstance() && kernelLauncher.tryResume())) {
+            kernelUpdateTimer.stop();
+            final Task<Integer> termKernel = getApiTask(o -> {
                 kernelConnection.disconnect();
-                kernelLauncher.terminate();
-            }
-        } catch (RuntimeException ex) {
-            LOG.error("Termination error", ex);
-            enableLaunchButton();
+                try {
+                    kernelLauncher.terminate();
+                } catch (Exception e) {
+                    throw new RuntimeException(e); // you can only use unchecked exceptions in the task?
+                }
+                return null;
+            }, null);
+            runApiTask(
+                    termKernel,
+                    evt -> enableLaunchButton(),
+                    getErrorEvent(throwable -> {
+                        LOG.error("Error terminating the kernel", throwable);
+                        enableTerminateButton();
+                    }, termKernel),
+                    getEmptyEvent()
+            );
         }
     }
 

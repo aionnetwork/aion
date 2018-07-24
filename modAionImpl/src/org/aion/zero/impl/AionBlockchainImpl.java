@@ -1275,7 +1275,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
     /**
      * Finds up to limit blocks starting from blockNumber on main chain
      *
-
      * @param bestNumber
      *         Number of best block
      * @param blockNumber

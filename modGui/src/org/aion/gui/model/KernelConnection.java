@@ -3,12 +3,15 @@ package org.aion.gui.model;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.RefreshEvent;
+import org.aion.gui.events.UnexpectedApiDisconnectedEvent;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
+import org.aion.os.UnixKernelProcessHealthChecker;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;

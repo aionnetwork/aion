@@ -6,6 +6,7 @@ import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.os.KernelLauncher;
+import org.aion.os.UnixKernelProcessHealthChecker;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
@@ -50,6 +51,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelConnection,
                     kernelUpdateTimer,
                     generalKernelInfoRetriever,
+                    new UnixKernelProcessHealthChecker(),
                     syncInfoDto
             ));
             /*put(SettingsController.class, () -> new SettingsController(

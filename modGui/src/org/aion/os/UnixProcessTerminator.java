@@ -79,12 +79,11 @@ public class UnixProcessTerminator {
      * until give up" duration is reached.  If the latter, throw exception.
      *
      * @param kernelInstanceId kernel instance that needs to be killed
-     * @param username user that is running the kernel process
      * @throws KernelControlException if an error happens while trying to kill process, or if both
      *                                timeouts are reached but process still running
      */
-    public void terminateAndAwait(KernelInstanceId kernelInstanceId,
-                                  String username) throws KernelControlException {
+    public void terminateAndAwait(KernelInstanceId kernelInstanceId)
+            throws KernelControlException {
         long unixPid = kernelInstanceId.getPid();
         boolean terminated = false;
 

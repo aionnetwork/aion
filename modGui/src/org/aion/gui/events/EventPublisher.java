@@ -1,7 +1,9 @@
 package org.aion.gui.events;
 
+import org.aion.gui.model.KernelConnection;
 import org.aion.gui.util.DataUpdater;
 import org.aion.log.AionLoggerFactory;
+import org.aion.os.KernelLauncher;
 import org.slf4j.Logger;
 
 public class EventPublisher {
@@ -31,4 +33,9 @@ public class EventPublisher {
 //    public static void fireApplicationSettingsChanged(final LightAppSettings settings){
 //        EventBusRegistry.INSTANCE.getBus(SETTINGS_CHANGED_ID).post(settings);
 //    }
+
+    public static void fireUnexpectedApiDisconnection(){
+        EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS)
+                .post(new UnexpectedApiDisconnectedEvent());
+    }
 }

@@ -10,7 +10,6 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.slf4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -19,13 +18,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /** Facilitates launching an instance of the Kernel and managing the launched instance. */
 public class KernelLauncher {
@@ -33,6 +27,7 @@ public class KernelLauncher {
     private final KernelLaunchConfigurator kernelLaunchConfigurator;
     private final EventBusRegistry eventBusRegistry;
     private final UnixProcessTerminator unixProcessTerminator;
+    private final UnixKernelProcessHealthChecker healthChecker;
     private final File pidFile;
     private final ExecutorService executor;
 
@@ -48,11 +43,13 @@ public class KernelLauncher {
      */
     public KernelLauncher(CfgGuiLauncher config,
                           EventBusRegistry eventBusRegistry,
-                          UnixProcessTerminator terminator) {
+                          UnixProcessTerminator terminator,
+                          UnixKernelProcessHealthChecker healthChecker) {
         this(config,
                 new KernelLaunchConfigurator(),
                 eventBusRegistry,
                 terminator,
+                healthChecker,
                 (config.getKernelPidFile() != null ?
                         new File(config.getKernelPidFile()) :
                         choosePidStorageLocation()),
@@ -65,12 +62,14 @@ public class KernelLauncher {
                                       KernelLaunchConfigurator klc,
                                       EventBusRegistry ebr,
                                       UnixProcessTerminator terminator,
+                                      UnixKernelProcessHealthChecker healthChecker,
                                       File pidFile,
                                       ExecutorService executorService) {
         this.config = config;
         this.kernelLaunchConfigurator = klc;
         this.eventBusRegistry = ebr;
         this.unixProcessTerminator = terminator;
+        this.healthChecker = healthChecker;
         this.pidFile = pidFile;
         this.executor = executorService;
     }
@@ -153,8 +152,23 @@ public class KernelLauncher {
 
         if(pidFile.exists() && !pidFile.isDirectory()) {
             try {
-                setCurrentInstance(retrieveAndSetPid(pidFile));
+                KernelInstanceId pid = retrievePid(pidFile);
+                if (!healthChecker.checkIfKernelRunning(pid.getPid())) {
+                    LOGGER.debug("Found old kernel pid, but the process is no longer running.  Will clean up.");
+                    cleanUpDeadProcess();
+                    return false;
+                }
+
+                setCurrentInstance(pid);
                 LOGGER.debug("Found old kernel pid = {}", currentInstance.getPid());
+                return true;
+            } catch (KernelControlException kce) {
+                // if we got here, we somehow couldn't figure out if process was running or not
+                // assume that it is -- if API fails to connect, DashboardController will
+                // handle that later.
+                LOGGER.warn(
+                        "Found old kernel pid = {} but could not determine if it is really running.  Assuming that it is.",
+                        currentInstance.getPid());
                 return true;
             } catch (ClassNotFoundException | IOException ex) {
                 LOGGER.error("Found old kernel pid file at {}, but failed to deserialize it, " +
@@ -179,7 +193,7 @@ public class KernelLauncher {
         if(!hasLaunchedInstance()) {
             throw new IllegalArgumentException("Trying to terminate when there is no running instance");
         }
-        executor.unixProcessTerminator.terminateAndAwait(currentInstance, System.getProperty("user.name"));
+        unixProcessTerminator.terminateAndAwait(currentInstance);
         removePersistedPid();
         setCurrentInstance(null);
     }
@@ -194,7 +208,22 @@ public class KernelLauncher {
         return currentInstance != null;
     }
 
-    private KernelInstanceId retrieveAndSetPid(File pidFile) throws IOException, ClassNotFoundException {
+    /** @return if kernel launched, return its instance id; otherwise, null */
+    public KernelInstanceId getLaunchedInstance() {
+        return this.currentInstance;
+    }
+
+    /**
+     * Resets the state of kernel launcher (and any resources it has persisted to disk) to as if the kernel
+     * is not launched.  Intended to be called when we detect that the process died through some mechanism
+     * that is not {@link #terminate()}, i.e. someone killed the process with their OS task manager.
+     */
+    public void cleanUpDeadProcess() {
+        removePersistedPid();
+        setCurrentInstance(null);
+    }
+
+    private KernelInstanceId retrievePid(File pidFile) throws IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream(pidFile);
         ObjectInputStream ois = new ObjectInputStream(fis);
         return (KernelInstanceId) ois.readObject();
