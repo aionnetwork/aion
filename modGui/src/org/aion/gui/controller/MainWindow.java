@@ -113,7 +113,8 @@ public class MainWindow extends Application {
                 EventBusRegistry.INSTANCE);
         kc = new KernelConnection(
                 CfgAion.inst().getApi(),
-                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
+                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS),
+                consoleManager);
         try {
             walletStorage = new WalletStorage();
         } catch (IOException ioe) {

@@ -15,7 +15,7 @@ public class ConnectivityStatusController extends AbstractController {
     private KernelConnection kc;
 
     private static final String CONNECTIVITY_STATUS_CONNECTED = "CONNECTED";
-    private static final String CONNECTIVITY_STATUS_DISCONNECTED = "DISCONNECTED";
+    private static final String CONNECTIVITY_STATUS_DISCONNECTED = "NOT CONNECTED";
 
     @FXML
     private Label connectivityLabel;

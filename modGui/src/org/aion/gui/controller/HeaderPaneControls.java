@@ -33,22 +33,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 public class HeaderPaneControls extends AbstractController {
-
-    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.GUI.name());
-
-    private static final String STYLE_DEFAULT = "header-button-default";
-
-    private static final String STYLE_PRESSED = "header-button-pressed";
-
-    private final BalanceDto balanceDto;
-
-    private final Map<Node, HeaderPaneButtonEvent> headerButtons = new HashMap<>();
-
-    public HeaderPaneControls(BalanceDto balanceDto) {
-        this.balanceDto = balanceDto;
-        this.accountAddress = "";
-    }
-
     @FXML
     private TextField accountBalance;
     @FXML
@@ -69,6 +53,19 @@ public class HeaderPaneControls extends AbstractController {
     private VBox settingsButton;
 
     private String accountAddress;
+
+    private final BalanceDto balanceDto;
+    private final Map<Node, HeaderPaneButtonEvent> headerButtons;
+
+    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+    private static final String STYLE_DEFAULT = "header-button-default";
+    private static final String STYLE_PRESSED = "header-button-pressed";
+
+    public HeaderPaneControls(BalanceDto balanceDto) {
+        this.balanceDto = balanceDto;
+        this.headerButtons = new HashMap<>();
+        this.accountAddress = "";
+    }
 
     @Override
     public void internalInit(URL location, ResourceBundle resources) {
@@ -96,13 +93,11 @@ public class HeaderPaneControls extends AbstractController {
         for (final Node headerButton : headerButtons.keySet()) {
             headerButton.getStyleClass().clear();
             if (pressed.getSource().equals(headerButton)) {
-                System.out.println("pressed.getSource = " + pressed.getSource() + "-> pressed");
                 headerButton.getStyleClass().add(STYLE_PRESSED);
                 setStyleToChildren(headerButton, "header-button-label-pressed");
                 HeaderPaneButtonEvent headerPaneButtonEvent = headerButtons.get(headerButton);
                 sendPressedEvent(headerPaneButtonEvent);
             } else {
-                System.out.println("pressed.getSource = " + pressed.getSource() + "-> default");
                 headerButton.getStyleClass().add(STYLE_DEFAULT);
                 setStyleToChildren(headerButton, "header-button-label");
             }

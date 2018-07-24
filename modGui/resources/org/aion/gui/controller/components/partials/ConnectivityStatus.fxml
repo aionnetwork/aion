@@ -14,6 +14,6 @@
         <URL value="@../footer-pane.css" />
     </stylesheets>
     <HBox spacing="10" AnchorPane.rightAnchor="0.0">
-        <Label fx:id="connectivityLabel" styleClass="connected-label" text="Connecting.."/>
+        <Label fx:id="connectivityLabel" styleClass="connected-label" text="NOT CONNECTED"/>
     </HBox>
 </VBox>

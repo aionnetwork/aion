@@ -10,11 +10,14 @@ import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
+import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import static org.aion.wallet.console.ConsoleManager.LogType.KERNEL;
 
 /**
  * Represents a connection to the kernel; provides interface to connect/disconnect to kernel API
@@ -26,6 +29,7 @@ public class KernelConnection {
     private final CfgApi cfgApi;
     private final IAionAPI api;
     private final EventBus eventBus;
+    private final ConsoleManager consoleManager;
 
     private Future<?> connectionFuture;
     private Future<?> disconnectionFuture;
@@ -39,8 +43,9 @@ public class KernelConnection {
      * @param eventBus Event bus to which notifications about connection state changes are sent
      */
     public KernelConnection(CfgApi cfgApi,
-                            EventBus eventBus) {
-        this(AionAPIImpl.inst(), cfgApi, eventBus, Executors.newSingleThreadExecutor());
+                            EventBus eventBus,
+                            ConsoleManager consoleManager) {
+        this(AionAPIImpl.inst(), cfgApi, eventBus, consoleManager, Executors.newSingleThreadExecutor());
     }
 
 
@@ -55,10 +60,12 @@ public class KernelConnection {
     @VisibleForTesting KernelConnection(IAionAPI aionApi,
                                         CfgApi cfgApi,
                                         EventBus eventBus,
+                                        ConsoleManager consoleManager,
                                         ExecutorService executorService) {
         this.api = aionApi;
         this.cfgApi = cfgApi;
         this.eventBus = eventBus;
+        this.consoleManager = consoleManager;
         this.backgroundExecutor = executorService;
     }
 
@@ -77,9 +84,9 @@ public class KernelConnection {
                     // log if it does.
                     LOG.error("Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
                             msg.getErrorCode(), msg.getErrString());
+                    consoleManager.addLog("Error connecting to kernel", KERNEL);
                 } else {
-//                    eventBus.post(new RefreshEvent(RefreshEvent.Type.TRANSACTION_FINISHED));
-                    System.out.println("KernelConnection#connect() doing EventPublisher.fireConnectionEstablished()");
+                    consoleManager.addLog("Connected to kernel", KERNEL);
                     EventPublisher.fireConnectionEstablished();
                     // TODO: ApiBlockchainConnector#connect has processTRansactionsOnReconnect() here now.  Do we need that too?
                 }
@@ -103,6 +110,7 @@ public class KernelConnection {
                 LOG.trace("About to destroy API");
                 api.destroyApi().getObject();
             }
+            consoleManager.addLog("Disconnected from kernel", KERNEL);
         });
 
     }

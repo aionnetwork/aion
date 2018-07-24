@@ -56,6 +56,7 @@ public class ConsoleManager {
     }
 
     public enum LogType {
+        KERNEL,
         ACCOUNT,
         TRANSACTION,
         SETTINGS
