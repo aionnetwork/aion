@@ -49,12 +49,12 @@ public final class Hello extends Msg {
         return this.msg;
     }
 
-    public static Hello decode(final byte[] _bytes) {
-        String msg = "";
+    public static Hello decode(final byte[] _bytes) throws UnsupportedEncodingException {
+        String msg;
         try{
             msg = new String(_bytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-
+            throw e;
         }
         return new Hello(msg);
     }

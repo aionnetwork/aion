@@ -26,6 +26,7 @@
 package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.Ctrl;
@@ -48,12 +49,16 @@ public class ResHandshakeTest {
 
     @Test
     public void testEncodeDecode() {
-
         ResHandshake mh1 = new ResHandshake(ThreadLocalRandom.current().nextBoolean());
         byte[] mhBytes = mh1.encode();
         ResHandshake mh2 = ResHandshake.decode(mhBytes);
         assertEquals(mh1.getSuccess(), mh2.getSuccess());
-
     }
 
+    @Test
+    public void testDecodeNull() {
+        assertNull(ResHandshake1.decode(null));
+        assertNull(ResHandshake1.decode(new byte[1]));
+
+    }
 }

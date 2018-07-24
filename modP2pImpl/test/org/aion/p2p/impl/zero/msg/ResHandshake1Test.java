@@ -26,6 +26,7 @@
 package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -73,5 +74,10 @@ public class ResHandshake1Test {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Test
+    public void testDecodeNull() {
+        assertNull(ResActiveNodes.decode(null));
     }
 }
