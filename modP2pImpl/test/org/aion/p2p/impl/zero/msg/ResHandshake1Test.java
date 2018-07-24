@@ -107,31 +107,27 @@ public class ResHandshake1Test {
     @Test
     public void testEncodeVerTruncated() {
 
-//        String myString
-//        String bv = new String()
-//
-//        StringBuilder bv = new StringBuilder();
-//        String truncatedBv;
-//
-//        char[] chars = Character.toChars(0x1F701);
-//        char[] chars2 = Character.toChars(0x1F702);
-//
-//
-//        for (int i=0; i< 63; i++) {
-//            bv.append(chars);
-//        }
-//        truncatedBv = bv.toString();
-//        bv.append(chars2);
-//
-//        ResHandshake1 rs1 = new ResHandshake1(true, bv.toString());
-//        assertNotNull(rs1);
-//
-//        byte[] ec = rs1.encode();
-//        assertNotNull(ec);
-//        assertEquals( 7, ec.length);
-//        assertEquals( 0x01, ec[0]);
-//        assertEquals( bv.length(), (int)ec[1]);
-//        byte[] cmp = Arrays.copyOfRange(ec, 2, ec.length);
+
+        StringBuilder bv = new StringBuilder();
+        String truncatedBv;
+
+        for (int i=0; i< Byte.MAX_VALUE; i++) {
+            bv.append("1");
+        }
+        truncatedBv = bv.toString();
+        bv.append("2");
+
+        ResHandshake1 rs1 = new ResHandshake1(true, bv.toString());
+        assertNotNull(rs1);
+
+        assertEquals(rs1.getBinaryVersion(), truncatedBv);
+
+        byte[] ec = rs1.encode();
+        assertNotNull(ec);
+        assertEquals( 7, ec.length);
+        assertEquals( 0x01, ec[0]);
+        assertEquals( bv.length(), (int)ec[1]);
+        byte[] cmp = Arrays.copyOfRange(ec, 2, ec.length);
 
         //assertArrayEquals(bv.getBytes(), cmp);
     }

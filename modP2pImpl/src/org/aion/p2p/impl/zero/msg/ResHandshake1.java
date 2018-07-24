@@ -41,14 +41,17 @@ public final class ResHandshake1 extends ResHandshake {
 
     public ResHandshake1(boolean _success, String _binaryVersion) {
         super(_success);
+
         // String coder has LATIN1 & UTF16
         // Since we are restricting the max byte length to 127,
         // we will restrict this to under 63
 
-        int i = _binaryVersion.length();
-
-        this.binaryVersion =
-                _binaryVersion.length() > 63 ? _binaryVersion.substring(0, 63) : _binaryVersion;
+        int byteLen = _binaryVersion.getBytes().length;
+        if (byteLen > Byte.MAX_VALUE) {
+            this.binaryVersion = _binaryVersion.substring(0, 63);
+        } else {
+            this.binaryVersion = _binaryVersion;
+        }
     }
 
     public static ResHandshake1 decode(final byte[] _bytes) {
