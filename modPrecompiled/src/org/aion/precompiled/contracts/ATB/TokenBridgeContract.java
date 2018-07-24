@@ -170,7 +170,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             case PURE_MEMBER_COUNT:
                 return success(intToResultBytes(this.connector.getMemberCount()));
             case PURE_RING_MAP: {
-                byte[] address = parseAddressFromCall(input);
+                address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
                 return success(booleanToResultBytes(this.connector.getActiveMember(address)));
