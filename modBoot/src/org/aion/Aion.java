@@ -74,8 +74,8 @@ public class Aion {
                 exit(ret);
             }
         }
-        System.out.println("CONFIG FILE: " + CfgAion.getConfFilePath());
-        System.out.println("GENESIS FILE: " + CfgAion.getGenesisFilePath());
+        System.out.println("CONFIG: " + CfgAion.getConfFilePath());
+        System.out.println("GENESIS: " + CfgAion.getGenesisFilePath());
 
         /*
          * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]

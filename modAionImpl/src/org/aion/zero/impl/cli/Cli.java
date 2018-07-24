@@ -53,6 +53,8 @@ import java.util.UUID;
  */
 public class Cli {
 
+    protected static final String BASE_PATH = System.getProperty("user.dir");
+
     public int call(final String[] args, final Cfg cfg) {
         try {
             cfg.fromXML();
@@ -227,27 +229,31 @@ public class Cli {
                     }
                     break;
 
-                // TODO: Determine network config folder path
+                // Determines network config folder path
                 case "--network": {
                     if (args.length == 2) {
                         switch (args[1].toLowerCase()) {
                             case "mainnet": {
-                                System.out.println("Path set to config/mainnet");
                                 CfgAion.setNetwork("mainnet");
-                                CfgAion.setConfFilePath("/home/joey/Desktop/IDE/aion/config/mainnet/config.xml");
-                                CfgAion.setGenesisFilePath("/home/joey/Desktop/IDE/aion/config/mainnet/genesis.json");
+                                CfgAion.setConfFilePath((BASE_PATH + "/config/mainnet/config.xml"));
+                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/mainnet/genesis.json"));
                                 break;
                             }
                             case "conquest": {
-                                System.out.println("Path set to config/conquest");
                                 CfgAion.setNetwork("conquest");
-                                CfgAion.setConfFilePath("/home/joey/Desktop/IDE/aion/config/conquest/config.xml");
-                                CfgAion.setGenesisFilePath("/home/joey/Desktop/IDE/aion/config/conquest/genesis.json");
+                                CfgAion.setConfFilePath((BASE_PATH + "/config/conquest/config.xml"));
+                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/conquest/genesis.json"));
+                                break;
+                            }
+                            default: {
+                                CfgAion.setNetwork("mainnet");
+                                CfgAion.setConfFilePath((BASE_PATH + "/config/mainnet/config.xml"));
+                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/mainnet/genesis.json"));
                                 break;
                             }
                         }
                     } else {
-                        System.out.println("Invalid number of arguments");
+                        System.out.println("Invalid number of arguments: Defaulted to mainnet");
                         return 1;
                     }
                     break;
