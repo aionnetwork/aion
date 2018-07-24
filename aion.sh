@@ -209,8 +209,12 @@ else
 	trap "exit_kernel" EXIT
 
 	exit_kernel() {
+        echo "<<< exit_kernel() >>>"
 		if [ ! -z "$kernel_pid" ]; then
 			kill "$kernel_pid" &> /dev/null
+            echo "<<<About to wait...>>>"
+            wait "$kernel_pid"
+            echo "<<<Wait done.>>>"
 		fi
 		exit 1
 	}

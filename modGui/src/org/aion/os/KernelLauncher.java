@@ -10,6 +10,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.slf4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,13 +19,22 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Facilitates launching an instance of the Kernel and managing the launched instance. */
 public class KernelLauncher {
     private final CfgGuiLauncher config;
     private final KernelLaunchConfigurator kernelLaunchConfigurator;
     private final EventBusRegistry eventBusRegistry;
+    private final UnixProcessTerminator unixProcessTerminator;
     private final File pidFile;
+    private final ExecutorService executor;
 
     private KernelInstanceId currentInstance = null;
 
@@ -37,11 +47,16 @@ public class KernelLauncher {
      *      the parameters
      */
     public KernelLauncher(CfgGuiLauncher config,
-                          EventBusRegistry eventBusRegistry) {
-        this(config, new KernelLaunchConfigurator(), eventBusRegistry,
+                          EventBusRegistry eventBusRegistry,
+                          UnixProcessTerminator terminator) {
+        this(config,
+                new KernelLaunchConfigurator(),
+                eventBusRegistry,
+                terminator,
                 (config.getKernelPidFile() != null ?
                         new File(config.getKernelPidFile()) :
-                        choosePidStorageLocation())
+                        choosePidStorageLocation()),
+                Executors.newSingleThreadExecutor()
         );
     }
 
@@ -49,11 +64,15 @@ public class KernelLauncher {
     @VisibleForTesting KernelLauncher(CfgGuiLauncher config,
                                       KernelLaunchConfigurator klc,
                                       EventBusRegistry ebr,
-                                      File pidFile) {
+                                      UnixProcessTerminator terminator,
+                                      File pidFile,
+                                      ExecutorService executorService) {
         this.config = config;
         this.kernelLaunchConfigurator = klc;
         this.eventBusRegistry = ebr;
+        this.unixProcessTerminator = terminator;
         this.pidFile = pidFile;
+        this.executor = executorService;
     }
 
     /**
@@ -128,7 +147,8 @@ public class KernelLauncher {
      */
     public boolean tryResume() throws ClassNotFoundException, IOException {
         if(hasLaunchedInstance()) {
-            throw new IllegalArgumentException("Can't try to resume because there is already an associated instance.");
+            throw new IllegalArgumentException(
+                    "Can't try to resume because there is already an associated instance.");
         }
 
         if(pidFile.exists() && !pidFile.isDirectory()) {
@@ -159,23 +179,8 @@ public class KernelLauncher {
         if(!hasLaunchedInstance()) {
             throw new IllegalArgumentException("Trying to terminate when there is no running instance");
         }
-
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .command("kill",
-                        String.valueOf(currentInstance.getPid()))
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT);
-        LOGGER.debug("About to kill pid {}", currentInstance.getPid());
-        try {
-            int killExitCode = processBuilder.start().waitFor();
-            LOGGER.trace("`kill` return code: " + killExitCode);
-            removePersistedPid();
-        } catch (InterruptedException | IOException ex) {
-            String message = "Error killing the Aion kernel process.";
-            LOGGER.error(message, ex);
-            throw new KernelControlException(message, ex);
-        }
-
+        executor.unixProcessTerminator.terminateAndAwait(currentInstance, System.getProperty("user.name"));
+        removePersistedPid();
         setCurrentInstance(null);
     }
 

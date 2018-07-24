@@ -23,6 +23,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.aion.os.KernelLauncher;
+import org.aion.os.UnixProcessTerminator;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
@@ -86,8 +87,10 @@ public class MainWindow extends Application {
 
     public MainWindow() {
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
-        kernelLauncher = new KernelLauncher(CfgAion.inst().getGui().getCfgGuiLauncher(),
-                EventBusRegistry.INSTANCE);
+        kernelLauncher = new KernelLauncher(
+                CfgAion.inst().getGui().getCfgGuiLauncher(),
+                EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator());
     }
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */

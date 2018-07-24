@@ -154,29 +154,36 @@ public class DashboardController extends AbstractController {
             if (kernelLauncher.hasLaunchedInstance()
                     || (!kernelLauncher.hasLaunchedInstance() && kernelLauncher.tryResume())) {
                 kernelUpdateTimer.stop();
+//                runApiTask(
+//                        () -> {
+//
+//                        },
+//                        evt -> Platform.runLater(() -> isMining.setText(String.valueOf(getMiningStatusTask.getValue()))),
+//                        getErrorEvent(throwable -> {}, getSyncInfoTask),
+//                        getEmptyEvent()
+//                );
                 kernelConnection.disconnect();
                 kernelLauncher.terminate();
             }
         } catch (RuntimeException ex) {
             LOG.error("Termination error", ex);
             enableLaunchButton();
-//            kernelUpdateTimer.fireImmediatelyAndThenStart();
         }
     }
 
     // -- Helpers methods -------------------------------------------------------------------------
     private void enableLaunchButton() {
-        launchKernelButton.setDisable(false);
-        terminateKernelButton.setDisable(true);
+        Platform.runLater(() -> launchKernelButton.setDisable(false));
+        Platform.runLater(() -> terminateKernelButton.setDisable(true));
     }
 
     private void enableTerminateButton() {
-        launchKernelButton.setDisable(true);
-        terminateKernelButton.setDisable(false);
+        Platform.runLater(() -> launchKernelButton.setDisable(true));
+        Platform.runLater(() -> terminateKernelButton.setDisable(false));
     }
 
     private void disableLaunchTerminateButtons() {
-        launchKernelButton.setDisable(true);
-        terminateKernelButton.setDisable(true);
+        Platform.runLater(() -> launchKernelButton.setDisable(true));
+        Platform.runLater(() -> terminateKernelButton.setDisable(true));
     }
 }
