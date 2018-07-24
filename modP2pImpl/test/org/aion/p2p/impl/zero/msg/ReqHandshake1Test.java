@@ -126,4 +126,21 @@ public class ReqHandshake1Test {
             testRoute();
         }
     }
+
+    @Test
+    public void testdecode() {
+        ReqHandshake rhs = ReqHandshake.decode(null);
+        assertNull(rhs);
+
+        rhs = ReqHandshake.decode(new byte[ReqHandshake.LEN-1]);
+        assertNull(rhs);
+    }
+
+    @Test
+    public void testdecodeException() {
+        byte[] msg = new byte [ReqHandshake1.LEN+2];
+        msg[ReqHandshake1.LEN+1] = 2; // versions Length
+        ReqHandshake rhs1 = ReqHandshake1.decode(msg);
+        assertNull(rhs1);
+    }
 }

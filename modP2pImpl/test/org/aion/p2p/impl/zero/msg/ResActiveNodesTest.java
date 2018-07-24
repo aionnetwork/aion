@@ -2,7 +2,7 @@ package org.aion.p2p.impl.zero.msg;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +63,7 @@ public class ResActiveNodesTest {
             assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
             assertArrayEquals(srcNode.getIp(), tarNode.getIp());
 
-            assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
+            assertEquals(srcNode.getIpStr(), tarNode.getIpStr());
             assertEquals(srcNode.getPort(), tarNode.getPort());
         }
     }
@@ -93,5 +93,11 @@ public class ResActiveNodesTest {
             assertEquals(srcNode.getIpStr(), tarNode.getIpStr());
             assertEquals(srcNode.getPort(), tarNode.getPort());
         }
+    }
+
+    @Test
+    public void testDecodeNull() {
+        assertNull(ResHandshake.decode(null));
+        assertNull(ResHandshake.decode(new byte[0]));
     }
 }

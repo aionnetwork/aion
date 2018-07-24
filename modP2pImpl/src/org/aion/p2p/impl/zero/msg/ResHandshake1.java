@@ -25,6 +25,8 @@
 
 package org.aion.p2p.impl.zero.msg;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -50,12 +52,7 @@ public final class ResHandshake1 extends ResHandshake {
         if (_bytes == null || _bytes.length < MIN_LEN) {
             return null;
         } else {
-
             try {
-
-                // decode success
-                boolean success = _bytes[0] == 0x00 ? false : true;
-
                 // decode binary version
                 byte len = _bytes[1];
                 String binaryVersion = "unknown";
@@ -65,8 +62,10 @@ public final class ResHandshake1 extends ResHandshake {
                     try {
                         binaryVersion = new String(binaryVersionBytes, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
-                        System.out.println(
-                                "<p2p res-handshake-decode error=" + e.getMessage() + ">");
+                        if (p2pLOG.isDebugEnabled()) {
+                            p2pLOG.debug("res-handshake-decode error={}", e.getMessage());
+                        }
+                        return null;
                     }
                 }
                 return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);
