@@ -199,7 +199,14 @@ if $guard; then
 
 else
 
-  	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-  		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
+  	# use default xms if not set
+    JAVA_OPTS="$JAVA_OPTS"
+    if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
+      JAVA_OPTS="-Xms4g"
+    fi
+
+
+    env EVMJIT="-cache=1" ./rt/bin/java ${JAVA_OPTS} \
+            -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
 
 fi

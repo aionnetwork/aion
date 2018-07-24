@@ -3,7 +3,7 @@
  PACK_PATH='pack'
 
  cd $PACK_PATH
- BIN_ARCHIVE=$(ls aion-*tar*)
+ BIN_ARCHIVE="aion.tar.gz"
  tar xvjf $BIN_ARCHIVE
  VERSION=$(./aion/aion.sh --version)
 

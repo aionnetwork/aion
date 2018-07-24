@@ -3,12 +3,13 @@
 PACK_PATH='pack'
 
 cd $PACK_PATH
-BIN_ARCHIVE=$(ls aion-*tar*)
+BIN_ARCHIVE="aion.tar.bz2"
 tar xvjf $BIN_ARCHIVE
 VERSION=$(./aion/aion.sh --version)
 
-docker build -t centrys/aion-core:latest ../. --build-arg kernel_path="$PACK_PATH/aion/"
-docker tag centrys/aion-core:latest centrys/aion-core:$VERSION
+BUILD_ARGS="--build-arg KERNEL_PATH=$PACK_PATH/aion/"
+
+docker build -t centrys/aion-core:$VERSION ../. $BUILD_ARGS
 
 rm -rf aion/
 
