@@ -70,8 +70,13 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            exit(ret);
+            if (!args[0].equals("--network")) {
+                System.out.println("Will Exit");
+                exit(ret);
+            }
         }
+        System.out.println("CONFIG FILE: " + CfgAion.getConfFilePath());
+        System.out.println("GENESIS FILE: " + CfgAion.getGenesisFilePath());
 
         /*
          * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]

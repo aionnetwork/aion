@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -89,7 +90,7 @@ public class Cli {
                         default:
                             printHelp();
                             return 1;
-                        }
+                    }
                     break;
                 case "-c":
                     cfg.fromXML();
@@ -117,14 +118,14 @@ public class Cli {
                     if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
 
                         // create directory if not exists
-                        File keystoreDir = new File(System.getProperty("user.dir") + File.separator +  CfgSsl.SSL_KEYSTORE_DIR);
+                        File keystoreDir = new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
                         if (!keystoreDir.isDirectory()) {
-                            System.out.println("No "+keystoreDir.getPath()+" directory found. Creating directory ...");
+                            System.out.println("No " + keystoreDir.getPath() + " directory found. Creating directory ...");
 
                             if (keystoreDir.mkdir()) {
-                                System.out.println("Created "+keystoreDir.getPath()+" directory.");
+                                System.out.println("Created " + keystoreDir.getPath() + " directory.");
                             } else {
-                                System.out.println("Directory: "+keystoreDir.getPath()+" could not be created. " +
+                                System.out.println("Directory: " + keystoreDir.getPath() + " could not be created. " +
                                         "Please check user permissions or create directory manually.");
                                 System.exit(1);
                             }
@@ -146,7 +147,7 @@ public class Cli {
                             console.printf("Enter name for certificate:\n");
                             certName = console.readLine();
                             certPass = String.valueOf(
-                                console.readPassword("Enter password for certificate (>6 characters):\n"));
+                                    console.readPassword("Enter password for certificate (>6 characters):\n"));
                         }
 
                         if (certName == null || certPass == null) throw new IllegalStateException("Received " +
@@ -161,11 +162,11 @@ public class Cli {
                         scriptArgs.addAll(Arrays.asList(Arrays.copyOfRange(args, 2, args.length)));
 
                         new ProcessBuilder(scriptArgs)
-                            .redirectInput(Redirect.INHERIT)
-                            .redirectOutput(Redirect.INHERIT)
-                            .redirectError(Redirect.INHERIT)
-                            .start()
-                            .waitFor();
+                                .redirectInput(Redirect.INHERIT)
+                                .redirectOutput(Redirect.INHERIT)
+                                .redirectError(Redirect.INHERIT)
+                                .start()
+                                .waitFor();
                     } else {
                         printHelp();
                         return 1;
@@ -178,15 +179,15 @@ public class Cli {
                         System.out.println("Finished database clean-up.");
                     } else {
                         switch (revertTo(args[1])) {
-                        case SUCCESS:
-                            System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
-                            break;
-                        case FAILURE:
-                            System.out.println("Unable to revert to block number " + args[1] + ".");
-                            return 1;
-                        case ILLEGAL_ARGUMENT:
-                        default:
-                            return 1;
+                            case SUCCESS:
+                                System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
+                                break;
+                            case FAILURE:
+                                System.out.println("Unable to revert to block number " + args[1] + ".");
+                                return 1;
+                            case ILLEGAL_ARGUMENT:
+                            default:
+                                return 1;
                         }
                     }
                     break;
@@ -225,6 +226,31 @@ public class Cli {
                         RecoveryUtils.printStateTrieSize(block_count);
                     }
                     break;
+
+                // TODO: Determine network config folder path
+                case "--network": {
+                    if (args.length == 2) {
+                        switch (args[1].toLowerCase()) {
+                            case "mainnet": {
+                                System.out.println("Path set to config/mainnet");
+                                CfgAion.setConfFilePath("/home/joey/Desktop/IDE/aion/config/mainnet/config.xml");
+                                CfgAion.setGenesisFilePath("/home/joey/Desktop/IDE/aion/config/mainnet/genesis.json");
+                                break;
+                            }
+                            case "conquest": {
+                                System.out.println("Path set to config/conquest");
+                                CfgAion.setConfFilePath("/home/joey/Desktop/IDE/aion/config/conquest/config.xml");
+                                CfgAion.setGenesisFilePath("/home/joey/Desktop/IDE/aion/config/conquest/genesis.json");
+                                break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Invalid number of arguments");
+                        return 1;
+                    }
+                    break;
+                }
+
                 case "--dump-state":
                     long level = -1L;
 
@@ -363,8 +389,7 @@ public class Cli {
     /**
      * Dumps the private of the given account.
      *
-     * @param address
-     *            address of the account
+     * @param address address of the account
      * @return boolean
      */
     private boolean exportPrivateKey(String address) {
@@ -394,8 +419,7 @@ public class Cli {
     /**
      * Imports a private key.
      *
-     * @param privateKey
-     *            private key in hex string
+     * @param privateKey private key in hex string
      * @return boolean
      */
     private boolean importPrivateKey(String privateKey) {
@@ -443,9 +467,9 @@ public class Cli {
      * user input from a console evironment and if one is not available it instead attempts to read
      * from reader.
      *
-     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
      * @param prompt The read-password prompt to display to the user.
      * @return The user-entered password.
+     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
      */
     public String readPassword(String prompt, BufferedReader reader) {
         if (prompt == null) {
@@ -462,10 +486,10 @@ public class Cli {
     /**
      * Returns a password after prompting the user to enter it from reader.
      *
-     * @throws NullPointerException if reader is null.
      * @param prompt The read-password prompt to display to the user.
      * @param reader The BufferedReader to read input from.
      * @return The user-entered password.
+     * @throws NullPointerException if reader is null.
      */
     private String readPasswordFromReader(String prompt, BufferedReader reader) {
         if (reader == null) {
@@ -495,5 +519,4 @@ public class Cli {
 
         return RecoveryUtils.revertTo(block);
     }
-
 }

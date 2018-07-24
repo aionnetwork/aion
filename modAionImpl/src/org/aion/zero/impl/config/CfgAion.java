@@ -41,6 +41,10 @@ import org.aion.zero.impl.GenesisBlockLoader;
  */
 public final class CfgAion extends Cfg {
 
+    // TODO: Implement abstract declarations
+    private static String CONF_FILE_PATH = BASE_PATH + "/config/mainnet/config.xml";
+    private static String GENESIS_FILE_PATH = BASE_PATH + "/config/mainnet/genesis.json";
+
     protected AionGenesis genesis;
 
     protected static final int N = 210;
@@ -326,5 +330,21 @@ public final class CfgAion extends Cfg {
                 }
             }
         }
+    }
+
+    // TODO: Getter function (mutators)
+    public static String getConfFilePath() {
+        return CONF_FILE_PATH;
+    }
+    public static String getGenesisFilePath() {
+        return GENESIS_FILE_PATH;
+    }
+
+    // TODO: Setter function (mutators)
+    public static void setConfFilePath(String input) {
+        CONF_FILE_PATH = input;
+    }
+    public static void setGenesisFilePath(String input) {
+        GENESIS_FILE_PATH = input;
     }
 }
