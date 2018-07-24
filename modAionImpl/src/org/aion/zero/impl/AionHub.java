@@ -48,7 +48,6 @@ import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
-import org.aion.precompiled.ContractFactory;
 import org.aion.utils.TaskDumpHeap;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -153,6 +152,7 @@ public class AionHub {
         String reportsFolder = "";
         if (cfg.getReports().isEnabled()) {
             File rpf = new File(cfg.getBasePath(), cfg.getReports().getPath());
+            //noinspection ResultOfMethodCallIgnored
             rpf.mkdirs();
             reportsFolder = rpf.getAbsolutePath();
         }

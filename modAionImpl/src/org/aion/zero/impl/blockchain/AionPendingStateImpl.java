@@ -20,8 +20,29 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.blockchain;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.aion.base.Constant;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
@@ -43,10 +64,8 @@ import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
-import org.aion.precompiled.ContractFactory;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
-import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -55,25 +74,17 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
+import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, AionTransaction> {
 
-    static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
-    static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
+    private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
+    private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
     private IP2pMgr p2pMgr;
 
@@ -85,6 +96,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             super((tx1, tx2) -> {
                 long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
                     ByteUtil.byteArrayToLong(tx2.getNonce());
+
                 if (nonceDiff != 0) {
                     return nonceDiff > 0 ? 1 : -1;
                 }
@@ -258,7 +270,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     }
 
-    private static final AionPendingStateImpl initializeAionPendingState() {
+    private static AionPendingStateImpl initializeAionPendingState() {
         AionPendingStateImpl ps = new AionPendingStateImpl(AionRepositoryImpl.inst());
         ps.init(AionBlockchainImpl.inst());
         return ps;
@@ -283,7 +295,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             try {
                 ServiceLoader.load(TxPoolModule.class);
             } catch (Exception e) {
-                System.out.println("load TxPoolModule service fail!" + e.toString());
+                LOGGER_TX.error("load TxPoolModule service fail!", e);
                 throw e;
             }
 
@@ -298,14 +310,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             TxPoolModule txPoolModule;
             try {
                 txPoolModule = TxPoolModule.getSingleton(prop);
+                //noinspection unchecked
                 this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
             } catch (Throwable e) {
-                e.printStackTrace();
-                System.out.println("TxPoolModule getTxPool fail!" + e.toString());
+                LOGGER_TX.error("TxPoolModule getTxPool fail!", e);
             }
 
         } else {
-            System.out.println("Seed mode is enable");
+            LOGGER_TX.info("Seed mode is enable");
         }
     }
 
@@ -603,6 +615,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      * Executes pending tx on the latest best block Fires pending state update
      *
      * @param tx transaction come from API or P2P
+     * @param txNonce nonce of the transaction.
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
     private boolean addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
@@ -627,7 +640,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             if (poolTx == null) {
                 LOGGER_TX.error("addPendingTransactionImpl no same tx nonce in the pool {}",
                     tx.toString());
-
                 fireDroppedTx(tx, "REPAYTX_POOL_EXCEPTION");
                 return false;
             } else {
@@ -683,6 +695,11 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private void fireDroppedTx(AionTransaction tx, String error) {
+
+        if (LOGGER_TX.isErrorEnabled()) {
+            LOGGER_TX.error("Tx dropped {} [{}]", error, tx.toString());
+        }
+
         AionTxReceipt rp = new AionTxReceipt();
         rp.setTransaction(tx);
         rp.setError(error);
@@ -771,16 +788,13 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             if (LOGGER_TX.isDebugEnabled()) {
                 LOGGER_TX.debug("PendingStateImpl.processBest: " + newBlock.getShortDescr());
             }
+            //noinspection unchecked
             processBestInternal(newBlock, receipts);
         }
 
         best.set(newBlock);
 
-        if (best.get().getNumber() + 128 < getPeersBestBlk13()) {
-            closeToNetworkBest = false;
-        } else {
-            closeToNetworkBest = true;
-        }
+        closeToNetworkBest = best.get().getNumber() + 128 >= getPeersBestBlk13();
 
         if (LOGGER_TX.isDebugEnabled()) {
             LOGGER_TX
@@ -924,6 +938,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         return info;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private List<AionTransaction> updateState(IAionBlock block) {
 
         pendingState = repository.startTracking();
@@ -965,9 +980,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private Set<Address> getTxsAccounts(List<AionTransaction> txn) {
         Set<Address> rtn = new HashSet<>();
         for (AionTransaction tx : txn) {
-            if (!rtn.contains(tx.getFrom())) {
-                rtn.add(tx.getFrom());
-            }
+            rtn.add(tx.getFrom());
         }
         return rtn;
     }
@@ -975,31 +988,19 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private AionTxExecSummary executeTx(AionTransaction tx, boolean inPool) {
 
         IAionBlock bestBlk = best.get();
-
         if (LOGGER_TX.isTraceEnabled()) {
             LOGGER_TX.trace("executeTx: {}", Hex.toHexString(tx.getHash()));
         }
 
-        if (ContractFactory.isPrecompiledContract(tx.getTo())) {
-            TransactionExecutor conExe = new TransactionExecutor(tx, bestBlk, pendingState, LOGGER_VM);
-            conExe.setExecutorProvider(AionExecutorProvider.getInstance());
+        TransactionExecutor txExe = new TransactionExecutor(tx, bestBlk, pendingState,
+            LOGGER_VM);
+        txExe.setExecutorProvider(AionExecutorProvider.getInstance());
 
-            if (inPool) {
-                conExe.setBypassNonce();
-            }
-
-            return conExe.execute();
-        } else {
-            TransactionExecutor txExe = new TransactionExecutor(tx, bestBlk, pendingState,
-                LOGGER_VM);
-            txExe.setExecutorProvider(AionExecutorProvider.getInstance());
-
-            if (inPool) {
-                txExe.setBypassNonce();
-            }
-
-            return txExe.execute();
+        if (inPool) {
+            txExe.setBypassNonce();
         }
+
+        return txExe.execute();
     }
 
     @Override
@@ -1135,6 +1136,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         LOGGER_TX.info("pendingCacheTx loading from DB");
         long t1 = System.currentTimeMillis();
+        //noinspection unchecked
         List<byte[]> pendingCacheTxBytes = repository.getCacheTx();
 
         List<AionTransaction> pendingTx = new ArrayList<>();
@@ -1174,6 +1176,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         LOGGER_TX.info("pendingPoolTx loading from DB");
         long t1 = System.currentTimeMillis();
+        //noinspection unchecked
         List<byte[]> pendingPoolTxBytes = repository.getPoolTx();
 
         List<AionTransaction> pendingTx = new ArrayList<>();
@@ -1208,7 +1211,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         LOGGER_TX
             .info("{} pendingPoolTx loaded from DB loaded into the txpool, {} ms",
                 pendingPoolTx.size(), t2);
-
     }
 
     @Override
