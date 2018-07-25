@@ -126,6 +126,10 @@ public class TransactionExecutor extends AbstractExecutor {
 
     }
 
+    public ExecutionContext getContext() {
+        return ctx;
+    }
+
     public void setExecutorProvider(ExecutorProvider provider) {
         this.provider = provider;
     }
