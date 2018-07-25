@@ -212,6 +212,10 @@ public class BridgeController {
         return signatureLength >= thresh && signatureLength <= this.connector.getMemberCount();
     }
 
+    private boolean bundleProcessed(byte[] hash) {
+        return this.connector.getBundle(hash);
+    }
+
     /**
      * Assume bundleHash is not from external source, but rather
      * calculated on our side (on the I/O layer), when {@link BridgeBundle} list
@@ -249,6 +253,9 @@ public class BridgeController {
         for (BridgeBundle b : bundles) {
             hash = HashUtil.h256(ByteUtil.merge(hash, b.recipient, b.transferValue.toByteArray()));
         }
+
+        if (bundleProcessed(hash))
+            return processError(ErrCode.PROCESSED);
 
         int signed = 0;
         for (byte[] sigBytes : signatures) {
@@ -290,6 +297,7 @@ public class BridgeController {
                 emitDistributed(b.recipient, b.transferValue);
             results.add(result);
         }
+        this.connector.setBundle(hash, true);
         emitProcessedBundle(hash);
         return processSuccess(ErrCode.NO_ERROR, results);
     }

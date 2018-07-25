@@ -14,6 +14,7 @@ public enum ErrCode {
     INVALID_SIGNATURE_BOUNDS(0x9),
     INVALID_TRANSFER(0xA),
     NOT_RELAYER(0xB),
+    PROCESSED(0xC),
     UNCAUGHT_ERROR(0x1337);
 
     private final int errCode;
