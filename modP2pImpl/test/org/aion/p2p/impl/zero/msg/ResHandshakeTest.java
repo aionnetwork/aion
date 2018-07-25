@@ -59,6 +59,5 @@ public class ResHandshakeTest {
     public void testDecodeNull() {
         assertNull(ResHandshake1.decode(null));
         assertNull(ResHandshake1.decode(new byte[1]));
-
     }
 }
