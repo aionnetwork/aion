@@ -78,8 +78,9 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
+
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("write {}-{}-{}", h.getVer(), h.getCtrl(), h.getAction());
+                p2pLOG.trace("write id:{} {}-{}-{}", nodeShortId, h.getVer(), h.getCtrl(), h.getAction());
             }
 
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
@@ -113,7 +114,6 @@ public class TaskWrite implements Runnable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             p2pLOG.error("TaskWrite exception {}", e.getMessage());
         } finally {
             channelBuffer.lock.unlock();

@@ -27,23 +27,15 @@ import java.util.Map;
 
 public interface INodeMgr {
 
-	void moveInboundToActive(int _channelHashCode);
-
-	void moveOutboundToActive(int _nodeIdHash, String _shortId);
-
 	void dropActive(int _nodeIdHash, String _reason);
-
-	Map<Integer, INode> getOutboundNodes();
 
 	int activeNodesSize();
 
-	INode tempNodesTake() throws InterruptedException;
+	INode tempNodesTake();
 
 	boolean isSeedIp(String _ip);
 
 	void addTempNode(INode _n);
-
-	boolean notActiveNode(int k);
 
 	void addOutboundNode(INode _n);
 
@@ -61,17 +53,31 @@ public interface INodeMgr {
 
 	INode getOutboundNode(int k);
 
-	String dumpNodeInfo(String selfShortId);
+	String dumpNodeInfo(String selfShortId, boolean complete);
 
 	void seedIpAdd(String _ip);
 
 	void shutdown();
-
-	void ban(int _nodeIdHash);
 
 	INode getRandom();
 
 	Map<Integer, INode> getActiveNodesMap();
 
 	void timeoutCheck();
+
+	void ban(int _nodeIdHash);
+
+	boolean notActiveNode(int _nodeIdHash);
+
+	boolean notAtOutboundList(int _nodeIdHash);
+
+	INode getNodefromOutBoundList(int _nodeIdHash);
+
+	/**
+	 * move node object from the inbound or outbound list to the active list
+	 * @param _hash the hash of the node, see inboundNodes/outboundNodes use in the NodeMgr
+	 * @param _type the string represent "inbound" or "outbound"
+	 */
+	void movePeerToActive(int _hash, String _type);
+
 }

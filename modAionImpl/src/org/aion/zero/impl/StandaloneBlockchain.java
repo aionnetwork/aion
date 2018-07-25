@@ -29,6 +29,7 @@ import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
+import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
@@ -41,7 +42,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.PrecompiledContracts;
+import org.aion.precompiled.ContractFactory;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -321,11 +322,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             bc.genesis = genesis;
 
             IRepositoryCache track = bc.getRepository().startTracking();
-            track.createAccount(PrecompiledContracts.totalCurrencyAddress);
+            track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 track.addStorageRow(
-                        PrecompiledContracts.totalCurrencyAddress,
+                        ContractFactory.getTotalCurrencyContractAddress(),
                         new DataWord(key.getKey()),
                         new DataWord(key.getValue()));
             }
@@ -356,8 +357,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     public void assertEqualTotalDifficulty() {
         BigInteger tdForHash, tdCached, tdPublic;
+        byte[] bestBlockHash;
 
         synchronized (this) {
+            bestBlockHash = getBestBlock().getHash();
             tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
             tdCached = getCacheTD();
             tdPublic = getTotalDifficulty();
@@ -365,6 +368,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         assert (tdPublic.equals(tdForHash));
         assert (tdPublic.equals(tdCached));
+        assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
     }
 
     @Override

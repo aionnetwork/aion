@@ -28,7 +28,6 @@ import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -103,111 +102,94 @@ public class TaskInbound implements Runnable {
                     Thread.sleep(0, 1);
                     continue;
                 }
-
-            } catch (IOException e) {
-                p2pLOG.warn("inbound-select-io-exception");
-                continue;
-            } catch (ClosedSelectorException e) {
-                if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("inbound-select-close-exception");
-                }
+            } catch (IOException | ClosedSelectorException e) {
+                p2pLOG.debug("inbound-select-exception", e);
                 continue;
             } catch (InterruptedException e) {
-                e.printStackTrace();
-                p2pLOG.error("taskInbound exception {}", e.toString());
+                p2pLOG.error("inbound thread sleep exception ", e);
                 return;
             }
 
-            Iterator<SelectionKey> keys = null;
             try {
-                keys = this.selector.selectedKeys().iterator();
+                Iterator<SelectionKey> keys = this.selector.selectedKeys().iterator();
                 while (keys.hasNext()) {
-                    SelectionKey sk = null;
+                    ChannelBuffer cb = null;
+                    SelectionKey key = null;
                     try {
-                        sk = keys.next();
-                        if (!sk.isValid()) {
+                        key = keys.next();
+                        if (!key.isValid()) {
                             continue;
                         }
 
-                        if (sk.isAcceptable()) {
+                        if (key.isAcceptable()) {
                             accept();
                         }
-                        if (sk.isReadable()) {
-                            ChannelBuffer cb = (ChannelBuffer) sk.attachment();
+
+
+                        if (key.isReadable()) {
+                            cb = (ChannelBuffer) key.attachment();
                             if (cb == null) {
-                                throw new P2pException("attachment is null");
+                                p2pLOG.error("inbound exception={}", new P2pException("attachment is null").getMessage());
+                                continue;
                             }
-                            try {
-                                readBuffer(sk, cb, readBuf);
-                            } catch (NullPointerException e) {
-                                mgr.closeSocket((SocketChannel) sk.channel(),
-                                    cb.getDisplayId() + "-read-msg-null-exception");
-                                cb.isClosed.set(true);
-                            } catch (P2pException e) {
-                                mgr.closeSocket((SocketChannel) sk.channel(),
-                                    cb.getDisplayId() + "-read-msg-p2p-exception");
-                                cb.isClosed.set(true);
-                            } catch (ClosedChannelException e) {
-                                mgr.closeSocket((SocketChannel) sk.channel(),
-                                    cb.getDisplayId() + "-read-msg-closed-channel-exception");
-                            }
+                            readBuffer(key, cb, readBuf);
                         }
-                    } catch (IOException e) {
-                        this.mgr.closeSocket((SocketChannel) sk.channel(),
-                            "inbound-io-exception=" + e.getMessage());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        this.mgr.closeSocket(key != null ? (SocketChannel) key.channel() : null,
+                            (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception " + e.toString());
+                        if (cb != null) {
+                            cb.isClosed.set(true);
+                        }
+                    } finally {
+                        keys.remove();
                     }
                 }
-
-            } catch (Exception ex) {
-                p2pLOG.error("inbound exception={}", ex.getMessage());
-            } finally {
-                if (keys != null) {
-                    keys.remove();
-                }
+            } catch (ClosedSelectorException ex) {
+                p2pLOG.error("inbound ClosedSelectorException={}", ex.toString());
             }
         }
 
         p2pLOG.info("p2p-pi shutdown");
     }
 
-    private void accept() {
-        SocketChannel channel;
-        try {
+    private void accept() throws Exception {
+        if (this.nodeMgr.activeNodesSize() >= this.mgr.getMaxActiveNodes()) {
+            return;
+        }
 
-            if (this.nodeMgr.activeNodesSize() >= this.mgr.getMaxActiveNodes()) {
+        SocketChannel channel = this.tcpServer.accept();
+        if (channel != null) {
+            this.mgr.configChannel(channel);
+
+            String ip = channel.socket().getInetAddress().getHostAddress();
+
+            if (this.mgr.isSyncSeedsOnly() && this.nodeMgr.isSeedIp(ip)) {
+                channel.close();
                 return;
             }
 
-            channel = this.tcpServer.accept();
-            if (channel != null) {
-                this.mgr.configChannel(channel);
-
-                String ip = channel.socket().getInetAddress().getHostAddress();
-
-                if (this.mgr.isSyncSeedsOnly() && this.nodeMgr.isSeedIp(ip)) {
-                    channel.close();
-                    return;
-                }
-
-                int port = channel.socket().getPort();
-                INode node = this.nodeMgr.allocNode(ip, port);
-                node.setChannel(channel);
-
-                SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
-                sk.attach(new ChannelBuffer());
-                this.nodeMgr.addInboundNode(node);
-
-                p2pLOG.info("new-connection {}:{}", ip, port);
+            // reject Self connect
+            if (this.mgr.getOutGoingIP().equals(ip)) {
+                channel.close();
+                return;
             }
-        } catch (IOException e) {
+
+            int port = channel.socket().getPort();
+            INode node = this.nodeMgr.allocNode(ip, port);
+
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("new-node : {}", node.toString());
+            }
+
+            node.setChannel(channel);
+
+            SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
+            sk.attach(new ChannelBuffer());
+            this.nodeMgr.addInboundNode(node);
+
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug("inbound-accept-io-exception");
+                p2pLOG.debug("new-connection {}:{}", ip, port);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            p2pLOG.error("TaskInbound exception {}", e.getMessage());
         }
     }
 
@@ -341,7 +323,8 @@ public class TaskInbound implements Runnable {
 
         if (!underRC) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug("over-called-route={}-{}-{} calls={} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getRouteCount(h.getRoute()).count, _cb.getDisplayId());
+                p2pLOG.debug("over-called-route={}-{}-{} calls={} node={}", h.getVer(), h.getCtrl(),
+                    h.getAction(), _cb.getRouteCount(h.getRoute()).count, _cb.getDisplayId());
             }
             return;
         }
@@ -361,7 +344,8 @@ public class TaskInbound implements Runnable {
                     case Ctrl.SYNC:
                         if (!handlers.containsKey(h.getRoute())) {
                             if (p2pLOG.isDebugEnabled()) {
-                                p2pLOG.debug("unregistered-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getDisplayId());
+                                p2pLOG.debug("unregistered-route={}-{}-{} node={}", h.getVer(),
+                                    h.getCtrl(), h.getAction(), _cb.getDisplayId());
                             }
                             return;
                         }
@@ -370,7 +354,8 @@ public class TaskInbound implements Runnable {
                         break;
                     default:
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("invalid-route={}-{}-{} node={}", h.getVer(), h.getCtrl(), h.getAction(), _cb.getDisplayId());
+                            p2pLOG.debug("invalid-route={}-{}-{} node={}", h.getVer(), h.getCtrl(),
+                                h.getAction(), _cb.getDisplayId());
                         }
                         break;
                 }
@@ -430,7 +415,8 @@ public class TaskInbound implements Runnable {
                     if (_msgBytes.length > ResHandshake.LEN) {
                         ResHandshake1 resHandshake1 = ResHandshake1.decode(_msgBytes);
                         if (resHandshake1 != null && resHandshake1.getSuccess()) {
-                            handleResHandshake(rb.getNodeIdHash(), resHandshake1.getBinaryVersion());
+                            handleResHandshake(rb.getNodeIdHash(),
+                                resHandshake1.getBinaryVersion());
                         }
                     }
                 }
@@ -499,6 +485,15 @@ public class TaskInbound implements Runnable {
         final byte[] _revision) {
         INode node = nodeMgr.getInboundNode(_channelHash);
         if (node != null && node.getPeerMetric().notBan()) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("netId={}, nodeId={} port={} rev={}", _netId, new String(_nodeId), _port,
+                        _revision);
+            }
+
+            if (p2pLOG.isTraceEnabled()) {
+                p2pLOG.trace("node {}", node.toString());
+            }
             if (handshakeRuleCheck(_netId)) {
                 _buffer.setNodeIdHash(Arrays.hashCode(_nodeId));
                 _buffer.setDisplayId(new String(Arrays.copyOfRange(_nodeId, 0, 6)));
@@ -517,7 +512,7 @@ public class TaskInbound implements Runnable {
                         }
                     }
                     node.setBinaryVersion(binaryVersion);
-                    nodeMgr.moveInboundToActive(_channelHash);
+                    nodeMgr.movePeerToActive(_channelHash, "inbound");
                     this.sendMsgQue.offer(
                         new MsgOut(
                             node.getIdHash(),
@@ -535,11 +530,11 @@ public class TaskInbound implements Runnable {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        INode node = nodeMgr.getOutboundNodes().get(_nodeIdHash);
+        INode node = nodeMgr.getNodefromOutBoundList(_nodeIdHash);
         if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
             node.setBinaryVersion(_binaryVersion);
-            nodeMgr.moveOutboundToActive(node.getIdHash(), node.getIdShort());
+            nodeMgr.movePeerToActive(node.getIdHash(), "outbound");
         }
     }
 
@@ -555,6 +550,8 @@ public class TaskInbound implements Runnable {
             String nodeDisplayId = node.getIdShort();
             node.refreshTimestamp();
             this.receiveMsgQue.offer(new MsgIn(nodeIdHash, nodeDisplayId, _route, _msgBytes));
+        } else {
+            p2pLOG.debug("handleKernelMsg can't find hash{}", _nodeIdHash);
         }
     }
 

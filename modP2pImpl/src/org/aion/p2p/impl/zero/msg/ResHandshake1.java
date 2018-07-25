@@ -65,7 +65,8 @@ public final class ResHandshake1 extends ResHandshake {
                     try {
                         binaryVersion = new String(binaryVersionBytes, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
-                        System.out.println("<p2p res-handshake-decode error=" + e.getMessage() + ">");
+                        System.out.println(
+                                "<p2p res-handshake-decode error=" + e.getMessage() + ">");
                     }
                 }
                 return new ResHandshake1(_bytes[0] == 0x01, binaryVersion);

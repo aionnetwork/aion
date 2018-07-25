@@ -59,7 +59,7 @@ if [[ $1 == "watch" ]]; then
     if $first; then
       set --
       first=false
-    else
+    else		  
       set -- "$@" "$arg"
     fi
   done
