@@ -28,13 +28,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.channels.ServerSocketChannel;
+import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -76,12 +78,11 @@ public class NodeMgrTest {
     private Node node;
 
     @Mock
-    private ServerSocketChannel tcpServer;
-
-    @Mock
     private SocketChannel channel;
 
     private NodeMgr nMgr;
+
+    Random r;
 
     @Before
     public void Setup() {
@@ -93,50 +94,45 @@ public class NodeMgrTest {
         MockitoAnnotations.initMocks(this);
 
         nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
-
-//        tcpServer = ServerSocketChannel.open();
-//        Selector selector = Selector.open();
-//        tcpServer = ServerSocketChannel.open();
-//        tcpServer.configureBlocking(false);
-//        tcpServer.socket().setReuseAddress(true);
-//        tcpServer.socket().bind(new InetSocketAddress(ip1, port1));
-//        tcpServer.register(selector, SelectionKey.OP_ACCEPT);
-//
-//        channel = SocketChannel.open();
-//        channel.socket().connect(new InetSocketAddress(ip1, port1), 10000);
-//        channel.configureBlocking(false);
-//        channel.socket().setSoTimeout(10000);
-//
-//        // set buffer to 256k.
-//        channel.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
-//        channel.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
+        r = new Random();
     }
 
-//    private final P2pMgr p2p = new P2pMgr(0,
-//        "",
-//        nodeId1,
-//        ip1,
-//        port1,
-//        nodes,
-//        false,
-//        128,
-//        128,
-//        false,
-//        50);
+    private void addActiveNode() {
+        INode node = nMgr.allocNode(ip1, 0);
 
-//    @Before
-//    public void mock_connection() throws IOException {
-//
-//    }
+        byte[] rHash = new byte[32];
+        r.nextBytes(rHash);
+        node.updateStatus(r.nextLong(), rHash, BigInteger.valueOf(r.nextLong()));
+        addNodetoOutbound(node, UUID.randomUUID());
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+    }
 
-//    @After
-//    public void close() throws IOException {
-//        tcpServer.close();
-//        channel.socket().close();
-//    }
+    private void addNodetoOutbound(INode node, UUID _uuid) {
+        node.setChannel(channel);
+        try {
+            node.setId(_uuid.toString().getBytes("UTF-8"));
+            node.refreshTimestamp();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        nMgr.addOutboundNode(node);
+        assertNotNull(nMgr.getOutboundNode(node.getIdHash()));
+    }
+
+    private void addNodetoInbound(INode node, UUID _uuid) {
+        node.setChannel(channel);
+        try {
+            node.setId(_uuid.toString().getBytes("UTF-8"));
+            node.refreshTimestamp();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        nMgr.addInboundNode(node);
+        assertNotNull(nMgr.getInboundNode(channel.hashCode()));
+    }
 
     @Test
-    public void test_tempNode() {
+    public void testTempNode() {
         nMgr.addTempNode(node);
         assertEquals(1, nMgr.tempNodesSize());
 
@@ -152,7 +148,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_tempNodeMax_128() {
+    public void testTempNodeMax_128() {
 
         String[] nodes_max = new String[130];
         int ip = 0;
@@ -173,7 +169,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_tempNodesTake() {
+    public void testTempNodesTake() {
 
         String[] nodes = new String[]{
             "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
@@ -203,7 +199,7 @@ public class NodeMgrTest {
 
 
     @Test
-    public void test_tempNodeMax_Any() {
+    public void testTempNodeMax_Any() {
 
         NodeMgr mgr = new NodeMgr(p2p, 512, 512, LOGGER);
         String[] nodes_max = new String[512];
@@ -238,7 +234,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_addInOutBoundNode() {
+    public void testAddInOutBoundNode() {
 
         INode node = nMgr.allocNode(ip1, 0);
         node.setChannel(channel);
@@ -258,45 +254,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_moveInboundToActive() {
-
-        INode node = nMgr.allocNode(ip2, 0);
-        node.setChannel(channel);
-
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        nMgr.addInboundNode(node);
-        assertEquals(0, nMgr.activeNodesSize());
-
-        nMgr.movePeerToActive(channel.hashCode(), "inbound");
-        assertEquals(1, nMgr.activeNodesSize());
-    }
-
-    @Test
-    public void test_moveOutboundToActive() {
-        INode node = nMgr.allocNode(ip2, 0);
-
-        node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        nMgr.addOutboundNode(node);
-        assertEquals(0, nMgr.activeNodesSize());
-
-        nMgr.movePeerToActive(node.getIdHash(), "outbound");
-        assertEquals(1, nMgr.activeNodesSize());
-
-    }
-
-    @Test
-    public void test_getActiveNodesList() {
+    public void testGetActiveNodesList() {
 
         NodeMgr nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
         INode node = nMgr.allocNode(ip2, 0);
@@ -324,7 +282,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_dropActive() {
+    public void testDropActive() {
         INode node = nMgr.allocNode(ip2, 0);
 
         node.setChannel(channel);
@@ -340,13 +298,17 @@ public class NodeMgrTest {
         nMgr.movePeerToActive(channel.hashCode(), "inbound");
         assertEquals(1, nMgr.activeNodesSize());
 
+        //will not drop
+        nMgr.dropActive(node.getIdHash()-1, "close");
+        assertEquals(1, nMgr.activeNodesSize());
+
+        //will drop
         nMgr.dropActive(node.getIdHash(), "close");
         assertEquals(0, nMgr.activeNodesSize());
-
     }
 
     @Test
-    public void test_ban() {
+    public void testBan() {
         INode node = nMgr.allocNode(ip2, 0);
 
         node.setChannel(channel);
@@ -370,10 +332,10 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_timeoutInbound() {
+    public void testTimeoutInbound() {
 
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoInbound(node);
+        addNodetoInbound(node, UUID.fromString(nodeId1));
 
         //Sleep for MAX_INBOUND_TIMEOUT
         try {
@@ -386,22 +348,11 @@ public class NodeMgrTest {
         assertNull(nMgr.getInboundNode(channel.hashCode()));
     }
 
-    private void addNodetoInbound(INode node) {
-        node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-            node.refreshTimestamp();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        nMgr.addInboundNode(node);
-        assertNotNull(nMgr.getInboundNode(channel.hashCode()));
-    }
 
     @Test
-    public void test_timeoutOutbound() {
+    public void testTimeoutOutbound() {
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoOutbound(node);
+        addNodetoOutbound(node, UUID.fromString(nodeId1));
 
         //Sleep for MAX_OUTBOUND_TIMEOUT
         try {
@@ -427,9 +378,9 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void test_getOutBoundNode() {
+    public void testGetOutBoundNode() {
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoOutbound(node);
+        addNodetoOutbound(node, UUID.fromString(nodeId1));
 
         //Sleep for MAX_OUTBOUND_TIMEOUT
         try {
@@ -445,7 +396,7 @@ public class NodeMgrTest {
     @Test
     public void testMoveOutboundToActive() {
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoOutbound(node);
+        addNodetoOutbound(node, UUID.fromString(nodeId1));
 
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
         assertNull(nMgr.getOutboundNode(node.getIdHash()));
@@ -458,7 +409,7 @@ public class NodeMgrTest {
     @Test
     public void testMoveInboundToActive() {
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoInbound(node);
+        addNodetoInbound(node, UUID.fromString(nodeId1));
 
         nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
         assertNull(nMgr.getInboundNode(node.getChannel().hashCode()));
@@ -471,7 +422,7 @@ public class NodeMgrTest {
     @Test
     public void testTimeoutActive() throws InterruptedException {
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoInbound(node);
+        addNodetoInbound(node, UUID.fromString(nodeId1));
 
         nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
         INode activeNode = nMgr.getActiveNode(node.getIdHash());
@@ -485,37 +436,144 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void testGetActiveNodesMap() throws InterruptedException {
+    public void testGetActiveNodesMap() {
         INode node = nMgr.allocNode(ip2, 0);
-        addNodetoInbound(node);
+        addNodetoInbound(node, UUID.fromString(nodeId1));
 
         nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
-        INode activeNode = nMgr.getActiveNode(node.getIdHash());
-        assertNotNull(activeNode);
-        assertEquals(node, activeNode);
 
-        Thread.sleep(10_001);
-
-        nMgr.timeoutCheck();
-        assertNull(nMgr.getActiveNode(node.getIdHash()));
-    }
-
-
-    private void addNodetoOutbound(INode node) {
-        node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-            node.refreshTimestamp();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        nMgr.addOutboundNode(node);
-        assertNotNull(nMgr.getOutboundNode(node.getIdHash()));
+        Map activeMap = nMgr.getActiveNodesMap();
+        assertNotNull(activeMap);
+        assertEquals(1, activeMap.size());
     }
 
     @Test
-    public void test_timeoutActive() {
-        //nMgr.movePeerToActive();
+    public void testNotAtOutBoundList() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node, UUID.fromString(nodeId1));
+        assertFalse(nMgr.notAtOutboundList(node.getIdHash()));
+
+        node = nMgr.allocNode(ip1, 0);
+        assertTrue(nMgr.notAtOutboundList(node.getIdHash()));
+    }
+
+    @Test
+    public void testGetRandom() {
+        assertNull(nMgr.getRandom());
+
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoInbound(node, UUID.fromString(nodeId1));
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+
+        INode nodeRandom = nMgr.getRandom();
+        assertNotNull(node);
+        assertEquals(node, nodeRandom);
+    }
+
+    @Test
+    public void testMovePeerToActive() {
+        INode node = nMgr.allocNode(ip2, 0);
+        node.setChannel(channel);
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+        assertTrue(nMgr.getActiveNodesMap().isEmpty());
+    }
+
+    @Test
+    public void testMovePeerToActive2() {
+        nMgr = new NodeMgr(p2p, 2, 2, LOGGER);
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node, UUID.fromString(nodeId1));
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+
+        node = nMgr.allocNode(ip1, 0);
+        addNodetoOutbound(node, UUID.fromString(nodeId2));
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+
+        assertEquals(2, nMgr.getActiveNodesMap().size());
+
+        node = nMgr.allocNode(ip1, port1);
+        addNodetoOutbound(node, UUID.randomUUID());
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+        assertEquals(2, nMgr.getActiveNodesMap().size());
+    }
+
+    @Test
+    public void testMovePeerToActive3() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node, UUID.fromString(nodeId1));
+
+        when(p2p.getSelfIdHash()).thenReturn(node.getIdHash());
+
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+        assertTrue(nMgr.getActiveNodesMap().isEmpty());
+    }
+
+    @Test
+    public void testShutDown() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node, UUID.randomUUID());
+
+        node = nMgr.allocNode(ip1, 0);
+        addNodetoOutbound(node, UUID.randomUUID());
+
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+
+        node = nMgr.allocNode("1.1.1.1", 0);
+        addNodetoInbound(node, UUID.randomUUID());
+
+        assertEquals(1, nMgr.activeNodesSize());
+
+        nMgr.shutdown();
+        assertTrue(nMgr.getActiveNodesMap().isEmpty());
+    }
+
+    @Test
+    public void testDumpNodeInfo() {
+        String dump = nMgr.dumpNodeInfo("testId", false);
+        assertNotNull(dump);
+
+        INode node = nMgr.allocNode(ip1, 0);
+        addNodetoOutbound(node, UUID.randomUUID());
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+
+        String dump2 = nMgr.dumpNodeInfo("testId", false);
+        assertEquals(dump.length(), dump2.length());
+
+        String dump3 = nMgr.dumpNodeInfo("testId", true);
+        assertTrue(dump3.length() > dump2.length());
+    }
+
+    @Test
+    public void testDumpNodeInfo2() {
+        String dump = nMgr.dumpNodeInfo("testId", false);
+        assertNotNull(dump);
+
+        nMgr.seedIpAdd(ip1);
+        INode node = nMgr.allocNode(ip1, 0);
+        byte[] rHash = new byte[32];
+        r.nextBytes(rHash);
+        node.updateStatus(r.nextLong(), rHash, BigInteger.ONE);
+        addNodetoOutbound(node, UUID.randomUUID());
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+
+        String dump2 = nMgr.dumpNodeInfo("testId", false);
+        assertTrue(dump2.length() > dump.length());
+
+        String dump3 = nMgr.dumpNodeInfo("testId", true);
+        assertEquals(dump3.length(), dump2.length());
+    }
+
+    @Test
+    public void testDumpNodeInfo3() {
+        String dump = nMgr.dumpNodeInfo("testId", false);
+        assertNotNull(dump);
+        addActiveNode();
+        addActiveNode();
+        addActiveNode();
+
+        String dump2 = nMgr.dumpNodeInfo("testId", true);
+        LOGGER.info(dump2);
+        assertTrue(dump2.length() > dump.length());
     }
 
 }
