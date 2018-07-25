@@ -530,7 +530,7 @@ public class TaskInbound implements Runnable {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        INode node = nodeMgr.getNodefromOutBoundList(_nodeIdHash);
+        INode node = nodeMgr.getOutboundNode(_nodeIdHash);
         if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
             node.setBinaryVersion(_binaryVersion);
