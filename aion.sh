@@ -171,7 +171,7 @@ if $guard; then
 			fi
 
 		done
-	
+
 		# Shutsdown Aion kernel
 		echo "## Killing Kernel ##"
 		kill $kPID
