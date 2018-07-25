@@ -148,7 +148,7 @@ public class AionLoggerFactory {
     }
 
     private static ConcurrentMap<String, Logger> loggerMap =
-            new ConcurrentHashMap<String, Logger>();
+        new ConcurrentHashMap<>();
 
     public static Logger getLogger(String label) {
 

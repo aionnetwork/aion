@@ -71,8 +71,6 @@ public interface INodeMgr {
 
 	boolean notAtOutboundList(int _nodeIdHash);
 
-	INode getNodefromOutBoundList(int _nodeIdHash);
-
 	/**
 	 * move node object from the inbound or outbound list to the active list
 	 * @param _hash the hash of the node, see inboundNodes/outboundNodes use in the NodeMgr

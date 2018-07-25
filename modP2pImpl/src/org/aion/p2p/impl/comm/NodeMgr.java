@@ -265,6 +265,7 @@ public class NodeMgr implements INodeMgr {
         return new ArrayList<>(activeNodes.values());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public HashMap getActiveNodesMap() {
         return new HashMap<>(activeNodes);
@@ -280,11 +281,6 @@ public class NodeMgr implements INodeMgr {
     @Override
     public boolean notAtOutboundList(int _nodeIdHash) {
         return !this.outboundNodes.containsKey(_nodeIdHash);
-    }
-
-    @Override
-    public INode getNodefromOutBoundList(int _nodeIdHash) {
-        return this.outboundNodes.get(_nodeIdHash);
     }
 
     private void timeoutOutBound() {
@@ -388,7 +384,7 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    void timeoutInbound() {
+    private void timeoutInbound() {
         try {
             Iterator<Map.Entry<Integer, INode>> it = inboundNodes.entrySet().iterator();
             while (it.hasNext()) {
