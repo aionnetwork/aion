@@ -64,7 +64,8 @@ public class KernelLauncherIntegTest {
         System.out.println("Before kernel launch, PIDs for Aion kernel process: " + aionPidsInitial);
 
         // launch a kernel instance
-        KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE);
+        KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker());
         Process kernelProc = kl.launch();
         Long nohupWrapperPid = kernelProc.pid();
 
@@ -82,7 +83,8 @@ public class KernelLauncherIntegTest {
 
         // terminate the kernel instance using a different launcher (simulates exit GUI / reopen GUI case)
         // and make sure that PID went away
-        KernelLauncher kl2 = new KernelLauncher(cfg, EventBusRegistry.INSTANCE);
+        KernelLauncher kl2 = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker());
         kl2.tryResume();
         kl2.terminate();
 
