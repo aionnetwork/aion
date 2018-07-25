@@ -32,14 +32,27 @@ import static org.junit.Assert.assertNull;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.log.LogLevels;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
+import org.junit.Before;
 import org.junit.Test;
 
 /** @author chris */
 public class ResHandshake1Test {
+
+    @Before
+    public void setup () {
+        Map<String, String> logMap = new HashMap<>();
+        logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
+        AionLoggerFactory.init(logMap);
+    }
 
     @Test
     public void test() throws UnsupportedEncodingException {
@@ -69,7 +82,7 @@ public class ResHandshake1Test {
     @Test
     public void testMultiple() {
         // Repeat the test multiple times to ensure validity
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 10000; i++) {
             try {
                 this.test();
             } catch (UnsupportedEncodingException e) {
@@ -106,8 +119,6 @@ public class ResHandshake1Test {
 
     @Test
     public void testEncodeVerTruncated() {
-
-
         StringBuilder bv = new StringBuilder();
         String truncatedBv;
 
@@ -120,15 +131,6 @@ public class ResHandshake1Test {
         ResHandshake1 rs1 = new ResHandshake1(true, bv.toString());
         assertNotNull(rs1);
 
-        assertEquals(rs1.getBinaryVersion(), truncatedBv);
-
-        byte[] ec = rs1.encode();
-        assertNotNull(ec);
-        assertEquals( 7, ec.length);
-        assertEquals( 0x01, ec[0]);
-        assertEquals( bv.length(), (int)ec[1]);
-        byte[] cmp = Arrays.copyOfRange(ec, 2, ec.length);
-
-        //assertArrayEquals(bv.getBytes(), cmp);
+        assertEquals(truncatedBv, rs1.getBinaryVersion());
     }
 }

@@ -25,16 +25,20 @@ package org.aion.p2p.impl.comm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.log.LogLevels;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Before;
@@ -58,7 +62,7 @@ public class NodeMgrTest {
     private String ip2 = "192.168.0.11";
     private int port1 = 30304;
     private int port2 = 30305;
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
+    private Logger LOGGER;
 
     private String[] nodes = new String[]{
         "p2p://" + nodeId1 + "@" + ip1 + ":" + port2,
@@ -79,9 +83,13 @@ public class NodeMgrTest {
 
     private NodeMgr nMgr;
 
-
     @Before
     public void Setup() {
+        Map<String, String> logMap = new HashMap<>();
+        logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
+        AionLoggerFactory.init(logMap);
+        LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
+
         MockitoAnnotations.initMocks(this);
 
         nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
@@ -156,12 +164,12 @@ public class NodeMgrTest {
         }
 
         for (String nodeL : nodes_max) {
-            Node node = Node.parseP2p(nodeL);
+            INode node = Node.parseP2p(nodeL);
+            assertNotNull(node);
             nMgr.addTempNode(node);
             nMgr.seedIpAdd(node.getIpStr());
         }
         assertEquals(128, nMgr.tempNodesSize());
-
     }
 
     @Test
@@ -365,7 +373,20 @@ public class NodeMgrTest {
     public void test_timeoutInbound() {
 
         INode node = nMgr.allocNode(ip2, 0);
+        addNodetoInbound(node);
 
+        //Sleep for MAX_INBOUND_TIMEOUT
+        try {
+            Thread.sleep(10_001);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        nMgr.timeoutCheck();
+        assertNull(nMgr.getInboundNode(channel.hashCode()));
+    }
+
+    private void addNodetoInbound(INode node) {
         node.setChannel(channel);
         try {
             node.setId(nodeId2.getBytes("UTF-8"));
@@ -374,22 +395,127 @@ public class NodeMgrTest {
             e.printStackTrace();
         }
         nMgr.addInboundNode(node);
+        assertNotNull(nMgr.getInboundNode(channel.hashCode()));
+    }
 
-        //Sleep for MAX_INBOUND_TIMEOUT
+    @Test
+    public void test_timeoutOutbound() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node);
+
+        //Sleep for MAX_OUTBOUND_TIMEOUT
         try {
-            Thread.sleep(11000);
+            Thread.sleep(20_001);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        nMgr.timeoutInbound();
-        assertNull(nMgr.getInboundNode(channel.hashCode()));
+        nMgr.timeoutCheck();
+        assertNull(nMgr.getOutboundNode(node.getIdHash()));
+    }
 
+    @Test
+    public void testAllocate() {
+        INode node = nMgr.allocNode(ip2, 0);
+        assertNotNull(node);
+        assertFalse(node.getIfFromBootList());
+
+        nMgr.seedIpAdd(ip2);
+        node = nMgr.allocNode(ip2, 0);
+        assertNotNull(node);
+        assertTrue(node.getIfFromBootList());
+    }
+
+    @Test
+    public void test_getOutBoundNode() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node);
+
+        //Sleep for MAX_OUTBOUND_TIMEOUT
+        try {
+            Thread.sleep(20_001);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        nMgr.timeoutCheck();
+        assertNull(nMgr.getOutboundNode(node.getIdHash()));
+    }
+
+    @Test
+    public void testMoveOutboundToActive() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoOutbound(node);
+
+        nMgr.movePeerToActive(node.getIdHash(), "outbound");
+        assertNull(nMgr.getOutboundNode(node.getIdHash()));
+
+        INode activeNode = nMgr.getActiveNode(node.getIdHash());
+        assertNotNull(activeNode);
+        assertEquals(node, activeNode);
+    }
+
+    @Test
+    public void testMoveInboundToActive() {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoInbound(node);
+
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+        assertNull(nMgr.getInboundNode(node.getChannel().hashCode()));
+
+        INode activeNode = nMgr.getActiveNode(node.getIdHash());
+        assertNotNull(activeNode);
+        assertEquals(node, activeNode);
+    }
+
+    @Test
+    public void testTimeoutActive() throws InterruptedException {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoInbound(node);
+
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+        INode activeNode = nMgr.getActiveNode(node.getIdHash());
+        assertNotNull(activeNode);
+        assertEquals(node, activeNode);
+
+        Thread.sleep(10_001);
+
+        nMgr.timeoutCheck();
+        assertNull(nMgr.getActiveNode(node.getIdHash()));
+    }
+
+    @Test
+    public void testGetActiveNodesMap() throws InterruptedException {
+        INode node = nMgr.allocNode(ip2, 0);
+        addNodetoInbound(node);
+
+        nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+        INode activeNode = nMgr.getActiveNode(node.getIdHash());
+        assertNotNull(activeNode);
+        assertEquals(node, activeNode);
+
+        Thread.sleep(10_001);
+
+        nMgr.timeoutCheck();
+        assertNull(nMgr.getActiveNode(node.getIdHash()));
+    }
+
+
+    private void addNodetoOutbound(INode node) {
+        node.setChannel(channel);
+        try {
+            node.setId(nodeId2.getBytes("UTF-8"));
+            node.refreshTimestamp();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        nMgr.addOutboundNode(node);
+        assertNotNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
     @Test
     public void test_timeoutActive() {
-        //TODO
+        //nMgr.movePeerToActive();
     }
 
 }
