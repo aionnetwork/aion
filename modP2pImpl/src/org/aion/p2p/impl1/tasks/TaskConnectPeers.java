@@ -81,6 +81,9 @@ public class TaskConnectPeers implements Runnable {
                 }
 
                 node = this.nodeMgr.tempNodesTake();
+                if (node == null) {
+                    continue;
+                }
 
                 if (node.getIfFromBootList()) {
                     this.nodeMgr.addTempNode(node);

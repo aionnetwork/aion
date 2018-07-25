@@ -28,16 +28,23 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevels;
@@ -95,6 +102,10 @@ public class NodeMgrTest {
 
         nMgr = new NodeMgr(p2p, MAX_ACTIVE_NODES, MAX_TEMP_NODES, LOGGER);
         r = new Random();
+    }
+
+    private String randomIP() {
+        return r.nextInt(256) + "." + r.nextInt(256) + "." + r.nextInt(256) + "." + r.nextInt(256);
     }
 
     private void addActiveNode() {
@@ -299,7 +310,7 @@ public class NodeMgrTest {
         assertEquals(1, nMgr.activeNodesSize());
 
         //will not drop
-        nMgr.dropActive(node.getIdHash()-1, "close");
+        nMgr.dropActive(node.getIdHash() - 1, "close");
         assertEquals(1, nMgr.activeNodesSize());
 
         //will drop
@@ -576,4 +587,147 @@ public class NodeMgrTest {
         assertTrue(dump2.length() > dump.length());
     }
 
+    @Test
+    public void testConcurrency() throws InterruptedException {
+        AtomicInteger count = new AtomicInteger(1000);
+
+        AtomicBoolean start = new AtomicBoolean(false);
+
+        BlockingQueue inbound = new LinkedBlockingQueue<INode>();
+        BlockingQueue outbound = new LinkedBlockingQueue<INode>();
+
+        Thread tGenTempNode = new Thread() {
+            @Override
+            public void run() {
+                while (start.get()) {
+                    nMgr.addTempNode(genNode());
+                    try {
+                        Thread.sleep(r.nextInt(10) + 10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            private INode genNode() {
+                INode n = new Node(false, UUID.randomUUID().toString().getBytes(),
+                    randomIP().getBytes(), r.nextInt(65535) + 1);
+
+                SocketChannel ch = mock(SocketChannel.class);
+                n.setChannel(ch);
+                byte[] rHash = new byte[32];
+                r.nextBytes(rHash);
+                n.updateStatus(r.nextLong(), rHash, BigInteger.valueOf(r.nextLong()));
+                return n;
+            }
+        };
+
+        Thread tMoveTempNodeToOutbound = new Thread(() -> {
+            while (start.get()) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                INode node = nMgr.tempNodesTake();
+                if (node == null) {
+                    continue;
+                }
+                nMgr.addOutboundNode(node);
+                //noinspection unchecked
+                outbound.add(node);
+            }
+        });
+
+        Thread tMoveTempNodeToInbound = new Thread(() -> {
+            while (start.get()) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                INode node = nMgr.tempNodesTake();
+                if (node == null) {
+                    continue;
+                }
+                nMgr.addInboundNode(node);
+                //noinspection unchecked
+                inbound.add(node);
+            }
+        });
+
+        Thread tMovePeerToActive = new Thread(() -> {
+            while (start.get()) {
+                int i = r.nextInt(2);
+                if (i == 0) {
+                    INode node = null;
+                    try {
+                        node = (INode) inbound.take();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
+                } else {
+                    INode node = null;
+                    try {
+                        node = (INode) outbound.take();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    nMgr.movePeerToActive(node.getIdHash(), "outbound");
+                }
+
+                count.getAndDecrement();
+
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Thread tDropActive = new Thread(() -> {
+            while (start.get()) {
+
+                HashMap activeMap = nMgr.getActiveNodesMap();
+
+                Iterator it = activeMap.entrySet().iterator();
+                if (it.hasNext()) {
+                    Entry en = (Entry) it.next();
+                    nMgr.dropActive((Integer) en.getKey(), "test");
+                }
+
+                count.getAndDecrement();
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        start.set(true);
+
+        tGenTempNode.start();
+
+        Thread.sleep(100);
+        tMoveTempNodeToOutbound.start();
+        tMoveTempNodeToInbound.start();
+        tMovePeerToActive.start();
+        tDropActive.start();
+
+        while (count.get() > 0) {
+            System.out.println(
+                "Node counts: " + count.get() + " activeSize: " + nMgr.getActiveNodesList().size()
+                    + " tempSize: " + nMgr.tempNodesSize());
+            Thread.sleep(1000);
+        }
+
+        start.set(false);
+        Thread.sleep(3000);
+
+    }
 }
