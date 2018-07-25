@@ -273,6 +273,13 @@ public class ExecutionContext {
     }
 
     /**
+     * Sets the transaction hash to txHash.
+     *
+     * @param txHash The new transaction hash.
+     */
+    public void setTransactionHash(@Nonnull byte[] txHash) { this.txHash = txHash; }
+
+    /**
      * Returns the length of the big-endian binary encoding of this ExecutionContext.
      *
      * @return the legtn of this ExecutionContext's binary encoding.

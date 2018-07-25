@@ -212,9 +212,9 @@ public class TransactionExecutor extends AbstractExecutor {
     protected AionTxExecSummary finish() {
 
         ExecutionHelper rootHelper = new ExecutionHelper();
-
-        rootHelper.merge(ctx.getHelper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
-
+        rootHelper.merge(ctx.getHelper(), Forks.isSeptemberForkEnabled(ctx.getBlockNumber())
+            ? exeResult.getCode() == ResultCode.SUCCESS.toInt()
+            : true);
 
         AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
                 .logs(rootHelper.getLogs()) //
