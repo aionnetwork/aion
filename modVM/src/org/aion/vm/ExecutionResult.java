@@ -33,7 +33,7 @@ import javax.annotation.Nonnull;
  *
  * @author yulong
  */
-public final class ExecutionResult extends AbstractExecutionResult {
+public class ExecutionResult extends AbstractExecutionResult {
 
     /**
      * Constructs a new ExecutionResult.

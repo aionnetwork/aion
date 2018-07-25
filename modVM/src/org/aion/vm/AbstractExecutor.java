@@ -49,6 +49,10 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
+    protected void setExecutionResult(@Nonnull IExecutionResult result) {
+        exeResult = result;
+    }
+
     public AbstractExecutor(@Nonnull IRepository _repo, boolean _localCall, long _blkRemainingNrg,
         @Nonnull Logger _logger) {
         this.repo = _repo;
