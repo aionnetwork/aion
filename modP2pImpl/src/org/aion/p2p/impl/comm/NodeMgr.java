@@ -202,10 +202,13 @@ public class NodeMgr implements INodeMgr {
         INode node = null;
         final ReentrantLock takeLock = this.takeLock;
         try {
-            takeLock.lockInterruptibly();
+            takeLock.lock();
             while (tempNodes.isEmpty()) {
                 notEmpty.await();
             }
+//            if (tempNodes.isEmpty()) {
+//                return null;
+//            }
 
             Integer key = tempNodes.keySet().iterator().next();
             node = tempNodes.remove(key);
