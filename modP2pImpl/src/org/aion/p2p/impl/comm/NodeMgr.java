@@ -173,6 +173,7 @@ public class NodeMgr implements INodeMgr {
                 .containsKey(_n.getPeerId()) && (notActiveNode(_n.getIdHash()) || _n
                 .getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
+                signalNotEmpty();
             }
         } catch (InterruptedException e) {
             p2pLOG.error("addTempNode exception!", e);
@@ -202,14 +203,11 @@ public class NodeMgr implements INodeMgr {
         INode node = null;
         final ReentrantLock takeLock = this.takeLock;
         try {
-            takeLock.lock();
+            takeLock.lockInterruptibly();
             while (tempNodes.isEmpty()) {
                 notEmpty.await();
             }
-//            if (tempNodes.isEmpty()) {
-//                return null;
-//            }
-
+            
             Integer key = tempNodes.keySet().iterator().next();
             node = tempNodes.remove(key);
             if (!tempNodes.isEmpty()) {
@@ -492,6 +490,16 @@ public class NodeMgr implements INodeMgr {
             }
         } catch (NullPointerException e) {
             p2pLOG.info("p2p-ban null exception ", e);
+        }
+    }
+
+    private void signalNotEmpty() {
+        final ReentrantLock takeLock = this.takeLock;
+        takeLock.lock();
+        try {
+            notEmpty.signal();
+        } finally {
+            takeLock.unlock();
         }
     }
 }
