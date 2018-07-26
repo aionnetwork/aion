@@ -39,6 +39,7 @@ import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -66,6 +67,7 @@ public class AionImpl implements IAionChain {
 
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
+    private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
     private static class Holder {
         static final AionImpl INSTANCE = new AionImpl();
@@ -185,7 +187,8 @@ public class AionImpl implements IAionChain {
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true);
+            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true, LOG_VM);
+            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             return executor.execute().getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -204,7 +207,8 @@ public class AionImpl implements IAionChain {
         IRepositoryCache repository = aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true);
+            TransactionExecutor executor = new TransactionExecutor(tx, block, repository, true, LOG_VM);
+            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             return executor.execute().getReceipt();
         } finally {
             repository.rollback();

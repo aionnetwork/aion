@@ -4,10 +4,6 @@ import javax.xml.stream.XMLOutputFactory;
 import com.google.common.base.Objects;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * Configuration for Aion kernel launcher within modGui.
@@ -135,61 +131,64 @@ public class CfgGuiLauncher {
     }
 
     public String toXML() {
-        final XMLOutputFactory output = XMLOutputFactory.newInstance();
-        output.setProperty("escapeCharacters", false);
-        XMLStreamWriter xmlWriter;
-        String xml;
-        try {
-            Writer strWriter = new StringWriter();
-            xmlWriter = output.createXMLStreamWriter(strWriter);
+        // Hidden for now
+        return "";
 
-            // start element gui
-            xmlWriter.writeCharacters("\t");
-            xmlWriter.writeStartElement("launcher");
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("Whether JVM settings for launching kernel should be autodetected; " +
-                    "'true' or 'false'");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("autodetect");
-            xmlWriter.writeCharacters(String.valueOf(isAutodetectJavaRuntime()));
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("Path to JAVA_HOME.  This field has no effect if autodetect is true.");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("java-home");
-            xmlWriter.writeCharacters(getJavaHome());
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("Working directory of kernel process.  This field has no effect if autodetect is true.");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("working-dir");
-            xmlWriter.writeCharacters(getWorkingDir());
-            xmlWriter.writeEndElement();
-
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("aion-sh");
-            xmlWriter.writeCharacters(getAionSh());
-            xmlWriter.writeEndElement();
-
-            // close element gui
-            xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeEndElement();
-
-            xml = strWriter.toString();
-            strWriter.flush();
-            strWriter.close();
-            xmlWriter.flush();
-            xmlWriter.close();
-            return xml;
-        } catch (IOException | XMLStreamException e) {
-            e.printStackTrace();
-            return "";
-        }
+//        final XMLOutputFactory output = XMLOutputFactory.newInstance();
+//        output.setProperty("escapeCharacters", false);
+//        XMLStreamWriter xmlWriter;
+//        String xml;
+//        try {
+//            Writer strWriter = new StringWriter();
+//            xmlWriter = output.createXMLStreamWriter(strWriter);
+//
+//            // start element gui
+//            xmlWriter.writeCharacters("\t");
+//            xmlWriter.writeStartElement("launcher");
+//
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeComment("Whether JVM settings for launching kernel should be autodetected; " +
+//                    "'true' or 'false'");
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeStartElement("autodetect");
+//            xmlWriter.writeCharacters(String.valueOf(isAutodetectJavaRuntime()));
+//            xmlWriter.writeEndElement();
+//
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeComment("Path to JAVA_HOME.  This field has no effect if autodetect is true.");
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeStartElement("java-home");
+//            xmlWriter.writeCharacters(getJavaHome());
+//            xmlWriter.writeEndElement();
+//
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeComment("Working directory of kernel process.  This field has no effect if autodetect is true.");
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeStartElement("working-dir");
+//            xmlWriter.writeCharacters(getWorkingDir());
+//            xmlWriter.writeEndElement();
+//
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeComment("Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.");
+//            xmlWriter.writeCharacters("\r\n\t\t\t");
+//            xmlWriter.writeStartElement("aion-sh");
+//            xmlWriter.writeCharacters(getAionSh());
+//            xmlWriter.writeEndElement();
+//
+//            // close element gui
+//            xmlWriter.writeCharacters("\r\n\t\t");
+//            xmlWriter.writeEndElement();
+//
+//            xml = strWriter.toString();
+//            strWriter.flush();
+//            strWriter.close();
+//            xmlWriter.flush();
+//            xmlWriter.close();
+//            return xml;
+//        } catch (IOException | XMLStreamException e) {
+//            e.printStackTrace();
+//            return "";
+//        }
     }
 
     @Override

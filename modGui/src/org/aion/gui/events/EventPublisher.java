@@ -89,4 +89,13 @@ public class EventPublisher {
         EventBusRegistry.INSTANCE.getBus(UiMessageEvent.ID)
                 .post(new UiMessageEvent(UiMessageEvent.Type.CONSOLE_LOG, message));
     }
+
+    public static void fireUnexpectedApiDisconnection() {
+        EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS)
+                .post(new UnexpectedApiDisconnectedEvent());
+    }
+
+    public static void fireDisconnected() {
+        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.DISCONNECTED));
+    }
 }

@@ -38,7 +38,7 @@ public class GeneralKernelInfoRetrieverTest {
         when(msg.isError()).thenReturn(false);
         when(msg.getObject()).thenReturn(Boolean.valueOf(true));
 
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         assertThat(unit.isMining(), is(true));
     }
 
@@ -73,7 +73,7 @@ public class GeneralKernelInfoRetrieverTest {
         }};
         when(msg.getObject()).thenReturn(peerList);
 
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         assertThat(unit.getPeerCount(), is(peerCount));
     }
 

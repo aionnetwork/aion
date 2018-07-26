@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,11 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.zero.types;
 
@@ -32,26 +30,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-
-import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
-//import org.aion.types.vm.Bloom;
-//import org.aion.types.vm.BloomInfo;
+import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.Log;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
  * aion transaction receipt class.
  */
-public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> implements ITxReceipt {
+public class AionTxReceipt extends AbstractTxReceipt<AionTransaction>  {
 
-    protected long energyUsed;
+    private long energyUsed;
 
     public AionTxReceipt() {
     }

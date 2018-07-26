@@ -51,9 +51,9 @@ public class CfgLogTest extends CfgLog {
     };
 
     private final static String[] path = {
-            "logger",                           // valid entry
+            "LOGGER",                           // valid entry
             "l!@#*g",                           // invalid entry
-            "log/logging/logger",               // special entry
+            "log/logging/LOGGER",               // special entry
             ""                                  // null entry
     };
 
@@ -126,7 +126,7 @@ public class CfgLogTest extends CfgLog {
         // Test for valid file path
         config.logPath = path[0];
         assertTrue(config.isValidPath());
-        assertEquals("logger", config.getLogPath());
+        assertEquals("LOGGER", config.getLogPath());
 
         // Test for invalid file path
         config.logPath = path[1];
@@ -135,7 +135,7 @@ public class CfgLogTest extends CfgLog {
         // Test for folder hierarchy path
         config.logPath = path[2];
         assertTrue(config.isValidPath());
-        assertEquals("log/logging/logger", config.getLogPath());
+        assertEquals("log/logging/LOGGER", config.getLogPath());
 
         // Test for null path
         config.logPath = path[3];
@@ -222,10 +222,5 @@ public class CfgLogTest extends CfgLog {
         }
 
         return true;
-    }
-
-    @Test
-    public void test() {
-        System.out.println( new CfgLog().toXML() );
     }
 }

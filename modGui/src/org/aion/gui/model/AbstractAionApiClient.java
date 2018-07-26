@@ -13,6 +13,7 @@ import org.slf4j.Logger;
  */
 public abstract class AbstractAionApiClient {
     private final IAionAPI api;
+    private final IApiMsgErrorHandler errorHandler;
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
@@ -20,9 +21,17 @@ public abstract class AbstractAionApiClient {
      * Constructor
      *
      * @param kernelConnection connection containing the API instance to interact with
+     * @param errorHander error handler that executes whenever API call is made.  use null if no
+     *                    error handling needed.
      */
-    protected AbstractAionApiClient(KernelConnection kernelConnection) {
+    protected AbstractAionApiClient(KernelConnection kernelConnection,
+                                    IApiMsgErrorHandler errorHander) {
         this.api = kernelConnection.getApi();
+        this.errorHandler = errorHander;
+    }
+
+    protected AbstractAionApiClient(KernelConnection kernelConnection) {
+        this(kernelConnection, null);
     }
 
     @FunctionalInterface
@@ -36,37 +45,19 @@ public abstract class AbstractAionApiClient {
      * to use this to execute critical sections that interact with the API.
      *
      * @param func a function that calls the Aion API
-     * @param throwIfError if true, throw {@link ApiDataRetrievalException} if API call returns an error
      * @return object returned by Aion API.
+     * @throws ApiDataRetrievalException if error handler decides to throw it
      */
-    protected ApiMsg callApi(ApiFunction func, boolean throwIfError) {
-        final ApiMsg resp;
+
+    protected ApiMsg callApi(ApiFunction func) throws ApiDataRetrievalException {
+        final ApiMsg msg;
         synchronized (api) {
-            resp = func.call(api);
+            msg = func.call(api);
         }
-        if(throwIfError) {
-            throwAndLogIfError(resp);
+        if(errorHandler != null) {
+            errorHandler.handleError(msg);
         }
-        return resp;
-    }
-
-    protected ApiMsg callApi(ApiFunction func) {
-        return callApi(func, true);
-    }
-
-    /**
-     * Log and throw if msg is in error state.  Otherwise, do nothing.
-     *
-     * @param msg msg
-     * @throws ApiDataRetrievalException
-     */
-    protected void throwAndLogIfError(ApiMsg msg) throws ApiDataRetrievalException {
-        if(msg.isError()) {
-            String log = String.format("Error in API call.  Code = %s.  Error = %s.",
-                    msg.getErrorCode(), msg.getErrString());
-            LOG.error(log);
-            throw new ApiDataRetrievalException(log, msg);
-        }
+        return msg;
     }
 
     /**

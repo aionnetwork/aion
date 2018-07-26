@@ -7,7 +7,6 @@ import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.EventPublisher;
-import org.aion.gui.events.RefreshEvent;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
@@ -110,6 +109,7 @@ public class KernelConnection {
                 LOG.trace("About to destroy API");
                 api.destroyApi().getObject();
             }
+            EventPublisher.fireDisconnected();
             consoleManager.addLog("Disconnected from kernel", KERNEL);
         });
 

@@ -22,9 +22,11 @@ import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
+import org.aion.gui.model.IApiMsgErrorHandler;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.BalanceDto;
+import org.aion.gui.model.SimpleApiMsgErrorHandler;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.gui.util.AionConstants;
 import org.aion.log.AionLoggerFactory;
@@ -34,6 +36,8 @@ import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.events.IdleMonitor;
 import org.aion.wallet.storage.WalletStorage;
+import org.aion.os.UnixKernelProcessHealthChecker;
+import org.aion.os.UnixProcessTerminator;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
@@ -86,6 +90,7 @@ public class MainWindow extends Application {
     private Stage stage;
     private Scene scene;
 
+    private final UnixKernelProcessHealthChecker unixKernelProcessHealthChecker;
     private final KernelUpdateTimer timer;
     private final KernelLauncher kernelLauncher;
     private final AccountManager accountManager;
@@ -109,8 +114,12 @@ public class MainWindow extends Application {
     public MainWindow() {
         consoleManager = new ConsoleManager();
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
-        kernelLauncher = new KernelLauncher(CfgAion.inst().getGui().getCfgGuiLauncher(),
-                EventBusRegistry.INSTANCE);
+        unixKernelProcessHealthChecker = new UnixKernelProcessHealthChecker();
+        kernelLauncher = new KernelLauncher(
+                CfgAion.inst().getGui().getCfgGuiLauncher(),
+                EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator(),
+                unixKernelProcessHealthChecker);
         kc = new KernelConnection(
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS),
@@ -124,8 +133,7 @@ public class MainWindow extends Application {
 
         accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
         transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
-        accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
-    }
+        accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);    }
 
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
@@ -170,6 +178,7 @@ public class MainWindow extends Application {
     }
 
     private FXMLLoader loader() throws IOException {
+        IApiMsgErrorHandler errorHandler = new SimpleApiMsgErrorHandler();
         FXMLLoader loader = new FXMLLoader((getClass().getResource(MAIN_WINDOW_FXML)));
         loader.setControllerFactory(new ControllerFactory()
                 .withKernelConnection(kc)

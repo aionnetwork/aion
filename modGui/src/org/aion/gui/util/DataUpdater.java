@@ -18,6 +18,9 @@ public class DataUpdater extends TimerTask {
 
     @Override
     public void run() {
-        Platform.runLater(() -> eventBus.post(new RefreshEvent(RefreshEvent.Type.TIMER)));
+        Platform.runLater(() -> {
+            eventBus.post(new RefreshEvent(RefreshEvent.Type.TIMER));
+        });
+
     }
 }

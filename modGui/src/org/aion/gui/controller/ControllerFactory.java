@@ -3,15 +3,16 @@ package org.aion.gui.controller;
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
 import org.aion.gui.controller.partials.ConsoleTailController;
-import org.aion.gui.model.ConsoleTail;
-import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.ConfigManipulator;
+import org.aion.gui.model.ConsoleTail;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.os.KernelLauncher;
+import org.aion.os.UnixKernelProcessHealthChecker;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.storage.WalletStorage;
@@ -51,6 +52,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private WalletStorage walletStorage;
     private TransactionProcessor transactionProcessor;
     private ConsoleManager consoleManager;
+    private UnixKernelProcessHealthChecker healthChecker;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -72,7 +74,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelUpdateTimer,
                     generalKernelInfoRetriever,
                     syncInfoDto,
-                    consoleManager));
+                    consoleManager,
+                    healthChecker));
             put(SettingsController.class, () -> new SettingsController(
                     configManipulator));
             put(AccountsController.class, () -> new AccountsController(
@@ -259,6 +262,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
 
     public ControllerFactory withConsoleManager(ConsoleManager consoleManager) {
         this.consoleManager = consoleManager;
+        return this;
+    }
+
+    public UnixKernelProcessHealthChecker getHealthChecker() {
+        return this.healthChecker;
+    }
+
+    public ControllerFactory withHealthChecker(UnixKernelProcessHealthChecker healthChecker) {
+        this.healthChecker = healthChecker;
         return this;
     }
 }

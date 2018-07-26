@@ -58,9 +58,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     protected ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    private IByteArrayKeyValueDatabase indexDS;
     private DataSourceArray<List<BlockInfo>> index;
-    private IByteArrayKeyValueDatabase blocksDS;
     private ObjectDataSource<AionBlock> blocks;
 
     private boolean checkIntegrity = true;
@@ -76,9 +74,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
 
-        this.indexDS = index;
         this.index = new DataSourceArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
-        this.blocksDS = blocks;
 
         this.blocks = new ObjectDataSource<>(blocks, new Serializer<AionBlock, byte[]>() {
             @Override
@@ -91,7 +87,6 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 return new AionBlock(bytes);
             }
         });
-
     }
 
     public AionBlock getBestBlock() {
@@ -147,20 +142,6 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         try {
             blocks.flush();
             index.flush();
-            try {
-                if (!blocksDS.isAutoCommitEnabled()) {
-                    blocksDS.commit();
-                }
-            } catch (Exception e) {
-                LOG.error("Unable to flush blocks data.", e);
-            }
-            try {
-                if (!indexDS.isAutoCommitEnabled()) {
-                    indexDS.commit();
-                }
-            } catch (Exception e) {
-                LOG.error("Unable to flush blocks index data.", e);
-            }
         } finally {
             lock.writeLock().unlock();
         }
@@ -1096,14 +1077,39 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             // check each block's total difficulty till genesis
             boolean correct = true;
             AionBlock block = getBestBlock();
+            long start, round, time;
+            start = round = System.currentTimeMillis();
+            long bestBlockNumber = block.getNumber();
+
             while (correct && block.getNumber() > 0) {
                 // it is correct if there is no inconsistency wrt to the parent
                 correct = getTotalDifficultyForHash(block.getHash())
                         .equals(getTotalDifficultyForHash(block.getParentHash()).add(block.getDifficultyBI()));
-                LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
-                              block.getShortHash(),
-                              block.getNumber(),
-                              correct ? "OK" : "NOT OK");
+
+                if (!correct) {
+                    LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
+                                  block.getShortHash(),
+                                  block.getNumber(),
+                                  "NOT OK");
+                } else {
+                    time = System.currentTimeMillis();
+                    if (time - round > 4999) {
+                        long remaining = block.getNumber();
+                        long checked = bestBlockNumber - block.getNumber() + 1;
+                        double duration = (time - start) / 1000;
+                        double approx = remaining * (duration / checked);
+                        approx = approx >= 1 ? approx : 1;
+
+                        LOG_CONS.info(
+                                "{} blocks checked in {} sec. {} more blocks to verify. Approximate completion time is {} sec.",
+                                checked,
+                                (long) duration,
+                                remaining,
+                                (long) approx);
+                        round = time;
+                    }
+                }
+
                 // check parent next
                 block = getBlockByHash(block.getParentHash());
             }
@@ -1111,10 +1117,15 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             // check correct TD for genesis block
             if (block.getNumber() == 0) {
                 correct = getTotalDifficultyForHash(block.getHash()).equals(block.getDifficultyBI());
-                LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
-                              block.getShortHash(),
-                              block.getNumber(),
-                              correct ? "OK" : "NOT OK");
+                if (!correct) {
+                    LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
+                                  block.getShortHash(),
+                                  block.getNumber(),
+                                  "NOT OK");
+                } else {
+                    time = ((System.currentTimeMillis() - start) / 1000) + 1;
+                    LOG_CONS.info("{} blocks checked in under {} sec.", bestBlockNumber + 1, time);
+                }
             }
 
             // if any inconsistency, correct the TD
@@ -1178,12 +1189,12 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         lock.writeLock().lock();
 
         try {
-            indexDS.close();
+            index.close();
         } catch (Exception e) {
             LOG.error("Not able to close the index database:", e);
         } finally {
             try {
-                blocksDS.close();
+                blocks.close();
             } catch (Exception e) {
                 LOG.error("Not able to close the blocks database:", e);
             } finally {

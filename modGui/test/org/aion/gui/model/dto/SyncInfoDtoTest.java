@@ -38,7 +38,7 @@ public class SyncInfoDtoTest {
 
         msg = new ApiMsg();
         when(net.syncInfo()).thenReturn(msg);
-        unit = new SyncInfoDto(kernelConnection);
+        unit = new SyncInfoDto(kernelConnection, null /*IApiMsgErrorHandler*/);
     }
 
     @Test
@@ -57,8 +57,10 @@ public class SyncInfoDtoTest {
         long chainBest = 792531;
         long networkBest = 1141;
 
-        SyncInfo syncInfo = new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used*/);
+        SyncInfo syncInfo = new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used */);
+
         msg.set(syncInfo, ApiMsg.cast.OTHERS);
+        when(api.isConnected()).thenReturn(true);
         unit = new SyncInfoDto(kernelConnection);
 
         unit.loadFromApiInternal();
@@ -77,7 +79,7 @@ public class SyncInfoDtoTest {
         when(chain.blockNumber()).thenReturn(secondMsg);
         secondMsg.set(Long.valueOf(blockNum), ApiMsg.cast.LONG);
 
-        unit = new SyncInfoDto(kernelConnection);
+        unit = new SyncInfoDto(kernelConnection, null /*IApiMsgErrorHandler*/);
         unit.loadFromApiInternal();
 
         assertThat(unit.getNetworkBestBlkNumber(), is(blockNum));

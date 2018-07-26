@@ -24,8 +24,6 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
-import com.google.common.base.Objects;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -44,7 +42,8 @@ public final class CfgNetP2p {
         this.maxTempNodes = 128;
         this.maxActiveNodes = 128;
         this.errorTolerance = 50;
-        this.isSyncOnlyNode = false;
+        this.clusterNodeMode = false;
+        this.syncOnlyMode = false;
     }
 
     private String ip;
@@ -53,9 +52,11 @@ public final class CfgNetP2p {
 
     private boolean discover;
 
+    private boolean clusterNodeMode;
+
     private boolean bootlistSyncOnly;
 
-    private boolean isSyncOnlyNode;
+    private boolean syncOnlyMode;
 
     private int maxTempNodes;
 
@@ -80,11 +81,14 @@ public final class CfgNetP2p {
                 case "discover":
                     this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
+                case "cluster-node-mode":
+                    this.clusterNodeMode = Boolean.parseBoolean(Cfg.readValue(sr));
+                    break;
                 case "bootlist-sync-only":
                     this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
-                case "sync-only-node":
-                    this.isSyncOnlyNode = Boolean.parseBoolean(Cfg.readValue(sr));
+                case "sync-only-mode":
+                    this.syncOnlyMode = Boolean.parseBoolean(Cfg.readValue(sr));
                     break;
                 case "max-temp-nodes":
                     this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
@@ -188,27 +192,9 @@ public final class CfgNetP2p {
         return errorTolerance;
     }
 
-    public boolean isSyncOnlyNode() {
-        return isSyncOnlyNode;
-    }
+    public boolean inClusterNodeMode() { return clusterNodeMode; }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CfgNetP2p cfgNetP2p = (CfgNetP2p) o;
-        return port == cfgNetP2p.port &&
-                discover == cfgNetP2p.discover &&
-                bootlistSyncOnly == cfgNetP2p.bootlistSyncOnly &&
-                isSyncOnlyNode == cfgNetP2p.isSyncOnlyNode &&
-                maxTempNodes == cfgNetP2p.maxTempNodes &&
-                maxActiveNodes == cfgNetP2p.maxActiveNodes &&
-                errorTolerance == cfgNetP2p.errorTolerance &&
-                Objects.equal(ip, cfgNetP2p.ip);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(ip, port, discover, bootlistSyncOnly, isSyncOnlyNode, maxTempNodes, maxActiveNodes, errorTolerance);
+    public boolean inSyncOnlyMode() {
+        return syncOnlyMode;
     }
 }
