@@ -89,14 +89,14 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
         switch(sig) {
             case SIG_CHANGE_OWNER: {
-                byte[] address = parseAddressFromCall(input);
-                if (address == null)
-                    return fail();
-                ErrCode code = this.controller.setNewOwner(this.context.caller().toBytes(), address);
+                    byte[] address = parseAddressFromCall(input);
+                    if (address == null)
+                        return fail();
+                    ErrCode code = this.controller.setNewOwner(this.context.caller().toBytes(), address);
 
-                if (code != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
+                    if (code != ErrCode.NO_ERROR)
+                        return fail();
+                    return success();
             }
             case SIG_ACCEPT_OWNERSHIP: {
                 ErrCode code = this.controller.acceptOwnership(this.context.caller().toBytes());
@@ -250,15 +250,11 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
-//        byte[] code = this.track.getCode(new Address(to));
-//        if (code != null && code.length != 0)
-//            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
-
         // otherwise prepare for a transfer
-//        ExecutionContext innerContext = assembleContext(to, value);
+        ExecutionContext innerContext = assembleContext(to, value);
 
-//        AionInternalTx tx = newInternalTx(innerContext);
-//        this.context.helper().addInternalTransaction(tx);
+        AionInternalTx tx = newInternalTx(innerContext);
+        this.context.helper().addInternalTransaction(tx);
 
         IRepositoryCache cache = this.track;
         cache.addBalance(new Address(to), value);
