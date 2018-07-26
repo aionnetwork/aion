@@ -3,6 +3,7 @@ package org.aion.gui.model;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.log.AionLoggerFactory;
+import org.aion.os.KernelInstanceId;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -13,6 +14,10 @@ import java.util.List;
  */
 public class GeneralKernelInfoRetriever extends AbstractAionApiClient {
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+
+    public GeneralKernelInfoRetriever(KernelConnection kernelConnection) {
+        this(kernelConnection, SimpleApiMsgErrorHandler.INSTANCE);
+    }
 
     public GeneralKernelInfoRetriever(KernelConnection kernelConnection, IApiMsgErrorHandler errorHandler) {
         super(kernelConnection, errorHandler);

@@ -4,7 +4,7 @@ import org.aion.gui.model.KernelConnection;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 public class AbstractDtoTest {
@@ -15,7 +15,7 @@ public class AbstractDtoTest {
             public boolean loadCalled = false;
 
             public TestImpl() {
-                super(mock(KernelConnection.class));
+                super(mock(KernelConnection.class), null);
             }
 
             @Override
