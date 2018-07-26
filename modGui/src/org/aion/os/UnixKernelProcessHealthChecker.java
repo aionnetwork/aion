@@ -31,7 +31,7 @@ public class UnixKernelProcessHealthChecker {
         ) {
             return br.lines().collect(Collectors.toList());
         } catch (IOException ioe) {
-            throw new IOException("Could not get the output of callPs program", ioe);
+            throw new IOException("Could not get the output of ps program", ioe);
         }
     }
 }

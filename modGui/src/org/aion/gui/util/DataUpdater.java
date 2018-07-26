@@ -20,7 +20,6 @@ public class DataUpdater extends TimerTask {
     public void run() {
         Platform.runLater(() -> {
             eventBus.post(new RefreshEvent(RefreshEvent.Type.TIMER));
-            System.out.println("tick!");
         });
 
     }

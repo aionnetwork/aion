@@ -10,16 +10,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.*;
 
 /** Facilitates launching an instance of the Kernel and managing the launched instance. */
 public class KernelLauncher {
@@ -29,7 +20,6 @@ public class KernelLauncher {
     private final UnixProcessTerminator unixProcessTerminator;
     private final UnixKernelProcessHealthChecker healthChecker;
     private final File pidFile;
-    private final ExecutorService executor;
 
     private KernelInstanceId currentInstance = null;
 
@@ -52,8 +42,7 @@ public class KernelLauncher {
                 healthChecker,
                 (config.getKernelPidFile() != null ?
                         new File(config.getKernelPidFile()) :
-                        choosePidStorageLocation()),
-                Executors.newSingleThreadExecutor()
+                        choosePidStorageLocation())
         );
     }
 
@@ -63,15 +52,13 @@ public class KernelLauncher {
                                       EventBusRegistry ebr,
                                       UnixProcessTerminator terminator,
                                       UnixKernelProcessHealthChecker healthChecker,
-                                      File pidFile,
-                                      ExecutorService executorService) {
+                                      File pidFile) {
         this.config = config;
         this.kernelLaunchConfigurator = klc;
         this.eventBusRegistry = ebr;
         this.unixProcessTerminator = terminator;
         this.healthChecker = healthChecker;
         this.pidFile = pidFile;
-        this.executor = executorService;
     }
 
     /**
@@ -229,7 +216,7 @@ public class KernelLauncher {
         return (KernelInstanceId) ois.readObject();
     }
 
-    private KernelInstanceId setAndPersistPid(long pid) throws IOException {
+    @VisibleForTesting KernelInstanceId setAndPersistPid(long pid) throws IOException {
         KernelInstanceId kernel = new KernelInstanceId(pid);
         FileOutputStream fos = new FileOutputStream(pidFile);
         ObjectOutputStream oos = new ObjectOutputStream(fos);

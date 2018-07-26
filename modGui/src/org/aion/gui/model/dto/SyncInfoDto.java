@@ -5,6 +5,7 @@ import org.aion.api.type.SyncInfo;
 import org.aion.gui.model.ApiDataRetrievalException;
 import org.aion.gui.model.IApiMsgErrorHandler;
 import org.aion.gui.model.KernelConnection;
+import org.aion.gui.model.SimpleApiMsgErrorHandler;
 import org.aion.log.AionLoggerFactory;
 import org.slf4j.Logger;
 
@@ -13,6 +14,15 @@ public class SyncInfoDto extends AbstractDto {
     private long networkBestBlkNumber;
 
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+
+    /**
+     * Constructor
+     *
+     * @param kernelConnection connection containing the API instance to interact with
+     */
+    public SyncInfoDto(KernelConnection kernelConnection) {
+        super(kernelConnection, SimpleApiMsgErrorHandler.INSTANCE);
+    }
 
     /**
      * Constructor

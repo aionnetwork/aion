@@ -205,16 +205,21 @@ else
 			JAVA_CMD="$JAVA_HOME/bin/java"
 	fi
 
+	# if there's CLI args, we just run it and quit
+	if [ "$#" -gt 0 ]; then
+		env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
+			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" 
+		exit
+	fi
+
+	# otherwise, kernel will start; run it in background
 	trap "exit" INT TERM
 	trap "exit_kernel" EXIT
 
 	exit_kernel() {
-        echo "<<< exit_kernel() >>>"
 		if [ ! -z "$kernel_pid" ]; then
 			kill "$kernel_pid" &> /dev/null
-            echo "<<<About to wait...>>>"
-            wait "$kernel_pid"
-            echo "<<<Wait done.>>>"
+			wait "$kernel_pid"
 		fi
 		exit 1
 	}

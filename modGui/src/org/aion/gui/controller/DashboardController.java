@@ -90,7 +90,6 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleUiTimerTick(RefreshEvent event) {
-        System.out.println("DashboardController#handleUiTimerTick -> " + event.getType());
         // peer count
         final Task<Integer> getPeerCountTask = getApiTask(o -> generalKernelInfoRetriever.getPeerCount(), null);
         runApiTask(
@@ -157,7 +156,7 @@ public class DashboardController extends AbstractController {
             LOG.error("Detected disconnection from Kernel API, but Kernel process is still running.  " +
                     "It is recommended that you terminate the kernel and re-launch it.");
         } else {
-            LOG.info("Detected unexpected termination of Kernel API.  Internal resources will be cleaned up.");
+            LOG.info("Detected unexpected termination of Kernel process.  Internal resources will be cleaned up.");
             kernelUpdateTimer.stop();
             kernelConnection.disconnect();
             kernelLauncher.cleanUpDeadProcess();
@@ -187,7 +186,7 @@ public class DashboardController extends AbstractController {
                 try {
                     kernelLauncher.terminate();
                 } catch (Exception e) {
-                    throw new RuntimeException(e); // you can only use unchecked exceptions in the task?
+                    throw new RuntimeException(e);
                 }
                 return null;
             }, null);

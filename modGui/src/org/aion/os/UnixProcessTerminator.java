@@ -88,7 +88,7 @@ public class UnixProcessTerminator {
     /**
      * Terminate the kernel OS process given by the kernelInstanceId and block until completion.
      *
-     * Specifically, send SIGTERM to that process, then poll the UNIX callPs program to verify that
+     * Specifically, send SIGTERM to that process, then poll the UNIX ps program to verify that
      * the process has stopped.  Keep checking until it has either stopped or the "timeout until
      * SIGKILL" duration is reached.  If timeout is reached, but process is still running, send
      * SIGKILL to that process.  Keep checking until it has either stopped or until the "timeout
@@ -170,7 +170,7 @@ public class UnixProcessTerminator {
         }
 
         List<String> callPs(long pid) throws IOException, InterruptedException {
-            final String[] command = new String[] {"ps", "-o", "pid=", "--pid", String.valueOf(pid)};
+            final String[] command = new String[]{"ps", "-o", "pid=", "--pid", String.valueOf(pid)};
             Process proc = new ProcessBuilder().command(command).start();
             proc.waitFor();
 
