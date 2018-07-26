@@ -97,13 +97,13 @@ public abstract class AbstractExecutor {
         }
     }
 
-    private boolean prepare(ITransaction tx, long contextNrgLmit) {
+    protected final boolean prepare(ITransaction tx, long contextNrgLmit) {
         if (isLocalCall) {
             return true;
         }
 
-        // check nrg limit
-        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice());
+        // check nrg limit      use signum 1 for txNrgPrice?
+        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice()).abs();
         long txNrgLimit = tx.getNrg();
 
         if (tx.isContractCreation()) {
