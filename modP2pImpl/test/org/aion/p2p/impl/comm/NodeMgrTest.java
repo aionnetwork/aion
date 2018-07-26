@@ -602,7 +602,7 @@ public class NodeMgrTest {
                 while (start.get()) {
                     nMgr.addTempNode(genNode());
                     try {
-                        Thread.sleep(r.nextInt(10) + 10);
+                        Thread.sleep(r.nextInt(5) + 5);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -625,7 +625,7 @@ public class NodeMgrTest {
         Thread tMoveTempNodeToOutbound = new Thread(() -> {
             while (start.get()) {
                 try {
-                    Thread.sleep(5);
+                    Thread.sleep(15);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -643,7 +643,7 @@ public class NodeMgrTest {
         Thread tMoveTempNodeToInbound = new Thread(() -> {
             while (start.get()) {
                 try {
-                    Thread.sleep(5);
+                    Thread.sleep(15);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -681,7 +681,7 @@ public class NodeMgrTest {
                 count.getAndDecrement();
 
                 try {
-                    Thread.sleep(5);
+                    Thread.sleep(8);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -702,7 +702,7 @@ public class NodeMgrTest {
                 count.getAndDecrement();
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -727,7 +727,7 @@ public class NodeMgrTest {
         }
 
         start.set(false);
-        Thread.sleep(3000);
+        Thread.sleep(1000);
 
     }
 }
