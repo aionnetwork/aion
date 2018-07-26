@@ -2,6 +2,6 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<VBox alignment="CENTER" prefWidth="100.0" xmlns="http://javafx.com/javafx/8.0.162">
+<VBox alignment="CENTER" xmlns="http://javafx.com/javafx/8.0.162">
     <Label styleClass="header-button-label" text="Send"/>
 </VBox>

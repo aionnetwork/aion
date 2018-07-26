@@ -1,21 +1,25 @@
 package org.aion.wallet.ui.components.partials;
 
-import javafx.concurrent.Task;
+import com.google.common.eventbus.Subscribe;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.aion.gui.controller.AbstractController;
+import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.events.KernelProcEvent;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.gui.model.KernelConnection;
 
 import java.net.URL;
-import java.util.EnumSet;
 import java.util.ResourceBundle;
 
 public class ConnectivityStatusController extends AbstractController {
     private KernelConnection kc;
 
-    private static final String CONNECTIVITY_STATUS_CONNECTED = "CONNECTED";
-    private static final String CONNECTIVITY_STATUS_DISCONNECTED = "NOT CONNECTED";
+    private static final String STATUS_DISCONNECTED = "DISCONNECTED";
+    private static final String STATUS_CONNECTED = "CONNECTED";
+    private static final String STATUS_CONNECTING = "CONNECTING";
+    private static final String STATUS_NOT_RUNNING = "NOT RUNNING";
 
     @FXML
     private Label connectivityLabel;
@@ -26,26 +30,28 @@ public class ConnectivityStatusController extends AbstractController {
 
     @Override
     public void internalInit(final URL location, final ResourceBundle resources) {
+        EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS).register(this);
     }
 
     @Override
-    protected final void refreshView(final RefreshEvent event) {
-        if (EnumSet.of(RefreshEvent.Type.TIMER, RefreshEvent.Type.CONNECTED).contains(event.getType())) {
-//            final Task<Boolean> getConnectedStatusTask = getApiTask(o -> blockchainConnector.getConnectionStatus(), null);
-            final Task<Boolean> getConnectedStatusTask = getApiTask(o -> kc.isConnected(), null);
-            runApiTask(
-                    getConnectedStatusTask,
-                    evt -> setConnectivityLabel(getConnectedStatusTask.getValue()),
-                    getErrorEvent(t -> {}, getConnectedStatusTask),
-                    getEmptyEvent());
+    protected void refreshView(final RefreshEvent event) {
+        switch (event.getType()) {
+            case CONNECTED:
+                Platform.runLater(() -> connectivityLabel.setText(STATUS_CONNECTED));
+                break;
+            case DISCONNECTED:
+                Platform.runLater(() -> connectivityLabel.setText(STATUS_DISCONNECTED));
+                break;
         }
     }
 
-    private void setConnectivityLabel(boolean connected) {
-        if (connected) {
-            connectivityLabel.setText(CONNECTIVITY_STATUS_CONNECTED);
-        } else {
-            connectivityLabel.setText(CONNECTIVITY_STATUS_DISCONNECTED);
-        }
+    @Subscribe
+    protected void refreshView(final KernelProcEvent.KernelLaunchedEvent ev) {
+        Platform.runLater(() -> connectivityLabel.setText(STATUS_CONNECTING));
+    }
+
+    @Subscribe
+    protected void refreshView(final KernelProcEvent.KernelTerminatedEvent ev) {
+        Platform.runLater(() -> connectivityLabel.setText(STATUS_NOT_RUNNING));
     }
 }

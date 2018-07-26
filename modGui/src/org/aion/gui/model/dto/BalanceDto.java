@@ -3,6 +3,7 @@ package org.aion.gui.model.dto;
 import org.aion.api.type.ApiMsg;
 import org.aion.base.type.Address;
 import org.aion.gui.model.KernelConnection;
+import org.aion.gui.model.SimpleApiMsgErrorHandler;
 
 import java.math.BigInteger;
 
@@ -24,7 +25,7 @@ public class BalanceDto extends AbstractDto {
      * @param kernelConnection connection containing the API instance to interact with
      */
     public BalanceDto(KernelConnection kernelConnection) {
-        super(kernelConnection);
+        super(kernelConnection, SimpleApiMsgErrorHandler.INSTANCE);
     }
 
     public void setAddress(String address) {
@@ -39,7 +40,6 @@ public class BalanceDto extends AbstractDto {
     protected void loadFromApiInternal() {
         try {
             ApiMsg msg = callApi(api -> api.getChain().getBalance(new Address(address)));
-            throwAndLogIfError(msg);
             balance = msg.getObject();
         } catch (Exception e) {
             balance = null;

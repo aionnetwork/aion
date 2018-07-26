@@ -6,5 +6,5 @@
     <!--<ImageView fitHeight="62.0" fitWidth="63.0" pickOnBounds="true" preserveRatio="true">-->
         <!--<Image url="@../icons/home-50.png"/>-->
     <!--</ImageView>-->
-    <Label styleClass="header-button-label" text="Kernel Info" />
+    <Label styleClass="header-button-label" text="Dashboard" />
 </VBox>

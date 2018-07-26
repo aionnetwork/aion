@@ -6,6 +6,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
+<?import javafx.geometry.Insets?>
 <AnchorPane styleClass="default" xmlns="http://javafx.com/javafx/8.0.162"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.aion.gui.controller.HeaderPaneControls"
             fx:id="parent"
@@ -32,25 +33,31 @@
                 </VBox>
             </AnchorPane>
             <HBox alignment="BOTTOM_CENTER">
-                <VBox fx:id="homeButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                <VBox fx:id="homeButton"  onMouseClicked="#handleButtonPressed">
+                    <padding><Insets left="20" right="20" /></padding>
                     <fx:include source="buttons/HomeButton.fxml"/>
                 </VBox>
-                <VBox fx:id="accountsButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                <VBox fx:id="accountsButton"  onMouseClicked="#handleButtonPressed">
+                    <padding><Insets left="20" right="20" /></padding>
                     <fx:include source="buttons/AccountsButton.fxml"/>
                 </VBox>
-                <VBox fx:id="sendButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                <VBox fx:id="sendButton"  onMouseClicked="#handleButtonPressed">
+                    <padding><Insets left="20" right="20" /></padding>
                     <fx:include source="buttons/SendButton.fxml"/>
                 </VBox>
-                <VBox fx:id="receiveButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                <VBox fx:id="receiveButton"  onMouseClicked="#handleButtonPressed">
+                    <padding><Insets left="20" right="20" /></padding>
                     <fx:include source="buttons/ReceiveButton.fxml"/>
                 </VBox>
-                <VBox fx:id="historyButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                <VBox fx:id="historyButton"  onMouseClicked="#handleButtonPressed">
+                    <padding><Insets left="20" right="20" /></padding>
                     <fx:include source="buttons/HistoryButton.fxml"/>
                 </VBox>
                 <!--<VBox alignment="BOTTOM_CENTER" fx:id="contractsButton" onMouseClicked="#handleButtonPressed">-->
                     <!--<fx:include source="buttons/ContractsButton.fxml"/>-->
                 <!--</VBox>-->
-                <VBox fx:id="settingsButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                <VBox fx:id="settingsButton"  onMouseClicked="#handleButtonPressed">
+                    <padding><Insets left="20" right="20" /></padding>
                     <fx:include source="buttons/SettingsButton.fxml"/>
                 </VBox>
             </HBox>

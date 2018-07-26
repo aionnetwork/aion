@@ -9,11 +9,11 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.aion.wallet.ui.components.partials.ConnectivityStatusController"
       fx:id="parent"
-      prefWidth="150.0" alignment="CENTER_RIGHT" AnchorPane.rightAnchor="0.0">
+      prefWidth="300.0" alignment="CENTER_RIGHT" AnchorPane.rightAnchor="0.0" >
     <stylesheets>
         <URL value="@../footer-pane.css" />
     </stylesheets>
-    <HBox spacing="10" AnchorPane.rightAnchor="0.0">
-        <Label fx:id="connectivityLabel" styleClass="connected-label" text="NOT CONNECTED"/>
+    <HBox spacing="10" AnchorPane.rightAnchor="0.0" alignment="CENTER_RIGHT">
+        <Label fx:id="connectivityLabel" styleClass="connected-label" text="NOT RUNNING" alignment="CENTER_RIGHT"/>
     </HBox>
 </VBox>

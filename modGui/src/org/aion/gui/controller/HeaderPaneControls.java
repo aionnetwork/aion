@@ -164,13 +164,6 @@ public class HeaderPaneControls extends AbstractController {
                     getErrorEvent(throwable -> {}, getBalanceTask),
                     getEmptyEvent()
             );
-//            final Task<BigInteger> getBalanceTask = getApiTask(blockchainConnector::getBalance, accountAddress);
-//            runApiTask(
-//                    getBalanceTask,
-//                    evt -> updateNewBalance(currency, getBalanceTask.getValue()),
-//                    getErrorEvent(t -> {}, getBalanceTask),
-//                    getEmptyEvent()
-//            );
         }
     }
 

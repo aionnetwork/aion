@@ -11,6 +11,8 @@ import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.aion.wallet.account.AccountManager;
@@ -42,8 +44,7 @@ public class MyBuilderFactory implements BuilderFactory {
     private AccountManager accountManager;
     private ConsoleManager consoleManager;
 
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     @VisibleForTesting
     MyBuilderFactory(BuilderFactory fallback) {
@@ -62,12 +63,8 @@ public class MyBuilderFactory implements BuilderFactory {
     public Builder<?> getBuilder(Class<?> clazz) {
         Builder<?> builder = builderChooser.get(clazz);
         if(null != builder) {
-            System.out.println(
-                    String.format("MyBuilderFactory#getBuilder(%s) with custom builder", clazz.toString()));
             return builder;
         } else {
-            System.out.println(
-                    String.format("MyBuilderFactory#getBuilder(%s) used fallback builder", clazz.toString()));
             return fallback.getBuilder(clazz);
         }
     }
@@ -89,5 +86,4 @@ public class MyBuilderFactory implements BuilderFactory {
         this.consoleManager = consoleManager;
         return this;
     }
-
 }
