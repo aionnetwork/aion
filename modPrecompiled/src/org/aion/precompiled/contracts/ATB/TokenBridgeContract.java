@@ -250,16 +250,17 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
-        byte[] code = this.track.getCode(new Address(to));
-        if (code != null && code.length != 0)
-            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
+//        byte[] code = this.track.getCode(new Address(to));
+//        if (code != null && code.length != 0)
+//            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
         // otherwise prepare for a transfer
-        ExecutionContext innerContext = assembleContext(to, value);
-        IRepositoryCache cache = this.track;
-        AionInternalTx tx = newInternalTx(innerContext);
-        this.context.helper().addInternalTransaction(tx);
+//        ExecutionContext innerContext = assembleContext(to, value);
 
+//        AionInternalTx tx = newInternalTx(innerContext);
+//        this.context.helper().addInternalTransaction(tx);
+
+        IRepositoryCache cache = this.track;
         cache.addBalance(new Address(to), value);
         cache.addBalance(this.contractAddress, value.negate());
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, 0);
