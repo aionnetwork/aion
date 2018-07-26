@@ -3,6 +3,7 @@ package org.aion.os;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.events.EventPublisher;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.junit.After;
 import org.junit.Before;
@@ -22,6 +23,9 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.when;
 
 public class KernelLauncherIntegTest {
     private List<Long> cleanupPids;
@@ -105,6 +109,29 @@ public class KernelLauncherIntegTest {
 
         assertThat("Expected PID that was launched to no longer be running after KernelLauncher#terminate",
                 terminated, is(true));
+    }
+
+    @Test
+    public void testKernelKilledExternallyWhenGuiRestarts() throws Exception {
+        CfgGuiLauncher cfg = new CfgGuiLauncher();
+        cfg.setAutodetectJavaRuntime(false);
+        cfg.setJavaHome(System.getProperty("java.home"));
+        cfg.setAionSh("aion.sh");
+        cfg.setWorkingDir(System.getProperty("user.dir") + "/../");
+
+        // create the pid file, but don't run any process to simulate
+        // a launched kernel that got killed
+        UnixKernelProcessHealthChecker healthChecker = mock(UnixKernelProcessHealthChecker.class);
+        when(healthChecker.checkIfKernelRunning(1)).thenReturn(false);
+        KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator(), healthChecker);
+        kl.setAndPersistPid(1);
+        kl.setCurrentInstance(null);
+
+        kl.tryResume();
+
+        // should notice that kernel is not actually running
+        assertThat(kl.hasLaunchedInstance(), is(false));
     }
 
     private List<Long> pgrep(String pattern) throws IOException, InterruptedException {

@@ -9,14 +9,18 @@ import javafx.stage.Stage;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.KernelProcEvent;
 import org.aion.gui.events.RefreshEvent;
+import org.aion.gui.events.UnexpectedApiDisconnectedEvent;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.gui.util.DataUpdater;
+import org.aion.os.KernelInstanceId;
 import org.aion.os.KernelLauncher;
+import org.aion.os.UnixKernelProcessHealthChecker;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.matcher.control.ButtonMatchers;
 import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -25,11 +29,13 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
+import static javax.management.Query.not;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testfx.api.FxAssert.verifyThat;
+import static org.testfx.matcher.base.NodeMatchers.isEnabled;
 
 /**
  * Tests integration of {@link DashboardController}; specifically, that it modifies its View
@@ -45,6 +51,7 @@ public class DashboardControllerIntegTest extends ApplicationTest {
     private KernelConnection kernelConnection;
     private KernelUpdateTimer kernelUpdateTimer;
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
+    private UnixKernelProcessHealthChecker healthChecker;
     private SyncInfoDto syncInfoDto;
     private EventBus kernelBus = EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS);
     private EventBus uiRefreshBus = EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH);
@@ -60,6 +67,7 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         kernelUpdateTimer = mock(KernelUpdateTimer.class);
         generalKernelInfoRetriever = mock(GeneralKernelInfoRetriever.class);
         syncInfoDto = mock(SyncInfoDto.class);
+        healthChecker = mock(UnixKernelProcessHealthChecker.class);
     }
 
     @Override
@@ -69,7 +77,8 @@ public class DashboardControllerIntegTest extends ApplicationTest {
                 .withKernelLauncher(kernelLauncher)
                 .withTimer(kernelUpdateTimer)
                 .withSyncInfoDto(syncInfoDto)
-                .withGeneralKernelInfoRetriever(generalKernelInfoRetriever);
+                .withGeneralKernelInfoRetriever(generalKernelInfoRetriever)
+                .withHealthChecker(healthChecker);
         FXMLLoader loader = new FXMLLoader(
                 DashboardController.class.getResource("components/Dashboard.fxml"),
                 null,
@@ -141,5 +150,17 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         verifyThat("#numPeersLabel", LabeledMatchers.hasText(String.valueOf(peerCount)));
         verifyThat("#blocksLabel", LabeledMatchers.hasText("1337/5781 total blocks"));
         verifyThat("#isMining", LabeledMatchers.hasText(String.valueOf(isMining)));
+    }
+
+    @Test
+    public void testHandleUnexpectedApiDisconnectWhenKernelDead() throws Exception {
+        KernelInstanceId kernelInstanceId = new KernelInstanceId(123);
+        when(kernelLauncher.getLaunchedInstance()).thenReturn(kernelInstanceId);
+        when(healthChecker.checkIfKernelRunning(123)).thenReturn(false);
+        kernelBus.post(new UnexpectedApiDisconnectedEvent());
+        WaitForAsyncUtils.waitForFxEvents();
+        verify(kernelUpdateTimer).stop();
+        verify(kernelConnection).disconnect();
+        verify(kernelLauncher).cleanUpDeadProcess();
     }
 }

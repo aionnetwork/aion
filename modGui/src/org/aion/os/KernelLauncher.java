@@ -29,7 +29,6 @@ public class KernelLauncher {
     private final UnixProcessTerminator unixProcessTerminator;
     private final UnixKernelProcessHealthChecker healthChecker;
     private final File pidFile;
-    private final ExecutorService executor;
 
     private KernelInstanceId currentInstance = null;
 
@@ -52,8 +51,7 @@ public class KernelLauncher {
                 healthChecker,
                 (config.getKernelPidFile() != null ?
                         new File(config.getKernelPidFile()) :
-                        choosePidStorageLocation()),
-                Executors.newSingleThreadExecutor()
+                        choosePidStorageLocation())
         );
     }
 
@@ -63,15 +61,13 @@ public class KernelLauncher {
                                       EventBusRegistry ebr,
                                       UnixProcessTerminator terminator,
                                       UnixKernelProcessHealthChecker healthChecker,
-                                      File pidFile,
-                                      ExecutorService executorService) {
+                                      File pidFile) {
         this.config = config;
         this.kernelLaunchConfigurator = klc;
         this.eventBusRegistry = ebr;
         this.unixProcessTerminator = terminator;
         this.healthChecker = healthChecker;
         this.pidFile = pidFile;
-        this.executor = executorService;
     }
 
     /**
@@ -229,7 +225,7 @@ public class KernelLauncher {
         return (KernelInstanceId) ois.readObject();
     }
 
-    private KernelInstanceId setAndPersistPid(long pid) throws IOException {
+    @VisibleForTesting KernelInstanceId setAndPersistPid(long pid) throws IOException {
         KernelInstanceId kernel = new KernelInstanceId(pid);
         FileOutputStream fos = new FileOutputStream(pidFile);
         ObjectOutputStream oos = new ObjectOutputStream(fos);

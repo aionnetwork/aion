@@ -31,6 +31,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private KernelUpdateTimer kernelUpdateTimer;
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
+    private UnixKernelProcessHealthChecker healthChecker;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -51,7 +52,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelConnection,
                     kernelUpdateTimer,
                     generalKernelInfoRetriever,
-                    new UnixKernelProcessHealthChecker(),
+                    healthChecker,
                     syncInfoDto
             ));
             /*put(SettingsController.class, () -> new SettingsController(
@@ -181,5 +182,14 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
      */
     public SyncInfoDto getSyncInfoDto() {
         return syncInfoDto;
+    }
+
+    public UnixKernelProcessHealthChecker getHealthChecker() {
+        return this.healthChecker;
+    }
+
+    public ControllerFactory withHealthChecker(UnixKernelProcessHealthChecker healthChecker) {
+        this.healthChecker = healthChecker;
+        return this;
     }
 }
