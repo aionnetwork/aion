@@ -200,7 +200,7 @@ public class NodeTest {
     }
 
     @Test
-    public void testConnection() throws IOException {
+    public void testConnection() {
         Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
         assertNotNull(n);
 

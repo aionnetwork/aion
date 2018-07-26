@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.p2p.Header;
 
 /**
@@ -51,7 +52,7 @@ class ChannelBuffer {
 
     byte[] body = null;
 
-    Lock lock = new java.util.concurrent.locks.ReentrantLock();
+    Lock lock = new ReentrantLock();
 
     /**
      * Indicates whether this channel is closed.
@@ -86,7 +87,6 @@ class ChannelBuffer {
             count = 0;
         }
     }
-
 
     ChannelBuffer() {
     }
@@ -128,6 +128,14 @@ class ChannelBuffer {
     }
 
     void readHead(ByteBuffer buf) {
+        if (buf.array().length < bsHead.length) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readHead short buffer size");
+            }
+            return;
+        }
+
         buf.get(bsHead);
         try {
             header = Header.decode(bsHead);
@@ -140,6 +148,22 @@ class ChannelBuffer {
     }
 
     void readBody(ByteBuffer buf) {
+        if (isHeaderNotCompleted()) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readBody no header.");
+            }
+            return;
+        }
+
+        if (buf.array().length < header.getLen()) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readBody short buffer size.");
+            }
+            return;
+        }
+
         body = new byte[header.getLen()];
         buf.get(body);
     }
