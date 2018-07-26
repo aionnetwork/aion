@@ -87,16 +87,6 @@ public class KernelLauncherTest {
         assertThat(unit.tryResume(), is(false));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testTryResumeWhenPidInFileNotRunning() throws Exception {
-        when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(mock(EventBus.class));
-        KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, pidFile);
-
-        unit.setCurrentInstance(mock(KernelInstanceId.class));
-        unit.tryResume();
-    }
-
     @Test
     public void testSetCurrentInstanceNonNull() throws Exception {
         EventBus eb = mock(EventBus.class);

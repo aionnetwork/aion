@@ -23,6 +23,7 @@ public class SimpleApiMsgErrorHandlerTest {
         try {
             unit.handleError(msg);
         } catch(ApiDataRetrievalException ex) {
+            assertThat(ex.getApiMsgCode(), is(-1003));
             gotException = true;
         }
         assertThat(listner.gotDisconnect, is(true));

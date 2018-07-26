@@ -24,32 +24,18 @@ public class AbstractAionApiClientTest {
         errorHandler = mock(IApiMsgErrorHandler.class);
         kernelConnection = mock(KernelConnection.class);
         when(kernelConnection.getApi()).thenReturn(api);
-        unit = new AbstractAionApiClient(kernelConnection) {};
+        unit = new AbstractAionApiClient(kernelConnection, errorHandler) {};
     }
 
     @Test
     public void testCallApi() {
+        ApiMsg msg = mock(ApiMsg.class);
         AbstractAionApiClient.ApiFunction func = mock(AbstractAionApiClient.ApiFunction.class);
-        unit.callApi(func);
-        verify(func).call(api);
-        verify(errorHandler).handleError(any(ApiMsg.class));
-    }
+        when(func.call(api)).thenReturn(msg);
 
-    // XXX Move to test of SimpleApiMsgErrorHandler
-//    @Test
-//    public void testThrowAndLogIfError() {
-//        ApiMsg msg = mock(ApiMsg.class);
-//        when(msg.isError()).thenReturn(true);
-//        when(msg.getErrString()).thenReturn("myErrorString");
-//        when(msg.getErrorCode()).thenReturn(1337);
-//        try {
-//            unit.throwAndLogIfError(msg);
-//        } catch (ApiDataRetrievalException ex) {
-//            assertThat(ex.getMessage(), is("Error in API call.  Code = 1337.  Error = myErrorString."));
-//            assertThat(ex.getApiMsgCode(), is(1337));
-//            assertThat(ex.getApiMsgString(), is("myErrorString"));
-//            return;
-//        }
-//        fail("Expected exception wasn't thrown.");
-//    }
+        unit.callApi(func);
+
+        verify(func).call(api);
+        verify(errorHandler).handleError(msg);
+    }
 }

@@ -20,7 +20,6 @@ import org.aion.os.KernelLauncher;
 import org.aion.os.UnixKernelProcessHealthChecker;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
-import org.testfx.matcher.control.ButtonMatchers;
 import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -29,13 +28,9 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
-import static javax.management.Query.not;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testfx.api.FxAssert.verifyThat;
-import static org.testfx.matcher.base.NodeMatchers.isEnabled;
 
 /**
  * Tests integration of {@link DashboardController}; specifically, that it modifies its View
