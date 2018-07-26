@@ -179,7 +179,7 @@ public class TransactionExecutor extends AbstractExecutor {
     }
 
     /**
-     * Prepares contract create.
+     * Prepares contract create.    is prepares the right word here?
      */
     protected void create() {
         Address contractAddress = tx.getContractAddress();

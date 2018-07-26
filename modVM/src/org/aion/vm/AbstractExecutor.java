@@ -97,6 +97,22 @@ public abstract class AbstractExecutor {
         }
     }
 
+    /**
+     * Checks that the transaction passes the basic validation criteria. These criteria are:
+     *   1. the transaction energy limit is within the acceptable limit range and is larger than the
+     *      remaining energy in the block that contains the transaction.
+     *   2. contextNrgLimit is non-negative.
+     *   3. the transaction nonce is equal to the transaction sender's nonce.
+     *   4. the transaction sender has enough funds to cover the cost of the transaction.
+     *
+     * Returns true if all crtieria are met or if the call is local.
+     * Returns false if the call is not local and at least one criterion is not met. In this case,
+     *   the execution result has its result code and energy left set appropriately.
+     *
+     * @param tx The transaction to check.
+     * @param contextNrgLmit The execution context's energy limit.
+     * @return true if call is local or if all criteria listed above are met.
+     */
     protected final boolean prepare(ITransaction tx, long contextNrgLmit) {
         if (isLocalCall) {
             return true;
