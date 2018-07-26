@@ -100,6 +100,8 @@
             <batchtest todir="${test.report.dir}">
                 <fileset dir="${src.test}">
                     <include name="**/*Test.java"/>
+                    <exclude name="**/AionAuctionContractTest.java"/>
+                    <exclude name="**/TokenBridgeContractTest.java"/>
                 </fileset>
             </batchtest>
         </junit>
@@ -127,6 +129,8 @@
             <batchtest todir="${test.report.dir}">
                 <fileset dir="${src.test}">
                     <include name="**/*Test.java"/>
+                    <exclude name="**/AionAuctionContractTest.java"/>
+                    <exclude name="**/TokenBridgeContractTest.java"/>
                 </fileset>
             </batchtest>
         </junit>

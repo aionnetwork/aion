@@ -26,6 +26,7 @@ import javax.annotation.Nonnull;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -51,6 +52,7 @@ import java.util.List;
  * @author yulong
  */
 public class TransactionExecutor extends AbstractExecutor {
+    // provider is essential to execute, but it is only set manually with a setter, not good practice
     private ExecutionContext ctx;
     private AionTransaction tx;
     private IAionBlock block;
@@ -126,14 +128,6 @@ public class TransactionExecutor extends AbstractExecutor {
 
     }
 
-    public ExecutionContext getContext() {
-        return ctx;
-    }
-
-    public void setExecutorProvider(ExecutorProvider provider) {
-        this.provider = provider;
-    }
-
     /**
      * Creates a transaction executor (use block nrg limit).
      */
@@ -149,6 +143,10 @@ public class TransactionExecutor extends AbstractExecutor {
     public TransactionExecutor(AionTransaction tx, IAionBlock block,
                                IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo, Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
+    }
+
+    public void setExecutorProvider(ExecutorProvider provider) {
+        this.provider = provider;
     }
 
     /**
@@ -273,4 +271,11 @@ public class TransactionExecutor extends AbstractExecutor {
         return (AionTxReceipt) buildReceipt(new AionTxReceipt(), tx, logs);
 
     }
+
+    public ExecutionContext getContext() {
+        return ctx;
+    }
+
+    public IExecutionResult getResult() { return exeResult; }
+
 }
