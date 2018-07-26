@@ -42,15 +42,15 @@ public class TempListTest {
 
     private Map<Integer, Object> tempList =
             Collections.synchronizedMap(
-                    new LinkedHashMap<Integer, Object>() {
-                        private static final long serialVersionUID = 1L;
+                new LinkedHashMap<>() {
+                    private static final long serialVersionUID = 1L;
 
-                        @Override
-                        protected boolean removeEldestEntry(
-                                final Map.Entry<Integer, Object> eldest) {
-                            return size() > cap;
-                        }
-                    });
+                    @Override
+                    protected boolean removeEldestEntry(
+                        final Map.Entry<Integer, Object> eldest) {
+                        return size() > cap;
+                    }
+                });
 
     @Test
     public void testTempList() {

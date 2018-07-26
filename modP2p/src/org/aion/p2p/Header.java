@@ -31,7 +31,7 @@ import java.nio.ByteBuffer;
 /**
  * @author chris
  */
-public final class Header {
+public class Header {
 
     public static final int LEN = 8;
 

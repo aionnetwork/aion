@@ -667,6 +667,7 @@ public class NodeMgrTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    assert node != null;
                     nMgr.movePeerToActive(node.getChannel().hashCode(), "inbound");
                 } else {
                     INode node = null;
@@ -675,6 +676,7 @@ public class NodeMgrTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    assert node != null;
                     nMgr.movePeerToActive(node.getIdHash(), "outbound");
                 }
 

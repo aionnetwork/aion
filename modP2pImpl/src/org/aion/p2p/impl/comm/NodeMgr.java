@@ -207,7 +207,7 @@ public class NodeMgr implements INodeMgr {
             while (tempNodes.isEmpty()) {
                 notEmpty.await();
             }
-            
+
             Integer key = tempNodes.keySet().iterator().next();
             node = tempNodes.remove(key);
             if (!tempNodes.isEmpty()) {
