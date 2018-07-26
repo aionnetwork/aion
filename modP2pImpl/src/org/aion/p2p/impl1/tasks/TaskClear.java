@@ -33,6 +33,7 @@ public class TaskClear implements Runnable {
 
     private final INodeMgr nodeMgr;
     private final AtomicBoolean start;
+    private boolean isRun = false;
 
     public TaskClear(final INodeMgr _nodeMgr, final AtomicBoolean _start) {
         this.nodeMgr = _nodeMgr;
@@ -41,6 +42,7 @@ public class TaskClear implements Runnable {
 
     @Override
     public void run() {
+        isRun = true;
         while (start.get()) {
             try {
                 Thread.sleep(PERIOD_CLEAR);
@@ -49,5 +51,10 @@ public class TaskClear implements Runnable {
                 p2pLOG.error("TaskClear exception {}", e.toString());
             }
         }
+        isRun = false;
+    }
+
+    public boolean isRun() {
+        return isRun;
     }
 }
