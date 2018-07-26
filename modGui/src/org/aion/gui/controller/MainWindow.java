@@ -17,12 +17,16 @@ import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
+import org.aion.gui.model.IApiMsgErrorHandler;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.gui.model.SimpleApiMsgErrorHandler;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.os.KernelLauncher;
+import org.aion.os.UnixKernelProcessHealthChecker;
+import org.aion.os.UnixProcessTerminator;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
@@ -73,6 +77,7 @@ public class MainWindow extends Application {
     private double yOffset;
     private Stage stage;
 
+    private final UnixKernelProcessHealthChecker unixKernelProcessHealthChecker;
     private final KernelUpdateTimer timer;
     private final KernelLauncher kernelLauncher;
 
@@ -86,8 +91,12 @@ public class MainWindow extends Application {
 
     public MainWindow() {
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
-        kernelLauncher = new KernelLauncher(CfgAion.inst().getGui().getCfgGuiLauncher(),
-                EventBusRegistry.INSTANCE);
+        unixKernelProcessHealthChecker = new UnixKernelProcessHealthChecker();
+        kernelLauncher = new KernelLauncher(
+                CfgAion.inst().getGui().getCfgGuiLauncher(),
+                EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator(),
+                unixKernelProcessHealthChecker);
     }
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
@@ -126,6 +135,7 @@ public class MainWindow extends Application {
     }
 
     private FXMLLoader loader() {
+        IApiMsgErrorHandler errorHandler = new SimpleApiMsgErrorHandler();
         KernelConnection kc = new KernelConnection(
                 CfgAion.inst().getApi(),
                 EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS));
@@ -134,8 +144,8 @@ public class MainWindow extends Application {
                 .withKernelConnection(kc)
                 .withKernelLauncher(kernelLauncher)
                 .withTimer(timer)
-                .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc))
-                .withSyncInfoDto(new SyncInfoDto(kc))
+                .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc, errorHandler))
+                .withSyncInfoDto(new SyncInfoDto(kc, errorHandler))
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
         );
         return loader;

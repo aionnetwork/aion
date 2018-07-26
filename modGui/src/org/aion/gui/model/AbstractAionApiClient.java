@@ -12,16 +12,23 @@ import org.slf4j.Logger;
  */
 public abstract class AbstractAionApiClient {
     private final IAionAPI api;
-
-    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+    private final IApiMsgErrorHandler errorHandler;
 
     /**
      * Constructor
      *
      * @param kernelConnection connection containing the API instance to interact with
+     * @param errorHander error handler that executes whenever API call is made.  use null if no
+     *                    error handling needed.
      */
-    protected AbstractAionApiClient(KernelConnection kernelConnection) {
+    protected AbstractAionApiClient(KernelConnection kernelConnection,
+                                    IApiMsgErrorHandler errorHander) {
         this.api = kernelConnection.getApi();
+        this.errorHandler = errorHander;
+    }
+
+    protected AbstractAionApiClient(KernelConnection kernelConnection) {
+        this(kernelConnection, null);
     }
 
     @FunctionalInterface
@@ -36,26 +43,17 @@ public abstract class AbstractAionApiClient {
      *
      * @param func a function that calls the Aion API
      * @return object returned by Aion API.
+     * @throws ApiDataRetrievalException if error handler decides to throw it
      */
-    protected ApiMsg callApi(ApiFunction func) {
+    protected ApiMsg callApi(ApiFunction func) throws ApiDataRetrievalException {
+        final ApiMsg msg;
         synchronized (api) {
-            return func.call(api);
+            msg = func.call(api);
         }
-    }
-
-    /**
-     * Log and throw if msg is in error state.  Otherwise, do nothing.
-     *
-     * @param msg msg
-     * @throws ApiDataRetrievalException
-     */
-    protected void throwAndLogIfError(ApiMsg msg) throws ApiDataRetrievalException {
-        if(msg.isError()) {
-            String log = String.format("Error in API call.  Code = %s.  Error = %s.",
-                    msg.getErrorCode(), msg.getErrString());
-            LOG.error(log);
-            throw new ApiDataRetrievalException(log, msg);
+        if(errorHandler != null) {
+            errorHandler.handleError(msg);
         }
+        return msg;
     }
 
     /**

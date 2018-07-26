@@ -211,6 +211,7 @@ else
 	exit_kernel() {
 		if [ ! -z "$kernel_pid" ]; then
 			kill "$kernel_pid" &> /dev/null
+			wait "$kernel_pid"
 		fi
 		exit 1
 	}

@@ -2,6 +2,7 @@ package org.aion.gui.model.dto;
 
 import org.aion.gui.model.AbstractAionApiClient;
 import org.aion.gui.model.ApiDataRetrievalException;
+import org.aion.gui.model.IApiMsgErrorHandler;
 import org.aion.gui.model.KernelConnection;
 
 public abstract class AbstractDto extends AbstractAionApiClient {
@@ -11,8 +12,8 @@ public abstract class AbstractDto extends AbstractAionApiClient {
      *
      * @param kernelConnection connection containing the API instance to interact with
      */
-    protected AbstractDto(KernelConnection kernelConnection) {
-        super(kernelConnection);
+    protected AbstractDto(KernelConnection kernelConnection, IApiMsgErrorHandler errorHandler) {
+        super(kernelConnection, errorHandler);
     }
 
     /**

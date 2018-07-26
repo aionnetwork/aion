@@ -38,7 +38,7 @@ public class GeneralKernelInfoRetrieverTest {
         when(msg.isError()).thenReturn(false);
         when(msg.getObject()).thenReturn(Boolean.valueOf(true));
 
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         assertThat(unit.isMining(), is(true));
     }
 
@@ -50,7 +50,7 @@ public class GeneralKernelInfoRetrieverTest {
         IMine mine = mock(IMine.class);
         when(api.getMine()).thenReturn(mine);
         when(mine.isMining()).thenReturn(apiMsgWithError);
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         unit.isMining();
     }
 
@@ -73,7 +73,7 @@ public class GeneralKernelInfoRetrieverTest {
         }};
         when(msg.getObject()).thenReturn(peerList);
 
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         assertThat(unit.getPeerCount(), is(peerCount));
     }
 
@@ -86,7 +86,7 @@ public class GeneralKernelInfoRetrieverTest {
         when(api.getNet()).thenReturn(net);
         ApiMsg msg = mock(ApiMsg.class);
         when(net.getActiveNodes()).thenReturn(apiMsgWithError);
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         unit.getPeerCount();
     }
 }
