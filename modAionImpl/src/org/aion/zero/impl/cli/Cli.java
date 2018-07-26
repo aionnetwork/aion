@@ -53,7 +53,7 @@ import java.util.UUID;
  */
 public class Cli {
 
-    private static final String BASE_PATH = System.getProperty("user.dir");
+    private static String BASE_PATH = Cfg.getBasePath();
 
     public int call(final String[] args, final Cfg cfg) {
         try {
@@ -95,10 +95,26 @@ public class Cli {
                     }
                     break;
                 case "-c":
+                    if (args.length == 2 && isValid(args[1])) {
+                        switch (args[1].toLowerCase()) {
+                            case "mainnet":
+                            case "conquest": {
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                System.out.println("\nNew config generated for " + args[1]);
+                                break;
+                            }
+                            default: {
+                                System.out.println("\nInvalid network " + args[1] + "; Defaulted to mainnet");
+                                break;
+                            }
+                        }
+                    }
+                    else if (args.length == 1) {
+                        System.out.println("\nInvalid network; Defaulted to mainnet");
+                    }
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
-                    System.out.println("\nNew config generated");
                     break;
                 case "-i":
                     cfg.fromXML();
@@ -230,36 +246,32 @@ public class Cli {
                     break;
 
                 // Determines network config folder path
+                case "-n":
                 case "--network": {
                     if (args.length == 2 && isValid(args[1])) {
                         switch (args[1].toLowerCase()) {
-                            case "mainnet": {
-                                CfgAion.setNetwork("mainnet");
-                                CfgAion.setConfFilePath((BASE_PATH + "/config/mainnet/config.xml"));
-                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/mainnet/genesis.json"));
-                                break;
-                            }
+                            case "mainnet":
                             case "conquest": {
-                                CfgAion.setNetwork("conquest");
-                                CfgAion.setConfFilePath((BASE_PATH + "/config/conquest/config.xml"));
-                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/conquest/genesis.json"));
+                                CfgAion.setNetwork(args[1]);
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/" + args[1] + "/genesis.json"));
+                                System.out.println("\nExecuting Aion kernel on " + args[1]);
                                 break;
                             }
                             default: {
-                                CfgAion.setNetwork("mainnet");
-                                CfgAion.setConfFilePath((BASE_PATH + "/config/mainnet/config.xml"));
-                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/mainnet/genesis.json"));
+                                System.out.println("Invalid network " + args[1] + ": Defaulted to mainnet");
                                 break;
                             }
                         }
                     } else {
-                        System.out.println("Invalid arguments: Defaulted to mainnet");
+                        System.out.println("Invalid network: Defaulted to mainnet");
                         return 1;
                     }
                     break;
                 }
 
                 // Determine database folder path
+                case "-d":
                 case "--datadir": {
                     if (args.length == 2 && isValid(args[1])) {
                         AionRepositoryImpl.setDatabasePath(args[1]);
@@ -348,7 +360,11 @@ public class Cli {
         System.out.println("  -a export [address]                           export private key of an account");
         System.out.println("  -a import [private_key]                       import private key");
         System.out.println();
-        System.out.println("  -c                                            create config with default values");
+        System.out.println("  -c [network]                                  create config with default values");
+        System.out.println();
+        System.out.println("  -n [network]      |   --network [network]     execute kernel with selected network");
+        System.out.println();
+        System.out.println("  -d [directory]    |   --datadir [directory]   execute kernel with selected database directory");
         System.out.println();
         System.out.println("  -i                                            show information");
         System.out.println();
@@ -540,6 +556,8 @@ public class Cli {
     }
 
     public static boolean isValid (String value) {
-        return value.length() > 0 && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
+        return !value.isEmpty() && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
+
+
 }

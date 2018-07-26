@@ -41,9 +41,10 @@ import org.aion.zero.impl.GenesisBlockLoader;
  */
 public final class CfgAion extends Cfg {
 
-    // TODO: Implement abstract declarations
     private static String NETWORK = "mainnet";
+
     private static String CONF_FILE_PATH = BASE_PATH + "/config/" + NETWORK + "/config.xml";
+
     private static String GENESIS_FILE_PATH = BASE_PATH + "/config/" + NETWORK + "/genesis.json";
 
     protected AionGenesis genesis;
@@ -333,7 +334,10 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    public static void setNetwork (String value) {
+    public static String getNetwork() {
+        return NETWORK;
+    }
+    public static void setNetwork(String value) {
         NETWORK = value;
     }
     public static void setConfFilePath (String value) {
@@ -342,10 +346,5 @@ public final class CfgAion extends Cfg {
     public static void setGenesisFilePath (String value) {
         GENESIS_FILE_PATH = value;
     }
-
-    public static String getNetwork () {
-        return NETWORK;
-    }
-
 
 }

@@ -124,7 +124,7 @@ public abstract class Cfg {
     /**
      * @return the base dir where all configuration + persistance is managed
      */
-    public String getBasePath() {
+    public static String getBasePath() {
         return BASE_PATH;
     }
 

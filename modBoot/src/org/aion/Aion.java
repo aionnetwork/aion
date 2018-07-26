@@ -70,7 +70,7 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            if (!args[0].matches("--network|--datadir")) {
+            if (!args[0].matches("-n|--network|-d|--datadir")) {
                 exit(ret);
             }
         }
@@ -134,23 +134,11 @@ public class Aion {
                 "  .''''''''`.   | |         | |      ``..  |\n" +
                 ".'           `. |  `._____.'  |          ``|\n\n";
 
-        // always print the version string in the center of the Aion logo
+        // always print information in the center of the Aion logo
         String versionStr = "v"+KERNEL_VERSION;
-        int leftPad = Math.round((44 - versionStr.length()) / 2.0f) + 1;
-        StringBuilder padVersionStr = new StringBuilder();
-        for (int i = 0; i < leftPad; i++) padVersionStr.append(" ");
-        padVersionStr.append(versionStr);
-        logo += padVersionStr.toString();
-        logo += "\n\n";
-
-        // always print the network string in the center of the Aion logo
         String networkStr = CfgAion.getNetwork();
-        int leftPad2 = Math.round((44 - networkStr.length()) / 2.0f) + 1;
-        StringBuilder padNetworkStr = new StringBuilder();
-        for (int i = 0; i < leftPad2; i++) padNetworkStr.append(" ");
-        padNetworkStr.append(networkStr);
-        logo += padNetworkStr.toString();
-        logo += "\n\n";
+        logo = appendLogo(logo, versionStr);
+        logo = appendLogo(logo, networkStr);
 
         genLog.info(logo);
 
@@ -313,4 +301,15 @@ public class Aion {
 
         return sslPass;
     }
+
+    public static String appendLogo(String value, String input) {
+        int leftPad = Math.round((44 - input.length()) / 2.0f) + 1;
+        StringBuilder padInput = new StringBuilder();
+        for (int i = 0; i < leftPad; i++) padInput.append(" ");
+        padInput.append(input);
+        value += padInput.toString();
+        value += "\n\n";
+        return value;
+    }
+
 }
