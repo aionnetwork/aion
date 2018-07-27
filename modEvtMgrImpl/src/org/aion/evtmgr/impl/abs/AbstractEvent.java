@@ -50,7 +50,11 @@ public abstract class AbstractEvent implements IEvent {
 
     @Override
     public boolean equals(Object o) {
-        return this.getEventType() == ((IEvent) o).getEventType();
+        try{
+            return this.getEventType() == ((IEvent) o).getEventType() && this.getCallbackType() == ((IEvent) o).getCallbackType();
+        }catch (ClassCastException e){
+            return false;
+        }
     }
 
     @Override
