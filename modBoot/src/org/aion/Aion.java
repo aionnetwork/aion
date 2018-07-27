@@ -183,24 +183,29 @@ public class Aion {
                     rpcBuilder.enableSsl(cfgSsl.getCert(), sslPass);
             };
             RpcServerVendor rpcVendor = RpcServerVendor.fromString(rpcCfg.getVendor()).orElse(RpcServerVendor.UNDERTOW);
-            switch (rpcVendor) {
-                case NANO: {
-                    NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder();
-                    commonRpcConfig.accept(rpcBuilder);
-                    rpcServer = rpcBuilder.build();
-                    break;
+            try {
+                switch (rpcVendor) {
+                    case NANO: {
+                        NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder();
+                        commonRpcConfig.accept(rpcBuilder);
+                        rpcServer = rpcBuilder.build();
+                        break;
+                    }
+                    case UNDERTOW:
+                    default: {
+                        UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
+                        commonRpcConfig.accept(rpcBuilder);
+                        rpcServer = rpcBuilder.build();
+                        break;
+                    }
                 }
-                case UNDERTOW:
-                default: {
-                    UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
-                    commonRpcConfig.accept(rpcBuilder);
-                    rpcServer = rpcBuilder.build();
-                    break;
-                }
+            } catch (Exception e) {
+                genLog.error("Failed to instantiate RPC server.", e);
             }
 
             if (rpcServer == null)
-                throw new IllegalStateException("RPC server should have been initialized by now.");
+                throw new IllegalStateException("Issue with RPC settings caused server instantiation to fail. " +
+                        "Please check RPC settings in config file.");
 
             rpcServer.start();
         }
@@ -275,7 +280,7 @@ public class Aion {
         }, "shutdown"));
     }
 
-    public static char[] getSslPassword(CfgAion cfg) {
+    private static char[] getSslPassword(CfgAion cfg) {
         CfgSsl sslCfg = cfg.getApi().getRpc().getSsl();
         char[] sslPass = sslCfg.getPass();
         // interactively ask for a password for the ssl file if they did not set on in the config file

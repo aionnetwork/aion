@@ -32,8 +32,9 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     public T setUrl(String hostName, int port) {
         this.hostName = Objects.requireNonNull(hostName);
 
-        if (port < 0) throw new RuntimeException("Port number must be greater than 0.");
+        if (port < 1) throw new RuntimeException("Port number must be greater than 0.");
         if (port < 1024) System.out.println("Ports < 1024 are privileged and require sudo.");
+        if (port > 65535) System.out.println("Ports > 65535 are not supported by OS.");
         this.port = port; // autoboxing
 
         return self();
