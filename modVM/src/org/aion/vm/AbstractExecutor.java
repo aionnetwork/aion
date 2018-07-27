@@ -221,10 +221,13 @@ public abstract class AbstractExecutor {
 
     /**
      * Updates the repository only if the call is not local and the transaction summary was not
-     * marked as rejected. If the repository qualifies for an update then it is updated as follows.
-     * The transaction sender is refunded for whatever outstanding energy was not consumed and the
-     * transaction energy consumption is set appropriately. The coinbase is paid its fee and all
-     * accounts marked for deletion (given that the transaction was successful) are deleted.
+     * marked as rejected.
+     *
+     * If the repository qualifies for an update then it is updated as follows:
+     *   1. The transaction sender is refunded for whatever outstanding energy was not consumed.
+     *   2. The transaction energy consumption amount is set accordingly.
+     *   3. The fee is transferred to the coinbase account.
+     *   4. All accounts marked for deletion (given that the transaction was successful) are deleted.
      *
      * @param summary The transaction summary.
      * @param tx The transaction.

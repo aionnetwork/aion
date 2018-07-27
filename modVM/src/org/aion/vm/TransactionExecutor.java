@@ -258,7 +258,7 @@ public class TransactionExecutor extends AbstractExecutor {
     /**
      * Returns the transaction receipt.
      */
-    private AionTxReceipt getReceipt(List<Log> logs) {
+    protected AionTxReceipt getReceipt(List<Log> logs) {
 //        AionTxReceipt receipt = new AionTxReceipt();
 //        receipt.setTransaction(tx);
 //        receipt.setLogs(txResult.getLogs());
