@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,18 +31,31 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
 import java.math.BigInteger;
 
 public class Utils {
 
-    static final byte[] encodingTable
-            = {
-                (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7',
-                (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f'
-            };
+    static final byte[] encodingTable = {
+        (byte) '0',
+        (byte) '1',
+        (byte) '2',
+        (byte) '3',
+        (byte) '4',
+        (byte) '5',
+        (byte) '6',
+        (byte) '7',
+        (byte) '8',
+        (byte) '9',
+        (byte) 'a',
+        (byte) 'b',
+        (byte) 'c',
+        (byte) 'd',
+        (byte) 'e',
+        (byte) 'f'
+    };
 
     static byte[] concatenate(byte[] a, byte[] b) {
         byte[] ret = new byte[a.length + b.length];
@@ -78,6 +91,5 @@ public class Utils {
         }
 
         return ret;
-
     }
 }
