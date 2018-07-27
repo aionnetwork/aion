@@ -12,6 +12,9 @@ module aion.apiserver {
     requires aion.fastvm;
 
     exports org.aion.api.server.pb;
-    exports org.aion.api.server.http;
     exports org.aion.api.server.zmq;
+
+    exports org.aion.api.server.http;
+    exports org.aion.api.server.http.nano;
+    exports org.aion.api.server.http.undertow;
 }

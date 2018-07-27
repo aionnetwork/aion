@@ -1,27 +1,27 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
+ * Contributors to the aion source files in decreasing order of code volume:
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * Aion foundation.
+ *
+ */
 
 package org.aion.zero.types;
 
@@ -91,7 +91,7 @@ public class AionTransaction extends AbstractTransaction {
         parsed = true;
     }
 
-    // testing constructor, only use this for the test.
+    // constructor for create nrgEstimate transaction
     public AionTransaction(byte[] nonce, Address from, Address to, byte[] value, byte[] data, long nrg, long nrgPrice) {
         super(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;
@@ -275,7 +275,7 @@ public class AionTransaction extends AbstractTransaction {
         try {
             return Address.wrap(HashUtil.calcNewAddr(from.toBytes(), this.getNonce()));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
             return null;
         }
     }
@@ -307,7 +307,6 @@ public class AionTransaction extends AbstractTransaction {
             from = Address.wrap(this.signature.getAddress());
             return from;
         } catch (Exception e) {
-            e.printStackTrace();
             LOG.error(e.getMessage(), e);
             return null;
         }

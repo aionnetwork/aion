@@ -171,7 +171,6 @@ if $guard; then
 			fi
 
 		done
-
 		# Shutsdown Aion kernel
 		echo "## Killing Kernel ##"
 		kill $kPID
@@ -198,8 +197,6 @@ if $guard; then
 	done
 
 else
-
   	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
   		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
-
 fi

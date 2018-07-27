@@ -89,5 +89,4 @@ public class LastThousands {
             examiner.shutdown();
         }
     }
-
 }

@@ -1,28 +1,29 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * Contributors to the aion source files in decreasing order of code volume:
  *
- ******************************************************************************/
+ * Aion foundation.
+ *
+ */
 
-package org.aion.api.server.http;
+package org.aion.api.server.rpc;
 
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
@@ -90,6 +91,7 @@ import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgNetP2p;
+import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
@@ -410,7 +412,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
+        if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -448,7 +450,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
+        if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
 
         DataWord key;
@@ -497,7 +499,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
+        if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -584,7 +586,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
+        if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
 
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -695,7 +697,7 @@ public class ApiWeb3Aion extends ApiAion {
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
         String bnOrId = "latest";
-        if (_bnOrId != null && !_bnOrId.equals(JSONObject.NULL))
+        if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
 
         Long bn = parseBnOrId(bnOrId);
@@ -729,7 +731,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
-        NumericalValue estimate = new NumericalValue(estimateGas(txParams));
+        NumericalValue estimate = new NumericalValue(estimateNrg(txParams));
 
         return new RpcMsg(estimate.toHexString());
     }
@@ -1149,7 +1151,7 @@ public class ApiWeb3Aion extends ApiAion {
 
 
         int duration = 300;
-        if (_duration != null && !_duration.equals(JSONObject.NULL))
+        if (!JSONObject.NULL.equals(_duration))
             duration = new BigInteger(_duration + "").intValueExact();
 
         return new RpcMsg(unlockAccount(_account, _password, duration));
@@ -1584,12 +1586,16 @@ public class ApiWeb3Aion extends ApiAion {
 
         // base.api.rpc
         CfgApiRpc rpcConfig = config.getRpc();
+        CfgSsl sslConfig = rpcConfig.getSsl();
         JSONObject rpc = new JSONObject();
         rpc.put("ip", rpcConfig.getIp());
         rpc.put("port", rpcConfig.getPort());
         rpc.put("corsEnabled", rpcConfig.getCorsEnabled());
         rpc.put("active", rpcConfig.getActive());
         rpc.put("maxThread", rpcConfig.getMaxthread());
+        rpc.put("sslEnabled", sslConfig.getEnabled());
+        rpc.put("sslCert", sslConfig.getCert());
+        rpc.put("sslPass", sslConfig.getPass());
 
         // end
         obj.put("rpc", rpc);
@@ -2248,9 +2254,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (nce != null && soln != null && hdrHash != null &&
-                !nce.equals(JSONObject.NULL) && !soln.equals(JSONObject.NULL) && !hdrHash.equals(JSONObject.NULL)) {
-
+        if (!JSONObject.NULL.equals(nce) && !JSONObject.NULL.equals(soln) && !JSONObject.NULL.equals(hdrHash)) {
             try {
                 templateMapLock.writeLock().lock();
 
@@ -2300,7 +2304,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (_blockNum != null && !_blockNum.equals(JSONObject.NULL)) {
+        if (!JSONObject.NULL.equals(_blockNum)) {
             String bnStr = _blockNum + "";
             try {
                 int bnInt = Integer.decode(bnStr);

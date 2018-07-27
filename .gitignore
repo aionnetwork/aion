@@ -5,6 +5,10 @@
 /pack/
 /reports/
 /cache/
+/ssl_keystore/
+/log/
+/rt/
+/web3/
 
 # ide
 /.idea/
