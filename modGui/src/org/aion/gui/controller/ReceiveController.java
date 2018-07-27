@@ -54,6 +54,7 @@ public class ReceiveController implements Initializable{
             if (event.getPayload().equals(account)) {
                 account = null;
                 accountAddress.setText("");
+                qrCode.setImage(null);
             }
         }
     }

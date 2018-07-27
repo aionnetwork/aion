@@ -6,6 +6,7 @@ import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.AbstractUIEvent;
 import org.aion.mcf.config.CfgApi;
+import org.aion.wallet.console.ConsoleManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -48,7 +49,7 @@ public class KernelConnectionTest {
 
         eventBus = mock(EventBus.class);
         executorService = Executors.newSingleThreadExecutor();
-        unit = new KernelConnection(api, cfgApi, eventBus, executorService);
+        unit = new KernelConnection(api, cfgApi, eventBus, mock(ConsoleManager.class), executorService);
     }
 
     @Test

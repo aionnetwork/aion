@@ -53,7 +53,6 @@ public class ConsoleTailController extends AbstractController {
         Platform.runLater(() -> tail.setText(timeIntervalIndicatorFormatter.makeStatus()));
     }
 
-
     public void onClick(MouseEvent mouseEvent) {
         consoleManager.show();
     }

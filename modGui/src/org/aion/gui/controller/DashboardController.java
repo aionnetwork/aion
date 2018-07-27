@@ -121,9 +121,7 @@ public class DashboardController extends AbstractController {
         Platform.runLater( () -> {
             kernelStatusLabel.setText("Running");
             enableTerminateButton();
-            consoleManager.addLog("Kernel successfully launched", ConsoleManager.LogType.KERNEL);
         });
-
     }
 
     @Subscribe
@@ -134,7 +132,6 @@ public class DashboardController extends AbstractController {
             numPeersLabel.setText("--");
             blocksLabel.setText("--");
             isMining.setText("--");
-            consoleManager.addLog("Kernel successfully terminated", ConsoleManager.LogType.KERNEL);
         });
     }
 
@@ -169,6 +166,7 @@ public class DashboardController extends AbstractController {
         kernelStatusLabel.setText("Starting...");
         try {
             kernelLauncher.launch();
+            consoleManager.addLog("Kernel launch started", ConsoleManager.LogType.KERNEL);
         } catch (RuntimeException ex) {
             enableLaunchButton();
         }
@@ -192,8 +190,12 @@ public class DashboardController extends AbstractController {
             }, null);
             runApiTask(
                     termKernel,
-                    evt -> enableLaunchButton(),
+                    evt -> {
+                        enableLaunchButton();
+                        consoleManager.addLog("Kernel successfully terminated", ConsoleManager.LogType.KERNEL);
+                    },
                     getErrorEvent(throwable -> {
+                        consoleManager.addLog("Error terminating the kernel", ConsoleManager.LogType.KERNEL);
                         LOG.error("Error terminating the kernel", throwable);
                         enableTerminateButton();
                     }, termKernel),
@@ -218,7 +220,8 @@ public class DashboardController extends AbstractController {
     }
 
     private void disableLaunchTerminateButtons() {
-        Platform.runLater(() -> launchKernelButton.setDisable(true));
-        Platform.runLater(() -> terminateKernelButton.setDisable(true));
+        System.out.println("Disabling stuff");
+        launchKernelButton.setDisable(true);
+        terminateKernelButton.setDisable(true);
     }
 }

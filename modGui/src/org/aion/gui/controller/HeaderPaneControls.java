@@ -35,8 +35,10 @@ import java.util.ResourceBundle;
 public class HeaderPaneControls extends AbstractController {
     @FXML
     private TextField accountBalance;
-    @FXML
-    private TextField activeAccount;
+//    @FXML
+//    private TextField activeAccount;
+@FXML
+private Label activeAccount;
     @FXML
     private Label activeAccountLabel;
     @FXML
@@ -132,17 +134,15 @@ public class HeaderPaneControls extends AbstractController {
                 accountBalance.setText(account.getBalance() + BalanceUtils.CCY_SEPARATOR + account.getCurrency());
                 accountBalance.setVisible(true);
                 activeAccount.setText(account.getName());
-                activeAccountLabel.setVisible(true);
                 accountAddress = account.getPublicAddress();
-                UIUtils.setWidth(activeAccount);
+//                UIUtils.setWidth(activeAccount);
                 UIUtils.setWidth(accountBalance);
             }
         } else if (AccountEvent.Type.LOCKED.equals(event.getType())){
             if (account.getPublicAddress().equals(accountAddress)){
                 accountAddress = "";
-                activeAccountLabel.setVisible(false);
                 accountBalance.setVisible(false);
-                activeAccount.setText("");
+                activeAccount.setText("(none selected)");
             }
         }
     }

@@ -5,16 +5,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import java.net.URL?>
 <?import javafx.scene.layout.AnchorPane?>
-<VBox xmlns="http://javafx.com/javafx/8.0.121"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.aion.gui.controller.partials.ConsoleTailController"
-      fx:id="parent"
+<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.aion.gui.controller.partials.ConsoleTailController" fx:id="parent"
       prefWidth="Infinity" alignment="CENTER_LEFT" AnchorPane.leftAnchor="0.0">
     <stylesheets>
         <URL value="@../footer-pane.css" />
     </stylesheets>
     <HBox spacing="10" AnchorPane.rightAnchor="0.0">
-    <Label fx:id="tail" styleClass="footer-pane-text" text="" onMouseClicked="#onClick"/>
+    <Label fx:id="tail" styleClass="footer-pane-text" text="" onMouseClicked="#onClick" style="-fx-cursor: hand;" />
 </HBox>
 
 </VBox>

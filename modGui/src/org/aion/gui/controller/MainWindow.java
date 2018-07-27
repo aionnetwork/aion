@@ -83,6 +83,14 @@ public class MainWindow extends Application {
      * Depending on how the code develops we can revisit this.  The fact that Controller layer has
      * two purposes may end up getting unwieldy; if so, maybe move (a) into the responsibility of
      * View or call it out as something else ("View controller"?).
+     *
+     * EventBus should be used only for the Model layer to send a signal to the Controller layer
+     * for something that happened originating from the Model layer; i.e. the model noticed that
+     * API has disconnected, then it can send an Event.  It should not be used for when the Model
+     * is responding to some request from the Controller.  These should be done by just return
+     * values in a Java method call (if call is synchronous) or a callback function given by the
+     * Controller (if call is asynchronous).  Furthermore, try to avoid situations where code
+     * behaviour is dependent on a sequence of multiple events triggering one another.
      */
 
     private double xOffset;
