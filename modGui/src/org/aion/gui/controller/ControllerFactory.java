@@ -1,8 +1,10 @@
 package org.aion.gui.controller;
 
+import com.google.common.eventbus.EventBus;
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
 import org.aion.gui.controller.partials.ConsoleTailController;
+import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.ConsoleTail;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
@@ -53,6 +55,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private TransactionProcessor transactionProcessor;
     private ConsoleManager consoleManager;
     private UnixKernelProcessHealthChecker healthChecker;
+    private EventBusRegistry eventBusRegistry;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -69,6 +72,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     public ControllerFactory() {
         this.builderChooser = new HashMap<>() {{
             put(DashboardController.class, () -> new DashboardController(
+                    eventBusRegistry,
                     kernelLauncher,
                     kernelConnection,
                     kernelUpdateTimer,
@@ -271,6 +275,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
 
     public ControllerFactory withHealthChecker(UnixKernelProcessHealthChecker healthChecker) {
         this.healthChecker = healthChecker;
+        return this;
+    }
+
+    public EventBusRegistry getEventBusRegistry() {
+        return this.eventBusRegistry;
+    }
+
+    public ControllerFactory withEventBusRegistry(EventBusRegistry eventBusRegistry) {
+        this.eventBusRegistry = eventBusRegistry;
         return this;
     }
 }

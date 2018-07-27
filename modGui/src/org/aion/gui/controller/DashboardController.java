@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class DashboardController extends AbstractController {
+    private final EventBusRegistry ebr;
     private final KernelLauncher kernelLauncher;
     private final KernelConnection kernelConnection;
     private final KernelUpdateTimer kernelUpdateTimer;
@@ -47,13 +48,15 @@ public class DashboardController extends AbstractController {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
-    public DashboardController(KernelLauncher kernelLauncher,
+    public DashboardController(EventBusRegistry eventBusRegistry,
+                               KernelLauncher kernelLauncher,
                                KernelConnection kernelConnection,
                                KernelUpdateTimer kernelUpdateTimer,
                                GeneralKernelInfoRetriever generalKernelInfoRetriever,
                                SyncInfoDto syncInfoDTO,
                                ConsoleManager consoleManager,
                                UnixKernelProcessHealthChecker unixKernelProcessHealthChecker) {
+        this.ebr = eventBusRegistry;
         this.kernelConnection = kernelConnection;
         this.kernelLauncher = kernelLauncher;
         this.kernelUpdateTimer = kernelUpdateTimer;
@@ -69,23 +72,10 @@ public class DashboardController extends AbstractController {
 
     @Override
     protected void registerEventBusConsumer() {
-        // TODO: Make injectable
-        EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS).register(this);
-//        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).register(this);
-        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).register(this);
-
+        ebr.getBus(EventBusRegistry.KERNEL_BUS).register(this);
+        ebr.getBus(RefreshEvent.ID).register(this);
     }
     // -- Handlers for Events coming from Model ---------------------------------------------------
-//    @Subscribe
-//    private void handleAccountChanged(final AccountDTO account) {
-//        LOG.warn("Implement me!");
-//    }
-
-    @Subscribe
-    private void handleHeaderPaneButtonEvent(final HeaderPaneButtonEvent event) {
-        LOG.warn("Implement me!");
-    }
-
     @Subscribe
     private void handleUiTimerTick(RefreshEvent event) {
         // peer count
@@ -139,6 +129,9 @@ public class DashboardController extends AbstractController {
     private void handleUnexpectedApiDisconnect(UnexpectedApiDisconnectedEvent event) {
         final boolean isRunning;
         try {
+            System.out.println(String.format("[%s] kernelLauncher = %s", this, kernelLauncher));
+            System.out.println(String.format("[%s] kernelLauncher.getLaunchedInstance() = %s", this, kernelLauncher.getLaunchedInstance() ));
+            System.out.println(String.format("[%s] kernelLauncher.getLaunchedInstance().getPid() = %b", this, kernelLauncher.getLaunchedInstance().getPid() ));
             isRunning = unixKernelProcessHealthChecker.checkIfKernelRunning(
                     kernelLauncher.getLaunchedInstance().getPid());
         } catch (KernelControlException kce) {
@@ -220,8 +213,7 @@ public class DashboardController extends AbstractController {
     }
 
     private void disableLaunchTerminateButtons() {
-        System.out.println("Disabling stuff");
-        launchKernelButton.setDisable(true);
-        terminateKernelButton.setDisable(true);
+        Platform.runLater(() -> launchKernelButton.setDisable(true));
+        Platform.runLater(() -> terminateKernelButton.setDisable(true));
     }
 }

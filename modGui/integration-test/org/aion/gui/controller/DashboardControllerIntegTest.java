@@ -1,6 +1,7 @@
 package org.aion.gui.controller;
 
 import com.google.common.eventbus.EventBus;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -18,6 +19,8 @@ import org.aion.gui.util.DataUpdater;
 import org.aion.os.KernelInstanceId;
 import org.aion.os.KernelLauncher;
 import org.aion.os.UnixKernelProcessHealthChecker;
+import org.aion.wallet.console.ConsoleManager;
+import org.junit.After;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.matcher.control.LabeledMatchers;
@@ -48,42 +51,44 @@ public class DashboardControllerIntegTest extends ApplicationTest {
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private UnixKernelProcessHealthChecker healthChecker;
     private SyncInfoDto syncInfoDto;
-    private EventBus kernelBus = EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS);
-    private EventBus uiRefreshBus = EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID);
+    private ConsoleManager consoleManager;
     private DashboardController controller;
+    private Parent dashboardView;
+    private EventBusRegistry ebr;
 
     /**
      * Not using Mockito's @Before because JavaFX's start() runs first and that needs member
      * vars already set up.
      */
     @Override
-    public void init() {
-        kernelLauncher = mock(KernelLauncher.class);
-        kernelConnection = mock(KernelConnection.class);
-        kernelUpdateTimer = mock(KernelUpdateTimer.class);
-        generalKernelInfoRetriever = mock(GeneralKernelInfoRetriever.class);
-        syncInfoDto = mock(SyncInfoDto.class);
-        healthChecker = mock(UnixKernelProcessHealthChecker.class);
-    }
-
-    @Override
     public void start(Stage stage) throws Exception {
-        cf = new ControllerFactory()
-                .withKernelConnection(kernelConnection)
-                .withKernelLauncher(kernelLauncher)
-                .withTimer(kernelUpdateTimer)
-                .withSyncInfoDto(syncInfoDto)
-                .withGeneralKernelInfoRetriever(generalKernelInfoRetriever)
-                .withHealthChecker(healthChecker);
-        FXMLLoader loader = new FXMLLoader(
-                DashboardController.class.getResource("components/Dashboard.fxml"),
-                null,
-                null,
-                cf,
-                Charset.forName(DEFAULT_CHARSET_NAME),
-                new LinkedList<>());
-        Parent dashboardView = loader.load();
-        controller = loader.getController();
+        ebr = new EventBusRegistry();
+            kernelLauncher = mock(KernelLauncher.class);
+            kernelConnection = mock(KernelConnection.class);
+            kernelUpdateTimer = mock(KernelUpdateTimer.class);
+            generalKernelInfoRetriever = mock(GeneralKernelInfoRetriever.class);
+            syncInfoDto = mock(SyncInfoDto.class);
+            healthChecker = mock(UnixKernelProcessHealthChecker.class);
+            consoleManager = mock(ConsoleManager.class);
+
+            cf = new ControllerFactory()
+                    .withKernelConnection(kernelConnection)
+                    .withKernelLauncher(kernelLauncher)
+                    .withTimer(kernelUpdateTimer)
+                    .withSyncInfoDto(syncInfoDto)
+                    .withGeneralKernelInfoRetriever(generalKernelInfoRetriever)
+                    .withHealthChecker(healthChecker)
+                    .withConsoleManager(consoleManager)
+                    .withEventBusRegistry(ebr);
+            FXMLLoader loader = new FXMLLoader(
+                    DashboardController.class.getResource("components/Dashboard.fxml"),
+                    null,
+                    null,
+                    cf,
+                    Charset.forName(DEFAULT_CHARSET_NAME),
+                    new LinkedList<>());
+            dashboardView = loader.load();
+            controller = loader.getController();
         stage.setScene(new Scene(dashboardView));
         stage.show();
         stage.toFront();
@@ -100,12 +105,12 @@ public class DashboardControllerIntegTest extends ApplicationTest {
     @Test
     public void testLaunchKernelThenTerminate() throws Exception {
         clickOn("#launchKernelButton");
-        verify(kernelLauncher).launch();
         WaitForAsyncUtils.waitForFxEvents();
+        verify(kernelLauncher).launch();
         verifyThat("#launchKernelButton", Node::isDisabled);
         verifyThat("#kernelStatusLabel", LabeledMatchers.hasText("Starting..."));
 
-        kernelBus.post(new KernelProcEvent.KernelLaunchedEvent());
+        ebr.getBus(EventBusRegistry.KERNEL_BUS).post(new KernelProcEvent.KernelLaunchedEvent());
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat("#kernelStatusLabel", LabeledMatchers.hasText("Running"));
         verify(kernelConnection).connect();
@@ -120,13 +125,17 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         verify(kernelConnection).disconnect();
         verify(kernelUpdateTimer).stop();
 
-        kernelBus.post(new KernelProcEvent.KernelTerminatedEvent());
+        ebr.getBus(EventBusRegistry.KERNEL_BUS).post(new KernelProcEvent.KernelTerminatedEvent());
         WaitForAsyncUtils.waitForFxEvents();
         verifyThat("#kernelStatusLabel", LabeledMatchers.hasText("Not running"));
     }
 
     @Test
     public void testUiTimerTick() throws Exception {
+        KernelInstanceId kernelInstanceId = new KernelInstanceId(123);
+        when(kernelLauncher.getLaunchedInstance()).thenReturn(kernelInstanceId);
+        when(healthChecker.checkIfKernelRunning(123)).thenReturn(false);
+
         int peerCount = 42;
         long bestNetBlkNumber = 5781;
         long bestChainBlkNumber = 1337;
@@ -136,7 +145,7 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         when(syncInfoDto.getChainBestBlkNumber()).thenReturn(bestChainBlkNumber);
         when(generalKernelInfoRetriever.isMining()).thenReturn(isMining);
 
-        uiRefreshBus.post(new RefreshEvent(RefreshEvent.Type.TIMER));
+        ebr.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.TIMER));
         try {
             controller.getExecutor().awaitTermination(1l, TimeUnit.SECONDS);
         } catch (InterruptedException ie) {
@@ -153,7 +162,7 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         KernelInstanceId kernelInstanceId = new KernelInstanceId(123);
         when(kernelLauncher.getLaunchedInstance()).thenReturn(kernelInstanceId);
         when(healthChecker.checkIfKernelRunning(123)).thenReturn(false);
-        kernelBus.post(new UnexpectedApiDisconnectedEvent());
+        ebr.getBus(EventBusRegistry.KERNEL_BUS).post(new UnexpectedApiDisconnectedEvent());
         WaitForAsyncUtils.waitForFxEvents();
         verify(kernelUpdateTimer).stop();
         verify(kernelConnection).disconnect();
