@@ -94,28 +94,30 @@ public class Cli {
                             return 1;
                     }
                     break;
+
+                // Config generation for a specific network
                 case "-c":
                     if (args.length == 2 && isValid(args[1])) {
                         switch (args[1].toLowerCase()) {
                             case "mainnet":
-                            case "conquest": {
+                            case "conquest":
                                 CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
                                 System.out.println("\nNew config generated for " + args[1]);
                                 break;
-                            }
-                            default: {
+                            default:
                                 System.out.println("\nInvalid network " + args[1] + "; Defaulted to mainnet");
                                 break;
-                            }
                         }
                     }
                     else if (args.length == 1) {
                         System.out.println("\nInvalid network; Defaulted to mainnet");
+                        return 1;
                     }
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
                     break;
+
                 case "-i":
                     cfg.fromXML();
                     System.out.println("\nInformation");
@@ -209,7 +211,7 @@ public class Cli {
                         }
                     }
                     break;
-                case "--state": {
+                case "--state":
                     String pruning_type = "full";
                     if (args.length >= 2) {
                         pruning_type = args[1];
@@ -222,7 +224,6 @@ public class Cli {
                         return 1;
                     }
                     break;
-                }
                 case "--dump-state-size":
                     long block_count = 2L;
 
@@ -247,32 +248,29 @@ public class Cli {
 
                 // Determines network config folder path
                 case "-n":
-                case "--network": {
+                case "--network":
                     if (args.length == 2 && isValid(args[1])) {
                         switch (args[1].toLowerCase()) {
                             case "mainnet":
-                            case "conquest": {
+                            case "conquest":
                                 CfgAion.setNetwork(args[1]);
                                 CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
                                 CfgAion.setGenesisFilePath((BASE_PATH + "/config/" + args[1] + "/genesis.json"));
-                                System.out.println("\nExecuting Aion kernel on " + args[1]);
+                                System.out.println("Executing Aion kernel on " + args[1]);
                                 break;
-                            }
-                            default: {
+                            default:
                                 System.out.println("Invalid network " + args[1] + ": Defaulted to mainnet");
                                 break;
-                            }
                         }
                     } else {
                         System.out.println("Invalid network: Defaulted to mainnet");
                         return 1;
                     }
                     break;
-                }
 
-                // Determine database folder path
+                // Determines database folder path
                 case "-d":
-                case "--datadir": {
+                case "--datadir":
                     if (args.length == 2 && isValid(args[1])) {
                         AionRepositoryImpl.setDatabasePath(args[1]);
                     } else {
@@ -280,7 +278,6 @@ public class Cli {
                         return 1;
                     }
                     break;
-                }
 
                 case "--dump-state":
                     long level = -1L;

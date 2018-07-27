@@ -337,6 +337,8 @@ public final class CfgAion extends Cfg {
     public static String getNetwork() {
         return NETWORK;
     }
+    public static String getConfFilePath() { return CONF_FILE_PATH; }
+    public static String getGenesisFilePath() { return GENESIS_FILE_PATH; }
     public static void setNetwork(String value) {
         NETWORK = value;
     }
