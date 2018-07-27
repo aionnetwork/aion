@@ -194,6 +194,15 @@
 
 	<target name="build_test" depends="build, test" />
 
+        <target name="3rd_build">
+                <echo message="compile debug is ${compile.debug}" />
+                <echo message="building 3rd party lib" />
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnsc/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libnsc/libnsc.jar" tofile="${dir.workspace}/lib/libnsc.jar" overwrite="true" />
+        </target>
+
 	<target name="mod_build">
                 <mkdir dir="${dir.modfile}" />
 		<echo message="compile debug is ${compile.debug}" />
@@ -288,7 +297,7 @@
                 </ant>
 	</target>
 
-	<target name="build" depends="mod_build">
+	<target name="build" depends="3rd_build, mod_build">
 		<mkdir dir="${dir.buildfile}" />
 		<mkdir dir="${dir.native}/linux/equihash" />
 		<mkdir dir="${dir.build.native}/linux/equihash" />

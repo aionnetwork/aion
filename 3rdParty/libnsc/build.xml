@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="libnsc">
+  <property name="build.dir" value="build"/>
+  <property name="core.src.dir" value="core/src/main/java"/>
+  <property name="prov.src.dir" value="prov/src/main/java"/>
+  <property name="jar.name" value="libnsc.jar"/>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete file="${jar.name}"/>
+    <mkdir dir="${build.dir}"/>
+  </target>
+
+  <target name="init">
+    <mkdir dir="${build.dir}"/>
+  </target>
+
+  <target name="build-project" depends="clean, init">
+    <echo message="building ${ant.project.name} output: ${jar.name}"/>
+    <javac debug="true" debuglevel="source,lines,vars" destdir="${build.dir}" includeantruntime="false" release="10" includeJavaRuntime="true" nowarn="true">
+      <src path="${core.src.dir}"/>
+      <src path="${prov.src.dir}"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="build-project">
+    <echo message="packaging ${ant.project.name}, output: ${jar.name}"/>
+    <jar destfile="${jar.name}" filesetmanifest="mergewithoutmain">
+      <manifest>
+        <attribute name="Class-Path" value="."/>
+      </manifest>
+      <fileset dir="${build.dir}"/>
+    </jar>
+  </target>
+
+  <!-- To keep compatibility with other build files -->
+  <target name="build" depends="jar"/>
+
+</project>
