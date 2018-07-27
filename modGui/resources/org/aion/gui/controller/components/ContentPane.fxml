@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" id="contentPane"
+            stylesheets="@contentPane.css" xmlns="http://javafx.com/javafx/8.0.121"
+            AnchorPane.topAnchor="130" AnchorPane.rightAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.bottomAnchor="60">
+    <fx:include source="Dashboard.fxml" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
+    <!--<fx:include source="partials/SettingsPane.fxml" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>-->
+</AnchorPane>
