@@ -136,7 +136,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     return fail();
                 return success();
             }
-            case SIG_SET_RELAYER:
+            case SIG_SET_RELAYER: {
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
@@ -145,6 +145,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
+            }
             case SIG_SUBMIT_BUNDLE: {
                 // TODO: possible attack vector, unsecure deserialization
                 BundleRequestCall bundleRequests = parseBundleRequest(input);

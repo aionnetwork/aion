@@ -13,8 +13,19 @@ public class BridgeDeserializer {
     private static final int DWORD_SIZE = 32;
     private static final int ADDR_SIZE = 32;
 
-    private static final int LIST_PT = 16;
+    /**
+     * Size of a "meta" element for defining lists. There are two types, the
+     * first is an offset pointer than points to the location of the list.
+     *
+     * The second is a length, that depicts the length of the list. In compliance
+     * with Solidity Encoding in the FVM, both are 16 bytes.
+     *
+     * We note here that despite being 16 bytes, we only use enough bytes such that
+     * the range stays within a positive integer (31 bits).
+     */
     private static final int LIST_META = 16;
+
+    private static final int BUNDLE_LIST_SIZE_MAX = 512;
 
     private static final BigInteger INT_MAX_VAL = BigInteger.valueOf(Integer.MAX_VALUE);
 
@@ -42,8 +53,21 @@ public class BridgeDeserializer {
         return address;
     }
 
+    /**
+     * Parses a list of addresses from input, currently only used by
+     * ring initialization. This method enforces some checks on the class
+     * of addresses before parsed, in that they <b>must</b> be user addresses
+     * (start with {@code 0xa0}).
+     *
+     * The implication being that you may not set a non-user, address to be
+     * a ring member.
+     *
+     * @param call input data
+     * @return {@code 2d array} containing list of addresses. {@code null} otherwise.
+     */
     public static byte[][] parseAddressList(@Nonnull final byte[] call) {
-        if (call.length < CALL_OFFSET + LIST_META + LIST_PT)
+        // check minimum length
+        if (call.length < CALL_OFFSET + (LIST_META *2))
             return null;
 
         final byte[][] addressList = parseList(call, CALL_OFFSET, 32);
@@ -74,7 +98,7 @@ public class BridgeDeserializer {
      */
     public static BundleRequestCall parseBundleRequest(@Nonnull final byte[] call) {
         // TODOs
-        if (call.length < CALL_OFFSET + DWORD_SIZE + (LIST_META + LIST_PT) * 4)
+        if (call.length < CALL_OFFSET + DWORD_SIZE + (LIST_META * 2) * 4)
             return null;
 
         final byte[] blockHash = parseDwordFromCall(call);
@@ -86,22 +110,22 @@ public class BridgeDeserializer {
         if (addressList == null)
             return null;
 
-        final byte[][] uintList = parseList(call, CALL_OFFSET + LIST_PT + DWORD_SIZE, 16);
+        final byte[][] uintList = parseList(call, CALL_OFFSET + LIST_META + DWORD_SIZE, 16);
         if (uintList == null)
             return null;
 
         if (addressList.length != uintList.length)
             return null;
 
-        final byte[][] signatureChunk1 = parseList(call, CALL_OFFSET + LIST_PT * 2 + DWORD_SIZE, 32);
+        final byte[][] signatureChunk1 = parseList(call, CALL_OFFSET + (LIST_META * 2) + DWORD_SIZE, 32);
         if (signatureChunk1 == null)
             return null;
 
-        final byte[][] signatureChunk2 = parseList(call, CALL_OFFSET + LIST_PT * 3 + DWORD_SIZE, 32);
+        final byte[][] signatureChunk2 = parseList(call, CALL_OFFSET + (LIST_META * 3) + DWORD_SIZE, 32);
         if (signatureChunk2 == null)
             return null;
 
-        final byte[][] signatureChunk3 = parseList(call, CALL_OFFSET + LIST_PT * 4 + DWORD_SIZE, 32);
+        final byte[][] signatureChunk3 = parseList(call, CALL_OFFSET + (LIST_META * 4) + DWORD_SIZE, 32);
         if (signatureChunk3 == null)
             return null;
 
@@ -144,30 +168,66 @@ public class BridgeDeserializer {
         final int callLength = call.length;
 
         // check minimum length
-        if (callLength < CALL_OFFSET + LIST_META + LIST_PT)
+        if (callLength < offset + (LIST_META * 2))
             return null;
 
-        final int listOffset = parseMeta(call, offset) + CALL_OFFSET;
+        /*
+         * Correct case S#1, found that we previously incremented the listOffset before
+         * checking for ERR_INT, would have led to a situation where this check
+         * (whether the first listOffset was invalid or not) would not trigger.
+         *
+         * Correct by checking before incrementing with CALL_OFFSET.
+         */
+        int listOffset = parseMeta(call, offset);
         if (listOffset == ERR_INT)
             return null;
+        listOffset = listOffset + CALL_OFFSET;
 
-        if (listOffset > call.length)
+        /*
+         * Correct case S#2, we need to check that from listOffset we can actually
+         * successfully parse the next meta variable (length). Since that
+         * case is not handled by parseMeta().
+         */
+        if (listOffset + LIST_META > call.length)
             return null;
 
         final int listLength = parseMeta(call, listOffset);
         if (listLength == ERR_INT)
             return null;
 
-        // do a quick calculation to check that we have sufficient length
-        // to cover the length
-        if (listLength * elementLength > (call.length - listOffset - LIST_PT))
+        /*
+         * Covers case Y#2, if attacker tries to construct and overflow to OOM output array,
+         * it will be caught here.
+         */
+        int consumedLength = 0;
+        try {
+            consumedLength = Math.multiplyExact(listLength, elementLength);
+        } catch (ArithmeticException e) {
+            return null;
+        }
+
+        /*
+         * Cover case S#4, assign an upper bound to the size of array we create.
+         * Under current gas estimations, our token takes approximately 30k-50k gas for a
+         * transfer.
+         *
+         * 30_000 * 512 = 15_360_000, which is above the current Ethereum block limit.
+         * Otherwise, if the limit does increase, we can simply cut bundles at this length.
+         */
+        if (BUNDLE_LIST_SIZE_MAX > 512)
+            return null;
+
+        /*
+         * Recall that we confirmed listOffset <= call.length. To check that offset, we then
+         * further consumed the offset position.
+         */
+        if (consumedLength > (call.length - listOffset - LIST_META))
             return null;
 
         final byte[][] output = new byte[listLength][];
 
-        // yuck
         int counter = 0;
-        for (int i = listOffset + LIST_META; i < (listOffset + LIST_META) + (listLength * elementLength); i += elementLength) {
+        for (int i = listOffset + LIST_META; i < (listOffset + LIST_META) + (consumedLength); i += elementLength) {
             byte[] element = new byte[elementLength];
             System.arraycopy(call, i, element, 0, elementLength);
             output[counter] = element;
@@ -179,17 +239,31 @@ public class BridgeDeserializer {
 
     private static int parseMeta(@Nonnull final byte[] call,
                                  final int offset) {
+
+        // covered by S#2, but good to have here in case (Y#3)
+        if (offset + LIST_META > call.length)
+            return ERR_INT;
+
         // more minimum length checks
-        final byte[] pt = new byte[LIST_PT];
-        System.arraycopy(call, offset, pt, 0, LIST_PT);
+        final byte[] pt = new byte[LIST_META];
+        System.arraycopy(call, offset, pt, 0, LIST_META);
 
         // check that destination is parse-able
         final BigInteger bigInt = new BigInteger(1, pt);
         if (bigInt.compareTo(INT_MAX_VAL) > 0)
             return ERR_INT;
 
-        // check that destination is within bounds
-        return bigInt.intValueExact();
+        try {
+            return bigInt.intValueExact();
+        } catch (ArithmeticException e) {
+            /*
+             * Catch case S#3, handles the case where someone could overload
+             * the biginteger, and try to create a value larger than INT_MAX,
+             * in this case we should consider the meta decode a failure and
+             * return -1;
+             */
+            return ERR_INT;
+        }
     }
 
     private static byte ADDRESS_HEADER = ByteUtil.hexStringToBytes("0xa0")[0];
