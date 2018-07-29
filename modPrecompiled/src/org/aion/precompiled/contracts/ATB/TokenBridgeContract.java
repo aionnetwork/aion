@@ -193,6 +193,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     private static ExecutionResult THROW =
             new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
     private ExecutionResult fail() {
+        this.context.helper().rejectInternalTransactions();
         return THROW;
     }
 
