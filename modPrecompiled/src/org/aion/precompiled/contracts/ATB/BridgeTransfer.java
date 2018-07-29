@@ -12,7 +12,7 @@ public class BridgeTransfer {
      * Consists of the sourceTransactionHash (32 bytes), the recipient address (32 bytes)
      * and the value (padded to 32 bytes).
      */
-    static final int TRANSFER_SIZE = 32 + 32 + 32;
+    static final int TRANSFER_SIZE = 32 + 32 + 16;
 
     private final BigInteger transferValue;
     private final byte[] recipient;
