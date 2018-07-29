@@ -94,8 +94,9 @@ public class BridgeDeserializer {
      * {@code null} if anything regarding deserialization is wrong
      */
     static BundleRequestCall parseBundleRequest(@Nonnull final byte[] call) {
-        // TODOs
-        if (call.length < CALL_OFFSET + DWORD_SIZE + (LIST_META * 2) * 4)
+
+        // account for 5 lists: sourceTransactionList, addressList, valueList, signatureChunks(1,2,3)
+        if (call.length < CALL_OFFSET + DWORD_SIZE + (LIST_META * 2) * 5)
             return null;
 
         final byte[] blockHash = parseDwordFromCall(call);
