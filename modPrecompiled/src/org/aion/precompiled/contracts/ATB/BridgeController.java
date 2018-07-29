@@ -2,15 +2,16 @@ package org.aion.precompiled.contracts.ATB;
 
 import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.processError;
 import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.processSuccess;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.computeBundleHash;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
+
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
-import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
@@ -61,10 +62,10 @@ public class BridgeController {
 
     /**
      * Checks whether the given address is the owner of the contract or not.
-     * @implNote assumes the address is non-null and properly formatted
      *
      * @param address to be checked for ownership
      * @return {@code true} if address is the owner {@code false} otherwise
+     * @implNote assumes the address is non-null and properly formatted
      */
     private boolean isOwner(@Nonnull final byte[] address) {
         byte[] owner = this.connector.getOwner();
@@ -75,6 +76,7 @@ public class BridgeController {
 
     /**
      * Checks whether the given address is the intended newOwner of the contract
+     *
      * @param address to be checked for new ownership
      * @return {@code} true if the address is the intended new owner {@code false} otherwise
      */
@@ -218,26 +220,28 @@ public class BridgeController {
 
     /**
      * Assume bundleHash is not from external source, but rather
-     * calculated on our side (on the I/O layer), when {@link BridgeBundle} list
+     * calculated on our side (on the I/O layer), when {@link BridgeTransfer} list
      * was being created.
      *
-     * @param bundles
+     * @param caller,          address of the calling account. Used to check whether
+     *                         the address calling is the relay or not.
+     * @param sourceBlockHash, hash of a block on the source blockchain, each
+     *                         block may contain 1 to N bundles. Used as part
+     *                         of the bundleHash to tie a bundle to a block.
+     * @param transfers,       {@link BridgeTransfer}
+     * @param signatures,      a list of signatures from signatories that have signed
+     *                         the bundles.
      * @return {@code ErrCode} indicating whether operation was successful
-     *
      * @implNote assume the inputs are properly formatted
-     *
-     * @implNote assumes the bundles will always have positive transfer values
-     * so the check is omitted. Technically it is possible to have an account
-     * transfer for {@code 0} amount of tokens. Assume that the bridge will
-     * take care that does not occur
-     *
-     * @implNote does not currently place restrictions on size of bundles.
-     * Since we're not charging cost for bundles we may want to look into
-     * charging these properly.
+     * @implNote will check whether any bundles are {@code 0} value transfers.
+     * In such a case, it indicates that the bridge has faulted, so we should
+     * immediately fail all transfers.
+     * @implNote {@link BridgeDeserializer} implicitly places a max size for each
+     * list to 512.
      */
     public ProcessedResults processBundles(@Nonnull final byte[] caller,
-                                           @Nonnull final byte[] blockHash,
-                                           @Nonnull final BridgeBundle[] bundles,
+                                           @Nonnull final byte[] sourceBlockHash,
+                                           @Nonnull final BridgeTransfer[] transfers,
                                            @Nonnull final byte[][] signatures) {
         if (!isRingLocked())
             return processError(ErrCode.RING_NOT_LOCKED);
@@ -248,11 +252,13 @@ public class BridgeController {
         if (!isWithinSignatureBounds(signatures.length))
             return processError(ErrCode.INVALID_SIGNATURE_BOUNDS);
 
+        /*
+         * Computes a unique identifier of the transfer hash for each sourceBlockHash,
+         * uniqueness relies on the fact that each
+         */
+
         // verify bundleHash
-        byte[] hash = HashUtil.h256(blockHash);
-        for (BridgeBundle b : bundles) {
-            hash = HashUtil.h256(ByteUtil.merge(hash, b.recipient, b.transferValue.toByteArray()));
-        }
+        byte[] hash = computeBundleHash(sourceBlockHash, transfers);
 
         if (bundleProcessed(hash))
             return processError(ErrCode.PROCESSED);
@@ -271,7 +277,10 @@ public class BridgeController {
 
         // otherwise, we're clear to proceed with transfers
         List<ExecutionResult> results = new ArrayList<>();
-        for (BridgeBundle b : bundles) {
+        for (BridgeTransfer b : transfers) {
+
+            if (b.getTransferValue().compareTo(BigInteger.ZERO) == 0)
+                return processError(ErrCode.INVALID_TRANSFER);
 
             /*
              * Tricky here, we distinguish between two types of failures here:
@@ -287,14 +296,14 @@ public class BridgeController {
              * interface documentation.
              */
             ExecutionResult result = null;
-            if ((result = transferrable.transfer(b.recipient, b.transferValue)).getResultCode()
+            if ((result = transferrable.transfer(b.getRecipient(), b.getTransferValue())).getResultCode()
                     == ExecutionResult.ResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
             if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
-                emitDistributed(b.recipient, b.transferValue);
+                emitDistributed(b.getRecipient(), b.getTransferValue());
             results.add(result);
         }
         this.connector.setBundle(hash, true);
@@ -334,9 +343,9 @@ public class BridgeController {
         addLog(topics);
     }
 
-    protected static class ProcessedResults {
-        public ErrCode controllerResult;
-        public List<ExecutionResult> internalResults;
+    static class ProcessedResults {
+        ErrCode controllerResult;
+        List<ExecutionResult> internalResults;
 
         private ProcessedResults(ErrCode code, List<ExecutionResult> internalResults) {
             this.controllerResult = code;

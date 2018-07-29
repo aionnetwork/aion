@@ -148,12 +148,16 @@ public class TokenBridgeContractTest {
         // assemble the payload
         byte[] blockHash = HashUtil.h256("blockHash".getBytes());
 
-        BridgeBundle[] bundles = new BridgeBundle[10];
+        BridgeTransfer[] bundles = new BridgeTransfer[10];
         for (int i = 0; i < 10; i++) {
-            bundles[i] = new BridgeBundle(BigInteger.ONE,
-                    AddressSpecs.computeA0Address(HashUtil.h256(Integer.toHexString(i).getBytes())));
+
+            // generate a unique sourceTransactionHash for each transfer
+            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            bundles[i] = new BridgeTransfer(BigInteger.ONE,
+                    AddressSpecs.computeA0Address(HashUtil.h256(Integer.toHexString(i).getBytes())),
+                    sourceTransactionHash);
         }
-        byte[] payloadHash = generateSignature(blockHash, bundles);
+        byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, bundles);
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
@@ -162,11 +166,13 @@ public class TokenBridgeContractTest {
             i++;
         }
 
+        ListFVM sourceTransactionList = new ListFVM();
         ListFVM addressList = new ListFVM();
         ListFVM uintList = new ListFVM();
-        for (BridgeBundle b : bundles) {
-            addressList.add(new AddressFVM(new ByteArrayWrapper(b.recipient)));
-            uintList.add(new Uint128FVM(new ByteArrayWrapper(PrecompiledUtilities.pad(b.transferValue.toByteArray(), 16))));
+        for (BridgeTransfer b : bundles) {
+            sourceTransactionList.add(new AddressFVM(new ByteArrayWrapper(b.getSourceTransactionHash())));
+            addressList.add(new AddressFVM(new ByteArrayWrapper(b.getRecipient())));
+            uintList.add(new Uint128FVM(new ByteArrayWrapper(PrecompiledUtilities.pad(b.getTransferValue().toByteArray(), 16))));
         }
 
         ListFVM sigChunk1 = new ListFVM();
@@ -180,6 +186,7 @@ public class TokenBridgeContractTest {
 
         callPayload = new AbiEncoder(BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
                 new AddressFVM(new ByteArrayWrapper(blockHash)),
+                sourceTransactionList,
                 addressList,
                 uintList,
                 sigChunk1,
@@ -187,19 +194,5 @@ public class TokenBridgeContractTest {
                 sigChunk3).encodeBytes();
         transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
-
-
-
-
-
-
-    }
-
-    private static byte[] generateSignature(byte[] blockHash, BridgeBundle[] bundles) {
-        byte[] hash = HashUtil.h256(blockHash);
-        for (BridgeBundle b : bundles) {
-            hash = HashUtil.h256(ByteUtil.merge(hash, b.recipient, b.transferValue.toByteArray()));
-        }
-        return hash;
     }
 }

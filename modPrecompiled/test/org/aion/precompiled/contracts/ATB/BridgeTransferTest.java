@@ -1,7 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -60,12 +59,13 @@ public class BridgeTransferTest {
         final byte[] senderAddress = this.members[0].getAddress();
         final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
         final byte[] recipient = HashUtil.h256("recipient".getBytes());
+        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeBundle bundle = new BridgeBundle(BigInteger.valueOf(1), recipient);
-        byte[] bundleHash = generateSignature(blockHash, new BridgeBundle[] {bundle});
+        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[members.length][];
         for (int i = 0; i < members.length; i++) {
@@ -76,7 +76,7 @@ public class BridgeTransferTest {
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
 
         BridgeController.ProcessedResults results =
-                this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
+                this.controller.processBundles(senderAddress, blockHash, new BridgeTransfer[] {bundle}, signatures);
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
@@ -84,15 +84,16 @@ public class BridgeTransferTest {
 
     @Test
     public void testBridgeNotEnoughSignatures() {
-        final byte[] senderAddress = this.members[0].getAddress();
+        final byte[] senderAddress = members[0].getAddress();
         final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
         final byte[] recipient = HashUtil.h256("recipient".getBytes());
+        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeBundle bundle = new BridgeBundle(BigInteger.valueOf(1), recipient);
-        byte[] bundleHash = generateSignature(blockHash, new BridgeBundle[] {bundle});
+        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[2][];
         for (int i = 0; i < 2; i++) {
@@ -103,7 +104,7 @@ public class BridgeTransferTest {
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
 
         BridgeController.ProcessedResults results =
-                this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
+                this.controller.processBundles(senderAddress, blockHash, new BridgeTransfer[] {bundle}, signatures);
 
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
@@ -116,12 +117,13 @@ public class BridgeTransferTest {
         final byte[] senderAddress = this.members[0].getAddress();
         final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
         final byte[] recipient = HashUtil.h256("recipient".getBytes());
+        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeBundle bundle = new BridgeBundle(BigInteger.valueOf(1), recipient);
-        byte[] bundleHash = generateSignature(blockHash, new BridgeBundle[] {bundle});
+        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[3][];
         for (int i = 0; i < 3; i++) {
@@ -132,7 +134,7 @@ public class BridgeTransferTest {
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
 
         BridgeController.ProcessedResults results =
-                this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
+                this.controller.processBundles(senderAddress, blockHash, new BridgeTransfer[] {bundle}, signatures);
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
@@ -144,12 +146,13 @@ public class BridgeTransferTest {
         final byte[] senderAddress = this.members[0].getAddress();
         final byte[] blockHash = HashUtil.h256("blockHash".getBytes());
         final byte[] recipient = HashUtil.h256("recipient".getBytes());
+        final byte[] sourceTransactionHash = HashUtil.h256("transaction".getBytes());
 
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeBundle bundle = new BridgeBundle(BigInteger.valueOf(1), recipient);
-        byte[] bundleHash = generateSignature(blockHash, new BridgeBundle[] {bundle});
+        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[6][];
         for (int i = 0; i < 5; i++) {
@@ -160,18 +163,10 @@ public class BridgeTransferTest {
         assertThat(code).isEqualTo(ErrCode.NO_ERROR);
 
         BridgeController.ProcessedResults results =
-                this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
+                this.controller.processBundles(senderAddress, blockHash, new BridgeTransfer[] {bundle}, signatures);
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
         assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
-    }
-
-    private static byte[] generateSignature(byte[] blockHash, BridgeBundle[] bundles) {
-        byte[] hash = HashUtil.h256(blockHash);
-        for (BridgeBundle b : bundles) {
-            hash = HashUtil.h256(ByteUtil.merge(hash, b.recipient, b.transferValue.toByteArray()));
-        }
-        return hash;
     }
 }
