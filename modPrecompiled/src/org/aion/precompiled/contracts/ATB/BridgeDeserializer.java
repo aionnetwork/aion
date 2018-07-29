@@ -25,7 +25,7 @@ public class BridgeDeserializer {
      */
     private static final int LIST_META = 16;
 
-    private static final int BUNDLE_LIST_SIZE_MAX = 512;
+    private static final int LIST_SIZE_MAX = 512;
 
     private static final BigInteger INT_MAX_VAL = BigInteger.valueOf(Integer.MAX_VALUE);
 
@@ -221,7 +221,7 @@ public class BridgeDeserializer {
          * 30_000 * 512 = 15_360_000, which is above the current Ethereum block limit.
          * Otherwise, if the limit does increase, we can simply cut bundles at this length.
          */
-        if (BUNDLE_LIST_SIZE_MAX > 512)
+        if (listLength > LIST_SIZE_MAX)
             return null;
 
         /*
