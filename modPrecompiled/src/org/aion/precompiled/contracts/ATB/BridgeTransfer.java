@@ -10,7 +10,7 @@ public class BridgeTransfer {
 
     /**
      * Consists of the sourceTransactionHash (32 bytes), the recipient address (32 bytes)
-     * and the value (padded to 32 bytes).
+     * and the value (padded to 16 bytes).
      */
     static final int TRANSFER_SIZE = 32 + 32 + 16;
 
