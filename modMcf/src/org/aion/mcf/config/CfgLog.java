@@ -51,6 +51,7 @@ public class CfgLog {
         modules.put(LogEnum.P2P.name(), LogLevels.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevels.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
+        modules.put(LogEnum.GUI.name(), LogLevels.INFO.name());
         this.logFile = false;
         this.logPath = "log";
     }

@@ -293,6 +293,103 @@ class TRShelpers {
         return trs.getAccountLastWithdrawalPeriod(contract, account);
     }
 
+    /**
+     * Returns the fraction of the total deposits that account owns to 18 decimal places, rounded
+     * down.
+     *
+     * @param accountDepositAmt The amount of deposit funds account has in some contract.
+     * @param contractDepositAmt The total amount of deposit funds in that same contract.
+     * @return accountDepositAmt / contractDepositAmt.
+     */
+    BigDecimal computeOwnershipFraction(BigInteger accountDepositAmt, BigInteger contractDepositAmt) {
+        //TODO: USE
+        return new BigDecimal(accountDepositAmt).
+            divide(new BigDecimal(contractDepositAmt), 18, RoundingMode.HALF_DOWN);
+    }
+
+    /**
+     * Returns the amount of bonus funds owed over the lifetime of some contract to some account.
+     *
+     * @param fraction The fraction of deposit funds owned by some account in some contract.
+     * @param contractBonusAmt The total bonus funds in that same contract.
+     * @return the amount of bonus funds owed accordingly over the contract lifetime.
+     */
+    BigInteger computeBonusOwed(BigDecimal fraction, BigInteger contractBonusAmt) {
+        //TODO: USE
+        return fraction.multiply(new BigDecimal(contractBonusAmt)).toBigInteger();
+    }
+
+    /**
+     * Returns the amount of bonus funds available to be collected each period.
+     *
+     * @param fraction The fraction of deposit funds owned by some account in some contract.
+     * @param contractBonusAmt The total bonus funds in that same contract.
+     * @param periods The total number of periods that same contract has.
+     * @return the amount of bonus funds available to be collected each period.
+     */
+    BigInteger computeBonusPerPeriod(BigDecimal fraction, BigInteger contractBonusAmt, int periods) {
+        //TODO: USE
+        return fraction.
+            multiply(new BigDecimal(contractBonusAmt)).
+            divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN).
+            toBigInteger();
+    }
+
+    // Returns the share of the bonus tokens account is entitled to withdraw over life of contract.
+    BigInteger getBonusShare(AbstractTRS trs, Address contract, Address account) {
+        //TODO: replace this with the above 2 methods.
+        return trs.computeBonusShare(contract, account);
+    }
+
+    /**
+     * Returns the amount of extra funds owed over the lifetime of some contract to some account.
+     *
+     * @param fraction The fraction of deposit funds owned by some account in some contract.
+     * @param contractExtraAmt The total extra funds in that same contract.
+     * @return the amount of extra funds owed accordingly over the contract lifetime.
+     */
+    BigInteger computeExtrasOwed(BigDecimal fraction, BigInteger contractExtraAmt) {
+        //TODO: USE
+        return fraction.multiply(new BigDecimal(contractExtraAmt)).toBigInteger();
+    }
+
+    /**
+     * Returns the amount of extra funds available to be collected each period.
+     *
+     * @param fraction The fraction of deposit funds owned by some account in some contract.
+     * @param contractBonusAmt The total extra funds in that same contract.
+     * @param periods The total number of periods that same contract has.
+     * @return the amount of extra funds available to be collected each period.
+     */
+    BigInteger computeExtrasPerPeriod(BigDecimal fraction, BigInteger contractBonusAmt, int periods) {
+        //TODO: USE
+        return fraction.
+            multiply(new BigDecimal(contractBonusAmt)).
+            divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN).
+            toBigInteger();
+    }
+
+    // Returns the amount of extras account is able to withdraw in the current period.
+    BigInteger getExtraShare(AbstractTRS trs, Address contract, Address account, BigDecimal fraction,
+        int currPeriod) {
+        //TODO: replace this with the above 2 methods.
+        return trs.computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
+    }
+
+    /**
+     * Returns the amount of deposit funds available to be collected each period.
+     *
+     * @param depositAmt The amout of deposit funds owned by some account in some contract.
+     * @param periods The total number of periods that same contract has.
+     * @return the amount of deposit funds available to be collected each period.
+     */
+    BigInteger computeDepositsPerPeriod(BigInteger depositAmt, int periods) {
+        //TODO: USE
+        return new BigDecimal(depositAmt).
+            divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN).
+            toBigInteger();
+    }
+
     // Grabs the current period contract is in as a BigInteger.
     BigInteger getCurrentPeriod(AbstractTRS trs, Address contract) {
         //TODO - this should be computed here, not grabbed from the contract
@@ -332,12 +429,6 @@ class TRShelpers {
         return share.toBigInteger().add(accBalance.toBigInteger());
     }
 
-    // Returns the share of the bonus tokens account is entitled to withdraw over life of contract.
-    BigInteger getBonusShare(AbstractTRS trs, Address contract, Address account) {
-        //TODO - this should be computed here, not grabbed from the contract
-        return trs.computeBonusShare(contract, account);
-    }
-
     // Returns the total amount of tokens account can withdraw over the lifetime of the contract.
     BigInteger getTotalOwed(AbstractTRS trs, Address contract, Address account) {
         //TODO - this should be computed here, not grabbed from the contract
@@ -373,12 +464,6 @@ class TRShelpers {
         BigInteger expectedWithdraw = currPeriod.multiply(
             getWithdrawAmt(owings, expectedSpecial, periods));
         return expectedWithdraw.add(expectedSpecial);
-    }
-
-    // Returns the amount of extras account is able to withdraw in the current period.
-    BigInteger getExtraShare(AbstractTRS trs, Address contract, Address account, BigDecimal fraction,
-        int currPeriod) {
-        return trs.computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
     }
 
     /**

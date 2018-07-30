@@ -44,7 +44,6 @@ if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
   JAVA_OPTS="-Xms4g"
 fi
 
-
 ####### WATCHGUARD IMPLEMENTATION #######
 #				    	#
 #   To kill: ps aux | egrep "aion.sh" 	#
@@ -142,7 +141,6 @@ if $guard; then
 
 		# Watchguard
 		while $watching; do
-
 			sleep $sample
 
 			# [1] Log timestamp (last 60 sec) OR [2] PID process state ZOMBIE/DEAD
@@ -205,7 +203,36 @@ if $guard; then
 
 else
 
-    env EVMJIT="-cache=1" ./rt/bin/java ${JAVA_OPTS} \
-            -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
+	JAVA_CMD=java
+	if [ -d "./rt" ]; then
+			JAVA_CMD="./rt/bin/java"
+	elif [ -d "./pack/rt" ]; then
+			JAVA_CMD="./pack/rt/bin/java"
+	elif [ -d "$JAVA_HOME" ]; then
+			JAVA_CMD="$JAVA_HOME/bin/java"
+	fi
 
+	# if there's CLI args, we just run it and quit
+	if [ "$#" -gt 0 ]; then
+		env EVMJIT="-cache=1" $JAVA_CMD ${JAVA_OPTS} \
+			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
+		exit
+	fi
+
+	# otherwise, kernel will start; run it in background
+	trap "exit" INT TERM
+	trap "exit_kernel" EXIT
+
+	exit_kernel() {
+		if [ ! -z "$kernel_pid" ]; then
+			kill "$kernel_pid" &> /dev/null
+			wait "$kernel_pid" &> /dev/null
+		fi
+		exit 1
+	}
+
+  	env EVMJIT="-cache=1" $JAVA_CMD ${JAVA_OPTS} \
+  		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
+    kernel_pid=$!
+    wait
 fi
