@@ -155,7 +155,7 @@ public class KernelLauncher {
                 // handle that later.
                 LOGGER.warn(
                         "Found old kernel pid = {} but could not determine if it is really running.  Assuming that it is.",
-                        currentInstance.getPid());
+                        currentInstance != null ? currentInstance.getPid() : "<unknown>");
                 return true;
             } catch (ClassNotFoundException | IOException ex) {
                 LOGGER.error("Found old kernel pid file at {}, but failed to deserialize it, " +

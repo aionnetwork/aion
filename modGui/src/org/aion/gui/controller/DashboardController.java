@@ -129,9 +129,6 @@ public class DashboardController extends AbstractController {
     private void handleUnexpectedApiDisconnect(UnexpectedApiDisconnectedEvent event) {
         final boolean isRunning;
         try {
-            System.out.println(String.format("[%s] kernelLauncher = %s", this, kernelLauncher));
-            System.out.println(String.format("[%s] kernelLauncher.getLaunchedInstance() = %s", this, kernelLauncher.getLaunchedInstance() ));
-            System.out.println(String.format("[%s] kernelLauncher.getLaunchedInstance().getPid() = %b", this, kernelLauncher.getLaunchedInstance().getPid() ));
             isRunning = unixKernelProcessHealthChecker.checkIfKernelRunning(
                     kernelLauncher.getLaunchedInstance().getPid());
         } catch (KernelControlException kce) {

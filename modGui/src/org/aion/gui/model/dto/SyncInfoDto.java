@@ -64,6 +64,7 @@ public class SyncInfoDto extends AbstractDto {
             chainBest = syncInfo.getChainBestBlock();
             netBest = syncInfo.getNetworkBestBlock();
         } catch (Exception e) {
+            System.out.println("SyncInfoDto#loadFromApiInternal -> went into Exception block");
             chainBest = getLatest();
             netBest = chainBest;
         }

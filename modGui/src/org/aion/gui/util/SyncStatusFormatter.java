@@ -30,6 +30,8 @@ public class SyncStatusFormatter {
 
 
     public static String formatSyncStatusByBlockNumbers(SyncInfoDto syncInfo) {
+        System.out.println("SyncStatusFormatter#formatSyncstatusByBlockNumbers -> chain best = " + syncInfo.getChainBestBlkNumber());
+        System.out.println("SyncStatusFormatter#formatSyncstatusByBlockNumbers -> net best = " + syncInfo.getNetworkBestBlkNumber());
         return syncInfo.getChainBestBlkNumber() + "/" + syncInfo.getNetworkBestBlkNumber() + " total blocks";
     }
 

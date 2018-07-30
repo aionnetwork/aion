@@ -123,6 +123,7 @@ public class MainWindow extends Application {
         consoleManager = new ConsoleManager();
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
         unixKernelProcessHealthChecker = new UnixKernelProcessHealthChecker();
+
         kernelLauncher = new KernelLauncher(
                 CfgAion.inst().getGui().getCfgGuiLauncher(),
                 EventBusRegistry.INSTANCE,
@@ -141,7 +142,8 @@ public class MainWindow extends Application {
 
         accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
         transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
-        accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);    }
+        accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
+    }
 
 
     /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
@@ -199,8 +201,10 @@ public class MainWindow extends Application {
                 .withWalletStorage(new WalletStorage())
                 .withBlockTransactionProcessor(transactionProcessor)
                 .withConsoleManager(consoleManager)
+                .withEventBusRegistry(EventBusRegistry.INSTANCE)
+                .withHealthChecker(unixKernelProcessHealthChecker)
         );
-        loader.setBuilderFactory(new MyBuilderFactory()
+        loader.setBuilderFactory(new UiSubcomponentsFactory()
                 .withAccountManager(accountManager)
                 .withConsoleManager(consoleManager)
         );
