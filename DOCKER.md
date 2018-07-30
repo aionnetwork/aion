@@ -17,6 +17,32 @@ leverage `ant pack_dev_docker` to build a custom image based on current code bas
 ant pack_dev_docker
 ```
 
+##### Description
+
+This command will:
+* build the project with `-Dcompile.debug=true`
+* build a custom Docker image using the current code adding java debug libs for remote debugging (this requires
+downloading a version of java different from the one automatically packed by the kernel binary)
+
+This build is conditioned by the `DEV_BUILD` argument in the `Dockerfile` so you can add more development related 
+behaviour by using this flag.
+
+##### Remote debug
+
+If you want to use the remote debugging feature:
+* make sure you expose the correct port where you want to attach which is set in the `supporting-services.yml` 
+and defaults to `6006`:
+```bash
+- JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:6006 -Xms4g
+```  
+
+* run the image as described below in [Running](#Running) and expose the debug port:
+```bash
+...
+-p 6006:6006
+...
+```
+
 **Note**: The image build uses the binary built in the `pack` directory by ant. 
 If you want to use a specific kernel binary download the binary from the official repo, rename it to `aion.tar.bz2` and 
 copy it to the `pack` directory
@@ -24,18 +50,31 @@ copy it to the `pack` directory
 
 ### Release build
 
+#### Build docker image
+
 ```bash
 ant pack_docker
 ```
 
-This command will create 2 docker images
-- centrys/aion-core:<kernelversionshortcommit>
-- centrys/aion-core:latest
-
-In order to have the image available for deployments you need to push it to the registry using the `push_docker` target
-
+This command will create 1 docker image with the tag value as `GITVER` variable from `script/prebuild.sh` which is the
+short commit revision.
+Eg:
 ```bash
-ant push_docker
+aion-core:0.2.8f5317462
+```
+
+#### Push docker image
+
+In order to have the image available for deployments/developers you need to tag and push it to you registry of choice manually.
+
+* tag image according to repo:
+```bash
+docker tag aion-core:<short_commit_revision> <your_docker_registry>/aion-core:<short_commit_revision> 
+```
+
+* push image:
+```bash
+docker push <your_docker_registry>/aion-core:<short_commit_revision>
 ```
 
 ## Running
@@ -56,7 +95,32 @@ docker run -it \
 -e rpc_listen_address="0.0.0.0" \
 -e peer_list="p2p://peer-id-1@10.10.10.10:3333,p2p://peer-id-2@12.12.12.12:4444" \
 -e override_peer_list="true" \
-centrys/aion-core:0.2.8.f5317462
+aion-core:0.2.8.f5317462
+```
+
+**Note**: 
+We wont's support setting options for the script as the container will have to be teared down after
+running and recreated again. This is not feasible in a production environment. Instead of passing options to the startup 
+script we should provide a rpc/java API that will allow the required functionality to be present after kernel startup.
+Until then we can still use that functionality by manually starting a bash session in the container and running
+the commands that we need. 
+
+Eg:
+
+* Start the container as described above
+* In a separate terminal get the container id
+```bash
+docker ps
+``` 
+
+* Start a bash session in the container
+```bash
+docker run -it <contaier_id> bash
+```
+
+* Make sure you are in the `/opt/aion` directory and run your desired commands:
+```bash
+./aion.sh -a list
 ```
 
 ##### Expose API
@@ -79,6 +143,8 @@ centrys/aion-core:0.2.8.f5317462
 ```
 
 ##### Bootstrap internal mining
+
+**Note**: The override of these variables are mostly for local development/testing purposes. 
 
 ```bash
 # This will lower the difficulty for slow machines and generate an account at startup and set it as the coinbase
@@ -123,4 +189,4 @@ List of environment variables than can override xml properties:
 - log_path
 ```
 
-If you need to override more properties update `aion-docker.py` to support those properties.
+If you need to override more properties update `override-config.py` to support those properties.

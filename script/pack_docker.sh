@@ -9,7 +9,7 @@ VERSION=$(./aion/aion.sh --version)
 
 BUILD_ARGS="--build-arg KERNEL_PATH=$PACK_PATH/aion/"
 
-docker build -t centrys/aion-core:$VERSION ../. $BUILD_ARGS
+docker build -t aion-core:$VERSION ../. $BUILD_ARGS
 
 rm -rf aion/
 

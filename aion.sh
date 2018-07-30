@@ -37,6 +37,12 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
+# prepare jvm params
+# use default xms if not set
+JAVA_OPTS="$JAVA_OPTS"
+if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
+  JAVA_OPTS="-Xms4g"
+fi
 
 
 ####### WATCHGUARD IMPLEMENTATION #######
@@ -120,7 +126,7 @@ if $guard; then
 		lastBoot=$newBoot
 
 		# Execute Java kernel
-		env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
+		env EVMJIT="-cache=1" ./rt/bin/java ${JAVA_OPTS} \
 			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
 		kPID=$!
 		running=true
@@ -198,13 +204,6 @@ if $guard; then
 	done
 
 else
-
-  	# use default xms if not set
-    JAVA_OPTS="$JAVA_OPTS"
-    if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
-      JAVA_OPTS="-Xms4g"
-    fi
-
 
     env EVMJIT="-cache=1" ./rt/bin/java ${JAVA_OPTS} \
             -cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
