@@ -24,6 +24,7 @@ package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.util.Arrays;
 import org.aion.base.util.Hex;
 import org.junit.Test;
 
@@ -49,6 +50,19 @@ public class UtilsTest {
 
         assertThat(Utils.hexEncode(input)).isEqualTo(Hex.encode(input));
         assertThat(Hex.decode(Utils.hexEncode(input))).isEqualTo(input);
+    }
+
+    @Test
+    public void testHexEncode_wTerminatorByte() {
+        String value = "1234567890abcdef";
+        byte[] input = Hex.decode(value);
+
+        // expecting an extra byte at the end of the array
+        byte[] expected = Hex.encode(input);
+        expected = Arrays.copyOf(expected, expected.length + 1);
+
+        byte[] actual = Utils.hexEncode(input, true);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test(expected = NullPointerException.class)

@@ -79,10 +79,14 @@ public class Utils {
     }
 
     static byte[] hexEncode(byte[] in) {
+        return hexEncode(in, false);
+    }
+
+    static byte[] hexEncode(byte[] in, boolean withTerminatorByte) {
         if (in == null) {
             return null;
         }
-        byte[] ret = new byte[in.length * 2];
+        byte[] ret = new byte[in.length * 2 + (withTerminatorByte ? 1 : 0)];
 
         for (int i = 0; i < in.length; i++) {
             int v = in[i] & 0xff;
