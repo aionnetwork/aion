@@ -11,7 +11,7 @@ enum BridgeEventSig {
     ADD_MEMBER          ("AddMember(address)"),
     REMOVE_MEMBER       ("RemoveMember(address)"),
     PROCESSED_BUNDLE    ("ProcessedBundle(bytes32,bytes32)"),
-    DISTRIBUTED         ("Distributed(address,uint128)");
+    DISTRIBUTED         ("Distributed(bytes32,address,uint128)");
 
     private final byte[] hashed;
     BridgeEventSig(@Nonnull final String eventSignature) {
