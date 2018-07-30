@@ -36,17 +36,11 @@
  */
 package org.aion.mcf.account;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -54,6 +48,9 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.matchers.Null;
+
+import static org.junit.Assert.*;
 
 public class KeystoreTest {
 
@@ -99,6 +96,7 @@ public class KeystoreTest {
     @Test
     public void testKeyCreate() {
         String password = randomPassword();
+
         ECKey key = ECKeyFac.inst().create();
         assertNotNull(key);
 
@@ -194,5 +192,44 @@ public class KeystoreTest {
         }
 
         assertTrue(hasAddr);
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void testBackupAccountWithNullInput(){
+        Keystore.backupAccount(null);
+    }
+
+    @Test (expected = NullPointerException.class)
+    public void testImportAccountNull(){
+        Keystore.importAccount(null);
+    }
+
+    @Test
+    public void testImportAccount(){
+        Map<String, String> importKey = new HashMap<>();
+        ECKey key = ECKeyFac.inst().create();
+
+        importKey.put(key.toString(), key.toString());
+        Set<String> res = Keystore.importAccount(importKey);
+    }
+
+    @Test
+    public void testAccountSorted(){
+        List<String> res = Keystore.accountsSorted();
+        for(String addr: res)
+            System.out.println(addr);
+    }
+
+    @Test
+    public void testKeystoreItem(){
+        KeystoreItem keystoreItem = new KeystoreItem();
+        keystoreItem.setId("test-id");
+        keystoreItem.setVersion(5);
+        keystoreItem.setAddress("fake-address");
+
+        // test get id
+        assertEquals("test-id", keystoreItem.getId());
+        assertEquals(Integer.valueOf(5), keystoreItem.getVersion());
+        assertEquals("fake-address", keystoreItem.getAddress());
     }
 }
