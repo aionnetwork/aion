@@ -44,36 +44,39 @@ public class CfgGui {
     }
 
     public String toXML() {
-        final XMLOutputFactory output = XMLOutputFactory.newInstance();
-        output.setProperty("escapeCharacters", false);
-        XMLStreamWriter xmlWriter;
-        String xml;
-        try {
-            Writer strWriter = new StringWriter();
-            xmlWriter = output.createXMLStreamWriter(strWriter);
-
-            // start element gui
-            xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeStartElement("gui");
-
-            // sub-element launcher
-            xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeCharacters(getCfgGuiLauncher().toXML());
-
-            // close element gui
-            xmlWriter.writeCharacters("\r\n\t");
-            xmlWriter.writeEndElement();
-
-            xml = strWriter.toString();
-            strWriter.flush();
-            strWriter.close();
-            xmlWriter.flush();
-            xmlWriter.close();
-            return xml;
-        } catch (IOException | XMLStreamException e) {
-            e.printStackTrace();
-            return "";
-        }
+        // Hidden for now
+        
+        return "";
+//        final XMLOutputFactory output = XMLOutputFactory.newInstance();
+//        output.setProperty("escapeCharacters", false);
+//        XMLStreamWriter xmlWriter;
+//        String xml;
+//        try {
+//            Writer strWriter = new StringWriter();
+//            xmlWriter = output.createXMLStreamWriter(strWriter);
+//
+//            // start element gui
+//            xmlWriter.writeCharacters("\r\n\t");
+//            xmlWriter.writeStartElement("gui");
+//
+//            // sub-element launcher
+//            xmlWriter.writeCharacters("\r\n\t");
+//            xmlWriter.writeCharacters(getCfgGuiLauncher().toXML());
+//
+//            // close element gui
+//            xmlWriter.writeCharacters("\r\n\t");
+//            xmlWriter.writeEndElement();
+//
+//            xml = strWriter.toString();
+//            strWriter.flush();
+//            strWriter.close();
+//            xmlWriter.flush();
+//            xmlWriter.close();
+//            return xml;
+//        } catch (IOException | XMLStreamException e) {
+//            e.printStackTrace();
+//            return "";
+//        }
     }
 
     public CfgGuiLauncher getCfgGuiLauncher() {
