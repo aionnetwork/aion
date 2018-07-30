@@ -59,7 +59,7 @@ if [[ $1 == "watch" ]]; then
     if $first; then
       set --
       first=false
-    else		  
+    else
       set -- "$@" "$arg"
     fi
   done
@@ -121,7 +121,7 @@ if $guard; then
 
 		# Execute Java kernel
 		env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
+			-cp "./lib/*:./mod/*" org.aion.Aion "$@" &
 		kPID=$!
 		running=true
 		watching=true
@@ -171,7 +171,6 @@ if $guard; then
 			fi
 
 		done
-	
 		# Shutsdown Aion kernel
 		echo "## Killing Kernel ##"
 		kill $kPID
@@ -198,8 +197,6 @@ if $guard; then
 	done
 
 else
-
   	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-  		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
-
+  		-cp "./lib/*:./mod/*" org.aion.Aion "$@"
 fi
