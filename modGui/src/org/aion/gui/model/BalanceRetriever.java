@@ -16,8 +16,21 @@ public class BalanceRetriever extends AbstractAionApiClient {
         super(kernelConnection);
     }
 
+    /**
+     * Get balance of given account
+     *
+     * @param address address of account
+     * @return if API is connected, balance of that account; otherwise, null
+     */
     public BigInteger getBalance(String address) {
-        ApiMsg msg = callApi(api -> api.getChain().getBalance(new Address(address)));
-        return msg.getObject();
+        // TODO Prefer Optional over null.
+        final BigInteger balance;
+        if(!apiIsConnected()) {
+            balance = null;
+        } else {
+            ApiMsg msg = callApi(api -> api.getChain().getBalance(new Address(address)));
+            balance = msg.getObject();
+        }
+        return balance;
     }
 }

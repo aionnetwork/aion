@@ -1,6 +1,5 @@
 package org.aion.gui.model;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.aion.api.impl.internal.Message;
 import org.aion.api.type.Block;
 import org.aion.api.type.BlockDetails;
@@ -11,7 +10,6 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventPublisher;
-import org.aion.gui.model.dto.BalanceDto;
 import org.aion.log.AionLoggerFactory;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.connector.dto.BlockDTO;
@@ -35,6 +33,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+/**
+ * Provides
+ */
 public class TransactionProcessor extends AbstractAionApiClient {
     private final AccountManager accountManager;
     private final ExecutorService backgroundExecutor;
@@ -151,12 +152,9 @@ public class TransactionProcessor extends AbstractAionApiClient {
             while (iterator.hasNext()) {
                 final TransactionDTO t = iterator.next();
                 if (t.getBlockNumber() > previousSafe) {
-                    System.out.println("t.getBlockNumber() > previousSafe --> " + t.getBlockNumber() + " > " + previousSafe + " --> oldTxs.add");
                     oldTxs.add(t);
                 } else {
-                    System.out.println("t.getBlockNumber() <= previousSafe --> " + t.getBlockNumber() + " <= " + previousSafe + " --> break");
-//                    break;
-                    continue; // TODO double check logic change... break would only work if the list was sorted from max to min
+                    continue;
                 }
             }
             accountManager.removeTransactions(address, oldTxs);

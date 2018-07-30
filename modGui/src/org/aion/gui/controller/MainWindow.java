@@ -140,7 +140,7 @@ public class MainWindow extends Application {
             throw new RuntimeException(ioe);
         }
 
-        accountManager = new AccountManager(new BalanceDto(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
+        accountManager = new AccountManager(new BalanceRetriever(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
         transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
         accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
     }
