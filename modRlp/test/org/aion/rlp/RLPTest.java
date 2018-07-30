@@ -37,8 +37,6 @@ package org.aion.rlp;
 import static org.aion.base.util.ByteUtil.byteArrayToInt;
 import static org.aion.rlp.RLP.decode;
 import static org.aion.rlp.RLP.decode2;
-import static org.aion.rlp.RLP.decodeBigInteger;
-import static org.aion.rlp.RLP.decodeIP4Bytes;
 import static org.aion.rlp.RLP.decodeInt;
 import static org.aion.rlp.RLP.encodeBigInteger;
 import static org.aion.rlp.RLP.encodeByte;
@@ -50,8 +48,6 @@ import static org.aion.rlp.RLP.encodeListHeader;
 import static org.aion.rlp.RLP.encodeShort;
 import static org.aion.rlp.RLP.encodeString;
 import static org.aion.rlp.RLP.fullTraverse;
-import static org.aion.rlp.RLP.getFirstListElement;
-import static org.aion.rlp.RLP.getNextElementIndex;
 import static org.aion.rlp.RlpTestData.expected14;
 import static org.aion.rlp.RlpTestData.expected16;
 import static org.aion.rlp.RlpTestData.result01;
@@ -93,8 +89,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Objects;
@@ -106,24 +100,7 @@ import org.junit.Test;
 public class RLPTest {
 
     @Test
-    public void test1() throws UnknownHostException {
-
-        String peersPacket = "F8 4E 11 F8 4B C5 36 81 "
-                + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C "
-                + "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 "
-                + "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 "
-                + "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 "
-                + "17 08 9F EA F8 4C 21 B0";
-
-        byte[] payload = Hex.decode(peersPacket);
-
-        byte[] ip = decodeIP4Bytes(payload, 5);
-
-        assertEquals(InetAddress.getByAddress(ip).toString(), ("/54.204.10.41"));
-    }
-
-    @Test
-    public void test2() throws UnknownHostException {
+    public void test2() {
 
         String peersPacket = "F8 4E 11 F8 4B C5 36 81 "
                 + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C "
@@ -136,57 +113,6 @@ public class RLPTest {
         int oneInt = decodeInt(payload, 11);
 
         assertEquals(oneInt, 30303);
-    }
-
-    @Test
-    public void test3() throws UnknownHostException {
-
-        String peersPacket = "F8 9A 11 F8 4B C5 36 81 "
-                + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C "
-                + "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 "
-                + "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 "
-                + "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 "
-                + "17 08 9F EA F8 4C 21 B0 F8 4A C4 36 02 0A 29 "
-                + "82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C FC 03 13 "
-                + "EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 F7 82 FF "
-                + "A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 E0 DE 49 "
-                + "98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 17 08 9F "
-                + "EA F8 4C 21 B0 ";
-
-        byte[] payload = Hex.decode(peersPacket);
-
-        int nextIndex = 5;
-        byte[] ip = decodeIP4Bytes(payload, nextIndex);
-        assertEquals("/54.204.10.41", InetAddress.getByAddress(ip).toString());
-
-        nextIndex = getNextElementIndex(payload, nextIndex);
-        int port = decodeInt(payload, nextIndex);
-        assertEquals(30303, port);
-
-        nextIndex = getNextElementIndex(payload, nextIndex);
-        BigInteger peerId = decodeBigInteger(payload, nextIndex);
-
-        BigInteger expectedPeerId
-                = new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
-        assertEquals(expectedPeerId, peerId);
-
-        nextIndex = getNextElementIndex(payload, nextIndex);
-        nextIndex = getFirstListElement(payload, nextIndex);
-        ip = decodeIP4Bytes(payload, nextIndex);
-        assertEquals("/54.2.10.41", InetAddress.getByAddress(ip).toString());
-
-        nextIndex = getNextElementIndex(payload, nextIndex);
-        port = decodeInt(payload, nextIndex);
-        assertEquals(30303, port);
-
-        nextIndex = getNextElementIndex(payload, nextIndex);
-        peerId = decodeBigInteger(payload, nextIndex);
-
-        assertEquals(expectedPeerId, peerId);
-
-        nextIndex = getNextElementIndex(payload, nextIndex);
-        nextIndex = getFirstListElement(payload, nextIndex);
-        assertEquals(-1, nextIndex);
     }
 
     @Test

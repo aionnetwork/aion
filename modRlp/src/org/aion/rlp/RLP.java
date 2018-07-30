@@ -102,22 +102,6 @@ public class RLP {
 
     // DECODING
 
-    private static byte decodeOneByteItem(byte[] data, int index) {
-        // null item
-        if ((data[index] & 0xFF) == OFFSET_SHORT_ITEM) {
-            return (byte) (data[index] - OFFSET_SHORT_ITEM);
-        }
-        // single byte item
-        if ((data[index] & 0xFF) < OFFSET_SHORT_ITEM) {
-            return data[index];
-        }
-        // single byte item
-        if ((data[index] & 0xFF) == OFFSET_SHORT_ITEM + 1) {
-            return data[index + 1];
-        }
-        return 0;
-    }
-
     public static int decodeInt(byte[] data, int index) {
         int value = 0;
         // NOTE: there are two ways zero can be encoded - 0x00 and
@@ -176,84 +160,6 @@ public class RLP {
         } else {
             throw new RuntimeException("wrong decode attempt");
         }
-    }
-
-    public static byte[] decodeIP4Bytes(byte[] data, int index) {
-
-        int offset = 1;
-
-        final byte[] result = new byte[4];
-        for (int i = 0; i < 4; i++) {
-            result[i] = decodeOneByteItem(data, index + offset);
-            if ((data[index + offset] & 0xFF) > OFFSET_SHORT_ITEM) {
-                offset += 2;
-            } else {
-                offset += 1;
-            }
-        }
-
-        // return IP address
-        return result;
-    }
-
-    public static int getFirstListElement(byte[] payload, int pos) {
-
-        if (pos >= payload.length) {
-            return -1;
-        }
-
-        if ((payload[pos] & 0xFF) >= OFFSET_LONG_LIST) {
-            byte lengthOfLength = (byte) (payload[pos] - OFFSET_LONG_LIST);
-            return pos + lengthOfLength + 1;
-        }
-        if ((payload[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                && (payload[pos] & 0xFF) < OFFSET_LONG_LIST) {
-            return pos + 1;
-        }
-        if ((payload[pos] & 0xFF) >= OFFSET_LONG_ITEM
-                && (payload[pos] & 0xFF) < OFFSET_SHORT_LIST) {
-            byte lengthOfLength = (byte) (payload[pos] - OFFSET_LONG_ITEM);
-            return pos + lengthOfLength + 1;
-        }
-        return -1;
-    }
-
-    public static int getNextElementIndex(byte[] payload, int pos) {
-
-        if (pos >= payload.length) {
-            return -1;
-        }
-
-        if ((payload[pos] & 0xFF) >= OFFSET_LONG_LIST) {
-            byte lengthOfLength = (byte) (payload[pos] - OFFSET_LONG_LIST);
-            int length = calcLength(lengthOfLength, payload, pos);
-            return pos + lengthOfLength + length + 1;
-        }
-        if ((payload[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                && (payload[pos] & 0xFF) < OFFSET_LONG_LIST) {
-
-            byte length = (byte) ((payload[pos] & 0xFF) - OFFSET_SHORT_LIST);
-            return pos + 1 + length;
-        }
-        if ((payload[pos] & 0xFF) >= OFFSET_LONG_ITEM
-                && (payload[pos] & 0xFF) < OFFSET_SHORT_LIST) {
-
-            byte lengthOfLength = (byte) (payload[pos] - OFFSET_LONG_ITEM);
-            int length = calcLength(lengthOfLength, payload, pos);
-            return pos + lengthOfLength + length + 1;
-        }
-        if ((payload[pos] & 0xFF) > OFFSET_SHORT_ITEM && (payload[pos] & 0xFF) < OFFSET_LONG_ITEM) {
-
-            byte length = (byte) ((payload[pos] & 0xFF) - OFFSET_SHORT_ITEM);
-            return pos + 1 + length;
-        }
-        if ((payload[pos] & 0xFF) == OFFSET_SHORT_ITEM) {
-            return pos + 1;
-        }
-        if ((payload[pos] & 0xFF) < OFFSET_SHORT_ITEM) {
-            return pos + 1;
-        }
-        return -1;
     }
 
     /** Get exactly one message payload */
