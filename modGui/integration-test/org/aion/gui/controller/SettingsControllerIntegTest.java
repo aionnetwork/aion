@@ -17,7 +17,9 @@ import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
 import org.aion.gui.model.ApplyConfigResult;
 import org.aion.gui.model.ConfigManipulator;
+import org.aion.gui.model.KernelConnection;
 import org.aion.gui.views.XmlArea;
+import org.aion.os.KernelControlException;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
@@ -40,12 +42,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/** TODO Need to add more wallet-related testing.  Also fix the problem of requiring to bring up the entire MainWindow just for this test to work. */
 public class SettingsControllerIntegTest extends ApplicationTest {
     private ControllerFactory cf;
     private ConfigManipulator configManipulator;
     private SettingsController controller;
+    private KernelConnection kc;
     private String configFileContents = "<fake><config><content><here>";
     private Stage stage;
+    private EventBusRegistry ebr;
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
 
     /**
@@ -57,6 +62,8 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         configManipulator = mock(ConfigManipulator.class);
         when(configManipulator.loadFromConfigFile()).thenReturn(configFileContents);
         when(configManipulator.getLastLoadedContent()).thenReturn(configFileContents);
+        kc = mock(KernelConnection.class);
+        ebr = mock(EventBusRegistry.class);
     }
 
     @Override
@@ -64,7 +71,9 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         this.stage = stage;
 
         cf = new ControllerFactory()
-                .withConfigManipulator(configManipulator);
+                .withConfigManipulator(configManipulator)
+                .withKernelConnection(kc)
+                .withEventBusRegistry(ebr);
         FXMLLoader loader = new FXMLLoader(
 //                SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
                 SettingsController.class.getResource("MainWindow.fxml"),

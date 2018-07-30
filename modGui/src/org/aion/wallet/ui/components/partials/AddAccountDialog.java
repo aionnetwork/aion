@@ -146,7 +146,10 @@ public class AddAccountDialog {
 
 //            addAccountDialog = FXMLLoader.load(getClass().getResource("AddAccountDialog.fxml"));
             FXMLLoader loader = new FXMLLoader((getClass().getResource("AddAccountDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
+            loader.setControllerFactory(new ControllerFactory()
+                    .withAccountManager(accountManager) /* TODO a specialization only has what we need... also constantly making new controller factories is so error prone */
+                    .withConsoleManager(consoleManager)
+            );
             addAccountDialog = loader.load();
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
