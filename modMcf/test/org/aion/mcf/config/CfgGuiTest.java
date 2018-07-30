@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Test {@link CfgGui} */
-public class CfgGuiTest {
+public class fCfgGuiTest {
     @Test
     public void testGetterSetter() {
         CfgGui unit = new CfgGui();
