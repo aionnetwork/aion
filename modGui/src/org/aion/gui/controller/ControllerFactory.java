@@ -1,6 +1,5 @@
 package org.aion.gui.controller;
 
-import com.google.common.eventbus.EventBus;
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
 import org.aion.gui.controller.partials.ConsoleTailController;
@@ -104,6 +103,17 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager, consoleManager));
             put(ConsoleTailController.class, () -> new ConsoleTailController(new ConsoleTail(), consoleManager));
             put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(kernelConnection));
+            put(SettingsController.class, () -> new SettingsController(
+                    configManipulator
+            ));
+            /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
+                    kernelConnection));
+            put(PeerCountController.class, () -> new PeerCountController(
+                    kernelConnection
+            ));
+            put(SyncStatusController.class, () -> new SyncStatusController(
+                    kernelConnection
+            ));*/
         }};
     }
 

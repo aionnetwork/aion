@@ -26,6 +26,9 @@ public class UnixKernelProcessHealthChecker {
         final String[] command = new String[] {"ps", "-o", "comm=", "--pid", String.valueOf(pid)};
         Process proc = new ProcessBuilder().command(command).start();
         proc.waitFor();
+        if(proc.exitValue() != 0) {
+            throw new KernelControlException("Error invoking ps program");
+        }
 
         try (
                 final InputStream is = proc.getInputStream();

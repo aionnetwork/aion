@@ -61,6 +61,16 @@ public class DashboardControllerIntegTest extends ApplicationTest {
      * vars already set up.
      */
     @Override
+    public void init() {
+        kernelLauncher = mock(KernelLauncher.class);
+        kernelConnection = mock(KernelConnection.class);
+        kernelUpdateTimer = mock(KernelUpdateTimer.class);
+        generalKernelInfoRetriever = mock(GeneralKernelInfoRetriever.class);
+        syncInfoDto = mock(SyncInfoDto.class);
+        healthChecker = mock(UnixKernelProcessHealthChecker.class);
+    }
+
+    @Override
     public void start(Stage stage) throws Exception {
         ebr = new EventBusRegistry();
             kernelLauncher = mock(KernelLauncher.class);

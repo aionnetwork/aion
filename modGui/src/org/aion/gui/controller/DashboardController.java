@@ -213,4 +213,5 @@ public class DashboardController extends AbstractController {
         Platform.runLater(() -> launchKernelButton.setDisable(true));
         Platform.runLater(() -> terminateKernelButton.setDisable(true));
     }
+
 }
