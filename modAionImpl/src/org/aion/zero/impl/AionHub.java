@@ -88,7 +88,7 @@ public class AionHub {
 
     private IPendingStateInternal<AionBlock, AionTransaction> mempool;
 
-    private final IAionBlockchain blockchain;
+    private IAionBlockchain blockchain;
 
     // TODO: Refactor to interface later
     private AionRepositoryImpl repository;
@@ -106,18 +106,27 @@ public class AionHub {
      */
     private volatile AionBlock startingBlock;
 
-    public AionHub() {
-        this(AionBlockchainImpl.inst());
+    /**
+     * Initialize as per the <a href= "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
+     * holder pattern
+     */
+    private static class Holder {
+
+        static final AionHub INSTANCE = new AionHub();
     }
 
-    public AionHub(AionBlockchainImpl aionBlockchainImpl) {
+    public static AionHub inst() {
+        return Holder.INSTANCE;
+    }
+
+    public AionHub() {
 
         this.cfg = CfgAion.inst();
 
         // load event manager before init blockchain instance
         loadEventMgr();
 
-        AionBlockchainImpl blockchain = aionBlockchainImpl;
+        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
         blockchain.setEventManager(this.eventMgr);
         this.blockchain = blockchain;
 
@@ -174,6 +183,9 @@ public class AionHub {
         this.p2pMgr.run();
 
         ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
+
+        this.pow = new AionPoW();
+        this.pow.init(blockchain, mempool, eventMgr);
 
         if (cfg.getReports().isHeapDumpEnabled()) {
             new Thread(
@@ -452,6 +464,10 @@ public class AionHub {
             getPendingState().shutDown();
             genLOG.info("<shutdown-pendingState>");
         }
+
+        genLOG.info("shutting down consensus...");
+        pow.shutdown();
+        genLOG.info("shutdown consensus... Done!");
 
         if (repository != null) {
             genLOG.info("shutting down DB...");

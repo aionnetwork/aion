@@ -30,8 +30,6 @@
         <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
         <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
         <pathelement location="${dir.lib}/libJson.jar"/>
-        <pathelement location="${dir.lib}/leveldb-api-0.9.jar"/>
-        <pathelement location="${dir.lib}/leveldbjni-all-1.18.3.jar"/>
         <pathelement location="${dir.mod}/modAionImpl.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
@@ -41,14 +39,11 @@
         <pathelement location="${dir.mod}/modRlp.jar"/>
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modEvtMgr.jar"/>
-        <pathelement location="${dir.mod}/modEvtMgrImpl.jar"/>
         <pathelement location="${dir.mod}/modP2p.jar"/>
         <pathelement location="${dir.mod}/modVM.jar"/>
         <pathelement location="${dir.mod}/modFastVM.jar"/>
         <pathelement location="${dir.mod}/modPrecompiled.jar"/>
         <pathelement location="${dir.mod}/modP2pImpl.jar"/>
-        <pathelement location="${dir.mod}/modTxPoolImpl.jar"/>
-        <pathelement location="${dir.mod}/modTxPool.jar"/>
     </path>
 
     <target name="clean_build" depends="clean, build"/>

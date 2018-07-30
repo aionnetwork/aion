@@ -2,9 +2,7 @@ package org.aion.zero.impl.config.dynamic;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.mcf.config.Cfg;
-import org.aion.zero.impl.config.applier.MiningApplier;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.config.CfgConsensusPow;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -65,9 +63,11 @@ public class DynamicConfigKeyRegistry {
 
     private static Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>>
     DEFAULT_GETTERS_APPLIERS = new HashMap<>() {{
-        put("aion.consensus.mining", ImmutablePair.of(
-                cfg -> ((CfgConsensusPow)cfg.getConsensus()).getMining(),
-                new MiningApplier()));
+        put("aion.consensus", ImmutablePair.of(cfg -> cfg.getConsensus(), NotImplementedThrower.INST));
+        // When MiningApplier changes reviewed, delete above line and uncomment below line.
+//        put("aion.consensus.mining", ImmutablePair.of(
+//                cfg -> ((CfgConsensusPow)cfg.getConsensus()).getMining(),
+//                new MiningApplier()));
 
         // Below are sections where no config keys within are dynamically changeable
         put("aion.api", ImmutablePair.of(cfg -> cfg.getApi(), NotImplementedThrower.INST));

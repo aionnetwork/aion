@@ -35,7 +35,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.IPowChain;
-import org.aion.mcf.config.Cfg;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
@@ -43,8 +42,6 @@ import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.pow.AionPoW;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -58,70 +55,42 @@ import java.util.List;
 import java.util.Optional;
 
 public class AionImpl implements IAionChain {
-    private AionHub aionHub;
-    private CfgAion cfg;
-    private TxCollector collector;
-    private AionPoW pow;
-    private final IMineRunner blockMiner;
-    private final IAionBlockchain blockchain;
 
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
+    public AionHub aionHub;
+
+    private CfgAion cfg;
+
+    private TxCollector collector;
+
     private static class Holder {
         static final AionImpl INSTANCE = new AionImpl();
     }
 
-    /**
-     * Constructor
-     *
-     * @param blockMiner Block miner
-     */
-    public AionImpl(IAionBlockchain blockchain, IMineRunner blockMiner, AionHub aionHub, CfgAion cfg, AionPoW pow) {
-        this.cfg = cfg;
-        this.aionHub = aionHub;
-        this.blockchain = blockchain;
-        LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
-                + cfg.getNet().getP2p().getPort() + ">");
-
-        collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX); // should make this injectable also
-        this.blockMiner = blockMiner;
-        this.pow = pow;
-    }
-
-    public AionImpl(AionHub aionHub, CfgAion cfg) {
-        this(aionHub.getBlockchain(),
-                new EquihashMiner(aionHub.getEventMgr(), cfg),
-                aionHub,
-                cfg, null);
-        this.pow = new AionPoW(this);
-        this.pow.init(aionHub.getBlockchain(), aionHub.getPendingState(), aionHub.getEventMgr());
-    }
-
-    /**
-     * Use of singleton instance is discouraged.  Please use one of the public constructors
-     * whenever possible.
-     */
     public static AionImpl inst() {
         return Holder.INSTANCE;
     }
 
     private AionImpl() {
-        this(new AionHub(), CfgAion.inst());
+        this.cfg = CfgAion.inst();
+        aionHub = new AionHub();
+        LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
+                + cfg.getNet().getP2p().getPort() + ">");
+
+        collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
     }
+
 
     @Override
     public IPowChain<AionBlock, A0BlockHeader> getBlockchain() {
-        return blockchain;
-    }
-
-    protected IAionBlockchain getAionBlockchain() {
-        return blockchain;
+        return aionHub.getBlockchain();
     }
 
     public synchronized ImportResult addNewMinedBlock(AionBlock block) {
-        ImportResult importResult = getAionBlockchain().tryToConnect(block);
+        ImportResult importResult = this.aionHub.getBlockchain().tryToConnect(block);
 
         if (importResult == ImportResult.IMPORTED_BEST) {
             this.aionHub.getPropHandler().propagateNewBlock(block);
@@ -131,6 +100,7 @@ public class AionImpl implements IAionChain {
 
     @Override
     public IMineRunner getBlockMiner() {
+
         Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
 
         if (minerCoinbase.equals(Address.EMPTY_ADDRESS())) {
@@ -138,19 +108,12 @@ public class AionImpl implements IAionChain {
             return null;
         }
 
-        return blockMiner;
-    }
-
-    public AionPoW getPow() {
-        return pow;
+        return EquihashMiner.inst();
     }
 
     @Override
     public void close() {
         aionHub.close();
-        LOG_GEN.info("shutting down consensus...");
-        pow.shutdown();
-        LOG_GEN.info("shutdown consensus... Done!");
     }
 
     @Override
@@ -245,7 +208,7 @@ public class AionImpl implements IAionChain {
 
     @Override
     public void exitOn(long number) {
-        blockchain.setExitOn(number);
+        aionHub.getBlockchain().setExitOn(number);
     }
 
     @Override
@@ -335,7 +298,7 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address, byte[] blockHash) {
         try {
-            byte[] stateRoot = getAionBlockchain().getBlockByHash(blockHash).getStateRoot();
+            byte[] stateRoot = this.aionHub.getBlockchain().getBlockByHash(blockHash).getStateRoot();
             AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 
@@ -352,7 +315,7 @@ public class AionImpl implements IAionChain {
     @Override
     public Optional<AccountState> getAccountState(Address address) {
         try {
-            byte[] stateRoot = getBlockchain().getBestBlock().getStateRoot();
+            byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
             AccountState account = (AccountState) this.aionHub.getRepository().getSnapshotTo(stateRoot)
                     .getAccountState(address);
 

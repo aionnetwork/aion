@@ -28,5 +28,4 @@ module aion.zero.impl {
     exports org.aion.zero.impl.db;
     exports org.aion.zero.impl.sync;
     exports org.aion.zero.impl.config.dynamic;
-    exports org.aion.zero.impl.config.applier;
 }

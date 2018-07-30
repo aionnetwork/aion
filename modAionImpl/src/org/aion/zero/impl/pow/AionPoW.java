@@ -38,7 +38,6 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingState;
 import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -47,12 +46,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -63,37 +57,53 @@ import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
  * new mining task to miners when needed.
  */
 public class AionPoW {
-    public static final String EPPOW_THREAD_NAME = "EpPow";
-    public static final String POW_THREAD_NAME = "pow";
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
-    private CfgAion config = CfgAion.inst();
-    private AtomicBoolean shutDown = new AtomicBoolean();
-    private volatile boolean paused = false;
-    private final Object pauseMonitor = new Object();
-
-    private SyncMgr syncMgr;
-    private EventExecuteService ees;
-    private final AionImpl aionImpl;
-
-    protected AtomicBoolean initialized = new AtomicBoolean(false);
-    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
-    protected AtomicLong lastUpdate = new AtomicLong(0);
+    private static final int syncLimit = 128;
 
     protected IAionBlockchain blockchain;
     protected IPendingState<AionTransaction> pendingState;
     protected IEventMgr eventMgr;
 
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
-    private static final int syncLimit = 128;
+    protected AtomicBoolean initialized = new AtomicBoolean(false);
+    protected AtomicBoolean newPendingTxReceived = new AtomicBoolean(false);
+    protected AtomicLong lastUpdate = new AtomicLong(0);
+
+    private AtomicBoolean shutDown = new AtomicBoolean();
+    private SyncMgr syncMgr;
+
+    private EventExecuteService ees;
+
+    private final class EpPOW implements Runnable {
+        boolean go = true;
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+
+                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                    newPendingTxReceived.set(true);
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    // create a new block template every time the best block
+                    // updates.
+                    createNewBlockTemplate();
+                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                    processSolution((Solution) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                    go = false;
+                }
+            }
+        }
+    }
+
+    private final CfgAion config = CfgAion.inst();
 
     /**
      * Creates an {@link AionPoW} instance. Be sure to call
      * {@link #init(IAionBlockchain, IPendingState, IEventMgr)} to initialize
      * the instance.
      */
-    public AionPoW(AionImpl aionImpl) {
-        this.aionImpl = aionImpl;
-        System.out.println("AionPow ctor2");
+    public AionPoW() {
     }
 
     /**
@@ -107,27 +117,44 @@ public class AionPoW {
      *            Event manager
      */
     public void init(IAionBlockchain blockchain, IPendingState<AionTransaction> pendingState, IEventMgr eventMgr) {
-        this.blockchain = blockchain;
-        this.pendingState = pendingState;
-        this.eventMgr = eventMgr;
-        this.syncMgr = SyncMgr.inst();
+        if (initialized.compareAndSet(false, true)) {
+            this.blockchain = blockchain;
+            this.pendingState = pendingState;
+            this.eventMgr = eventMgr;
+            this.syncMgr = SyncMgr.inst();
 
-        // skip if mining is disabled, otherwise we are doing needless
-        // work by generating new block templates on IMPORT_BEST
-        if (config.getConsensus().getMining()
-                && initialized.compareAndSet(false, true)) {
 
+            // return early if mining is disabled, otherwise we are doing needless
+            // work by generating new block templates on IMPORT_BEST
             if (!config.getConsensus().getMining())
                 return;
 
             setupHandler();
-            ees = new EventExecuteService(100_000, EPPOW_THREAD_NAME, Thread.NORM_PRIORITY, LOG);
+            ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
+
 
             registerCallback();
             ees.start(new EpPOW());
 
-            new Thread(new PeriodicPowRunner(), POW_THREAD_NAME).start();
+            new Thread(() -> {
+                while (!shutDown.get()) {
+                    try {
+                        Thread.sleep(100);
+
+                        long now = System.currentTimeMillis();
+                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
+                                || now - lastUpdate.get() > 10000) { // fallback, when
+                                                               // we never
+                                                               // received any
+                                                               // events
+                            createNewBlockTemplate();
+                        }
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+            }, "pow").start();
         }
     }
 
@@ -202,7 +229,7 @@ public class AionPoW {
             block.getHeader().setSolution(solution.getSolution());
 
             // This can be improved
-             ImportResult importResult = aionImpl.addNewMinedBlock(block);
+            ImportResult importResult = AionImpl.inst().addNewMinedBlock(block);
 
             // Check that the new block was successfully added
             if (importResult.isSuccessful()) {
@@ -254,108 +281,10 @@ public class AionPoW {
         }
     }
 
-    /**
-     * Shut down the worker threads.  Cannot be resumed; for pause/resume functionality see
-     * {@link #pause()}.
-     */
     public synchronized void shutdown() {
         if (ees != null) {
             ees.shutdown();
         }
         shutDown.set(true);
-    }
-
-
-    /** Pause the worker threads.  Resumable by {@link #resume()}. */
-    public void pause() {
-        LOG.info("Pausing AionPoW workers.");
-        this.paused = true;
-    }
-
-    /**
-     * Resume the worker threads if paused by {@link #pause()}.  If not paused, this method
-     * does nothing.
-     */
-    public void resume() {
-        synchronized (pauseMonitor) {
-            LOG.info("Resuming AionPoW workers.");
-            paused = false;
-            pauseMonitor.notifyAll();
-        }
-    }
-
-    public void setCfg(CfgAion newCfg) {
-        config = newCfg;
-    }
-
-    private final class EpPOW implements Runnable {
-        boolean go = true;
-        @Override
-        public void run() {
-            while (go) { // TODO double check this sync logic
-                synchronized (pauseMonitor) {
-                    if (paused) {
-                        try {
-                            LOG.debug("EpPOW paused");
-                            pauseMonitor.wait();
-                            LOG.debug("EpPOW resumed");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (!go) {
-                            break;
-                        }
-                    }
-                }
-                LOG.trace("EpPOW doing work");
-
-                IEvent e = ees.take();
-                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
-                    newPendingTxReceived.set(true);
-                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                    // create a new block template every time the best block
-                    // updates.
-                    createNewBlockTemplate();
-                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
-                    processSolution((Solution) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
-                    go = false;
-                }
-            }
-        }
-    }
-
-    private class PeriodicPowRunner implements Runnable {
-        @Override
-        public void run() {
-            while (!shutDown.get()) {
-                synchronized (pauseMonitor) {
-                    if(paused) {
-                        try {
-                            LOG.debug("PeriodicPowRunner paused");
-                            pauseMonitor.wait();
-                            LOG.debug("PeriodicPowRunner resumed");
-                        } catch (InterruptedException e) {
-                            LOG.debug("PeriodicPowRunner interrupted while waiting");
-                            break;
-                        }
-                    }
-                    if(shutDown.get()) break;
-                }
-
-                try {
-                    Thread.sleep(100);
-
-                    long now = System.currentTimeMillis();
-                    if (now - lastUpdate.get() > 3000
-                            && newPendingTxReceived.compareAndSet(true, false)
-                            || now - lastUpdate.get() > 10000) /* fallback when we never received any event*/ {
-                        createNewBlockTemplate();
-                    }
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        }
     }
 }

@@ -30,7 +30,6 @@
 
 package org.aion.zero.impl.config;
 
-import com.google.common.base.Objects;
 import org.aion.base.type.Address;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgConsensus;
@@ -43,11 +42,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-public class CfgConsensusPow extends CfgConsensus {
+public final class CfgConsensusPow extends CfgConsensus {
 
     private final CfgEnergyStrategy cfgEnergyStrategy;
 
-    public CfgConsensusPow() {
+    CfgConsensusPow() {
         this.mining = false;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
         this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors
@@ -170,10 +169,6 @@ public class CfgConsensusPow extends CfgConsensus {
         return (byte) Math.min(procs, this.cpuMineThreads);
     }
 
-    public void setCpuMineThreads(int threads) {
-        this.cpuMineThreads = (byte)threads;
-    }
-
     public String getExtraData() {
         return this.extraData;
     }
@@ -188,23 +183,5 @@ public class CfgConsensusPow extends CfgConsensus {
 
     public boolean isSeed() {
         return seed;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CfgConsensusPow that = (CfgConsensusPow) o;
-        return mining == that.mining &&
-                seed == that.seed &&
-                cpuMineThreads == that.cpuMineThreads &&
-                Objects.equal(cfgEnergyStrategy, that.cfgEnergyStrategy) &&
-                Objects.equal(minerAddress, that.minerAddress) &&
-                Objects.equal(extraData, that.extraData);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(cfgEnergyStrategy, mining, seed, minerAddress, cpuMineThreads, extraData);
     }
 }
