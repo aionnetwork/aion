@@ -1,0 +1,13 @@
+1. This 3rd party porject use JNA to wrap/gen the c++ uPnP implemtation, which means it require java8 or above version.
+   the user who want to build from scrach need to have the java8 enviroment.
+
+2. Edit Makefile to check the java8 path to match your system current settings.
+
+3. Execute make jar, will generate two files the aion project require. One is libminiupnpc.so, the other is miniupnpc_linux.jar under the java folder.
+
+4. You can test the build by execute testjava.sh under the java folder, it require the native library libminiupnpc.so is coped into the java folder.
+
+5. Copy libminiupnpc.so and miniupnpc_linux.jar into aion/lib.
+
+Note:
+    Aion provide the prebuild version into the aion/lib folder for the user don't want to install the java8 environment.
