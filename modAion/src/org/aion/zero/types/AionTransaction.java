@@ -275,7 +275,7 @@ public class AionTransaction extends AbstractTransaction {
         try {
             return Address.wrap(HashUtil.calcNewAddr(from.toBytes(), this.getNonce()));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
             return null;
         }
     }
@@ -307,7 +307,6 @@ public class AionTransaction extends AbstractTransaction {
             from = Address.wrap(this.signature.getAddress());
             return from;
         } catch (Exception e) {
-            e.printStackTrace();
             LOG.error(e.getMessage(), e);
             return null;
         }
