@@ -7,6 +7,7 @@ import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.EventPublisher;
+import org.aion.gui.events.RefreshEvent;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
@@ -86,7 +87,7 @@ public class KernelConnection {
                     consoleManager.addLog("Error connecting to kernel", KERNEL);
                 } else {
                     consoleManager.addLog("Connected to kernel", KERNEL);
-                    EventPublisher.fireConnectionEstablished();
+                    eventBus.post(RefreshEvent.Type.CONNECTED);
                     // TODO: ApiBlockchainConnector#connect has processTRansactionsOnReconnect() here now.  Do we need that too?
                 }
             }

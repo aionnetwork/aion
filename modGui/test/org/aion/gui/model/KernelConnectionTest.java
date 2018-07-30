@@ -5,6 +5,7 @@ import com.google.common.io.CharSource;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.AbstractUIEvent;
+import org.aion.gui.events.RefreshEvent;
 import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
 import org.junit.Before;
@@ -66,9 +67,9 @@ public class KernelConnectionTest {
             fail("Execution took too long.");
         }
         verify(api).connect(expectedConnectionString, expectedReconnect);
-        ArgumentCaptor<AbstractUIEvent> captor = ArgumentCaptor.forClass(AbstractUIEvent.class);
+        ArgumentCaptor<RefreshEvent.Type> captor = ArgumentCaptor.forClass(RefreshEvent.Type.class);
         verify(eventBus).post(captor.capture());
-        assertThat((captor.getValue()).getType(), is(CONNECTED));
+        assertThat(captor.getValue(), is(CONNECTED));
     }
 
     @Test
