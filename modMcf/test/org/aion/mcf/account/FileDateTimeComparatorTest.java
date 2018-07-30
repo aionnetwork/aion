@@ -39,6 +39,7 @@ package org.aion.mcf.account;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
@@ -132,5 +133,30 @@ public class FileDateTimeComparatorTest {
                 assertThat(a, is(equalTo(b)));
             }
         }
+    }
+
+    @Test
+    public void testNullInput(){
+        File testFile = new File("test");
+        FileDateTimeComparator fileDateTimeComparator = new FileDateTimeComparator();
+
+        assertEquals(0, fileDateTimeComparator.compare(null, null));
+        assertEquals(1, fileDateTimeComparator.compare(null, testFile));
+        assertEquals(-1, fileDateTimeComparator.compare(testFile, null));
+    }
+
+    @Test
+    public void testInvalidName(){
+        File testFile = new File("test");
+        FileDateTimeComparator fileDateTimeComparator = new FileDateTimeComparator();
+
+        assertEquals(0, fileDateTimeComparator.compare(testFile,testFile));
+    }
+
+    @Test
+    public void testNullTime() {
+        File testFile = new File("test--test--test");
+        FileDateTimeComparator fileDateTimeComparator = new FileDateTimeComparator();
+        assertEquals(0, fileDateTimeComparator.compare(testFile, testFile));
     }
 }
