@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,10 +31,9 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
-import static org.aion.base.util.ByteArrayWrapper.wrap;
 import static org.aion.base.util.ByteUtil.byteArrayToInt;
 import static org.aion.rlp.RLP.decode;
 import static org.aion.rlp.RLP.decode2;
@@ -48,7 +47,6 @@ import static org.aion.rlp.RLP.encodeInt;
 import static org.aion.rlp.RLP.encodeLength;
 import static org.aion.rlp.RLP.encodeList;
 import static org.aion.rlp.RLP.encodeListHeader;
-import static org.aion.rlp.RLP.encodeSet;
 import static org.aion.rlp.RLP.encodeShort;
 import static org.aion.rlp.RLP.encodeString;
 import static org.aion.rlp.RLP.fullTraverse;
@@ -98,13 +96,9 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.Set;
-
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -173,7 +167,7 @@ public class RLPTest {
         BigInteger peerId = decodeBigInteger(payload, nextIndex);
 
         BigInteger expectedPeerId
-                = new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
+                = new BigInteger("11356629247358725515654715129711890958861491612873043044752814241820167155109073064559464053586837011802513611263556758124445676272172838679152022396871088");
         assertEquals(expectedPeerId, peerId);
 
         nextIndex = getNextElementIndex(payload, nextIndex);
@@ -187,9 +181,6 @@ public class RLPTest {
 
         nextIndex = getNextElementIndex(payload, nextIndex);
         peerId = decodeBigInteger(payload, nextIndex);
-
-        expectedPeerId
-                = new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
 
         assertEquals(expectedPeerId, peerId);
 
@@ -1041,7 +1032,7 @@ public class RLPTest {
     }
 
     // Code from: http://stackoverflow.com/a/4785776/459349
-    private String bytesToAscii(byte[] b) {
+    static String bytesToAscii(byte[] b) {
         String hex = Hex.toHexString(b);
         StringBuilder output = new StringBuilder();
         for (int i = 0; i < hex.length(); i += 2) {
@@ -1129,39 +1120,6 @@ public class RLPTest {
     }
 
     @Test
-    public void testEncodeSet_1() {
-
-        Set<ByteArrayWrapper> data = new HashSet<>();
-
-        ByteArrayWrapper element1
-                = new ByteArrayWrapper(Hex.decode("1111111111111111111111111111111111111111111111111111111111111111"));
-
-        ByteArrayWrapper element2
-                = new ByteArrayWrapper(Hex.decode("2222222222222222222222222222222222222222222222222222222222222222"));
-
-        data.add(element1);
-        data.add(element2);
-
-        byte[] setEncoded = encodeSet(data);
-
-        RLPList list = (RLPList) decode2(setEncoded).get(0);
-
-        byte[] element1_ = list.get(0).getRLPData();
-        byte[] element2_ = list.get(1).getRLPData();
-
-        assertTrue(data.contains(wrap(element1_)));
-        assertTrue(data.contains(wrap(element2_)));
-    }
-
-    @Test
-    public void testEncodeSet_2() {
-
-        Set<ByteArrayWrapper> data = new HashSet<>();
-        byte[] setEncoded = encodeSet(data);
-        assertEquals("c0", Hex.toHexString(setEncoded));
-    }
-
-    @Test
     public void testEncodeInt_7f() {
         String result = Hex.toHexString(encodeInt(0x7f));
         String expected = "7f";
@@ -1240,7 +1198,7 @@ public class RLPTest {
 	byte[] res = RLP.encodeLong(num);
 	
 	// decode and see if same
-	Long ret = RLP.decodeLongInt(res, 0);
+	Long ret = RLP.decodeBigInteger(res, 0).longValue();
 	assertEquals(num, ret);
     }
     
@@ -1321,7 +1279,7 @@ public class RLPTest {
     public void testLargeLong() {
 	long largeLong = 0xFFFFFFFFFL;
 	byte[] encoded = RLP.encodeLong(largeLong);
-	long out = RLP.decodeLongInt(encoded, 0);
+	long out = RLP.decodeBigInteger(encoded, 0).longValue();
 	assertThat(out, is(equalTo(largeLong)));
     }
     
@@ -1337,7 +1295,7 @@ public class RLPTest {
     public void testIntegerLong() {
 	long largeLong = 0xFFFFFFFFL;
 	byte[] encoded = RLP.encodeLong(largeLong);
-	long out = RLP.decodeLongInt(encoded, 0);
+	long out = RLP.decodeBigInteger(encoded, 0).longValue();
 	assertThat(out, is(equalTo(largeLong)));
     }
     
