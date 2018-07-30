@@ -85,5 +85,18 @@
 		<DB>ERROR</DB>
 		<API>INFO</API>
 		<P2P>INFO</P2P>
+		<GUI>INFO</GUI>
 	</log>
+	<gui>
+		<launcher>
+			<!--Whether JVM settings for launching kernel should be autodetected; 'true' or 'false'-->
+			<autodetect>true</autodetect>
+			<!--Path to JAVA_HOME.  This field has no effect if autodetect is true.-->
+			<java-home>aion.sh</java-home>
+			<!--Working directory of kernel process.  This field has no effect if autodetect is true.-->
+			<working-dir>/placeholder/for/aion_root_dir</working-dir>
+			<!--Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.-->
+			<aion-sh></aion-sh>
+		</launcher>
+	</gui>
 </aion>

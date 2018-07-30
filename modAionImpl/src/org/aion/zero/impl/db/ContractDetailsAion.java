@@ -26,10 +26,8 @@ package org.aion.zero.impl.db;
 
 import org.aion.base.db.DetailsProvider;
 import org.aion.base.db.IContractDetails;
-import org.aion.mcf.config.CfgDb;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.base.vm.IDataWord;
 import org.aion.zero.db.AionContractDetailsImpl;
-import org.aion.zero.impl.config.CfgAion;
 
 /**
  * Contract details provider for Aion.
@@ -89,7 +87,7 @@ public class ContractDetailsAion implements DetailsProvider {
     }
 
     @Override
-    public IContractDetails<DataWord> getDetails() {
+    public IContractDetails<IDataWord> getDetails() {
         return new AionContractDetailsImpl(this.prune, this.memStorageLimit);
     }
 
