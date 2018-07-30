@@ -50,7 +50,7 @@ public class GeneralKernelInfoRetrieverTest {
         IMine mine = mock(IMine.class);
         when(api.getMine()).thenReturn(mine);
         when(mine.isMining()).thenReturn(apiMsgWithError);
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
         unit.isMining();
     }
 
@@ -86,7 +86,7 @@ public class GeneralKernelInfoRetrieverTest {
         when(api.getNet()).thenReturn(net);
         ApiMsg msg = mock(ApiMsg.class);
         when(net.getActiveNodes()).thenReturn(apiMsgWithError);
-        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc);
         unit.getPeerCount();
     }
 }

@@ -7,6 +7,8 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 public class SimpleApiMsgErrorHandler implements IApiMsgErrorHandler {
+    public static final SimpleApiMsgErrorHandler INSTANCE = new SimpleApiMsgErrorHandler();
+
     private static final long API_NOT_CONNECTED_ERROR = -1003L; // as defined by org.aion.api.impl.ErrId
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 

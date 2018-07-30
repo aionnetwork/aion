@@ -14,6 +14,10 @@ import java.util.List;
 public class GeneralKernelInfoRetriever extends AbstractAionApiClient {
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
+    public GeneralKernelInfoRetriever(KernelConnection kernelConnection) {
+        this(kernelConnection, SimpleApiMsgErrorHandler.INSTANCE);
+    }
+
     public GeneralKernelInfoRetriever(KernelConnection kernelConnection, IApiMsgErrorHandler errorHandler) {
         super(kernelConnection, errorHandler);
     }

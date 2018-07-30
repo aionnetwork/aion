@@ -1,5 +1,6 @@
 package org.aion.os;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
  * Terminates UNIX processes.
  */
 public class UnixProcessTerminator {
+    private final UnixCommandRunner unixCommandRunner;
     private final Duration timeoutUntilSigKill;
     private final Duration timeoutUntilGiveUp;
     private final Duration pollInterval;
@@ -41,6 +43,16 @@ public class UnixProcessTerminator {
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     /**
+     * Constructor with default parameters.
+     */
+    public UnixProcessTerminator() {
+        this(DEFAULT_TIMEOUT_UNTIL_GIVE_UP,
+                DEFAULT_TIMEOUT_UNTIL_SIGKILL,
+                DEFAULT_POLL_INTERVAL,
+                DEFAULT_INITIAL_WAIT);
+    }
+
+    /**
      * Constructor
      *
      * @param timeoutUntilSigKill Duration to wait after initial wait until we try to force
@@ -53,20 +65,24 @@ public class UnixProcessTerminator {
                                  Duration timeoutUntilGiveUp,
                                  Duration pollInterval,
                                  Duration initialWait) {
+        this(timeoutUntilSigKill,
+                timeoutUntilGiveUp,
+                pollInterval,
+                initialWait,
+                new UnixCommandRunner());
+    }
+
+    @VisibleForTesting
+    UnixProcessTerminator(Duration timeoutUntilSigKill,
+                          Duration timeoutUntilGiveUp,
+                          Duration pollInterval,
+                          Duration initialWait,
+                          UnixCommandRunner unixCommandRunner) {
         this.timeoutUntilSigKill = timeoutUntilSigKill;
         this.timeoutUntilGiveUp = timeoutUntilGiveUp;
         this.pollInterval = pollInterval;
         this.initialWait = initialWait;
-    }
-
-    /**
-     * Constructor with default parameters.
-     */
-    public UnixProcessTerminator() {
-        this(DEFAULT_TIMEOUT_UNTIL_GIVE_UP,
-                DEFAULT_TIMEOUT_UNTIL_SIGKILL,
-                DEFAULT_POLL_INTERVAL,
-                DEFAULT_INITIAL_WAIT);
+        this.unixCommandRunner = unixCommandRunner;
     }
 
     /**
@@ -88,9 +104,9 @@ public class UnixProcessTerminator {
         boolean terminated = false;
 
         try {
-            sendSigterm(unixPid);
+            unixCommandRunner.sendSigterm(unixPid);
             LOGGER.info("Killing (SIGTERM) kernel PID {}", kernelInstanceId.getPid());
-            terminated = blockUntilProcessDeadOrTimeout(unixPid);
+            terminated = blockUntilProcessDeadOrTimeout(unixPid, timeoutUntilSigKill);
 
             if (terminated) {
                 LOGGER.info("Kernel successfully exited after SIGTERM");
@@ -98,8 +114,8 @@ public class UnixProcessTerminator {
             }
 
             LOGGER.info("Kernel still running after timeout ({}) reached.  Sending SIGKILL.");
-            sendSigKill(unixPid); // Hasta la vista bb
-            terminated = blockUntilProcessDeadOrTimeout(unixPid);
+            unixCommandRunner.sendSigKill(unixPid); // Hasta la vista bb
+            terminated = blockUntilProcessDeadOrTimeout(unixPid, timeoutUntilGiveUp);
         } catch (IOException | InterruptedException ex) {
             throw new KernelControlException(
                     "Error while trying to terminate kernel process.", ex);
@@ -114,51 +130,59 @@ public class UnixProcessTerminator {
         }
     }
 
-    private boolean blockUntilProcessDeadOrTimeout(long unixPid) throws IOException, InterruptedException {
+    private boolean blockUntilProcessDeadOrTimeout(long unixPid, Duration timeout) throws IOException, InterruptedException {
         TimeUnit.MILLISECONDS.sleep(initialWait.toMillis());
 
         Duration waited = Duration.ZERO;
         boolean terminated = false;
         do {
             TimeUnit.MILLISECONDS.sleep(pollInterval.toMillis());
-            List<String> psOutput = callPs(unixPid);
+            List<String> psOutput = unixCommandRunner.callPs(unixPid);
             terminated = psOutput.isEmpty();
-            waited.plus(pollInterval);
-        } while(!terminated && waited.compareTo(timeoutUntilGiveUp) < 0);
+            waited = waited.plus(pollInterval);
+        } while(!terminated && waited.compareTo(timeout) < 0);
         return terminated;
     }
 
-    private int sendSigterm(long unixPid) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .command("kill",
-                        String.valueOf(unixPid))
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT);
-        return processBuilder.start().waitFor();
-    }
+    /**
+     * Put all the work of actually running OS commands into this class, so that UnixProcessTerminator
+     * unit tests can test the rest of the code in isolation by mocking this class.  Logic of this class
+     * will be covered by integ tests.
+     */
+    @VisibleForTesting
+    static class UnixCommandRunner {
+        int sendSigterm(long unixPid) throws IOException, InterruptedException {
+            ProcessBuilder processBuilder = new ProcessBuilder()
+                    .command("kill",
+                            String.valueOf(unixPid))
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT);
+            return processBuilder.start().waitFor();
+        }
 
-    private int sendSigKill(long unixPid) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder()
-                .command("kill", "-9",
-                        String.valueOf(unixPid))
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT);
-        return processBuilder.start().waitFor();
-    }
+        int sendSigKill(long unixPid) throws IOException, InterruptedException {
+            ProcessBuilder processBuilder = new ProcessBuilder()
+                    .command("kill", "-9",
+                            String.valueOf(unixPid))
+                    .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT);
+            return processBuilder.start().waitFor();
+        }
 
-    private List<String> callPs(long pid) throws IOException, InterruptedException {
-        final String[] command = new String[] {"ps", "-o", "pid=", "--pid", String.valueOf(pid)};
-        Process proc = new ProcessBuilder().command(command).start();
-        proc.waitFor();
+        List<String> callPs(long pid) throws IOException, InterruptedException {
+            final String[] command = new String[]{"ps", "-o", "pid=", "--pid", String.valueOf(pid)};
+            Process proc = new ProcessBuilder().command(command).start();
+            proc.waitFor();
 
-        try (
-                final InputStream is = proc.getInputStream();
-                final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
-                final BufferedReader br = new BufferedReader(isr);
-        ) {
-            return br.lines().collect(Collectors.toList());
-        } catch (IOException ioe) {
-            throw new IOException("Could not get the output of pscal program", ioe);
+            try (
+                    final InputStream is = proc.getInputStream();
+                    final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
+                    final BufferedReader br = new BufferedReader(isr);
+            ) {
+                return br.lines().collect(Collectors.toList());
+            } catch (IOException ioe) {
+                throw new IOException("Could not get the output of ps program", ioe);
+            }
         }
     }
 }
