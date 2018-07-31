@@ -1,0 +1,65 @@
+.default{
+    -fx-background-color: white;
+}
+
+.pressed{
+    -fx-border-color: #40bded;
+    -fx-border-width: 0 0 5 0;
+}
+
+.header-button-label-pressed {
+    -fx-text-fill: #40bded;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 18px;
+}
+
+.header-button-label {
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 18px;
+    -fx-padding: 0 0 10 0;
+}
+
+.header-account-label {
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 18px;
+    -fx-padding: 0 0 0 10;
+}
+
+.header-account-info {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0px;
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 14px;
+    -fx-display-caret: false;
+}
+
+#logo:hover {
+    -fx-cursor: hand;
+}
+
+.clickable:hover {
+    -fx-cursor: hand;
+}
+
+.header-button-label:hover {
+    -fx-cursor: hand;
+}
+
+.balance-value {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0px;
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 18px;
+    -fx-display-caret: false;
+    -fx-border-color: #40bded;
+    -fx-border-width: 0 0 1 0;
+}

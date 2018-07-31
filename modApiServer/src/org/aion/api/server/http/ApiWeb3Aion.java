@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
-<<<<<<< HEAD
  * <p>This file is part of the aion network project.
  *
  * <p>The aion network project is free software: you can redistribute it and/or modify it under the
@@ -14,7 +13,6 @@
  *
  * <p>You should have received a copy of the GNU General Public License along with the aion network
  * project source files. If not, see <https://www.gnu.org/licenses/>.
-=======
  * This file is part of the aion network project.
  *
  * The aion network project is free software: you can redistribute it
@@ -30,7 +28,6 @@
  * You should have received a copy of the GNU General Public License
  * along with the aion network project source files.
  * If not, see <https://www.gnu.org/licenses/>.
->>>>>>> master-pre-merge
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *
@@ -2267,8 +2264,13 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (nce != null && soln != null && hdrHash != null &&
-                !nce.equals(JSONObject.NULL) && !soln.equals(JSONObject.NULL) && !hdrHash.equals(JSONObject.NULL)) {
+
+        if (nce != null
+                && soln != null
+                && hdrHash != null
+                && !nce.equals(null)
+                && !soln.equals(null)
+                && !hdrHash.equals(null)) {
 
             try {
                 templateMapLock.writeLock().lock();
