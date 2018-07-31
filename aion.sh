@@ -192,7 +192,7 @@ if $guard; then
 		echo "############################## REBOUNCE COUNT [$countRebounce] ##############################"
 
 	done
-
+else
 	JAVA_CMD=java
 	if [ -d "./rt" ]; then
 			JAVA_CMD="./rt/bin/java"
