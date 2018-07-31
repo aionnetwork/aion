@@ -49,6 +49,7 @@ public class TaskConnectPeers implements Runnable {
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final Selector selector;
     private final ReqHandshake1 cachedReqHS;
+    private boolean isRun = false;
 
     public TaskConnectPeers(
         final IP2pMgr _mgr,
@@ -71,6 +72,7 @@ public class TaskConnectPeers implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setName("p2p-tcp");
+        isRun = true;
         while (this.start.get()) {
             INode node;
             try {
@@ -82,6 +84,7 @@ public class TaskConnectPeers implements Runnable {
 
                 node = this.nodeMgr.tempNodesTake();
                 if (node == null) {
+                    p2pLOG.debug("no temp node can take.");
                     continue;
                 }
 
@@ -102,7 +105,6 @@ public class TaskConnectPeers implements Runnable {
                 SocketChannel channel = null;
                 try {
                     channel = SocketChannel.open();
-
                     channel.socket()
                         .connect(
                             new InetSocketAddress(node.getIpStr(), _port),
@@ -110,7 +112,6 @@ public class TaskConnectPeers implements Runnable {
                     this.mgr.configChannel(channel);
 
                     if (channel.isConnected()) {
-
                         if (p2pLOG.isDebugEnabled()) {
                             p2pLOG.debug("success-connect node-id={} ip={}", node.getIdShort(),
                                 node.getIpStr());
@@ -188,5 +189,10 @@ public class TaskConnectPeers implements Runnable {
                 }
             }
         }
+        isRun = false;
+    }
+
+    public boolean isRun() {
+        return isRun;
     }
 }

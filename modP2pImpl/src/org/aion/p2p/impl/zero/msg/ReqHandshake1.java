@@ -39,7 +39,7 @@ import java.util.List;
  * protocal version upgrading test
  *
  */
-public final class ReqHandshake1 extends ReqHandshake {
+public class ReqHandshake1 extends ReqHandshake {
 
     private byte[] revision;
 
