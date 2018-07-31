@@ -307,7 +307,7 @@ public class BridgeController {
             results.add(result);
         }
         this.connector.setBundle(hash, true);
-        emitProcessedBundle(hash);
+        emitProcessedBundle(sourceBlockHash, hash);
         return processSuccess(ErrCode.NO_ERROR, results);
     }
 
@@ -342,8 +342,12 @@ public class BridgeController {
         addLog(topics);
     }
 
-    private void emitProcessedBundle(@Nonnull final byte[] bundleHash) {
-        List<byte[]> topics = Arrays.asList(BridgeEventSig.PROCESSED_BUNDLE.getHashed(), bundleHash);
+    private void emitProcessedBundle(@Nonnull final byte[] sourceBlockHash,
+                                     @Nonnull final byte[] bundleHash) {
+        List<byte[]> topics = Arrays.asList(
+                BridgeEventSig.PROCESSED_BUNDLE.getHashed(),
+                sourceBlockHash,
+                bundleHash);
         addLog(topics);
     }
 
