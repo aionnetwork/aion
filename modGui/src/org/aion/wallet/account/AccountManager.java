@@ -1,5 +1,6 @@
 package org.aion.wallet.account;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.github.novacrypto.bip39.MnemonicGenerator;
 import io.github.novacrypto.bip39.Words;
 import io.github.novacrypto.bip39.wordlists.English;
@@ -54,14 +55,15 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AccountManager {
+    private final Map<String, byte[]> addressToKeystoreContent;
     private final WalletStorage walletStorage;
     private final Map<String, AccountDTO> addressToAccount;
-    private final Map<String, byte[]> addressToKeystoreContent = Collections.synchronizedMap(new HashMap<>());
     private final KeystoreFormat keystoreFormat = new KeystoreFormat();
     private final BalanceRetriever balanceProvider;
     private final Supplier<String> currencySupplier;
     private final ConsoleManager consoleManager;
     private final MnemonicGeneratorWrapper mnemonicGenerator;
+    private final KeystoreWrapper keystoreWrapper;
 
     private MasterKey root;
 
@@ -71,30 +73,36 @@ public class AccountManager {
 
     public AccountManager(final BalanceRetriever balanceProvider,
                           final Supplier<String> currencySupplier,
-                          ConsoleManager consoleManager,
-                          WalletStorage walletStorage,
-                          Map<String, AccountDTO> addressToAccount,
-                          MnemonicGeneratorWrapper mnemonicGenerator) {
+                          final ConsoleManager consoleManager,
+                          final WalletStorage walletStorage) {
+        this(balanceProvider,
+                currencySupplier,
+                consoleManager,
+                walletStorage,
+                new HashMap<>(),
+                new MnemonicGeneratorWrapper(new MnemonicGenerator(English.INSTANCE)),
+                new KeystoreWrapper()
+        );
+    }
+
+    @VisibleForTesting
+    AccountManager(final BalanceRetriever balanceProvider,
+                          final Supplier<String> currencySupplier,
+                          final ConsoleManager consoleManager,
+                          final WalletStorage walletStorage,
+                          final Map<String, AccountDTO> addressToAccount,
+                          final MnemonicGeneratorWrapper mnemonicGenerator,
+                          final KeystoreWrapper keystoreWrapper) {
+        this.addressToKeystoreContent = Collections.synchronizedMap(new HashMap<>());
         this.balanceProvider = balanceProvider;
         this.currencySupplier = currencySupplier;
         this.consoleManager = consoleManager;
         this.walletStorage = walletStorage;
         this.addressToAccount = addressToAccount;
         this.mnemonicGenerator = mnemonicGenerator;
-    }
+        this.keystoreWrapper = keystoreWrapper;
 
-    public AccountManager(final BalanceRetriever balanceProvider,
-                          final Supplier<String> currencySupplier,
-                          ConsoleManager consoleManager,
-                          WalletStorage walletStorage) {
-        this(balanceProvider,
-                currencySupplier,
-                consoleManager,
-                walletStorage,
-                new HashMap<>(),
-                new MnemonicGeneratorWrapper(new MnemonicGenerator(English.INSTANCE))
-        );
-        for (String address : Keystore.list()) {
+        for (String address : keystoreWrapper.list()) {
             addressToAccount.put(address, getNewAccount(address));
         }
     }
@@ -211,6 +219,14 @@ public class AccountManager {
         return root.deriveHardened(new int[]{44, 425, 0, 0, derivationIndex});
     }
 
+    /**
+     * Derivation path for HD wallet generation.  The first four off-sets are the predetermined numbers
+     * {44, 425, 0, 0}.  The last offset is the derivation index.
+     */
+    private int[] derivationPath(final int derivationIndex) {
+        return new int[] { 44, 425, 0, 0, derivationIndex };
+    }
+
     private AccountDTO addInternalAccount() throws ValidationException {
         AccountDTO dto = addInternalAccount(walletStorage.getMasterAccountDerivations());
         walletStorage.incrementMasterAccountDerivations();
@@ -221,8 +237,8 @@ public class AccountManager {
         String address = TypeConverter.toJsonHex(KeystoreItem.parse(fileContent).getAddress());
         final AccountDTO accountDTO;
         if (shouldKeep) {
-            if (!Keystore.exist(address)) {
-                address = Keystore.create(password, key);
+            if (!keystoreWrapper.exist(address)) {
+                address = keystoreWrapper.create(password, key);
                 if (AddressUtils.isValid(address)) {
                     accountDTO = createImportedAccountFromPrivateKey(address, key.getPrivKeyBytes());
                 } else {
@@ -247,9 +263,9 @@ public class AccountManager {
 
     public void exportAccount(final AccountDTO account, final String password, final String destinationDir) throws ValidationException {
         final ECKey ecKey = CryptoUtils.getECKey(account.getPrivateKey());
-        final boolean remembered = account.isImported() && Keystore.exist(account.getPublicAddress());
+        final boolean remembered = account.isImported() && keystoreWrapper.exist(account.getPublicAddress());
         if (!remembered) {
-            Keystore.create(password, ecKey);
+            keystoreWrapper.create(password, ecKey);
         }
         if (Files.isDirectory(walletStorage.KEYSTORE_PATH)) {
             final String fileNameRegex = getExportedFileNameRegex(account.getPublicAddress());
@@ -304,10 +320,6 @@ public class AccountManager {
     public List<AccountDTO> getAccounts() {
         final Collection<AccountDTO> filteredAccounts = addressToAccount.values().stream().filter(account -> account.isImported() || account.isUnlocked()).collect(Collectors.toList());
         for (AccountDTO account : filteredAccounts) {
-//            balanceProvider.setAddress(account.getPublicAddress());
-//            balanceProvider.loadFromApi();
-
-//            account.setBalance(BalanceUtils.formatBalance(balanceProvider.apply(account.getPublicAddress())));
             BigInteger balance = balanceProvider.getBalance(account.getPublicAddress());
             account.setBalance(BalanceUtils.formatBalance(balance));
         }
@@ -340,7 +352,7 @@ public class AccountManager {
         if (fileContent.isPresent()) {
             storedKey = KeystoreFormat.fromKeystore(fileContent.get(), password);
         } else {
-            storedKey = Keystore.getKey(account.getPublicAddress(), password);
+            storedKey = keystoreWrapper.getKey(account.getPublicAddress(), password);
         }
 
         if (storedKey != null) {
@@ -454,11 +466,16 @@ public class AccountManager {
         return oldestSafeBlock;
     }
 
+    public MasterKey getRoot() {
+        return this.root;
+    }
+
     /**
-     * This exists solely to allow make mocking of the MnemonicGenerator dependency possible, which
-     * is final.
+     * Wrap {@link MnemonicGenerator}, which is final, so that AccountManager can have
+     * unit tests that are isolated from that dependency via mocks.
      */
-    private final static class MnemonicGeneratorWrapper {
+    @VisibleForTesting
+    static class MnemonicGeneratorWrapper {
         MnemonicGenerator mnemonicGenerator;
         public MnemonicGeneratorWrapper(MnemonicGenerator mnemonicGenerator) {
             this.mnemonicGenerator = mnemonicGenerator;
@@ -466,6 +483,31 @@ public class AccountManager {
 
         public void createMnemonic(byte[] entropy, MnemonicGenerator.Target target) {
             this.mnemonicGenerator.createMnemonic(entropy, target);
+        }
+    }
+
+    /**
+     * Wrap {@link Keystore}, which only has static methods, so that AccountManager
+     * can have unit tests that is isolated from the real KeyStore behaviour via
+     * mocks.  Should eventually refactor KeyStore to make its methods non-static and
+     * then remove this wrapper.
+     */
+    @VisibleForTesting
+    static class KeystoreWrapper {
+        public String create(String password, ECKey key) {
+            return Keystore.create(password, key);
+        }
+
+        public String[] list() {
+            return Keystore.list();
+        }
+
+        public boolean exist(String _address) {
+            return Keystore.exist(_address);
+        }
+
+        public ECKey getKey(String _address, String _password) {
+            return Keystore.getKey(_address, _password);
         }
     }
 }
