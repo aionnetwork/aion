@@ -437,7 +437,7 @@ public class AionTxExecSummary implements ITxExecSummary {
             if (summary.internalTransactions == null)
                 summary.internalTransactions = Collections.emptyList();
 
-            if (summary.failed != TransactionStatus.SUCCESS) {
+            if (summary.failed != null && summary.failed != TransactionStatus.SUCCESS) {
                 for (AionInternalTx transaction : summary.internalTransactions) {
                     transaction.reject();
                 }

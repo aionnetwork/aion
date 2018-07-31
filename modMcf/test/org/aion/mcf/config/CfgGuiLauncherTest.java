@@ -65,17 +65,18 @@ public class CfgGuiLauncherTest {
         unit.setWorkingDir("/working/dir");
 
         String result = unit.toXML();
-        assertThat(result, is(
-                "\t<launcher>\r\n" +
-                        "\t\t\t<!--Whether JVM settings for launching kernel should be autodetected; 'true' or 'false'-->\r\n" +
-                        "\t\t\t<autodetect>false</autodetect>\r\n" +
-                        "\t\t\t<!--Path to JAVA_HOME.  This field has no effect if autodetect is true.-->\r\n" +
-                        "\t\t\t<java-home>/java/home</java-home>\r\n" +
-                        "\t\t\t<!--Working directory of kernel process.  This field has no effect if autodetect is true.-->\r\n" +
-                        "\t\t\t<working-dir>/working/dir</working-dir>\r\n" +
-                        "\t\t\t<!--Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.-->\r\n" +
-                        "\t\t\t<aion-sh>myAion.sh</aion-sh>\r\n" +
-                        "\t\t</launcher>"
-        ));
+        assertThat(result, is("")); // cfg is hidden for now
+//        assertThat(result, is(
+//                "\t<launcher>\r\n" +
+//                        "\t\t\t<!--Whether JVM settings for launching kernel should be autodetected; 'true' or 'false'-->\r\n" +
+//                        "\t\t\t<autodetect>false</autodetect>\r\n" +
+//                        "\t\t\t<!--Path to JAVA_HOME.  This field has no effect if autodetect is true.-->\r\n" +
+//                        "\t\t\t<java-home>/java/home</java-home>\r\n" +
+//                        "\t\t\t<!--Working directory of kernel process.  This field has no effect if autodetect is true.-->\r\n" +
+//                        "\t\t\t<working-dir>/working/dir</working-dir>\r\n" +
+//                        "\t\t\t<!--Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.-->\r\n" +
+//                        "\t\t\t<aion-sh>myAion.sh</aion-sh>\r\n" +
+//                        "\t\t</launcher>"
+//        ));
     }
 }

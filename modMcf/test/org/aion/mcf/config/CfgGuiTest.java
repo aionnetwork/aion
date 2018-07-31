@@ -50,7 +50,7 @@ public class CfgGuiTest {
         when(cfgGuiLauncher.toXML()).thenReturn("<cfg-gui-part/>");
 
         String result = unit.toXML();
-        assertThat(result, is(""));
+        assertThat(result, is("")); // cfg is hidden for now
 //        assertThat(result, is(
 //                "\r\n\t<gui>\r\n" +
 //                        "\t<cfg-gui-part/>\r\n" +

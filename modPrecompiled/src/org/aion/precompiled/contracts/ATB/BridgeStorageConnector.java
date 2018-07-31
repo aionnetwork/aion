@@ -50,6 +50,7 @@ public class BridgeStorageConnector {
         MEMBER_COUNT(new DataWord(0x2)),
         MIN_THRESH(new DataWord(0x3)),
         RING_LOCKED(new DataWord(0x4)),
+        RELAYER(new DataWord(0x5)),
         INITIALIZED(new DataWord(0x42));
 
         private DataWord offset;
@@ -108,6 +109,16 @@ public class BridgeStorageConnector {
 
     public byte[] getNewOwner() {
         byte[] ret = this.getDWORD(S_OFFSET.NEW_OWNER.offset);
+        return BridgeUtilities.getAddress(ret);
+    }
+
+    public void setRelayer(@Nonnull final byte[] address) {
+        assert address.length == 32 : "address length must be 32 bytes";
+        this.setDWORD(S_OFFSET.RELAYER.offset, address);
+    }
+
+    public byte[] getRelayer() {
+        byte[] ret = this.getDWORD(S_OFFSET.RELAYER.offset);
         return BridgeUtilities.getAddress(ret);
     }
 
@@ -223,11 +234,5 @@ public class BridgeStorageConnector {
         if (word.isZero())
             return null;
         return word.getData();
-    }
-
-    public enum TransferResult {
-        SUCCESS,
-        CONTRACT_ACC,
-        TRANSFER_FAILED
     }
 }

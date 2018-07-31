@@ -14,14 +14,16 @@ enum BridgeFuncSig {
     SIG_RING_INITIALIZE     ("initializeRing(address[])"),
     SIG_RING_ADD_MEMBER     ("addRingMember(address)"),
     SIG_RING_REMOVE_MEMBER  ("removeRingMember(address)"),
-    SIG_SUBMIT_BUNDLE       ("submitBundle(bytes32,address[],uint128[],bytes32[],bytes32[],bytes32)"),
+    SIG_SET_RELAYER         ("setRelayer(address)"),
+    SIG_SUBMIT_BUNDLE       ("submitBundle(bytes32,address[],uint128[],bytes32[],bytes32[],bytes32[])"),
     PURE_OWNER              ("owner()"),
     PURE_NEW_OWNER          ("newOwner()"),
     PURE_ACTION_MAP         ("actionMap(bytes32)"),
     PURE_RING_MAP           ("ringMap(address)"),
     PURE_RING_LOCKED        ("ringLocked()"),
     PURE_MIN_THRESH         ("minThresh()"),
-    PURE_MEMBER_COUNT       ("memberCount()");
+    PURE_MEMBER_COUNT       ("memberCount()"),
+    PURE_RELAYER            ("relayer()");
 
     private static Map<ByteArrayWrapper, BridgeFuncSig> enumSet = new HashMap<>();
 
