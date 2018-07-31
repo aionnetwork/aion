@@ -19,6 +19,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
+import javax.management.OperationsException;
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -71,10 +72,19 @@ public class HeaderPaneControls extends AbstractController {
     }
 
     public void openAionWebSite() {
+        // borrowed from aion_ui's URLManager; when wallet version of modGui
+        // is merged, this will be replaced with a call to URLManager instead.
         try {
-            Desktop.getDesktop().browse(new URI(AION_URL));
-        } catch (IOException | URISyntaxException e) {
-            log.error("Exception occurred trying to open website: %s", e.getMessage(), e);
+            URI uri = new URI(AION_URL);
+            final String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                Desktop.getDesktop().browse(uri);
+            } else if (os.contains("nix") || os.contains("nux") || os.indexOf("aix") > 0)
+                if (Runtime.getRuntime().exec(new String[]{"which", "xdg-open"}).getInputStream().read() != -1) {
+                    Runtime.getRuntime().exec(new String[]{"xdg-open", AION_URL});
+                }
+        } catch (URISyntaxException | IOException ex) {
+            log.error("Failed to open URL.", ex);
         }
     }
 
