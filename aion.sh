@@ -121,7 +121,7 @@ if $guard; then
 
 		# Execute Java kernel
 		env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
+			-cp "./lib/*:./mod/*" org.aion.Aion "$@" &
 		kPID=$!
 		running=true
 		watching=true
@@ -200,6 +200,6 @@ if $guard; then
 else
 
   	env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
-  		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
+  		-cp "./lib/*:./mod/*" org.aion.Aion "$@"
 
 fi

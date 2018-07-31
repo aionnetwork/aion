@@ -81,8 +81,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 	</target>
 
-	<target name="ci_test_modules">
-		 
+	<target name="ci_test_modules">		 
 		<ant inheritAll="false" antfile="${dir.workspace}/modCrypto/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modP2pImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modTxPoolImpl/build.xml" target="ci_build" />
@@ -194,6 +193,25 @@
 
 	<target name="build_test" depends="build, test" />
 
+        <target name="3rd_build">
+                <echo message="compile debug is ${compile.debug}" />
+                <echo message="building 3rd party lib" />
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnsc/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libnsc/libnsc.jar" tofile="${dir.workspace}/lib/libnsc.jar" overwrite="true" />
+
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnzmq/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libnzmq/libnzmq.jar" tofile="${dir.workspace}/lib/libnzmq.jar" overwrite="true" />
+
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libJson/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libJson/libJson.jar" tofile="${dir.workspace}/lib/libJson.jar" overwrite="true" />
+        </target>
+
 	<target name="mod_build">
                 <mkdir dir="${dir.modfile}" />
 		<echo message="compile debug is ${compile.debug}" />
@@ -288,7 +306,7 @@
                 </ant>
 	</target>
 
-	<target name="build" depends="mod_build">
+	<target name="build" depends="3rd_build, mod_build">
 		<mkdir dir="${dir.buildfile}" />
 		<mkdir dir="${dir.native}/linux/equihash" />
 		<mkdir dir="${dir.build.native}/linux/equihash" />
@@ -391,8 +409,7 @@
 		<tar destfile="${dir.pack}/aion.tar.bz2" compression="bzip2" longfile="gnu">
 			<tarfileset dir="${dir.libfile}" filemode="755" prefix="${project.name}/lib">
 				<include name="*.jar" />
-				<include name="libminiupnp/*.jar" />
-				<include name="libminiupnp/*.so" />
+				<include name="*.so" />
 				<exclude name="byte-buddy-*.jar" />
 				<exclude name="JUnitParams-*.jar" />
 				<exclude name="mockito-*.jar" />
