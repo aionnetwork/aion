@@ -127,4 +127,6 @@ will be built when executing the release.sh in the aion_fastvm repo or execute t
 
 libzmq.so.5
 linux kernel package, can be obtained by apt install libzmq5
+
+libjzmq.so
 https://github.com/zeromq/jzmq
