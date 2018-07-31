@@ -60,6 +60,7 @@ public final class CfgAion extends Cfg {
         this.log = new CfgLog();
         this.tx = new CfgTx();
         this.reports = new CfgReports();
+        this.gui = new CfgGui();
     }
 
     private static class CfgAionHolder {
@@ -205,6 +206,9 @@ public final class CfgAion extends Cfg {
                     case "reports":
                         this.reports.fromXML(sr);
                         break;
+                    case "gui":
+                        this.gui.fromXML(sr);
+                        break;
                     default:
                         skipElement(sr);
                         break;
@@ -307,6 +311,7 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getLog().toXML());
             sw.writeCharacters(this.getTx().toXML());
             sw.writeCharacters(this.getReports().toXML());
+            sw.writeCharacters(this.getGui().toXML());
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="Aion graphical front-end">
+    <property name="dir.lib" value="../lib"/>
+    <property name="dir.mod" value="../mod"/>
+    <property name="dir.resources" value="./resources"/>
+    <property name="dir.dest" value="./build/main"/>
+    <property name="src.test" value="./test"/>
+    <property name="dir.test" value="./build/test"/>
+    <property name="src.integtest" value="./integration-test"/>
+    <property name="dir.integtest" value="./build/integration-test"/>
+    <property name="test.report.dir" value="report"/>
+    <property name="dir.javaAPIlib" value="../javaAPIlib"/>
+
+    <!-- Dependencies for building production code (i.e. non-test files) -->
+    <path id="classpath.dependency">
+        <pathelement location="${dir.mod}/modLogger.jar"/>
+        <pathelement location="${dir.mod}/modMcf.jar"/>
+        <pathelement location="${dir.mod}/modAionImpl.jar"/>
+        <pathelement location="${dir.lib}/../aion_api/pack/modAionApi.jar" />
+        <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+        <pathelement location="${dir.lib}/guava-19.0.jar" />
+    </path>
+
+    <!-- Test dependencies -->
+    <path id="classpath.test">
+        <pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
+        <pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar"/>
+        <pathelement location="${dir.lib}/mockito-core-2.12.0.jar"/>
+        <pathelement location="${dir.lib}/byte-buddy-1.7.9.jar"/>
+        <pathelement location="${dir.lib}/byte-buddy-agent-1.7.9.jar"/>
+        <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
+		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
+        <pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
+        <pathelement location="${dir.mod}/modGui.jar"/>
+        <pathelement location="${dir.mod}/modAionBase.jar"/>
+
+        <!-- only used by integration-test -->
+		<pathelement location="${dir.lib}/testfx-core-4.0.13-alpha.jar" />
+		<pathelement location="${dir.lib}/testfx-junit-4.0.13-alpha.jar" />
+        <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar" />
+        <pathelement location="${dir.lib}/../aion_api/lib/gson-2.7.jar" /> <!-- hmm... -->
+        <pathelement location="${dir.lib}/openjfx-monocle-jdk-9+181.jar" /> <!-- hmm... -->
+        <pathelement location="${dir.mod}/modAion.jar"/>
+        <pathelement location="${dir.mod}/modDbImpl.jar"/>
+        <pathelement location="${dir.mod}/modDbImpl.jar"/>
+
+    </path>
+
+    <target name="clean_build" depends="clean">
+    	<antcall target="build">
+        	<param name="compile.debug" value="${compile.debug}"/>
+        </antcall>
+    </target>
+
+    <target name="clean">
+        <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/"/>
+        <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
+        <delete dir="${test.report.dir}"/>
+        <delete file="${dir.mod}/modGui.jar"/>
+    </target>
+
+
+    <target name="test" depends="test_build">
+        <mkdir dir="${test.report.dir}"/>
+        <junit printsummary="on" haltonfailure="yes" fork="true">
+            <classpath>
+                <path refid="classpath.test"/>
+                <path refid="classpath.dependency"/>
+                <pathelement location="${dir.test}"/>
+            </classpath>
+            <formatter type="plain" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest todir="${test.report.dir}">
+                <fileset dir="${src.test}" includes="**/*Test.java"/>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="integtest" depends="integtest_build" >
+        <echo message="user.dir = ${user.dir}" />
+        <echo message="basedir = ${basedir}" />
+        <mkdir dir="${test.report.dir}"/>
+        <junit printsummary="on" haltonfailure="yes" fork="yes">
+
+            <!-- hack to make KernelLauncher use the correct path regardless of 
+                 whether ant invoked from aion dir or aion/modGui.  The proper
+                 fix is to make KernelLauncher work regardless of pwd value.  -->
+            <jvmarg value="-Duser.dir=${basedir}" />
+
+            <sysproperty key="testfx.robot" value="glass" />
+            <sysproperty key="testfx.headless" value="true" />
+            <sysproperty key="prism.order" value="sw" />
+            <sysproperty key="prism.text" value="t2k" />
+            <classpath>
+                <path refid="classpath.test"/>
+                <path refid="classpath.dependency"/>
+                <pathelement location="${dir.test}"/>
+            </classpath>
+            <formatter type="plain" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest todir="${test.report.dir}" fork="yes">
+                <fileset dir="${src.integtest}" includes="**/*Test.java"/>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="build">
+        <echo message="compiling with debug=${compile.debug}" />
+        <mkdir dir="${dir.dest}"/>
+        <javac
+                debug="${compile.debug}"
+                debuglevel="source,lines,vars"
+                includeantruntime="false"
+                release="10"
+                srcdir="./"
+                destdir="${dir.dest}"
+                includes="src/**/*.java,module-info.java" >
+            <modulepath> 
+                <path refid="classpath.dependency"/>
+            </modulepath>
+        </javac>
+        <copy todir="${dir.dest}"> <fileset dir="${dir.resources}" /> </copy>
+        <jar
+                destfile="modGui.jar"
+                filesetmanifest="mergewithoutmain"
+                basedir="${dir.dest}"
+        />
+        <move includeemptydirs="false" todir="${dir.mod}" file="modGui.jar" /> 
+    </target>
+
+    <target name="test_build" depends="build">
+        <mkdir dir="${dir.test}"/>
+        <javac
+                debug="on"
+                debuglevel="source,lines,vars"
+                includeantruntime="false"
+                release="10"
+                srcdir="${src.test}"
+                destdir="${dir.test}"
+                includes="**/*Test.java" >
+            <classpath>
+                <path refid="classpath.test"/>
+                <path refid="classpath.dependency"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="integtest_build" depends="build">
+        <mkdir dir="${dir.test}"/>
+        <javac
+                debug="on"
+                debuglevel="source,lines,vars"
+                includeantruntime="false"
+                release="10"
+                srcdir="${src.integtest}"
+                destdir="${dir.test}"
+                includes="**/*Test.java" >
+            <classpath>
+                <path refid="classpath.test"/>
+                <path refid="classpath.dependency"/>
+            </classpath>
+        </javac>
+    </target>
+
+</project>

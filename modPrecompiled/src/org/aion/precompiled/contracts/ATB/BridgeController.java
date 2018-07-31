@@ -106,6 +106,25 @@ public class BridgeController {
 
     // end owner
 
+    // relayer
+
+    public boolean isRelayer(@Nonnull final byte[] caller) {
+        byte[] relayer = this.connector.getRelayer();
+        if (relayer == null)
+            return false;
+        return Arrays.equals(caller, this.connector.getRelayer());
+    }
+
+    public ErrCode setRelayer(@Nonnull final byte[] caller,
+                              @Nonnull final byte[] newOwner) {
+        if (!isOwner(caller))
+            return ErrCode.NOT_OWNER;
+        this.connector.setRelayer(newOwner);
+        return ErrCode.NO_ERROR;
+    }
+
+    // end relayer
+
     // ring
 
     private static int thresholdRatio(final int in) {
@@ -184,6 +203,8 @@ public class BridgeController {
         return ErrCode.NO_ERROR;
     }
 
+    // end ring
+
     // bridge
 
     private boolean isWithinSignatureBounds(int signatureLength) {
@@ -211,14 +232,14 @@ public class BridgeController {
      * charging these properly.
      */
     public ProcessedResults processBundles(@Nonnull final byte[] caller,
-                                  @Nonnull final byte[] blockHash,
-                                  @Nonnull final BridgeBundle[] bundles,
-                                  @Nonnull final byte[][] signatures) {
+                                           @Nonnull final byte[] blockHash,
+                                           @Nonnull final BridgeBundle[] bundles,
+                                           @Nonnull final byte[][] signatures) {
         if (!isRingLocked())
             return processError(ErrCode.RING_NOT_LOCKED);
 
-        if (!isRingMember(caller))
-            return processError(ErrCode.NOT_RING_MEMBER);
+        if (!isRelayer(caller))
+            return processError(ErrCode.NOT_RELAYER);
 
         if (!isWithinSignatureBounds(signatures.length))
             return processError(ErrCode.INVALID_SIGNATURE_BOUNDS);

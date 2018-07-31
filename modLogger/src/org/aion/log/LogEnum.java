@@ -28,7 +28,7 @@ package org.aion.log;
  *
  */
 public enum LogEnum {
-    GEN, CONS, SYNC, API, VM, NET, DB, EVTMGR, TXPOOL, TX, P2P;
+    GEN, CONS, SYNC, API, VM, NET, DB, EVTMGR, TXPOOL, TX, P2P, GUI;
 
     public static boolean contains(String _module) {
         for (LogEnum module : values())

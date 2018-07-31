@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- tidy up these things -->
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.*?>
+<!--<AnchorPane id="overviewPane"
+            xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.aion.gui.controller.DashboardController" fx:id="parent">-->
+
+<GridPane id="overviewPane"
+    xmlns:fx="http://javafx.com/fxml" 
+    fx:controller="org.aion.gui.controller.DashboardController" 
+    fx:id="parent"
+    alignment="center" hgap="10" vgap="10">
+    <padding>
+        <Insets top="25" right="25" bottom="25" left="25"/>
+    </padding>
+    <VBox 
+        alignment="TOP_CENTER" 
+        spacing="10" 
+        GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3">
+        <Label text="Dashboard" styleClass="tile-label" alignment="CENTER"/>
+    </VBox>
+
+    <Button fx:id="launchKernelButton" id="launchKernelButton"
+        GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="1"
+        AnchorPane.topAnchor="50" AnchorPane.leftAnchor="10" 
+        mnemonicParsing="false" text="Launch kernel" 
+        onMouseClicked="#launchKernel"/>
+    <Button fx:id="terminateKernelButton" id="terminateKernelButton"
+        GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="1"
+        AnchorPane.topAnchor="50" AnchorPane.leftAnchor="10" 
+        mnemonicParsing="false" text="Terminate kernel" 
+        onMouseClicked="#terminateKernel"
+        disable="true" />
+
+    <GridPane id="kernelInfo"
+        alignment="center" hgap="50" vgap="10" 
+        GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="3"
+    >
+        <Label text="Kernel status: " alignment="CENTER"
+            GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="1"/>
+        <Label fx:id="kernelStatusLabel" text="Not running" alignment="CENTER"
+            GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.columnSpan="1"/>
+        <Label text="Peers: " alignment="CENTER" 
+            GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="1"/>
+        <Label fx:id="numPeersLabel" text="--" alignment="CENTER"
+            GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="1"/>
+        <Label text="Mining: " alignment="CENTER"
+            GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="1"/>
+        <Label fx:id="isMining" text="--" alignment="CENTER"
+            GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.columnSpan="1"/>
+        <Label text="Blocks: " alignment="CENTER" 
+            GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="1"/>
+        <Label fx:id="blocksLabel" text="--" alignment="CENTER"
+            GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="1"/>
+    </GridPane>
+
+
+</GridPane>
+<!--</AnchorPane>-->
+
