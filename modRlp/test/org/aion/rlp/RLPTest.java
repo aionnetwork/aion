@@ -47,7 +47,6 @@ import static org.aion.rlp.RLP.encodeList;
 import static org.aion.rlp.RLP.encodeListHeader;
 import static org.aion.rlp.RLP.encodeShort;
 import static org.aion.rlp.RLP.encodeString;
-import static org.aion.rlp.RLP.fullTraverse;
 import static org.aion.rlp.RlpTestData.expected14;
 import static org.aion.rlp.RlpTestData.expected16;
 import static org.aion.rlp.RlpTestData.result01;
@@ -377,18 +376,6 @@ public class RLPTest {
 //
 //        assertEquals("f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
 //                Hex.toHexString(header));
-    }
-
-    @Test
-    public void test11() {
-//        2240089100000070
-        String tx = "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
-        byte[] payload = Hex.decode(tx);
-
-        Queue<Integer> index = new LinkedList<>();
-        fullTraverse(payload, 0, 0, payload.length, 1, index);
-
-        // TODO: assert lenght overflow while parsing list in RLP
     }
 
     @Test
@@ -934,29 +921,6 @@ public class RLPTest {
         assertEquals(expected, Hex.toHexString(encodedLength));
     }
 
-    @Test
-    @Ignore
-    public void unsupportedLength() {
-
-        int length = 56;
-        int offset = 192;
-        byte[] encodedLength;
-
-        // length > 2^64
-        // TODO: Fix this test - when casting double to int, information gets lost since 'int' is max (2^31)-1
-        double maxLength = Math.pow(256, 8);
-
-        try {
-            encodedLength = encodeLength((int) maxLength, offset);
-            System.out.println("length: " + length + ", offset: " + offset + ", encoded: " + Arrays.toString(encodedLength));
-
-            fail("Expecting RuntimeException: 'Input too long'");
-        } catch (RuntimeException e) {
-            // Success!
-        }
-
-    }
-
     // Code from: http://stackoverflow.com/a/4785776/459349
     static String bytesToAscii(byte[] b) {
         String hex = Hex.toHexString(b);
@@ -1032,7 +996,11 @@ public class RLPTest {
     @Test
     public void testEncodeListHeader() {
 
-        byte[] header = encodeListHeader(10);
+        byte[] header = encodeListHeader(0);
+        String expected_0 = "c0";
+        assertEquals(expected_0, Hex.toHexString(header));
+
+        header = encodeListHeader(10);
         String expected_1 = "ca";
         assertEquals(expected_1, Hex.toHexString(header));
 
