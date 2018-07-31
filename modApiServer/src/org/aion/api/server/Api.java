@@ -50,7 +50,20 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
     private final Compiler solc = Compiler.getInstance();
-    protected final AionPendingStateImpl pendingState = AionPendingStateImpl.inst();
+    protected final AionPendingStateImpl pendingState;
+
+    // This is the constructor that should always be used, unless testing
+    Api() {
+        pendingState = AionPendingStateImpl.inst();
+    }
+
+    // Only for testing purposes
+    Api(boolean test) {
+        if (!test)
+            pendingState = AionPendingStateImpl.inst();
+        else
+            pendingState = null;
+    }
 
     public abstract String getCoinbase();
 
