@@ -83,7 +83,7 @@ public class HeaderPaneControls extends AbstractController {
                 if (Runtime.getRuntime().exec(new String[]{"which", "xdg-open"}).getInputStream().read() != -1) {
                     Runtime.getRuntime().exec(new String[]{"xdg-open", AION_URL});
                 }
-        } catch (URISyntaxException | IOException ex) {
+        } catch (URISyntaxException | IOException | SecurityException ex) {
             log.error("Failed to open URL.", ex);
         }
     }
