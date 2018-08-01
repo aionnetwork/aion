@@ -84,13 +84,6 @@ public class ExecutionContext {
 
         super();
 
-        if ((txHash != null) && (txHash.length != 32)) { throw new IllegalArgumentException("txHash must be length 32."); }
-        if (nrgLimit < 0) { throw new IllegalArgumentException("nrgLimit " + NEG_MSG); }
-        if (depth < 0) { throw new IllegalArgumentException("depth " + NEG_MSG); }
-        if (blockNumber < 0) { throw new IllegalArgumentException("blockNumber " + NEG_MSG); }
-        if (blockTimestamp < 0) { throw new IllegalArgumentException("blockTimestamp " + NEG_MSG); }
-        if (blockNrgLimit < 0) { throw new IllegalArgumentException("blockNrgLimit " + NEG_MSG); }
-
         this.recipient = recipient;
         this.origin = origin;
         this.caller = caller;

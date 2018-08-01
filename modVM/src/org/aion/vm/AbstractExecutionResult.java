@@ -25,7 +25,6 @@ package org.aion.vm;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nonnull;
 import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -83,10 +82,8 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      * @param nrgLeft The energy left after execution.
      * @param output The output of the execution.
      * @throws NullPointerException if code is null.
-     * @throws IllegalArgumentException if nrgLeft is negative.
      */
-    public AbstractExecutionResult(@Nonnull ResultCode code, long nrgLeft, byte[] output) {
-        if (nrgLeft < 0) { throw new IllegalArgumentException("create with negative nrgLeft."); }
+    public AbstractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
         this.code = code;
         this.nrgLeft = nrgLeft;
         this.output = output;
@@ -150,11 +147,9 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      * Sets the AbstractExecutionResult's code to the code whose integer representation is code.
      *
      * @param code the integer representation of the code to be set.
-     * @throws IllegalArgumentException if code does not correspond to a ResultCode.
      */
     public void setCode(int code) {
         ResultCode resCode = ResultCode.fromInt(code);
-        if (resCode == null) { throw new IllegalArgumentException("set invalid code."); }
         this.code = resCode;
     }
 
@@ -162,10 +157,8 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      * Sets the energy left for the AbstractExecutionResult to nrgLeft.
      *
      * @param nrgLeft The energy remaining.
-     * @throws IllegalArgumentException if nrgLeft is negative.
      */
     public void setNrgLeft(long nrgLeft) {
-        if (nrgLeft < 0) { throw new IllegalArgumentException("set negative nrgLeft."); }
         this.nrgLeft = nrgLeft;
     }
 

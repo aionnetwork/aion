@@ -102,7 +102,6 @@
                 <fileset dir="${src.test}">
                     <include name="**/*Test.java"/>
                     <exclude name="**/EquihashSolutionRuleTest.java"/>
-                    <exclude name="**/BlockchainIntegrationTest.java"/>
                 </fileset>
             </batchtest>
         </junit>
@@ -132,7 +131,6 @@
                 <fileset dir="${src.test}">
                     <include name="**/*Test.java"/>
                     <exclude name="**/EquihashSolutionRuleTest.java"/>
-                    <exclude name="**/BlockchainIntegrationTest.java"/>
                 </fileset>
             </batchtest>
         </junit>
