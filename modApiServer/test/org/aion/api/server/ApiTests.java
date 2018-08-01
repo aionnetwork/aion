@@ -52,7 +52,7 @@ public class ApiTests {
 
     @Test
     public void TestCreate() {
-        System.out.println("run TestApiConnect.");
+        System.out.println("run TestCreate.");
         ApiImpl api = new ApiImpl();
         api.solcVersion();
         assertNotNull(api.LOG);
