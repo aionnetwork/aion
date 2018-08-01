@@ -54,7 +54,7 @@ public class AccountChangeHandlers {
             final Iterator<String> addressesIterator = addresses.iterator();
             AccountDTO account = accountManager.getAccount(addressesIterator.next());
             account.setActive(true);
-            EventPublisher.fireAccountChanged(account);
+            new EventPublisher().fireAccountChanged(account);
         }
     }
 }

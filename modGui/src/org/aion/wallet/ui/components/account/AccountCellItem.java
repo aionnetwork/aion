@@ -146,7 +146,7 @@ public class AccountCellItem extends ListCell<AccountDTO> {
             EventPublisher.fireAccountUnlocked(modifiedAccount);
         } else {
             modifiedAccount.setActive(true);
-            EventPublisher.fireAccountChanged(modifiedAccount);
+            new EventPublisher().fireAccountChanged(modifiedAccount);
         }
     }
 

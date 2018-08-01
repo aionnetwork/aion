@@ -20,13 +20,6 @@ public class EventPublisher {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
-    public static void fireAccountChanged(final AccountDTO account) {
-        if (account != null) {
-            System.out.println("EventPublisher#fireAccountChanged");
-            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.CHANGED, account));
-        }
-    }
-
     public static void fireAccountUnlocked(final AccountDTO account) {
         if (account != null) {
             EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.UNLOCKED, account));
@@ -47,18 +40,6 @@ public class EventPublisher {
     public static void fireAccountLocked(final AccountDTO account) {
         if (account != null) {
             EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountEvent(AbstractAccountEvent.Type.LOCKED, account));
-        }
-    }
-
-    public static void fireAccountAdded(final AccountDTO account) {
-        if (account != null) {
-            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.ADDED, account));
-        }
-    }
-
-    public static void fireAccountsRecovered(final Set<String> addresses) {
-        if (addresses != null && !addresses.isEmpty()) {
-            EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountListEvent(AbstractAccountEvent.Type.RECOVERED, addresses));
         }
     }
 
@@ -97,5 +78,24 @@ public class EventPublisher {
 
     public static void fireDisconnected() {
         EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.DISCONNECTED));
+    }
+
+    public void fireAccountChanged(final AccountDTO account) {
+        if (account != null) {
+            System.out.println("EventPublisher#fireAccountChanged");
+            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.CHANGED, account));
+        }
+    }
+
+    public void fireAccountAdded(final AccountDTO account) {
+        if (account != null) {
+            EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.ADDED, account));
+        }
+    }
+
+    public void fireAccountsRecovered(final Set<String> addresses) {
+        if (addresses != null && !addresses.isEmpty()) {
+            EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountListEvent(AbstractAccountEvent.Type.RECOVERED, addresses));
+        }
     }
 }

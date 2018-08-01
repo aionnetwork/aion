@@ -9,7 +9,6 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.gui.events.EventPublisher;
 import org.aion.gui.model.BalanceRetriever;
-import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.util.BalanceUtils;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -55,7 +54,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AccountManager {
-    private final Map<String, byte[]> addressToKeystoreContent;
+    private final Map<String, byte[]> addressToKeystoreContent; // only used for external accounts
     private final WalletStorage walletStorage;
     private final Map<String, AccountDTO> addressToAccount;
     private final KeystoreFormat keystoreFormat = new KeystoreFormat();
@@ -64,12 +63,16 @@ public class AccountManager {
     private final ConsoleManager consoleManager;
     private final MnemonicGeneratorWrapper mnemonicGenerator;
     private final KeystoreWrapper keystoreWrapper;
+    private final EventPublisher eventPublisher;
 
     private MasterKey root;
 
-    private boolean isWalletLocked = false;
+    private boolean isWalletLocked = false; // TODO what actually uses this?
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+
+    /** sentinel value for derivation index to signify account doesn't use derivation path (i.e. is imported) */
+    private static final int NON_DERIVED_ACCOUNT = -1;
 
     public AccountManager(final BalanceRetriever balanceProvider,
                           final Supplier<String> currencySupplier,
@@ -81,18 +84,20 @@ public class AccountManager {
                 walletStorage,
                 new HashMap<>(),
                 new MnemonicGeneratorWrapper(new MnemonicGenerator(English.INSTANCE)),
-                new KeystoreWrapper()
+                new KeystoreWrapper(),
+                new EventPublisher()
         );
     }
 
     @VisibleForTesting
     AccountManager(final BalanceRetriever balanceProvider,
-                          final Supplier<String> currencySupplier,
-                          final ConsoleManager consoleManager,
-                          final WalletStorage walletStorage,
-                          final Map<String, AccountDTO> addressToAccount,
-                          final MnemonicGeneratorWrapper mnemonicGenerator,
-                          final KeystoreWrapper keystoreWrapper) {
+                   final Supplier<String> currencySupplier,
+                   final ConsoleManager consoleManager,
+                   final WalletStorage walletStorage,
+                   final Map<String, AccountDTO> addressToAccount,
+                   final MnemonicGeneratorWrapper mnemonicGenerator,
+                   final KeystoreWrapper keystoreWrapper,
+                   final EventPublisher eventPublisher) {
         this.addressToKeystoreContent = Collections.synchronizedMap(new HashMap<>());
         this.balanceProvider = balanceProvider;
         this.currencySupplier = currencySupplier;
@@ -101,6 +106,7 @@ public class AccountManager {
         this.addressToAccount = addressToAccount;
         this.mnemonicGenerator = mnemonicGenerator;
         this.keystoreWrapper = keystoreWrapper;
+        this.eventPublisher = eventPublisher;
 
         for (String address : keystoreWrapper.list()) {
             addressToAccount.put(address, getNewAccount(address));
@@ -137,7 +143,7 @@ public class AccountManager {
         root = new MasterKey(rootEcKey);
         walletStorage.setMasterAccountMnemonic(mnemonic, password);
         final AccountDTO accountDTO = addInternalAccount();
-        EventPublisher.fireAccountAdded(accountDTO);
+        eventPublisher.fireAccountAdded(accountDTO);
         return accountDTO;
     }
 
@@ -158,7 +164,7 @@ public class AccountManager {
                 recoveredAddresses.add(address);
             }
         }
-        EventPublisher.fireAccountsRecovered(recoveredAddresses);
+        eventPublisher.fireAccountsRecovered(recoveredAddresses);
     }
 
     public boolean isMasterAccountUnlocked() {
@@ -166,7 +172,7 @@ public class AccountManager {
     }
 
     public void createAccount() throws ValidationException {
-        EventPublisher.fireAccountAdded(addInternalAccount());
+        eventPublisher.fireAccountAdded(addInternalAccount());
     }
 
     public AccountDTO importKeystore(final byte[] file, final String password, final boolean shouldKeep) throws ValidationException {
@@ -257,7 +263,14 @@ public class AccountManager {
         if (accountDTO == null) {
             throw new ValidationException("Failed to create account");
         }
-        processAccountAdded(accountDTO, fileContent);
+
+        if (accountDTO == null || fileContent == null) {
+            throw new IllegalArgumentException(String.format("account %s ; keystoreContent: %s", accountDTO, Arrays.toString(fileContent)));
+        }
+        final String address1 = accountDTO.getPublicAddress();
+        addressToKeystoreContent.put(address1, fileContent);
+        eventPublisher.fireAccountAdded(accountDTO);
+
         return accountDTO;
     }
 
@@ -328,7 +341,7 @@ public class AccountManager {
             if (!o1.isImported() && !o2.isImported()) {
                 return o1.getDerivationIndex() - o2.getDerivationIndex();
             }
-            return o1.isImported() ? 1 : -1;
+            return o1.isImported() ? 1 : NON_DERIVED_ACCOUNT;
         });
         return accounts;
     }
@@ -358,7 +371,7 @@ public class AccountManager {
         if (storedKey != null) {
             account.setActive(true);
             account.setPrivateKey(storedKey.getPrivKeyBytes());
-            EventPublisher.fireAccountChanged(account);
+            eventPublisher.fireAccountChanged(account);
         } else {
             throw new ValidationException("The password is incorrect!");
         }
@@ -392,7 +405,7 @@ public class AccountManager {
     }
 
     private AccountDTO createImportedAccountFromPrivateKey(final String address, final byte[] privateKeyBytes) {
-        return createAccountWithPrivateKey(address, privateKeyBytes, true, -1);
+        return createAccountWithPrivateKey(address, privateKeyBytes, true, NON_DERIVED_ACCOUNT);
     }
 
     private AccountDTO createAccountWithPrivateKey(final String address, final byte[] privateKeyBytes, boolean isImported, int derivation) {
@@ -411,15 +424,6 @@ public class AccountManager {
         return account;
     }
 
-    private void processAccountAdded(final AccountDTO account, final byte[] keystoreContent) {
-        if (account == null || keystoreContent == null) {
-            throw new IllegalArgumentException(String.format("account %s ; keystoreContent: %s", account, Arrays.toString(keystoreContent)));
-        }
-        final String address = account.getPublicAddress();
-        addressToKeystoreContent.put(address, keystoreContent);
-        EventPublisher.fireAccountAdded(account);
-    }
-
     private String getStoredAccountName(final String publicAddress) {
         return walletStorage.getAccountName(publicAddress);
     }
@@ -434,7 +438,7 @@ public class AccountManager {
     }
 
     private AccountDTO getNewAccount(final String publicAddress) {
-        return getNewAccount(publicAddress, true, -1);
+        return getNewAccount(publicAddress, true, NON_DERIVED_ACCOUNT);
     }
 
     private String getFormattedBalance(String address) {

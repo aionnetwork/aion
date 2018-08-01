@@ -105,7 +105,7 @@ public class ImportAccountDialog implements Initializable {
         }
 
         if (account != null) {
-            EventPublisher.fireAccountChanged(account);
+            new EventPublisher().fireAccountChanged(account);
             this.close(eventSource);
         }
     }
