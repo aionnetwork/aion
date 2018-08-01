@@ -3,6 +3,7 @@ package org.aion.wallet.account;
 import io.github.novacrypto.bip39.MnemonicGenerator;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
+
 import org.aion.gui.events.EventPublisher;
 import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.util.AionConstants;
@@ -449,8 +450,6 @@ public class AccountManagerTest {
         when(keystoreWrapper.list()).thenReturn(accountList);
         AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
                 walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
-
-        Runtime.getRuntime().exec("");
 
 //        addressToAccount.put("name", )
     }
