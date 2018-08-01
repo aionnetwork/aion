@@ -1,0 +1,88 @@
+#contentPane {
+    -fx-background-color: WHITE;
+    -fx-border-color:#40bded;
+    -fx-border-width: 1 0 1 0;
+}
+
+.scroll-pane > .viewport {
+   -fx-background-color: transparent;
+}
+
+.scroll-pane {
+   -fx-background-color: transparent;
+   -fx-fit-to-height: false;
+   -fx-fit-to-width: true;
+}
+
+.main-text {
+    -fx-text-fill: black;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 32px;
+    -fx-text-alignment: CENTER;
+}
+
+.input-fields {
+    -fx-background-color: #ececec;
+    -fx-background-radius: 0,0,0,0;
+    -fx-text-fill: black;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 16px;
+    -fx-prompt-text-fill: gray;
+}
+
+.button {
+    -fx-background-color: #40bded;
+    -fx-background-radius: 0,0,0,0;
+    -fx-text-fill: white;
+    -fx-font-family: 'Open Sans Bold';
+    -fx-font-size: 18px;
+}
+
+.button .disabled{
+    -fx-background-color: #ececec;
+}
+
+.accounts-list{
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.tile-label {
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 32px;
+}
+
+.line{
+    -fx-stroke: #40bded;
+}
+
+.header-text {
+    -fx-font-family: 'Open Sans Bold';
+    -fx-font-size: 18px;
+}
+
+.paragraph-text {
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 16px;
+}
+
+.balance-value {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0px;
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 16px;
+    -fx-display-caret: false;
+    -fx-border-color: #40bded;
+    -fx-border-width: 0 0 1 0;
+}
+
+.address-textarea {
+    -fx-control-inner-background: #ececec;
+    -fx-background-insets: 0px;
+    -fx-text-fill: BLACK;
+    -fx-display-caret: false;
+}

@@ -1,0 +1,29 @@
+.anchor-pane {
+    -fx-background-color: white;
+}
+
+#progressBarLabel {
+    -fx-text-fill: black;
+}
+
+.connected-label {
+    -fx-background-color: #12354b;
+    -fx-background-radius: 20 20 20 20;
+    -fx-padding: 5 15 5 15;
+    -fx-text-fill: #40bded;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 14px;
+    -fx-text-alignment: CENTER;
+}
+
+.footer-pane-text {
+    -fx-text-fill: black;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 14px;
+}
+
+.footer-pane-logo-text {
+    -fx-text-fill: gray;
+    -fx-font-family: 'Open Sans Regular';
+    -fx-font-size: 14px;
+}

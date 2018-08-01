@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,16 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.zero.impl;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 import org.aion.base.util.ExecutorPipeline;
-import org.aion.base.util.Functional;
-import org.aion.mcf.core.ImportResult;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -48,15 +45,17 @@ public class AionBlockLoader {
 
     private void blockWork(AionBlock block) {
         if (block.getNumber() >= blockchain.getBestBlock().getNumber()
-                || blockchain.getBlockByHash(block.getHash()) == null) {
+            || blockchain.getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
             }
 
             ImportResult result = blockchain.tryToConnect(block);
-            System.out.println(df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result
-                    + " (prework: " + exec1.getQueue().size() + ", work: " + exec2.getQueue().size() + ", blocks: "
+            System.out.println(
+                df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result
+                    + " (prework: " + exec1.getQueue().size() + ", work: " + exec2.getQueue().size()
+                    + ", blocks: "
                     + exec1.getOrderMap().size() + ")");
 
         } else {
@@ -71,30 +70,19 @@ public class AionBlockLoader {
     ExecutorPipeline<AionBlock, ?> exec2;
 
     public void loadBlocks() {
-        exec1 = new ExecutorPipeline<AionBlock, AionBlock>(8, 1000, true,
-                new Functional.Function<AionBlock, AionBlock>() {
-                    @Override
-                    public AionBlock apply(AionBlock b) {
-                        for (AionTransaction tx : b.getTransactionsList()) {
-                            tx.getFrom();
-                        }
-                        return b;
-                    }
-                }, new Functional.Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) {
-                        logger.error("Unhandled exception: ", throwable);
-                    }
-                });
-
-        exec2 = exec1.add(1, 1000, new Functional.Consumer<AionBlock>() {
-            @Override
-            public void accept(AionBlock block) {
-                try {
-                    blockWork(block);
-                } catch (Exception e) {
-                    e.printStackTrace();
+        exec1 = new ExecutorPipeline<>(8, 1000, true,
+            b -> {
+                for (AionTransaction tx : b.getTransactionsList()) {
+                    tx.getFrom();
                 }
+                return b;
+            }, throwable -> logger.error("Unhandled exception: ", throwable));
+
+        exec2 = exec1.add(1, 1000, block -> {
+            try {
+                blockWork(block);
+            } catch (Exception e) {
+                logger.error("Unhandled exception: ", e);
             }
         });
 
@@ -108,7 +96,6 @@ public class AionBlockLoader {
     }
 
     private boolean isValid(A0BlockHeader header) {
-
         return true;
     }
 }

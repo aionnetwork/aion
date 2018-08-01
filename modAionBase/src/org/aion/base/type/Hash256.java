@@ -127,7 +127,6 @@ public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, C
         try {
             return new Hash256(Arrays.copyOf(this.hash, BYTES));
         } catch (Exception e) {
-            e.printStackTrace();
             throw new CloneNotSupportedException(e.toString());
         }
     }

@@ -532,7 +532,6 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getNonce(_address);
     }
 
-
     protected byte[] sendTransaction(ArgTxCall _params) {
 
         Address from = _params.getFrom();
