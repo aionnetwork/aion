@@ -22,7 +22,6 @@
  */
 package org.aion.vm;
 
-import javax.annotation.Nonnull;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -66,8 +65,8 @@ public class TransactionExecutor extends AbstractExecutor {
      * @param tx    transaction to be executed
      * @param block a temporary block used to garner relevant environmental variables
      */
-    public TransactionExecutor(@Nonnull AionTransaction tx, @Nonnull IAionBlock block,
-        @Nonnull IRepository repo, boolean isLocalCall, long blockRemainingNrg, @Nonnull Logger logger) {
+    public TransactionExecutor(AionTransaction tx, IAionBlock block, IRepository repo,
+        boolean isLocalCall, long blockRemainingNrg, Logger logger) {
 
         super(repo, isLocalCall, blockRemainingNrg, logger);
 

@@ -22,7 +22,6 @@ package org.aion.vm;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import javax.annotation.Nonnull;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.DataWord;
 
@@ -78,10 +77,10 @@ public class ExecutionContext {
      * @throws IllegalArgumentException if any numeric quantities are negative or txHash is not
      * length 32.
      */
-    public ExecutionContext(byte[] txHash, @Nonnull Address recipient, @Nonnull Address origin,
-        @Nonnull Address caller, @Nonnull DataWord nrgPrice, long nrgLimit, @Nonnull DataWord callValue,
-        @Nonnull byte[] callData, int depth, int kind, int flags, @Nonnull Address blockCoinbase,
-        long blockNumber, long blockTimestamp, long blockNrgLimit, @Nonnull DataWord blockDifficulty) {
+    public ExecutionContext(byte[] txHash, Address recipient, Address origin, Address caller,
+        DataWord nrgPrice, long nrgLimit, DataWord callValue, byte[] callData, int depth, int kind,
+        int flags, Address blockCoinbase, long blockNumber, long blockTimestamp, long blockNrgLimit,
+        DataWord blockDifficulty) {
 
         super();
 
@@ -268,7 +267,7 @@ public class ExecutionContext {
      *
      * @param recipient The new recipient.
      */
-    public void setRecipient(@Nonnull Address recipient) {
+    public void setRecipient(Address recipient) {
         this.recipient = recipient;
     }
 
@@ -277,7 +276,7 @@ public class ExecutionContext {
      *
      * @param txHash The new transaction hash.
      */
-    public void setTransactionHash(@Nonnull byte[] txHash) { this.txHash = txHash; }
+    public void setTransactionHash(byte[] txHash) { this.txHash = txHash; }
 
     /**
      * Returns the length of the big-endian binary encoding of this ExecutionContext.

@@ -20,7 +20,6 @@
  ******************************************************************************/
 package org.aion.vm;
 
-import javax.annotation.Nonnull;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionInternalTx;
@@ -76,7 +75,7 @@ public class ExecutionHelper {
      *
      * @param address The address to add to the deleted accounts.
      */
-    public void addDeleteAccount(@Nonnull Address address) {
+    public void addDeleteAccount(Address address) {
         deleteAccounts.add(address);
     }
 
@@ -85,7 +84,7 @@ public class ExecutionHelper {
      *
      * @param addresses The addressed to add to the set of deleted accounts.
      */
-    public void addDeleteAccounts(@Nonnull Collection<Address> addresses) {
+    public void addDeleteAccounts(Collection<Address> addresses) {
         for (Address addr : addresses) {
             if (addr != null) { deleteAccounts.add(addr); }
         }
@@ -96,7 +95,7 @@ public class ExecutionHelper {
      *
      * @param log The log to add to the execution logs.
      */
-    public void addLog(@Nonnull Log log) {
+    public void addLog(Log log) {
         logs.add(log);
     }
 
@@ -105,7 +104,7 @@ public class ExecutionHelper {
      *
      * @param logs The collection of logs to add to the execution logs.
      */
-    public void addLogs(@Nonnull Collection<Log> logs) {
+    public void addLogs(Collection<Log> logs) {
         for (Log log : logs) {
             if (log != null) { this.logs.add(log); }
         }
@@ -127,14 +126,14 @@ public class ExecutionHelper {
      *
      * @param tx The internal transaction to add.
      */
-    public void addInternalTransaction(@Nonnull AionInternalTx tx) { internalTxs.add(tx); }
+    public void addInternalTransaction(AionInternalTx tx) { internalTxs.add(tx); }
 
     /**
      * Adds a collection of internal transactions, txs, to the internal transactions list.
      *
      * @param txs The collection of internal transactions to add.
      */
-    public void addInternalTransactions(@Nonnull Collection<AionInternalTx> txs) {
+    public void addInternalTransactions(Collection<AionInternalTx> txs) {
         for (AionInternalTx tx : txs) {
             if (tx != null) { this.internalTxs.add(tx); }
         }
@@ -155,7 +154,7 @@ public class ExecutionHelper {
      * @param other another transaction result
      * @param success whether the other transaction is success or not
      */
-    public void merge(@Nonnull ExecutionHelper other, boolean success) {
+    public void merge(ExecutionHelper other, boolean success) {
         addInternalTransactions(other.getInternalTransactions());
         if (success) {
             addDeleteAccounts(other.getDeleteAccounts());
