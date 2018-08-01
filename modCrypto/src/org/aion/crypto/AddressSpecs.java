@@ -33,6 +33,7 @@ public class AddressSpecs {
         assert address.length() == 64;
 
         byte[] h = HashUtil.h256(ByteUtil.hexStringToBytes(address));
+        System.out.println(ByteUtil.toHexString(h));
         BitSet b = BitSet.valueOf(h);
         char[] caddr = address.toCharArray();
         for (int i = 0; i < 64; i++) {
