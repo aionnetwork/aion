@@ -31,8 +31,10 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -369,6 +371,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
     }
 
+    @Override
     public synchronized ImportResult tryToConnect(final AionBlock block) {
         ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
 
@@ -378,5 +381,78 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             assert (getCacheTD().equals(tdForHash));
         }
         return result;
+    }
+
+    /**
+     * @apiNote users should beware that this will cause a disconnect
+     * in the blockchain, one should not expect to use any block that
+     * is below {@code blockNumber}
+     *
+     * @apiNote as a consequence of the creation behaviour do not attempt
+     * to conduct VM bytecode that queries the history of the chain.
+     *
+     * This should <i>always</i> be used first, do not attempt to use
+     * this function after a blockchain has already been altered in
+     * some state.
+     *
+     * @implNote creates a new block that does not reference any parent
+     * and adds it into the blockchain (note that this will cause a
+     * disconnect in the blockchain)
+     *
+     * @param blockNumber to be set in the blockchain
+     */
+    public synchronized void setBlockNumber(long blockNumber) {
+        // cannot replace genesis
+        assert blockNumber > 0;
+        assert blockNumber > this.getBestBlock().getNumber();
+
+        // enforce that we have just created the blockchain, and have not
+        // altered it in any drastic fashion
+        assert this.getBestBlock() == this.genesis;
+
+        try {
+            // we also need a grandparent block to calculate difficulty
+            AionBlock grandParentBlock = null;
+            if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
+                // create a grandparent block if none exists
+                A0BlockHeader header = new A0BlockHeader.Builder()
+                        .withStateRoot(this.getBestBlock().getStateRoot())
+                        .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                        .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                        .withNumber((int) blockNumber - 1)
+                        .withEnergyLimit(this.genesis.getNrgLimit())
+                        .withDifficulty(this.genesis.getDifficulty())
+                        .withTimestamp(0)
+                        .build();
+
+                AionBlock block = new AionBlock(header, Collections.emptyList());
+                this.setBestBlock(block);
+                this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
+                grandParentBlock = block;
+            } else {
+                // grab the grandparent block from the database if it exists
+                grandParentBlock = this.getBlockStore()
+                        .getBlocksByNumber((int) blockNumber - 1).get(0).getKey();
+            }
+
+            A0BlockHeader bestHeader = this.getBestBlock().getHeader();
+            A0BlockHeader header = new A0BlockHeader.Builder()
+                    .withParentHash(grandParentBlock.getHash())
+                    .withStateRoot(this.getBestBlock().getStateRoot())
+                    .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                    .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                    .withDifficulty(this.getBestBlock().getDifficulty())
+                    .withEnergyLimit(this.getBestBlock().getNrgLimit())
+                    .withTimestamp(1)
+                    .withNumber(blockNumber)
+                    .build();
+            AionBlock block = new AionBlock(header, Collections.emptyList());
+            this.setBestBlock(block);
+            this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
+        } catch (Exception e) {
+            // any exception here should kill the tests
+            // rethrow as runtime
+            throw new RuntimeException(e);
+        }
     }
 }

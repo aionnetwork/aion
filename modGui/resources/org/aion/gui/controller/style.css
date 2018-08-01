@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'Open Sans Regular';
+    src: url('fonts/OpenSans-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'Open Sans Bold';
+    src: url('fonts/OpenSans-Bold.ttf');
+}
+
+@font-face {``
+    font-family: 'Open Sans Extra Bold Italic';
+    src: url('fonts/OpenSans-ExtraBoldItalic.ttf');
+}
+
+@font-face {
+    font-family: 'Open Sans Light';
+    src: url('fonts/OpenSans-Light.ttf');
+}
+
+.main-stage {
+    -fx-background-color: WHITE;
+    -fx-border-color: #ececec;
+    -fx-border-width: 1 1 1 1;
+}
+
+.label {
+    -fx-text-fill: BLACK;
+    -fx-text-alignment: CENTER;
+}
+
+.copyable-label, .copyable-label:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0px;
+    -fx-text-fill: BLACK;
+    -fx-display-caret: false;
+}

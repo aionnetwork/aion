@@ -73,6 +73,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         if (nrgLimit < ENERGY_CONSUME)
             return THROW;
 
+        if(input.length == 0){
+            return success();
+        }
         // as a preset, try to initialize before execution
         this.controller.initialize();
 
@@ -115,23 +118,23 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             case SIG_RING_ADD_MEMBER: {
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
-                    return THROW;
+                    return fail();
 
                 ErrCode code = this.controller.ringAddMember(this.context.getCaller().toBytes(), address);
                 if (code != ErrCode.NO_ERROR)
-                    return THROW;
-                break;
+                    return fail();
+                return success();
             }
             case SIG_RING_REMOVE_MEMBER: {
                 byte[] address = parseAddressFromCall(input);
 
                 if (address == null)
-                    return THROW;
+                    return fail();
 
                 ErrCode code = this.controller.ringRemoveMember(this.context.getCaller().toBytes(), address);
                 if (code != ErrCode.NO_ERROR)
-                    return THROW;
-                break;
+                    return fail();
+                return success();
             }
             case SIG_SET_RELAYER:
                 byte[] address = parseAddressFromCall(input);
@@ -170,10 +173,10 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             case PURE_MEMBER_COUNT:
                 return success(intToResultBytes(this.connector.getMemberCount()));
             case PURE_RING_MAP: {
-                address = parseAddressFromCall(input);
-                if (address == null)
+                byte[] address2 = parseAddressFromCall(input);
+                if (address2 == null)
                     return fail();
-                return success(booleanToResultBytes(this.connector.getActiveMember(address)));
+                return success(booleanToResultBytes(this.connector.getActiveMember(address2)));
             }
             case PURE_ACTION_MAP:
                 byte[] bundleHash = parseDwordFromCall(input);
@@ -183,7 +186,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             default:
                 return fail();
         }
-        throw new RuntimeException("should never reach here");
+        // throw new RuntimeException("should never reach here");
     }
 
     private static ExecutionResult THROW =

@@ -1,0 +1,31 @@
+.account-item {
+    -fx-background-color: WHITE;
+}
+
+.clickable:hover {
+    -fx-cursor: hand;
+}
+
+.add-account-buttons {
+    -fx-background-color: #40bded;
+    -fx-background-radius: 0,0,0,0;
+    -fx-text-fill: white;
+    -fx-font-family: 'Open Sans Bold';
+    -fx-font-size: 18px;
+}
+
+.name-input-fields {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0px;
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: gray;
+    -fx-padding: 5 0 5 10;
+}
+
+.name-input-fields-selected {
+    -fx-background-color: #ececec;
+    -fx-background-insets: 0px;
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: gray;
+    -fx-padding: 5 0 5 10;
+}
