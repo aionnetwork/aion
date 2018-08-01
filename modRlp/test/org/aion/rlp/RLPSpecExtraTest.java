@@ -376,6 +376,8 @@ public class RLPSpecExtraTest {
 
         byte[] inputAsBytes = new Value(input).getData();
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
+
+        assertThat(RLP.encodeListHeader(input.length)).isEqualTo(Hex.decode("c1"));
     }
 
     @Test
@@ -403,6 +405,8 @@ public class RLPSpecExtraTest {
 
         byte[] inputAsBytes = new Value(input).getData();
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
+
+        assertThat(RLP.encodeListHeader(input.length)).isEqualTo(Hex.decode("c3"));
     }
 
     @Test(expected = RuntimeException.class)
@@ -883,5 +887,28 @@ public class RLPSpecExtraTest {
     @Test(expected = RuntimeException.class)
     public void testDecode_wException() {
         RLP.decode(new byte[] {-1}, 0);
+    }
+
+    @Test
+    public void testDecodeWithDifferentPosition() {
+        byte[] input = Hex.decode("c7c6827a77c10401");
+
+        assertThat(RLP.decode(input, 0).getDecoded() instanceof Object[]).isTrue();
+        assertThat(RLP.decode(input, 0).toString()).isEqualTo("7a770401");
+
+        assertThat(RLP.decode(input, 1).getDecoded() instanceof Object[]).isTrue();
+        assertThat(RLP.decode(input, 1).toString()).isEqualTo("7a770401");
+
+        assertThat(RLP.decode(input, 2).getDecoded() instanceof byte[]).isTrue();
+        assertThat(RLP.decode(input, 2).toString()).isEqualTo("7a77");
+
+        assertThat(RLP.decode(input, 5).getDecoded() instanceof Object[]).isTrue();
+        assertThat(RLP.decode(input, 5).toString()).isEqualTo("04");
+
+        assertThat(RLP.decode(input, 6).getDecoded() instanceof byte[]).isTrue();
+        assertThat(RLP.decode(input, 6).toString()).isEqualTo("04");
+
+        assertThat(RLP.decode(input, 7).getDecoded() instanceof byte[]).isTrue();
+        assertThat(RLP.decode(input, 7).toString()).isEqualTo("01");
     }
 }
