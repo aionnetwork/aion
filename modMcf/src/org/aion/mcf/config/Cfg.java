@@ -57,6 +57,8 @@ public abstract class Cfg {
 
     protected CfgReports reports;
 
+    protected CfgGui gui;
+
     public void setId(final String _id){
         this.id = _id;
     }
@@ -115,6 +117,10 @@ public abstract class Cfg {
 
     public CfgReports getReports() {
         return this.reports;
+    }
+
+    public CfgGui getGui() {
+        return this.gui;
     }
 
     public String[] getNodes() {

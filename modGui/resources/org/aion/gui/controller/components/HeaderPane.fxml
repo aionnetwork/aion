@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import java.net.URL?>
+<AnchorPane styleClass="default" xmlns="http://javafx.com/javafx/8.0.162"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.aion.gui.controller.HeaderPaneControls"
+            fx:id="parent"
+            AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="10.0" AnchorPane.leftAnchor="0.0" prefHeight="125">
+
+    <stylesheets>
+        <URL value="@header.css" />
+    </stylesheets>
+
+    <HBox alignment="CENTER" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+        <HBox onMouseClicked="#openAionWebSite">
+            <ImageView id="logo" pickOnBounds="true" preserveRatio="true" fitHeight="95">
+                <Image url="@icons/aion_logo.png"/>
+            </ImageView>
+        </HBox>
+        <VBox alignment="BOTTOM_CENTER" spacing="25">
+            <AnchorPane>
+                <VBox alignment="CENTER_LEFT" AnchorPane.topAnchor="25" AnchorPane.leftAnchor="0">
+                    <Label fx:id="activeAccountLabel" text="Account" styleClass="header-account-label" visible="false"/>
+                    <TextField fx:id="activeAccount" styleClass="header-account-info" editable="false"/>
+                </VBox>
+                <VBox alignment="CENTER_RIGHT" AnchorPane.topAnchor="30" AnchorPane.rightAnchor="10">
+                    <TextField fx:id="accountBalance" styleClass="balance-value" editable="false" visible="false"/>
+                </VBox>
+            </AnchorPane>
+            <HBox alignment="BOTTOM_CENTER">
+                <VBox fx:id="homeButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/HomeButton.fxml"/>
+                </VBox>
+
+                <!--
+                <VBox fx:id="sendButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/SendButton.fxml"/>
+                </VBox>
+                <VBox fx:id="receiveButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/ReceiveButton.fxml"/>
+                </VBox>
+                <VBox fx:id="historyButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/HistoryButton.fxml"/>
+                </VBox> -->
+
+                <!--<VBox alignment="BOTTOM_CENTER" fx:id="contractsButton" onMouseClicked="#handleButtonPressed">-->
+                    <!--<fx:include source="buttons/ContractsButton.fxml"/>-->
+                <!--</VBox>-->
+                <VBox fx:id="settingsButton" prefWidth="150.0" onMouseClicked="#handleButtonPressed">
+                    <fx:include source="buttons/SettingsButton.fxml"/>
+                </VBox>
+            </HBox>
+        </VBox>
+
+    </HBox>
+
+
+    <fx:include source="partials/WindowControls.fxml"/>
+</AnchorPane>

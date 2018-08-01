@@ -1,4 +1,3 @@
-# setup paths
 PACK_PATH="pack"
 JDK_PATH="${PACK_PATH}/jdk"
 JDK_RT="${PACK_PATH}/rt"
@@ -51,5 +50,3 @@ if [ ! -d "$API_PATH" ]; then
   mkdir $API_PATH
   cp aion_api/pack/libAionApi-*.tar.gz $API_PATH
 fi
-
-

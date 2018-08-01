@@ -28,7 +28,7 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.crypto.HashUtil;
-import org.aion.vm.PrecompiledContracts;
+import org.aion.precompiled.ContractFactory;
 import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
@@ -49,7 +49,7 @@ public class AionGenesis extends AionBlock {
      * more configuration position, this indicates the address at which the
      * storage rows are to be stored
      */
-    protected static final Address NETWORK_BALANCE_ADDRESS = PrecompiledContracts.totalCurrencyAddress;
+    protected static final Address NETWORK_BALANCE_ADDRESS = ContractFactory.getTotalCurrencyContractAddress();
 
     /**
      * Aion Genesis Constants
