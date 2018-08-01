@@ -23,6 +23,7 @@
 package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.base.util.ByteUtil.byteArrayToInt;
 import static org.aion.rlp.RLPSpecTest.assertDecodeBigInteger;
 import static org.aion.rlp.RLPSpecTest.assertDecodeInt;
@@ -34,6 +35,7 @@ import static org.aion.rlp.RLPSpecTest.assertEncodeShort;
 import static org.aion.rlp.Utils.asUnsignedByteArray;
 
 import java.math.BigInteger;
+import java.util.List;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.junit.Test;
@@ -56,9 +58,7 @@ public class RLPSpecExtraTest {
         assertEncodeShort(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("82"));
@@ -72,9 +72,7 @@ public class RLPSpecExtraTest {
         assertEncodeShort(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(0);
     }
 
@@ -86,9 +84,7 @@ public class RLPSpecExtraTest {
         assertEncodeShort(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("82"));
@@ -102,9 +98,7 @@ public class RLPSpecExtraTest {
         assertEncodeShort(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("82"));
@@ -118,9 +112,7 @@ public class RLPSpecExtraTest {
         assertEncodeInt(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("82"));
@@ -134,9 +126,7 @@ public class RLPSpecExtraTest {
         assertEncodeInt(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("84"));
@@ -150,9 +140,7 @@ public class RLPSpecExtraTest {
         assertEncodeLong(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("84"));
@@ -166,9 +154,7 @@ public class RLPSpecExtraTest {
         assertEncodeLong(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("84"));
@@ -194,9 +180,7 @@ public class RLPSpecExtraTest {
         assertThat(actual).isEqualTo(expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("85"));
@@ -222,9 +206,7 @@ public class RLPSpecExtraTest {
         assertThat(actual).isEqualTo(expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("85"));
@@ -250,9 +232,7 @@ public class RLPSpecExtraTest {
         assertThat(actual).isEqualTo(expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("87"));
@@ -266,9 +246,7 @@ public class RLPSpecExtraTest {
         assertEncodeLong(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("88"));
@@ -282,9 +260,7 @@ public class RLPSpecExtraTest {
         assertEncodeLong(input, expected);
 
         byte[] inputAsBytes =
-                input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(BigInteger.valueOf(input));
+                input == 0 ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("88"));
@@ -298,9 +274,7 @@ public class RLPSpecExtraTest {
         assertEncodeBigInteger(input, expected);
 
         byte[] inputAsBytes =
-                input.equals(BigInteger.ZERO)
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(input);
+                input.equals(BigInteger.ZERO) ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(input);
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("88"));
@@ -319,9 +293,7 @@ public class RLPSpecExtraTest {
         assertEncodeBigInteger(input, expected);
 
         byte[] inputAsBytes =
-                input.equals(BigInteger.ZERO)
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(input);
+                input.equals(BigInteger.ZERO) ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(input);
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(2);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("b840"));
@@ -340,9 +312,7 @@ public class RLPSpecExtraTest {
         assertEncodeBigInteger(input, expected);
 
         byte[] inputAsBytes =
-                input.equals(BigInteger.ZERO)
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : asUnsignedByteArray(input);
+                input.equals(BigInteger.ZERO) ? EMPTY_BYTE_ARRAY : asUnsignedByteArray(input);
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(2);
 
         assertThat(RLP.encodeLongElementHeader(inputAsBytes.length)).isEqualTo(Hex.decode("b840"));
@@ -395,8 +365,14 @@ public class RLPSpecExtraTest {
         assertThat(RLP.encodeList(RLP.encode((byte) 1))).isEqualTo(expected);
 
         // as value
-        actual = RLP.encode(new Value(input));
+        Value val = new Value(input);
+        assertThat(val.asString()).isEqualTo("");
+        assertThat(val.asBytes()).isEqualTo(EMPTY_BYTE_ARRAY);
+        actual = RLP.encode(val);
         assertThat(actual).isEqualTo(expected);
+        assertThat(val.get(0).asObj()).isNotNull();
+        assertThat(val.get(0).asBigInt()).isEqualTo(BigInteger.ONE);
+        assertThat(val.get(1).asObj()).isNull();
 
         byte[] inputAsBytes = new Value(input).getData();
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
@@ -414,8 +390,16 @@ public class RLPSpecExtraTest {
                 .isEqualTo(expected);
 
         // as value
-        actual = RLP.encode(new Value(input));
+        Value val = new Value(input);
+        assertThat(val.asString()).isEqualTo("");
+        assertThat(val.asBytes()).isEqualTo(EMPTY_BYTE_ARRAY);
+        actual = RLP.encode(val);
         assertThat(actual).isEqualTo(expected);
+        for (int i = 0; i < 3; i++) {
+            assertThat(val.get(i).asObj()).isNotNull();
+            assertThat(val.get(i).asBigInt()).isEqualTo(BigInteger.valueOf(i + 1));
+        }
+        assertThat(val.get(3).asObj()).isNull();
 
         byte[] inputAsBytes = new Value(input).getData();
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
@@ -441,6 +425,14 @@ public class RLPSpecExtraTest {
         short expected = 32767;
 
         assertDecodeInt(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asInt()).isEqualTo(expected);
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -449,6 +441,14 @@ public class RLPSpecExtraTest {
         short expected = 120;
 
         assertDecodeInt(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asInt()).isEqualTo(expected);
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -457,6 +457,14 @@ public class RLPSpecExtraTest {
         short expected = 30303;
 
         assertDecodeInt(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asInt()).isEqualTo(expected);
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -465,6 +473,14 @@ public class RLPSpecExtraTest {
         short expected = 20202;
 
         assertDecodeInt(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asInt()).isEqualTo(expected);
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -473,6 +489,14 @@ public class RLPSpecExtraTest {
         int expected = 32768;
 
         assertDecodeInt(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asInt()).isEqualTo(expected);
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -481,6 +505,14 @@ public class RLPSpecExtraTest {
         int expected = 2147483647;
 
         assertDecodeInt(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asInt()).isEqualTo(expected);
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -489,6 +521,13 @@ public class RLPSpecExtraTest {
         long expected = 2147483648L;
 
         assertDecodeLong(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -497,6 +536,13 @@ public class RLPSpecExtraTest {
         long expected = 4294967295L;
 
         assertDecodeLong(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -506,8 +552,22 @@ public class RLPSpecExtraTest {
 
         assertDecodeLong(input, expected);
 
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
+
         input = Hex.decode("880000000100000000");
         assertDecodeLong(input, expected);
+
+        // check Value
+        val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -517,9 +577,22 @@ public class RLPSpecExtraTest {
 
         assertDecodeLong(input, expected);
 
-        input = Hex.decode("880000000100007ffc");
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
 
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
+
+        input = Hex.decode("880000000100007ffc");
         assertDecodeLong(input, expected);
+
+        // check Value
+        val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -529,9 +602,22 @@ public class RLPSpecExtraTest {
 
         assertDecodeLong(input, expected);
 
-        input = Hex.decode("8800ffffffffffffff");
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
 
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
+
+        input = Hex.decode("8800ffffffffffffff");
         assertDecodeLong(input, expected);
+
+        // check Value
+        val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -540,6 +626,13 @@ public class RLPSpecExtraTest {
         long expected = 72057594037927936L;
 
         assertDecodeLong(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -548,6 +641,13 @@ public class RLPSpecExtraTest {
         long expected = 9223372036854775807L;
 
         assertDecodeLong(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asLong()).isEqualTo(expected);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.valueOf(expected));
     }
 
     @Test
@@ -556,6 +656,12 @@ public class RLPSpecExtraTest {
         BigInteger expected = new BigInteger("9223372036854775808", 10);
 
         assertDecodeBigInteger(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asBigInt()).isEqualTo(expected);
     }
 
     @Test
@@ -569,6 +675,12 @@ public class RLPSpecExtraTest {
                         10);
 
         assertDecodeBigInteger(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asBigInt()).isEqualTo(expected);
     }
 
     @Test
@@ -582,6 +694,12 @@ public class RLPSpecExtraTest {
                         10);
 
         assertDecodeBigInteger(input, expected);
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        assertThat(val.asBigInt()).isEqualTo(expected);
     }
 
     @Test
@@ -605,6 +723,15 @@ public class RLPSpecExtraTest {
 
         RLPElement elm = RLP.decode2OneItem(input, 0);
         assertThat(elm.getRLPData()).isEqualTo(new byte[] {1});
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+        assertThat(val.length()).isEqualTo(expected.length);
+
+        assertThat(val.asInt()).isEqualTo(1);
+        assertThat(val.asLong()).isEqualTo(1L);
+        assertThat(val.asBigInt()).isEqualTo(BigInteger.ONE);
     }
 
     @Test
@@ -634,6 +761,15 @@ public class RLPSpecExtraTest {
 
         elm = RLP.decode2OneItem(input, 3);
         assertThat(elm.getRLPData()).isEqualTo(new byte[] {3});
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+        assertThat(val.length()).isEqualTo(expected.length);
+
+        assertThat(val.asInt()).isEqualTo(new BigInteger(1, expected).intValue());
+        assertThat(val.asLong()).isEqualTo(new BigInteger(1, expected).longValue());
+        assertThat(val.asBigInt()).isEqualTo(new BigInteger(1, expected));
     }
 
     @Test
@@ -658,6 +794,15 @@ public class RLPSpecExtraTest {
 
         RLPElement elm = RLP.decode2OneItem(input, 1);
         assertThat(elm.getRLPData()).isEqualTo(new byte[] {1});
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        List<Object> valAsList = val.asList();
+        assertThat(valAsList.size()).isEqualTo(expected.length);
+        assertThat(val.length()).isEqualTo(expected.length);
+        assertThat(byteArrayToInt((byte[]) valAsList.get(0))).isEqualTo(expected[0]);
     }
 
     @Test
@@ -671,7 +816,9 @@ public class RLPSpecExtraTest {
 
         Object[] actual = (Object[]) result.getDecoded();
         assertThat(actual.length).isEqualTo(expected.length);
-        assertThat(byteArrayToInt((byte[]) actual[0])).isEqualTo(expected[0]);
+        for (int i = 0; i < expected.length; i++) {
+            assertThat(byteArrayToInt((byte[]) actual[i])).isEqualTo(expected[i]);
+        }
 
         RLPList list = RLP.decode2(input);
         assertThat(list).isNotNull();
@@ -689,6 +836,17 @@ public class RLPSpecExtraTest {
 
         elm = RLP.decode2OneItem(input, 3);
         assertThat(elm.getRLPData()).isEqualTo(new byte[] {3});
+
+        // check Value
+        Value val = Value.fromRlpEncoded(input);
+        assertThat(val.encode()).isEqualTo(input);
+
+        List<Object> valAsList = val.asList();
+        assertThat(valAsList.size()).isEqualTo(expected.length);
+        assertThat(val.length()).isEqualTo(expected.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertThat(byteArrayToInt((byte[]) valAsList.get(i))).isEqualTo(expected[i]);
+        }
     }
 
     @Test(expected = RuntimeException.class)
