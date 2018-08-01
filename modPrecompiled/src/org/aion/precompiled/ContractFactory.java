@@ -42,7 +42,7 @@ public class ContractFactory {
     private static final String TOKEN_BRIDGE = "0000000000000000000000000000000000000000000000000000000000000200";
     private static final String TOKEN_BRIDGE_INITIAL_OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
 
-    private ContractFactory(){}
+    public ContractFactory(){}
 
     /**
      * Returns a new pre-compiled contract such that the getRecipient of the new contract is getRecipient.
@@ -53,7 +53,8 @@ public class ContractFactory {
      * @return the specified pre-compiled getRecipient.
      */
     public static IPrecompiledContract getPrecompiledContract(ExecutionContext context,
-                                                              IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
+
         switch (context.getRecipient().toString()) {
             case TOTAL_CURRENCY:
                 return new TotalCurrencyContract(track, context.getCaller(), Address.wrap(OWNER));
@@ -63,6 +64,16 @@ public class ContractFactory {
                 return contract;
             default: return null;
         }
+    }
+
+    /**
+     * A non-static method that is functionally equivalent to calling the static method
+     * getPrecompiledContract. This method is here to make mocking of this class easier.
+     */
+    public IPrecompiledContract fetchPrecompiledContract(ExecutionContext context,
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
+
+        return getPrecompiledContract(context, track);
     }
 
     /**
