@@ -117,6 +117,7 @@ public class TaskConnectPeers implements Runnable {
                                 node.getIpStr());
                         }
 
+                        channel.configureBlocking(false);
                         SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
                         ChannelBuffer rb = new ChannelBuffer();
                         rb.setDisplayId(node.getIdShort());
@@ -150,24 +151,6 @@ public class TaskConnectPeers implements Runnable {
                         channel.close();
                         // node.peerMetric.incFailedCount();
                     }
-                } catch (IOException e) {
-                    if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("connect-outbound io-exception addr={}:{} reason={}",
-                            node.getIpStr(), _port, e.toString());
-                    }
-
-                    if (channel != null) {
-                        if (p2pLOG.isTraceEnabled()) {
-                            p2pLOG.trace("close channel {}", node.toString());
-                        }
-                        try {
-                            channel.close();
-                        } catch (IOException e1) {
-                            p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
-                        }
-                    }
-
-                    // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG
