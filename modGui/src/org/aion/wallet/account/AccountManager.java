@@ -273,9 +273,9 @@ public class AccountManager {
         if (!remembered) {
             keystoreWrapper.create(password, ecKey);
         }
-        if (Files.isDirectory(walletStorage.KEYSTORE_PATH)) {
+        if (Files.isDirectory(walletStorage.getKeystorePath())) {
             final String fileNameRegex = getExportedFileNameRegex(account.getPublicAddress());
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(walletStorage.KEYSTORE_PATH, fileNameRegex)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(walletStorage.getKeystorePath(), fileNameRegex)) {
                 for (Path keystoreFile : stream) {
                     final String fileName = keystoreFile.getFileName().toString();
                     if (remembered) {
@@ -291,10 +291,11 @@ public class AccountManager {
                     }
                 }
             } catch (IOException e) {
+                e.printStackTrace();
                 throw new ValidationException(e);
             }
         } else {
-            LOG.error("Could not find Keystore directory: " + walletStorage.KEYSTORE_PATH);
+            LOG.error("Could not find Keystore directory: " + walletStorage.getKeystorePath());
         }
 
     }

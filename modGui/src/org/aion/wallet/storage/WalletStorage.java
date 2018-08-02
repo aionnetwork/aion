@@ -1,6 +1,9 @@
 package org.aion.wallet.storage;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.aion.gui.model.ApiType;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.aion.wallet.dto.LightAppSettings;
 import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
@@ -19,11 +22,12 @@ import java.util.Optional;
 import java.util.Properties;
 
 public class WalletStorage {
-
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
-
-    public final Path KEYSTORE_PATH;
+    private final String storageDir;
+    private final Path keystorePath;
+    private final String accountsFile;
+    private final String walletFile;
+    private final Properties accountsProperties;
+    private final Properties lightAppProperties;
 
     private static final String BLANK = "";
     private static final String ACCOUNT_NAME_PROP = ".name";
@@ -32,52 +36,41 @@ public class WalletStorage {
     private static final String MNEMONIC_ENCRYPTION_ALGORITHM = "Blowfish";
     private static final String MNEMONIC_STRING_CONVERSION_CHARSET_NAME = "ISO-8859-1";
 
-//    private static final WalletStorage INST;
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
-    private final String storageDir;
-    private final String accountsFile;
-    private final String walletFile;
-
-    private final Properties accountsProperties;
-    private final Properties lightAppProperties;
-
+    /** Constructor with default storage locations */
     public WalletStorage() throws IOException {
-        String storageDir = System.getProperty("local.storage.dir");
-        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
-            storageDir = System.getProperty("user.home") + File.separator + ".aion";
-        }
+        this(getDefaultStorageDir(), getDefaultKeystorePath());
+    }
+
+    public WalletStorage(String storageDir,
+                         Path keystorePath) throws IOException {
+        this(storageDir,
+                keystorePath,
+                getDefaultAccountsFile(storageDir),
+                getDefaultWalletFile(storageDir));
+    }
+
+    @VisibleForTesting
+    WalletStorage(
+            String storageDir,
+            Path keystorePath,
+            String accountsFile,
+            String walletFile) throws IOException {
         this.storageDir = storageDir;
-
-        KEYSTORE_PATH = Paths.get(this.storageDir + File.separator + "keystore");
-        System.out.println("WalletStorage.KEYSTORE_PATH = " + KEYSTORE_PATH);
-
-        accountsFile = this.storageDir + File.separator + "accounts.properties";
-
-        walletFile = this.storageDir + File.separator + "wallet.properties";
+        this.keystorePath = keystorePath;
+        this.accountsFile = accountsFile;
+        this.walletFile = walletFile;
 
         final Path dir = Paths.get(this.storageDir);
         ensureExistence(dir, true);
-        accountsProperties = getPropertiesFomFIle(accountsFile);
-        lightAppProperties = getPropertiesFomFIle(walletFile);
+        ensureExistence(keystorePath, true);
+        this.accountsProperties = getPropertiesFomFIle(getDefaultAccountsFile(storageDir));
+        this.lightAppProperties = getPropertiesFomFIle(getDefaultWalletFile(storageDir));
     }
 
-    private Properties getPropertiesFomFIle(final String fullPath) throws IOException {
-        final Path filePath = Paths.get(fullPath);
-        ensureExistence(filePath, false);
-        final InputStream reader = Files.newInputStream(filePath);
-        Properties properties = new Properties();
-        properties.load(reader);
-        return properties;
-    }
-
-    private void ensureExistence(final Path path, final boolean isDir) throws IOException {
-        if (!Files.exists(path)) {
-            if (isDir) {
-                Files.createDirectory(path);
-            } else {
-                Files.createFile(path);
-            }
-        }
+    public Path getKeystorePath() {
+        return keystorePath;
     }
 
     public void save() {
@@ -178,5 +171,44 @@ public class WalletStorage {
         cipher.init(Cipher.DECRYPT_MODE, skeyspec);
         byte[] decrypted = cipher.doFinal(encryptedMnemonic.getBytes(MNEMONIC_STRING_CONVERSION_CHARSET_NAME));
         return new String(decrypted);
+    }
+
+    private static String getDefaultStorageDir() {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.home") + File.separator + ".aion";
+        }
+        return storageDir;
+    }
+
+    private static Path getDefaultKeystorePath() {
+        return Paths.get(getDefaultStorageDir() + File.separator + "keystore");
+    }
+
+    private static String getDefaultAccountsFile(String storageDir) {
+        return storageDir + File.separator + "accounts.properties";
+    }
+
+    private static String getDefaultWalletFile(String storageDir) {
+        return storageDir + File.separator + "wallet.properties";
+    }
+
+    private static Properties getPropertiesFomFIle(final String fullPath) throws IOException {
+        final Path filePath = Paths.get(fullPath);
+        ensureExistence(filePath, false);
+        final InputStream reader = Files.newInputStream(filePath);
+        Properties properties = new Properties();
+        properties.load(reader);
+        return properties;
+    }
+
+    private static void ensureExistence(final Path path, final boolean isDir) throws IOException {
+        if (!Files.exists(path)) {
+            if (isDir) {
+                Files.createDirectory(path);
+            } else {
+                Files.createFile(path);
+            }
+        }
     }
 }
