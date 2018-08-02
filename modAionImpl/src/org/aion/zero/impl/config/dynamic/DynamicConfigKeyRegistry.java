@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -34,19 +35,19 @@ import java.util.function.Function;
  */
 public class DynamicConfigKeyRegistry {
     private final
-    Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> key2GetterApplier; // config_key -> (getter,applier)
+    Map<String, Pair<Function<Cfg,?>, Optional<IDynamicConfigApplier>>> key2GetterApplier; // config_key -> (getter,applier)
 
     public DynamicConfigKeyRegistry() {
         this(DEFAULT_GETTERS_APPLIERS);
     }
 
     @VisibleForTesting
-    DynamicConfigKeyRegistry(Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> key2GetterApplier) {
+    DynamicConfigKeyRegistry(Map<String, Pair<Function<Cfg,?>, Optional<IDynamicConfigApplier>>> key2GetterApplier) {
         this.key2GetterApplier = key2GetterApplier; // note: not a deep copy
     }
 
     public void bind(String key, Function<Cfg,?> getter, IDynamicConfigApplier applier) {
-        key2GetterApplier.put(key, new ImmutablePair<>(getter, applier));
+        key2GetterApplier.put(key, new ImmutablePair<>(getter, Optional.of(applier)));
     }
 
     public Set<String> getBoundKeys() {
@@ -57,44 +58,24 @@ public class DynamicConfigKeyRegistry {
         return key2GetterApplier.get(key).getLeft();
     }
 
-    public IDynamicConfigApplier getApplier(String key) {
+    public Optional<IDynamicConfigApplier> getApplier(String key) {
         return key2GetterApplier.get(key).getRight();
     }
 
-    private static Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>>
+    private static Map<String, Pair<Function<Cfg,?>, Optional<IDynamicConfigApplier>>>
     DEFAULT_GETTERS_APPLIERS = new HashMap<>() {{
-        put("aion.consensus", ImmutablePair.of(cfg -> cfg.getConsensus(), NotImplementedThrower.INST));
+        put("aion.consensus", ImmutablePair.of(cfg -> cfg.getConsensus(), Optional.empty()));
         // When MiningApplier changes reviewed, delete above line and uncomment below line.
 //        put("aion.consensus.mining", ImmutablePair.of(
 //                cfg -> ((CfgConsensusPow)cfg.getConsensus()).getMining(),
 //                new MiningApplier()));
 
         // Below are sections where no config keys within are dynamically changeable
-        put("aion.api", ImmutablePair.of(cfg -> cfg.getApi(), NotImplementedThrower.INST));
-        put("aion.net.id", ImmutablePair.of(cfg -> cfg.getNet().getId(), NotImplementedThrower.INST));
-        put("aion.net.p2p", ImmutablePair.of(cfg -> cfg.getNet().getP2p(), NotImplementedThrower.INST));
-        put("aion.sync", ImmutablePair.of(cfg -> cfg.getSync(), NotImplementedThrower.INST));
-        put("aion.log", ImmutablePair.of(cfg -> cfg.getLog(), NotImplementedThrower.INST));
-        put("aion.db", ImmutablePair.of(cfg -> cfg.getDb(), NotImplementedThrower.INST));
+        put("aion.api", ImmutablePair.of(cfg -> cfg.getApi(), Optional.empty()));
+        put("aion.net.id", ImmutablePair.of(cfg -> cfg.getNet().getId(), Optional.empty()));
+        put("aion.net.p2p", ImmutablePair.of(cfg -> cfg.getNet().getP2p(), Optional.empty()));
+        put("aion.sync", ImmutablePair.of(cfg -> cfg.getSync(), Optional.empty()));
+        put("aion.log", ImmutablePair.of(cfg -> cfg.getLog(), Optional.empty()));
+        put("aion.db", ImmutablePair.of(cfg -> cfg.getDb(), Optional.empty()));
     }};
-
-    /**
-     * An applyer that just throws an exception.  Used for sections of the config that don't have
-     * implementation for dynamic config changes yet.
-     */
-    private static class NotImplementedThrower implements IDynamicConfigApplier {
-        public static final NotImplementedThrower INST = new NotImplementedThrower();
-
-        @Override
-        public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
-            throw new InFlightConfigChangeNotAllowedException(
-                    "In-flight change for this config key has not been implemented.");
-        }
-
-        @Override
-        public InFlightConfigChangeResult undo(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
-            throw new InFlightConfigChangeNotAllowedException(
-                    "In-flight change for this config key has not been implemented.");
-        }
-    }
 }
