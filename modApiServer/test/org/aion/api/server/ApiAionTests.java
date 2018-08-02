@@ -1,27 +1,30 @@
 package org.aion.api.server;
 
 import org.aion.api.server.types.SyncInfo;
+import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
+import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
-import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.AionImpl;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionBlockStore;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ApiAionTests {
 
@@ -138,12 +141,18 @@ public class ApiAionTests {
         AionBlock blk = impl.getBlockchain().getBestBlock();
 
         assertEquals(blk, api.getBestBlock());
+
+        assertEquals(blk, api.getBlock(-1));
+
         assertEquals(blk.toString(), api.getBlockByHash(blk.getHash()).toString());
         assertEquals(blk.toString(), api.getBlock(blk.getNumber()).toString());
 
         Map.Entry rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
         assertEquals(rslt.getKey().toString(), blk.toString());
-        assertEquals(rslt.getValue(), blk.getDifficultyBI());
+        if (!blk.isGenesis())
+            assertEquals(rslt.getValue(),
+                    ((AionBlockStore)impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
+        assertEquals(api.getBlockWithTotalDifficulty(0).getValue(), CfgAion.inst().getGenesis().getDifficultyBI());
     }
 
 
@@ -161,5 +170,44 @@ public class ApiAionTests {
             assertEquals(sync.networkBestBlkNumber, (long) impl.getNetworkBestBlockNumber().get());
         if (impl.getInitialStartingBlockNumber().isPresent())
             assertEquals(sync.chainBestBlkNumber, (long) impl.getLocalBestBlockNumber().get());
+    }
+
+    @Test
+    public void TestGetTransactions() {
+        System.out.println("run TestGetTransactions.");
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+        String msg = "test message";
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+                    msg.getBytes(),100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
+                Collections.singletonList(tx), false);
+
+        assertNotNull(blk);
+        assertNotEquals(blk.getTransactionsList().size(), 0);
+
+        impl.getAionHub().getBlockchain().add(blk);
+
+        assertTrue(blk.isEqual(api.getBlockByHash(blk.getHash())));
+        assertEquals(tx, api.getTransactionByBlockHashAndIndex(blk.getHash(), 0));
+        assertEquals(tx, api.getTransactionByBlockNumberAndIndex(blk.getNumber(), 0));
+        assertEquals(1, api.getBlockTransactionCountByNumber(blk.getNumber()));
+        assertEquals(1, api.getTransactionCountByHash(blk.getHash()));
+
+        blk = api.getBlockByHash(blk.getHash());
+
+        assertEquals(1, api.getTransactionCount(
+                blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
+        assertEquals(0, api.getTransactionCount(Address.EMPTY_ADDRESS(), blk.getNumber()));
+
+        assertEquals(tx, api.getTransactionByHash(tx.getHash()));
+
+
     }
 }
