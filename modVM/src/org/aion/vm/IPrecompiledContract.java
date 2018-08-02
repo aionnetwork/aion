@@ -30,7 +30,7 @@ public interface IPrecompiledContract {
 
     /**
      * Returns the result of executing the pre-compiled contract. The contract will be executed
-     * using the input arguments input and the energy limit getNrgLimit.
+     * using the input arguments input and the energy limit nrgLimit.
      *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.

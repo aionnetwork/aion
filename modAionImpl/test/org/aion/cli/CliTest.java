@@ -106,7 +106,7 @@ public class CliTest {
     @Test
     public void testImportPrivateKey2() {
         ECKey key = ECKeyFac.inst().create();
-        System.out.println("Original getRecipient    : " + Hex.toHexString(key.getAddress()));
+        System.out.println("Original address    : " + Hex.toHexString(key.getAddress()));
         System.out.println("Original public key : " + Hex.toHexString(key.getPubKey()));
         System.out.println("Original private key: " + Hex.toHexString(key.getPrivKeyBytes()));
 
@@ -114,7 +114,7 @@ public class CliTest {
         assertEquals(0, cli.call(args, CfgAion.inst()));
 
         ECKey key2 = Keystore.getKey(Hex.toHexString(key.getAddress()), "password");
-        System.out.println("Imported getRecipient    : " + Hex.toHexString(key2.getAddress()));
+        System.out.println("Imported address    : " + Hex.toHexString(key2.getAddress()));
         System.out.println("Imported public key : " + Hex.toHexString(key2.getPubKey()));
         System.out.println("Imported private key: " + Hex.toHexString(key2.getPrivKeyBytes()));
     }

@@ -140,7 +140,7 @@ public class TRSuseContractTest extends TRShelpers {
 
     @Test
     public void testDepositToNonExistentContract() {
-        // Test on contract getRecipient actually an account getRecipient.
+        // Test on contract address actually an account address.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         byte[] input = getDepositInput(acct, BigInteger.TWO);
@@ -148,7 +148,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test on contract getRecipient looks like a legit TRS getRecipient (proper prefix).
+        // Test on contract address looks like a legit TRS address (proper prefix).
         byte[] addr = new byte[Address.ADDRESS_LEN];
         System.arraycopy(acct.toBytes(), 0, addr, 0, Address.ADDRESS_LEN);
         addr[0] = (byte) 0xC0;
@@ -1800,7 +1800,7 @@ public class TRSuseContractTest extends TRShelpers {
 
     @Test
     public void testRefundBadTRScontract() {
-        // Test TRS getRecipient that looks like regular account getRecipient.
+        // Test TRS address that looks like regular account address.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         Address contract = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getRefundInput(contract, acct, BigInteger.ZERO);
@@ -1808,7 +1808,7 @@ public class TRSuseContractTest extends TRShelpers {
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
-        // Test TRS getRecipient with TRS prefix, so it looks legit.
+        // Test TRS address with TRS prefix, so it looks legit.
         byte[] addr = ECKeyFac.inst().create().getAddress();
         addr[0] = (byte) 0xC0;
         contract = new Address(addr);

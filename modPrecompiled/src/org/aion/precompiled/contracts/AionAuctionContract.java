@@ -103,7 +103,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * Constructs a Aion Auction Contract object, ready to execute.
      *
      * @param track The repository
-     * @param address The callerAddress of the calling account, use AION getRecipient for testing
+     * @param address The callerAddress of the calling account, use AION address for testing
      */
     public AionAuctionContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, IBlockchain blockchain) {
         super(track);
@@ -135,7 +135,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * [1b domainNameLength] length of the byte array containing the domain name
      * [mb domainName] the domain to time extend, m > 0
      * [32b callerAddress] should be the owner of the domain
-     * [96b signature] signature of the getCaller
+     * [96b signature] signature of the caller
      * [1b operator] set this to 0 for time extension
      *
      * 1 + m + 32 + 96 + 1 = 130 + m

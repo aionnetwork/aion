@@ -242,7 +242,7 @@ public class Cli {
         System.out.println();
         System.out.println("  -a create                    create a new account");
         System.out.println("  -a list                      list all existing accounts");
-        System.out.println("  -a export [getRecipient]          export private key of an account");
+        System.out.println("  -a export [address]          export private key of an account");
         System.out.println("  -a import [private_key]      import private key");
         System.out.println();
         System.out.println("  -c                           create config with default values");
@@ -303,7 +303,7 @@ public class Cli {
      * Dumps the private of the given account.
      *
      * @param address
-     *            getRecipient of the account
+     *            address of the account
      * @return boolean
      */
     private boolean exportPrivateKey(String address) {
@@ -369,7 +369,7 @@ public class Cli {
 
         String address = Keystore.create(password, key);
         if (!address.equals("0x")) {
-            System.out.println("The private key was imported, the getRecipient is: " + address);
+            System.out.println("The private key was imported, the address is: " + address);
             return true;
         } else {
             System.out.println("Failed to import the private key. Already exists?");

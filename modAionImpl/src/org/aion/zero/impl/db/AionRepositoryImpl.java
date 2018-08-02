@@ -176,7 +176,7 @@ public class AionRepositoryImpl
                         } catch (Exception e) {
                             e.printStackTrace();
                             LOG.error(
-                                    "contractDetailsCache setRecipient exception [{}]", e.toString());
+                                    "contractDetailsCache setAddress exception [{}]", e.toString());
                         }
 
                         contractDetailsCache.commit();
@@ -474,7 +474,7 @@ public class AionRepositoryImpl
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
-        // details.setRecipient(addr);
+        // details.setAddress(addr);
 
         cacheAccounts.put(address, account);
         cacheDetails.put(address, details);

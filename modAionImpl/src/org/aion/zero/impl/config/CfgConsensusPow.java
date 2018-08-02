@@ -78,7 +78,7 @@ public final class CfgConsensusPow extends CfgConsensus {
                         case "seed":
                             this.seed = Boolean.parseBoolean(Cfg.readValue(sr));
                                 break;
-                        case "miner-getRecipient":
+                        case "miner-address":
                             this.minerAddress = Cfg.readValue(sr);
                             break;
                         case "cpu-mine-threads":
@@ -118,7 +118,7 @@ public final class CfgConsensusPow extends CfgConsensus {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeStartElement("miner-getRecipient");
+            xmlWriter.writeStartElement("miner-address");
             xmlWriter.writeCharacters(this.getMinerAddress());
             xmlWriter.writeEndElement();
 

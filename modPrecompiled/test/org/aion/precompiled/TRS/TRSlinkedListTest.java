@@ -446,7 +446,7 @@ public class TRSlinkedListTest extends TRShelpers {
         assertEquals(next, getLinkedListHead(trs, contract));
         assertNull(getLinkedListPrev(trs, contract, next));
 
-        // We also make sure each getRecipient in the list is unique.
+        // We also make sure each address in the list is unique.
         Set<Address> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize - 1; i++) {
             if (i == listSize - 2) {
@@ -481,7 +481,7 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     private void checkRemoveTailOfLargerList(Address contract, Address owner, int listSize) {
-        // We have a linked list with 10 depositors. First find the tail. Ensure each getRecipient is unique too.
+        // We have a linked list with 10 depositors. First find the tail. Ensure each address is unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
         Address head = new Address(next.toBytes());
@@ -540,7 +540,7 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     private void checkRemoveInteriorOfLargerList(Address contract, Address owner, int listSize) {
-        // We have a linked list with 10 depositors. Grab the 5th in line. Ensure each getRecipient is unique too.
+        // We have a linked list with 10 depositors. Grab the 5th in line. Ensure each address is unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
         Address head = new Address(next.toBytes());
@@ -582,8 +582,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     private void checkMultipleListRemovals(Address contract, Address owner, int listSize) {
-        // We have a linked list with 10 depositors. Ensure each getRecipient is unique. Grab every other
-        // getRecipient to remove.
+        // We have a linked list with 10 depositors. Ensure each address is unique. Grab every other
+        // address to remove.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
         Set<Address> removals = new HashSet<>();

@@ -47,10 +47,10 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
 
     /**
      * Constructs a new PrivateTRScontract that will use repo as the database cache to update its
-     * state with and is called by getCaller.
+     * state with and is called by caller.
      *
      * @param repo The database cache.
-     * @param caller The calling getRecipient.
+     * @param caller The calling address.
      */
     public PrivateTRScontract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {

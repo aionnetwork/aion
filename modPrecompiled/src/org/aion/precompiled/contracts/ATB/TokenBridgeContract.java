@@ -46,7 +46,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.context = context;
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
-        this.controller = new BridgeController(this.connector, this.context.getHelper(), contractAddress, ownerAddress);
+        this.controller = new BridgeController(this.connector, this.context.helper(), contractAddress, ownerAddress);
         this.controller.setTransferrable(this);
 
         this.contractAddress = contractAddress;
@@ -92,14 +92,14 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
-                ErrCode code = this.controller.setNewOwner(this.context.getCaller().toBytes(), address);
+                ErrCode code = this.controller.setNewOwner(this.context.caller().toBytes(), address);
 
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
             }
             case SIG_ACCEPT_OWNERSHIP: {
-                ErrCode code = this.controller.acceptOwnership(this.context.getCaller().toBytes());
+                ErrCode code = this.controller.acceptOwnership(this.context.caller().toBytes());
                 if (code !=  ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -110,7 +110,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (addressList == null)
                     return fail();
 
-                ErrCode code = this.controller.ringInitialize(this.context.getCaller().toBytes(), addressList);
+                ErrCode code = this.controller.ringInitialize(this.context.caller().toBytes(), addressList);
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -120,7 +120,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (address == null)
                     return fail();
 
-                ErrCode code = this.controller.ringAddMember(this.context.getCaller().toBytes(), address);
+                ErrCode code = this.controller.ringAddMember(this.context.caller().toBytes(), address);
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -131,7 +131,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (address == null)
                     return fail();
 
-                ErrCode code = this.controller.ringRemoveMember(this.context.getCaller().toBytes(), address);
+                ErrCode code = this.controller.ringRemoveMember(this.context.caller().toBytes(), address);
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -140,7 +140,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
-                ErrCode code = this.controller.setRelayer(this.context.getCaller().toBytes(), address);
+                ErrCode code = this.controller.setRelayer(this.context.caller().toBytes(), address);
 
                 if (code != ErrCode.NO_ERROR)
                     return fail();
@@ -153,7 +153,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     return fail();
 
                 BridgeController.ProcessedResults results = this.controller.processBundles(
-                        this.context.getCaller().toBytes(),
+                        this.context.caller().toBytes(),
                         bundleRequests.blockHash,
                         bundleRequests.bundles,
                         bundleRequests.signatures);
@@ -196,13 +196,13 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     }
 
     private ExecutionResult success() {
-        long energyRemaining = this.context.getNrgLimit() - ENERGY_CONSUME;
+        long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, energyRemaining);
     }
 
     private ExecutionResult success(@Nonnull final byte[] response) {
         // should always be positive
-        long energyRemaining = this.context.getNrgLimit() - ENERGY_CONSUME;
+        long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
         assert energyRemaining >= 0;
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
     }
@@ -211,28 +211,28 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     private ExecutionContext assembleContext(@Nonnull final byte[] recipient,
                                              @Nonnull final BigInteger value) {
         return new ExecutionContext(
-                this.context.getTransactionHash(),
+                this.context.transactionHash(),
                 new Address(recipient),
-                this.context.getOrigin(),
+                this.context.origin(),
                 this.contractAddress,
-                this.context.getNrgPrice(),
+                this.context.nrgPrice(),
                 ENERGY_CONSUME,
                 new DataWord(value),
                 ByteUtil.EMPTY_BYTE_ARRAY,
-                this.context.getDepth() + 1,
+                this.context.depth() + 1,
                 0,
                 0,
-                this.context.getBlockCoinbase(),
-                this.context.getBlockNumber(),
-                this.context.getBlockTimestamp(),
-                this.context.getBlockNrgLimit(),
-                this.context.getBlockDifficulty());
+                this.context.blockCoinbase(),
+                this.context.blockNumber(),
+                this.context.blockTimestamp(),
+                this.context.blockNrgLimit(),
+                this.context.blockDifficulty());
     }
 
     /**
      * Performs a transfer of value from one account to another, using a method that
      * mimicks to the best of it's ability the {@code CALL} opcode. There are some
-     * assumptions that become important for any getCaller to know:
+     * assumptions that become important for any caller to know:
      *
      * @implNote this method will check that the recipient account has no code. This
      * means that we <b>cannot</b> do a transfer to any contract account.
@@ -240,7 +240,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * @implNote assumes that the {@code fromValue} derived from the track will never
      * be null.
      *
-     * @param to recipient getRecipient
+     * @param to recipient address
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
@@ -258,7 +258,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         ExecutionContext innerContext = assembleContext(to, value);
         IRepositoryCache cache = this.track;
         AionInternalTx tx = newInternalTx(innerContext);
-        this.context.getHelper().addInternalTransaction(tx);
+        this.context.helper().addInternalTransaction(tx);
 
         cache.addBalance(new Address(to), value);
         cache.addBalance(this.contractAddress, value.negate());
@@ -277,18 +277,18 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     @SuppressWarnings("JavadocReference")
     private AionInternalTx newInternalTx(ExecutionContext context) {
 
-        byte[] parentHash = context.getTransactionHash();
-        int deep = context.getDepth();
-        int idx = context.getHelper().getInternalTransactions().size();
+        byte[] parentHash = context.transactionHash();
+        int deep = context.depth();
+        int idx = context.helper().getInternalTransactions().size();
 
         return new AionInternalTx(parentHash,
                 deep,
                 idx,
-                new DataWord(this.track.getNonce(context.getCaller())).getData(),
-                context.getCaller(),
-                context.getRecipient(),
-                context.getCallValue().getData(),
-                context.getCallData(),
+                new DataWord(this.track.getNonce(context.caller())).getData(),
+                context.caller(),
+                context.address(),
+                context.callValue().getData(),
+                context.callData(),
                 "call");
     }
 }

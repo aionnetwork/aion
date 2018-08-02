@@ -38,7 +38,7 @@ import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 
 /**
- * A class exposing all getHelper methods and some variables for TRS-related testing.
+ * A class exposing all helper methods and some variables for TRS-related testing.
  */
 class TRShelpers {
     private static final byte[] OUT = new byte[1];
@@ -61,20 +61,20 @@ class TRShelpers {
         return acct;
     }
 
-    // Returns a new TRSstateContract that calls the contract using getCaller.
+    // Returns a new TRSstateContract that calls the contract using caller.
     TRSstateContract newTRSstateContract(Address caller) {
         return new TRSstateContract(repo, caller, blockchain);
     }
 
-    // Returns a new TRSuseContract that calls the contract using getCaller.
+    // Returns a new TRSuseContract that calls the contract using caller.
     TRSuseContract newTRSuseContract(Address caller) {
         return new TRSuseContract(repo, caller, blockchain);
     }
 
-    // Returns a new TRSqueryContract that calls the contract using getCaller.
+    // Returns a new TRSqueryContract that calls the contract using caller.
     TRSqueryContract newTRSqueryContract(Address caller) { return new TRSqueryContract(repo, caller, blockchain); }
 
-    // Returns the getRecipient of a newly created TRS contract, assumes all params are valid.
+    // Returns the address of a newly created TRS contract, assumes all params are valid.
     Address createTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
@@ -89,7 +89,7 @@ class TRShelpers {
         return contract;
     }
 
-    // Returns the getRecipient of a newly created TRS contract and locks it; assumes all params valid.
+    // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
     // The owner deposits 1 token so that the contract can be locked.
     Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
@@ -106,7 +106,7 @@ class TRShelpers {
         return contract;
     }
 
-    // Returns the getRecipient of a newly created TRS contract that is locked and live. The owner deposits
+    // Returns the address of a newly created TRS contract that is locked and live. The owner deposits
     //  token so that the contract can be locked.
     Address createLockedAndLiveTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
@@ -140,7 +140,7 @@ class TRShelpers {
         }
     }
 
-    // Returns a TRS contract getRecipient that has numDepositors depositors in it (owner does not deposit)
+    // Returns a TRS contract address that has numDepositors depositors in it (owner does not deposit)
     // each with DEFAULT_BALANCE deposit balance.
     Address getContractMultipleDepositors(int numDepositors, Address owner, boolean isTest,
         boolean isDirectDeposit, int periods, BigInteger percent, int precision) {
@@ -156,7 +156,7 @@ class TRShelpers {
         return contract;
     }
 
-    // Returns a TRS contract getRecipient that has numDepositors depositors in it (owner does not deposit)
+    // Returns a TRS contract address that has numDepositors depositors in it (owner does not deposit)
     // each with DEFAULT_BALANCE deposit balance. Owner uses depositFor to deposit for depositors.
     Address getContractMultipleDepositorsUsingDepositFor(int numDepositors, Address owner,
         boolean isTest, int periods, BigInteger percent, int precision) {
@@ -253,7 +253,7 @@ class TRShelpers {
         }
     }
 
-    // Returns the getRecipient of the owner of the TRS contract given by the getRecipient contract.
+    // Returns the address of the owner of the TRS contract given by the address contract.
     Address getOwner(AbstractTRS trs, Address contract) {
         return trs.getContractOwner(contract);
     }
@@ -437,7 +437,7 @@ class TRShelpers {
 
     /**
      * Returns the amount an account is expected to receive from a first withdrawal from a contract
-     * given that the params are true of the contract and the getCaller.
+     * given that the params are true of the contract and the caller.
      *
      * This method is unreliable if the first withdraw is performed in the last period. There are
      * roundoff errors that accrue and cause the non-final withdrawal amounts to be round down and
@@ -446,10 +446,10 @@ class TRShelpers {
      *
      * @param trs An AbstractTRS instance.
      * @param contract The contract in question.
-     * @param deposits The amount the getCaller deposited.
+     * @param deposits The amount the caller deposited.
      * @param total The total amount of deposits in the contract.
      * @param bonus The bonus balance in the contract.
-     * @param percent The percentage of total owings the getCaller is eligible to receive in special event.
+     * @param percent The percentage of total owings the caller is eligible to receive in special event.
      * @param periods The number of periods the contract has.
      * @return the expected amount to withdraw on a first call to the contract.
      */
@@ -480,7 +480,7 @@ class TRShelpers {
      * @param bonus The bonus amount.
      * @param periods The number of periods the contract has.
      * @param percentage The percent of total owings that can be claimed in special event.
-     * @return the getRecipient of the contract.
+     * @return the address of the contract.
      */
     Address setupContract(int numDepositors, BigInteger deposits, BigInteger bonus,
         int periods, BigDecimal percentage) {
@@ -916,7 +916,7 @@ class TRShelpers {
 
     /**
      * Returns the amount an account is expected to receive from a first withdrawal from a contract
-     * given that the params are true of the contract and the getCaller.
+     * given that the params are true of the contract and the caller.
      *
      * This method uses timestamp to determine the current period the contract is in!
      *
@@ -927,10 +927,10 @@ class TRShelpers {
      *
      * @param trs An AbstractTRS instance.
      * @param contract The contract in question.
-     * @param deposits The amount the getCaller deposited.
+     * @param deposits The amount the caller deposited.
      * @param total The total amount of deposits in the contract.
      * @param bonus The bonus balance in the contract.
-     * @param percent The percentage of total owings the getCaller is eligible to receive in special event.
+     * @param percent The percentage of total owings the caller is eligible to receive in special event.
      * @param periods The number of periods the contract has.
      * @param timestamp Timestamp for the current period the contract is in.
      * @return the expected amount to withdraw on a first call to the contract.

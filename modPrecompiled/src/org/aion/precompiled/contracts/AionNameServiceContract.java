@@ -49,7 +49,7 @@ import org.apache.commons.collections4.map.LRUMap;
  * <p>Architecture: Registry consists of a single central contract that maintains a list of all
  * domains and sub-domains, and stores: owners of domain (external acc/user or smart contract)
  * resolver of domain time-to-live for all records under the domain Resolvers are responsible for
- * the actual process of translating names into getRecipient
+ * the actual process of translating names into address
  *
  * @author William
  */
@@ -89,11 +89,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         setUpKeys();
         if (!isValidDomainAddress(address)) {
             throw new IllegalArgumentException(
-                    "Invalid domain getRecipient, check for aion prefix: 0xa0(66char) or a0(64char)\n");
+                    "Invalid domain address, check for aion prefix: 0xa0(66char) or a0(64char)\n");
         }
         if (!isValidOwnerAddress(ownerAddress)) {
             throw new IllegalArgumentException(
-                    "The owner getRecipient does not exist in the given repository\n");
+                    "The owner address does not exist in the given repository\n");
         }
         if (!(getOwnerAddress().equals(ownerAddress))
                 && !(getOwnerAddress()
@@ -101,8 +101,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         Address.wrap(
                                 "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
-                    "The owner getRecipient of this domain from repository is different than the given"
-                            + "owner getRecipient from the input\n");
+                    "The owner address of this domain from repository is different than the given"
+                            + "owner address from the input\n");
         }
 
         if (!isAvailableDomain(address, ownerAddress)) {
@@ -126,11 +126,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
      *                     should be set to 1
      *      [1b operation] - <1: set resolver, 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain
      *                       ownership>
-     *      [32 new getRecipient]
+     *      [32 new address]
      *      [96 signature]
      *      1 + 1 + 32 + 96 = 130
      *
-     *      [32b subdomain getRecipient] - optional
+     *      [32b subdomain address] - optional
      *      [96b signature] - optional
      *      [32b subdomain name in bytes] - optional
      *      130 + 32 + 32 + 32 = 226
@@ -370,18 +370,18 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] nameFirstPart = fullDomainName.substring(0, 16).getBytes();
         byte[] nameSecondPart = fullDomainName.substring(16, 32).getBytes();
 
-        // set up domain getRecipient for storage
+        // set up domain address for storage
         byte[] addressFirstPart = new byte[16];
         byte[] addressSecondPart = new byte[16];
         System.arraycopy(domainAddress.toBytes(), 0, addressFirstPart, 0, 16);
         System.arraycopy(domainAddress.toBytes(), 16, addressSecondPart, 0, 16);
 
         //store
-        // store name -> getRecipient pair
+        // store name -> address pair
         this.track.addStorageRow(registeredDomainNameAddress, new DataWord(blake128(domainName.getBytes())), new DataWord(addressFirstPart));
         this.track.addStorageRow(registeredDomainNameAddress, new DataWord(blake128(blake128(domainName.getBytes()))), new DataWord(addressSecondPart));
 
-        // store getRecipient -> name pair
+        // store address -> name pair
         this.track.addStorageRow(registeredDomainAddressName, new DataWord(blake128(domainAddress.toBytes())), new DataWord(nameFirstPart));
         this.track.addStorageRow(registeredDomainAddressName, new DataWord(blake128(blake128(domainAddress.toBytes()))), new DataWord(nameSecondPart));
     }
@@ -399,13 +399,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     private boolean isValidDomainAddress(Address domainAddress) {
-        // checks if the given domain getRecipient is valid under the aion domain
+        // checks if the given domain address is valid under the aion domain
         String rawAddress = domainAddress.toString();
         return rawAddress.charAt(0) == 'a' && rawAddress.charAt(1) == '0';
     }
 
     private boolean isValidOwnerAddress(Address ownerAddress) {
-        // checks if the owner getRecipient is registered in the repository
+        // checks if the owner address is registered in the repository
         if (this.track.hasAccountState(ownerAddress)) return true;
         return (this.track.hasContractDetails(ownerAddress));
     }
@@ -570,8 +570,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         System.out.println("--------------------------AION NAME SERVICE QUERY: Active Domains (" + activeDomainsList.size() + ")-----------------------------");
         for (ActiveDomainsData domain: activeDomainsList){
             System.out.println("Domain name: " + domain.domainName);
-            System.out.println("    Owner getRecipient: " + domain.ownerAddress);
-            System.out.println("    Domain getRecipient: " + domain.domainAddress);
+            System.out.println("    Owner address: " + domain.ownerAddress);
+            System.out.println("    Domain address: " + domain.domainAddress);
             System.out.println("    Expire Date: " + domain.expireDate);
             System.out.println("    Value: " + domain.auctionValue);
             if(domains.containsKey(domain.domainName))
@@ -599,8 +599,8 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             if(domain.ownerAddress.equals(callerAddress)){
                 notAnOwner = false;
                 System.out.println("Domain name: " + domain.domainName);
-                System.out.println("    Owner getRecipient: " + domain.ownerAddress);
-                System.out.println("    Domain getRecipient: " + domain.domainAddress);
+                System.out.println("    Owner address: " + domain.ownerAddress);
+                System.out.println("    Domain address: " + domain.domainAddress);
                 System.out.println("    Expire Date: " + domain.expireDate);
                 System.out.println("    Value: " + domain.auctionValue);
                 if(domains.containsKey(domain.domainName))

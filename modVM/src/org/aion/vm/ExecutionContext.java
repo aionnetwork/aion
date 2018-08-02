@@ -38,7 +38,7 @@ public class ExecutionContext {
     public static int CREATE = 3;
 
     private ExecutionHelper helper;
-    private Address recipient;
+    private Address address;
     private Address origin;
     private Address caller;
     private Address blockCoinbase;
@@ -59,7 +59,7 @@ public class ExecutionContext {
      * Creates a VM execution context.
      *
      * @param txHash The transaction hash
-     * @param recipient The transaction recipient.
+     * @param address The transaction address.
      * @param origin The sender of the original transaction.
      * @param caller The transaction caller.
      * @param nrgPrice The nrg price in current environment.
@@ -77,14 +77,14 @@ public class ExecutionContext {
      * @throws IllegalArgumentException if any numeric quantities are negative or txHash is not
      * length 32.
      */
-    public ExecutionContext(byte[] txHash, Address recipient, Address origin, Address caller,
+    public ExecutionContext(byte[] txHash, Address address, Address origin, Address caller,
         DataWord nrgPrice, long nrgLimit, DataWord callValue, byte[] callData, int depth, int kind,
         int flags, Address blockCoinbase, long blockNumber, long blockTimestamp, long blockNrgLimit,
         DataWord blockDifficulty) {
 
         super();
 
-        this.recipient = recipient;
+        this.address = address;
         this.origin = origin;
         this.caller = caller;
         this.nrgPrice = nrgPrice;
@@ -106,7 +106,7 @@ public class ExecutionContext {
     /**
      * Returns a big-endian binary encoding of this ExecutionContext in the following format:
      *
-     * |32b - recipient|32b - origin|32b - caller|16b - nrgPrice|8b - nrgLimit|16b - callValue|
+     * |32b - address|32b - origin|32b - caller|16b - nrgPrice|8b - nrgLimit|16b - callValue|
      * 4b - callDataLength|?b - callData|4b - depth|4b - kind|4b - flags|32b - blockCoinbase|
      * 8b - blockNumber|8b - blockTimestamp|8b - blockNrgLimit|16b - blockDifficulty|
      *
@@ -117,7 +117,7 @@ public class ExecutionContext {
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.allocate(getEncodingLength());
         buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.put(recipient.toBytes());
+        buffer.put(address.toBytes());
         buffer.put(origin.toBytes());
         buffer.put(caller.toBytes());
         buffer.put(nrgPrice.getData());
@@ -139,129 +139,129 @@ public class ExecutionContext {
     /**
      * @return the transaction hash.
      */
-    public byte[] getTransactionHash() {
+    public byte[] transactionHash() {
         return txHash;
     }
 
     /**
-     * @return the transaction recipient.
+     * @return the transaction address.
      */
-    public Address getRecipient() {
-        return recipient;
+    public Address address() {
+        return address;
     }
 
     /**
-     * @return the origination recipient, which is the sender of original transaction.
+     * @return the origination address, which is the sender of original transaction.
      */
-    public Address getOrigin() {
+    public Address origin() {
         return origin;
     }
 
     /**
      * @return the transaction caller.
      */
-    public Address getCaller() {
+    public Address caller() {
         return caller;
     }
 
     /**
      * @return the nrg price in current environment.
      */
-    public DataWord getNrgPrice() {
+    public DataWord nrgPrice() {
         return nrgPrice;
     }
 
     /**
      * @return the nrg limit in current environment.
      */
-    public long getNrgLimit() {
+    public long nrgLimit() {
         return nrgLimit;
     }
 
     /**
      * @return the deposited value by instruction/trannsaction.
      */
-    public DataWord getCallValue() {
+    public DataWord callValue() {
         return callValue;
     }
 
     /**
      * @return the call data.
      */
-    public byte[] getCallData() {
+    public byte[] callData() {
         return callData;
     }
 
     /**
      * @return the execution stack depth.
      */
-    public int getDepth() {
+    public int depth() {
         return depth;
     }
 
     /**
      * @return the transaction kind.
      */
-    public int getKind() {
+    public int kind() {
         return kind;
     }
 
     /**
      * @return the transaction flags.
      */
-    public int getFlags() {
+    public int flags() {
         return flags;
     }
 
     /**
      * @return the block's beneficiary.
      */
-    public Address getBlockCoinbase() {
+    public Address blockCoinbase() {
         return blockCoinbase;
     }
 
     /**
      * @return the block number.
      */
-    public long getBlockNumber() {
+    public long blockNumber() {
         return blockNumber;
     }
 
     /**
      * @return the block timestamp.
      */
-    public long getBlockTimestamp() {
+    public long blockTimestamp() {
         return blockTimestamp;
     }
 
     /**
      * @return the block energy limit.
      */
-    public long getBlockNrgLimit() {
+    public long blockNrgLimit() {
         return blockNrgLimit;
     }
 
     /**
      * @return the block difficulty.
      */
-    public DataWord getBlockDifficulty() {
+    public DataWord blockDifficulty() {
         return blockDifficulty;
     }
 
     /**
      * @return the transaction helper.
      */
-    public ExecutionHelper getHelper() {
+    public ExecutionHelper helper() {
         return helper;
     }
 
     /**
-     * Sets the transaction recipient to recipient.
+     * Sets the transaction address to address.
      *
-     * @param recipient The new recipient.
+     * @param address The new address.
      */
-    public void setRecipient(Address recipient) {
-        this.recipient = recipient;
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     /**

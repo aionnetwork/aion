@@ -77,7 +77,7 @@ public class BlockchainEnergyTest {
         int amount = (int) (bc.getGenesis().getNrgLimit() / DEFAULT_TX_AMOUNT);
 
 
-        //(byte[] nonce, byte[] from, byte[] to, byte[] value, byte[] data, byte[] nrg, byte[] getNrgPrice)
+        //(byte[] nonce, byte[] from, byte[] to, byte[] value, byte[] data, byte[] nrg, byte[] nrgPrice)
         List<AionTransaction> txs = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
             // this transaction should send one (1) AION coin from acc[0] to RECEIPT_ADDR

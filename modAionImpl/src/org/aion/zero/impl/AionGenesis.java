@@ -46,7 +46,7 @@ import java.util.Map;
 public class AionGenesis extends AionBlock {
     /**
      * Make this value constant for now, in the future we may move this to a
-     * more configuration position, this indicates the getRecipient at which the
+     * more configuration position, this indicates the address at which the
      * storage rows are to be stored
      */
     protected static final Address NETWORK_BALANCE_ADDRESS = ContractFactory.getTotalCurrencyContractAddress();
@@ -69,7 +69,7 @@ public class AionGenesis extends AionBlock {
 
     /**
      * Corresponds to {@link AbstractBlockHeader#getCoinbase()} that mined the
-     * first block. For fairness, the getRecipient is set to an getRecipient that is not
+     * first block. For fairness, the address is set to an address that is not
      * ever to be used
      */
     protected static final Address GENESIS_COINBASE = Address.ZERO_ADDRESS();
@@ -157,7 +157,7 @@ public class AionGenesis extends AionBlock {
     /**
      * Premined accounts, these are accounts that have initial state and value.
      * Because of the bridging mechanism, we arbitrarily store all ERC20 token
-     * values as coins on an account at getRecipient 0x100 (256).
+     * values as coins on an account at address 0x100 (256).
      */
     private Map<Address, AccountState> premine = new HashMap<>();
 
@@ -205,7 +205,7 @@ public class AionGenesis extends AionBlock {
      * 
      * <p>Does not assume anything about the input data, will do the necessary
      * checks to assert the specs. But will not do null checks, therefore it is
-     * up to the getCaller to ensure input values are non null</p>
+     * up to the caller to ensure input values are non null</p>
      * 
      * <p>This class makes no assumptions about thread-safety.</p>
      */
@@ -290,7 +290,7 @@ public class AionGenesis extends AionBlock {
                 this.premined = new HashMap<>();
 
             if (this.premined.get(address) != null)
-                throw new IllegalArgumentException("duplicate premined getRecipient");
+                throw new IllegalArgumentException("duplicate premined address");
 
             this.premined.put(address, state);
             return this;

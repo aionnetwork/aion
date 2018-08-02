@@ -9,7 +9,7 @@ import java.util.Map;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.toSignature;
 
 enum BridgeFuncSig {
-    SIG_CHANGE_OWNER        ("changeOwner(getRecipient)"),
+    SIG_CHANGE_OWNER        ("changeOwner(address)"),
     SIG_ACCEPT_OWNERSHIP    ("acceptOwnership()"),
     SIG_RING_INITIALIZE     ("initializeRing(address[])"),
     SIG_RING_ADD_MEMBER     ("addRingMember(address)"),
@@ -19,7 +19,7 @@ enum BridgeFuncSig {
     PURE_OWNER              ("owner()"),
     PURE_NEW_OWNER          ("newOwner()"),
     PURE_ACTION_MAP         ("actionMap(bytes32)"),
-    PURE_RING_MAP           ("ringMap(getRecipient)"),
+    PURE_RING_MAP           ("ringMap(address)"),
     PURE_RING_LOCKED        ("ringLocked()"),
     PURE_MIN_THRESH         ("minThresh()"),
     PURE_MEMBER_COUNT       ("memberCount()"),

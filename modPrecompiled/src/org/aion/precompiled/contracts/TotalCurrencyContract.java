@@ -75,7 +75,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * byte (bit) to check for addition or subtraction
      * <p>
      * Note: as a consequence of us storing the pk and signature as part of the call
-     * we can send a transaction to this contract from any getRecipient. As long as we
+     * we can send a transaction to this contract from any address. As long as we
      * hold the private key preset in this contract.
      * <p>
      * Within the contract, the storage is modelled as the following:

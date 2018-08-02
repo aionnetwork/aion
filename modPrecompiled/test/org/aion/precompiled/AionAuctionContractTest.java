@@ -638,7 +638,7 @@ public class AionAuctionContractTest {
 
         assertEquals(ResultCode.SUCCESS, result2.getResultCode());
         assertEquals(result2.getNrgLeft(), 4000);
-        assertEquals(32, result2.getOutput().length); //check that an getRecipient was returned
+        assertEquals(32, result2.getOutput().length); //check that an address was returned
     }
 
     private byte[] setupInputs(String domainName, Address ownerAddress, byte[] amount, ECKey k){

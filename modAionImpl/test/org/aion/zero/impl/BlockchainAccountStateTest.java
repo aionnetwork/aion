@@ -49,7 +49,7 @@ public class BlockchainAccountStateTest {
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 400 transactions per bundle
-        //byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long getNrgPrice
+        //byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < 400; i++) {
             Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),
@@ -107,7 +107,7 @@ public class BlockchainAccountStateTest {
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 400 transactions per bundle
-        //byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long getNrgPrice
+        //byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < 400; i++) {
             Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),

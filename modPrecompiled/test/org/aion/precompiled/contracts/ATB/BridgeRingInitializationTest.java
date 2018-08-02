@@ -21,7 +21,7 @@ public class BridgeRingInitializationTest {
         DummyRepo repo = new DummyRepo();
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
         this.controller = new BridgeController(connector,
-                dummyContext().getHelper(), CONTRACT_ADDR, OWNER_ADDR);
+                dummyContext().helper(), CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
     }
 

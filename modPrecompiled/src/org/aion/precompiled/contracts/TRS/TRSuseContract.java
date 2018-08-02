@@ -62,10 +62,10 @@ public final class TRSuseContract extends AbstractTRS {
 
     /**
      * Constructs a new TRSuseContract that will use repo as the database cache to update its
-     * state with and is called by getCaller.
+     * state with and is called by caller.
      *
      * @param repo The database cache.
-     * @param caller The calling getRecipient.
+     * @param caller The calling address.
      */
     public TRSuseContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller,
@@ -86,7 +86,7 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress> | <128b - amount>]
      *     total = 161 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract to deposit funds into.
+     *     contractAddress is the address of the public-facing TRS contract to deposit funds into.
      *       amount is the amount of funds to deposit. The contract interprets these 128 bytes as an
      *       unsigned and positive amount.
      *
@@ -107,13 +107,13 @@ public final class TRSuseContract extends AbstractTRS {
      *     missed periods.
      *
      *     In the special case that a contract has its funds open, the first call to this operation
-     *     after the funds are opened will withdraw all funds that the contract owes the getCaller
+     *     after the funds are opened will withdraw all funds that the contract owes the caller
      *     including bonus. Any subsequent calls will fail.
      *
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account is
+     *     contractAddress is the address of the public-facing TRS contract that the account is
      *       attempting to withdraw funds from.
      *
      *     conditions: the TRS contract must be live in order to withdraw funds from it.
@@ -133,16 +133,16 @@ public final class TRSuseContract extends AbstractTRS {
      *       where X is in [1, 100]
      *     total = 193-16,033 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account is
+     *     contractAddress is the address of the public-facing TRS contract that the account is
      *       attempting to deposit funds into.
      *     and for each entry we have the following pair:
-     *       accountAddress is the getRecipient of an account the getCaller is attempting to deposit funds
+     *       accountAddress is the address of an account the caller is attempting to deposit funds
      *       into the contract for.
      *       amount is the corresponding amount of funds to deposit on behalf of accountAddress.
      *
      *     conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit
-     *       into it. The getCaller must be the owner of the contract. Each accountAddress must be an
-     *       Aion account getRecipient. If a contract has its funds open then this operation is disabled.
+     *       into it. The caller must be the owner of the contract. Each accountAddress must be an
+     *       Aion account address. If a contract has its funds open then this operation is disabled.
      *
      *     returns: void.
      *
@@ -160,11 +160,11 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account is
+     *     contractAddress is the address of the public-facing TRS contract that the account is
      *       attempting to perform a bulk withdrawal of funds from.
      *
      *     conditions: the TRS contract must be live in order to bulk withdraw funds from it. The
-     *       getCaller must be the owner of the contract.
+     *       caller must be the owner of the contract.
      *
      *     returns: void.
      *
@@ -175,8 +175,8 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
      *     total = 193 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account given
-     *       by the getRecipient accountAddress is being refunded from. The proposed refund amount is
+     *     contractAddress is the address of the public-facing TRS contract that the account given
+     *       by the address accountAddress is being refunded from. The proposed refund amount is
      *       given by amount. The contract interprets the 128 bytes of amount as unsigned and
      *       strictly positive.
      *
@@ -198,12 +198,12 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress> | <32b - forAccount> | <128b - amount>]
      *     total = 193 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract.
+     *     contractAddress is the address of the public-facing TRS contract.
      *     forAccount is the account that will be listed as having amount deposited into it if the
      *       operation succeeds.
      *     amount is the amount of funds to deposit into the contract on forAccount's behalf.
      *
-     *     conditions: the TRS contract must not yet be locked (or obviously live) and the getCaller
+     *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
      *       must be the contract owner. If a contract's funds are open then this operation is
      *       disabled.
      *
@@ -220,10 +220,10 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress> | <128b - amount>]
      *     total = 161 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract.
+     *     contractAddress is the address of the public-facing TRS contract.
      *     amount is the amount of extra funds to add to the contract.
      *
-     *     conditions: the getCaller must be the contract owner. If a contract's funds are open then
+     *     conditions: the caller must be the contract owner. If a contract's funds are open then
      *       this operation is disabled.
      *
      *     returns: void.
@@ -267,7 +267,7 @@ public final class TRSuseContract extends AbstractTRS {
      *   [<1b - 0x0> | <32b - contractAddress> | <128b - amount>]
      *   total = 161 bytes
      * where:
-     *   contractAddress is the getRecipient of the public-facing TRS contract to deposit funds into.
+     *   contractAddress is the address of the public-facing TRS contract to deposit funds into.
      *   amount is the amount of funds to deposit. The contract interprets these 128 bytes as an
      *     unsigned and positive amount.
      *
@@ -299,7 +299,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // A deposit operation can only execute if direct depositing is enabled or getCaller is owner.
+        // A deposit operation can only execute if direct depositing is enabled or caller is owner.
         Address owner = getContractOwner(contract);
         if (!caller.equals(owner) && !isDirDepositsEnabled(contract)) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -316,7 +316,7 @@ public final class TRSuseContract extends AbstractTRS {
         System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
         BigInteger amount = new BigInteger(amountBytes);
 
-        // The getCaller must have adequate funds to make the proposed deposit.
+        // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
             return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
@@ -334,7 +334,7 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account is
+     *     contractAddress is the address of the public-facing TRS contract that the account is
      *       attempting to withdraw funds from.
      *
      *     conditions: the TRS contract must be live in order to withdraw funds from it.
@@ -383,16 +383,16 @@ public final class TRSuseContract extends AbstractTRS {
      *   where E is a contiguous list of X 160-byte entry arrays, such that X is in [1, 100]
      *     total = 193-16,033 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account is
+     *     contractAddress is the address of the public-facing TRS contract that the account is
      *       attempting to deposit funds into.
      *     and for each entry we have the following pair:
-     *       accountAddress is the getRecipient of an account the getCaller is attempting to deposit funds
+     *       accountAddress is the address of an account the caller is attempting to deposit funds
      *       into the contract for.
      *       amount is the corresponding amount of funds to deposit on behalf of accountAddress.
      *
      *     conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit
-     *       into it. The getCaller must be the owner of the contract. Each accountAddress must be an
-     *       Aion account getRecipient. If a contract has its funds open then this operation is disabled.
+     *       into it. The caller must be the owner of the contract. Each accountAddress must be an
+     *       Aion account address. If a contract has its funds open then this operation is disabled.
      *
      *     returns: void.
      *
@@ -423,7 +423,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // A bulk-deposit-for operation can only execute if the getCaller is the owner of the contract.
+        // A bulk-deposit-for operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -447,7 +447,7 @@ public final class TRSuseContract extends AbstractTRS {
             System.arraycopy(input, index + entryAddrLen, amountBytes, 1, amtLen);
             amounts[i] = new BigInteger(amountBytes);
 
-            // Verify the account is an Aion getRecipient.
+            // Verify the account is an Aion address.
             if (input[index] != AION_PREFIX) {
                 return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
             }
@@ -480,11 +480,11 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<32b - contractAddress>]
      *     total = 33 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account is
+     *     contractAddress is the address of the public-facing TRS contract that the account is
      *       attempting to perform a bulk withdrawal of funds from.
      *
      *     conditions: the TRS contract must be live in order to bulk withdraw funds from it. The
-     *       getCaller must be the owner of the contract.
+     *       caller must be the owner of the contract.
      *
      *     returns: void.
      *
@@ -507,7 +507,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // A bulk-withdraw operation can only execute if the getCaller is the owner of the contract.
+        // A bulk-withdraw operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -540,8 +540,8 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<1b - 0x4> | <32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
      *     total = 193 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract that the account given
-     *       by the getRecipient accountAddress is being refunded from. The proposed refund amount is
+     *     contractAddress is the address of the public-facing TRS contract that the account given
+     *       by the address accountAddress is being refunded from. The proposed refund amount is
      *       given by amount. The contract interprets the 128 bytes of amount as unsigned and
      *       strictly positive.
      *
@@ -575,7 +575,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // A refund operation can only execute if the getCaller is the contract owner.
+        // A refund operation can only execute if the caller is the contract owner.
         Address owner = getContractOwner(contract);
         if (!caller.equals(owner)) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
@@ -631,13 +631,13 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<1b - 0x5> | <32b - contractAddress> | <32b - forAccount> | <128b - amount>]
      *     total = 193 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract.
+     *     contractAddress is the address of the public-facing TRS contract.
      *     forAccount is the account that will be listed as having amount deposited into it if the
      *       operation succeeds.
      *     amount is the amount of funds to deposit into the contract on forAccount's behalf. This
      *       value is interpreted as unsigned and strictly positive.
      *
-     *     conditions: the TRS contract must not yet be locked (or obviously live) and the getCaller
+     *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
      *       must be the contract owner. If a contract has its funds open then this operation is
      *       disabled.
      *
@@ -665,7 +665,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // A depositFor operation can only execute if getCaller is owner.
+        // A depositFor operation can only execute if caller is owner.
         if (!caller.equals(getContractOwner(contract))) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -681,13 +681,13 @@ public final class TRSuseContract extends AbstractTRS {
         System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
         BigInteger amount = new BigInteger(amountBytes);
 
-        // The getCaller must have adequate funds to make the proposed deposit.
+        // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
             return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        // Verify the account is an Aion getRecipient.
+        // Verify the account is an Aion address.
         if (input[indexAccount] != AION_PREFIX) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -705,10 +705,10 @@ public final class TRSuseContract extends AbstractTRS {
      *     [<1b - 0x6> | <32b - contractAddress> | <128b - amount>]
      *     total = 161 bytes
      *   where:
-     *     contractAddress is the getRecipient of the public-facing TRS contract.
+     *     contractAddress is the address of the public-facing TRS contract.
      *     amount is the amount of extra funds to add to the contract.
      *
-     *   conditions: the getCaller must be the contract owner. If a contract's funds are open then
+     *   conditions: the caller must be the contract owner. If a contract's funds are open then
      *     this operation is disabled.
      *
      *   returns: void.
@@ -733,7 +733,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
 
-        // A depositFor operation can only execute if getCaller is owner.
+        // A depositFor operation can only execute if caller is owner.
         if (!caller.equals(getContractOwner(contract))) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -748,7 +748,7 @@ public final class TRSuseContract extends AbstractTRS {
         System.arraycopy(input, indexAmount, amountBytes, 1, len - indexAmount);
         BigInteger amount = new BigInteger(amountBytes);
 
-        // The getCaller must have adequate funds to make the proposed deposit.
+        // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
             return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
@@ -765,14 +765,14 @@ public final class TRSuseContract extends AbstractTRS {
     // <-------------------------------------HELPER METHODS---------------------------------------->
 
     /**
-     * Deposits amount into the TRS contract whose getRecipient is contract on behalf of account. If
+     * Deposits amount into the TRS contract whose address is contract on behalf of account. If
      * amount is zero then this method does nothing but return a successful execution result.
      *
-     * This method transfers amount from the getCaller's balance into the contract. It does not take
-     * this amount from account (unless account is the getCaller). However, if this method succeeds
+     * This method transfers amount from the caller's balance into the contract. It does not take
+     * this amount from account (unless account is the caller). However, if this method succeeds
      * then account will have a deposit balance in the contract of amount amount.
      *
-     * The reason the funds are removed from the getCaller's account and placed into the contract on
+     * The reason the funds are removed from the caller's account and placed into the contract on
      * behalf of account is to faciliate both the deposit and depositFor functionalities.
      *
      * @param contract the TRS contract to update.
@@ -802,10 +802,10 @@ public final class TRSuseContract extends AbstractTRS {
      * Updates the linked list for the TRS contract given by contract, if necessary, in the following
      * way:
      *
-     * If the getCaller does not have a valid account in the TRS contract contract then that account is
+     * If the caller does not have a valid account in the TRS contract contract then that account is
      * added to the head of the linked list for that contract.
      *
-     * If the account is valid and already exists this method does nothing, since the getCaller must
+     * If the account is valid and already exists this method does nothing, since the caller must
      * already be in the list.
      *
      * @param contract The TRS contract to update.

@@ -33,7 +33,7 @@ public interface A0BCConfig {
      * Retrieve the currently set coinbase for this particular node, blocks
      * mined with this node will use this as the coinbase.
      *
-     * @return {@code coinbase} a 32-bytes getRecipient
+     * @return {@code coinbase} a 32-bytes address
      */
     Address getCoinbase();
 
