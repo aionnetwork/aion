@@ -267,17 +267,19 @@ public class AccountManager {
         return accountDTO;
     }
 
-    public void exportAccount(final AccountDTO account, final String password, final String destinationDir) throws ValidationException {
+    public String exportAccount(final AccountDTO account, final String password, final String destinationDir) throws ValidationException {
         final ECKey ecKey = CryptoUtils.getECKey(account.getPrivateKey());
         final boolean remembered = account.isImported() && keystoreWrapper.exist(account.getPublicAddress());
         if (!remembered) {
             keystoreWrapper.create(password, ecKey);
         }
+        String fileName = null;
+
         if (Files.isDirectory(walletStorage.getKeystorePath())) {
             final String fileNameRegex = getExportedFileNameRegex(account.getPublicAddress());
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(walletStorage.getKeystorePath(), fileNameRegex)) {
                 for (Path keystoreFile : stream) {
-                    final String fileName = keystoreFile.getFileName().toString();
+                    fileName = keystoreFile.getFileName().toString();
                     if (remembered) {
                         Files.copy(keystoreFile, Paths.get(destinationDir + File.separator + fileName), StandardCopyOption.REPLACE_EXISTING);
                     } else {
@@ -297,7 +299,7 @@ public class AccountManager {
         } else {
             LOG.error("Could not find Keystore directory: " + walletStorage.getKeystorePath());
         }
-
+        return fileName;
     }
 
     private String getExportedFileNameRegex(final String publicAddress) {
