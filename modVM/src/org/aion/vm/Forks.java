@@ -2,23 +2,8 @@ package org.aion.vm;
 
 public class Forks {
 
-    private static final long JUNE_FORK = 167691L;
-    public static Boolean TEST_JUNE_FORK = null;
-
-
     private static final long SEPTEMBER_FORK = 1000000L;
     public static Boolean TEST_SEPTEMBER_FORK = null;
-
-    /**
-     * Returns whether the fork in June is enabled. This fork was created to fix
-     * the address issue for CREATE opcode and the nonce issue.
-     *
-     * @param blockNumber
-     * @return true if enabled; otherwise, false
-     */
-    public static boolean isJuneForkEnabled(long blockNumber) {
-        return TEST_JUNE_FORK != null ? TEST_JUNE_FORK : blockNumber >= JUNE_FORK;
-    }
 
     /**
      * Returns whether the fork in September is enabled. This fork was created
@@ -32,7 +17,6 @@ public class Forks {
     }
 
     public static void clearTestState() {
-        TEST_JUNE_FORK = null;
         TEST_SEPTEMBER_FORK = null;
     }
 }
