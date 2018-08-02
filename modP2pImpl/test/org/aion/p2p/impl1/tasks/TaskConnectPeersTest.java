@@ -25,6 +25,7 @@ package org.aion.p2p.impl1.tasks;
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -45,6 +46,7 @@ import org.aion.log.LogLevels;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.P2pConstant;
 import org.aion.p2p.impl.zero.msg.ReqHandshake1;
 import org.junit.After;
 import org.junit.Before;
@@ -55,25 +57,26 @@ import org.mockito.MockitoAnnotations;
 public class TaskConnectPeersTest {
 
     @Mock
+    private
     INodeMgr nodeMgr;
 
     @Mock
-    IP2pMgr p2pMgr;
+    private IP2pMgr p2pMgr;
 
     @Mock
-    BlockingQueue<MsgOut> sendMsgQue;
+    private BlockingQueue<MsgOut> sendMsgQue;
 
     @Mock
-    ReqHandshake1 rhs;
+    private ReqHandshake1 rhs;
 
     @Mock
-    INode node;
+    private INode node;
 
-    ServerSocketChannel ssc;
+    private ServerSocketChannel ssc;
 
-    Thread listen;
+    private Thread listen;
 
-    Selector selector;
+    private Selector selector;
 
     public class ThreadTCPServer extends Thread {
 
@@ -100,25 +103,31 @@ public class TaskConnectPeersTest {
                     return;
                 }
 
-                Iterator<SelectionKey> keys = this.selector.selectedKeys().iterator();
-                while (keys.hasNext()) {
+                Iterator itor = this.selector.selectedKeys().iterator();
+                while (itor.hasNext()) {
                     SelectionKey key;
                     try {
-                        key = keys.next();
+                        key = (SelectionKey)itor.next();
                         if (key.isAcceptable()) {
                             ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
                             sc = ssc.accept();
                             if (sc != null) {
                                 sc.configureBlocking(false);
-                                sc.register(selector, SelectionKey.OP_READ);
+                                sc.socket().setSoTimeout(10_000);
+                                sc.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
+                                sc.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
+
+                                SelectionKey sk = sc.register(this.selector, SelectionKey.OP_READ);
+                                sk.attach(new ChannelBuffer());
                                 System.out.println("socket connected!");
                             }
                         }
+
                     } catch ( IOException e) {
                         e.printStackTrace();
                     }
+                    itor.remove();
                 }
-                keys.remove();
             }
         }
     }
@@ -146,7 +155,7 @@ public class TaskConnectPeersTest {
     @After
     public void tearDown() throws IOException, InterruptedException {
         listen.interrupt();
-        Thread.sleep(100);
+        Thread.sleep(1000);
         ssc.close();
     }
 
@@ -199,10 +208,75 @@ public class TaskConnectPeersTest {
         when(nodeMgr.tempNodesTake()).thenReturn(node);
         when(node.getIfFromBootList()).thenReturn(true);
 
-        Thread.sleep(10000);
+        Thread.sleep(2000);
 
         atb.set(false);
         Thread.sleep(3000);
         assertFalse(tcp.isRun());
+    }
+
+    @Test
+    public void testRunException() throws InterruptedException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
+            rhs);
+
+        when(node.getIdHash()).thenReturn(1);
+        when(node.getPort()).thenReturn(60606);
+        when(node.getIpStr()).thenReturn("127.0.0.1");
+        when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
+        when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
+
+        Thread t = new Thread(tcp);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(10);
+        assertTrue(tcp.isRun());
+
+        // should see the loop continue every sec
+        Thread.sleep(1000);
+
+        when(nodeMgr.activeNodesSize()).thenReturn(127);
+        // should see the loop continue every sec due to null node been taken
+        Thread.sleep(1000);
+
+        when(node.getIdShort()).thenReturn("1");
+        when(nodeMgr.tempNodesTake()).thenReturn(node);
+        when(node.getIfFromBootList()).thenReturn(true);
+        when(sendMsgQue.offer(any(MsgOut.class))).thenThrow(new NullPointerException("exception"));
+
+        Thread.sleep(2000);
+
+        atb.set(false);
+        Thread.sleep(3000);
+        assertFalse(tcp.isRun());
+    }
+
+    @Test
+    public void testRunException2() throws InterruptedException {
+
+        listen.interrupt();
+
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
+            rhs);
+
+        when(node.getIdHash()).thenReturn(1);
+        when(node.getPort()).thenReturn(60606);
+        when(node.getIpStr()).thenReturn("127.0.0.1");
+        when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
+        when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
+
+        Thread t = new Thread(tcp);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(10);
+        assertTrue(tcp.isRun());
+
+        // should see the loop continue every sec
+        Thread.sleep(1000);
+        when(nodeMgr.tempNodesTake()).thenThrow(new NullPointerException("exception"));
+
+        assertTrue(tcp.isRun());
     }
 }
