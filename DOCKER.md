@@ -1,12 +1,19 @@
 # Dockerization
 
+Provides a container that can run the AION kernel. Can also attach a remote debugger if necessary.
+
+## Limitations
+
+Currently this image there does NOT support running CLI commands before the kernel startup. 
+One needs to build a custom image and bake in other CLI commands if necessary (override the container startup script).
+
 ## Prerequisites
 
 - docker-compose (docker-compose version 1.21.0, build 5920eb0)
 - docker (>= Docker version 17.12.1-ce, build 7390fc6)
 
 The kernel can be deployed as a container using the Dockerfile present in the root of the repo. 
-The docker image can be built and pushed using the `pack_docker` and `push_docker` ant targets. Local development can
+The docker image can be built using the `pack_docker` ant target. Local development can
 leverage `ant pack_dev_docker` to build a custom image based on current code base.
 
 ## Building
