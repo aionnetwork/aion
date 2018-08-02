@@ -148,6 +148,7 @@ public class MainWindow extends Application {
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
                 .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc, errorHandler))
                 .withSyncInfoDto(new SyncInfoDto(kc, errorHandler))
+                .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
         );
         return loader;
     }

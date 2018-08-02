@@ -22,6 +22,7 @@
  */
 package org.aion;
 
+
 import org.aion.api.server.http.NanoServer;
 import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
@@ -45,6 +46,7 @@ import java.util.ServiceLoader;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
+
 
 public class Aion {
 
