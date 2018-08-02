@@ -8,9 +8,12 @@ import org.aion.gui.events.EventPublisher;
 import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.util.AionConstants;
 import org.aion.mcf.account.KeystoreFormat;
+import org.aion.wallet.connector.dto.BlockDTO;
+import org.aion.wallet.connector.dto.SendTransactionDTO;
 import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.crypto.MasterKey;
 import org.aion.wallet.dto.AccountDTO;
+import org.aion.wallet.dto.TransactionDTO;
 import org.aion.wallet.exception.ValidationException;
 import org.aion.wallet.storage.WalletStorage;
 import org.aion.wallet.util.CryptoUtils;
@@ -21,9 +24,14 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -35,7 +43,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -445,13 +452,156 @@ public class AccountManagerTest {
         assertThat(unit.isMasterAccountUnlocked(), is(false));
     }
 
+    @Test
     public void testGetOldestSafeBlock() {
         String[] accountList = new String[0];
         when(keystoreWrapper.list()).thenReturn(accountList);
         AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
                 walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
 
-//        addressToAccount.put("name", )
+        Set<String> addresses = new LinkedHashSet<>();
+        addresses.add("a1");
+        addresses.add("a2");
+        addresses.add("a3");
+
+        AccountDTO a1 = mock(AccountDTO.class);
+        AccountDTO a2 = mock(AccountDTO.class);
+        AccountDTO a3 = mock(AccountDTO.class);
+        addressToAccount.put("a1", a1);
+        addressToAccount.put("a2", a2);
+        addressToAccount.put("a3", a3);
+
+        long b1Number = 1337;
+        long b2Number = 31337;
+        BlockDTO b1 = mock(BlockDTO.class);
+        BlockDTO b2 = mock(BlockDTO.class);
+        when(a1.getLastSafeBlock()).thenReturn(b1);
+        when(b1.getNumber()).thenReturn(b1Number);
+        when(a2.getLastSafeBlock()).thenReturn(b2);
+        when(b2.getNumber()).thenReturn(b2Number);
+        when(a3.getLastSafeBlock()).thenReturn(null);
+
+        AtomicBoolean nullFilterUsed = new AtomicBoolean(false);
+
+        BlockDTO result = unit.getOldestSafeBlock(addresses, iter -> {
+            nullFilterUsed.set(true);
+            assertThat(iter.hasNext(), is(false));
+        });
+
+        assertThat(result, is(b1));
+        assertThat(nullFilterUsed.get(), is(true));
     }
 
+    @Test
+    public void testAddRemoveGetTransactions() {
+        String[] accountList = new String[0];
+        when(keystoreWrapper.list()).thenReturn(accountList);
+        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
+                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        String address = "address";
+        AccountDTO account = new AccountDTO(
+                "anyName", address, "anyBalance", "anyCurrency", false, 0
+        );
+        addressToAccount.put(address, account);
+
+        assertThat(unit.getTransactions(address).isEmpty(), is(true));
+        TransactionDTO tx1 = mock(TransactionDTO.class);
+        TransactionDTO tx2 = mock(TransactionDTO.class);
+        unit.addTransactions(address, Collections.singleton(tx1));
+        assertThat(unit.getTransactions(address), is(Collections.singleton(tx1)));
+        unit.addTransactions(address, Collections.singleton(tx2));
+        assertThat(unit.getTransactions(address), is(new HashSet(Arrays.asList(tx1, tx2))));
+        unit.removeTransactions(address, Arrays.asList(tx1, tx2));
+        assertThat(unit.getTransactions(address).isEmpty(), is(true));
+    }
+
+    @Test
+    public void testGetUpdateLastSafeBlock() {
+        String[] accountList = new String[0];
+        when(keystoreWrapper.list()).thenReturn(accountList);
+        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
+                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        String address = "address";
+        AccountDTO account = new AccountDTO(
+                "anyName", address, "anyBalance", "anyCurrency", false, 0
+        );
+        addressToAccount.put(address, account);
+
+        BlockDTO block1 = mock(BlockDTO.class);
+        BlockDTO block2 = mock(BlockDTO.class);
+
+        account.setLastSafeBlock(block1);
+        assertThat(unit.getLastSafeBlock(address), is(block1));
+
+        unit.updateLastSafeBlock(address, block2);
+        assertThat(unit.getLastSafeBlock(address), is(block2));
+    }
+
+    @Test
+    public void testGetAddresses() {
+        String[] accountList = new String[] {
+                "0xc0ffee1111111111111111111111111111111111111111111111111111111111",
+                "0xdecaf22222222222222222222222222222222222222222222222222222222222",
+        };
+        when(keystoreWrapper.list()).thenReturn(accountList);
+        when(walletStorage.getAccountName(accountList[0])).thenReturn("Coffee!");
+        when(walletStorage.getAccountName(accountList[1])).thenReturn("Decaf!");
+        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
+                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+
+        assertThat(unit.getAddresses().size(), is(2));
+        assertThat(unit.getAddresses().containsAll(Arrays.asList(accountList)),
+                is(true));
+    }
+
+    @Test
+    public void testUpdateAccount() {
+        String[] accountList = new String[] {
+                "0xc0ffee1111111111111111111111111111111111111111111111111111111111"
+        };
+        when(keystoreWrapper.list()).thenReturn(accountList);
+        when(walletStorage.getAccountName(accountList[0])).thenReturn("old name");
+        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
+                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountDTO account = new AccountDTO(
+                "new name!", accountList[0], "anyBalance", "anyCurrency", false, 0
+        );
+        unit.updateAccount(account);
+        verify(walletStorage).setAccountName(accountList[0], "new name!");
+    }
+
+    @Test
+    public void testGetAddRemoveTimedOutTransactions() {
+        String[] accountList = new String[0];
+        when(keystoreWrapper.list()).thenReturn(accountList);
+        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
+                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        String address = "address";
+        AccountDTO account = new AccountDTO(
+                "anyName", address, "anyBalance", "anyCurrency", false, 0
+        );
+        addressToAccount.put(address, account);
+
+        assertThat(unit.getTimedOutTransactions(address).isEmpty(), is(true));
+        SendTransactionDTO tx1 = mock(SendTransactionDTO.class);
+        when(tx1.getFrom()).thenReturn(address);
+        SendTransactionDTO tx2 = mock(SendTransactionDTO.class);
+        when(tx2.getFrom()).thenReturn(address);
+
+        unit.addTimedOutTransaction(tx1);
+        assertThat(unit.getTimedOutTransactions(address).size(), is(1));
+        assertThat(unit.getTimedOutTransactions(address).get(0), is(tx1));
+
+        unit.addTimedOutTransaction(tx2);
+        assertThat(unit.getTimedOutTransactions(address).size(), is(2));
+        assertThat(unit.getTimedOutTransactions(address).get(0), is(tx1));
+        assertThat(unit.getTimedOutTransactions(address).get(1), is(tx2));
+
+        unit.removeTimedOutTransaction(tx1);
+        assertThat(unit.getTimedOutTransactions(address).size(), is(1));
+        assertThat(unit.getTimedOutTransactions(address).get(0), is(tx2));
+
+        unit.removeTimedOutTransaction(tx2);
+        assertThat(unit.getTimedOutTransactions(address).isEmpty(), is(true));
+    }
 }

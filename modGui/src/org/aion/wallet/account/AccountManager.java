@@ -222,15 +222,8 @@ public class AccountManager {
     }
 
     private ECKey getEcKeyFromRoot(final int derivationIndex) throws ValidationException {
+        // NB: {44, 425, 0, 0} is the pre-determined path of how to derive keys from the master key
         return root.deriveHardened(new int[]{44, 425, 0, 0, derivationIndex});
-    }
-
-    /**
-     * Derivation path for HD wallet generation.  The first four off-sets are the predetermined numbers
-     * {44, 425, 0, 0}.  The last offset is the derivation index.
-     */
-    private int[] derivationPath(final int derivationIndex) {
-        return new int[] { 44, 425, 0, 0, derivationIndex };
     }
 
     private AccountDTO addInternalAccount() throws ValidationException {
