@@ -28,7 +28,6 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.math.BigInteger;
 import java.util.List;
-import javax.annotation.Nonnull;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -49,12 +48,12 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
-    protected void setExecutionResult(@Nonnull IExecutionResult result) {
+    protected void setExecutionResult(IExecutionResult result) {
         exeResult = result;
     }
 
-    public AbstractExecutor(@Nonnull IRepository _repo, boolean _localCall, long _blkRemainingNrg,
-        @Nonnull Logger _logger) {
+    public AbstractExecutor(IRepository _repo, boolean _localCall, long _blkRemainingNrg,
+        Logger _logger) {
         this.repo = _repo;
         this.repoTrack = repo.startTracking();
         this.isLocalCall = _localCall;
@@ -118,7 +117,6 @@ public abstract class AbstractExecutor {
             return true;
         }
 
-        // check nrg limit      use signum 1 for txNrgPrice?
         BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice()).abs();
         long txNrgLimit = tx.getNrg();
 
@@ -207,7 +205,7 @@ public abstract class AbstractExecutor {
      * @return receipt with the new receipt added to it.
      */
     @SuppressWarnings("unchecked")
-    protected ITxReceipt buildReceipt(@Nonnull ITxReceipt receipt, ITransaction tx, List logs) {
+    protected ITxReceipt buildReceipt(ITxReceipt receipt, ITransaction tx, List logs) {
         //TODO probably remove receipt and instantiate a new empty one here?
         receipt.setTransaction(tx);
         receipt.setLogs(logs);
@@ -234,8 +232,8 @@ public abstract class AbstractExecutor {
      * @param coinbase The coinbase for the block in which the transaction was sealed.
      * @param deleteAccounts The list of accounts to be deleted if tx was successful.
      */
-    protected void updateRepo(@Nonnull ITxExecSummary summary, @Nonnull ITransaction tx,
-        @Nonnull Address coinbase, @Nonnull List<Address> deleteAccounts) {
+    protected void updateRepo(ITxExecSummary summary, ITransaction tx, Address coinbase,
+        List<Address> deleteAccounts) {
 
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();

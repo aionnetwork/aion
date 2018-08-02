@@ -81,23 +81,6 @@ public class ExecutionResult extends AbstractExecutionResult {
     }
 
     /**
-     * Returns a big-endian binary encoding of this ExecutionResult.
-     *
-     * @return a big-endian binary encoding of this ExecutionResult.
-     */
-    public final byte[] toBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 8 + 4 + (output == null ? 0 : output.length));
-        buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.putInt(code.toInt());
-        buffer.putLong(nrgLeft);
-        buffer.putInt(output == null ? -1 : output.length);
-        if (output != null) {
-            buffer.put(output);
-        }
-        return buffer.array();
-    }
-
-    /**
      * Returns true only if o is an ExecutionResult with the same code, energy left and output as
      * this ExecutionResult.
      *

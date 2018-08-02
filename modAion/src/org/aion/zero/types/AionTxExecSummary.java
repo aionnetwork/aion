@@ -340,7 +340,6 @@ public class AionTxExecSummary implements ITxExecSummary {
         if (!parsed) {
             rlpParse();
         }
-        // redundant getReceipt just calls itself??
         return BigInteger.valueOf(this.getReceipt().getEnergyUsed())
                 .multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
     }

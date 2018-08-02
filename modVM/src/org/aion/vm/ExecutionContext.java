@@ -31,7 +31,8 @@ import org.aion.mcf.vm.types.DataWord;
  * @author yulong
  */
 public class ExecutionContext {
-    private static final String NEG_MSG = "must be non-negative.";
+    private static final int ENCODE_BASE_LEN = (Address.ADDRESS_LEN * 4) + (DataWord.BYTES * 3) +
+        (Long.BYTES * 4) + (Integer.BYTES * 4);
     public static int CALL = 0;
     public static int DELEGATECALL = 1;
     public static int CALLCODE = 2;
@@ -277,8 +278,7 @@ public class ExecutionContext {
      * @return the legtn of this ExecutionContext's binary encoding.
      */
     private int getEncodingLength() {
-        return (Address.ADDRESS_LEN * 4) + (DataWord.BYTES * 3) + (Long.BYTES * 4) +
-            (Integer.BYTES * 4) + callData.length;
+        return ENCODE_BASE_LEN + callData.length;
     }
 
 }

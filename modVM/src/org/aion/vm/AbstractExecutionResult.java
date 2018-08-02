@@ -23,6 +23,8 @@
 
 package org.aion.vm;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.type.IExecutionResult;
@@ -86,7 +88,7 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     public AbstractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
         this.code = code;
         this.nrgLeft = nrgLeft;
-        this.output = output;
+        this.output = (output == null) ? ByteUtil.EMPTY_BYTE_ARRAY : output;
     }
 
     /**
@@ -107,7 +109,17 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      *
      * @return a big-endian binary encoding of the AbstractExecutionResult.
      */
-    abstract public byte[] toBytes();
+    public byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 8 + 4 + (output == null ? 0 : output.length));
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(code.toInt());
+        buffer.putLong(nrgLeft);
+        buffer.putInt(output == null ? 0 : output.length);
+        if (output != null) {
+            buffer.put(output);
+        }
+        return buffer.array();
+    }
 
     /**
      * Returns an integer representation of the AbstractExecutionResult's code.
@@ -192,8 +204,8 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      */
     @Override
     public String toString() {
-        return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " +
-            Hex.toHexString(output) + "]";
+        String out = (output == null) ? "" : Hex.toHexString(output);
+        return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + out + "]";
     }
 
 }
