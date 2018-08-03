@@ -2,6 +2,8 @@ package org.aion.api.server;
 
 import org.aion.api.server.types.CompiledContr;
 import org.aion.base.type.Address;
+import org.aion.mcf.account.AccountManager;
+import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
 import org.junit.Test;
 
@@ -65,14 +67,21 @@ public class ApiTests {
         assertFalse(api.unlockAccount(Address.ZERO_ADDRESS(), "testPassword", 0));
         assertFalse(api.unlockAccount(Address.ZERO_ADDRESS().toString(), "testPassword", 0));
         assertFalse(api.lockAccount(Address.ZERO_ADDRESS(), "testPassword"));
+
+        Address addr = new Address(Keystore.create("testPwd"));
+        assertTrue(api.unlockAccount(addr, "testPwd", 50000));
     }
 
     @Test
     public void TestAccountRetrieval() {
         System.out.println("run TestAccountRetrieval.");
         ApiImpl api = new ApiImpl();
-        assertTrue(api.getAccounts().isEmpty());
         assertNull(api.getAccountKey(Address.ZERO_ADDRESS().toString()));
+
+        String addr = Keystore.create("testPwd");
+        assertEquals(AccountManager.inst().getKey(Address.wrap(addr)), api.getAccountKey(addr));
+
+        assertTrue(api.getAccounts().contains(addr));
     }
 
     @Test
