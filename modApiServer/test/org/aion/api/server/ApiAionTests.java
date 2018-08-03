@@ -1,6 +1,8 @@
 package org.aion.api.server;
 
+import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
+import org.aion.api.server.types.TxRecpt;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
@@ -8,6 +10,8 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.account.AccountManager;
+import org.aion.mcf.account.Keystore;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -100,7 +104,6 @@ public class ApiAionTests {
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         System.out.println("API Version = " + api.getApiVersion());
         assertNotNull(api.getInstalledFltrs());
-        assertNotNull(api.getCoinbase());
     }
 
     @Test
@@ -109,10 +112,10 @@ public class ApiAionTests {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         api.initNrgOracle(impl);
-        assertNotNull(ApiAion.NRG_ORACLE);
+        assertNotNull(api.getNrgOracle());
         // Initing a second time should not create a new NrgOracle
         api.initNrgOracle(impl);
-        assertNotNull(ApiAion.NRG_ORACLE);
+        assertNotNull(api.getNrgOracle());
     }
 
     @Test
@@ -180,10 +183,10 @@ public class ApiAionTests {
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
-        String msg = "test message";
+        byte[] msg = "test message".getBytes();
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                 Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                    msg.getBytes(),100000, 100000);
+                    msg,100000, 100000);
         tx.sign(new ECKeyEd25519());
 
         AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
@@ -208,6 +211,166 @@ public class ApiAionTests {
 
         assertEquals(tx, api.getTransactionByHash(tx.getHash()));
 
+    }
 
+    @Test
+    public void TestDoCall() {
+        System.out.println("run TestDoCall.");
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        byte[] msg = "test message".getBytes();
+
+        Address addr = new Address(Keystore.create("testPwd"));
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+                msg,100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+
+        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNotNull(api.doCall(txcall));
+    }
+
+    @Test
+    public void TestEstimates() {
+        System.out.println("run TestEstimates.");
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        byte[] msg = "test message".getBytes();
+
+        Address addr = new Address(Keystore.create("testPwd"));
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+                msg,100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+
+        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNotEquals(0, api.estimateGas(txcall));
+        assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
+    }
+
+    @Test
+    public void TestCreateContract() {
+        System.out.println("run TestCreateContract.");
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        byte[] msg = "test message".getBytes();
+
+        Address addr = new Address(Keystore.create("testPwd"));
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNotNull(api.createContract(txcall).transId);
+        assertNotNull(api.createContract(txcall).address);
+
+        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNull(api.createContract(txcall));
+
+        txcall = new ArgTxCall(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNull(api.createContract(txcall));
+    }
+
+    @Test
+    public void TestAccountGetters() {
+        System.out.println("run TestTransactionGetters.");
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS()));
+        assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS()));
+        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS().toString()));
+        assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS().toString()));
+    }
+
+    @Test
+    public void TestSendTransaction() {
+        System.out.println("run TestSendTransaction.");
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        byte[] msg = "test message".getBytes();
+
+        Address addr = new Address(Keystore.create("testPwd"));
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNotNull(api.sendTransaction(txcall));
+
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+                msg,100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+        assertNotNull(api.sendTransaction(tx.getEncoded()));
+
+        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNull(api.sendTransaction(txcall));
+
+        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
+                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+
+        assertNull(api.sendTransaction(txcall));
+    }
+
+    @Test
+    public void TestSimpleGetters() {
+        System.out.println("run TestSimpleGetters.");
+        AionImpl impl = AionImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        assertEquals(CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
+            api.getRecommendedNrgPrice());
+        api.initNrgOracle(impl);
+        assertEquals(api.getNrgOracle().getNrgPrice(),
+                api.getRecommendedNrgPrice());
+
+        assertNotNull(api.getCoinbase());
+        assertEquals(impl.getAionHub().getRepository().getCode(Address.ZERO_ADDRESS()),
+                api.getCode(Address.ZERO_ADDRESS()));
+        assertEquals(impl.getBlockMiner().isMining(), api.isMining());
+        assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
+        assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
+        assertNotNull(api.p2pProtocolVersion());
+        assertNotEquals(0, api.getDefaultNrgLimit());
+        assertEquals(impl.getAionHub().getP2pMgr().chainId(), Integer.parseInt(api.chainId()));
+    }
+
+    @Test
+    public void TestHashRate() {
+        System.out.println("run TestSendTransaction.");
+        AionImpl impl = AionImpl.inst();
+        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+
+        double hashRate = 1000;
+
+        assertTrue(api.setReportedHashrate(Double.toString(hashRate), ""));
+        assertEquals(impl.getBlockMiner().getHashrate() + hashRate, Double.parseDouble(api.getHashrate()), 0.001);
     }
 }
