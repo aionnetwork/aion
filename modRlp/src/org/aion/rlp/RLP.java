@@ -510,8 +510,8 @@ public class RLP {
         } else {
             byte[] out = new byte[9];
             out[0] = (byte) (OFFSET_SHORT_ITEM + 8);
-            for (int i = 7; i >= 0; i--) {
-                out[i + 1] = (byte) (l & 0xFF);
+            for (int i = 8; i > 0; i--) {
+                out[i] = (byte) (l & 0xFF);
                 l >>= 8;
             }
             return out;

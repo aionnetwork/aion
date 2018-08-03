@@ -113,37 +113,23 @@ public class CompactEncoder {
         }
         int oddlen = (nibbles.length - terminator) % 2;
         int flag = 2 * terminator + oddlen;
-        if (oddlen != 0) {
-            byte[] ret;
-            if (terminator == 0) {
-                ret = new byte[nibbles.length + 1];
-                ret[0] = (byte) flag;
-                System.arraycopy(nibbles, 0, ret, 1, nibbles.length);
-            } else { // terminator == 1
-                ret = new byte[nibbles.length];
-                ret[0] = (byte) flag;
-                System.arraycopy(nibbles, 0, ret, 1, nibbles.length - 1);
-            }
-            nibbles = ret;
-        } else {
-            byte[] ret;
-            if (terminator == 0) {
-                ret = new byte[nibbles.length + 2];
-                ret[0] = (byte) flag;
-                ret[1] = 0;
-                System.arraycopy(nibbles, 0, ret, 2, nibbles.length);
-            } else { // terminator == 1
-                ret = new byte[nibbles.length + 1];
-                ret[0] = (byte) flag;
-                ret[1] = 0;
-                System.arraycopy(nibbles, 0, ret, 2, nibbles.length - 1);
-            }
-            nibbles = ret;
-        }
+
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        for (int i = 0; i < nibbles.length; i += 2) {
+        int len = terminator == 0 ? nibbles.length : nibbles.length - 1;
+        int start;
+
+        if (oddlen != 0) {
+            buffer.write(16 * (byte) flag + nibbles[0]);
+            start = 1;
+        } else {
+            buffer.write(16 * (byte) flag);
+            start = 0;
+        }
+
+        for (int i = start; i < len; i += 2) {
             buffer.write(16 * nibbles[i] + nibbles[i + 1]);
         }
+
         return buffer.toByteArray();
     }
 
