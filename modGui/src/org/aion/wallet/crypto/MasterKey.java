@@ -32,15 +32,14 @@ public class MasterKey {
     }
 
     private byte[] getChild(final int pathElement, final byte[] keyHash) throws ValidationException {
-
         byte[] parentPrivateKey = Arrays.copyOfRange(keyHash, 0, 32);
         byte[] parentChainCode = Arrays.copyOfRange(keyHash, 32, 64);
 
         // ed25519 supports ONLY hardened keys
-        final byte[] offset = CryptoUtils.getHardenedNumber(pathElement);
+        final byte[] offset = CryptoUtils.hardenedNumber(pathElement);
 
         byte[] parentPaddedKey = org.spongycastle.util.Arrays.concatenate(new byte[]{0}, parentPrivateKey, offset);
 
-        return CryptoUtils.getSha512(parentChainCode, parentPaddedKey);
+        return CryptoUtils.hashSha512(parentChainCode, parentPaddedKey);
     }
 }

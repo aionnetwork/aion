@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.RefreshEvent;
-import org.aion.gui.model.dto.BalanceDto;
+import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.util.BalanceUtils;
 import org.aion.gui.util.UIUtils;
 import org.aion.log.AionLoggerFactory;
@@ -56,15 +56,15 @@ private Label activeAccount;
 
     private String accountAddress;
 
-    private final BalanceDto balanceDto;
+    private final BalanceRetriever balanceRetriever;
     private final Map<Node, HeaderPaneButtonEvent> headerButtons;
 
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.GUI.name());
     private static final String STYLE_DEFAULT = "header-button-default";
     private static final String STYLE_PRESSED = "header-button-pressed";
 
-    public HeaderPaneControls(BalanceDto balanceDto) {
-        this.balanceDto = balanceDto;
+    public HeaderPaneControls(BalanceRetriever balanceRetriever) {
+        this.balanceRetriever = balanceRetriever;
         this.headerButtons = new HashMap<>();
         this.accountAddress = "";
     }
@@ -153,14 +153,10 @@ private Label activeAccount;
             final String[] text = accountBalance.getText().split(BalanceUtils.CCY_SEPARATOR);
             final String currency = text[1];
 
-            Task<Void> getBalanceTask = getApiTask(o -> {
-                balanceDto.setAddress(accountAddress); // TODO ugly
-                balanceDto.loadFromApi();
-                return null;
-            }, null);
+            Task<BigInteger> getBalanceTask = getApiTask(balanceRetriever::getBalance, accountAddress);
             runApiTask(
                     getBalanceTask,
-                    evt -> Platform.runLater(() -> updateNewBalance(currency, balanceDto.getBalance())),
+                    evt -> Platform.runLater(() -> updateNewBalance(currency, getBalanceTask.getValue())),
                     getErrorEvent(throwable -> {}, getBalanceTask),
                     getEmptyEvent()
             );

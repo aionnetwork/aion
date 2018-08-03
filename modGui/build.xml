@@ -10,6 +10,8 @@
     <property name="dir.integtest" value="./build/integration-test"/>
     <property name="test.report.dir" value="report"/>
     <property name="dir.javaAPIlib" value="../javaAPIlib"/>
+	<property name="native.src.dir" value="../native" />
+	<property name="native.dir" value="native" />
 
     <!-- Dependencies for building production code (i.e. non-test files) -->
     <path id="classpath.dependency">
@@ -50,8 +52,7 @@
         <pathelement location="${dir.lib}/../aion_api/lib/gson-2.7.jar" /> <!-- hmm... -->
         <pathelement location="${dir.mod}/modAion.jar"/>
         <pathelement location="${dir.mod}/modDbImpl.jar"/>
-        <pathelement location="${dir.mod}/modDbImpl.jar"/>
-
+        <pathelement location="${dir.mod}/modRlp.jar"/>
     </path>
 
     <target name="clean_build" depends="clean">
@@ -65,11 +66,16 @@
         <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${test.report.dir}"/>
         <delete file="${dir.mod}/modGui.jar"/>
+		<delete dir="${native.dir}" />
     </target>
 
 
     <target name="test" depends="test_build">
         <mkdir dir="${test.report.dir}"/>
+		<mkdir dir="${native.dir}" />
+		<copy todir="${native.dir}">
+			<fileset dir="${native.src.dir}" />
+		</copy>
         <junit printsummary="on" haltonfailure="yes" fork="true">
             <classpath>
                 <path refid="classpath.test"/>
@@ -88,6 +94,10 @@
         <echo message="user.dir = ${user.dir}" />
         <echo message="basedir = ${basedir}" />
         <mkdir dir="${test.report.dir}"/>
+		<mkdir dir="${native.dir}" />
+		<copy todir="${native.dir}">
+			<fileset dir="${native.src.dir}" />
+		</copy>
         <junit printsummary="on" haltonfailure="yes" fork="yes">
 
             <!-- hack to make KernelLauncher use the correct path regardless of 

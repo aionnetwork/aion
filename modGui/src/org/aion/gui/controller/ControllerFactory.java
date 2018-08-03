@@ -4,13 +4,13 @@ import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
 import org.aion.gui.controller.partials.ConsoleTailController;
 import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.ConsoleTail;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.TransactionProcessor;
-import org.aion.gui.model.dto.BalanceDto;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.os.KernelLauncher;
 import org.aion.os.UnixKernelProcessHealthChecker;
@@ -84,7 +84,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(AccountsController.class, () -> new AccountsController(
                     accountManager, walletStorage, consoleManager));
             put(HeaderPaneControls.class, () -> new HeaderPaneControls(
-                    new BalanceDto(kernelConnection)));
+                    new BalanceRetriever(kernelConnection)));
             put(SendController.class, () -> new SendController(
                     kernelConnection,
                     accountManager,

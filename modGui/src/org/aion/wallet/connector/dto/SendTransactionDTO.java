@@ -3,7 +3,6 @@ package org.aion.wallet.connector.dto;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.wallet.exception.ValidationException;
 import org.aion.wallet.util.AddressUtils;
-import org.aion.wallet.util.ConfigUtils;
 
 import java.math.BigInteger;
 

@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -119,8 +118,8 @@ public class AccountManagerTest {
         // verify return value
         assertThat(result, is(mnemonic));
         // verify master ("root") key creation
-        assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.getBip39ECKey(mnemonic).getPubKey()));
-        assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.getBip39ECKey(mnemonic).getPrivKeyBytes()));
+        assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
+        assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
         // verify creation of new accountDTO and its derived key
         ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex}); // TODO why 44,425,0,0
         assertThat(unit.getAccounts().size(), is(1));
@@ -149,8 +148,8 @@ public class AccountManagerTest {
         unit.importMasterAccount(mnemonic, password);
 
         // verify master ("root") key creation
-        assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.getBip39ECKey(mnemonic).getPubKey()));
-        assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.getBip39ECKey(mnemonic).getPrivKeyBytes()));
+        assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
+        assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
         // verify creation of new accountDTO and its derived key
         int derivIndex = 0;
         ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex}); // TODO why 44,425,0,0
@@ -188,7 +187,7 @@ public class AccountManagerTest {
     public void testUnlockMasterAccountWhenMasterAccountExists() throws Exception {
         // calculate the addresses needed for mocking the Keystore part
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.getBip39ECKey(mnemonic));
+        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
         ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
         String address1 = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
         ECKey derivedKey2 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 1}); // TODO why 44,425,0,0
@@ -222,7 +221,7 @@ public class AccountManagerTest {
     public void testCreateAccount() throws Exception {
         // calculate the addresses needed for mocking the Keystore part
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.getBip39ECKey(mnemonic));
+        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
         ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
         String address1 = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
         String[] accountList = new String[] { address1 };
@@ -254,7 +253,7 @@ public class AccountManagerTest {
     public void testImportKeystoreWhenShouldNotKeepAccountAndAccountAlreadyExists() throws Exception {
         // need to create the keystore bytes so we can use it as test input
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.getBip39ECKey(mnemonic));
+        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
         ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
 
         String password = "pw";
@@ -280,7 +279,7 @@ public class AccountManagerTest {
     public void testImportKeystoreWhenShouldNotKeepAccount() throws Exception {
         // need to create the keystore bytes so we can use it as test input
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.getBip39ECKey(mnemonic));
+        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
         ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
 
         String password = "pw";
@@ -305,7 +304,7 @@ public class AccountManagerTest {
     public void testImportKeystoreWhenShouldKeepAccount() throws Exception {
         // need to create the keystore bytes so we can use it as test input
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.getBip39ECKey(mnemonic));
+        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
         ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
 
         String password = "pw";
@@ -333,7 +332,7 @@ public class AccountManagerTest {
     @Test
     public void testImportPrivateKey() throws Exception {
         // set up an arbitrary private key to use as test input
-        ECKey key = CryptoUtils.getBip39ECKey(
+        ECKey key = CryptoUtils.generateSha512HashedBip39ECKey(
                 "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
         byte[] privKey = key.getPrivKeyBytes();
 
@@ -362,7 +361,7 @@ public class AccountManagerTest {
         // external implies the keystore content is already in addressToKeystoreContent map
 
         // first we need to import an accout so that it is in that map
-        ECKey key = CryptoUtils.getBip39ECKey(
+        ECKey key = CryptoUtils.generateSha512HashedBip39ECKey(
                 "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
         byte[] privKey = key.getPrivKeyBytes();
 
@@ -401,7 +400,7 @@ public class AccountManagerTest {
         );
 
         String password = "password";
-        ECKey key = CryptoUtils.getBip39ECKey(
+        ECKey key = CryptoUtils.generateSha512HashedBip39ECKey(
                 "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
         when(keystoreWrapper.getKey("0x"+pubAddress, password)).thenReturn(key);
 

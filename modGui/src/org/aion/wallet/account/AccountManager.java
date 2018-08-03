@@ -138,7 +138,7 @@ public class AccountManager {
     }
 
     private AccountDTO processMasterAccount(final String mnemonic, final String password) throws ValidationException {
-        final ECKey rootEcKey = CryptoUtils.getBip39ECKey(mnemonic);
+        final ECKey rootEcKey = CryptoUtils.generateSha512HashedBip39ECKey(mnemonic);
 
         root = new MasterKey(rootEcKey);
         walletStorage.setMasterAccountMnemonic(mnemonic, password);
@@ -153,7 +153,7 @@ public class AccountManager {
         }
         isWalletLocked = false;
 
-        final ECKey rootEcKey = CryptoUtils.getBip39ECKey(walletStorage.getMasterAccountMnemonic(password));
+        final ECKey rootEcKey = CryptoUtils.generateSha512HashedBip39ECKey(walletStorage.getMasterAccountMnemonic(password));
         root = new MasterKey(rootEcKey);
 
         final int accountDerivations = walletStorage.getMasterAccountDerivations();

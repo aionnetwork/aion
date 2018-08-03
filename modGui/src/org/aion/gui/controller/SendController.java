@@ -17,9 +17,9 @@ import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.RefreshEvent;
-import org.aion.gui.model.TransactionProcessor;
+import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.model.KernelConnection;
-import org.aion.gui.model.dto.BalanceDto;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.util.AionConstants;
 import org.aion.gui.util.BalanceUtils;
 import org.aion.gui.util.UIUtils;
@@ -77,7 +77,7 @@ public class SendController extends AbstractController {
     @FXML
     private Label timedoutTransactionsLabel;
 
-    private BalanceDto balanceDto;
+    private BalanceRetriever balanceRetriever;
     private AccountDTO account;
     private boolean connected;
     private final TransactionResubmissionDialog transactionResubmissionDialog;
@@ -98,7 +98,7 @@ public class SendController extends AbstractController {
         this.transactionProcessor = transactionProcessor;
         this.transactionResubmissionDialog = new TransactionResubmissionDialog(
                 accountManager, consoleManager); // TODO should be injectable
-        this.balanceDto = new BalanceDto(kernelConnection); // TODO should be injectable
+        this.balanceRetriever = new BalanceRetriever(kernelConnection); // TODO should be injectable
         this.consoleManager = consoleManager;
     }
 
@@ -304,31 +304,16 @@ public class SendController extends AbstractController {
         if (account == null) {
             return;
         }
-        Task<Void> getBalanceTask = getApiTask(o -> {
-            balanceDto.setAddress(account.getPublicAddress()); // TODO ugly
-            balanceDto.loadFromApi();
-            return null;
-        }, null);
+        Task<BigInteger> getBalanceTask = getApiTask(balanceRetriever::getBalance, account.getPublicAddress());
         runApiTask(
                 getBalanceTask,
-                evt -> Platform.runLater(() -> {  // TODO confusing as hell
-                    account.setBalance(BalanceUtils.formatBalance(balanceDto.getBalance()));
+                evt -> Platform.runLater(() -> {
+                    account.setBalance(BalanceUtils.formatBalance(getBalanceTask.getValue()));
                     setAccountBalanceText();
                 }),
                 getErrorEvent(throwable -> {}, getBalanceTask),
                 getEmptyEvent()
         );
-
-//        final Task<BigInteger> getBalanceTask = getApiTask(blockchainConnector::getBalance, account.getPublicAddress());
-//        runApiTask(
-//                getBalanceTask,
-//                evt -> {
-//                    account.setBalance(BalanceUtils.formatBalance(getBalanceTask.getValue()));
-//                    setAccountBalanceText();
-//                },
-//                getErrorEvent(t -> {}, getBalanceTask),
-//                getEmptyEvent()
-//        );
     }
 
     private SendTransactionDTO mapFormData() throws ValidationException {

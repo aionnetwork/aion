@@ -14,6 +14,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
+/**
+ * Event handlers for account change related events
+ */
 public class AccountChangeHandlers {
     private final AccountManager accountManager;
     private final TransactionProcessor transactionProcessor;
@@ -25,31 +28,21 @@ public class AccountChangeHandlers {
         EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).register(this);
     }
 
-    // originally from ApiBlockchainConnector.java
     @Subscribe
     private void handleAccountEvent(final AccountEvent event) {
-        System.out.println("AccountChangeHandlers#handleAccountEvent");
         final AccountDTO account = event.getPayload();
         if (AbstractAccountEvent.Type.CHANGED.equals(event.getType())) {
-            System.out.println("AccountChangeHandlers#handleAccountEvent A");
             accountManager.updateAccount(account);
         } else if (AbstractAccountEvent.Type.ADDED.equals(event.getType())) {
-            System.out.println("AccountChangeHandlers#handleAccountEvent B");
-//            backgroundExecutor.submit(() -> processTransactionsFromBlock(null, Collections.singleton(account.getPublicAddress())));
             transactionProcessor.processTxnsFromBlockAsync(null, Collections.singleton(account.getPublicAddress()));
         }
     }
 
-    // originally from ApiBlockchainConnector.java
     @Subscribe
     private void handleAccountListEvent(final AccountListEvent event) {
-        System.out.println("AccountChangeHandlers#handleAccountListEvent");
-
         if (AbstractAccountEvent.Type.RECOVERED.equals(event.getType())) {
-            System.out.println("AccountChangeHandlers#handleAccountListEvent A");
             final Set<String> addresses = event.getPayload();
             final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {});
-//            backgroundExecutor.submit(() -> processTransactionsFromBlock(oldestSafeBlock, addresses));
             transactionProcessor.processTxnsFromBlockAsync(oldestSafeBlock, addresses);
             final Iterator<String> addressesIterator = addresses.iterator();
             AccountDTO account = accountManager.getAccount(addressesIterator.next());

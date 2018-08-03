@@ -7,18 +7,18 @@ import org.libsodium.jni.Sodium;
 import java.math.BigInteger;
 
 public class SeededECKeyEd25519 extends ECKeyEd25519 {
-
-    private static int SIG_BYTES = Sodium.crypto_sign_ed25519_seedbytes();
-
     private final byte[] publicKey;
     private final byte[] secretKey;
     private final byte[] address;
+
+    private static final int SIG_BYTES = Sodium.crypto_sign_ed25519_seedbytes();
 
     public SeededECKeyEd25519(final byte[] seed) {
         checkSeed(seed);
         publicKey = new byte[PUBKEY_BYTES];
         secretKey = new byte[SECKEY_BYTES];
         Sodium.crypto_sign_ed25519_seed_keypair(publicKey, secretKey, seed);
+
         address = computeAddress(publicKey);
     }
 
