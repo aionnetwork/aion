@@ -28,7 +28,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +36,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.CfgAion;
@@ -57,7 +57,7 @@ public class Cli {
     File keystoreDir = new File(
         System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
-    public int call(final String[] args, final Cfg cfg) {
+    public int call(final String[] args, Cfg cfg) {
         try {
             cfg.fromXML();
             switch (args[0].toLowerCase()) {
@@ -247,11 +247,19 @@ public class Cli {
                 case "-d":
                 case "--datadir":
                     if (args.length == 2 && isValid(args[1])) {
-                        AionRepositoryImpl.setDatabasePath(args[1]);
+
+                        // TODO: Check if the folder exists
+                        // TODO: Copy keystore, config and genesis files
+                        // TODO: Set the BASE_PATH (CONF + GENESIS)
+                        // TODO: Set the KEYSTORE folder path
+
+                        cfg.getDb().setDatabasePath(args[1] + "/database");
+                        cfg.getLog().setLogPath(args[1] + "/log");
                     } else {
                         System.out.println("Invalid arguments; Defaulted database path");
                         return 1;
                     }
+                    cfg.toXML(null);
                     break;
 
                 case "--dump-state":

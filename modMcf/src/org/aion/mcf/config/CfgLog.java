@@ -164,4 +164,9 @@ public class CfgLog {
     public boolean isValidPath() {
         return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
+
+    public void setLogPath(String value) {
+        logPath = value;
+    }
+
 }

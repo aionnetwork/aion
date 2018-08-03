@@ -6,7 +6,6 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.config.CfgAion;
-import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -197,19 +196,19 @@ public class CliTest {
 
         Cli cli = new Cli();
         Cfg cfg = CfgAion.inst();
-        AionRepositoryImpl db = AionRepositoryImpl.inst();
+
 
         assertEquals(1, cli.call(networkArgs[0], cfg) );
-        assertEquals("database", db.getDatabasePath() );
+        assertEquals("database", cfg.getDb().getPath() );
 
         assertEquals(1, cli.call(networkArgs[1], cfg) );
-        assertEquals("database", db.getDatabasePath() );
+        assertEquals("database", cfg.getDb().getPath() );
 
         assertEquals(0, cli.call(networkArgs[2], cfg) );
-        assertEquals("database", db.getDatabasePath() );
+        assertEquals("database", cfg.getDb().getPath() );
 
         assertEquals(0, cli.call(networkArgs[3], cfg) );
-        assertEquals("test_db", db.getDatabasePath() );
+        assertEquals("test_db", cfg.getDb().getPath() );
 
     }
 

@@ -28,7 +28,6 @@ import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.io.Console;
-import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
