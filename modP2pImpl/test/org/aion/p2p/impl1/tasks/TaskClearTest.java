@@ -22,7 +22,7 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -58,9 +58,8 @@ public class TaskClearTest {
         t.start();
         assertTrue(t.isAlive());
         Thread.sleep(10);
-        assertTrue(tc.isRun());
         atb.set(false);
         Thread.sleep(10_100);
-        assertFalse(tc.isRun());
+        assertEquals("TERMINATED", t.getState().toString());
     }
 }
