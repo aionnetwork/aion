@@ -42,6 +42,51 @@ import static org.junit.Assert.assertEquals;
 
 public class ByteArrayWrapperTest {
 
+    private final int size = 7;
+
+    private final String[] inputString = {
+            null,
+            "",
+            "eE55fF66eE55fF66eE55fF66eE55fF66",
+            "aA11bB22cC33dd44aA11bB22cC33dd44aA11bB22cC33dd44aA11bB22cC33dd44",
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            "0000000000000000000000000000000000000000000000000000000000000001",
+    };
+
+    private final byte[][] inputByte = {
+            null,
+            ByteUtil.hexStringToBytes(inputString[1]),
+            ByteUtil.hexStringToBytes(inputString[2]),
+            ByteUtil.hexStringToBytes(inputString[3]),
+            ByteUtil.hexStringToBytes(inputString[4]),
+            ByteUtil.hexStringToBytes(inputString[5]),
+            ByteUtil.hexStringToBytes(inputString[6]),
+    };
+
+    /**
+     * 1. Wrap the input data
+     * 2. Assert to see if equal
+     */
+    @Test
+    public void testWrap() {
+
+        ByteArrayWrapper tempArray;
+
+        System.out.println("\nWrap test:");
+        for(int a = 0; a < size; a++) {
+            try {
+                tempArray = ByteArrayWrapper.wrap(inputByte[a]);
+                assertEquals(tempArray.toString(), inputString[a].toLowerCase());
+                assertEquals(tempArray.toBytes(), tempArray.getData());
+                System.out.println("Test " + a + ": Valid " + tempArray);
+            } catch (NullPointerException e) {
+                System.out.println("Test " + a + ": Invalid");
+            }
+        }
+    }
+
+
     @Test
     public void testCollision() {
         java.util.HashMap<ByteArrayWrapper, Object> map = new java.util.HashMap<>();
