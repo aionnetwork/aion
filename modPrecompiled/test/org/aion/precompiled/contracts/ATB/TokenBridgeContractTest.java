@@ -165,6 +165,12 @@ public class TokenBridgeContractTest {
         }
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
 
+        // ATB-4, do one assert here to check that transactionHash is not set
+        assertThat(this.contract.execute(
+                ByteUtil.merge(BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
+                        payloadHash), 21000L).getOutput())
+                .isEqualTo(ByteUtil.EMPTY_WORD);
+
         byte[][] signatures = new byte[members.length][];
         int i = 0;
         for (ECKey k : members) {
@@ -202,6 +208,13 @@ public class TokenBridgeContractTest {
 
 
         /// VERIFICATION
+
+        // ATB-4 assert that transactionHash is now properly set
+        // ATB-4, do one assert here to check that transactionHash is not set
+        assertThat(this.contract.execute(
+                ByteUtil.merge(BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
+                        payloadHash), 21000L).getOutput())
+                .isEqualTo(submitBundleContext.transactionHash());
 
         assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
 
@@ -348,5 +361,10 @@ public class TokenBridgeContractTest {
 
         assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
         assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+    }
+
+    @Test
+    public void testBundleHash() {
+
     }
 }

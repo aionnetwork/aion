@@ -214,8 +214,8 @@ public class BridgeController {
         return signatureLength >= thresh && signatureLength <= this.connector.getMemberCount();
     }
 
-    private boolean bundleProcessed(byte[] hash) {
-        return this.connector.getBundle(hash);
+    private boolean bundleProcessed(@Nonnull final byte[] hash) {
+        return !Arrays.equals(this.connector.getBundle(hash), ByteUtil.EMPTY_WORD);
     }
 
     /**
@@ -240,6 +240,7 @@ public class BridgeController {
      * list to 512.
      */
     public ProcessedResults processBundles(@Nonnull final byte[] caller,
+                                           @Nonnull final byte[] transactionHash,
                                            @Nonnull final byte[] sourceBlockHash,
                                            @Nonnull final BridgeTransfer[] transfers,
                                            @Nonnull final byte[][] signatures) {
@@ -306,7 +307,7 @@ public class BridgeController {
                 emitDistributed(b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue());
             results.add(result);
         }
-        this.connector.setBundle(hash, true);
+        this.connector.setBundle(hash, transactionHash);
         emitProcessedBundle(sourceBlockHash, hash);
         return processSuccess(ErrCode.NO_ERROR, results);
     }

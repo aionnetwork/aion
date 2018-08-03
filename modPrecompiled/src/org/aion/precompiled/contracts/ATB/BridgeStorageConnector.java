@@ -12,6 +12,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.PrecompiledUtilities;
 
 /**
  * Storage layout mapping as the following:
@@ -186,23 +187,53 @@ public class BridgeStorageConnector {
         return (activeMemberWord[15] & 0x01) == 1;
     }
 
+    /**
+     * @implNote ATB-4 changes, we have a new requirement in the contract
+     * to store the value (transactionHash) of when the bundle was set
+     * into the block.
+     *
+     * Therefore, where previously we were checking whether the bundle
+     * was valid based on a {@code true/false} assumption, we now check
+     * whether the bundle is valid based on whether the returned address
+     * equates to a zero word.
+     *
+     * Documentation on the change can be found as part of v0.0.4
+     * changes.
+     */
     public void setBundle(@Nonnull final byte[] key,
-                          final boolean value) {
+                          @Nonnull final byte[] value) {
         assert key.length == 32;
+        assert value.length == 32;
+
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
-        DataWord b = value ? new DataWord(1) : new DataWord(0);
-        this.setWORD(hWord, b);
+        this.setDWORD(hWord, value);
     }
 
-    public boolean getBundle(@Nonnull final byte[] key) {
+    /**
+     * @implNote changed as part of ATB-4, see {@link #setBundle(byte[], byte[])}
+     * above for more information.
+     *
+     * @implNote note here that we return an EMPTY_WORD, this is checked in
+     * the controller layer and equates to a false.
+     *
+     * @param key bundleHash
+     * @return {@code EMPTY_WORD (32)} if no blockHash is found, {@code transactionHash}
+     *         of the input transaction otherwise.
+     */
+    public byte[] getBundle(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
-        byte[] bundleWord = this.getWORD(hWord);
-        if (bundleWord == null)
-            return false;
-        return (bundleWord[15] & 0x01) == 1;
+        byte[] bundleDoubleWord = this.getDWORD(hWord);
+        if (bundleDoubleWord == null)
+            return ByteUtil.EMPTY_WORD;
+
+        // paranoid, this should typically never happen
+        if (bundleDoubleWord.length < 32)
+            bundleDoubleWord = PrecompiledUtilities.pad(bundleDoubleWord, 32);
+
+        return bundleDoubleWord;
     }
 
     // DWORD helpers

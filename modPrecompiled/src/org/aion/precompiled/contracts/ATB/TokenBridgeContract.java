@@ -153,8 +153,13 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (bundleRequests == null)
                     return fail();
 
+                // ATB-4, as part of the changes we now
+                // pass in the transactionHash of the call
+                // into the contract, this will be logged so that
+                // we can refer to it at a later time.
                 BridgeController.ProcessedResults results = this.controller.processBundles(
                         this.context.caller().toBytes(),
+                        this.context.transactionHash(),
                         bundleRequests.blockHash,
                         bundleRequests.bundles,
                         bundleRequests.signatures);
@@ -183,7 +188,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] bundleHash = parseDwordFromCall(input);
                 if (bundleHash == null)
                     return fail();
-                return success(booleanToResultBytes(this.connector.getBundle(bundleHash)));
+                return success(this.connector.getBundle(bundleHash));
             default:
                 return fail();
         }
