@@ -7,6 +7,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.computeBundleHa
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -261,8 +262,15 @@ public class BridgeController {
         // verify bundleHash
         byte[] hash = computeBundleHash(sourceBlockHash, transfers);
 
-        if (bundleProcessed(hash))
-            return processError(ErrCode.PROCESSED);
+        // ATB 4-1, a transaction submitting a bundle that has already been
+        // submitted should not trigger a failure. Instead we should emit
+        // an event indicating the transactionHash that the bundle was
+        // previously successfully broadcast in.
+        if (bundleProcessed(hash)) {
+            emitSuccessfulTransactionHash(transactionHash);
+            return processSuccess(ErrCode.NO_ERROR,
+                    Collections.emptyList());
+        }
 
         int signed = 0;
         for (byte[] sigBytes : signatures) {
@@ -349,6 +357,13 @@ public class BridgeController {
                 BridgeEventSig.PROCESSED_BUNDLE.getHashed(),
                 sourceBlockHash,
                 bundleHash);
+        addLog(topics);
+    }
+
+    private void emitSuccessfulTransactionHash(@Nonnull final byte[] aionTransactionHash) {
+        List<byte[]> topics = Arrays.asList(
+                BridgeEventSig.SUCCESSFUL_TXHASH.getHashed(),
+                aionTransactionHash);
         addLog(topics);
     }
 
