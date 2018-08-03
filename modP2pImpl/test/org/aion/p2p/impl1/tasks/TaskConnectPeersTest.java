@@ -23,7 +23,7 @@
 package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -170,10 +170,9 @@ public class TaskConnectPeersTest {
         t.start();
         assertTrue(t.isAlive());
         Thread.sleep(10);
-        assertTrue(tcp.isRun());
         atb.set(false);
         Thread.sleep(2000);
-        assertFalse(tcp.isRun());
+        assertEquals("TERMINATED", t.getState().toString());
     }
 
     @Test
@@ -195,7 +194,6 @@ public class TaskConnectPeersTest {
         t.start();
         assertTrue(t.isAlive());
         Thread.sleep(10);
-        assertTrue(tcp.isRun());
 
         // should see the loop continue every sec
         Thread.sleep(2000);
@@ -212,7 +210,7 @@ public class TaskConnectPeersTest {
 
         atb.set(false);
         Thread.sleep(3000);
-        assertFalse(tcp.isRun());
+        assertEquals("TERMINATED", t.getState().toString());
     }
 
     @Test
@@ -231,7 +229,6 @@ public class TaskConnectPeersTest {
         t.start();
         assertTrue(t.isAlive());
         Thread.sleep(10);
-        assertTrue(tcp.isRun());
 
         // should see the loop continue every sec
         Thread.sleep(1000);
@@ -249,7 +246,7 @@ public class TaskConnectPeersTest {
 
         atb.set(false);
         Thread.sleep(3000);
-        assertFalse(tcp.isRun());
+        assertEquals("TERMINATED", t.getState().toString());
     }
 
     @Test
@@ -271,12 +268,12 @@ public class TaskConnectPeersTest {
         t.start();
         assertTrue(t.isAlive());
         Thread.sleep(10);
-        assertTrue(tcp.isRun());
 
         // should see the loop continue every sec
         Thread.sleep(1000);
         when(nodeMgr.tempNodesTake()).thenThrow(new NullPointerException("exception"));
-
-        assertTrue(tcp.isRun());
+        atb.set(false);
+        Thread.sleep(3000);
+        assertEquals("TERMINATED", t.getState().toString());
     }
 }
