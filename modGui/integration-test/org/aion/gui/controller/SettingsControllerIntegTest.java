@@ -20,6 +20,8 @@ import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.views.XmlArea;
 import org.aion.os.KernelControlException;
+import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.console.ConsoleManager;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
@@ -52,6 +54,8 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     private Stage stage;
     private EventBusRegistry ebr;
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
+    private AccountManager accountManager;
+    private ConsoleManager consoleManager;
 
     /**
      * Not using Mockito's @Before because JavaFX's start() runs first and that needs member
@@ -63,7 +67,7 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         when(configManipulator.loadFromConfigFile()).thenReturn(configFileContents);
         when(configManipulator.getLastLoadedContent()).thenReturn(configFileContents);
         kc = mock(KernelConnection.class);
-        ebr = mock(EventBusRegistry.class);
+        ebr = new EventBusRegistry();
     }
 
     @Override
@@ -82,6 +86,10 @@ public class SettingsControllerIntegTest extends ApplicationTest {
                 cf,
                 Charset.forName(DEFAULT_CHARSET_NAME),
                 new LinkedList<>());
+        loader.setBuilderFactory(new UiSubcomponentsFactory()
+                .withAccountManager(accountManager)
+                .withConsoleManager(consoleManager)
+        );
         Parent root = loader.load();
         controller = loader.getController();
         stage.setScene(new Scene(root));

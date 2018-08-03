@@ -14,6 +14,7 @@ public class XmlArea extends StackPane {
     private CodeArea codeArea;
 
     public XmlArea() {
+        System.out.println("XML AREA BEING CONSTRUCTED.");
         codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         VirtualizedScrollPane vsp = new VirtualizedScrollPane<>(codeArea);
