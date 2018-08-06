@@ -49,4 +49,8 @@ public interface IPowBlockHeader extends IBlockHeader {
     void setDifficulty(byte[] _diff);
 
     byte[] getPowBoundary();
+
+    byte[] getNonce();
+
+    void setNonce(byte[] _nc);
 }
