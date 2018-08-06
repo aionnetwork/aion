@@ -45,6 +45,7 @@ native/linux/solidity
 
 # tests
 modMcf/keystore
+modAionImpl/keystore
 
 
 # 3rd party
