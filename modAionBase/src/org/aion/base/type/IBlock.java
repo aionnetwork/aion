@@ -73,5 +73,18 @@ public interface IBlock<TX extends ITransaction, BH extends IBlockHeader> {
     byte[] getReceiptsRoot();
 
     long getTimestamp();
-    
+
+    Address getCoinbase();
+
+    byte[] getStateRoot();
+
+    void setStateRoot(byte[] stateRoot);
+
+    byte[] getTxTrieRoot();
+
+    byte[] getLogBloom();
+
+    long getNrgConsumed();
+
+    long getNrgLimit();
 }
