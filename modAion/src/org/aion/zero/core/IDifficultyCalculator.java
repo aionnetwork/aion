@@ -22,11 +22,12 @@
  *     Aion foundation.
  *
  ******************************************************************************/
-package org.aion.mcf.core;
+package org.aion.zero.core;
 
 import java.math.BigInteger;
 
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.types.A0BlockHeader;
 
 /**
  * Interface for retrieving difficulty calculations for a particular
@@ -38,5 +39,5 @@ import org.aion.mcf.types.AbstractBlockHeader;
  */
 @FunctionalInterface
 public interface IDifficultyCalculator {
-    BigInteger calculateDifficulty(AbstractBlockHeader current, AbstractBlockHeader dependency);
+    BigInteger calculateDifficulty(A0BlockHeader current, A0BlockHeader dependency);
 }

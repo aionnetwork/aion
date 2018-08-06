@@ -29,13 +29,11 @@ import static org.aion.base.util.BIUtil.isEqual;
 import java.math.BigInteger;
 import java.util.List;
 
-import org.aion.mcf.blockchain.IChainCfg;
-import org.aion.mcf.core.IDifficultyCalculator;
+import org.aion.zero.blockchain.IChainCfg;
+import org.aion.zero.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
-import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.IAionBlock;
 
 /**
