@@ -1,5 +1,6 @@
 package org.aion.gui.controller;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
@@ -29,6 +30,7 @@ public class ReceiveController implements Initializable{
 
     private AccountDTO account;
 
+
     @Override
     public void initialize(final URL location, final ResourceBundle resources) {
         registerEventBusConsumer();
@@ -53,10 +55,15 @@ public class ReceiveController implements Initializable{
         } else if (AccountEvent.Type.LOCKED.equals(event.getType())) {
             if (event.getPayload().equals(account)) {
                 account = null;
-                accountAddress.setText("");
+                accountAddress.setText("No account selected!");
                 qrCode.setImage(null);
             }
         }
+    }
+
+    @VisibleForTesting
+    void setAccount(AccountDTO account)  {
+        this.account = account;
     }
 
     public void onCopyToClipBoard() {

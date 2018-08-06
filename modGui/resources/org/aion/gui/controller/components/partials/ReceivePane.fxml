@@ -20,7 +20,7 @@
             <TextArea fx:id="accountAddress" styleClass="address-textarea" wrapText="true" prefRowCount="2" prefColumnCount="30" text="No account selected!"/>
         </HBox>
         <HBox alignment="TOP_CENTER">
-            <Button text="Copy to clipboard" onMouseClicked="#onCopyToClipBoard" styleClass="disabled"/>
+            <Button text="Copy to clipboard" onMouseClicked="#onCopyToClipBoard" styleClass="disabled" fx:id="copyToClipboardButton"/>
         </HBox>
     </VBox>
 </AnchorPane>
