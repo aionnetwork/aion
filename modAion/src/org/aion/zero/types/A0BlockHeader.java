@@ -31,12 +31,9 @@ import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.Objects;
 
 import org.aion.base.type.Address;
-import org.aion.base.type.IPowBlockHeader;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Utils;
 import org.aion.crypto.HashUtil;

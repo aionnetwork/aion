@@ -32,7 +32,9 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.base.type;
+package org.aion.zero.types;
+
+import org.aion.base.type.IBlockHeader;
 
 import java.math.BigInteger;
 
