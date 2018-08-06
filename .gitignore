@@ -22,6 +22,7 @@
 /mod*/native/
 /native/linux/blake2b/libblake2b.so
 /native/linux/equihash/equiMiner.so
+bin/
 
 # ci
 /report/
@@ -41,6 +42,9 @@ fastvm_*.tar.gz
 solidity_*.tar.gz
 native/linux/fastvm
 native/linux/solidity
+
+# tests
+modMcf/keystore
 
 
 # 3rd party
