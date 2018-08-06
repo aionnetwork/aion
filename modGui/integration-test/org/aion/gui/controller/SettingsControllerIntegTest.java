@@ -79,8 +79,7 @@ public class SettingsControllerIntegTest extends ApplicationTest {
                 .withKernelConnection(kc)
                 .withEventBusRegistry(ebr);
         FXMLLoader loader = new FXMLLoader(
-//                SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
-                SettingsController.class.getResource("MainWindow.fxml"),
+                SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
                 null,
                 null,
                 cf,
@@ -96,7 +95,7 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         stage.show();
         stage.toFront();
 
-        panes.put(HeaderPaneButtonEvent.Type.SETTINGS, stage.getScene().lookup("#settingsPane"));
+        lookup("#settingsPane").query().setVisible(true);
 
         EventBusRegistry.INSTANCE.getBus(WindowControlsEvent.ID).register(this);
         EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
@@ -124,8 +123,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
      */
     @Test
     public void testReset() throws Exception {
-        clickOn("#settingsButton");
-
         XmlArea xml = lookup("#xmlArea").query();
         Platform.runLater( () -> xml.setText("something new") );
         WaitForAsyncUtils.waitForFxEvents();
@@ -150,8 +147,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         when(configManipulator.applyNewConfig(anyString()))
                 .thenReturn(new ApplyConfigResult(false, errorMsg, null));
 
-        clickOn("#settingsButton");
-
         XmlArea xml = lookup("#xmlArea").query();
         Platform.runLater( () -> xml.setText("anyText") );
 
@@ -175,8 +170,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         when(configManipulator.applyNewConfig(anyString()))
                 .thenReturn(new ApplyConfigResult(true, msg, null));
 
-        clickOn("#settingsButton");
-
         XmlArea xml = lookup("#xmlArea").query();
         Platform.runLater( () -> xml.setText("anyText") );
         WaitForAsyncUtils.waitForFxEvents();
@@ -189,20 +182,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         assertThat(alertDialog.getHeaderText(), is("Confirmation"));
         assertThat(alertDialog.getContentText(), is(msg));
         Platform.runLater(() -> ((Button)alertDialog.lookupButton(ButtonType.OK)).fire());
-    }
-
-    @Subscribe
-    private void handleHeaderPaneButtonEvent(final org.aion.gui.events.HeaderPaneButtonEvent event) {
-        if(stage.getScene() == null) {
-            return;
-        }
-        for(Map.Entry<HeaderPaneButtonEvent.Type, Node> entry: panes.entrySet()) {
-            if(event.getType().equals(entry.getKey())) {
-                entry.getValue().setVisible(true);
-            } else {
-                entry.getValue().setVisible(false);
-            }
-        }
     }
 
     private DialogPane dialogPaneOfAlertBox(Stage alertBox) {

@@ -34,21 +34,16 @@ public class AccountManagerIntegTest {
      */
     @Test
     public void testImportExport() throws Exception {
+        // set up test data
         File tempLocalStorageDir = tempFolder.newFolder("localStorageDir");
         File tempExportDir = tempFolder.newFolder("export");
-
-        System.out.println("temp storage dir = " + tempLocalStorageDir.getAbsolutePath());
-        System.out.println("temp export dir = " + tempExportDir.getAbsolutePath());
-
         String localStorageDir = tempLocalStorageDir.getAbsolutePath();
         String exportDir = tempExportDir.getAbsolutePath();
 
-        // TODO Bug-fix: accountManager export function loses its mind when this isn't set
         System.setProperty("local.storage.dir", localStorageDir);
 
         final byte[] testKeystoreBytes;
-        // XXX make test file location more sane
-        try (InputStream is = new FileInputStream("modGui/test-files/test-keystore")) {
+        try (InputStream is = new FileInputStream("test-files/test-keystore")) {
             testKeystoreBytes = ByteStreams.toByteArray(is);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -60,6 +55,7 @@ public class AccountManagerIntegTest {
             return;
         }
 
+        // set up classes for test
         BalanceRetriever balanceRetriever = mock(BalanceRetriever.class);
         Supplier currencySupplier = () -> AionConstants.CCY;
         ConsoleManager consoleManager = mock(ConsoleManager.class);
@@ -72,18 +68,20 @@ public class AccountManagerIntegTest {
                 balanceRetriever, currencySupplier, consoleManager, walletStorage);
         String testKeystorePassword = "testpass";
         boolean shouldKeep = false;
+
+        // verify import
         AccountDTO account = accountManager.importKeystore(testKeystoreBytes, testKeystorePassword, shouldKeep);
 
         String expectedAddress = "0xa09210aec9c66539097a4ae9c536828eef4c69c4f65a68469326534b3cb10f5e";
         assertThat(account.getPublicAddress(), is(expectedAddress));
 
+        // verify export
         String exportPassword = "all ur base";
         String outFile = accountManager.exportAccount(account, exportPassword, exportDir);
 
         assertThat(Files.exists(Paths.get(exportDir, outFile)), is(true));
 
         final byte[] exportedKeystoreBytes;
-        // XXX fix path behaviour
         try (InputStream is = new FileInputStream(exportDir + File.separator + outFile)) {
             exportedKeystoreBytes = ByteStreams.toByteArray(is);
         } catch (FileNotFoundException e) {
