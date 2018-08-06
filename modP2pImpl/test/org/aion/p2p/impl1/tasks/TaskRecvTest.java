@@ -24,10 +24,16 @@ package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyByte;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.channels.Selector;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,46 +57,31 @@ import org.mockito.MockitoAnnotations;
 public class TaskRecvTest {
 
     @Mock
-    private
-    INodeMgr nodeMgr;
-
-    @Mock
-    private IP2pMgr p2pMgr;
-
-    @Mock
     private BlockingQueue<MsgIn> recvMsgQue;
 
     @Mock
-    private INode node;
-
-    @Mock
-    private Msg msg;
+    private Handler h;
 
     @Mock
     private Map<Integer, List<Handler>> handler;
 
-    private Selector selector;
-
-    private int lane;
 
     private Random r = new Random();
 
     @Before
-    public void Setup() throws IOException {
-        lane = Math
-            .min(Runtime.getRuntime().availableProcessors() << 1, 32);
+    public void Setup() {
         MockitoAnnotations.initMocks(this);
+
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
         AionLoggerFactory.init(logMap);
 
-        selector = Selector.open();
     }
 
     @After
-    public void tearDown() {
-    }
+    public void teardown() {
 
+    }
 
     @Test
     public void testRun() throws InterruptedException {
@@ -111,130 +102,52 @@ public class TaskRecvTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
 
-        MsgIn mi = new MsgIn(1, "1", 1, new byte[0]);
+        int route = 1;
+        MsgIn mi = new MsgIn(1, "1", route, new byte[0]);
         when(recvMsgQue.take()).thenReturn(mi);
-        //when()
+        when(handler.get(route)).thenReturn(null);
 
         Thread t = new Thread(ts);
         t.start();
         assertTrue(t.isAlive());
         Thread.sleep(10);
+
+        List<Handler> hdlr = new ArrayList<>();
+        hdlr.add(null);
+        hdlr.add(h);
+
+        when(handler.get(route)).thenReturn(hdlr);
+
         atb.set(false);
         Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
-//
-//    @Test
-//    public void testRunLane() throws InterruptedException {
-//        AtomicBoolean atb = new AtomicBoolean(true);
-//        TaskSend ts = new TaskSend(p2pMgr, 0, recvMsgQue, atb, nodeMgr, selector);
-//
-//        MsgOut mo = new MsgOut(1, "1", msg, Dest.OUTBOUND);
-//        when(recvMsgQue.take()).thenReturn(mo);
-//
-//        Thread t = new Thread(ts);
-//        t.start();
-//        assertTrue(t.isAlive());
-//        Thread.sleep(10);
-//        atb.set(false);
-//        Thread.sleep(100);
-//        assertEquals("TERMINATED", t.getState().toString());
-//    }
-//
-//    @Test
-//    public void testRun2() throws InterruptedException, IOException {
-//        AtomicBoolean atb = new AtomicBoolean(true);
-//        TaskSend ts = new TaskSend(p2pMgr, 0, recvMsgQue, atb, nodeMgr, selector);
-//
-//        MsgOut mo = new MsgOut(0, "1", msg, Dest.OUTBOUND);
-//        when(recvMsgQue.take()).thenReturn(mo);
-//        when(nodeMgr.getOutboundNode(0)).thenReturn(node);
-//
-//        ChannelBuffer cb = new ChannelBuffer();
-//        SocketChannel ch = SocketChannel.open();
-//        ch.configureBlocking(false);
-//        ch.register(selector, SelectionKey.OP_WRITE, cb);
-//
-//        when(node.getChannel()).thenReturn(ch);
-//
-//        Thread t = new Thread(ts);
-//        t.start();
-//
-//        assertTrue(t.isAlive());
-//        Thread.sleep(10);
-//        atb.set(false);
-//        Thread.sleep(100);
-//        assertEquals("TERMINATED", t.getState().toString());
-//    }
-//
-//    @Test
-//    public void testRun3() throws InterruptedException, IOException {
-//        AtomicBoolean atb = new AtomicBoolean(true);
-//        TaskSend ts = new TaskSend(p2pMgr, 0, recvMsgQue, atb, nodeMgr, selector);
-//
-//        MsgOut mo = new MsgOut(0, "1", msg, Dest.ACTIVE);
-//        when(recvMsgQue.take()).thenReturn(mo);
-//        when(nodeMgr.getActiveNode(0)).thenReturn(node);
-//
-//        ChannelBuffer cb = new ChannelBuffer();
-//        SocketChannel ch = SocketChannel.open();
-//        ch.configureBlocking(false);
-//        ch.register(selector, SelectionKey.OP_WRITE, cb);
-//
-//        when(node.getChannel()).thenReturn(ch);
-//
-//        Thread t = new Thread(ts);
-//        t.start();
-//
-//        assertTrue(t.isAlive());
-//        Thread.sleep(10);
-//        atb.set(false);
-//        Thread.sleep(100);
-//        assertEquals("TERMINATED", t.getState().toString());
-//    }
-//
-//    @Test
-//    public void testRun4() throws InterruptedException, IOException {
-//        AtomicBoolean atb = new AtomicBoolean(true);
-//        TaskSend ts = new TaskSend(p2pMgr, 0, recvMsgQue, atb, nodeMgr, selector);
-//
-//        MsgOut mo = new MsgOut(0, "1", msg, Dest.INBOUND);
-//        when(recvMsgQue.take()).thenReturn(mo);
-//        when(nodeMgr.getInboundNode(0)).thenReturn(node);
-//
-//        ChannelBuffer cb = new ChannelBuffer();
-//        SocketChannel ch = SocketChannel.open();
-//        ch.configureBlocking(false);
-//        ch.register(selector, SelectionKey.OP_WRITE, cb);
-//
-//        when(node.getChannel()).thenReturn(ch);
-//
-//        Thread t = new Thread(ts);
-//        t.start();
-//
-//        assertTrue(t.isAlive());
-//        Thread.sleep(10);
-//        atb.set(false);
-//        Thread.sleep(100);
-//        assertEquals("TERMINATED", t.getState().toString());
-//    }
-//
-//    @Test
-//    public void testRunNullNode() throws InterruptedException {
-//        AtomicBoolean atb = new AtomicBoolean(true);
-//        TaskSend ts = new TaskSend(p2pMgr, 0, recvMsgQue, atb, nodeMgr, selector);
-//
-//        MsgOut mo = new MsgOut(0, "1", msg, Dest.INBOUND);
-//        when(recvMsgQue.take()).thenReturn(mo);
-//        when(nodeMgr.getInboundNode(0)).thenReturn(null);
-//
-//        Thread t = new Thread(ts);
-//        t.start();
-//
-//        assertTrue(t.isAlive());
-//        Thread.sleep(10);
-//        atb.set(false);
-//        Thread.sleep(100);
-//        assertEquals("TERMINATED", t.getState().toString());
-//    }
+
+    @Test (expected = Exception.class)
+    public void testRunMsgIn2() throws InterruptedException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
+
+        int route = 1;
+        MsgIn mi = new MsgIn(1, "1", route, new byte[0]);
+        when(recvMsgQue.take()).thenReturn(mi);
+        when(handler.get(route)).thenReturn(null);
+
+        Thread t = new Thread(ts);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(10);
+
+        List<Handler> hdlr = new ArrayList<>();
+        hdlr.add(null);
+        hdlr.add(h);
+
+        when(handler.get(route)).thenReturn(hdlr);
+        doThrow(new Exception("test exception!")).when(h).receive(anyInt(), anyString(), any());
+
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
 }
