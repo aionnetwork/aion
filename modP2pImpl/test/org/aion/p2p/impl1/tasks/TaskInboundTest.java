@@ -27,16 +27,15 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,9 +78,6 @@ public class TaskInboundTest {
 
     @Mock
     private Msg msg;
-
-    @Mock
-    private ChannelBuffer cb;
 
     @Mock
     private ServerSocketChannel ssc;
@@ -167,7 +163,7 @@ public class TaskInboundTest {
 
 
     @Test
-    public void testRun() throws InterruptedException, IOException {
+    public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
 
@@ -187,8 +183,26 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
 
-        when(selector.selectNow()).thenReturn(0);
-        //doThrow(new IOException()).when(selector).selectNow();
+        doThrow(ClosedSelectorException.class).when(selector).selectNow();
+
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(100);
+
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
+    @Test
+    public void testRunClosedSelectorException() throws InterruptedException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        when(selector.selectNow()).thenReturn(1);
+        when(selector.selectedKeys()).thenThrow(ClosedSelectorException.class);
 
         Thread t = new Thread(ti);
         t.start();
@@ -207,31 +221,29 @@ public class TaskInboundTest {
 
         when(sk.isValid()).thenReturn(false);
 
-
         when(sk2.isValid()).thenReturn(true);
-//        when(sk2.isAcceptable()).thenReturn(true);
-//        when(sk2.isReadable()).thenReturn(true);
-//        when(sk2.attachment()).thenReturn(null);
-//
-//        when(sk3.isValid()).thenReturn(true);
-//        when(sk3.readyOps()).thenReturn(OP_READ | OP_ACCEPT);
-//        when(sk3.isAcceptable()).thenReturn(true);
-//        when(sk3.isReadable()).thenReturn(true);
-//        when(sk3.attachment()).thenReturn(cb);
+        when(sk2.isAcceptable()).thenReturn(true);
+        when(sk2.isReadable()).thenReturn(true);
+        when(sk2.attachment()).thenReturn(null);
+
+        when(sk3.isValid()).thenReturn(true);
+        when(sk3.isAcceptable()).thenReturn(true);
+        when(sk3.isReadable()).thenReturn(true);
+        ChannelBuffer cb = new ChannelBuffer();
+        when(sk3.attachment()).thenReturn(cb);
 
         when(selector.selectNow()).thenReturn(1);
 
-        Set<SelectionKey> ss = new HashSet<>();
+        Set<SelectionKey> ss = new LinkedHashSet<>();
         ss.add(sk);
         ss.add(sk2);
         ss.add(sk3);
         when(selector.selectedKeys()).thenReturn(ss);
 
-
         Thread t = new Thread(ti);
         t.start();
         assertTrue(t.isAlive());
-        Thread.sleep(100);
+        Thread.sleep(200);
         atb.set(false);
         Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
