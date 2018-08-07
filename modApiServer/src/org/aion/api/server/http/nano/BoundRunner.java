@@ -1,4 +1,4 @@
-package org.aion.api.server.nanohttpd;
+package org.aion.api.server.http.nano;
 
 import fi.iki.elonen.NanoHTTPD;
 
@@ -12,12 +12,11 @@ import java.util.concurrent.ExecutorService;
  * Override that here so we can put an upper limit on the number of active threads using a thread pool.
  */
 public class BoundRunner implements NanoHTTPD.AsyncRunner {
-    private ExecutorService executorService;
-    private final List<NanoHTTPD.ClientHandler> running =
-            Collections.synchronizedList(new ArrayList<NanoHTTPD.ClientHandler>());
+    private ExecutorService es;
+    private final List<NanoHTTPD.ClientHandler> running = Collections.synchronizedList(new ArrayList<>());
 
-    public BoundRunner(ExecutorService executorService) {
-        this.executorService = executorService;
+    public BoundRunner(ExecutorService es) {
+        this.es = es;
     }
 
     @Override
@@ -35,7 +34,7 @@ public class BoundRunner implements NanoHTTPD.AsyncRunner {
 
     @Override
     public void exec(NanoHTTPD.ClientHandler clientHandler) {
-        executorService.submit(clientHandler);
+        es.submit(clientHandler);
         this.running.add(clientHandler);
     }
 }

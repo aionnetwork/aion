@@ -226,8 +226,12 @@ public class PendingTxCache {
         for (Address addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("cacheTx.flush addr[{}] bn[{}] tx#[{}] accSize[{}] cacheSize[{}]", addr.toString(),
-                        bn.toString(), cacheTxMap.get(addr).size(), cachedAccountSize.get(addr), currentSize.get());
+                LOG.debug("cacheTx.flush addr[{}] bn[{}] tx#[{}] accSize[{}] cacheSize[{}]",
+                        addr.toString(),
+                        bn.toString(),
+                        cacheTxMap.size(),
+                        cachedAccountSize.size(),
+                        currentSize.get());
             }
 
             if (cacheTxMap.get(addr) != null) {
