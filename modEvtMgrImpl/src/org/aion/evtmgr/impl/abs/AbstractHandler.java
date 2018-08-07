@@ -50,7 +50,7 @@ public abstract class AbstractHandler {
     private BlockingQueue<IEvent> queue = new LinkedBlockingQueue<>();
     private List<IEventCallback> eventCallback = new CopyOnWriteArrayList<>();
     private AtomicBoolean interrupt = new AtomicBoolean(false);
-    private boolean interruptted = false;
+    private boolean interrupted = false;
     private int handlerType;
 
     protected Thread dispatcher = new Thread(() -> {
@@ -75,7 +75,7 @@ public abstract class AbstractHandler {
             }
 
             queue.clear();
-            interruptted = true;
+            interrupted = true;
         } catch (InterruptedException e) {
             LOG.error("Handler interrupt exception {}", e.toString());
         } catch (Error e) {
@@ -119,7 +119,7 @@ public abstract class AbstractHandler {
         }
 
         int cnt = 0;
-        while (!interruptted && (cnt++ < 10)) {
+        while (!interrupted && (cnt++ < 10)) {
             System.out.print(".");
             Thread.sleep(1000);
         }

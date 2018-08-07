@@ -1,0 +1,63 @@
+.anchor-pane {
+    -fx-background-color: WHITE;
+    -fx-border-color: #ececec;
+    -fx-border-width: 1 1 1 1;
+}
+
+.main-text {
+    -fx-text-fill: BLACK;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 26px;
+}
+
+.paragraph-text {
+    -fx-text-fill: BLACK;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 18px;
+}
+
+.submit-button {
+    -fx-background-color: #5AF0BD;
+    -fx-background-radius: 0,0,0,0;
+    -fx-text-fill: white;
+    -fx-font-family: 'Open Sans Bold';
+    -fx-font-size: 18px;
+}
+
+.submit-button-small {
+    -fx-background-color: #5AF0BD;
+    -fx-background-radius: 0,0,0,0;
+    -fx-text-fill: white;
+    -fx-font-family: 'Open Sans Bold';
+    -fx-font-size: 14px;
+}
+
+.error-input-fields {
+    -fx-text-box-border: red ;
+    -fx-focus-color: red ;
+}
+
+.mnemonic-textarea {
+    -fx-control-inner-background: #ececec;
+    -fx-background-insets: 0px;
+    -fx-text-fill: BLACK;
+    -fx-display-caret: false;
+}
+
+.transaction-table-header-text {
+    -fx-text-fill: BLACK;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 18px;
+}
+
+.transaction-row-text {
+    -fx-text-fill: BLACK;
+    -fx-font-family: 'Open Sans Light';
+    -fx-font-size: 14px;
+}
+
+.transaction-row {
+    -fx-border-color: #ececec;
+    -fx-border-style: solid inside;
+    -fx-border-width: 0 0 1 0;
+}
