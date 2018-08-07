@@ -40,6 +40,7 @@ import org.aion.wallet.storage.WalletStorage;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,29 +124,29 @@ public class MainWindow extends Application {
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
         unixKernelProcessHealthChecker = new UnixKernelProcessHealthChecker();
 
-        kernelLauncher = new KernelLauncher(
-                CfgAion.inst().getGui().getCfgGuiLauncher(),
-                EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(),
-                unixKernelProcessHealthChecker);
-        kc = new KernelConnection(
-                CfgAion.inst().getApi(),
-                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS),
-                consoleManager);
         try {
-            walletStorage = new WalletStorage();
+            walletStorage = new WalletStorage(getDefaultStorageDir());
         } catch (IOException ioe) {
             // XXX Handle it properly
             throw new RuntimeException(ioe);
         }
+
+        kernelLauncher = new KernelLauncher(
+                CfgAion.inst().getGui().getCfgGuiLauncher(),
+                EventBusRegistry.INSTANCE,
+                new UnixProcessTerminator(),
+                unixKernelProcessHealthChecker,
+                new File(getDefaultStorageDir()));
+        kc = new KernelConnection(
+                CfgAion.inst().getApi(),
+                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS),
+                consoleManager);
 
         accountManager = new AccountManager(new BalanceRetriever(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
         transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
         accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
     }
 
-
-    /** This impl contains start-up code to make the GUI more fancy.  Lifted from aion_ui.  */
     @Override
     public void start(Stage stage) throws Exception {
         // Set up Cfg and Logger
@@ -197,7 +198,7 @@ public class MainWindow extends Application {
                 .withSyncInfoDto(new SyncInfoDto(kc))
                 .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
                 .withAccountManager(accountManager)
-                .withWalletStorage(new WalletStorage())
+                .withWalletStorage(walletStorage)
                 .withBlockTransactionProcessor(transactionProcessor)
                 .withConsoleManager(consoleManager)
                 .withEventBusRegistry(EventBusRegistry.INSTANCE)
@@ -239,7 +240,6 @@ public class MainWindow extends Application {
     public void shutDown() {
         LOG.info("Shutting down.");
         Platform.exit();
-        //BlockchainConnector.getInstance().close();
         Executors.newSingleThreadExecutor().submit(() -> System.exit(0));
         timer.stop();
     }
@@ -266,7 +266,6 @@ public class MainWindow extends Application {
         if(stage.getScene() == null) {
             return;
         }
-//        log.debug(event.getType().toString());
         // todo: refactor by adding a view controller
         for(Map.Entry<HeaderPaneButtonEvent.Type, Node> entry: panes.entrySet()) {
             if(event.getType().equals(entry.getKey())) {
@@ -295,6 +294,14 @@ public class MainWindow extends Application {
         }
         idleMonitor = new IdleMonitor(lockDelayDuration, accountManager::lockAll);
         idleMonitor.register(scene, Event.ANY);
+    }
+
+    private static String getDefaultStorageDir() {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.home") + File.separator + ".aion";
+        }
+        return storageDir;
     }
 
 }

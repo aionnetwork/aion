@@ -39,8 +39,8 @@ public class WalletStorage {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     /** Constructor with default storage locations */
-    public WalletStorage() throws IOException {
-        this(getDefaultStorageDir(), getDefaultKeystorePath());
+    public WalletStorage(String storageDir) throws IOException {
+        this(storageDir, getDefaultKeystorePath(storageDir));
     }
 
     public WalletStorage(String storageDir,
@@ -173,16 +173,10 @@ public class WalletStorage {
         return new String(decrypted);
     }
 
-    private static String getDefaultStorageDir() {
-        String storageDir = System.getProperty("local.storage.dir");
-        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
-            storageDir = System.getProperty("user.home") + File.separator + ".aion";
-        }
-        return storageDir;
-    }
 
-    private static Path getDefaultKeystorePath() {
-        return Paths.get(getDefaultStorageDir() + File.separator + "keystore");
+
+    private static Path getDefaultKeystorePath(String storageDir) {
+        return Paths.get(storageDir + File.separator + "keystore");
     }
 
     private static String getDefaultAccountsFile(String storageDir) {
