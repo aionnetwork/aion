@@ -31,7 +31,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
+import org.aion.log.LogLevel;
 
 /** @author chris */
 public class CfgLog {
@@ -42,16 +42,17 @@ public class CfgLog {
 
     public CfgLog() {
         modules = new HashMap<>();
-        modules.put(LogEnum.CONS.name(), LogLevels.INFO.name());
-        modules.put(LogEnum.GEN.name(), LogLevels.INFO.name());
-        modules.put(LogEnum.VM.name(), LogLevels.ERROR.name());
-        modules.put(LogEnum.DB.name(), LogLevels.ERROR.name());
-        modules.put(LogEnum.SYNC.name(), LogLevels.INFO.name());
-        modules.put(LogEnum.API.name(), LogLevels.INFO.name());
-        modules.put(LogEnum.P2P.name(), LogLevels.INFO.name());
-        modules.put(LogEnum.TX.name(), LogLevels.ERROR.name());
-        modules.put(LogEnum.TXPOOL.name(), LogLevels.ERROR.name());
-        modules.put(LogEnum.GUI.name(), LogLevels.INFO.name());
+        modules.put(LogEnum.ROOT.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.CONS.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.GEN.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.VM.name(), LogLevel.ERROR.name());
+        modules.put(LogEnum.DB.name(), LogLevel.ERROR.name());
+        modules.put(LogEnum.SYNC.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.API.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.P2P.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.TX.name(), LogLevel.ERROR.name());
+        modules.put(LogEnum.TXPOOL.name(), LogLevel.ERROR.name());
+        modules.put(LogEnum.GUI.name(), LogLevel.INFO.name());
         this.logFile = false;
         this.logPath = "log";
     }

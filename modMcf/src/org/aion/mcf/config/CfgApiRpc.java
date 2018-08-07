@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -32,8 +31,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,10 +45,16 @@ public final class CfgApiRpc {
         this.active = true;
         this.ip = "127.0.0.1";
         this.port = 8545;
-        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
         this.corsEnabled = false;
-        this.maxthread = 1;
+        this.corsOrigin = "*";
+        this.maxthread = null;
         this.filtersEnabled = true;
+        // using a strings here for the following 2 properties instead of referencing the associated enum value
+        // since don't want to add dependency to modApiServer just for this
+        this.vendor = "undertow";
+        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
+
+        this.ssl = new CfgSsl();
     }
 
     private boolean active;
@@ -57,8 +62,11 @@ public final class CfgApiRpc {
     private int port;
     private List<String> enabled;
     private boolean corsEnabled;
-    private int maxthread;
+    private String corsOrigin;
+    private Integer maxthread;
     private boolean filtersEnabled;
+    private CfgSsl ssl;
+    private String vendor;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         // get the attributes
@@ -82,6 +90,14 @@ public final class CfgApiRpc {
                                 //e.printStackTrace();
                             }
                             break;
+                        case "cors-origin":
+                            try {
+                                corsOrigin = Cfg.readValue(sr).trim();
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.rpc.cors-origin; using preset: " + corsOrigin);
+                                //e.printStackTrace();
+                            }
+                            break;
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
                             this.enabled = new ArrayList<>(
@@ -90,16 +106,23 @@ public final class CfgApiRpc {
                                     .collect(Collectors.toList())
                             );
                             break;
-                        case "threads":
-                            int t = 0;
+                        case "vendor":
                             try {
-                                t = Integer.parseInt(Cfg.readValue(sr));
+                                this.vendor = Cfg.readValue(sr).trim();
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            // filter out negative thread counts
-                            if (t > 0)
-                                this.maxthread = t;
+                            break;
+                        case "threads":
+                            try {
+                                int t = Integer.parseInt(Cfg.readValue(sr));
+                                // filter out negative counts
+                                if (t > 0) this.maxthread = t;
+                                // otherwise, accept default set in constructor
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
                             break;
                         case "filters-enabled":
                             try {
@@ -108,6 +131,9 @@ public final class CfgApiRpc {
                                 System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
                                 e.printStackTrace();
                             }
+                            break;
+                        case "ssl":
+                            this.ssl.fromXML(sr);
                             break;
                         default:
                             Cfg.skipElement(sr);
@@ -153,12 +179,8 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
             xmlWriter.writeEndElement();
 
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("size of thread pool allocated for rpc requests");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeStartElement("threads");
-            xmlWriter.writeCharacters(this.maxthread + "");
-            xmlWriter.writeEndElement();
+            // don't write-back ssl. (keep it hidden for now)
+            // xmlWriter.writeCharacters(this.ssl.toXML());
 
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
@@ -186,11 +208,14 @@ public final class CfgApiRpc {
     public boolean getCorsEnabled() {
         return corsEnabled;
     }
+    public String getCorsOrigin() { return corsOrigin; }
     public List<String> getEnabled() {
         return enabled;
     }
-    public int getMaxthread() { return maxthread; }
+    public Integer getMaxthread() { return maxthread; }
     public boolean isFiltersEnabled() {
         return filtersEnabled;
     }
+    public CfgSsl getSsl() { return this.ssl; }
+    public String getVendor() { return vendor; }
 }
