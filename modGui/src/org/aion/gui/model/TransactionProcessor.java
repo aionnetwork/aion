@@ -1,11 +1,7 @@
 package org.aion.gui.model;
 
 import org.aion.api.impl.internal.Message;
-import org.aion.api.type.Block;
-import org.aion.api.type.BlockDetails;
-import org.aion.api.type.MsgRsp;
-import org.aion.api.type.TxArgs;
-import org.aion.api.type.TxDetails;
+import org.aion.api.type.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TypeConverter;
@@ -21,11 +17,7 @@ import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -89,8 +81,15 @@ public class TransactionProcessor extends AbstractAionApiClient {
 
     public Set<TransactionDTO> getLatestTransactions(final String address) {
         backgroundExecutor.submit(this::processTransactionsFromOldestRegisteredSafeBlock);
-        // FIXME: should it wait until the execution is done before running the next line?
+        // TODO: consider waiting on the submit Future before returning
         return accountManager.getTransactions(address);
+    }
+
+    public void processTransactionsOnReconnect() {
+        final Set<String> addresses = accountManager.getAddresses();
+        final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {
+        });
+        processTransactionsFromBlock(oldestSafeBlock, addresses);
     }
 
     private void processTransactionsFromBlock(final BlockDTO lastSafeBlock, final Set<String> addresses) {

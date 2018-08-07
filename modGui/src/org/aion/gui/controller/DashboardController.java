@@ -8,7 +8,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import org.aion.gui.events.EventBusRegistry;
-import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.KernelProcEvent;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.gui.events.UnexpectedApiDisconnectedEvent;
@@ -107,6 +106,7 @@ public class DashboardController extends AbstractController {
     @Subscribe
     private void handleKernelLaunched(final KernelProcEvent.KernelLaunchedEvent ev) {
         kernelConnection.connect(); // TODO: what if we launched the process but can't connect?
+
         kernelUpdateTimer.start();
         Platform.runLater( () -> {
             kernelStatusLabel.setText("Running");

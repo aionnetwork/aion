@@ -3,7 +3,6 @@ package org.aion.wallet.account;
 import io.github.novacrypto.bip39.MnemonicGenerator;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
-
 import org.aion.gui.events.EventPublisher;
 import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.util.AionConstants;
@@ -23,30 +22,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.*;
 
 public class AccountManagerTest {
     private BalanceRetriever balanceProvider;
@@ -121,7 +107,7 @@ public class AccountManagerTest {
         assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
         assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
         // verify creation of new accountDTO and its derived key
-        ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex}); // TODO why 44,425,0,0
+        ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex});
         assertThat(unit.getAccounts().size(), is(1));
         assertThat(unit.getAccounts().get(0).getName(), is(name));
         assertThat(unit.getAccounts().get(0).getDerivationIndex(), is(0));
@@ -133,7 +119,7 @@ public class AccountManagerTest {
         verify(walletStorage).setMasterAccountMnemonic(mnemonic, password);
         verify(walletStorage).incrementMasterAccountDerivations();
         verify(walletStorage).setAccountName(unit.getAccounts().get(0).getPublicAddress(), name);
-        // TODO verify EventPublisher.fireAccountAdded(accountDTO) happened
+        verify(eventPublisher).fireAccountAdded(unit.getAccounts().get(0));
     }
 
     @Test
@@ -152,7 +138,7 @@ public class AccountManagerTest {
         assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
         // verify creation of new accountDTO and its derived key
         int derivIndex = 0;
-        ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex}); // TODO why 44,425,0,0
+        ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex});
         assertThat(unit.getAccounts().size(), is(1));
         assertThat(unit.getAccounts().get(0).getName(), is(nullValue()));
         assertThat(unit.getAccounts().get(0).getDerivationIndex(), is(0));
@@ -164,7 +150,7 @@ public class AccountManagerTest {
         // verify master account is stored
         verify(walletStorage).setMasterAccountMnemonic(mnemonic, password);
         verify(walletStorage).incrementMasterAccountDerivations();
-        // TODO verify EventPublisher.fireAccountAdded(accountDTO) happened
+        verify(eventPublisher).fireAccountAdded(unit.getAccounts().get(0));
     }
 
     @Test
@@ -188,9 +174,9 @@ public class AccountManagerTest {
         // calculate the addresses needed for mocking the Keystore part
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
         MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
         String address1 = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
-        ECKey derivedKey2 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 1}); // TODO why 44,425,0,0
+        ECKey derivedKey2 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 1});
         String address2 = TypeConverter.toJsonHex(derivedKey2.computeAddress(derivedKey2.getPubKey()));
         String[] accountList = new String[] { address1 };
         when(keystoreWrapper.list()).thenReturn(accountList);
@@ -222,7 +208,7 @@ public class AccountManagerTest {
         // calculate the addresses needed for mocking the Keystore part
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
         MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
         String address1 = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
         String[] accountList = new String[] { address1 };
         when(keystoreWrapper.list()).thenReturn(accountList);
@@ -254,7 +240,7 @@ public class AccountManagerTest {
         // need to create the keystore bytes so we can use it as test input
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
         MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
 
         String password = "pw";
         byte[] keystoreBytes = new KeystoreFormat().toKeystore(derivedKey1, password);
@@ -280,7 +266,7 @@ public class AccountManagerTest {
         // need to create the keystore bytes so we can use it as test input
         String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
         MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0}); // TODO why 44,425,0,0
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
 
         String password = "pw";
         byte[] keystoreBytes = new KeystoreFormat().toKeystore(derivedKey1, password);

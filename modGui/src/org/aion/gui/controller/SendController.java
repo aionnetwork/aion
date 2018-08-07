@@ -4,12 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import org.aion.api.impl.internal.Message;
 import org.aion.base.util.TypeConverter;
@@ -97,8 +92,8 @@ public class SendController extends AbstractController {
         this.accountManager = accountManager;
         this.transactionProcessor = transactionProcessor;
         this.transactionResubmissionDialog = new TransactionResubmissionDialog(
-                accountManager, consoleManager); // TODO should be injectable
-        this.balanceRetriever = new BalanceRetriever(kernelConnection); // TODO should be injectable
+                accountManager, consoleManager);
+        this.balanceRetriever = new BalanceRetriever(kernelConnection);
         this.consoleManager = consoleManager;
     }
 
@@ -141,6 +136,7 @@ public class SendController extends AbstractController {
                 if (account != null) {
                     sendButton.setDisable(false);
                 }
+                transactionProcessor.processTransactionsOnReconnect(); // Not sure if this is the best place for this...
                 break;
             case DISCONNECTED:
                 connected = false;
