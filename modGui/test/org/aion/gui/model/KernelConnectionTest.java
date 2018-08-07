@@ -4,7 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.io.CharSource;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
-import org.aion.gui.events.AbstractUIEvent;
+import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.when;
 public class KernelConnectionTest {
     private IAionAPI api;
     private CfgApi cfgApi;
-    private EventBus eventBus;
+    private EventPublisher eventPublisher;
     private ExecutorService executorService;
     private KernelConnection unit;
 
@@ -48,9 +48,9 @@ public class KernelConnectionTest {
                 .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
         cfgApi.fromXML(xmlStream);
 
-        eventBus = mock(EventBus.class);
+        eventPublisher = mock(EventPublisher.class);
         executorService = Executors.newSingleThreadExecutor();
-        unit = new KernelConnection(api, cfgApi, eventBus, mock(ConsoleManager.class), executorService);
+        unit = new KernelConnection(api, cfgApi, eventPublisher, mock(ConsoleManager.class), executorService);
     }
 
     @Test
@@ -67,9 +67,7 @@ public class KernelConnectionTest {
             fail("Execution took too long.");
         }
         verify(api).connect(expectedConnectionString, expectedReconnect);
-        ArgumentCaptor<RefreshEvent.Type> captor = ArgumentCaptor.forClass(RefreshEvent.Type.class);
-        verify(eventBus).post(captor.capture());
-        assertThat(captor.getValue(), is(CONNECTED));
+        verify(eventPublisher).fireConnectionEstablished();
     }
 
     @Test
@@ -82,6 +80,7 @@ public class KernelConnectionTest {
             fail("Execution took too long.");
         }
         verify(api).destroyApi();
+        verify(eventPublisher).fireDisconnected();
     }
 
     @Test

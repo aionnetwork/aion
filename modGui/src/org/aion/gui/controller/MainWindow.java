@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
 import org.aion.gui.model.AccountChangeHandlers;
@@ -139,7 +140,7 @@ public class MainWindow extends Application {
                 new File(getDefaultStorageDir()));
         kc = new KernelConnection(
                 CfgAion.inst().getApi(),
-                EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS),
+                new EventPublisher(),
                 consoleManager);
 
         accountManager = new AccountManager(new BalanceRetriever(kc), () -> AionConstants.CCY, consoleManager, walletStorage);

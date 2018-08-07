@@ -170,6 +170,7 @@ public class DashboardControllerIntegTest extends ApplicationTest {
     @Test
     public void testHandleUnexpectedApiDisconnectWhenKernelDead() throws Exception {
         KernelInstanceId kernelInstanceId = new KernelInstanceId(123);
+        when(kernelLauncher.hasLaunchedInstance()).thenReturn(true);
         when(kernelLauncher.getLaunchedInstance()).thenReturn(kernelInstanceId);
         when(healthChecker.checkIfKernelRunning(123)).thenReturn(false);
         ebr.getBus(EventBusRegistry.KERNEL_BUS).post(new UnexpectedApiDisconnectedEvent());

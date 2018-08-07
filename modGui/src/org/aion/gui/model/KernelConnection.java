@@ -2,12 +2,10 @@ package org.aion.gui.model;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.EventBus;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.EventPublisher;
-import org.aion.gui.events.RefreshEvent;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
@@ -28,7 +26,7 @@ public class KernelConnection {
     private final ExecutorService backgroundExecutor;
     private final CfgApi cfgApi;
     private final IAionAPI api;
-    private final EventBus eventBus;
+    private final EventPublisher eventPublisher;
     private final ConsoleManager consoleManager;
 
     private Future<?> connectionFuture;
@@ -38,33 +36,31 @@ public class KernelConnection {
 
     /**
      * Constructor
-     *
-     * @param cfgApi Configuration
-     * @param eventBus Event bus to which notifications about connection state changes are sent
+     *  @param cfgApi Configuration
+     * @param eventPublisher Event bus to which notifications about connection state changes are sent
      */
     public KernelConnection(CfgApi cfgApi,
-                            EventBus eventBus,
+                            EventPublisher eventPublisher,
                             ConsoleManager consoleManager) {
-        this(AionAPIImpl.inst(), cfgApi, eventBus, consoleManager, Executors.newSingleThreadExecutor());
+        this(AionAPIImpl.inst(), cfgApi, eventPublisher, consoleManager, Executors.newSingleThreadExecutor());
     }
 
 
     /**
      * Constructor with injectable parameters for testing
-     *
-     * @param aionApi
+     *  @param aionApi
      * @param cfgApi
-     * @param eventBus
+     * @param eventPublisher
      * @param executorService
      */
     @VisibleForTesting KernelConnection(IAionAPI aionApi,
                                         CfgApi cfgApi,
-                                        EventBus eventBus,
+                                        EventPublisher eventPublisher,
                                         ConsoleManager consoleManager,
                                         ExecutorService executorService) {
         this.api = aionApi;
         this.cfgApi = cfgApi;
-        this.eventBus = eventBus;
+        this.eventPublisher = eventPublisher;
         this.consoleManager = consoleManager;
         this.backgroundExecutor = executorService;
     }
@@ -87,8 +83,7 @@ public class KernelConnection {
                     consoleManager.addLog("Error connecting to kernel", KERNEL);
                 } else {
                     consoleManager.addLog("Connected to kernel", KERNEL);
-                    eventBus.post(RefreshEvent.Type.CONNECTED);
-                    // TODO: ApiBlockchainConnector#connect has processTRansactionsOnReconnect() here now.  Do we need that too?
+                    eventPublisher.fireConnectionEstablished();
                 }
             }
         });
@@ -108,9 +103,9 @@ public class KernelConnection {
         disconnectionFuture = backgroundExecutor.submit(() -> {
             synchronized (api) {
                 LOG.trace("About to destroy API");
-                api.destroyApi().getObject();
+                api.destroyApi();
             }
-            EventPublisher.fireDisconnected();
+            eventPublisher.fireDisconnected();
             consoleManager.addLog("Disconnected from kernel", KERNEL);
         });
 

@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -22,10 +23,17 @@ import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.io.File;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
 import static org.hamcrest.Matchers.is;
@@ -34,14 +42,15 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testfx.api.FxAssert.verifyThat;
 
-/** TODO Need to add more wallet-related testing.  Also fix the problem of requiring to bring up the entire MainWindow just for this test to work. */
 public class SettingsControllerIntegTest extends ApplicationTest {
     private ControllerFactory cf;
     private ConfigManipulator configManipulator;
     private SettingsController controller;
     private KernelConnection kc;
     private String configFileContents = "<fake><config><content><here>";
+    private String configFileName = "/tmp/absolute/path/to/the/Config/File/Name";
     private Stage stage;
     private EventBusRegistry ebr;
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
@@ -57,6 +66,7 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         configManipulator = mock(ConfigManipulator.class);
         when(configManipulator.loadFromConfigFile()).thenReturn(configFileContents);
         when(configManipulator.getLastLoadedContent()).thenReturn(configFileContents);
+        when(configManipulator.configFile()).thenReturn(new File(configFileName));
         kc = mock(KernelConnection.class);
         ebr = new EventBusRegistry();
     }
@@ -82,7 +92,12 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         );
         Parent root = loader.load();
         controller = loader.getController();
-        stage.setScene(new Scene(root));
+
+        AnchorPane ap = new AnchorPane(root);
+        ap.setPrefWidth(860);
+        ap.setPrefHeight(570);
+
+        stage.setScene(new Scene(ap));
         stage.show();
         stage.toFront();
 
@@ -102,6 +117,8 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     public void testInitialState() throws Exception {
         XmlArea xml = lookup("#xmlArea").query();
         assertThat(xml.getText(), is(configFileContents));
+        verifyThat(lookup("#editingFileLabel"),
+                LabeledMatchers.hasText("Editing " + new File(configFileName).getAbsolutePath()));
     }
 
     /**

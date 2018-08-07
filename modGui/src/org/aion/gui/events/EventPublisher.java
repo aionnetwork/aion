@@ -50,10 +50,6 @@ public class EventPublisher {
         }
     }
 
-    public static void fireConnectionEstablished() {
-        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.CONNECTED));
-    }
-
     public static void fireFatalErrorEncountered(final String message) {
         EventBusRegistry.INSTANCE.getBus(ErrorEvent.ID).post(new ErrorEvent(ErrorEvent.Type.FATAL, message));
     }
@@ -76,8 +72,12 @@ public class EventPublisher {
                 .post(new UnexpectedApiDisconnectedEvent());
     }
 
-    public static void fireDisconnected() {
+    public void fireDisconnected() {
         EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.DISCONNECTED));
+    }
+
+    public void fireConnectionEstablished() {
+        EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.CONNECTED));
     }
 
     public void fireAccountChanged(final AccountDTO account) {

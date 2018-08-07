@@ -12,13 +12,13 @@
             AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="10"
             >
     <center>
-        <XmlArea AnchorPane.bottomAnchor="5" fx:id="xmlArea">
+        <XmlArea AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.bottomAnchor="5" fx:id="xmlArea">
             <!-- Controller java will put more stuff here -->
         </XmlArea>
     </center>
     <top>
         <VBox>
-            <Label text="Editing /home/sergiu/repos/aion/config/config.xml" />
+            <Label fx:id="editingFileLabel" text="Editing " />
             <Label text=" " />
         </VBox>
     </top>

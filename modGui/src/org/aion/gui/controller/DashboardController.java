@@ -127,10 +127,14 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleUnexpectedApiDisconnect(UnexpectedApiDisconnectedEvent event) {
-        final boolean isRunning;
+        if(!kernelLauncher.hasLaunchedInstance()) {
+            // Probably in the middle of disconnecting; no action needed
+            return;
+        }
+        final boolean actuallyRunning;
         try {
-            isRunning = unixKernelProcessHealthChecker.checkIfKernelRunning(
-                    kernelLauncher.getLaunchedInstance().getPid());
+            actuallyRunning = unixKernelProcessHealthChecker.checkIfKernelRunning(
+                            kernelLauncher.getLaunchedInstance().getPid());
         } catch (KernelControlException kce) {
             // If we get here we're so broken we don't know how to proceed; either the OS
             // is in a broken state or there's a bug/defect within our code.
@@ -139,7 +143,7 @@ public class DashboardController extends AbstractController {
             return;
         }
 
-        if(isRunning) {
+        if(actuallyRunning) {
             LOG.error("Detected disconnection from Kernel API, but Kernel process is still running.  " +
                     "It is recommended that you terminate the kernel and re-launch it.");
         } else {
