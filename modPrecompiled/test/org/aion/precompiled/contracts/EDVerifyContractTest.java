@@ -11,7 +11,6 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
-import org.aion.vm.TransactionResult;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -59,7 +58,8 @@ public class EDVerifyContractTest {
         IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
 
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
-        assertThat(result.getOutput()[0]).isEqualTo(1);
+        assertThat(result.getOutput()).isEqualTo(ecKey.getAddress());
+        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
 
     @Test
@@ -70,7 +70,7 @@ public class EDVerifyContractTest {
         IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
 
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
-        assertThat(result.getOutput()[0]).isEqualTo(0);
+        assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
 
@@ -82,7 +82,7 @@ public class EDVerifyContractTest {
 
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.INTERNAL_ERROR.toInt());
-        assertThat(result.getOutput()[0]).isEqualTo(0);
+        assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class EDVerifyContractTest {
 
         IExecutionResult result = contract.execute(input, INVALID_NRG_LIMIT);
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.OUT_OF_NRG.toInt());
-        assertThat(result.getOutput()[0]).isEqualTo(0);
+        assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
     }
 
     private void beforeEach() {
@@ -124,8 +124,8 @@ public class EDVerifyContractTest {
     private byte[] setupInput(int length) {
         byte[] input = new byte[length];
         System.arraycopy(hashedMessage, 0, input, 0, 32);
-        System.arraycopy(signature.getSignature(), 0, input, 32, 64);
-        System.arraycopy(ecKey.getPubKey(), 0, input, 96, (length == 128) ? 32 : 31);
+        System.arraycopy(ecKey.getPubKey(), 0, input, 32, 32);
+        System.arraycopy(signature.getSignature(), 0, input, 64, (length == 128) ? 64 : 63);
         return input;
     }
 }
