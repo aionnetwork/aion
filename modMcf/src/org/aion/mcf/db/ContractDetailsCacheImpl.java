@@ -65,7 +65,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
                 return null;
             }
             value = origContract.get(key);
-            storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
+            storage.put(key.copy(), value == null ? DataWord.ZERO : value.copy());
         }
 
         if (value == null || value.isZero()) {
@@ -101,7 +101,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
-                if ((value != null) && (!value.isZero())) {
+                if (value != null) {
                     storage.put(key, value);
                 }
             }
