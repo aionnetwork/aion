@@ -23,6 +23,7 @@
         <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
         <pathelement location="${dir.lib}/jsr305-3.0.2.jar"/>
         <pathelement location="${dir.lib}/mockito-core-2.12.0.jar"/>
+        <pathelement location="${dir.lib}/byte-buddy-1.7.9.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
