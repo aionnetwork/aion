@@ -20,10 +20,6 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferrable {
 
-    private static final int BUNDLE_PARAM_ACC = 0;
-    private static final int BUNDLE_PARAM_VAL = 1;
-    private static final int BUNDLE_PARAM_SIG = 2;
-
     private static final long ENERGY_CONSUME = 21000L;
 
     // queries
@@ -189,6 +185,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (bundleHash == null)
                     return fail();
                 return success(this.connector.getBundle(bundleHash));
+            case PURE_RELAYER:
+                // ATB-5 Add in relayer getter
+                return success(this.connector.getRelayer());
             default:
                 return fail();
         }
