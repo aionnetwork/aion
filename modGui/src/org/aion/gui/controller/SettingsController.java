@@ -27,7 +27,6 @@ public class SettingsController extends AbstractController {
 
     public SettingsController(ConfigManipulator configManipulator) {
         this.configManip = configManipulator;
-        System.out.println("Settings controller ctor");
     }
 
     @Override
@@ -41,8 +40,6 @@ public class SettingsController extends AbstractController {
     }
 
     public void resetXml(MouseEvent mouseEvent) {
-        System.out.println("reset XML");
-        System.out.println(configManip.getLastLoadedContent());
         Platform.runLater(() -> xmlArea.setText(configManip.getLastLoadedContent()));
     }
 

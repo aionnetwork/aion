@@ -41,7 +41,7 @@ import java.util.Map;
  */
 public class ControllerFactory implements Callback<Class<?>, Object> {
     /** maps a class to a method that constructs an instance of it */
-    private final Map<Class, BuildMethod> builderChooser;
+    protected final Map<Class, BuildMethod> builderChooser;
 
     private KernelConnection kernelConnection;
     private KernelLauncher kernelLauncher;

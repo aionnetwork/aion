@@ -111,16 +111,13 @@ public class HistoryController extends AbstractController {
 
     @Subscribe
     private void handleHeaderPaneButtonEvent(final HeaderPaneButtonEvent event) {
-        System.out.println("HistoryController#handleHeaderPaneButtonEvent.  event.getType = " + event.getType());
         if (event.getType().equals(HeaderPaneButtonEvent.Type.HISTORY)) {
-            System.out.println("HistoryController#handleHeaderPaneButtonEvent.  reloadWalletView()");
             reloadWalletView();
         }
     }
 
     @Subscribe
     private void handleAccountChanged(final AccountEvent event) {
-        System.out.println("HistoryController#handleAccountChanged.  event = " + event.toString());
         if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED).contains(event.getType())) {
             this.account = event.getPayload();
             if (isInView()) {
@@ -143,7 +140,6 @@ public class HistoryController extends AbstractController {
     }
 
     private void reloadWalletView() {
-        System.out.println(String.format("HistoryController#reloadWalletView : account = %s", account));
         if (account == null) {
             return;
         }

@@ -270,10 +270,8 @@ public class MainWindow extends Application {
         // todo: refactor by adding a view controller
         for(Map.Entry<HeaderPaneButtonEvent.Type, Node> entry: panes.entrySet()) {
             if(event.getType().equals(entry.getKey())) {
-                System.out.println(entry.getValue() + " -> visible");
                 entry.getValue().setVisible(true);
             } else {
-                System.out.println(entry.getValue() + " -> not visible");
                 entry.getValue().setVisible(false);
             }
         }

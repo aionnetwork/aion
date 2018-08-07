@@ -65,7 +65,6 @@ public class ConsoleTail {
     }
 
     public String makeStatus() {
-        System.out.println("Status...");
         if(message == null) {
             return "";
         } else {

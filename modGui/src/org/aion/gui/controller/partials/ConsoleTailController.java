@@ -45,7 +45,6 @@ public class ConsoleTailController extends AbstractController {
 
     @Override
     protected final void refreshView(final RefreshEvent event) {
-        System.out.println("ConsoleTailController tick");
         updateStatusText();
     }
 

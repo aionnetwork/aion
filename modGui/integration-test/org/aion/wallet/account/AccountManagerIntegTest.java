@@ -43,7 +43,7 @@ public class AccountManagerIntegTest {
         System.setProperty("local.storage.dir", localStorageDir);
 
         final byte[] testKeystoreBytes;
-        try (InputStream is = new FileInputStream("test-files/test-keystore")) {
+        try (InputStream is = new FileInputStream(System.getProperty("user.dir") + "/" + "test-files/test-keystore")) {
             testKeystoreBytes = ByteStreams.toByteArray(is);
         } catch (FileNotFoundException e) {
             e.printStackTrace();

@@ -165,7 +165,6 @@ private Label activeAccount;
 
     private void updateNewBalance(final String currency, final BigInteger bigInteger) {
         final String newBalance = BalanceUtils.formatBalance(bigInteger) + BalanceUtils.CCY_SEPARATOR + currency;
-        System.out.println("HeaderPaneControls#updateNewBalance -> accountBalance.setText -> " + newBalance);
         if (!newBalance.equalsIgnoreCase(accountBalance.getText())) {
             accountBalance.setText(newBalance);
             UIUtils.setWidth(accountBalance);

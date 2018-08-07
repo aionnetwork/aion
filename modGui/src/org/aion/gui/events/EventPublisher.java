@@ -82,7 +82,6 @@ public class EventPublisher {
 
     public void fireAccountChanged(final AccountDTO account) {
         if (account != null) {
-            System.out.println("EventPublisher#fireAccountChanged");
             EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.CHANGED, account));
         }
     }

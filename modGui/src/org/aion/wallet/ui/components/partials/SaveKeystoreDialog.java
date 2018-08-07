@@ -75,11 +75,9 @@ public class SaveKeystoreDialog implements Initializable {
     }
 
     public void open(final MouseEvent mouseEvent) {
-        System.out.println("SaveKeystoreDialog#open");
         final StackPane pane = new StackPane();
         final Pane saveKeystoreDialog;
         try {
-//            saveKeystoreDialog = FXMLLoader.load(getClass().getResource("SaveKeystoreDialog.fxml"));
             FXMLLoader loader = new FXMLLoader((getClass().getResource("SaveKeystoreDialog.fxml")));
             loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager).withConsoleManager(consoleManager) /* TODO a specialization only has what we need */);
             saveKeystoreDialog = loader.load();
