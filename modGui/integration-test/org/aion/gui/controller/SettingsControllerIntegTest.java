@@ -1,6 +1,5 @@
 package org.aion.gui.controller;
 
-import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -19,7 +18,6 @@ import org.aion.gui.model.ApplyConfigResult;
 import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.views.XmlArea;
-import org.aion.os.KernelControlException;
 import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.junit.Test;
@@ -27,16 +25,9 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
