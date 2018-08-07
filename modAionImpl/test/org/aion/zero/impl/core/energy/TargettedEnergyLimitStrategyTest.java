@@ -1,23 +1,20 @@
 package org.aion.zero.impl.core.energy;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
-import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
-import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
 
 public class TargettedEnergyLimitStrategyTest {
 
@@ -29,12 +26,11 @@ public class TargettedEnergyLimitStrategyTest {
                                 config.getConstants().getEnergyLowerBoundLong());
 
     @Mock
-    A0BlockHeader inputHeader;
-
-    @Mock
+    private
     A0BlockHeader parentHeader;
 
     @Mock
+    private
     A0BlockHeader header;
 
     @Before
@@ -52,7 +48,7 @@ public class TargettedEnergyLimitStrategyTest {
         assertThat(errors).isEmpty();
     }
 
-    BlockConstants constants = new BlockConstants();
+    private BlockConstants constants = new BlockConstants();
 
     @Test
     public void testTargettedEnergyLimitLowerBound() {
@@ -113,7 +109,7 @@ public class TargettedEnergyLimitStrategyTest {
     }
 
     private static final java.util.Random random = new Random();
-    long randLong(int lower, int upper) {
+    private long randLong(int lower, int upper) {
         return lower + random.nextInt((upper - lower) + 1);
     }
 
@@ -152,11 +148,11 @@ public class TargettedEnergyLimitStrategyTest {
 
         for (int k = 0; k < 5; k++) {
             long parentEnergy = randLong(5000, 20_000_000);
-            for (int i = 0; i < 100_000; i++) {
-
+            for (int i = 0; i < 10_000; i++) {
                 when(header.getEnergyLimit()).thenReturn(parentEnergy);
                 parentEnergy = strategy.getEnergyLimit(header);
             }
+            System.out.println("tested " + (k+1) + " of 5 rounds");
             assertThat(parentEnergy).isEqualTo(10_000_000L);
         }
     }
