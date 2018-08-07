@@ -15,8 +15,6 @@ import java.util.Set;
 
 public class EventPublisher {
     public static final String ACCOUNT_CHANGE_EVENT_ID = "account.changed";
-//    public static final String ACCOUNT_UNLOCK_EVENT_ID = "account.unlock";
-//    public static final String SETTINGS_CHANGED_ID = "settings.changed";
 
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
@@ -25,11 +23,6 @@ public class EventPublisher {
             EventBusRegistry.INSTANCE.getBus(AccountEvent.ID).post(new AccountEvent(AccountEvent.Type.UNLOCKED, account));
         }
     }
-
-//    public static void fireOperationFinished(){
-//        LOG.trace("EventPublisher#fireOperationFinished");
-//        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).post(new RefreshEvent(RefreshEvent.Type.OPERATION_FINISHED));
-//    }
 
     public static void fireAccountExport(final AccountDTO account) {
         if (account != null) {

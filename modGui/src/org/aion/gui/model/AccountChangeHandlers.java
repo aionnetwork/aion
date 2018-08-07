@@ -15,7 +15,12 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * Event handlers for account change related events
+ * Event handlers for account change related events.  Not great to have a class that's just disparate
+ * event handlers, but it contains some logic for coordinating AccountManager and TransactionProcessor
+ * that isn't convenient to refactor at the moment.  Think about how to organize this when we refactor
+ * event management.
+ *
+ * This class should thought of as part of Controller layer.
  */
 public class AccountChangeHandlers {
     private final AccountManager accountManager;

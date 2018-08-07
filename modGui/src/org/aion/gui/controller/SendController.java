@@ -38,18 +38,11 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class SendController extends AbstractController {
-
     private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
-
     private static final String PENDING_MESSAGE = "Sending transaction...";
-
     private static final String SUCCESS_MESSAGE = "Transaction finished";
-
     private static final Tooltip NRG_LIMIT_TOOLTIP = new Tooltip("NRG limit");
-
     private static final Tooltip NRG_PRICE_TOOLTIP = new Tooltip("NRG price");
-
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
 
     @FXML
     private PasswordField passwordInput;
@@ -120,11 +113,8 @@ public class SendController extends AbstractController {
         passwordInput.setManaged(false);
 
         toInput.textProperty().addListener(event -> transactionToResubmit = null);
-
         nrgInput.textProperty().addListener(event -> transactionToResubmit = null);
-
         nrgPriceInput.textProperty().addListener(event -> transactionToResubmit = null);
-
         valueInput.textProperty().addListener(event -> transactionToResubmit = null);
     }
 
@@ -217,7 +207,6 @@ public class SendController extends AbstractController {
 
     private TransactionResponseDTO sendTransaction(final SendTransactionDTO sendTransactionDTO) {
         try {
-//            return blockchainConnector.sendTransaction(sendTransactionDTO);
             return transactionProcessor.sendTransaction(sendTransactionDTO);
         } catch (ValidationException e) {
             throw new RuntimeException(e);
@@ -237,7 +226,6 @@ public class SendController extends AbstractController {
 
     private void setTimedoutTransactionsLabelText() {
         if(account != null) {
-//            final List<SendTransactionDTO> timedoutTransactions = blockchainConnector.getAccountManager().getTimedOutTransactions(account.getPublicAddress());
             final List<SendTransactionDTO> timedoutTransactions = accountManager.getTimedOutTransactions(account.getPublicAddress());
             if(!timedoutTransactions.isEmpty()) {
                 timedoutTransactionsLabel.setVisible(true);

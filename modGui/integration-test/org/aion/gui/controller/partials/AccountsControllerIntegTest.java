@@ -128,7 +128,6 @@ public class AccountsControllerIntegTest extends ApplicationTest {
         verify(unlockMasterAccountDialog).open(any(MouseEvent.class));
         verify(accountManager, never()).createAccount();
 
-
         clickOn("#importButton");
         WaitForAsyncUtils.waitForFxEvents();
         verify(importAccountDialog).open(any(MouseEvent.class));
@@ -173,5 +172,4 @@ public class AccountsControllerIntegTest extends ApplicationTest {
         assertThat(listItems.get(0), is(account));
         assertThat(listItems.get(1), is(otherAccount));
     }
-
 }
