@@ -459,4 +459,17 @@
 			<arg value="${dir.workspace}/script/postpack.sh" />
 		</exec>
 	</target>
+
+	<target name="pack_docker" depends="pack_build">
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/pack_docker.sh" />
+		</exec>
+	</target>
+
+	<target name="pack_dev_docker">
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/pack_dev_docker.sh" />
+		</exec>
+	</target>
+
 </project>
