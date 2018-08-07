@@ -26,9 +26,9 @@
     <path id="classpath.test">
         <pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
         <pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar"/>
-        <pathelement location="${dir.lib}/mockito-core-2.12.0.jar"/>
-        <pathelement location="${dir.lib}/byte-buddy-1.7.9.jar"/>
-        <pathelement location="${dir.lib}/byte-buddy-agent-1.7.9.jar"/>
+        <pathelement location="${dir.lib}/mockito-core-2.21.0.jar"/>
+        <pathelement location="${dir.lib}/byte-buddy-1.8.17.jar"/>
+        <pathelement location="${dir.lib}/byte-buddy-agent-1.8.17.jar"/>
         <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
 		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
         <pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
@@ -63,7 +63,7 @@
 
     <target name="test" depends="test_build">
         <mkdir dir="${test.report.dir}"/>
-        <junit printsummary="on" haltonfailure="yes" fork="true">
+        <junit printsummary="yes" haltonfailure="yes" fork="yes">
             <classpath>
                 <path refid="classpath.test"/>
                 <path refid="classpath.dependency"/>
@@ -81,7 +81,7 @@
         <echo message="user.dir = ${user.dir}" />
         <echo message="basedir = ${basedir}" />
         <mkdir dir="${test.report.dir}"/>
-        <junit printsummary="on" haltonfailure="yes" fork="yes">
+        <junit printsummary="yes" haltonfailure="yes" fork="yes">
 
             <!-- hack to make KernelLauncher use the correct path regardless of 
                  whether ant invoked from aion dir or aion/modGui.  The proper

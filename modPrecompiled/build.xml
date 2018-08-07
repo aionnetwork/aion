@@ -66,7 +66,7 @@
 
     <target name="test_build" depends="build">
         <mkdir dir="${dir.test}" />
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
             <classpath>
                 <path refid="classpath.test" />
             </classpath>
@@ -75,7 +75,7 @@
 
     <target name="ci_test_build" depends="build">
         <mkdir dir="${dir.test}"/>
-        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
+        <javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
             <classpath>
                 <path refid="classpath.test"/>
             </classpath>
@@ -94,7 +94,7 @@
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
-        <junit printsummary="on" haltonfailure="yes" fork="true">
+        <junit printsummary="yes" haltonfailure="yes" fork="yes">
             <classpath>
                 <path refid="classpath.test" />
                 <pathelement location="${dir.test}" />
@@ -121,7 +121,7 @@
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
-        <junit printsummary="on" haltonfailure="no" fork="true">
+        <junit printsummary="yes" haltonfailure="no" fork="yes">
             <classpath>
                 <path refid="classpath.test" />
                 <pathelement location="${dir.test}" />
