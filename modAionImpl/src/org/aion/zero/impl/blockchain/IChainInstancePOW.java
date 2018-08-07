@@ -22,16 +22,18 @@
  *
  ******************************************************************************/
 
-package org.aion.mcf.blockchain;
+package org.aion.zero.impl.blockchain;
 
+import org.aion.mcf.blockchain.IChainInstanceBase;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
  * Chain instance pow interface.
  */
 public interface IChainInstancePOW extends IChainInstanceBase {
 
-    IPowChain<?, ?> getBlockchain();
+    IAionBlockchain getBlockchain();
 
     IMineRunner getBlockMiner();
 }

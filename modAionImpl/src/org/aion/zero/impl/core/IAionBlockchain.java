@@ -24,6 +24,7 @@ package org.aion.zero.impl.core;
 import java.util.List;
 import org.aion.base.db.IRepository;
 import org.aion.mcf.core.IBlockchain;
+import org.aion.zero.blockchain.IPowChain;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -33,7 +34,7 @@ import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain
-        extends IBlockchain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
+        extends IPowChain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
 
     AionBlock createNewBlock(
             AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);

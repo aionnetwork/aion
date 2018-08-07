@@ -22,12 +22,11 @@
  */
 package org.aion.mcf.core;
 
-import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
-import org.aion.mcf.blockchain.IPowChain;
+import org.aion.mcf.blockchain.IGenericChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
@@ -48,7 +47,7 @@ public interface IBlockchain<
                 TX extends ITransaction,
                 TR extends AbstractTxReceipt,
                 INFO extends AbstractTxInfo>
-        extends IPowChain<BLK, BH> {
+        extends IGenericChain<BLK, BH> {
 
     long getSize();
 
@@ -66,8 +65,6 @@ public interface IBlockchain<
 
     void close();
 
-    void setTotalDifficulty(BigInteger totalDifficulty);
-
     byte[] getBestBlockHash();
 
     List<byte[]> getListOfHashesEndWith(byte[] hash, int qty);
@@ -77,8 +74,6 @@ public interface IBlockchain<
     INFO getTransactionInfo(byte[] hash);
 
     void setExitOn(long exitOn);
-
-    Address getMinerCoinbase();
 
     boolean isBlockExist(byte[] hash);
 
