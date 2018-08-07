@@ -52,6 +52,7 @@ public class CfgLog {
         modules.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevel.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevel.ERROR.name());
+        modules.put(LogEnum.GUI.name(), LogLevel.INFO.name());
         this.logFile = false;
         this.logPath = "log";
     }
@@ -103,7 +104,7 @@ public class CfgLog {
 
             /*
              * XML - Displays tag/entry in the config.xml
-             * Boolean value to allow logger to be toggled ON and OFF
+             * Boolean value to allow LOGGER to be toggled ON and OFF
              */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeComment("Enable/Disable logback service; if disabled, output will not be logged.");
@@ -149,12 +150,12 @@ public class CfgLog {
         return this.modules;
     }
 
-    /** Method checks whether logger is enabled/disabled */
+    /** Method checks whether LOGGER is enabled/disabled */
     public boolean getLogFile() {
         return this.logFile;
     }
 
-    /** Method returns user input folder path of logger */
+    /** Method returns user input folder path of LOGGER */
     public String getLogPath() {
         return this.logPath;
     }
@@ -163,4 +164,9 @@ public class CfgLog {
     public boolean isValidPath() {
         return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
+
+    public void setLogPath(String value) {
+        logPath = value;
+    }
+
 }

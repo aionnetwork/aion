@@ -277,7 +277,7 @@ public class CfgDb {
     }
 
     public String getPath() {
-        return this.path;
+        return path;
     }
 
     public CfgPrune getPrune() {
@@ -390,4 +390,9 @@ public class CfgDb {
             }
         }
     }
+
+    public void setDatabasePath(String value) {
+        path = value;
+    }
+
 }

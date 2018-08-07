@@ -41,6 +41,12 @@ import org.aion.zero.impl.GenesisBlockLoader;
  */
 public final class CfgAion extends Cfg {
 
+    private static String NETWORK = "mainnet";
+
+    private static String CONF_FILE_PATH = BASE_PATH + "/config/" + NETWORK + "/config.xml";
+
+    private static String GENESIS_FILE_PATH = BASE_PATH + "/config/" + NETWORK + "/genesis.json";
+
     protected AionGenesis genesis;
 
     protected static final int N = 210;
@@ -60,6 +66,7 @@ public final class CfgAion extends Cfg {
         this.log = new CfgLog();
         this.tx = new CfgTx();
         this.reports = new CfgReports();
+        this.gui = new CfgGui();
     }
 
     private static class CfgAionHolder {
@@ -205,6 +212,9 @@ public final class CfgAion extends Cfg {
                     case "reports":
                         this.reports.fromXML(sr);
                         break;
+                    case "gui":
+                        this.gui.fromXML(sr);
+                        break;
                     default:
                         skipElement(sr);
                         break;
@@ -307,6 +317,7 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getLog().toXML());
             sw.writeCharacters(this.getTx().toXML());
             sw.writeCharacters(this.getReports().toXML());
+            sw.writeCharacters(this.getGui().toXML());
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();
@@ -327,4 +338,25 @@ public final class CfgAion extends Cfg {
             }
         }
     }
+
+    public static String getNetwork() {
+        return NETWORK;
+    }
+
+    public static String getConfFilePath() { return CONF_FILE_PATH; }
+
+    public static String getGenesisFilePath() { return GENESIS_FILE_PATH; }
+
+    public static void setNetwork(String value) {
+        NETWORK = value;
+    }
+
+    public static void setConfFilePath (String value) {
+        CONF_FILE_PATH = value;
+    }
+
+    public static void setGenesisFilePath (String value) {
+        GENESIS_FILE_PATH = value;
+    }
+
 }

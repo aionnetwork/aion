@@ -28,7 +28,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,8 +36,11 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
@@ -50,11 +52,12 @@ import java.util.UUID;
  * @author chris
  */
 public class Cli {
-
+  
+    private static String BASE_PATH = Cfg.getBasePath();
     File keystoreDir = new File(
         System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
-    public int call(final String[] args, final Cfg cfg) {
+    public int call(final String[] args, Cfg cfg) {
         try {
             cfg.fromXML();
             switch (args[0].toLowerCase()) {
@@ -93,12 +96,30 @@ public class Cli {
                             return 1;
                     }
                     break;
+
+                // Config generation for a specific network
                 case "-c":
+                    if (args.length == 2 && isValid(args[1])) {
+                        switch (args[1].toLowerCase()) {
+                            case "mainnet":
+                            case "conquest":
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                System.out.println("\nNew config generated for " + args[1]);
+                                break;
+                            default:
+                                System.out.println("\nInvalid network " + args[1] + "; Defaulted to mainnet");
+                                break;
+                        }
+                    }
+                    else if (args.length == 1) {
+                        System.out.println("\nInvalid network; Defaulted to mainnet");
+                        return 1;
+                    }
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
-                    System.out.println("\nNew config generated");
                     break;
+
                 case "-i":
                     cfg.fromXML();
                     System.out.println("\nInformation");
@@ -161,7 +182,7 @@ public class Cli {
                         }
                     }
                     break;
-                case "--state": {
+                case "--state":
                     String pruning_type = "full";
                     if (args.length >= 2) {
                         pruning_type = args[1];
@@ -174,7 +195,6 @@ public class Cli {
                         return 1;
                     }
                     break;
-                }
                 case "--dump-state-size":
                     long block_count = 2L;
 
@@ -200,6 +220,48 @@ public class Cli {
                         RecoveryUtils.printStateTrieSize(block_count);
                     }
                     break;
+
+                // Determines network config folder path
+                case "-n":
+                case "--network":
+                    if (args.length == 2 && isValid(args[1])) {
+                        switch (args[1].toLowerCase()) {
+                            case "mainnet":
+                            case "conquest":
+                                CfgAion.setNetwork(args[1]);
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/" + args[1] + "/genesis.json"));
+                                System.out.println("Executing Aion kernel on " + args[1]);
+                                break;
+                            default:
+                                System.out.println("Invalid network " + args[1] + ": Defaulted to mainnet");
+                                break;
+                        }
+                    } else {
+                        System.out.println("Invalid network: Defaulted to mainnet");
+                        return 1;
+                    }
+                    break;
+
+                // Determines database folder path
+                case "-d":
+                case "--datadir":
+                    if (args.length == 2 && isValid(args[1])) {
+
+                        // TODO: Check if the folder exists
+                        // TODO: Copy keystore, config and genesis files
+                        // TODO: Set the BASE_PATH (CONF + GENESIS)
+                        // TODO: Set the KEYSTORE folder path
+
+                        cfg.getDb().setDatabasePath(args[1] + "/database");
+                        cfg.getLog().setLogPath(args[1] + "/log");
+                    } else {
+                        System.out.println("Invalid arguments; Defaulted database path");
+                        return 1;
+                    }
+                    cfg.toXML(null);
+                    break;
+
                 case "--dump-state":
                     long level = -1L;
 
@@ -284,8 +346,11 @@ public class Cli {
             "  -a export [address]                           export private key of an account");
         System.out.println("  -a import [private_key]                       import private key");
         System.out.println();
-        System.out.println(
-            "  -c                                            create config with default values");
+        System.out.println("  -c [network]                                  create config with default values");
+        System.out.println();
+        System.out.println("  -n [network]      |   --network [network]     execute kernel with selected network");
+        System.out.println();
+        System.out.println("  -d [directory]    |   --datadir [directory]   execute kernel with selected database directory");
         System.out.println();
         System.out.println("  -i                                            show information");
         System.out.println();
@@ -479,6 +544,10 @@ public class Cli {
         }
 
         return RecoveryUtils.revertTo(block);
+    }
+
+    public static boolean isValid (String value) {
+        return !value.isEmpty() && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 
     private void createKeystoreDirIfMissing() {

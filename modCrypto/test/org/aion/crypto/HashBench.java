@@ -56,6 +56,7 @@ public class HashBench {
         for (int i = 0; i < COUNT; i++) {
             HashUtil.blake256(input);
             HashUtil.blake256Native(input);
+            HashUtil.keccak256(input);
         }
 
         // blake2b
@@ -75,5 +76,13 @@ public class HashBench {
         System.out.println(" Blake2b native: " + (te - ts) / COUNT + " ns / call");
 
         assertArrayEquals(outputJ, outputN);
+
+        // keccak
+        ts = System.nanoTime();
+        for (int i = 0; i < COUNT; i++) {
+            HashUtil.keccak256(input);
+        }
+        te = System.nanoTime();
+        System.out.println(" Keccak        : " + (te - ts) / COUNT + " ns / call");
     }
 }

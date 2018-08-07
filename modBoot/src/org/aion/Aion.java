@@ -28,7 +28,6 @@ import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.io.Console;
-import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
@@ -70,7 +69,9 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            exit(ret);
+            if (!args[0].matches("-n|--network|-d|--datadir")) {
+                exit(ret);
+            }
         }
 
         /*
@@ -95,19 +96,19 @@ public class Aion {
          */
         String UUID = cfg.getId();
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
-            System.out.println("Invalid UUID; please check <id> setting in config.xml");
+            System.out.println("Invalid UUID; please check config settings");
             exit(-1);
         }
 
         /* Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out
-                .println("Logger disabled; to enable please check <log> settings in config.xml");
+                .println("Logger disabled; enable under config settings");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Invalid file path; please check <log> setting in config.xml");
+            System.out.println("Invalid log path; please check config settings");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
+            System.out.println("Log Folder: " + cfg.getLog().getLogPath());
         }
 
         // get the ssl password synchronously from the console, only if required
@@ -125,20 +126,18 @@ public class Aion {
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         String logo =
-              "\n                     _____                  \n" +
+                "\n                                          \n" +
+                "                     _____                  \n" +
                 "      .'.       |  .~     ~.  |..          |\n" +
                 "    .'   `.     | |         | |  ``..      |\n" +
                 "  .''''''''`.   | |         | |      ``..  |\n" +
                 ".'           `. |  `._____.'  |          ``|\n\n";
 
-        // always print the version string in the center of the Aion logo
+        // always print information in the center of the Aion logo
         String versionStr = "v"+KERNEL_VERSION;
-        int leftPad = Math.round((44 - versionStr.length()) / 2.0f) + 1;
-        StringBuilder padVersionStr = new StringBuilder();
-        for (int i = 0; i < leftPad; i++) padVersionStr.append(" ");
-        padVersionStr.append(versionStr);
-        logo += padVersionStr.toString();
-        logo += "\n\n";
+        String networkStr = CfgAion.getNetwork();
+        logo = appendLogo(logo, versionStr);
+        logo = appendLogo(logo, networkStr);
 
         genLog.info(logo);
 
@@ -306,4 +305,15 @@ public class Aion {
 
         return sslPass;
     }
+
+    public static String appendLogo(String value, String input) {
+        int leftPad = Math.round((44 - input.length()) / 2.0f) + 1;
+        StringBuilder padInput = new StringBuilder();
+        for (int i = 0; i < leftPad; i++) padInput.append(" ");
+        padInput.append(input);
+        value += padInput.toString();
+        value += "\n\n";
+        return value;
+    }
+
 }
