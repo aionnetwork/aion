@@ -5,6 +5,7 @@
 	<property name="dir.dest" value="./build/main" />
 	<property name="dir.test" value="./build/test" />
 	<property name="src.test" value="./test" />
+	<property name="test.resources" value="./test/resources" />
 	<property name="test.report.dir" value="report" />
 
 	<path id="classpath.test">
@@ -17,6 +18,11 @@
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
                 <pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
+                <pathelement location="${dir.lib}/byte-buddy-1.8.17.jar" />
+                <pathelement location="${dir.lib}/byte-buddy-agent-1.8.17.jar" />
+                <pathelement location="${dir.lib}/mockito-core-2.21.0.jar" />
+                <pathelement location="${dir.lib}/objenesis-2.6.jar" />
+                <pathelement location="${dir.mod}/modAionBase.jar" />		
 	</path>
 
 	<path id="cp">
@@ -51,10 +57,11 @@
 
 	<target name="test" depends="test_build">
 		<mkdir dir="${test.report.dir}" />
-		<junit printsummary="on" haltonfailure="no" fork="true">
+		<junit printsummary="yes" haltonfailure="yes" fork="yes">
 			<classpath>
 				<path refid="classpath.test" />
 				<pathelement location="${dir.test}" />
+                                <pathelement location="${test.resources}" />
 			</classpath>
 			<formatter type="plain" usefile="false" />
 			<formatter type="xml" />
@@ -66,7 +73,7 @@
 
 	<target name="ci_build" depends="test_build">
 		<mkdir dir="${test.report.dir}" />
-		<junit printsummary="on" haltonfailure="no" fork="true">
+		<junit printsummary="yes" haltonfailure="no" fork="yes">
 			<classpath>
 				<path refid="classpath.test" />
 				<pathelement location="${dir.test}" />
