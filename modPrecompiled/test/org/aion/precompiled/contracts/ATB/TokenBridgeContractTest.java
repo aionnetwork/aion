@@ -1336,4 +1336,148 @@ public class TokenBridgeContractTest {
             this.callPayload = callPayload;
         }
     }
+
+    // other functions coverage
+    @Test
+    public void testRingLocked(){
+        // override defaults
+        this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        // try before
+        byte[] callPayload = new AbiEncoder(BridgeFuncSig.PURE_RING_LOCKED.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult.getOutput()).isEqualTo(DataWord.ONE.getData());
+
+        // lock the ring
+        this.connector.setRingLocked(false);
+
+        // try after
+        byte[] callPayload2 = new AbiEncoder(BridgeFuncSig.PURE_RING_LOCKED.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
+        assertThat(transferResult2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult2.getOutput()).isEqualTo(DataWord.ZERO.getData());
+    }
+
+    @Test
+    public void testMinThreshold(){
+        // override defaults
+        this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        // try before
+        byte[] callPayload = new AbiEncoder(BridgeFuncSig.PURE_MIN_THRESH.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult.getOutput()).isEqualTo(new DataWord(new BigInteger("3")).getData());
+
+        // explicitly set the min threshold to 5
+        this.connector.setMinThresh(5);
+
+        // try after
+        byte[] callPayload2 = new AbiEncoder(BridgeFuncSig.PURE_MIN_THRESH.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
+        assertThat(transferResult2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult2.getOutput()).isEqualTo(new DataWord(new BigInteger("5")).getData());
+
+        // try setting threshold greater than number of validator members
+        this.connector.setMinThresh(10);
+
+        // try after
+        byte[] callPayload3 = new AbiEncoder(BridgeFuncSig.PURE_MIN_THRESH.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult3 = this.contract.execute(callPayload3, DEFAULT_NRG);
+        assertThat(transferResult3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult3.getOutput()).isEqualTo(new DataWord(new BigInteger("10")).getData());
+    }
+
+    @Test
+    public void testMemberCount(){
+        // override defaults
+        this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        // try before
+        byte[] callPayload = new AbiEncoder(BridgeFuncSig.PURE_MEMBER_COUNT.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult.getOutput()).isEqualTo(new DataWord(new BigInteger("5")).getData());
+
+        // explicitly set the member count to 10
+        this.connector.setMemberCount(10);
+
+        // try after
+        byte[] callPayload2 = new AbiEncoder(BridgeFuncSig.PURE_MEMBER_COUNT.getSignature(), encodingList).encodeBytes();
+        ExecutionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
+        assertThat(transferResult2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(transferResult2.getOutput()).isEqualTo(new DataWord(new BigInteger("10")).getData());
+    }
+
+    @Test
+    public void testRingMap(){
+        // override defaults
+        this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        // create input byte[]
+        byte[] callPayload = new byte[36];
+        byte[] encodeBytes = new AbiEncoder(BridgeFuncSig.PURE_RING_MAP.getSignature()).encodeBytes();
+        ECKey newKey = ECKeyFac.inst().create();
+        byte[] randomAddress = newKey.getAddress();
+        System.arraycopy(encodeBytes, 0, callPayload, 0, 4);
+        System.arraycopy(randomAddress, 0, callPayload, 4, 32);
+
+        // execute with valid input
+        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        // execute with invalid input
+        ExecutionResult transferResult2 = this.contract.execute(encodeBytes, DEFAULT_NRG);
+        assertThat(transferResult2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+    }
+
 }
