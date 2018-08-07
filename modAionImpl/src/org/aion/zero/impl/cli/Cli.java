@@ -40,9 +40,11 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -52,7 +54,9 @@ import java.util.UUID;
  */
 public class Cli {
 
-    public int call(final String[] args, final Cfg cfg) {
+    private static String BASE_PATH = Cfg.getBasePath();
+
+    public int call(final String[] args, Cfg cfg) {
         try {
             cfg.fromXML();
             switch (args[0].toLowerCase()) {
@@ -89,13 +93,27 @@ public class Cli {
                         default:
                             printHelp();
                             return 1;
-                        }
+                    }
                     break;
                 case "-c":
+                    if (args.length == 2 && isValid(args[1])) {
+                        switch (args[1].toLowerCase()) {
+                            case "mainnet":
+                            case "conquest":
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                System.out.println("\nNew config generated for " + args[1]);
+                                break;
+                            default:
+                                System.out.println("\nInvalid network '" + args[1] + "'; Set to default mainnet");
+                                break;
+                        }
+                    } else if (args.length == 1) {
+                        System.out.println("\nInvalid arguments; Set to default mainnet");
+                        return 1;
+                    }
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
-                    System.out.println("\nNew config generated");
                     break;
                 case "-i":
                     cfg.fromXML();
@@ -120,18 +138,78 @@ public class Cli {
                         System.out.println("Finished database clean-up.");
                     } else {
                         switch (revertTo(args[1])) {
-                        case SUCCESS:
-                            System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
-                            break;
-                        case FAILURE:
-                            System.out.println("Unable to revert to block number " + args[1] + ".");
-                            return 1;
-                        case ILLEGAL_ARGUMENT:
-                        default:
-                            return 1;
+                            case SUCCESS:
+                                System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
+                                break;
+                            case FAILURE:
+                                System.out.println("Unable to revert to block number " + args[1] + ".");
+                                return 1;
+                            case ILLEGAL_ARGUMENT:
+                            default:
+                                return 1;
                         }
                     }
                     break;
+
+                // Determines network config folder path
+                case "-n":
+                case "--network":
+                    if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
+
+                        // Recursively call to change database folder (TEMP)
+                        if (args.length == 4 && (args[2].equals("--datadir") || args[2].equals("-d"))) {
+                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                            call(newArgs, cfg);
+                        }
+
+                        switch (args[1].toLowerCase()) {
+                            case "mainnet":
+                            case "conquest":
+                                CfgAion.setNetwork(args[1]);
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/" + args[1] + "/genesis.json"));
+                                break;
+                            default:
+                                System.out.println("Invalid network '" + args[1] + "': Set to default network");
+                                break;
+                        }
+                    } else {
+
+                        // Set to default database && log && network
+                        System.out.println("Invalid arguments: Set to default network");
+                        cfg.getDb().setDatabasePath("database");
+                        cfg.getLog().setLogPath("log");
+                        cfg.toXML(null);
+                        return 1;
+                    }
+                    break;
+
+                // Determines database folder path
+                case "-d":
+                case "--datadir":
+                    if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
+
+                        // Recursively call to change network (TEMP)
+                        if (args.length == 4 && (args[2].equals("--network") || args[2].equals("-n"))) {
+                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                            call(newArgs, cfg);
+                        }
+
+                        // Change to specified database folder
+                        cfg.getDb().setDatabasePath(args[1] + "/database");
+                        cfg.getLog().setLogPath(args[1] + "/log");
+                        cfg.toXML(null);
+                    } else {
+
+                        // Set to default database && log
+                        System.out.println("Invalid arguments; Set to default database path");
+                        cfg.getDb().setDatabasePath("database");
+                        cfg.getLog().setLogPath("log");
+                        cfg.toXML(null);
+                        return 1;
+                    }
+                    break;
+
                 case "--state": {
                     String pruning_type = "full";
                     if (args.length >= 2) {
@@ -245,7 +323,11 @@ public class Cli {
         System.out.println("  -a export [address]          export private key of an account");
         System.out.println("  -a import [private_key]      import private key");
         System.out.println();
-        System.out.println("  -c                           create config with default values");
+        System.out.println("  -c [network]                 create config with default values to select network");
+        System.out.println();
+        System.out.println("  -n, --network [network]      execute kernel with selected network");
+        System.out.println();
+        System.out.println("  -d, --datadir [directory]    execute kernel with selected database directory");
         System.out.println();
         System.out.println("  -i                           show information");
         System.out.println();
@@ -302,8 +384,7 @@ public class Cli {
     /**
      * Dumps the private of the given account.
      *
-     * @param address
-     *            address of the account
+     * @param address address of the account
      * @return boolean
      */
     private boolean exportPrivateKey(String address) {
@@ -333,8 +414,7 @@ public class Cli {
     /**
      * Imports a private key.
      *
-     * @param privateKey
-     *            private key in hex string
+     * @param privateKey private key in hex string
      * @return boolean
      */
     private boolean importPrivateKey(String privateKey) {
@@ -382,9 +462,9 @@ public class Cli {
      * user input from a console evironment and if one is not available it instead attempts to read
      * from reader.
      *
-     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
      * @param prompt The read-password prompt to display to the user.
      * @return The user-entered password.
+     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
      */
     public String readPassword(String prompt, BufferedReader reader) {
         if (prompt == null) {
@@ -401,10 +481,10 @@ public class Cli {
     /**
      * Returns a password after prompting the user to enter it from reader.
      *
-     * @throws NullPointerException if reader is null.
      * @param prompt The read-password prompt to display to the user.
      * @param reader The BufferedReader to read input from.
      * @return The user-entered password.
+     * @throws NullPointerException if reader is null.
      */
     private String readPasswordFromReader(String prompt, BufferedReader reader) {
         if (reader == null) {
@@ -435,4 +515,7 @@ public class Cli {
         return RecoveryUtils.revertTo(block);
     }
 
+    public static boolean isValid(String value) {
+        return !value.isEmpty() && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
+    }
 }

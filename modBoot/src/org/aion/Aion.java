@@ -61,7 +61,9 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            exit(ret);
+            if (!args[0].matches("-n|--network|-d|--datadir")) {
+                exit(ret);
+            }
         }
 
         /*
@@ -79,18 +81,14 @@ public class Aion {
             throw e;
         }
 
-        /*
-         * Ensuring valid UUID in the config.xml
-         * Valid UUID: 32 Hex in 5 Groups [0-9A-F]
-         * 00000000-0000-0000-0000-000000000000
-         */
+        // UUID check
         String UUID = cfg.getId();
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
             exit(-1);
         }
 
-        /* Outputs relevant logger configuration */
+        // Log/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out
                 .println("Logger disabled; to enable please check <log> settings in config.xml");
@@ -100,6 +98,7 @@ public class Aion {
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
         }
+        System.out.println("Database path: '" + cfg.getDb().getPath() + "'");
 
         /*
          * Logger initialize with LOGFILE and LOGPATH (user config inputs)
@@ -115,6 +114,11 @@ public class Aion {
                 ".'           `. |  `._____.'  |          ``|\n\n" +
                 "                    NETWORK  v" + KERNEL_VERSION +
                 "\n\n";
+
+        String versionStr = "v"+KERNEL_VERSION;
+        String networkStr = CfgAion.getNetwork();
+        logo = appendLogo(logo, versionStr);
+        logo = appendLogo(logo, networkStr);
 
         genLog.info(logo);
 
@@ -224,4 +228,15 @@ public class Aion {
 
         }, "shutdown"));
     }
+
+    public static String appendLogo(String value, String input) {
+        int leftPad = Math.round((44 - input.length()) / 2.0f) + 1;
+        StringBuilder padInput = new StringBuilder();
+        for (int i = 0; i < leftPad; i++) padInput.append(" ");
+        padInput.append(input);
+        value += padInput.toString();
+        value += "\n\n";
+        return value;
+    }
+
 }

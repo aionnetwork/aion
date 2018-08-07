@@ -34,11 +34,7 @@ import org.aion.mcf.types.AbstractBlock;
  */
 public abstract class Cfg {
 
-    private static final String BASE_PATH = System.getProperty("user.dir");
-
-    protected static final String CONF_FILE_PATH = BASE_PATH + "/config/config.xml";
-
-    protected static final String GENESIS_FILE_PATH = BASE_PATH + "/config/genesis.json";
+    protected static final String BASE_PATH = System.getProperty("user.dir");
 
     protected String mode;
 
@@ -133,7 +129,7 @@ public abstract class Cfg {
     /**
      * @return the base dir where all configuration + persistance is managed
      */
-    public String getBasePath() {
+    public static String getBasePath() {
         return BASE_PATH;
     }
 

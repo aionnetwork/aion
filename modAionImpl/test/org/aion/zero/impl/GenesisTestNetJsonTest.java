@@ -18,10 +18,10 @@ import static com.google.common.truth.Truth.assertThat;
 public class GenesisTestNetJsonTest {
 
     // if we're running in the module itself
-    private static final String TESTNET_DEFAULT_LOCATION = "../modBoot/resource/testnet.json";
+    private static final String TESTNET_DEFAULT_LOCATION = "../modBoot/resource/conquest/genesis.json";
 
     // if we're running in the project folder
-    private static final String TESTNET_ALT_LOCATION = "./modBoot/resource/testnet.json";
+    private static final String TESTNET_ALT_LOCATION = "./modBoot/resource/conquest/genesis.json";
 
     private static AionGenesis genesis;
 

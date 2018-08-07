@@ -149,6 +149,10 @@ public class CfgLog {
         return this.modules;
     }
 
+    public void setLogPath(String value) {
+        logPath = value;
+    }
+
     /** Method checks whether LOGGER is enabled/disabled */
     public boolean getLogFile() {
         return this.logFile;

@@ -390,4 +390,8 @@ public class CfgDb {
             }
         }
     }
+
+    public void setDatabasePath(String value) {
+        path = value;
+    }
 }
