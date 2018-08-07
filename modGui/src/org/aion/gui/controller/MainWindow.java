@@ -128,8 +128,13 @@ public class MainWindow extends Application {
         try {
             walletStorage = new WalletStorage(getDefaultStorageDir());
         } catch (IOException ioe) {
-            // XXX Handle it properly
-            throw new RuntimeException(ioe);
+            // Should handle this with a nice graphical error message with
+            // suggestion for how to fix.  For now just throw an exception
+            // that bubbles up to terminate the program.
+            throw new IllegalStateException(String.format(
+                    "Fatal error: could not allocate wallet storage at location '%s'; exiting.",
+                    getDefaultStorageDir()
+            ), ioe);
         }
 
         kernelLauncher = new KernelLauncher(

@@ -39,7 +39,6 @@ public abstract class AbstractController implements Initializable {
     }
 
     protected void registerEventBusConsumer() {
-//        EventBusRegistry.INSTANCE.getBus(DataUpdater.UI_DATA_REFRESH).register(this); // FIXME this one should go away and everything using it should use the one below
         EventBusRegistry.INSTANCE.getBus(RefreshEvent.ID).register(this);
     }
 

@@ -66,8 +66,7 @@ public class AccountManager {
     private final EventPublisher eventPublisher;
 
     private MasterKey root;
-
-    private boolean isWalletLocked = false; // TODO what actually uses this?
+    private boolean isWalletLocked = false;
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 

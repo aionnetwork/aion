@@ -5,15 +5,13 @@ import org.junit.Test;
 import org.libsodium.jni.encoders.Hex;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class SeededECKeyEd25519Test {
     private static final Hex HEX = new Hex();
 
     @Test
     public void test() {
-        // TODO should double check the values against some other impl
-
         byte[] seed = HEX.decode("e33c0f7d81d843c572275f287498e8d408654fdf0d1e065b84e2e6f157aab09b"
         );
         SeededECKeyEd25519 unit = new SeededECKeyEd25519(seed);

@@ -128,7 +128,7 @@ public class TransactionProcessorTest {
 
         // set up mocks for the "add new transactions" part
         ApiMsg blockDetailsApiMsg = mock(ApiMsg.class);
-        when(api.getAdmin().getBlockDetailsByNumber(anyList() /* TODO what is this actually expected to be?? */))
+        when(api.getAdmin().getBlockDetailsByNumber(anyList()))
                 .thenReturn(blockDetailsApiMsg);
         List<BlockDetails> blockDetails = new LinkedList<>() {{
             // in real-life, this number of BlockDetails in this list would be the same as min(BLOCK_BATCH_SIZE, latest - safest)
