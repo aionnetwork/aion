@@ -57,7 +57,6 @@ public class EDVerifyContractTest {
         byte[] input = setupInput(INPUT_BUFFER_LENGTH);
 
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
-
         assertThat(result.getOutput()).isEqualTo(ecKey.getAddress());
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
@@ -68,7 +67,6 @@ public class EDVerifyContractTest {
         input[33] = 0;
 
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
-
         assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
