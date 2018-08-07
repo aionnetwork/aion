@@ -209,6 +209,7 @@ public class MainWindow extends Application {
                 .withConsoleManager(consoleManager)
                 .withEventBusRegistry(EventBusRegistry.INSTANCE)
                 .withHealthChecker(unixKernelProcessHealthChecker)
+                .withBalanceRetriever(new BalanceRetriever(kc))
         );
         loader.setBuilderFactory(new UiSubcomponentsFactory()
                 .withAccountManager(accountManager)

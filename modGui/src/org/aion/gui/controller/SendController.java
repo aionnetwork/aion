@@ -79,15 +79,16 @@ public class SendController extends AbstractController {
     public SendController(KernelConnection kernelConnection,
                           AccountManager accountManager,
                           TransactionProcessor transactionProcessor,
-                          ConsoleManager consoleManager) {
+                          ConsoleManager consoleManager,
+                          BalanceRetriever balanceRetriever) {
         super();
         this.kernelConnection = kernelConnection;
         this.accountManager = accountManager;
         this.transactionProcessor = transactionProcessor;
         this.transactionResubmissionDialog = new TransactionResubmissionDialog(
                 accountManager, consoleManager);
-        this.balanceRetriever = new BalanceRetriever(kernelConnection);
         this.consoleManager = consoleManager;
+        this.balanceRetriever = balanceRetriever;
     }
 
     @Override
@@ -135,6 +136,8 @@ public class SendController extends AbstractController {
             case TRANSACTION_FINISHED:
                 setDefaults();
                 break;
+            case TIMER:
+                refreshAccountBalance();
             default:
         }
         setTimedoutTransactionsLabelText();
@@ -293,7 +296,7 @@ public class SendController extends AbstractController {
                     account.setBalance(BalanceUtils.formatBalance(getBalanceTask.getValue()));
                     setAccountBalanceText();
                 }),
-                getErrorEvent(throwable -> {}, getBalanceTask),
+                getErrorEvent(throwable -> throwable.printStackTrace(), getBalanceTask),
                 getEmptyEvent()
         );
     }

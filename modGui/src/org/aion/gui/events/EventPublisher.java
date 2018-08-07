@@ -30,7 +30,7 @@ public class EventPublisher {
         }
     }
 
-    public static void fireAccountLocked(final AccountDTO account) {
+    public void fireAccountLocked(final AccountDTO account) {
         if (account != null) {
             EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountEvent(AbstractAccountEvent.Type.LOCKED, account));
         }

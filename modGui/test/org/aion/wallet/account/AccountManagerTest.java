@@ -435,6 +435,7 @@ public class AccountManagerTest {
         assertThat(account.isActive(), is(false));
         assertThat(account.getPrivateKey(), is(nullValue()));
         assertThat(unit.isMasterAccountUnlocked(), is(false));
+        verify(eventPublisher).fireAccountLocked(account);
     }
 
     @Test

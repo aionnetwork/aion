@@ -198,7 +198,7 @@ public class TransactionProcessor extends AbstractAionApiClient {
                 transaction.getTxIndex());
     }
 
-    public final TransactionResponseDTO sendTransaction(final SendTransactionDTO dto) throws ValidationException {
+    public TransactionResponseDTO sendTransaction(final SendTransactionDTO dto) throws ValidationException {
         if (dto == null || !dto.validate()) {
             throw new ValidationException("Invalid transaction request data");
         }
@@ -208,7 +208,7 @@ public class TransactionProcessor extends AbstractAionApiClient {
         return sendTransactionInternal(dto);
     }
 
-    private final BigInteger getBalance(final String address) {
+    private BigInteger getBalance(final String address) {
         return balanceRetriever.getBalance(address);
     }
 

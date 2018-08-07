@@ -55,6 +55,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private ConsoleManager consoleManager;
     private UnixKernelProcessHealthChecker healthChecker;
     private EventBusRegistry eventBusRegistry;
+    private BalanceRetriever balanceRetriever;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
@@ -89,7 +90,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     kernelConnection,
                     accountManager,
                     transactionProcessor,
-                    consoleManager));
+                    consoleManager,
+                    balanceRetriever));
             put(HistoryController.class, () -> new HistoryController(
                     transactionProcessor,
                     accountManager,
@@ -294,6 +296,15 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
 
     public ControllerFactory withEventBusRegistry(EventBusRegistry eventBusRegistry) {
         this.eventBusRegistry = eventBusRegistry;
+        return this;
+    }
+
+    public BalanceRetriever getBalanceRetriever() {
+        return this.balanceRetriever;
+    }
+
+    public ControllerFactory withBalanceRetriever(BalanceRetriever balanceRetriever) {
+        this.balanceRetriever = balanceRetriever;
         return this;
     }
 }

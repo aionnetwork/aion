@@ -395,7 +395,7 @@ public class AccountManager {
         for (AccountDTO account : addressToAccount.values()) {
             account.setPrivateKey(null);
             account.setActive(false);
-            EventPublisher.fireAccountLocked(account);
+            eventPublisher.fireAccountLocked(account);
         }
     }
 
