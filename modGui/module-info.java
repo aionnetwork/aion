@@ -11,5 +11,7 @@ module aion.boot {
     requires javafx.controls;
     requires java.desktop;
 
+    requires java.management;
+
     exports org.aion;
 }

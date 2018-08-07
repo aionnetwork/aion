@@ -1,6 +1,5 @@
 package org.aion.api.server.rpc;
 
-import org.aion.api.server.http.ApiWeb3Aion;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
