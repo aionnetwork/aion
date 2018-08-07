@@ -7,7 +7,7 @@
 <fx:root type="javafx.scene.control.ListCell" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
          stylesheets="@accountListViewItem.css" styleClass="account-item">
     <graphic>
-        <HBox spacing="5">
+        <HBox spacing="5" alignment="TOP_CENTER">
             <VBox prefWidth="120">
                 <TextField text="Name:" styleClass="copyable-label" editable="false"/>
                 <TextField text="Public address" styleClass="copyable-label" editable="false"/>
