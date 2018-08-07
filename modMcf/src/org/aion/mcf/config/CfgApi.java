@@ -23,6 +23,8 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -110,5 +112,20 @@ public final class CfgApi {
             e.printStackTrace();
             return "";
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgApi cfgApi = (CfgApi) o;
+        return Objects.equal(zmq, cfgApi.zmq) &&
+                Objects.equal(rpc, cfgApi.rpc) &&
+                Objects.equal(nrg, cfgApi.nrg);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(zmq, rpc, nrg);
     }
 }

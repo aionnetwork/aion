@@ -37,6 +37,13 @@ ARG=$@
 # add execute permission to rt
 chmod +x ./rt/bin/*
 
+# prepare jvm params
+# use default xms if not set
+JAVA_OPTS="$JAVA_OPTS"
+if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
+  JAVA_OPTS="-Xms4g"
+fi
+
 ####### WATCHGUARD IMPLEMENTATION #######
 #				    	#
 #   To kill: ps aux | egrep "aion.sh" 	#
@@ -57,7 +64,7 @@ if [[ $1 == "watch" ]]; then
     if $first; then
       set --
       first=false
-    else		  
+    else
       set -- "$@" "$arg"
     fi
   done
@@ -118,7 +125,7 @@ if $guard; then
 		lastBoot=$newBoot
 
 		# Execute Java kernel
-		env EVMJIT="-cache=1" ./rt/bin/java -Xms4g \
+		env EVMJIT="-cache=1" ./rt/bin/java ${JAVA_OPTS} \
 			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
 		kPID=$!
 		running=true
@@ -156,7 +163,7 @@ if $guard; then
 			  for ((i=0; i<${#threads[@]}; ++i)); do
 			    tTime=$(ps --pid $kPID | egrep -o "[0-9]{2}\.[0-9]{2} ${threads[i]}" | cut -d" " -f1)
 			    tState=$(./rt/bin/jstack -l $kPID | egrep -A1 "${threads[i]}" | egrep -o "State.*" | cut -d" " -f2)
-			    if [[ $tTime == ${tPrev[i]} ]] && [[ $tState == "BLOCKED" ]]; then 
+			    if [[ $tTime == ${tPrev[i]} ]] && [[ $tState == "BLOCKED" ]]; then
 			      echo "## ${threads[i]} THREAD DEAD ##"
 			      (./rt/bin/jstack -l $kPID | egrep -A1 "${threads[i]}") > threadDump_$countRebounce.txt
 			      watching=false
@@ -207,8 +214,8 @@ else
 
 	# if there's CLI args, we just run it and quit
 	if [ "$#" -gt 0 ]; then
-		env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
-			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" 
+		env EVMJIT="-cache=1" $JAVA_CMD ${JAVA_OPTS} \
+			-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@"
 		exit
 	fi
 
@@ -224,7 +231,7 @@ else
 		exit 1
 	}
 
-  	env EVMJIT="-cache=1" $JAVA_CMD -Xms4g \
+  	env EVMJIT="-cache=1" $JAVA_CMD ${JAVA_OPTS} \
   		-cp "./lib/*:./lib/libminiupnp/*:./mod/*" org.aion.Aion "$@" &
     kernel_pid=$!
     wait

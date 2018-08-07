@@ -1,10 +1,12 @@
 package org.aion.gui.controller;
 
 import javafx.util.Callback;
+import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
+import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.aion.os.UnixKernelProcessHealthChecker;
 import org.slf4j.Logger;
@@ -31,6 +33,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private KernelUpdateTimer kernelUpdateTimer;
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
+    private ConfigManipulator configManipulator;
     private UnixKernelProcessHealthChecker healthChecker;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
@@ -55,9 +58,10 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     healthChecker,
                     syncInfoDto
             ));
-            /*put(SettingsController.class, () -> new SettingsController(
-                    kernelConnection));
-            put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
+            put(SettingsController.class, () -> new SettingsController(
+                    configManipulator
+            ));
+            /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
                     kernelConnection));
             put(PeerCountController.class, () -> new PeerCountController(
                     kernelConnection
@@ -178,10 +182,19 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     }
 
     /**
-     * @return the SyncInfoDto used by this factory
+     * @param configManipulator sets the ConfigManipulator used by this factory
+     * @return this
      */
-    public SyncInfoDto getSyncInfoDto() {
-        return syncInfoDto;
+    public ControllerFactory withConfigManipulator(ConfigManipulator configManipulator) {
+        this.configManipulator = configManipulator;
+        return this;
+    }
+
+    /**
+     * @return the ConfigManipulator used by this factory
+     */
+    public ConfigManipulator getConfigManipulator() {
+        return configManipulator;
     }
 
     public UnixKernelProcessHealthChecker getHealthChecker() {

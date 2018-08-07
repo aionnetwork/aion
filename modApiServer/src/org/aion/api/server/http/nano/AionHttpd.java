@@ -1,4 +1,4 @@
-package org.aion.api.server.nanohttpd;
+package org.aion.api.server.http.nano;
 
 import fi.iki.elonen.NanoHTTPD;
 import org.aion.api.server.rpc.RpcProcessor;
@@ -11,42 +11,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NanoHttpd extends NanoHTTPD {
+public class AionHttpd extends NanoHTTPD {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     private RpcProcessor rpcProcessor;
     private boolean corsEnabled;
+    private Map<String, String> corsHeaders;
 
-    public NanoHttpd(
-            String hostname,
-            int port,
-            boolean corsEnabled,
-            List<String> enabledEndpoints) throws IOException {
+    public AionHttpd(String hostname, int port, RpcProcessor rpcProcessor, boolean corsEnabled, Map<String, String> corsHeaders) {
         super(hostname, port);
-        this.rpcProcessor = new RpcProcessor(enabledEndpoints);
-        this.corsEnabled = corsEnabled;
-    }
 
-    protected Response addCORSHeaders(Response resp) {
-        resp.addHeader("Access-Control-Allow-Origin", "*");
-        resp.addHeader("Access-Control-Allow-Headers", "origin,accept,content-type");
-        resp.addHeader("Access-Control-Allow-Credentials", "true");
-        resp.addHeader("Access-Control-Allow-Methods", "POST");
-        resp.addHeader("Access-Control-Max-Age", "86400");
-        return resp;
+        this.rpcProcessor = rpcProcessor;
+        this.corsEnabled = corsEnabled;
+        this.corsHeaders = corsHeaders;
     }
 
     private Response respond(IHTTPSession session) {
-        String requestBody = null;
-
-        Map<String, String> body = new HashMap<String, String>(); // body need to grab key postData
+        Map<String, String> body = new HashMap<>(); // body need to grab key postData
         try {
             session.parseBody(body);
         } catch (Exception e) {
             LOG.debug("<rpc-server - no request body found>", e);
         }
 
-        requestBody = body.getOrDefault("postData", null);
+        String requestBody = body.getOrDefault("postData", null);
 
         return NanoHTTPD.newFixedLengthResponse(
                 Response.Status.OK,
@@ -65,8 +53,11 @@ public class NanoHttpd extends NanoHTTPD {
         }
 
         if (corsEnabled) {
-            r = addCORSHeaders(r);
+            for(Map.Entry<String, String> header: corsHeaders.entrySet()){
+                r.addHeader(header.getKey(), header.getValue());
+            }
         }
+
         return r;
     }
 
