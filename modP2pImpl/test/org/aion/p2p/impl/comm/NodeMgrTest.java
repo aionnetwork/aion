@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
+import org.aion.log.LogLevel;
 import org.aion.p2p.INode;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Before;
@@ -89,12 +89,12 @@ public class NodeMgrTest {
 
     private NodeMgr nMgr;
 
-    Random r;
+    private Random r;
 
     @Before
     public void Setup() {
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
         LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 

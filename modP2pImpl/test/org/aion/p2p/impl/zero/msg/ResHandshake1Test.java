@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
+import org.aion.log.LogLevel;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
@@ -50,7 +50,7 @@ public class ResHandshake1Test {
     @Before
     public void setup () {
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
     }
 

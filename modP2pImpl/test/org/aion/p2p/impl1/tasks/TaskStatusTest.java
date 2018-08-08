@@ -40,7 +40,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
+import org.aion.log.LogLevel;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INodeMgr;
 import org.junit.After;
@@ -66,7 +66,7 @@ public class TaskStatusTest {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(),  LogLevels.DEBUG.name());
+        logMap.put(LogEnum.P2P.name(),  LogLevel.DEBUG.name());
         AionLoggerFactory.init(logMap);
     }
 
