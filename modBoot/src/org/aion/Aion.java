@@ -25,7 +25,6 @@ package org.aion;
 
 
 import java.io.Console;
-import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
@@ -53,8 +52,7 @@ import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
-import java.util.ServiceLoader;
-
+import static java.lang.System.exit;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
@@ -329,7 +327,7 @@ public class Aion {
             if (console == null) {
                 System.out.println("SSL-certificate-use requested with RPC server and no console found. " +
                         "Please set the ssl password in the config file (insecure) to run kernel non-interactively with this option.");
-                System.exit(1);
+                exit(1);
             } else {
                 console.printf("---------------------------------------------\n");
                 console.printf("----------- INTERACTION REQUIRED ------------\n");
