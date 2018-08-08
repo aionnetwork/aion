@@ -63,6 +63,7 @@ import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -81,7 +82,7 @@ public abstract class ApiAion extends Api {
 
     // delegate concurrency to underlying object
     protected static NrgOracle NRG_ORACLE;
-    protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
+    protected IChainInstancePOW ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
     protected AtomicLong fltrIndex; // AtomicLong
@@ -102,7 +103,7 @@ public abstract class ApiAion extends Api {
 
     protected EventExecuteService ees;
 
-    public ApiAion(final IAionChain _ac) {
+    public ApiAion(final IChainInstancePOW _ac) {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
         this.fltrIndex = new AtomicLong(0);

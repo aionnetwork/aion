@@ -85,6 +85,7 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -306,7 +307,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     @SuppressWarnings("rawtypes")
-    public ApiAion0(IAionChain ac) {
+    public ApiAion0(IChainInstancePOW ac) {
         super(ac);
         this.pendingReceipts = Collections.synchronizedMap(new LRUMap<>(10000, 100));
 

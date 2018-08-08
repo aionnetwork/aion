@@ -43,7 +43,7 @@ import org.aion.zero.types.IAionBlock;
  * Aion chain interface.
  * 
  */
-public interface IAionChain extends IChainInstancePOW, QueryInterface {
+public interface IAionChain extends QueryInterface {
 
     IAionBlockchain getBlockchain();
 
@@ -70,5 +70,4 @@ public interface IAionChain extends IChainInstancePOW, QueryInterface {
     void exitOn(long number);
 
     long estimateTxNrg(AionTransaction tx, IAionBlock block);
-
 }

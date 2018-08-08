@@ -32,7 +32,7 @@ public class AionFactory {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
-    public static IAionChain create() {
+    public static IChainInstancePOW create() {
         return AionImpl.inst();
     }
 

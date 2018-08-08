@@ -55,7 +55,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-public class AionImpl implements IAionChain {
+public class AionImpl implements IChainInstancePOW {
 
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());

@@ -48,6 +48,7 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
@@ -135,7 +136,7 @@ public class Aion {
 
         genLog.info(logo);
 
-        IAionChain ac = AionFactory.create();
+        IChainInstancePOW ac = AionFactory.create();
 
         IMineRunner nm = null;
 
