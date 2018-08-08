@@ -24,13 +24,18 @@ package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -83,8 +88,16 @@ public class TaskInboundTest {
     private ServerSocketChannel ssc;
 
     @Mock
-    private SelectionKey sk;
+    private SocketChannel sc;
 
+    @Mock
+    private Socket s;
+
+    @Mock
+    private InetAddress ia;
+
+    @Mock
+    private SelectionKey sk;
 
     @Mock
     private SelectionKey sk2;
@@ -248,6 +261,109 @@ public class TaskInboundTest {
         Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
+
+    @Test
+    public void testAccept() throws InterruptedException, IOException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        when(sk2.isValid()).thenReturn(true);
+        when(sk2.isAcceptable()).thenReturn(true);
+        when(nodeMgr.activeNodesSize()).thenReturn(1);
+        when(p2pMgr.getMaxActiveNodes()).thenReturn(2);
+        when(ssc.accept()).thenReturn(sc);
+        when(sc.socket()).thenReturn(s);
+        when(s.getInetAddress()).thenReturn(ia);
+        when(ia.getHostAddress()).thenReturn("0.0.0.0");
+        when(p2pMgr.isSyncSeedsOnly()).thenReturn(true);
+        when(nodeMgr.isSeedIp(anyString())).thenReturn(true);
+
+        when(selector.selectNow()).thenReturn(1);
+
+        Set<SelectionKey> ss = new LinkedHashSet<>();
+        ss.add(sk2);
+        when(selector.selectedKeys()).thenReturn(ss);
+
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(200);
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
+    @Test
+    public void testAccept2() throws InterruptedException, IOException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        when(sk2.isValid()).thenReturn(true);
+        when(sk2.isAcceptable()).thenReturn(true);
+        when(nodeMgr.activeNodesSize()).thenReturn(1);
+        when(p2pMgr.getMaxActiveNodes()).thenReturn(2);
+        when(ssc.accept()).thenReturn(sc);
+        when(sc.socket()).thenReturn(s);
+        when(s.getInetAddress()).thenReturn(ia);
+        when(ia.getHostAddress()).thenReturn("0.0.0.0");
+        when(p2pMgr.isSyncSeedsOnly()).thenReturn(true);
+        when(nodeMgr.isSeedIp(anyString())).thenReturn(false);
+        when(p2pMgr.getOutGoingIP()).thenReturn("0.0.0.0");
+
+        when(selector.selectNow()).thenReturn(1);
+
+        Set<SelectionKey> ss = new LinkedHashSet<>();
+        ss.add(sk2);
+        when(selector.selectedKeys()).thenReturn(ss);
+
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(200);
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
+    @Test
+    public void testAccept3() throws InterruptedException, IOException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        when(sk2.isValid()).thenReturn(true);
+        when(sk2.isAcceptable()).thenReturn(true);
+        when(nodeMgr.activeNodesSize()).thenReturn(1);
+        when(p2pMgr.getMaxActiveNodes()).thenReturn(2);
+        when(ssc.accept()).thenReturn(sc);
+        when(sc.socket()).thenReturn(s);
+        when(s.getInetAddress()).thenReturn(ia);
+
+        when(ia.getHostAddress()).thenReturn("0.0.0.0");
+        when(p2pMgr.isSyncSeedsOnly()).thenReturn(true);
+        when(nodeMgr.isSeedIp(anyString())).thenReturn(false);
+        when(p2pMgr.getOutGoingIP()).thenReturn("1.1.1.1");
+        when(s.getPort()).thenReturn(0);
+
+
+        when(selector.selectNow()).thenReturn(1);
+
+        Set<SelectionKey> ss = new LinkedHashSet<>();
+        ss.add(sk2);
+        when(selector.selectedKeys()).thenReturn(ss);
+
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(200);
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
+
 
 //
 //    @Test

@@ -125,7 +125,6 @@ public class TaskInbound implements Runnable {
                             accept();
                         }
 
-
                         if (key.isReadable()) {
                             cb = (ChannelBuffer) key.attachment();
                             if (cb == null) {
