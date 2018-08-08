@@ -1,11 +1,8 @@
 package org.aion.api.server.pb;
 
 import com.google.protobuf.ByteString;
-import org.aion.api.impl.internal.ApiUtils;
-import org.aion.api.server.ApiAionTests;
 import org.aion.api.server.ApiUtil;
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
@@ -13,10 +10,9 @@ import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
-import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
@@ -30,23 +26,21 @@ import static org.junit.Assert.*;
 
 public class ApiAion0Tests {
 
-    byte[] msg, socketId, hash;
-    int requestSize;
+    private byte[] msg, socketId, hash;
 
     private static final int MSG_HASH_LEN = 8;
     private static final int RSP_HEADER_NOHASH_LEN = 3;
-    public static final int REQ_HEADER_NOHASH_LEN = 4;
+    private static final int REQ_HEADER_NOHASH_LEN = 4;
     private static final int RSP_HEADER_LEN = RSP_HEADER_NOHASH_LEN + MSG_HASH_LEN;
 
     public ApiAion0Tests() {
         msg = "test message".getBytes();
         socketId = RandomUtils.nextBytes(5);
         hash = RandomUtils.nextBytes(ApiUtil.HASH_LEN);
-        requestSize = msg.length + 3;
     }
 
     private byte[] stripHeader(byte[] rsp) {
-        boolean hasHash = (rsp[2] == 1 ? true : false);
+        boolean hasHash = (rsp[2] == 1);
         int bodyLen = rsp.length - (hasHash ? RSP_HEADER_LEN : RSP_HEADER_NOHASH_LEN);
 
         if (hasHash) {
@@ -1094,7 +1088,8 @@ public class ApiAion0Tests {
             Message.rsp_getTransaction rslt = Message.rsp_getTransaction.parseFrom(stripHeader(rsp));
             assertEquals(blk.getNumber(), rslt.getBlocknumber());
             assertEquals(ByteString.copyFrom(tx.getData()), rslt.getData());
-            assertEquals(tx.getNrgPrice(), rslt.getNrgPrice());        } catch (Exception e) {
+            assertEquals(tx.getNrgPrice(), rslt.getNrgPrice());
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             fail();
         }
@@ -1102,6 +1097,458 @@ public class ApiAion0Tests {
         request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
                 .put((byte) Message.Servs.s_hb_VALUE)
                 .put((byte) Message.Funcs.f_getTransactionByHash_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessGetTxCount() {
+        System.out.println("run TestProcessGetTxCount.");
+
+        AionImpl impl = AionImpl.inst();
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+                msg,100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
+                Collections.singletonList(tx), false);
+
+        impl.getAionHub().getBlockchain().add(blk);
+        blk = api.getBlockByHash(blk.getHash());
+
+        Message.req_getTransactionCount reqBody = Message.req_getTransactionCount.newBuilder()
+                .setBlocknumber(blk.getNumber())
+                .setAddress(ByteString.copyFrom(blk.getTransactionsList().get(0).getFrom().toBytes()))
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_chain_VALUE)
+                .put((byte) Message.Funcs.f_getTransactionCount_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getTransactionCount rslt = Message.rsp_getTransactionCount.parseFrom(stripHeader(rsp));
+            assertEquals(1, rslt.getTxCount());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getTransactionCount_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessGetActiveNodes() {
+        System.out.println("run TestProcessGetActiveNodes.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_net_VALUE)
+                .put((byte) Message.Funcs.f_getActiveNodes_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getActiveNodes rslt = Message.rsp_getActiveNodes.parseFrom(stripHeader(rsp));
+            assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), rslt.getNodeCount());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getActiveNodes_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessGetStaticNodes() {
+        System.out.println("run TestProcessGetStaticNodes.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_net_VALUE)
+                .put((byte) Message.Funcs.f_getStaticNodes_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getStaticNodes rslt = Message.rsp_getStaticNodes.parseFrom(stripHeader(rsp));
+            assertEquals(CfgAion.inst().getNodes().length, rslt.getNodeCount());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getStaticNodes_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessGetSolcVersion() {
+        System.out.println("run TestProcessGetSolcVersion.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_tx_VALUE)
+                .put((byte) Message.Funcs.f_getSolcVersion_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getSolcVersion rslt = Message.rsp_getSolcVersion.parseFrom(stripHeader(rsp));
+            assertEquals(api.solcVersion(), rslt.getVer());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getSolcVersion_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessIsSyncing() {
+        System.out.println("run TestProcessIsSyncing.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_net_VALUE)
+                .put((byte) Message.Funcs.f_isSyncing_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_isSyncing rslt = Message.rsp_isSyncing.parseFrom(stripHeader(rsp));
+            assertNotEquals(impl.isSyncComplete(), rslt.getSyncing());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_isSyncing_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessSyncInfo() {
+        System.out.println("run TestProcessSyncInfo.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_net_VALUE)
+                .put((byte) Message.Funcs.f_syncInfo_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_syncInfo rslt = Message.rsp_syncInfo.parseFrom(stripHeader(rsp));
+            assertNotEquals(impl.isSyncComplete(), rslt.getSyncing());
+            assertEquals((long) impl.getInitialStartingBlockNumber().orElse(0L), (long) rslt.getChainBestBlock());
+            assertEquals((long) impl.getNetworkBestBlockNumber().orElse(0L), (long) rslt.getNetworkBestBlock());
+            assertEquals(24, rslt.getMaxImportBlocks());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_syncInfo_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessAccountCreateAndLock() {
+        System.out.println("run TestProcessAccountCreateAndLock.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        Message.req_accountCreate reqBody = Message.req_accountCreate.newBuilder()
+                .addPassword("passwd0")
+                .addPassword("passwd1")
+                .addPassword("passwd2")
+                .setPrivateKey(true)
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_account_VALUE)
+                .put((byte) Message.Funcs.f_accountCreate_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        ByteString addr = ByteString.EMPTY;
+
+        try {
+            Message.rsp_accountCreate rslt = Message.rsp_accountCreate.parseFrom(stripHeader(rsp));
+            assertEquals(3, rslt.getAddressCount());
+            addr = rslt.getAddress(0);
+            assertTrue(api.unlockAccount(Address.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
+            assertTrue(api.unlockAccount(Address.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
+            assertTrue(api.unlockAccount(Address.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_accountCreate_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        Message.req_accountlock reqBody2 = Message.req_accountlock.newBuilder()
+                .setAccount(addr)
+                .setPassword("passwd0")
+                .build();
+
+        request = ByteBuffer.allocate(reqBody2.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_wallet_VALUE)
+                .put((byte) Message.Funcs.f_accountLock_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody2.toByteArray())
+                .array();
+
+        rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+        assertEquals(0x01, rsp[3]);
+
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_accountCreate_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessUserPrivilege() {
+        System.out.println("run TestProcessUserPrivilege.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_privilege_VALUE)
+                .put((byte) Message.Funcs.f_userPrivilege_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_fail_unsupport_api_VALUE, rsp[1]);
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_userPrivilege_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessMiningValue() {
+        System.out.println("run TestProcessMiningValue.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_mine_VALUE)
+                .put((byte) Message.Funcs.f_mining_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg)
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_mining rslt = Message.rsp_mining.parseFrom(stripHeader(rsp));
+            assertEquals(api.isMining(), rslt.getMining());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_mining_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessEstimateNrg() {
+        System.out.println("run TestProcessEstimateNrg.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        byte[] val = {50, 30};
+
+        Message.req_estimateNrg reqBody = Message.req_estimateNrg.newBuilder()
+                .setFrom(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                .setNrgPrice(5000)
+                .setData(ByteString.copyFrom(msg))
+                .setValue(ByteString.copyFrom(val))
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_tx_VALUE)
+                .put((byte) Message.Funcs.f_estimateNrg_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_estimateNrg rslt = Message.rsp_estimateNrg.parseFrom(stripHeader(rsp));
+            assertNotEquals(0, rslt.getNrg());
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_estimateNrg_VALUE)
                 .put((byte) 1)
                 .put(hash)
                 .put(msg).array();
