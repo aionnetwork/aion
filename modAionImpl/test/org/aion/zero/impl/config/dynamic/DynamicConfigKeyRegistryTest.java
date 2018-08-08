@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static org.hamcrest.Matchers.is;
@@ -31,9 +32,9 @@ public class DynamicConfigKeyRegistryTest {
     public void testCtorAndGetters() {
         Function<Cfg,?> func1 = cfg -> cfg.getApi();
         Function<Cfg,?> func2 = cfg -> cfg.getGui().getCfgGuiLauncher();
-        Map<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> gettersAppliers = new HashMap<>() {{
-            put("myKey1", ImmutablePair.of(func1, new TestApplier()));
-            put("myKey2", ImmutablePair.of(func2, new TestApplier()));
+        Map<String, Pair<Function<Cfg,?>, Optional<IDynamicConfigApplier>>> gettersAppliers = new HashMap<>() {{
+            put("myKey1", ImmutablePair.of(func1, Optional.of(new TestApplier())));
+            put("myKey2", ImmutablePair.of(func2, Optional.of(new TestApplier())));
         }};
         DynamicConfigKeyRegistry unit = new DynamicConfigKeyRegistry(gettersAppliers);
 
@@ -42,8 +43,8 @@ public class DynamicConfigKeyRegistryTest {
         assertThat(unit.getBoundKeys().contains("myKey2"), is(true));
         assertThat(unit.getGetter("myKey1"), is(func1));
         assertThat(unit.getGetter("myKey2"), is(func2));
-        assertThat(unit.getApplier("myKey1") instanceof TestApplier, is(true));
-        assertThat(unit.getApplier("myKey2") instanceof TestApplier, is(true));
+        assertThat(unit.getApplier("myKey1").get() instanceof TestApplier, is(true));
+        assertThat(unit.getApplier("myKey2").get() instanceof TestApplier, is(true));
     }
 
     @Test
@@ -51,12 +52,12 @@ public class DynamicConfigKeyRegistryTest {
         DynamicConfigKeyRegistry unit = new DynamicConfigKeyRegistry();
         int exceptionsSeen = 0;
         try {
-            unit.getApplier("aion.sync").apply(mock(Cfg.class), mock(Cfg.class));
+            unit.getApplier("aion.sync").get().apply(mock(Cfg.class), mock(Cfg.class));
         } catch (InFlightConfigChangeNotAllowedException ex) {
             exceptionsSeen += 1;
         }
         try {
-            unit.getApplier("aion.sync").undo(mock(Cfg.class), mock(Cfg.class));
+            unit.getApplier("aion.sync").get().undo(mock(Cfg.class), mock(Cfg.class));
         } catch (InFlightConfigChangeNotAllowedException ex) {
             exceptionsSeen += 1;
         }
@@ -70,7 +71,7 @@ public class DynamicConfigKeyRegistryTest {
         unit.bind("myKey", func1, new TestApplier());
         assertThat(unit.getBoundKeys().size(), is(1));
         assertThat(unit.getGetter("myKey"), is(func1));
-        assertThat(unit.getApplier("myKey") instanceof TestApplier, is(true));
+        assertThat(unit.getApplier("myKey").get() instanceof TestApplier, is(true));
 
     }
 }

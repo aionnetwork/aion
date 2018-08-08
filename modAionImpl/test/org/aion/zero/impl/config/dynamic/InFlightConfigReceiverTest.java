@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import javax.xml.stream.XMLStreamException;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static org.hamcrest.Matchers.is;
@@ -16,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class InFlightConfigReceiverTest {
-    private LinkedHashMap<String, Pair<Function<Cfg,?>, IDynamicConfigApplier>> registryMap;
+    private LinkedHashMap<String, Pair<Function<Cfg,?>, Optional<IDynamicConfigApplier>>> registryMap;
     private DynamicConfigKeyRegistry registry;
     private TestApplier successfulApplier;
     private TestApplier failingApplier;
@@ -37,9 +38,9 @@ public class InFlightConfigReceiverTest {
 
     @Test
     public void testApplyNewConfigSuccessful() throws Exception {
-        registryMap.put("good.key.one", ImmutablePair.of(cfg -> cfg.getId(), successfulApplier));
-        registryMap.put("good.key.two", ImmutablePair.of(cfg -> cfg.getId(), successfulApplier));
-        registryMap.put("no-op.key", ImmutablePair.of(cfg -> cfg.getBasePath(), successfulApplier));
+        registryMap.put("good.key.one", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("good.key.two", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("no-op.key", ImmutablePair.of(cfg -> cfg.getBasePath(), Optional.of(successfulApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(oldCfg.getBasePath()).thenReturn("same");
         when(newCfg.getId()).thenReturn("new");
@@ -54,8 +55,8 @@ public class InFlightConfigReceiverTest {
 
     @Test
     public void testApplyNewConfigUnsuccessfulApplierThenRollback() throws Exception {
-        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), successfulApplier));
-        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), failingApplier));
+        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(failingApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(newCfg.getId()).thenReturn("new");
 
@@ -68,8 +69,8 @@ public class InFlightConfigReceiverTest {
 
     @Test
     public void testApplyNewConfigApplierThrowsThenRollback() throws Exception {
-        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), successfulApplier));
-        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), throwingApplier));
+        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(throwingApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(newCfg.getId()).thenReturn("new");
 
@@ -84,8 +85,8 @@ public class InFlightConfigReceiverTest {
     public void testApplyNewConfigUnsuccessfulApplierThenRollbackUnsuccessful() throws Exception {
         TestApplier cannotRollbackApplier = new TestApplier(TestApplier.Behaviour.THROW_ON_UNDO_ONLY);
 
-        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), cannotRollbackApplier));
-        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), failingApplier));
+        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(cannotRollbackApplier)));
+        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(failingApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(newCfg.getId()).thenReturn("new");
 
