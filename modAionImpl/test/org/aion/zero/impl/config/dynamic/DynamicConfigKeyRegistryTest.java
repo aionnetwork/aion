@@ -50,18 +50,7 @@ public class DynamicConfigKeyRegistryTest {
     @Test
     public void testKeyNotDynamic() throws InFlightConfigChangeException {
         DynamicConfigKeyRegistry unit = new DynamicConfigKeyRegistry();
-        int exceptionsSeen = 0;
-        try {
-            unit.getApplier("aion.sync").get().apply(mock(Cfg.class), mock(Cfg.class));
-        } catch (InFlightConfigChangeNotAllowedException ex) {
-            exceptionsSeen += 1;
-        }
-        try {
-            unit.getApplier("aion.sync").get().undo(mock(Cfg.class), mock(Cfg.class));
-        } catch (InFlightConfigChangeNotAllowedException ex) {
-            exceptionsSeen += 1;
-        }
-        assertThat(exceptionsSeen, is(2));
+        assertThat( unit.getApplier("aion.sync").isPresent(), is(false));
     }
 
     @Test
