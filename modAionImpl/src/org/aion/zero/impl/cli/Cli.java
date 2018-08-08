@@ -194,13 +194,13 @@ public class Cli {
 
                                 // Recursively call to change database path
                                 if (args.length == 4 && (args[2].equals("--datadir") || args[2].equals("-d"))) {
-                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                                    call(newArgs, cfg);
                                     // Modify config path to inside datadir folder
                                     CfgAion.setNetwork(args[1]);
                                     CfgAion.setConfFilePath(BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/config.xml");
                                     CfgAion.setGenesisFilePath((BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/genesis.json"));
                                     Keystore.setKeystorePath(BASE_PATH + "/" + args[3] + "/keystore");
+                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                                    call(newArgs, cfg);
                                 } else {
                                     // Change to specified network path
                                     CfgAion.setNetwork(args[1]);

@@ -43,6 +43,11 @@ public class CliTest {
         String BASE_PATH = Cfg.getBasePath();
         File dst = new File(BASE_PATH + "/config");
         FileUtils.deleteRecursively(dst);
+
+//        File path1 = new File(BASE_PATH + "/database");
+//        File path2 = new File(BASE_PATH + "/test_db");
+//        FileUtils.deleteRecursively(path1);
+//        FileUtils.deleteRecursively(path2);
     }
 
     /**
@@ -147,6 +152,37 @@ public class CliTest {
     }
 
     /**
+     * Test the -d | --datadir option to see if;
+     * 1. Access the correct dbPath
+     * 2. Defaults correctly to "database"
+     */
+    @Test
+    public void testDatabase() {
+
+        final String[][] networkArgs = new String[][] {
+                { "-d" , "" },              // Unspecified
+                { "-d" , "{@.@}" },         // Invalid
+                { "-d" , "aaaaaaaa" },      // Default
+                { "-d" , "test_db" },       // Valid
+        };
+
+        Cli cli = new Cli();
+        Cfg cfg = CfgAion.inst();
+
+        assertEquals(1, cli.call(networkArgs[0], cfg));
+        assertEquals("database", cfg.getDb().getPath() );
+
+        assertEquals(1, cli.call(networkArgs[1], cfg) );
+        assertEquals("database", cfg.getDb().getPath() );
+
+        assertEquals(0, cli.call(networkArgs[2], cfg) );
+        assertEquals("aaaaaaaa/database", cfg.getDb().getPath() );
+
+        assertEquals(0, cli.call(networkArgs[3], cfg) );
+        assertEquals("test_db/database", cfg.getDb().getPath() );
+    }
+
+    /**
      * Test the -n | --network option to see if;
      * 1. Access the correct CONF_FILE_PATH
      * 2. Access the correct GENESIS_FILE_PATH
@@ -169,18 +205,18 @@ public class CliTest {
 
         assertEquals(1, cli.call(networkArgs[0], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
-        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
-        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
+        assertEquals(BASE_PATH + "/test_db/config/mainnet/config.xml", CfgAion.getConfFilePath() );
+        assertEquals(BASE_PATH + "/test_db/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
 
         assertEquals(1, cli.call(networkArgs[1], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
-        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
-        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
+        assertEquals(BASE_PATH + "/test_db/config/mainnet/config.xml", CfgAion.getConfFilePath() );
+        assertEquals(BASE_PATH + "/test_db/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
 
         assertEquals(0, cli.call(networkArgs[2], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
-        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
-        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
+        assertEquals(BASE_PATH + "/test_db/config/mainnet/config.xml", CfgAion.getConfFilePath() );
+        assertEquals(BASE_PATH + "/test_db/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
 
         assertEquals(0, cli.call(networkArgs[3], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
@@ -191,37 +227,6 @@ public class CliTest {
         assertEquals("conquest", CfgAion.getNetwork() );
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath() );
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath() );
-    }
-
-    /**
-     * Test the -d | --datadir option to see if;
-     * 1. Access the correct dbPath
-     * 2. Defaults correctly to "database"
-     */
-    @Test
-    public void testDatabase() {
-
-        final String[][] networkArgs = new String[][] {
-                { "-d" , "" },              // Unspecified
-                { "-d" , "{@.@}" },         // Invalid
-                { "-d" , "database" },      // Default
-                { "-d" , "test_db" }        // Valid
-        };
-
-        Cli cli = new Cli();
-        Cfg cfg = CfgAion.inst();
-
-        assertEquals(1, cli.call(networkArgs[0], cfg));
-        assertEquals("database", cfg.getDb().getPath());
-
-        assertEquals(1, cli.call(networkArgs[1], cfg) );
-        assertEquals("database", cfg.getDb().getPath() );
-
-        assertEquals(0, cli.call(networkArgs[2], cfg) );
-        assertEquals("database/database", cfg.getDb().getPath() );
-
-        assertEquals(0, cli.call(networkArgs[3], cfg) );
-        assertEquals("test_db/database", cfg.getDb().getPath() );
     }
 
 }
