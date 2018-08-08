@@ -32,12 +32,12 @@ public class TRSstateContractTest extends TRShelpers {
     private static final int MAX_OP = 3;
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup() {
         repo = new DummyRepo();
         ((DummyRepo) repo).storageErrorReturn = null;
         tempAddrs = new ArrayList<>();
         repo.addBalance(AION, BigInteger.ONE);
-        createBlockchain(0, 0);
+        mockBlockchain(0);
     }
 
     @After
@@ -1337,8 +1337,8 @@ public class TRSstateContractTest extends TRShelpers {
     }
 
     @Test
-    public void testOpenFundsWithdrawIsNowWithdrawAll() throws InterruptedException {
-        createBlockchain(0, 0);
+    public void testOpenFundsWithdrawIsNowWithdrawAll() {
+        mockBlockchain(0);
         BigInteger bal1 = new BigInteger("2375628376523");
         BigInteger bal2 = new BigInteger("438756347565782346578");
         BigInteger bal3 = new BigInteger("98124329685948546");
@@ -1389,8 +1389,8 @@ public class TRSstateContractTest extends TRShelpers {
     }
 
     @Test
-    public void testOpenFundsBulkWithdrawIsNowBulkWithdrawAll() throws InterruptedException {
-        createBlockchain(0, 0);
+    public void testOpenFundsBulkWithdrawIsNowBulkWithdrawAll() {
+        mockBlockchain(0);
         BigInteger bal1 = new BigInteger("4366234645");
         BigInteger bal2 = new BigInteger("5454757853");
         BigInteger bal3 = new BigInteger("43534654754342");
