@@ -129,31 +129,11 @@ public class ByteUtilTest {
             }
         }
 
-//        byte[] temp5 = encodeValFor32Bits("10");
-//        byte[] temp6 = encodeValFor32Bits("20");
-//        byte[] temp7 = encodeValFor32Bits("30");
-//        byte[] temp8 = encodeDataList("10", "20", "30");
-//        byte[] temp9 = encodeValFor32Bits("102030");
-//        byte[] temp10 = encodeValFor32Bits("302010");
-//        System.out.println(bytesToBigInteger(temp5));
-//        System.out.println(bytesToBigInteger(temp6));
-//        System.out.println(bytesToBigInteger(temp7));
-//        System.out.println(bytesToBigInteger(temp8));
-//        System.out.println(bytesToBigInteger(temp9));
-//        System.out.println(bytesToBigInteger(temp10));
-
     }
 
     // TODO: Object --> Bytes
     // encodeValFor32Bits(Object)
     // encodeDataList(Object)
-
-    // 0
-    // 255
-    // 4712366482869645213696
-    // 4702366482869645213696
-    // 4692366482869645213696
-    // 4622366482869645213697
 
     @Test
     public void objectTest() {
@@ -164,9 +144,6 @@ public class ByteUtilTest {
             } catch (NullPointerException e) {
                 System.out.println("\nNull Object Test!");
             }
-//            try {
-//                byte[] temp2 = encodeDataList(testNum[1][1], testNum[2][1], );
-//            }
         }
     }
 

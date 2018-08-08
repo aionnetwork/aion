@@ -40,16 +40,6 @@ public class AddressTest {
             new ByteArrayWrapper(addrByte[6])
     };
 
-//    @Test
-//    public void test() {
-//        for(int i = 3; i < size; i++) {
-//            Address a = Address.wrap(addrByte[i]);
-//            int length = addrByte[i].length;
-//            for (int j = 0; j < length; j++)
-//                System.out.print(a.toBytes()[j] + ",");
-//            System.out.println();
-//        }
-//    }
 
     /**
      * Test address wrap function for each input type; String(Hex), Byte, ByteArrayWrapper

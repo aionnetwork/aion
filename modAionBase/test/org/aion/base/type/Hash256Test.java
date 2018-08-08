@@ -40,13 +40,6 @@ public class Hash256Test {
             new ByteArrayWrapper(hashByte[6])
     };
 
-//    @Test
-//    public void test() {
-//        for(int i = 0; i < size; i++) {
-//            System.out.println(hashByte[i]);
-//        }
-//    }
-
     /**
      * Test hash wrap function for each input type; String(Hex), Byte, ByteArrayWrapper
      * For each input type:
