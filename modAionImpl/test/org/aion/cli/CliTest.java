@@ -36,18 +36,27 @@ public class CliTest {
         File src = new File(BASE_PATH + "/../config");
         File dst = new File(BASE_PATH + "/config");
         FileUtils.copyRecursively(src, dst);
+
+        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
+        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
+        Keystore.setKeystorePath(BASE_PATH + "/keystore");
     }
 
     @After
     public void shutdown() {
         String BASE_PATH = Cfg.getBasePath();
-        File dst = new File(BASE_PATH + "/config");
-        FileUtils.deleteRecursively(dst);
+        File path1 = new File(BASE_PATH + "/config");
+        File path2 = new File(BASE_PATH + "/aaaaaaaa");
+        File path3 = new File(BASE_PATH + "/test_db");
+        if(path1.exists() && path2.exists() && path3.exists()) {
+            FileUtils.deleteRecursively(path1);
+            FileUtils.deleteRecursively(path2);
+            FileUtils.deleteRecursively(path3);
+        }
 
-//        File path1 = new File(BASE_PATH + "/database");
-//        File path2 = new File(BASE_PATH + "/test_db");
-//        FileUtils.deleteRecursively(path1);
-//        FileUtils.deleteRecursively(path2);
+        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
+        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
+        Keystore.setKeystorePath(BASE_PATH + "/keystore");
     }
 
     /**
@@ -159,6 +168,7 @@ public class CliTest {
     @Test
     public void testDatabase() {
 
+        String BASE_PATH = Cfg.getBasePath();
         final String[][] networkArgs = new String[][] {
                 { "-d" , "" },              // Unspecified
                 { "-d" , "{@.@}" },         // Invalid
@@ -180,6 +190,7 @@ public class CliTest {
 
         assertEquals(0, cli.call(networkArgs[3], cfg) );
         assertEquals("test_db/database", cfg.getDb().getPath() );
+
     }
 
     /**
@@ -205,18 +216,18 @@ public class CliTest {
 
         assertEquals(1, cli.call(networkArgs[0], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
-        assertEquals(BASE_PATH + "/test_db/config/mainnet/config.xml", CfgAion.getConfFilePath() );
-        assertEquals(BASE_PATH + "/test_db/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
+        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
+        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
 
         assertEquals(1, cli.call(networkArgs[1], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
-        assertEquals(BASE_PATH + "/test_db/config/mainnet/config.xml", CfgAion.getConfFilePath() );
-        assertEquals(BASE_PATH + "/test_db/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
+        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
+        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
 
         assertEquals(0, cli.call(networkArgs[2], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
-        assertEquals(BASE_PATH + "/test_db/config/mainnet/config.xml", CfgAion.getConfFilePath() );
-        assertEquals(BASE_PATH + "/test_db/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
+        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
+        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
 
         assertEquals(0, cli.call(networkArgs[3], cfg) );
         assertEquals("mainnet", CfgAion.getNetwork() );
@@ -227,6 +238,7 @@ public class CliTest {
         assertEquals("conquest", CfgAion.getNetwork() );
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath() );
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath() );
+
     }
 
 }
