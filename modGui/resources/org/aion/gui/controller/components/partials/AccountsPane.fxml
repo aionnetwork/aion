@@ -9,20 +9,22 @@
 <AnchorPane id="accountsPane" stylesheets="@../contentPane.css"
             xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.aion.gui.controller.partials.AccountsController" fx:id="parent"
-            visible="false" AnchorPane.bottomAnchor="15" AnchorPane.topAnchor="15">
+            visible="false">
 
-    <VBox alignment="TOP_CENTER" spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="15" AnchorPane.bottomAnchor="15" style="-fx-background-color:red">
-        <Label text="Accounts overview" styleClass="tile-label" alignment="TOP_CENTER"/>
-            <ScrollPane hbarPolicy="NEVER" vbarPolicy="NEVER" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.bottomAnchor="15" style="-fx-background-color:purple" fitToHeight="true" >
-                <ListView fx:id="accountListView" styleClass="accounts-list, custom-scrollbar" style="-fx-background-color:green" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.bottomAnchor="15" >
+    <VBox alignment="CENTER" spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="15">
+        <Label text="Accounts overview" styleClass="tile-label" alignment="CENTER"/>
+        <AnchorPane>
+            <ScrollPane hbarPolicy="NEVER" vbarPolicy="NEVER" AnchorPane.rightAnchor="0" AnchorPane.leftAnchor="0">
+                <ListView fx:id="accountListView" styleClass="accounts-list, custom-scrollbar"  prefHeight="240">
                     <cellFactory>
                         <AccountCellFactory/>
                     </cellFactory>
                 </ListView>
             </ScrollPane>
+        </AnchorPane>
     </VBox>
-    <Button fx:id="addMasterAccountButton" AnchorPane.bottomAnchor="15" AnchorPane.leftAnchor="10" prefWidth="170" mnemonicParsing="false" text="Add account" onMouseClicked="#openAddAccountDialog"/>
-    <Button fx:id="unlockMasterAccountButton" AnchorPane.bottomAnchor="15" AnchorPane.leftAnchor="10" prefWidth="170" mnemonicParsing="false" text="Unlock account" onMouseClicked="#unlockMasterAccount"/>
-    <Button fx:id="importButton" AnchorPane.bottomAnchor="15" AnchorPane.leftAnchor="190" mnemonicParsing="false" text="Import account" onMouseClicked="#openImportAccountDialog"/>
+    <Button fx:id="addMasterAccountButton" AnchorPane.topAnchor="320" AnchorPane.leftAnchor="10" prefWidth="170" mnemonicParsing="false" text="Add account" onMouseClicked="#openAddAccountDialog"/>
+    <Button fx:id="unlockMasterAccountButton" AnchorPane.topAnchor="320" AnchorPane.leftAnchor="10" prefWidth="170" mnemonicParsing="false" text="Unlock account" onMouseClicked="#unlockMasterAccount"/>
+    <Button fx:id="importButton" AnchorPane.topAnchor="320" AnchorPane.leftAnchor="190" mnemonicParsing="false" text="Import account" onMouseClicked="#openImportAccountDialog"/>
 </AnchorPane>
 

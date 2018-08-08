@@ -177,7 +177,10 @@ public class MainWindow extends Application {
 
         stage.setTitle(TITLE);
         stage.setScene(scene);
+        stage.setMaxHeight(570);
+        stage.setMaxWidth(860);
         stage.show();
+
 
         panes.put(HeaderPaneButtonEvent.Type.DASHBOARD, scene.lookup("#overviewPane"));
         panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
