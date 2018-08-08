@@ -1822,4 +1822,280 @@ public class ApiAion0Tests {
         api.shutDown();
     }
 
+    @Test
+    public void TestProcessBlockDetails() {
+        System.out.println("run TestProcessEventDeregister.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        Message.req_getBlockDetailsByNumber reqBody = Message.req_getBlockDetailsByNumber.newBuilder()
+                .addBlkNumbers(api.getBestBlock().getNumber())
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_admin_VALUE)
+                .put((byte) Message.Funcs.f_getBlockDetailsByNumber_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getBlockDetailsByNumber rslt = Message.rsp_getBlockDetailsByNumber.parseFrom(stripHeader(rsp));
+            assertEquals(1, rslt.getBlkDetailsCount());
+            Message.t_BlockDetail blkdtl = rslt.getBlkDetails(0);
+            assertEquals(api.getBestBlock().getNumber(), blkdtl.getBlockNumber());
+            assertEquals(api.getBestBlock().getNrgConsumed(), blkdtl.getNrgConsumed());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getBlockDetailsByNumber_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessBlockSqlRange() {
+        System.out.println("run TestProcessBlockSqlRange.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        long bestBlkNum = api.getBestBlock().getNumber();
+
+        Message.req_getBlockSqlByRange reqBody = Message.req_getBlockSqlByRange.newBuilder()
+                .setBlkNumberStart(bestBlkNum)
+                .setBlkNumberEnd(bestBlkNum + 20)
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_admin_VALUE)
+                .put((byte) Message.Funcs.f_getBlockSqlByRange_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getBlockSqlByRange rslt = Message.rsp_getBlockSqlByRange.parseFrom(stripHeader(rsp));
+            assertEquals(1, rslt.getBlkSqlCount());
+            Message.t_BlockSql blksql = rslt.getBlkSql(0);
+            assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
+        }   catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getBlockSqlByRange_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessBlockDetailsRange() {
+        System.out.println("run TestProcessBlockDetailsRange.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        long bestBlkNum = api.getBestBlock().getNumber();
+
+        Message.req_getBlockDetailsByRange reqBody = Message.req_getBlockDetailsByRange.newBuilder()
+                .setBlkNumberStart(bestBlkNum)
+                .setBlkNumberEnd(bestBlkNum + 20)
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_admin_VALUE)
+                .put((byte) Message.Funcs.f_getBlockDetailsByRange_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getBlockDetailsByRange rslt = Message.rsp_getBlockDetailsByRange.parseFrom(stripHeader(rsp));
+            assertEquals(1, rslt.getBlkDetailsCount());
+            Message.t_BlockDetail blksql = rslt.getBlkDetails(0);
+            assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
+        }   catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getBlockDetailsByRange_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessBlockDetailsLatest() {
+        System.out.println("run TestProcessBlockDetailsLatest.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        Message.req_getBlockDetailsByLatest reqBody = Message.req_getBlockDetailsByLatest.newBuilder()
+                .setCount(20)
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_admin_VALUE)
+                .put((byte) Message.Funcs.f_getBlockDetailsByLatest_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getBlockDetailsByLatest rslt = Message.rsp_getBlockDetailsByLatest.parseFrom(stripHeader(rsp));
+            assertEquals(20, rslt.getBlkDetailsCount());
+            Message.t_BlockDetail blksql = rslt.getBlkDetails(19);
+            assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
+        }   catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getBlockDetailsByLatest_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessBlocksLatest() {
+        System.out.println("run TestProcessBlocksLatest.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        Message.req_getBlocksByLatest reqBody = Message.req_getBlocksByLatest.newBuilder()
+                .setCount(20)
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_admin_VALUE)
+                .put((byte) Message.Funcs.f_getBlocksByLatest_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getBlocksByLatest rslt = Message.rsp_getBlocksByLatest.parseFrom(stripHeader(rsp));
+            assertEquals(20, rslt.getBlksCount());
+            Message.t_Block blksql = rslt.getBlks(19);
+            assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
+        }   catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getBlocksByLatest_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
+    @Test
+    public void TestProcessAccountDetails() {
+        System.out.println("run TestProcessAccountDetails.");
+
+        AionImpl impl = AionImpl.inst();
+        ApiAion0 api = new ApiAion0(impl);
+
+        Address addr = new Address(Keystore.create("testPwd"));
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        Message.req_getAccountDetailsByAddressList reqBody = Message.req_getAccountDetailsByAddressList.newBuilder()
+                .addAddresses(ByteString.copyFrom(addr.toBytes()))
+                .addAddresses(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                .build();
+
+        byte[] request = ByteBuffer.allocate(reqBody.getSerializedSize() + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_admin_VALUE)
+                .put((byte) Message.Funcs.f_getAccountDetailsByAddressList_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(reqBody.toByteArray())
+                .array();
+
+        byte[] rsp = api.process(request, socketId);
+
+        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        try {
+            Message.rsp_getAccountDetailsByAddressList rslt = Message.rsp_getAccountDetailsByAddressList.parseFrom(stripHeader(rsp));
+            assertEquals(2, rslt.getAccountsCount());
+            Message.t_AccountDetail acctDtl = rslt.getAccounts(0);
+            assertEquals(ByteString.copyFrom(addr.toBytes()), acctDtl.getAddress());
+            assertEquals(ByteString.copyFrom(api.getBalance(addr).toByteArray()), acctDtl.getBalance());
+        }   catch (Exception e) {
+            System.out.println(e.getMessage());
+            fail();
+        }
+
+        request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
+                .put((byte) Message.Servs.s_hb_VALUE)
+                .put((byte) Message.Funcs.f_getAccountDetailsByAddressList_VALUE)
+                .put((byte) 1)
+                .put(hash)
+                .put(msg).array();
+        assertEquals(Message.Retcode.r_fail_service_call_VALUE, api.process(request, socketId)[1]);
+
+        api.shutDown();
+    }
+
 }
