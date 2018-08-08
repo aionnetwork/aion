@@ -53,7 +53,7 @@ or you can find the source code from http://www.json.org/
 
 libminiupnp/miniupnpc_linux.jar
 libminiupnp/libminiupnpc.so
-aion/3rdParty/libminiupnpc
+aion/3rdParty/libminiupnpc (please read build_upnp_for_aion.txt inside the project folder before you build the jar)
 or you can find the source code from https://github.com/miniupnp/miniupnp
 
 libnsc.jar
