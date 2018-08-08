@@ -30,6 +30,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.google.common.base.Objects;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 
@@ -104,7 +106,7 @@ public class CfgLog {
 
             /*
              * XML - Displays tag/entry in the config.xml
-             * Boolean value to allow LOGGER to be toggled ON and OFF
+             * Boolean value to allow logger to be toggled ON and OFF
              */
             xmlWriter.writeCharacters("\t\t");
             xmlWriter.writeComment("Enable/Disable logback service; if disabled, output will not be logged.");
@@ -159,7 +161,7 @@ public class CfgLog {
         return this.logFile;
     }
 
-    /** Method returns user input folder path of LOGGER */
+    /** Method returns user input folder path of logger */
     public String getLogPath() {
         return this.logPath;
     }
@@ -167,5 +169,20 @@ public class CfgLog {
     /** Method checks folder path for illegal inputs */
     public boolean isValidPath() {
         return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgLog cfgLog = (CfgLog) o;
+        return logFile == cfgLog.logFile &&
+                Objects.equal(modules, cfgLog.modules) &&
+                Objects.equal(logPath, cfgLog.logPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(modules, logFile, logPath);
     }
 }

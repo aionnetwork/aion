@@ -22,10 +22,7 @@
  */
 package org.aion;
 
-import static java.lang.System.exit;
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
-import static org.aion.zero.impl.Version.KERNEL_VERSION;
+
 
 import java.io.Console;
 import java.util.Optional;
@@ -55,6 +52,13 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+
+import java.util.ServiceLoader;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
+
 
 public class Aion {
 
@@ -101,9 +105,9 @@ public class Aion {
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out
-                .println("Logger disabled; to enable please check <log> settings in config.xml");
+                .println("Logger disabled; to enable please check log settings in config.xml\n");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Invalid file path; please check <log> setting in config.xml");
+            System.out.println("File path is invalid; please check log setting in config.xml\n");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("Logger path: '" + cfg.getLog().getLogPath() + "'");
@@ -153,6 +157,26 @@ public class Aion {
         if (nm != null) {
             nm.delayedStartMining(10);
         }
+
+        /*
+         * Create JMX server and register in-flight config receiver MBean.  Commenting out for now
+         * because not using it yet.
+         */
+//        InFlightConfigReceiver inFlightConfigReceiver = new InFlightConfigReceiver(
+//                cfg, new DynamicConfigKeyRegistry());
+//        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+//        ObjectName objectName = null;
+//        try {
+//            objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
+//            server.registerMBean(inFlightConfigReceiver, objectName);
+//        } catch (MalformedObjectNameException
+//                | NotCompliantMBeanException
+//                | InstanceAlreadyExistsException
+//                | MBeanRegistrationException ex) {
+//            genLog.error(
+//                    "Failed to initialize JMX server.  In-flight configuration changes will not be available.",
+//                    ex);
+//        }
 
         /*
          * Start Threads.
@@ -278,6 +302,7 @@ public class Aion {
             genLog.info("---------------------------------------------");
 
         }, "shutdown"));
+
     }
 
     public static String appendLogo(String value, String input) {

@@ -1,6 +1,8 @@
 package org.aion.mcf.config;
 
 import javax.xml.stream.XMLOutputFactory;
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
@@ -83,5 +85,18 @@ public class CfgGui {
 
     public void setCfgGuiLauncher(CfgGuiLauncher cfgGuiLauncher) {
         this.cfgGuiLauncher = cfgGuiLauncher;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgGui cfgGui = (CfgGui) o;
+        return Objects.equal(cfgGuiLauncher, cfgGui.cfgGuiLauncher);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(cfgGuiLauncher);
     }
 }
