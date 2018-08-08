@@ -185,18 +185,20 @@ public class Cli {
                 case "--network":
                     if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
 
-                        // Recursively call to change database folder (TEMP)
-                        if (args.length == 4 && (args[2].equals("--datadir") || args[2].equals("-d"))) {
-                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                            call(newArgs, cfg);
-                        }
-
                         switch (args[1].toLowerCase()) {
                             case "mainnet":
                             case "conquest":
+
+                                // Change to specified network path
                                 CfgAion.setNetwork(args[1]);
                                 CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
                                 CfgAion.setGenesisFilePath((BASE_PATH + "/config/" + args[1] + "/genesis.json"));
+
+                                // Recursively call to change database path
+                                if (args.length == 4 && (args[2].equals("--datadir") || args[2].equals("-d"))) {
+                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                                    call(newArgs, cfg);
+                                }
                                 break;
                             default:
                                 System.out.println("Invalid network '" + args[1] + "': Set to default network");
@@ -218,16 +220,20 @@ public class Cli {
                 case "--datadir":
                     if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
 
-                        // Recursively call to change network (TEMP)
+                        // Check datadir folder for keystore and config folder
+                        // (Exists) Set keystore and config path
+
+                        // Recursively call to change network path
                         if (args.length == 4 && (args[2].equals("--network") || args[2].equals("-n"))) {
                             String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                             call(newArgs, cfg);
                         }
 
-                        // Change to specified database folder
+                        // Change to specified database path
                         cfg.getDb().setDatabasePath(args[1] + "/database");
                         cfg.getLog().setLogPath(args[1] + "/log");
                         cfg.toXML(null);
+
                     } else {
 
                         // Set to default database && log

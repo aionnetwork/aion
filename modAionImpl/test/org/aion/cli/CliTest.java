@@ -1,11 +1,13 @@
 package org.aion.cli;
 
+import org.aion.db.utils.FileUtils;
 import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.config.CfgAion;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -14,6 +16,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import org.aion.zero.impl.cli.Cli;
+
+import java.io.File;
 
 public class CliTest {
 
@@ -26,6 +30,19 @@ public class CliTest {
     @Before
     public void setup() {
         doReturn("password").when(cli).readPassword(any(), any());
+
+        // Copies config folder recursively
+        String BASE_PATH = Cfg.getBasePath();
+        File src = new File(BASE_PATH + "/../config");
+        File dst = new File(BASE_PATH + "/config");
+        FileUtils.copyRecursively(src, dst);
+    }
+
+    @After
+    public void shutdown() {
+        String BASE_PATH = Cfg.getBasePath();
+        File dst = new File(BASE_PATH + "/config");
+        FileUtils.deleteRecursively(dst);
     }
 
     /**
@@ -175,6 +192,7 @@ public class CliTest {
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath() );
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath() );
     }
+
     /**
      * Test the -d | --datadir option to see if;
      * 1. Access the correct dbPath
@@ -193,17 +211,17 @@ public class CliTest {
         Cli cli = new Cli();
         Cfg cfg = CfgAion.inst();
 
-        assertEquals(1, cli.call(networkArgs[0], cfg) );
-        assertEquals("database", cfg.getDb().getPath() );
+        assertEquals(1, cli.call(networkArgs[0], cfg));
+        assertEquals("database", cfg.getDb().getPath());
 
         assertEquals(1, cli.call(networkArgs[1], cfg) );
         assertEquals("database", cfg.getDb().getPath() );
 
         assertEquals(0, cli.call(networkArgs[2], cfg) );
-        assertEquals("database", cfg.getDb().getPath() );
+        assertEquals("database/database", cfg.getDb().getPath() );
 
         assertEquals(0, cli.call(networkArgs[3], cfg) );
-        assertEquals("test_db", cfg.getDb().getPath() );
+        assertEquals("test_db/database", cfg.getDb().getPath() );
     }
 
 }
