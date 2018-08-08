@@ -178,7 +178,7 @@ public class TransactionExecutor extends AbstractExecutor {
     }
 
     /**
-     * Prepares contract create.    is prepares the right word here?
+     * Prepares contract create.
      */
     protected void create() {
         Address contractAddress = tx.getContractAddress();

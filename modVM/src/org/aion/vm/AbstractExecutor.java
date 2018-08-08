@@ -48,10 +48,6 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
-    protected void setExecutionResult(IExecutionResult result) {
-        exeResult = result;
-    }
-
     public AbstractExecutor(IRepository _repo, boolean _localCall, long _blkRemainingNrg,
         Logger _logger) {
         this.repo = _repo;
@@ -262,4 +258,9 @@ public abstract class AbstractExecutor {
             LOGGER.debug("Transaction logs: {}", summary.getLogs());
         }
     }
+
+    protected void setExecutionResult(IExecutionResult result) {
+        exeResult = result;
+    }
+
 }
