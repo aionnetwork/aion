@@ -267,13 +267,15 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         backupPendingCacheAdd.clear();
         backupPendingPoolRemove.clear();
         pendingTxCache.clearCacheTxHash();
-
     }
 
     private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain) {
+            CfgAion _cfgAion,
+            AionRepositoryImpl _repository,
+            AionBlockchainImpl _blockchain,
+            boolean forTest) {
         AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
-        ps.init(_blockchain);
+        ps.init(_blockchain, _cfgAion, forTest);
         return ps;
     }
 
@@ -281,7 +283,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         static final AionPendingStateImpl INSTANCE =
                 initializeAionPendingState(
-                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst());
+                        CfgAion.inst(),
+                        AionRepositoryImpl.inst(),
+                        AionBlockchainImpl.inst(),
+                        false);
     }
 
     public static AionPendingStateImpl inst() {
@@ -290,7 +295,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     public static AionPendingStateImpl createForTesting(
             CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return initializeAionPendingState(_cfgAion, _repository, _blockchain);
+        return initializeAionPendingState(_cfgAion, _repository, _blockchain, true);
     }
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
@@ -329,19 +334,19 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
     }
 
-    public void init(final AionBlockchainImpl blockchain) {
+    private void init(
+            final AionBlockchainImpl _blockchain, final CfgAion _cfgAion, boolean forTest) {
         if (!this.isSeed) {
-            this.blockchain = blockchain;
+            this.blockchain = _blockchain;
             this.best = new AtomicReference<>();
-            this.transactionStore = blockchain.getTransactionStore();
+            this.transactionStore = _blockchain.getTransactionStore();
 
-            this.evtMgr = blockchain.getEventMgr();
-            this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
-            this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax(),
-                poolBackUp);
+            this.evtMgr = _blockchain.getEventMgr();
+            this.poolBackUp = _cfgAion.getTx().getPoolBackup();
+            this.pendingTxCache = new PendingTxCache(_cfgAion.getTx().getCacheMax(), poolBackUp);
             this.pendingState = repository.startTracking();
 
-            this.dumpPool = CfgAion.inst().getTx().getPoolDump();
+            this.dumpPool = _cfgAion.getTx().getPoolDump();
 
             ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOGGER_TX);
             ees.setFilter(setEvtFilter());
@@ -365,7 +370,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 }
             }
 
-            this.bufferEnable = CfgAion.inst().getTx().getBuffer();
+            this.bufferEnable = _cfgAion.getTx().getBuffer();
             if (bufferEnable) {
                 LOGGER_TX.info("TxBuf enable!");
                 this.ex = Executors.newSingleThreadScheduledExecutor();
@@ -374,9 +379,12 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 this.txBuffer = Collections.synchronizedList(new ArrayList<>());
             }
 
-            ees.start(new EpPS());
+            if (forTest) {
+                ees = null;
+            } else {
+                ees.start(new EpPS());
+            }
         }
-
     }
 
     private Set<Integer> setEvtFilter() {
