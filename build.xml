@@ -204,7 +204,7 @@
 
 	<target name="build_test" depends="build, test" />
 
-        <target name="3rd_build">
+        <target name="3rd_build" depends="clean">
                 <echo message="compile debug is ${compile.debug}" />
                 <echo message="building 3rd party lib" />
                 <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnsc/build.xml" target="build">
@@ -408,6 +408,9 @@
 		<delete dir="${dir.pack}/web3" />
 		<delete file="${dir.pack}/aion.tar.bz2" />
 		<delete dir="${dir.modfile}" />
+        <delete dir="${dir.libfile}/libJson.jar" />
+        <delete dir="${dir.libfile}/libnsc.jar" />
+        <delete dir="${dir.libfile}/libnzmq.jar" />
 	</target>
 
 	<target name="pack_build" depends="logenv">
