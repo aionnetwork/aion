@@ -46,6 +46,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
@@ -105,9 +106,12 @@ public class Aion {
             System.out.println("Invalid file path; please check <log> setting in config.xml");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
+            System.out.println("Logger path: '" + cfg.getLog().getLogPath() + "'");
         }
         System.out.println("Database path: '" + cfg.getDb().getPath() + "'");
+        System.out.println("Config path: '" + CfgAion.getConfFilePath() + "'");
+        System.out.println("Genesis path: '" + CfgAion.getGenesisFilePath() + "'");
+        System.out.println("Keystore path: '" + Keystore.getKeystorePath() + "'");
 
         // get the ssl password synchronously from the console, only if required
         // do this here, before writes to logger because if we don't do this here, then

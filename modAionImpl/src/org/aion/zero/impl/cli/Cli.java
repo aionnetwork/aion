@@ -28,13 +28,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.db.utils.FileUtils;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
@@ -43,7 +43,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -59,6 +58,10 @@ public class Cli {
             System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
     public int call(final String[] args, Cfg cfg) {
+        return call(args, cfg, BASE_PATH);
+    }
+
+    public int call(final String[] args, Cfg cfg, String path) {
         try {
             cfg.fromXML();
             switch (args[0].toLowerCase()) {
@@ -189,15 +192,20 @@ public class Cli {
                             case "mainnet":
                             case "conquest":
 
-                                // Change to specified network path
-                                CfgAion.setNetwork(args[1]);
-                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
-                                CfgAion.setGenesisFilePath((BASE_PATH + "/config/" + args[1] + "/genesis.json"));
-
                                 // Recursively call to change database path
                                 if (args.length == 4 && (args[2].equals("--datadir") || args[2].equals("-d"))) {
                                     String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                                     call(newArgs, cfg);
+                                    // Modify config path to inside datadir folder
+                                    CfgAion.setNetwork(args[1]);
+                                    CfgAion.setConfFilePath(BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/config.xml");
+                                    CfgAion.setGenesisFilePath((BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/genesis.json"));
+                                    Keystore.setKeystorePath(BASE_PATH + "/" + args[3] + "/keystore");
+                                } else {
+                                    // Change to specified network path
+                                    CfgAion.setNetwork(args[1]);
+                                    CfgAion.setConfFilePath(path + "/config/" + args[1] + "/config.xml");
+                                    CfgAion.setGenesisFilePath((path + "/config/" + args[1] + "/genesis.json"));
                                 }
                                 break;
                             default:
@@ -220,16 +228,28 @@ public class Cli {
                 case "--datadir":
                     if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
 
-                        // Check datadir folder for keystore and config folder
-                        // (Exists) Set keystore and config path
-
-                        // Recursively call to change network path
-                        if (args.length == 4 && (args[2].equals("--network") || args[2].equals("-n"))) {
-                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                            call(newArgs, cfg);
+                        // Check if datadir exist; if not copy configuration files
+                        File dir = new File(BASE_PATH + "/" + args[1]);
+                        if (!dir.exists()) {
+                            File src1 = new File(BASE_PATH + "/config");
+                            File src2 = new File(BASE_PATH + "/keystore");
+                            File dst1 = new File(BASE_PATH + "/" + args[1] + "/config");
+                            File dst2 = new File(BASE_PATH + "/" + args[1] + "/keystore");
+                            FileUtils.copyRecursively(src1, dst1);
+                            FileUtils.copyRecursively(src2, dst2);
                         }
 
-                        // Change to specified database path
+                        // Determine network from inside datadir folder
+                        if (args.length == 4 && (args[2].equals("--network") || args[2].equals("-n"))) {
+                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                            call(newArgs, cfg, dir.toString());
+                        } else {
+                            CfgAion.setNetwork("mainnet");
+                            CfgAion.setConfFilePath(BASE_PATH + "/" + args[1] + "/config/mainnet/config.xml");
+                            CfgAion.setGenesisFilePath(BASE_PATH + "/" + args[1] + "/config/mainnet/genesis.json");
+                        }
+
+                        Keystore.setKeystorePath(BASE_PATH + "/" + args[1] + "/keystore");
                         cfg.getDb().setDatabasePath(args[1] + "/database");
                         cfg.getLog().setLogPath(args[1] + "/log");
                         cfg.toXML(null);
