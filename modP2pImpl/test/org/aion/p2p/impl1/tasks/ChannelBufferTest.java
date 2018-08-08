@@ -38,7 +38,7 @@ import java.util.Random;
 import java.util.UUID;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
+import org.aion.log.LogLevel;
 import org.aion.p2p.Header;
 import org.aion.p2p.impl1.tasks.ChannelBuffer.RouteStatus;
 import org.junit.Before;
@@ -61,7 +61,7 @@ public class ChannelBufferTest {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
 
         cb = new ChannelBuffer();

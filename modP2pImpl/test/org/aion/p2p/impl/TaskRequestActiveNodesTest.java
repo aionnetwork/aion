@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.log.LogLevels;
+import org.aion.log.LogLevel;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.junit.Before;
@@ -52,7 +52,7 @@ public class TaskRequestActiveNodesTest {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevels.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
         p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
     }
