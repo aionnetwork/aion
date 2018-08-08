@@ -72,6 +72,9 @@ public class BridgeTransferTest {
             signatures[i] = members[i].sign(bundleHash).toBytes();
         }
 
+        ErrCode code = this.controller.setRelayer(OWNER_ADDR.toBytes(), senderAddress);
+        assertThat(code).isEqualTo(ErrCode.NO_ERROR);
+
         BridgeController.ProcessedResults results =
                 this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
         assertThat(results).isNotNull();
@@ -96,8 +99,12 @@ public class BridgeTransferTest {
             signatures[i] = members[i].sign(bundleHash).toBytes();
         }
 
+        ErrCode code = this.controller.setRelayer(OWNER_ADDR.toBytes(), senderAddress);
+        assertThat(code).isEqualTo(ErrCode.NO_ERROR);
+
         BridgeController.ProcessedResults results =
                 this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
+
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
@@ -120,6 +127,9 @@ public class BridgeTransferTest {
         for (int i = 0; i < 3; i++) {
             signatures[i] = members[i].sign(bundleHash).toBytes();
         }
+
+        ErrCode code = this.controller.setRelayer(OWNER_ADDR.toBytes(), senderAddress);
+        assertThat(code).isEqualTo(ErrCode.NO_ERROR);
 
         BridgeController.ProcessedResults results =
                 this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);
@@ -145,6 +155,9 @@ public class BridgeTransferTest {
         for (int i = 0; i < 5; i++) {
             signatures[i] = members[i].sign(bundleHash).toBytes();
         }
+
+        ErrCode code = this.controller.setRelayer(OWNER_ADDR.toBytes(), senderAddress);
+        assertThat(code).isEqualTo(ErrCode.NO_ERROR);
 
         BridgeController.ProcessedResults results =
                 this.controller.processBundles(senderAddress, blockHash, new BridgeBundle[] {bundle}, signatures);

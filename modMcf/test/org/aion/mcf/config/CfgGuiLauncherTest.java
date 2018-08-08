@@ -65,7 +65,7 @@ public class CfgGuiLauncherTest {
         unit.setWorkingDir("/working/dir");
 
         String result = unit.toXML();
-        assertThat(result, is(""));
+        assertThat(result, is("")); // cfg is hidden for now
 //        assertThat(result, is(
 //                "\t<launcher>\r\n" +
 //                        "\t\t\t<!--Whether JVM settings for launching kernel should be autodetected; 'true' or 'false'-->\r\n" +

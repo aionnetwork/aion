@@ -25,6 +25,9 @@ import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.util.URLManager;
 import org.slf4j.Logger;
 
+import javax.management.OperationsException;
+import java.awt.*;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.EnumSet;

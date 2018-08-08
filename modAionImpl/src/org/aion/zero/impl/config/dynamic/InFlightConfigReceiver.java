@@ -17,6 +17,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -98,12 +99,16 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
                 continue;
             }
 
-            IDynamicConfigApplier applier = configKeyRegistry.getApplier(key);
-            if(applier == null) {
+            Optional<IDynamicConfigApplier> maybeApplier = configKeyRegistry.getApplier(key);
+            if(! maybeApplier.isPresent()) {
+                throw new IllegalArgumentException(String.format(
+                        "The key '%s' does not support in-flight configuration change", key));
+            } else if(maybeApplier == null) {
                 throw new IllegalStateException(String.format(
                         "DynamicConfigKeyRegistry configuration error.  There is no applier for the bound key '%s'",
                         key));
             }
+            IDynamicConfigApplier applier = maybeApplier.get();
 
             final InFlightConfigChangeResult result;
             try {
