@@ -59,7 +59,7 @@ public class TaskWrite implements Runnable {
     @Override
     public void run() {
         // reset allocated buffer and clear messages if the channel is closed
-        if (channelBuffer.isClosed.get()) {
+        if (channelBuffer.isClosed()) {
             channelBuffer.refreshHeader();
             channelBuffer.refreshBody();
             p2pMgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
@@ -102,7 +102,7 @@ public class TaskWrite implements Runnable {
                     p2pLOG.debug("closed-channel-exception node={}", this.nodeShortId);
                 }
 
-                channelBuffer.isClosed.set(true);
+                channelBuffer.setClosed();
             } catch (IOException ex2) {
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("write-msg-io-exception node={} err={}", this.nodeShortId,
@@ -110,7 +110,7 @@ public class TaskWrite implements Runnable {
                 }
 
                 if (ex2.getMessage().equals("Broken pipe")) {
-                    channelBuffer.isClosed.set(true);
+                    channelBuffer.setClosed();
                 }
             }
         } catch (Exception e) {

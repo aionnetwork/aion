@@ -24,6 +24,8 @@ package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -41,6 +44,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,10 +52,10 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.p2p.Handler;
+import org.aion.p2p.Header;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.Msg;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
 import org.junit.After;
 import org.junit.Before;
@@ -82,7 +86,10 @@ public class TaskInboundTest {
     private INode node;
 
     @Mock
-    private Msg msg;
+    private ChannelBuffer cb;
+
+    @Mock
+    private Header hdr;
 
     @Mock
     private ServerSocketChannel ssc;
@@ -102,7 +109,6 @@ public class TaskInboundTest {
     @Mock
     private SelectionKey sk2;
 
-
     @Mock
     private SelectionKey sk3;
 
@@ -111,6 +117,8 @@ public class TaskInboundTest {
 
     @Mock
     private MockSelector selector;
+
+    private Random r = new Random();
 
     public class MockSelector extends Selector {
 
@@ -333,8 +341,8 @@ public class TaskInboundTest {
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
 
-        when(sk2.isValid()).thenReturn(true);
-        when(sk2.isAcceptable()).thenReturn(true);
+        when(sk.isValid()).thenReturn(true);
+        when(sk.isAcceptable()).thenReturn(true);
         when(nodeMgr.activeNodesSize()).thenReturn(1);
         when(p2pMgr.getMaxActiveNodes()).thenReturn(2);
         when(ssc.accept()).thenReturn(sc);
@@ -346,12 +354,15 @@ public class TaskInboundTest {
         when(nodeMgr.isSeedIp(anyString())).thenReturn(false);
         when(p2pMgr.getOutGoingIP()).thenReturn("1.1.1.1");
         when(s.getPort()).thenReturn(0);
+        when(nodeMgr.allocNode(anyString(), anyInt())).thenReturn(node);
+
+        when(sc.register(any(), anyInt())).thenReturn(sk);
 
 
         when(selector.selectNow()).thenReturn(1);
 
         Set<SelectionKey> ss = new LinkedHashSet<>();
-        ss.add(sk2);
+        ss.add(sk);
         when(selector.selectedKeys()).thenReturn(ss);
 
         Thread t = new Thread(ti);
@@ -363,8 +374,116 @@ public class TaskInboundTest {
         assertEquals("TERMINATED", t.getState().toString());
     }
 
+    @Test
+    public void testReadBuffer() throws InterruptedException, IOException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        // settings for readBuffer
+        when(sk.channel()).thenReturn(sc);
+        when(sc.read(any(ByteBuffer.class))).thenReturn(0);
+
+        // settings for run
+        when(sk.isValid()).thenReturn(true);
+        when(sk.isReadable()).thenReturn(true);
+        when(sk.attachment()).thenReturn(cb);
+        when(selector.selectNow()).thenReturn(1);
+
+        Set<SelectionKey> ss = new LinkedHashSet<>();
+        ss.add(sk);
+        when(selector.selectedKeys()).thenReturn(ss);
+
+        // execute the task
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(200);
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
+    @Test
+    public void testReadBuffer2() throws InterruptedException, IOException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        // settings for readBuffer
+        when(sk.channel()).thenReturn(sc);
+        when(sc.read(any(ByteBuffer.class))).thenReturn(1).thenReturn(0);
+
+        //settings for calBuffer
+        //when(cb.buffRemain).thenReturn(1);
+
+        // settings for run
+        when(sk.isValid()).thenReturn(true);
+        when(sk.isReadable()).thenReturn(true);
+        when(sk.attachment()).thenReturn(cb);
+        when(selector.selectNow()).thenReturn(1);
+
+        Set<SelectionKey> ss = new LinkedHashSet<>();
+        ss.add(sk);
+        when(selector.selectedKeys()).thenReturn(ss);
+
+        // execute the task
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(200);
 
 
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
+
+    @Test
+    public void testReadBuffer3() throws InterruptedException, IOException {
+        AtomicBoolean atb = new AtomicBoolean(true);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
+
+        // settings for readBuffer
+        when(sk.channel()).thenReturn(sc);
+        int read = r.nextInt(10000);
+        int remain = r.nextInt(10000);
+        when(sc.read(any(ByteBuffer.class))).thenReturn(read).thenReturn(0);
+
+        //settings for calBuffer
+        when(cb.getBuffRemain()).thenReturn(remain);
+        when(cb.getRemainBuffer()).thenReturn(new byte[remain]);
+
+        //settings for readMsg
+        when(cb.isHeaderNotCompleted()).thenReturn(true);
+        when(cb.isBodyNotCompleted()).thenReturn(true);
+
+        //settings for readBody
+        when(cb.getHeader()).thenReturn(hdr);
+        //when(hdr.getLen()).thenReturn(Header.LEN);
+
+        // settings for run
+        when(sk.isValid()).thenReturn(true);
+        when(sk.isReadable()).thenReturn(true);
+        when(sk.attachment()).thenReturn(cb);
+        when(selector.selectNow()).thenReturn(1);
+
+        Set<SelectionKey> ss = new LinkedHashSet<>();
+        ss.add(sk);
+        when(selector.selectedKeys()).thenReturn(ss);
+
+        // execute the task
+        Thread t = new Thread(ti);
+        t.start();
+        assertTrue(t.isAlive());
+        Thread.sleep(200);
+
+
+        atb.set(false);
+        Thread.sleep(100);
+        assertEquals("TERMINATED", t.getState().toString());
+    }
 //
 //    @Test
 //    public void testRunMsgOutTimeout() throws InterruptedException {

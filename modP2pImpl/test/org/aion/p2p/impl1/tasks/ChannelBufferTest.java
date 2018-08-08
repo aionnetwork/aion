@@ -103,9 +103,9 @@ public class ChannelBufferTest {
 
     @Test
     public void testRefreshHeader() {
-        cb.header = header;
+        cb.setHeader(header);
         cb.refreshHeader();
-        assertNull(cb.header);
+        assertNull(cb.getHeader());
     }
 
     @Test
@@ -122,9 +122,9 @@ public class ChannelBufferTest {
             ByteBuffer bb = genBuffer();
             cb.readHead(bb);
             if (bb.array().length >= LEN) {
-                assertArrayEquals(expectHeader.encode(), cb.header.encode());
+                assertArrayEquals(expectHeader.encode(), cb.getHeader().encode());
             } else {
-                assertNull(cb.header);
+                assertNull(cb.getHeader());
             }
         }
     }
@@ -132,7 +132,7 @@ public class ChannelBufferTest {
     @Test
     public void TestHeaderNotCompleted() {
         assertTrue(cb.isHeaderNotCompleted());
-        cb.header = header;
+        cb.setHeader(header);
         assertFalse(cb.isHeaderNotCompleted());
     }
 
@@ -140,7 +140,7 @@ public class ChannelBufferTest {
     public void TestBodyNotCompleted() {
         when(header.getLen()).thenReturn(UUID.randomUUID().toString().getBytes().length);
         assertTrue(cb.isBodyNotCompleted());
-        cb.header = header;
+        cb.setHeader(header);
         assertTrue(cb.isBodyNotCompleted());
         cb.body = UUID.randomUUID().toString().getBytes();
         assertFalse(cb.isBodyNotCompleted());
@@ -154,12 +154,12 @@ public class ChannelBufferTest {
             ByteBuffer bb = genBuffer();
             cb.readHead(bb);
             if (bb.array().length >= LEN) {
-                assertArrayEquals(expectHeader.encode(), cb.header.encode());
+                assertArrayEquals(expectHeader.encode(), cb.getHeader().encode());
                 cb.readBody(bb);
                 assertNotNull(cb.body);
-                assertEquals(cb.header.getLen(), cb.body.length);
+                assertEquals(cb.getHeader().getLen(), cb.body.length);
             } else {
-                assertNull(cb.header);
+                assertNull(cb.getHeader());
             }
         }
     }
