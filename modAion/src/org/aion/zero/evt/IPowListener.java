@@ -20,27 +20,42 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
-package org.aion.mcf.db;
 
-import java.math.BigInteger;
+ ******************************************************************************/
+package org.aion.zero.evt;
+
+import java.util.List;
 
 import org.aion.base.type.IBlock;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxExecSummary;
+
+import org.aion.mcf.evt.IListenerBase;
+import org.aion.mcf.types.AbstractBlockSummary;
+import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
- * POW BLockstore interface.
+ * POW listener interface.
  *
  * @param <BLK>
- * @param <BH>
+ * @param <TX>
+ * @param <TXR>
+ * @param <BS>
  */
-public interface IBlockStorePow<BLK extends IBlock<?, ?>, BH extends AbstractBlockHeader>
-        extends IBlockStoreBase<BLK, BH> {
+public interface IPowListener<BLK extends IBlock<?, ?>, TX extends ITransaction, TXR extends AbstractTxReceipt<?>, BS extends AbstractBlockSummary<?, ?, ?, ?>>
+        extends IListenerBase<BLK, TX, TXR, BS> {
+    void onBlock(BS blockSummary);
 
-    BigInteger getTotalDifficultyForHash(byte[] hash);
+    void onPeerDisconnect(String host, long port);
 
-    void saveBlock(BLK block, BigInteger cummDifficulty, boolean mainChain);
+    void onPendingTransactionsReceived(List<TX> transactions);
 
-    BigInteger getTotalDifficulty();
+    void onSyncDone();
+
+    void onNoConnections();
+
+    void onVMTraceCreated(String transactionHash, String trace);
+
+    void onTransactionExecuted(ITxExecSummary summary);
 
 }

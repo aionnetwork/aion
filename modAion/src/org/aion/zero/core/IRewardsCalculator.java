@@ -22,7 +22,7 @@
  *     Aion foundation.
  *
  ******************************************************************************/
-package org.aion.mcf.core;
+package org.aion.zero.core;
 
 import java.math.BigInteger;
 

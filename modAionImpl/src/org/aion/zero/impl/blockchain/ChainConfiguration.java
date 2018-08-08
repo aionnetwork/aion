@@ -28,8 +28,7 @@ import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.zero.blockchain.IChainCfg;
 import org.aion.zero.core.IDifficultyCalculator;
-import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.mcf.mine.IMiner;
+import org.aion.zero.core.IRewardsCalculator;
 import org.aion.mcf.valid.*;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
@@ -54,7 +53,6 @@ import java.util.Arrays;
 public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction> {
 
     protected BlockConstants constants;
-    protected IMiner<?, ?> miner;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;

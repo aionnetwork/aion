@@ -42,7 +42,7 @@ import org.aion.log.LogEnum;
 import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.config.CfgNetP2p;
-import org.aion.mcf.db.IBlockStorePow;
+import org.aion.zero.db.IBlockStorePow;
 import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;

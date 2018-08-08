@@ -28,7 +28,7 @@ import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.zero.core.IDifficultyCalculator;
-import org.aion.mcf.core.IRewardsCalculator;
+import org.aion.zero.core.IRewardsCalculator;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 
