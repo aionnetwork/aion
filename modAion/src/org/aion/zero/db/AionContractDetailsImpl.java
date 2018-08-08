@@ -210,7 +210,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
-                if (value != null) {
+                if ((value != null) && (!value.isZero())) {
                     storage.put(key, value);
                 }
             }
