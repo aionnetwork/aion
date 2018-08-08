@@ -69,6 +69,9 @@ public class AccountManagerTest {
 
     @Test
     public void testSingletonAccountManager(){
+        // first check that there are no accounts
+        assertEquals(0, accountManager.getAccounts().size());
+
         // unlock some accounts ----------------------------------------------------------------------------------------
         assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 2000));
         assertTrue(accountManager.unlockAccount(Address.wrap(k2.getAddress()), p2, 1));
