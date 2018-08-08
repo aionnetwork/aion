@@ -94,7 +94,7 @@ public class TransactionProcessor extends AbstractAionApiClient {
 
     private void processTransactionsFromBlock(final BlockDTO lastSafeBlock, final Set<String> addresses) {
         if(!apiIsConnected()) {
-            LOG.warn("Will not process transactions from block: {} for addresses: {} because API is disconnected or no addresses",
+            LOG.info("Will not process transactions from block: {} for addresses: {} because API is disconnected or no addresses",
                     lastSafeBlock, addresses);
             return;
         }

@@ -127,7 +127,7 @@ public class SendController extends AbstractController {
                 if (account != null) {
                     sendButton.setDisable(false);
                 }
-                transactionProcessor.processTransactionsOnReconnect(); // Not sure if this is the best place for this...
+//                transactionProcessor.processTransactionsOnReconnect();
                 break;
             case DISCONNECTED:
                 connected = false;
