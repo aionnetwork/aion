@@ -54,7 +54,7 @@ public class AccountManagerTest {
     private final String p3 = "password3";
 
     private AccountManager accountManager = AccountManager.inst();
-    private Address addr = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+    private Address address1 = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
 
     @Before
     public void setup(){
@@ -80,7 +80,7 @@ public class AccountManagerTest {
         assertTrue(accountManager.unlockAccount(Address.wrap(k3.getAddress()), p3, 86401));
 
         // not registered key
-        assertFalse(accountManager.unlockAccount(addr, "no pass", 2000));
+        assertFalse(accountManager.unlockAccount(address1, "no pass", 2000));
 
         // account already present, update the timeout
         assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 4000));
@@ -89,7 +89,7 @@ public class AccountManagerTest {
         assertTrue(accountManager.lockAccount(Address.wrap(k2.getAddress()), p2));
 
         // not registered key
-        assertFalse(accountManager.lockAccount(addr, "no pass"));
+        assertFalse(accountManager.lockAccount(address1, "no pass"));
 
         // get accounts ------------------------------------------------------------------------------------------------
         assertEquals(3, accountManager.getAccounts().size());
@@ -101,7 +101,7 @@ public class AccountManagerTest {
         assertArrayEquals(k1.getPrivKeyBytes(), result.getPrivKeyBytes());
 
         // key not exist
-        assertNull(accountManager.getKey(addr));
+        assertNull(accountManager.getKey(address1));
 
         // past time out, remove k2, check if account map size has decreased
         ECKey res2 = accountManager.getKey(Address.wrap(k2.getAddress()));
