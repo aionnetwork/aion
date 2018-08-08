@@ -2082,7 +2082,6 @@ public class ApiAion0Tests {
                 .put((byte) Message.Servs.s_admin_VALUE)
                 .put((byte) Message.Funcs.f_getAccountDetailsByAddressList_VALUE)
                 .put((byte) 1)
-                .put((byte) 1)
                 .put(hash)
                 .put(reqBody.toByteArray())
                 .array();
