@@ -13,6 +13,7 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
@@ -1769,6 +1770,19 @@ public class ApiAion0Tests {
             fail();
         }
 
+        AionRepositoryImpl repo = AionRepositoryImpl.inst();
+        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
+
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+                msg,100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
+                Collections.singletonList(tx), false);
+
+        api.onBlock((AionBlockSummary) impl.getAionHub().getBlockchain().add(blk));
+
         request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
                 .put((byte) Message.Servs.s_hb_VALUE)
                 .put((byte) Message.Funcs.f_eventRegister_VALUE)
@@ -2068,6 +2082,7 @@ public class ApiAion0Tests {
                 .put((byte) Message.Servs.s_admin_VALUE)
                 .put((byte) Message.Funcs.f_getAccountDetailsByAddressList_VALUE)
                 .put((byte) 1)
+                .put((byte) 1)
                 .put(hash)
                 .put(reqBody.toByteArray())
                 .array();
@@ -2097,5 +2112,4 @@ public class ApiAion0Tests {
 
         api.shutDown();
     }
-
 }
