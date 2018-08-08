@@ -22,8 +22,6 @@
  */
 package org.aion.vm;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionInternalTx;
