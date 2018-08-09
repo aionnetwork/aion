@@ -4,6 +4,8 @@ import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -173,33 +175,29 @@ class TRShelpers {
         return contract;
     }
 
-    // Creates a new blockchain with numBlocks blocks and sets it to the blockchain field. This
-    // method creates a new block every sleepDuration milliseconds.
-    void createBlockchain(int numBlocks, long sleepDuration) throws InterruptedException {
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-            .withDefaultAccounts()
-            .withValidatorConfiguration("simple")
-            .build();
-
-        StandaloneBlockchain bc = bundle.bc;
-        senderKey = bundle.privateKeys.get(0);
-        AionBlock previousBlock = bc.genesis;
-
-        for (int i = 0; i < numBlocks; i++) {
-            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
-            previousBlock = createBundleAndCheck(bc, senderKey, previousBlock);
-        }
-
-        blockchain = bc;
+    /**
+     * Sets the blockchain to a mocked blockchain whose best block has the timestamp timestamp.
+     *
+     * @param timestamp The timestamp of the mocked best block.
+     */
+    void mockBlockchain(long timestamp) {
+        AionBlock mockblock = mock(AionBlock.class);
+        when(mockblock.getTimestamp()).thenReturn(timestamp);
+        StandaloneBlockchain mockchain = mock(StandaloneBlockchain.class);
+        when(mockchain.getBestBlock()).thenReturn(mockblock);
+        blockchain = mockchain;
     }
 
-    // Adds numBlocks more blocks to the blockchain every sleepDuration milliseconds.
-    void addBlocks(int numBlocks, long sleepDuration) throws InterruptedException {
-        AionBlock previousBlock = blockchain.getBestBlock();
-        for (int i = 0; i < numBlocks; i++) {
-            if (sleepDuration > 0) { Thread.sleep(sleepDuration); }
-            previousBlock = createBundleAndCheck(((StandaloneBlockchain) blockchain), senderKey, previousBlock);
-        }
+    /**
+     * Sets the block at block number blockNum to have timestamp timestamp.
+     *
+     * @param blockNum The block number to mock.
+     * @param timestamp The mocked timestamp.
+     */
+    void mockBlockchainBlock(long blockNum, long timestamp) {
+        AionBlock mockBlock = mock(AionBlock.class);
+        when(mockBlock.getTimestamp()).thenReturn(timestamp);
+        when(blockchain.getBlockByNumber(blockNum)).thenReturn(mockBlock);
     }
 
     // Returns the amount of extra funds that the TRS contract contract has.
@@ -293,106 +291,19 @@ class TRShelpers {
         return trs.getAccountLastWithdrawalPeriod(contract, account);
     }
 
-    /**
-     * Returns the fraction of the total deposits that account owns to 18 decimal places, rounded
-     * down.
-     *
-     * @param accountDepositAmt The amount of deposit funds account has in some contract.
-     * @param contractDepositAmt The total amount of deposit funds in that same contract.
-     * @return accountDepositAmt / contractDepositAmt.
-     */
-    BigDecimal computeOwnershipFraction(BigInteger accountDepositAmt, BigInteger contractDepositAmt) {
-        //TODO: USE
-        return new BigDecimal(accountDepositAmt).
-            divide(new BigDecimal(contractDepositAmt), 18, RoundingMode.HALF_DOWN);
-    }
-
-    /**
-     * Returns the amount of bonus funds owed over the lifetime of some contract to some account.
-     *
-     * @param fraction The fraction of deposit funds owned by some account in some contract.
-     * @param contractBonusAmt The total bonus funds in that same contract.
-     * @return the amount of bonus funds owed accordingly over the contract lifetime.
-     */
-    BigInteger computeBonusOwed(BigDecimal fraction, BigInteger contractBonusAmt) {
-        //TODO: USE
-        return fraction.multiply(new BigDecimal(contractBonusAmt)).toBigInteger();
-    }
-
-    /**
-     * Returns the amount of bonus funds available to be collected each period.
-     *
-     * @param fraction The fraction of deposit funds owned by some account in some contract.
-     * @param contractBonusAmt The total bonus funds in that same contract.
-     * @param periods The total number of periods that same contract has.
-     * @return the amount of bonus funds available to be collected each period.
-     */
-    BigInteger computeBonusPerPeriod(BigDecimal fraction, BigInteger contractBonusAmt, int periods) {
-        //TODO: USE
-        return fraction.
-            multiply(new BigDecimal(contractBonusAmt)).
-            divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN).
-            toBigInteger();
-    }
-
     // Returns the share of the bonus tokens account is entitled to withdraw over life of contract.
     BigInteger getBonusShare(AbstractTRS trs, Address contract, Address account) {
-        //TODO: replace this with the above 2 methods.
         return trs.computeBonusShare(contract, account);
-    }
-
-    /**
-     * Returns the amount of extra funds owed over the lifetime of some contract to some account.
-     *
-     * @param fraction The fraction of deposit funds owned by some account in some contract.
-     * @param contractExtraAmt The total extra funds in that same contract.
-     * @return the amount of extra funds owed accordingly over the contract lifetime.
-     */
-    BigInteger computeExtrasOwed(BigDecimal fraction, BigInteger contractExtraAmt) {
-        //TODO: USE
-        return fraction.multiply(new BigDecimal(contractExtraAmt)).toBigInteger();
-    }
-
-    /**
-     * Returns the amount of extra funds available to be collected each period.
-     *
-     * @param fraction The fraction of deposit funds owned by some account in some contract.
-     * @param contractBonusAmt The total extra funds in that same contract.
-     * @param periods The total number of periods that same contract has.
-     * @return the amount of extra funds available to be collected each period.
-     */
-    BigInteger computeExtrasPerPeriod(BigDecimal fraction, BigInteger contractBonusAmt, int periods) {
-        //TODO: USE
-        return fraction.
-            multiply(new BigDecimal(contractBonusAmt)).
-            divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN).
-            toBigInteger();
     }
 
     // Returns the amount of extras account is able to withdraw in the current period.
     BigInteger getExtraShare(AbstractTRS trs, Address contract, Address account, BigDecimal fraction,
         int currPeriod) {
-        //TODO: replace this with the above 2 methods.
         return trs.computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
-    }
-
-    /**
-     * Returns the amount of deposit funds available to be collected each period.
-     *
-     * @param depositAmt The amout of deposit funds owned by some account in some contract.
-     * @param periods The total number of periods that same contract has.
-     * @return the amount of deposit funds available to be collected each period.
-     */
-    BigInteger computeDepositsPerPeriod(BigInteger depositAmt, int periods) {
-        //TODO: USE
-        return new BigDecimal(depositAmt).
-            divide(BigDecimal.valueOf(periods), 18, RoundingMode.HALF_DOWN).
-            toBigInteger();
     }
 
     // Grabs the current period contract is in as a BigInteger.
     BigInteger getCurrentPeriod(AbstractTRS trs, Address contract) {
-        //TODO - this should be computed here, not grabbed from the contract
         return BigInteger.valueOf(getContractCurrentPeriod(trs, contract));
     }
 
@@ -400,14 +311,12 @@ class TRShelpers {
     BigInteger getSpecialAmount(BigDecimal accBalance, BigDecimal contractBalance,
         BigDecimal bonus, BigDecimal percent) {
 
-        //TODO - this should be computed here, not grabbed from the contract
         BigDecimal owings = new BigDecimal(grabOwings(accBalance, contractBalance, bonus));
         return (owings.multiply(percent.movePointLeft(2))).toBigInteger();
     }
 
     // Grabs the amount an account can withdraw regularly, not in special event, according to params.
     BigInteger getWithdrawAmt(BigInteger owings, BigInteger specialAmt, int periods) {
-        //TODO - this should be computed here, not grabbed from the contract
         BigDecimal periodsBI = new BigDecimal(BigInteger.valueOf(periods));
         BigDecimal owingWithoutSpec = new BigDecimal(owings.subtract(specialAmt));
         BigDecimal res = owingWithoutSpec.divide(periodsBI, 18, RoundingMode.HALF_DOWN);
@@ -416,14 +325,12 @@ class TRShelpers {
 
     // Returns the period that contract is currently in.
     int getContractCurrentPeriod(AbstractTRS trs, Address contract) {
-        //TODO - this should be computed here, not grabbed from the contract
         long currTime = blockchain.getBestBlock().getTimestamp();
         return trs.calculatePeriod(contract, trs.getContractSpecs(contract), currTime);
     }
 
     // Grabs the amount owed to account if the following params are true.
     BigInteger grabOwings(BigDecimal accBalance, BigDecimal contractBalance, BigDecimal bonus) {
-        //TODO - this should be computed here, not grabbed from the contract
         BigDecimal fraction = accBalance.divide(contractBalance, 18, RoundingMode.HALF_DOWN);
         BigDecimal share = bonus.multiply(fraction);
         return share.toBigInteger().add(accBalance.toBigInteger());
@@ -431,7 +338,6 @@ class TRShelpers {
 
     // Returns the total amount of tokens account can withdraw over the lifetime of the contract.
     BigInteger getTotalOwed(AbstractTRS trs, Address contract, Address account) {
-        //TODO - this should be computed here, not grabbed from the contract
         return trs.computeTotalOwed(contract, account);
     }
 
@@ -456,7 +362,6 @@ class TRShelpers {
     BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract, BigInteger deposits,
         BigInteger total, BigInteger bonus, BigDecimal percent, int periods) {
 
-        //TODO - this should be computed here, not grabbed from the contract
         BigInteger currPeriod = getCurrentPeriod(trs, contract);
         BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
         BigInteger expectedSpecial = getSpecialAmount(new BigDecimal(deposits), new BigDecimal(total),
@@ -887,32 +792,6 @@ class TRShelpers {
     }
 
     // <-----------------------------------HELPERS FOR THIS CLASS---------------------------------->
-
-    private static AionBlock createBundleAndCheck(StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
-        byte[] ZERO_BYTE = new byte[0];
-
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
-        List<AionTransaction> transactions = new ArrayList<>();
-
-        // create 100 transactions per bundle
-        for (int i = 0; i < 100; i++) {
-            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
-            AionTransaction sendTransaction = new AionTransaction(accountNonce.toByteArray(),
-                destAddr, BigInteger.ONE.toByteArray(), ZERO_BYTE, 21000, 1);
-            sendTransaction.sign(key);
-            transactions.add(sendTransaction);
-            accountNonce = accountNonce.add(BigInteger.ONE);
-        }
-
-        AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
-        assertEquals(100, block.getTransactionsList().size());
-        // clear the trie
-        bc.getRepository().flush();
-
-        ImportResult result = bc.tryToConnect(block);
-        assertEquals(ImportResult.IMPORTED_BEST, result);
-        return block;
-    }
 
     /**
      * Returns the amount an account is expected to receive from a first withdrawal from a contract
