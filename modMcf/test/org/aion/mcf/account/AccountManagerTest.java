@@ -1,5 +1,4 @@
 /*
- ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -18,33 +17,29 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- *****************************************************************************
  */
 package org.aion.mcf.account;
 
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
 public class AccountManagerTest {
+    private AccountManager accountManager = AccountManager.inst();
+    private Address address = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+
     private ECKey k1;
     private ECKey k2;
     private ECKey k3;
@@ -53,8 +48,19 @@ public class AccountManagerTest {
     private final String p2 = "password2";
     private final String p3 = "password3";
 
-    private AccountManager accountManager = AccountManager.inst();
-    private Address address1 = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+    private String address1;
+    private String address2;
+    private String address3;
+
+    private static final String KEYSTORE_PATH;
+
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        KEYSTORE_PATH = storageDir + "/keystore";
+    }
 
     @Before
     public void setup(){
@@ -62,50 +68,106 @@ public class AccountManagerTest {
         k2 = ECKeyFac.inst().create();
         k3 = ECKeyFac.inst().create();
 
-        Keystore.create(p1, k1);
-        Keystore.create(p2, k2);
-        Keystore.create(p3, k3);
+        // for later on removing the keystore files generated
+        address1 = Keystore.create(p1, k1).substring(2);
+        address2 = Keystore.create(p2, k2).substring(2);
+        address3 = Keystore.create(p3, k3).substring(2);
     }
+
+    // remove all the keystore files created
+    @After
+    public void clean(){
+        // empty the map in account manager for each test
+        // have to do this because AccountManager is a singleton class
+        cleanAccountManager();
+
+        // get a list of all the files in keystore directory
+        File folder = new File(KEYSTORE_PATH);
+        File[] AllFilesInDirectory = folder.listFiles();
+        List<String> allFileNames = new ArrayList<>();
+        List<String> filesToBeDeleted = new ArrayList<>();
+
+        // check for invalid or wrong path - should not happen
+        if(AllFilesInDirectory == null)
+            return;
+
+        for(File file: AllFilesInDirectory){
+            allFileNames.add(file.getName());
+        }
+
+        // get a list of the files needed to be deleted, check the ending of file names with corresponding addresses
+        for(String name: allFileNames){
+            String ending = name.substring(name.length()-64);
+
+            if(ending.equals(address1) || ending.equals(address2) || ending.equals(address3)) {
+                filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);
+            }
+        }
+
+        // iterate and delete those files
+        for (String name: filesToBeDeleted){
+            File file = new File(name);
+            if (file.delete())
+                System.out.println("Deleted file: " + name);
+        }
+    }
+
 
     @Test
     public void testSingletonAccountManager(){
-        // first check that there are no accounts
-        assertEquals(0, accountManager.getAccounts().size());
+//        // first check that there are no accounts
+//        assertEquals(0, accountManager.getAccounts().size());
+//
+//        // unlock some accounts ----------------------------------------------------------------------------------------
+//        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 2000));
+//        assertTrue(accountManager.unlockAccount(Address.wrap(k2.getAddress()), p2, 1));
+//
+//        // time out more than max
+//        assertTrue(accountManager.unlockAccount(Address.wrap(k3.getAddress()), p3, 86401));
+//
+//        // not registered key
+//        assertFalse(accountManager.unlockAccount(address, "no pass", 2000));
+//
+//        // account already present, update the timeout
+//        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 4000));
+//
+//        // lock some accounts ------------------------------------------------------------------------------------------
+//        assertTrue(accountManager.lockAccount(Address.wrap(k2.getAddress()), p2));
+//
+//        // not registered key
+//        assertFalse(accountManager.lockAccount(address, "no pass"));
+//
+//        // get accounts ------------------------------------------------------------------------------------------------
+//        assertEquals(3, accountManager.getAccounts().size());
+//
+//        // get key -----------------------------------------------------------------------------------------------------
+//        ECKey result = accountManager.getKey(Address.wrap(k1.getAddress()));
+//        assertArrayEquals(k1.getAddress(), result.getAddress());
+//        assertArrayEquals(k1.getPubKey(), result.getPubKey());
+//        assertArrayEquals(k1.getPrivKeyBytes(), result.getPrivKeyBytes());
+//
+//        // key not exist
+//        assertNull(accountManager.getKey(address));
+//
+//        // past time out, remove k2, check if account map size has decreased
+//        ECKey res2 = accountManager.getKey(Address.wrap(k2.getAddress()));
+//        assertNull(res2);
+//        assertEquals(2, accountManager.getAccounts().size());
+    }
 
-        // unlock some accounts ----------------------------------------------------------------------------------------
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 2000));
-        assertTrue(accountManager.unlockAccount(Address.wrap(k2.getAddress()), p2, 1));
 
-        // time out more than max
-        assertTrue(accountManager.unlockAccount(Address.wrap(k3.getAddress()), p3, 86401));
 
-        // not registered key
-        assertFalse(accountManager.unlockAccount(address1, "no pass", 2000));
+    private void cleanAccountManager(){
+        // wait for the accounts to timeout
+        try {
+            Thread.sleep(2000L);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        // account already present, update the timeout
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 4000));
-
-        // lock some accounts ------------------------------------------------------------------------------------------
-        assertTrue(accountManager.lockAccount(Address.wrap(k2.getAddress()), p2));
-
-        // not registered key
-        assertFalse(accountManager.lockAccount(address1, "no pass"));
-
-        // get accounts ------------------------------------------------------------------------------------------------
-        assertEquals(3, accountManager.getAccounts().size());
-
-        // get key -----------------------------------------------------------------------------------------------------
-        ECKey result = accountManager.getKey(Address.wrap(k1.getAddress()));
-        assertArrayEquals(k1.getAddress(), result.getAddress());
-        assertArrayEquals(k1.getPubKey(), result.getPubKey());
-        assertArrayEquals(k1.getPrivKeyBytes(), result.getPrivKeyBytes());
-
-        // key not exist
-        assertNull(accountManager.getKey(address1));
-
-        // past time out, remove k2, check if account map size has decreased
-        ECKey res2 = accountManager.getKey(Address.wrap(k2.getAddress()));
-        assertNull(res2);
-        assertEquals(2, accountManager.getAccounts().size());
+        // remove accounts
+        accountManager.getKey(Address.wrap(k1.getAddress()));
+        accountManager.getKey(Address.wrap(k2.getAddress()));
+        accountManager.getKey(Address.wrap(k3.getAddress()));
     }
 }
