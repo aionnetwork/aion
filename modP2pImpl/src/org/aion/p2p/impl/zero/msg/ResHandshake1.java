@@ -34,7 +34,7 @@ import java.util.Arrays;
 /**
  * @author chris
  */
-public class ResHandshake1 extends ResHandshake {
+public final class ResHandshake1 extends ResHandshake {
 
     // success(byte) + binary version len (byte)
     private static final int MIN_LEN = 2;
