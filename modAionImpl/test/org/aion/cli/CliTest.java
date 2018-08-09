@@ -18,6 +18,7 @@ import static org.mockito.Mockito.doReturn;
 import org.aion.zero.impl.cli.Cli;
 
 import java.io.File;
+import java.io.IOException;
 
 public class CliTest {
 
@@ -28,7 +29,7 @@ public class CliTest {
      * is called using any two params.
      */
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         doReturn("password").when(cli).readPassword(any(), any());
 
         // Copies config folder recursively
@@ -36,6 +37,7 @@ public class CliTest {
         File src = new File(BASE_PATH + "/../config");
         File dst = new File(BASE_PATH + "/config");
         FileUtils.copyRecursively(src, dst);
+        dst.deleteOnExit();
 
         CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
         CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
@@ -44,14 +46,14 @@ public class CliTest {
 
     @After
     public void shutdown() {
+
+        // Deletes created folders recursively
         String BASE_PATH = Cfg.getBasePath();
-        File path1 = new File(BASE_PATH + "/config");
-        File path2 = new File(BASE_PATH + "/aaaaaaaa");
-        File path3 = new File(BASE_PATH + "/test_db");
-        if(path1.exists() && path2.exists() && path3.exists()) {
+        File path1 = new File(BASE_PATH + "/aaaaaaaa");
+        File path2 = new File(BASE_PATH + "/test_db");
+        if(path1.exists() && path2.exists()) {
             FileUtils.deleteRecursively(path1);
             FileUtils.deleteRecursively(path2);
-            FileUtils.deleteRecursively(path3);
         }
 
         CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");

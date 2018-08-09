@@ -197,7 +197,7 @@ public class Cli {
                                     // Modify config path to inside datadir folder
                                     CfgAion.setNetwork(args[1]);
                                     CfgAion.setConfFilePath(BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/config.xml");
-                                    CfgAion.setGenesisFilePath((BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/genesis.json"));
+                                    CfgAion.setGenesisFilePath(BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/genesis.json");
                                     Keystore.setKeystorePath(BASE_PATH + "/" + args[3] + "/keystore");
                                     String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                                     call(newArgs, cfg);
