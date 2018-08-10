@@ -38,11 +38,15 @@ ARG=$@
 chmod +x ./rt/bin/*
 
 # prepare jvm params
-# use default xms if not set
+# default to minimum 4gb heap if Xms not set.
 JAVA_OPTS="$JAVA_OPTS"
 if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
-  JAVA_OPTS="-Xms4g"
+  JAVA_OPTS+=" -Xms4g"
 fi
+
+# to suppress illegal reflective access warning out of xnio
+# (we depend on xnio transitively via undertow-core)
+JAVA_OPTS+=" --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
 
 ####### WATCHGUARD IMPLEMENTATION #######
 #				    	#

@@ -98,11 +98,11 @@ public class AionLoggerFactory {
             String modName = mod.name().toUpperCase();
             String modLevel = moduleToLevelMap.get(modName);
             if (modLevel != null) {
-                // if we can't translate log-level for some reason, default to INFO
-                Level level = Level.toLevel(modLevel, Level.INFO);
+                // if we can't translate log-level for some reason, default to WARN
+                Level level = Level.toLevel(modLevel, Level.WARN);
                 modules.put(mod, level);
             } else {
-                modules.put(mod, Level.INFO);
+                modules.put(mod, Level.WARN);
             }
         }
 
