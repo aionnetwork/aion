@@ -122,7 +122,7 @@ public class ExecutionHelper {
     }
 
     /**
-     * Adds an internal transaction, tx, to the internal transactions list.cd
+     * Adds an internal transaction, tx, to the internal transactions list.
      *
      * @param tx The internal transaction to add.
      */
