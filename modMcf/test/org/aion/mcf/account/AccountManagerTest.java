@@ -254,9 +254,23 @@ public class AccountManagerTest {
 
     @Test
     public void testUnlockAndLockMultipleTimes(){
+        // first an account
+        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
+        assertThat(accountManager.getAccounts().size()).isEqualTo(1);
+
+        // lock k1 and check that timeout is changed
+        assertTrue(accountManager.lockAccount(Address.wrap(k1.getAddress()), p1));
+        List<Account> accountsList;
+        accountsList = accountManager.getAccounts();
+        assertThat(accountsList.size()).isEqualTo(1);
+        assertThat(accountsList.get(0).getTimeout()).isLessThan(Instant.now().getEpochSecond());
+
+        // now unlock account with k1 again and check that timeout is changed
+        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
+        assertThat(accountManager.getAccounts().size()).isEqualTo(1);
+        assertThat(accountsList.get(0).getTimeout()).isEqualTo(Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT);
 
     }
-
 
     private static void cleanAccountManager(){
         // lock all the accounts, which modifies the timeout
