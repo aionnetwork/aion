@@ -88,9 +88,9 @@ public class EquiValidator {
      * @param blockHeader The block header.
      * @param nonce The nonce for the solution.
      * @return True if the solution is valid for the blockHeader and nonce.
+     * @throws NullPointerException when given null input
      */
-    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce)
-            throws NullPointerException {
+    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -216,8 +216,9 @@ public class EquiValidator {
      * @param minimal Byte array in minimal format
      * @param cBitLen Number of bits in a collision
      * @return An array containing solution indices.
+     * @throws NullPointerException when given null input
      */
-    public int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) throws NullPointerException {
+    public int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) {
         if (minimal == null) {
             throw new NullPointerException("null minimal bytes");
         }
@@ -238,8 +239,9 @@ public class EquiValidator {
      * @param b StepRow B
      * @param l Length of bytes to compare
      * @return False if no collision in hashes a,b up to l, else true.
+     * @throws NullPointerException when given null input
      */
-    private boolean hasCollision(StepRow a, StepRow b, int l) throws NullPointerException {
+    private boolean hasCollision(StepRow a, StepRow b, int l) {
         if (a == null || b == null) {
             throw new NullPointerException("null StepRow passed");
         }
@@ -260,9 +262,9 @@ public class EquiValidator {
      * @param len Number of elements to compare
      * @param lenIndices Number of indices to compare
      * @return true if distinct; false otherwise
+     * @throws NullPointerException when given null input
      */
-    private boolean distinctIndices(FullStepRow a, FullStepRow b, int len, int lenIndices)
-            throws NullPointerException {
+    private boolean distinctIndices(FullStepRow a, FullStepRow b, int len, int lenIndices) {
         if (a == null || b == null) {
             throw new NullPointerException("null FullStepRow passed");
         }

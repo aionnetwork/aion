@@ -81,10 +81,9 @@ public class OptimizedEquiValidator {
      * @param blockHeader Block header raw bytes excluding nonce and solution
      * @param nonce Nonce used to generate solution
      * @return True if valid solution based on block header and nonce
-     * @throws NullPointerException
+     * @throws NullPointerException when given null input
      */
-    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce)
-            throws NullPointerException {
+    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -115,8 +114,8 @@ public class OptimizedEquiValidator {
         return verify(blockHeader, nonce, blake, indices, 0, hash, k);
     }
 
-    public boolean isValidSolutionNative(byte[] solution, byte[] blockHeader, byte[] nonce)
-            throws NullPointerException {
+    /** @throws NullPointerException when given null input */
+    public boolean isValidSolutionNative(byte[] solution, byte[] blockHeader, byte[] nonce) {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -227,8 +226,10 @@ public class OptimizedEquiValidator {
         for (int i = 0; i < indicesHashLength; i++) hash[i] = (byte) (hash0[i] ^ hash1[i]);
 
         int bits = (round < k ? round * collisionBitLength : n);
+        int bitsDiv8 = bits / 8;
+        int bitsMod8 = bits % 8;
 
-        for (int i = 0; i < bits / 8; i++) {
+        for (int i = 0; i < bitsDiv8; i++) {
             if (hash[i] != 0) {
                 LOG.debug("Solution validation failed - Non-zero XOR");
                 return false;
@@ -236,7 +237,7 @@ public class OptimizedEquiValidator {
         }
 
         // Check remainder bits
-        if ((bits % 8) > 0 && (hash[bits / 8] >> (8 - (bits % 8))) != 0) {
+        if ((bitsMod8) > 0 && (hash[bitsDiv8] >> (8 - (bitsMod8))) != 0) {
             LOG.debug("Solution validation failed - Non-zero XOR");
             return false;
         }
@@ -279,8 +280,10 @@ public class OptimizedEquiValidator {
         for (int i = 0; i < indicesHashLength; i++) hash[i] = (byte) (hash0[i] ^ hash1[i]);
 
         int bits = (round < k ? round * collisionBitLength : n);
+        int bitsDiv8 = bits / 8;
+        int bitsMod8 = bits % 8;
 
-        for (int i = 0; i < bits / 8; i++) {
+        for (int i = 0; i < bitsDiv8; i++) {
             if (hash[i] != 0) {
                 LOG.debug("Solution validation failed - Non-zero XOR");
                 return false;
@@ -288,7 +291,7 @@ public class OptimizedEquiValidator {
         }
 
         // Check remainder bits
-        if ((bits % 8) > 0 && (hash[bits / 8] >> (8 - (bits % 8))) != 0) {
+        if ((bitsMod8) > 0 && (hash[bitsDiv8] >> (8 - (bitsMod8))) != 0) {
             LOG.debug("Solution validation failed - Non-zero XOR");
             return false;
         }

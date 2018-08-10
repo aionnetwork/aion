@@ -74,7 +74,7 @@ public class Equihash {
      * Retrieves a set of possible solutions given the passed header and nonce value Any number of
      * solutions may be returned; the maximum number of solutions observed has been 8
      *
-     * @param header A 391 byte block header (header minus nonce and solutions)
+     * @param header A 32 byte hash of the block header (minus nonce and solutions)
      * @param nonce - A 32 byte header
      * @return An array of equihash solutions
      */

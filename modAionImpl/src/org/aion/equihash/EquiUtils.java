@@ -32,14 +32,14 @@ import static org.aion.base.util.ByteUtil.intsToBytes;
  */
 public class EquiUtils {
 
-    /*
+    /**
      * Expand an array from compressed format into hash-append value format.
      *
-     * More precise extendArray method, allows for better specification of in
-     * and outLen
+     * <p>More precise extendArray method, allows for better specification of in and outLen
+     *
+     * @throws NullPointerException when given null input
      */
-    public static void extendArray(byte[] in, int inLen, byte[] out, int bitLen, int bytePad)
-            throws NullPointerException {
+    public static void extendArray(byte[] in, int inLen, byte[] out, int bitLen, int bytePad) {
 
         if (in == null) throw new NullPointerException("null input array");
         else if (out == null) throw new NullPointerException("null output array");
@@ -59,30 +59,27 @@ public class EquiUtils {
 
                 for (int x = bytePad; x < outWidth; x++) {
 
-                    out[j + x] =
-                            (byte)
-                                    ((
-                                            // Big-endian
-                                            accValue >>> (accBits + (8 * (outWidth - x - 1))))
-                                            & (
-                                            // Apply bit_len_mask across byte boundaries
-                                            (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
+                    out[j + x] = (byte) ((
+                        // Big-endian
+                        accValue >>> (accBits + (8 * (outWidth - x - 1))))
+                        & (
+                        // Apply bit_len_mask across byte boundaries
+                        (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
                 }
                 j += outWidth;
             }
         }
     }
 
-    /*
-     * A simplified extend array method using default outLen and inLen
-     * parameters. Expand an array from compressed format into hash-append value
-     * format.
+    /**
+     * A simplified extend array method using default outLen and inLen parameters. Expand an array
+     * from compressed format into hash-append value format.
      *
-     * More precise extendArray method, allows for better specification of in
-     * and outLen
+     * <p>More precise extendArray method, allows for better specification of in and outLen
+     *
+     * @throws NullPointerException when given null input
      */
-    public static void extendArray(byte[] in, byte[] out, int bitLen, int bytePad)
-            throws NullPointerException {
+    public static void extendArray(byte[] in, byte[] out, int bitLen, int bytePad) {
 
         if (in == null) throw new NullPointerException("null input array");
         else if (out == null) throw new NullPointerException("null output array");
@@ -103,14 +100,12 @@ public class EquiUtils {
 
                 for (int x = bytePad; x < outWidth; x++) {
 
-                    out[j + x] =
-                            (byte)
-                                    ((
-                                            // Big-endian
-                                            accValue >>> (accBits + (8 * (outWidth - x - 1))))
-                                            & (
-                                            // Apply bit_len_mask across byte boundaries
-                                            (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
+                    out[j + x] = (byte) ((
+                        // Big-endian
+                        accValue >>> (accBits + (8 * (outWidth - x - 1))))
+                        & (
+                        // Apply bit_len_mask across byte boundaries
+                        (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
                 }
                 j += outWidth;
             }
@@ -125,17 +120,17 @@ public class EquiUtils {
      * @param len Starting position in hashes
      * @param lenIndices Length of indices
      * @return True if a > b, else false
+     * @throws NullPointerException when given null input
      */
-    public static boolean indicesBefore(StepRow a, StepRow b, int len, int lenIndices)
-            throws NullPointerException {
+    public static boolean indicesBefore(StepRow a, StepRow b, int len, int lenIndices) {
         if (a == null || b == null)
             throw new NullPointerException("null StepRow passed for comparison");
 
         byte[] hashA = a.getHash();
         byte[] hashB = b.getHash();
 
-        if (hashA == null) throw new NullPointerException("null hash withing StepRow a");
-        else if (hashB == null) throw new NullPointerException("null hash withing StepRow b");
+        if (hashA == null) throw new NullPointerException("null hash within StepRow a");
+        else if (hashB == null) throw new NullPointerException("null hash within StepRow b");
 
         int i = 0;
         while ((hashA[i + len] & 0xff) == (hashB[i + len] & 0xff) && i < lenIndices) {
@@ -152,9 +147,9 @@ public class EquiUtils {
      * @param out Output array
      * @param bitLen Number of bits to compress
      * @param bytePad Byte padding to ensure a whole number of bytes examined.
+     * @throws NullPointerException when given null input
      */
-    private static void compressArray(byte[] in, byte[] out, int bitLen, int bytePad)
-            throws NullPointerException {
+    private static void compressArray(byte[] in, byte[] out, int bitLen, int bytePad) {
 
         if (in == null) throw new NullPointerException("null input array");
         else if (out == null) throw new NullPointerException("null output array");
@@ -170,12 +165,9 @@ public class EquiUtils {
             if (accBits < 8) {
                 accValue = accValue << bitLen;
                 for (int x = bytePad; x < inWidth; x++) {
-                    accValue =
-                            accValue
-                                    | ((in[j + x]
-                                                    & ((bitLenMask >> (8 * (inWidth - x - 1)))
-                                                            & 0xFF))
-                                            << (8 * (inWidth - x - 1)));
+                    accValue = accValue | ((in[j + x] & ((bitLenMask
+                        >> (8 * (inWidth - x - 1))) & 0xFF))
+                        << (8 * (inWidth - x - 1)));
                 }
                 j += inWidth;
                 accBits += bitLen;
@@ -191,10 +183,10 @@ public class EquiUtils {
      *
      * @param indices Indices array
      * @param cBitLen Collision bit length
-     * @return Minimalized version of passed indices
+     * @return Minimized version of passed indices
+     * @throws NullPointerException when given null input
      */
-    public static byte[] getMinimalFromIndices(int[] indices, int cBitLen)
-            throws NullPointerException {
+    public static byte[] getMinimalFromIndices(int[] indices, int cBitLen) {
 
         if (indices == null) throw new NullPointerException("null indices array");
 
@@ -216,9 +208,9 @@ public class EquiUtils {
      * @param minimal Byte array in minimal format
      * @param cBitLen Number of bits in a collision
      * @return An array containing solution indices.
+     * @throws NullPointerException when given null input
      */
-    public static int[] getIndicesFromMinimal(byte[] minimal, int cBitLen)
-            throws NullPointerException {
+    public static int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) {
         if (minimal == null) {
             throw new NullPointerException("null minimal bytes");
         }

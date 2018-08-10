@@ -35,11 +35,22 @@ import org.aion.zero.types.A0BlockHeader;
 /** @author Alexandra Roatis */
 public class TestResources {
 
+    private static final String userDir = System.getProperty("user.dir");
+    private static final String module = "modAionImpl";
+    private static final String rawDataFile = "test_resources/raw-block-data.txt";
+
     /** Extracts raw block data from a test resource file. */
     public static List<byte[]> rawBlockData() {
         List<byte[]> parameters = new ArrayList<>();
 
-        File file = new File("modAionImpl/test_resources/raw-block-data.txt");
+        File file;
+
+        if (userDir.contains(module)) {
+            file = new File(userDir, rawDataFile);
+        } else {
+            file = new File(userDir, module + "/" + rawDataFile);
+        }
+
         BufferedReader reader = null;
 
         try {
@@ -70,7 +81,14 @@ public class TestResources {
     public static List<byte[]> rawBlockData(int limit) {
         List<byte[]> parameters = new ArrayList<>();
 
-        File file = new File("modAionImpl/test_resources/raw-block-data.txt");
+        File file;
+
+        if (userDir.contains(module)) {
+            file = new File(userDir, rawDataFile);
+        } else {
+            file = new File(userDir, module + "/" + rawDataFile);
+        }
+
         BufferedReader reader = null;
 
         try {
