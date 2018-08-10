@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p.impl.comm;
 
 import java.security.SecureRandom;
@@ -45,9 +46,8 @@ import org.slf4j.Logger;
 public class NodeMgr implements INodeMgr {
 
     private final static int TIMEOUT_INBOUND_NODES = 10000;
-
-    private static final int TIMEOUT_OUTBOUND_NODES = 20000;
-    private static final Random random = new SecureRandom();
+    private final static int TIMEOUT_OUTBOUND_NODES = 20000;
+    private final static Random random = new SecureRandom();
     private final static char[] hexArray = "0123456789abcdef".toCharArray();
     private static Logger p2pLOG;
     private final int maxActiveNodes;
@@ -57,7 +57,6 @@ public class NodeMgr implements INodeMgr {
     private final ReentrantLock takeLock = new ReentrantLock();
     private final ReentrantLock putLock = new ReentrantLock();
     private final Condition notEmpty = takeLock.newCondition();
-    //private final BlockingQueue<INode> tempNodes = new LinkedBlockingQueue<>();
     private final Map<Integer, INode> tempNodes = Collections
         .synchronizedMap(new LinkedHashMap<>());
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
@@ -175,6 +174,7 @@ public class NodeMgr implements INodeMgr {
                 .containsKey(_n.getPeerId()) && (notActiveNode(_n.getIdHash()) || _n
                 .getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
+                signalNotEmpty();
             }
         } catch (InterruptedException e) {
             p2pLOG.error("addTempNode exception!", e);
@@ -267,6 +267,7 @@ public class NodeMgr implements INodeMgr {
         return new ArrayList<>(activeNodes.values());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public HashMap getActiveNodesMap() {
         return new HashMap<>(activeNodes);
@@ -282,11 +283,6 @@ public class NodeMgr implements INodeMgr {
     @Override
     public boolean notAtOutboundList(int _nodeIdHash) {
         return !this.outboundNodes.containsKey(_nodeIdHash);
-    }
-
-    @Override
-    public INode getNodefromOutBoundList(int _nodeIdHash) {
-        return this.outboundNodes.get(_nodeIdHash);
     }
 
     private void timeoutOutBound() {
@@ -390,7 +386,7 @@ public class NodeMgr implements INodeMgr {
         }
     }
 
-    void timeoutInbound() {
+    private void timeoutInbound() {
         try {
             Iterator<Map.Entry<Integer, INode>> it = inboundNodes.entrySet().iterator();
             while (it.hasNext()) {
@@ -495,6 +491,16 @@ public class NodeMgr implements INodeMgr {
             }
         } catch (NullPointerException e) {
             p2pLOG.info("p2p-ban null exception ", e);
+        }
+    }
+
+    private void signalNotEmpty() {
+        final ReentrantLock takeLock = this.takeLock;
+        takeLock.lock();
+        try {
+            notEmpty.signal();
+        } finally {
+            takeLock.unlock();
         }
     }
 }

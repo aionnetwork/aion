@@ -95,7 +95,7 @@
 
   <target name="ci_build" depends="ci_test_build">
     <mkdir dir="${test.report.dir}" />
-    <junit printsummary="on" haltonfailure="no" fork="true">
+    <junit printsummary="yes" haltonfailure="no" fork="yes">
       <classpath>
         <path refid="classpath.test"/>
         <path refid="classpath.dependency"/>

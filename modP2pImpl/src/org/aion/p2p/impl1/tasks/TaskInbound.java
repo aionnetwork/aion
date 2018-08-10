@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
@@ -125,7 +126,6 @@ public class TaskInbound implements Runnable {
                             accept();
                         }
 
-
                         if (key.isReadable()) {
                             cb = (ChannelBuffer) key.attachment();
                             if (cb == null) {
@@ -138,7 +138,7 @@ public class TaskInbound implements Runnable {
                         this.mgr.closeSocket(key != null ? (SocketChannel) key.channel() : null,
                             (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception " + e.toString());
                         if (cb != null) {
-                            cb.isClosed.set(true);
+                            cb.setClosed();
                         }
                     } finally {
                         keys.remove();
@@ -175,14 +175,20 @@ public class TaskInbound implements Runnable {
             }
 
             int port = channel.socket().getPort();
-            INode node = this.nodeMgr.allocNode(ip, port);
+            INode node;
+            try {
+                node = this.nodeMgr.allocNode(ip, port);
+            } catch (IllegalArgumentException e) {
+                p2pLOG.error("illegal ip / port : {} {}", ip , port);
+                channel.close();
+                return;
+            }
 
             if (p2pLOG.isTraceEnabled()) {
                 p2pLOG.trace("new-node : {}", node.toString());
             }
 
             node.setChannel(channel);
-
             SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
             sk.attach(new ChannelBuffer());
             this.nodeMgr.addInboundNode(node);
@@ -215,7 +221,7 @@ public class TaskInbound implements Runnable {
 
     private int readBody(final ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
 
-        int bodyLen = _cb.header.getLen();
+        int bodyLen = _cb.getHeader().getLen();
 
         // some msg have nobody.
         if (bodyLen == 0) {
@@ -253,7 +259,7 @@ public class TaskInbound implements Runnable {
             return;
         }
 
-        int remainBufAll = _cb.buffRemain + cnt;
+        int remainBufAll = _cb.getBuffRemain() + cnt;
         ByteBuffer bufferAll = calBuffer(_cb, _readBuf, cnt);
 
         do {
@@ -265,7 +271,7 @@ public class TaskInbound implements Runnable {
             }
         } while (r > 0);
 
-        _cb.buffRemain = r;
+        _cb.setBuffRemain(r);
 
         if (r != 0) {
             // there are no perfect cycling buffer in jdk
@@ -274,9 +280,9 @@ public class TaskInbound implements Runnable {
             // @TODO: looking for more efficient way.
 
             int currPos = bufferAll.position();
-            _cb.remainBuffer = new byte[r];
+            _cb.setRemainBuffer(new byte[r]);
             bufferAll.position(currPos - r);
-            bufferAll.get(_cb.remainBuffer);
+            bufferAll.get(_cb.getRemainBuffer());
 
         }
 
@@ -311,7 +317,7 @@ public class TaskInbound implements Runnable {
 
     private void handleMsg(SelectionKey _sk, ChannelBuffer _cb) {
 
-        Header h = _cb.header;
+        Header h = _cb.getHeader();
         byte[] bodyBytes = _cb.body;
 
         _cb.refreshHeader();
@@ -371,12 +377,12 @@ public class TaskInbound implements Runnable {
 
     private ByteBuffer calBuffer(ChannelBuffer _cb, ByteBuffer _readBuf, int _cnt) {
         ByteBuffer r;
-        if (_cb.buffRemain != 0) {
+        if (_cb.getBuffRemain() != 0) {
             byte[] alreadyRead = new byte[_cnt];
             _readBuf.position(0);
             _readBuf.get(alreadyRead);
-            r = ByteBuffer.allocate(_cb.buffRemain + _cnt);
-            r.put(_cb.remainBuffer);
+            r = ByteBuffer.allocate(_cb.getBuffRemain() + _cnt);
+            r.put(_cb.getRemainBuffer());
             r.put(alreadyRead);
         } else {
             r = _readBuf;
@@ -530,7 +536,7 @@ public class TaskInbound implements Runnable {
     }
 
     private void handleResHandshake(int _nodeIdHash, String _binaryVersion) {
-        INode node = nodeMgr.getNodefromOutBoundList(_nodeIdHash);
+        INode node = nodeMgr.getOutboundNode(_nodeIdHash);
         if (node != null && node.getPeerMetric().notBan()) {
             node.refreshTimestamp();
             node.setBinaryVersion(_binaryVersion);
