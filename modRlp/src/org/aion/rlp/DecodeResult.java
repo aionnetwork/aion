@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,11 +31,10 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
 import java.io.Serializable;
-
 import org.aion.base.util.Hex;
 
 @SuppressWarnings("serial")
@@ -57,6 +56,7 @@ public class DecodeResult implements Serializable {
         return decoded;
     }
 
+    @Override
     public String toString() {
         return asString(this.decoded);
     }

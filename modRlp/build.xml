@@ -16,6 +16,9 @@
   <path id="classpath.test">
     <pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
     <pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar"/>
+    <pathelement location="${dir.lib}/truth-0.42.jar"/>
+    <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
+    <pathelement location="${dir.lib}/diffutils-1.3.0.jar"/>
     <pathelement location="${dir.mod}/modRlp.jar"/>
   </path>
 
