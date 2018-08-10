@@ -47,7 +47,7 @@ public class ResHandshake1 extends ResHandshake {
         // truncate string when byte length large then 127
         if (_binaryVersion.getBytes().length > Byte.MAX_VALUE) {
             this.binaryVersion = new String(ByteBuffer.allocate(Byte.MAX_VALUE)
-                .put(_binaryVersion.getBytes(), 0, Byte.MAX_VALUE).flip().array());
+                .put(_binaryVersion.getBytes(), 0, Byte.MAX_VALUE).array());
         } else {
             this.binaryVersion = _binaryVersion;
         }
