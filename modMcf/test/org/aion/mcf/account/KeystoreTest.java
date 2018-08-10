@@ -207,20 +207,18 @@ public class KeystoreTest {
     }
 
     @Test
-    public void testImportAccount(){
-        Map<String, String> importKey = new HashMap<>();
-        ECKey key = ECKeyFac.inst().create();
-
-        importKey.put(key.toString(), key.toString());
-        Set<String> res = Keystore.importAccount(importKey);
-    }
-
-    @Test
     public void testAccountSorted(){
+        String addr1 = Keystore.create("p1", ECKeyFac.inst().create());
+        String addr2 = Keystore.create("p2", ECKeyFac.inst().create());
+
         List<String> res = Keystore.accountsSorted();
-        for(String addr: res){
-            System.out.println(addr);
-        }
+
+        assertEquals(2, res.size());
+        assertEquals(addr1, res.get(0));
+        assertEquals(addr2, res.get(1));
+
+        cleanFiles(addr1);
+        cleanFiles(addr2);
     }
 
     @Test
