@@ -41,8 +41,9 @@ public class HeaderTest {
     private int route;
 
     @Before
-    public void Setup() {
+    public void setup() {
         version = (short) ThreadLocalRandom.current().nextInt();
+        System.out.println("Version: " + version);
         ctl = 0;
         action = 4;
         length = 8;

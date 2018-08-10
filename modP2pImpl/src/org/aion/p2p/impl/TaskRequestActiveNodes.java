@@ -41,6 +41,8 @@ public final class TaskRequestActiveNodes implements Runnable {
 
 	private final Logger p2pLOG;
 
+	private final static ReqActiveNodes reqActiveNodesMsg = new ReqActiveNodes();
+	
 	public TaskRequestActiveNodes(final IP2pMgr _mgr, final Logger p2pLOG) {
 		this.mgr = _mgr;
 		this.p2pLOG = p2pLOG;
@@ -53,7 +55,7 @@ public final class TaskRequestActiveNodes implements Runnable {
 			if (p2pLOG.isTraceEnabled()) {
 				p2pLOG.trace("TaskRequestActiveNodes: {}", node.toString());
 			}
-			this.mgr.send(node.getIdHash(), node.getIdShort(), new ReqActiveNodes());
+			this.mgr.send(node.getIdHash(), node.getIdShort(), reqActiveNodesMsg);
 		}
 	}
 }

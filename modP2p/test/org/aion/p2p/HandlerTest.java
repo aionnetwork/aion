@@ -23,20 +23,19 @@
 package org.aion.p2p;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
 public class HandlerTest {
 
-    class MockHandler extends Handler {
+    class TestHandler extends Handler {
         /**
          * @param _ver short
          * @param _ctrl byte
          * @param _act byte
          */
-        MockHandler(short _ver, byte _ctrl, byte _act) {
+        TestHandler(short _ver, byte _ctrl, byte _act) {
             super(_ver, _ctrl, _act);
         }
 
@@ -48,7 +47,7 @@ public class HandlerTest {
 
     @Test
     public void testConstructor() {
-        MockHandler mockHandler = new MockHandler((short)1, (byte)1, (byte)1);
+        TestHandler mockHandler = new TestHandler((short)1, (byte)1, (byte)1);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
@@ -59,7 +58,7 @@ public class HandlerTest {
 
     @Test
     public void testConstructor_corner() {
-        MockHandler mockHandler = new MockHandler(Short.MAX_VALUE, (byte)255, (byte)255);
+        TestHandler mockHandler = new TestHandler(Short.MAX_VALUE, (byte)255, (byte)255);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
@@ -70,7 +69,7 @@ public class HandlerTest {
 
     @Test
     public void testConstructor_corner2() {
-        MockHandler mockHandler = new MockHandler(Short.MIN_VALUE, (byte)0, (byte)0);
+        TestHandler mockHandler = new TestHandler(Short.MIN_VALUE, (byte)0, (byte)0);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
@@ -81,7 +80,7 @@ public class HandlerTest {
 
     @Test
     public void testShutdown() {
-        MockHandler mockHandler = new MockHandler((short)0, (byte)0, (byte)0);
+        TestHandler mockHandler = new TestHandler((short)0, (byte)0, (byte)0);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
@@ -89,13 +88,6 @@ public class HandlerTest {
         assertEquals(hdr.getCtrl(), (byte)0);
         assertEquals(hdr.getAction(), (byte)0);
 
-        boolean hasThrow = false;
-        try {
-            mockHandler.shutDown();
-        } catch (Exception e) {
-            hasThrow = true;
-        }
-
-        assertFalse(hasThrow);
+        mockHandler.shutDown();
     }
 }

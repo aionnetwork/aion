@@ -45,5 +45,4 @@ public final class ReqActiveNodes extends Msg {
     public byte[] encode() {
         return null;
     }
-
 }
