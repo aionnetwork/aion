@@ -65,11 +65,8 @@ public class TaskRecvTest {
     @Mock
     private Map<Integer, List<Handler>> handler;
 
-
-    private Random r = new Random();
-
     @Before
-    public void Setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
@@ -78,10 +75,6 @@ public class TaskRecvTest {
 
     }
 
-    @After
-    public void teardown() {
-
-    }
 
     @Test
     public void testRun() throws InterruptedException {

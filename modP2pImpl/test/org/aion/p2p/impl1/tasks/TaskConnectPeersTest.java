@@ -57,8 +57,7 @@ import org.mockito.MockitoAnnotations;
 public class TaskConnectPeersTest {
 
     @Mock
-    private
-    INodeMgr nodeMgr;
+    private INodeMgr nodeMgr;
 
     @Mock
     private IP2pMgr p2pMgr;
@@ -133,7 +132,7 @@ public class TaskConnectPeersTest {
     }
 
     @Before
-    public void Setup() throws IOException {
+    public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());

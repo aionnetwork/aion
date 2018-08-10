@@ -38,7 +38,7 @@ public class MsgTest {
          * @warning: at the msg construction phase, len of msg is unknown therefore right before
          * socket.write, we need to figure out len before preparing the byte[]
          */
-        public MockMsg(short _ver, byte _ctrl, byte _act) {
+        MockMsg(short _ver, byte _ctrl, byte _act) {
             super(_ver, _ctrl, _act);
         }
 

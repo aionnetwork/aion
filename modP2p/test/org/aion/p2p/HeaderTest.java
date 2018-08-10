@@ -39,7 +39,7 @@ public class HeaderTest {
     private int route;
 
     @Before
-    public void Setup() {
+    public void setup() {
         version = (short) ThreadLocalRandom.current().nextInt();
         ctl = 0;
         action = 4;

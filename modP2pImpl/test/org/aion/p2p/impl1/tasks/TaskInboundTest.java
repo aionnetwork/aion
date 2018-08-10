@@ -67,8 +67,7 @@ import org.mockito.MockitoAnnotations;
 public class TaskInboundTest {
 
     @Mock
-    private
-    INodeMgr nodeMgr;
+    private INodeMgr nodeMgr;
 
     @Mock
     private IP2pMgr p2pMgr;
@@ -169,19 +168,12 @@ public class TaskInboundTest {
     }
 
     @Before
-    public void Setup() {
-
+    public void setup() {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
-
     }
-
-    @After
-    public void tearDown() {
-    }
-
 
     @Test
     public void testRun() throws InterruptedException {

@@ -66,7 +66,7 @@ public class ReqHandshake1Test {
     private List<Short> randomVersions;
 
     @Before
-    public void ReqHandshake2Test() {
+    public void reqHandshake2Test() {
 
         randomRevision = new byte[Byte.MAX_VALUE];
         ThreadLocalRandom.current().nextBytes(randomRevision);

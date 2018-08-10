@@ -48,16 +48,17 @@ import org.mockito.MockitoAnnotations;
 
 public class ChannelBufferTest {
 
-    ChannelBuffer cb;
-    Random r;
+    private ChannelBuffer cb;
+    private Random r;
 
     @Mock
+    private
     Header header;
 
-    Header expectHeader;
+    private Header expectHeader;
 
     @Before
-    public void Setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();

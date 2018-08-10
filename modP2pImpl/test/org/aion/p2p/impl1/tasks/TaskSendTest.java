@@ -74,7 +74,7 @@ public class TaskSendTest {
     private Random r = new Random();
 
     @Before
-    public void Setup() throws IOException {
+    public void setup() throws IOException {
         lane = Math
             .min(Runtime.getRuntime().availableProcessors() << 1, 32);
         MockitoAnnotations.initMocks(this);
@@ -84,11 +84,6 @@ public class TaskSendTest {
 
         selector = Selector.open();
     }
-
-    @After
-    public void tearDown() {
-    }
-
 
     @Test
     public void testRun() throws InterruptedException {

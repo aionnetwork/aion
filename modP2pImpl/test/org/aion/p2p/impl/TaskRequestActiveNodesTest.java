@@ -48,7 +48,7 @@ public class TaskRequestActiveNodesTest {
     private Logger p2pLOG;
 
     @Before
-    public void Setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
@@ -58,7 +58,7 @@ public class TaskRequestActiveNodesTest {
     }
 
     @Test
-    public void TestRun() {
+    public void testRun() {
         when(mgr.getRandom()).thenReturn(node);
 
         TaskRequestActiveNodes tran = new TaskRequestActiveNodes(mgr, p2pLOG);

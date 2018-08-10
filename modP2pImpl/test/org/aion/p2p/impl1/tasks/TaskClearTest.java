@@ -39,10 +39,10 @@ import org.mockito.MockitoAnnotations;
 
 public class TaskClearTest {
     @Mock
-    INodeMgr nodeMgr;
+    private INodeMgr nodeMgr;
 
     @Before
-    public void Setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());

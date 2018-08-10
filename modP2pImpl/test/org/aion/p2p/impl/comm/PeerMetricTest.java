@@ -22,7 +22,6 @@
 
 package org.aion.p2p.impl.comm;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +35,7 @@ public class PeerMetricTest {
     private PeerMetric metric;
 
     @Before
-    public void Setup() {
+    public void setup() {
         metric = new PeerMetric(P2pConstant.FAILED_CONN_RETRY_INTERVAL);
     }
 
@@ -80,7 +79,7 @@ public class PeerMetricTest {
     }
 
     @Test
-    public void TestShouldNotConn() throws InterruptedException {
+    public void testShouldNotConn() throws InterruptedException {
         int cnt = 0;
         while (++cnt < P2pConstant.STOP_CONN_AFTER_FAILED_CONN + 1) {
             metric.incFailedCount();
@@ -93,7 +92,7 @@ public class PeerMetricTest {
     }
 
     @Test
-    public void TestShouldNotConn2() throws InterruptedException {
+    public void testShouldNotConn2() throws InterruptedException {
         int cnt = 0;
         while (++cnt < P2pConstant.STOP_CONN_AFTER_FAILED_CONN + 1) {
             metric.incFailedCount();
@@ -111,7 +110,7 @@ public class PeerMetricTest {
     }
 
     @Test
-    public void TestShouldNotConn3() throws InterruptedException {
+    public void testShouldNotConn3() throws InterruptedException {
         assertFalse(metric.shouldNotConn());
         metric.ban();
         assertTrue(metric.shouldNotConn());
