@@ -44,7 +44,7 @@ public class UtilsTest {
     }
 
     @Test
-    public void testHexEncode_wString() {
+    public void testHexEncode_woTerminatorByte() {
         String value = "1234567890abcdef";
         byte[] input = Hex.decode(value);
 
@@ -79,5 +79,22 @@ public class UtilsTest {
     public void testConcatenate() {
         assertThat(Utils.concatenate(new byte[] {1, 2}, new byte[] {3, 4}))
                 .isEqualTo(new byte[] {1, 2, 3, 4});
+    }
+
+    @Test
+    public void testConcatenate_wEmptyFirstArray() {
+        assertThat(Utils.concatenate(new byte[] {}, new byte[] {3, 4}))
+                .isEqualTo(new byte[] {3, 4});
+    }
+
+    @Test
+    public void testConcatenate_wEmptySecondArray() {
+        assertThat(Utils.concatenate(new byte[] {1, 2}, new byte[] {}))
+                .isEqualTo(new byte[] {1, 2});
+    }
+
+    @Test
+    public void testConcatenate_wEmptyArrays() {
+        assertThat(Utils.concatenate(new byte[] {}, new byte[] {})).isEqualTo(new byte[] {});
     }
 }

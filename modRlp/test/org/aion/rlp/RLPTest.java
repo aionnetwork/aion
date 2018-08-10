@@ -80,7 +80,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.spongycastle.util.encoders.Hex.encode;
 
 import java.io.ByteArrayOutputStream;
@@ -88,18 +87,14 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.Objects;
-import java.util.Queue;
 import org.aion.base.util.Hex;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class RLPTest {
 
     @Test
-    public void test2() {
+    public void testDecodeOneIntFromPacket() {
 
         String peersPacket = "F8 4E 11 F8 4B C5 36 81 "
                 + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C "
@@ -115,10 +110,7 @@ public class RLPTest {
     }
 
     @Test
-    /**
-     * encode byte
-     */
-    public void test4() {
+    public void testEncodeByte() {
 
         byte[] expected = {(byte) 0x80};
         byte[] data = encodeByte((byte) 0);
@@ -134,10 +126,7 @@ public class RLPTest {
     }
 
     @Test
-    /**
-     * encode short
-     */
-    public void test5() {
+    public void testEncodeShort() {
 
         byte[] expected = {(byte) 0x80};
         byte[] data = encodeShort((byte) 0);
@@ -165,9 +154,6 @@ public class RLPTest {
     }
 
     @Test
-    /**
-     * encode int
-     */
     public void testEncodeInt() {
 
         byte[] expected = {(byte) 0x80};

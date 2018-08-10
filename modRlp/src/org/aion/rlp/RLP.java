@@ -51,7 +51,7 @@ import org.aion.base.util.Hex;
  */
 public class RLP {
 
-    // /** Allow for content up to size of 2^64 bytes * */
+    // Allow for content up to size of 2^64 bytes
     // private static final double MAX_ITEM_LENGTH = Math.pow(256, 8);
 
     /**
@@ -340,40 +340,35 @@ public class RLP {
         }
         int prefix = data[pos] & 0xFF;
         if (prefix == OFFSET_SHORT_ITEM) {
-            return new DecodeResult(pos + 1, ""); // means no length or 0
+            // means no length or 0
+            return new DecodeResult(pos + 1, "");
         } else if (prefix < OFFSET_SHORT_ITEM) {
-            return new DecodeResult(pos + 1, new byte[] {data[pos]}); // byte
-            // is
-            // its
-            // own
-            // RLP
-            // encoding
+            // byte is its own RLP encoding
+            return new DecodeResult(pos + 1, new byte[] {data[pos]});
         } else if (prefix <= OFFSET_LONG_ITEM) {
-            int len = prefix - OFFSET_SHORT_ITEM; // length of the encoded bytes
+            // length of the encoded bytes
+            int len = prefix - OFFSET_SHORT_ITEM;
             return new DecodeResult(pos + 1 + len, copyOfRange(data, pos + 1, pos + 1 + len));
         } else if (prefix < OFFSET_SHORT_LIST) {
-            int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the
-            // encoded bytes
-            int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length
-            // of
-            // encoded
-            // bytes
+            // length of length of the encoded bytes
+            int lenlen = prefix - OFFSET_LONG_ITEM;
+            // length of encoded bytes
+            int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen));
             return new DecodeResult(
                     pos + 1 + lenlen + lenbytes,
                     copyOfRange(data, pos + 1 + lenlen, pos + 1 + lenlen + lenbytes));
         } else if (prefix <= OFFSET_LONG_LIST) {
-            int len = prefix - OFFSET_SHORT_LIST; // length of the encoded list
+            // length of the encoded list
+            int len = prefix - OFFSET_SHORT_LIST;
             pos++;
             return decodeList(data, pos, len);
         } else if (prefix < 0xFF) {
-            int lenlen = prefix - OFFSET_LONG_LIST; // length of length the
-            // encoded list
-            int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length
-            // of
-            // encoded
-            // bytes
-            pos = pos + lenlen + 1; // start at position of first element in
-            // list
+            // length of length of the encoded list
+            int lenlen = prefix - OFFSET_LONG_LIST;
+            // length of encoded bytes
+            int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen));
+            // start at position of first element in list
+            pos = pos + lenlen + 1;
             return decodeList(data, pos, lenlist);
         } else {
             throw new RuntimeException(
@@ -414,10 +409,9 @@ public class RLP {
 
             List<byte[]> obj = new ArrayList<>();
             int length = 0;
-            byte[] temp;
 
             for (Object object : inputArray) {
-                temp = encode(object);
+                byte[] temp = encode(object);
                 obj.add(temp);
                 length += temp.length;
             }

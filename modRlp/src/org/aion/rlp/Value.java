@@ -96,6 +96,10 @@ public class Value {
         return Arrays.asList(valueArray);
     }
 
+    /**
+     * @return the numerical value as an {@link Integer}. If called for values that are not integers
+     *     or byte arrays it will return 0.
+     */
     public int asInt() {
         decode();
         if (value instanceof Integer) {
@@ -106,6 +110,10 @@ public class Value {
         return 0;
     }
 
+    /**
+     * @return the numerical value as a {@link Long}. If called for values that are not integers or
+     *     byte arrays it will return 0.
+     */
     public long asLong() {
         decode();
         if (value instanceof Long) {
@@ -116,6 +124,10 @@ public class Value {
         return 0;
     }
 
+    /**
+     * @return the numerical value as a {@link BigInteger}. If called for values that are not
+     *     numbers or byte arrays it will return {@link BigInteger#ZERO}.
+     */
     public BigInteger asBigInt() {
         decode();
         if (value instanceof BigInteger) {
@@ -134,6 +146,10 @@ public class Value {
         return BigInteger.ZERO;
     }
 
+    /**
+     * @implNote If called for values that are not strings or byte arrays it will return an empty
+     *     string.
+     */
     public String asString() {
         decode();
         if (isBytes()) {
@@ -144,6 +160,10 @@ public class Value {
         return "";
     }
 
+    /**
+     * @implNote If called for values that are not strings or byte arrays it will return an empty
+     *     byte array.
+     */
     public byte[] asBytes() {
         decode();
         if (isBytes()) {
@@ -256,7 +276,7 @@ public class Value {
         return isNull() // null
                 || isBytes() && asBytes().length == 0 // empty byte array
                 || isList() && asList().isEmpty() // empty list
-                || isString() && asString().equals(""); // empty string
+                || isString() && asString().isEmpty(); // empty string
     }
 
     public int length() {
