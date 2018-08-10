@@ -39,12 +39,18 @@ import java.util.*;
  */
 public class ExecutionHelper {
 
-    public static class Call {
-        final byte[] data;
-        final byte[] destination;
-        final byte[] value;
+    private Set<Address> deleteAccounts = new HashSet<>();
+    private List<AionInternalTx> internalTxs = new ArrayList<>();
+    private List<Log> logs = new ArrayList<>();
+    private List<Call> calls = new ArrayList<>();
 
-        public Call(byte[] data, byte[] destination, byte[] value) {
+    public static class Call {
+
+        private final byte[] data;
+        private final byte[] destination;
+        private final byte[] value;
+
+        Call(byte[] data, byte[] destination, byte[] value) {
             this.data = data;
             this.destination = destination;
             this.value = value;
@@ -63,126 +69,78 @@ public class ExecutionHelper {
         }
     }
 
-    private Set<Address> deleteAccounts = new HashSet<>();
-    private List<AionInternalTx> internalTxs = new ArrayList<>();
-    private List<Log> logs = new ArrayList<>();
-    private List<Call> calls = new ArrayList<>();
-
     /**
-     * Create a new execution result.
-     */
-    public ExecutionHelper() {
-    }
-
-    /**
-     * Returns deleted accounts.
+     * Adds address to the set of deleted accounts if address is non-null and is not already in the
+     * set.
      *
-     * @return
-     */
-    public List<Address> getDeleteAccounts() {
-        List<Address> result = new ArrayList<>();
-        for (Address acc : deleteAccounts) {
-            result.add(acc);
-        }
-        return result;
-    }
-
-    /**
-     * Adds a deleted accounts.
-     *
-     * @param address
+     * @param address The address to add to the deleted accounts.
      */
     public void addDeleteAccount(Address address) {
         deleteAccounts.add(address);
     }
 
     /**
-     * Adds a collections of deleted accounts.
+     * Adds the collection addresses to the set of deleted accounts if addresses is non-null.
      *
-     * @param addresses
+     * @param addresses The addressed to add to the set of deleted accounts.
      */
     public void addDeleteAccounts(Collection<Address> addresses) {
-        for (Address address : addresses) {
-            addDeleteAccount(address);
+        for (Address addr : addresses) {
+            if (addr != null) { deleteAccounts.add(addr); }
         }
     }
 
     /**
-     * Returns logs.
+     * Adds log to the execution logs.
      *
-     * @return
-     */
-    public List<Log> getLogs() {
-        return logs;
-    }
-
-    /**
-     * Adds a log.
-     *
-     * @param log
+     * @param log The log to add to the execution logs.
      */
     public void addLog(Log log) {
         logs.add(log);
     }
 
     /**
-     * Adds a collection of logs.
+     * Adds a collection of logs, logs, to the execution logs.
      *
-     * @param logs
+     * @param logs The collection of logs to add to the execution logs.
      */
     public void addLogs(Collection<Log> logs) {
-        this.logs.addAll(logs);
+        for (Log log : logs) {
+            if (log != null) { this.logs.add(log); }
+        }
     }
 
     /**
-     * Returns calls.
+     * Adds a call whose parameters are given by the parameters to this method.
      *
-     * @return
-     */
-    public List<Call> getCalls() {
-        return calls;
-    }
-
-    /**
-     * Adds a call.
-     *
-     * @param data
-     * @param destination
-     * @param value
+     * @param data The call data.
+     * @param destination The call destination.
+     * @param value The call value.
      */
     public void addCall(byte[] data, byte[] destination, byte[] value) {
         calls.add(new Call(data, destination, value));
     }
 
     /**
-     * Returns internal transactions.
+     * Adds an internal transaction, tx, to the internal transactions list.
      *
-     * @return
+     * @param tx The internal transaction to add.
      */
-    public List<AionInternalTx> getInternalTransactions() {
-        return internalTxs;
-    }
+    public void addInternalTransaction(AionInternalTx tx) { internalTxs.add(tx); }
 
     /**
-     * Adds an internal transaction.
+     * Adds a collection of internal transactions, txs, to the internal transactions list.
      *
-     * @param tx
-     */
-    public void addInternalTransaction(AionInternalTx tx) {
-        internalTxs.add(tx);
-    }
-
-    /**
-     * Adds a collection of internal transactions.
-     *
-     * @param txs
+     * @param txs The collection of internal transactions to add.
      */
     public void addInternalTransactions(Collection<AionInternalTx> txs) {
-        internalTxs.addAll(txs);
+        for (AionInternalTx tx : txs) {
+            if (tx != null) { this.internalTxs.add(tx); }
+        }
     }
 
     /**
-     * Reject all internal transactions.
+     * Rejects all internal transactions.
      */
     public void rejectInternalTransactions() {
         for (AionInternalTx tx : getInternalTransactions()) {
@@ -191,7 +149,7 @@ public class ExecutionHelper {
     }
 
     /**
-     * Merge another execution result.
+     * Merges another ExecutionHelper into this ExecutionHelper.
      *
      * @param other another transaction result
      * @param success whether the other transaction is success or not
@@ -203,4 +161,33 @@ public class ExecutionHelper {
             addLogs(other.getLogs());
         }
     }
+
+    /**
+     * Returns the list of deleted accounts, the accounts to be deleted following a transaction.
+     *
+     * @return the deleted accounts list.
+     */
+    public List<Address> getDeleteAccounts() { return new ArrayList<>(deleteAccounts); }
+
+    /**
+     * Returns the execution logs.
+     *
+     * @return the execution logs.
+     */
+    public List<Log> getLogs() { return logs; }
+
+    /**
+     * Returns the calls.
+     *
+     * @return the calls.
+     */
+    public List<Call> getCalls() { return calls; }
+
+    /**
+     * Returns the internal transactions.
+     *
+     * @return the internal transactions.
+     */
+    public List<AionInternalTx> getInternalTransactions() { return internalTxs; }
+
 }

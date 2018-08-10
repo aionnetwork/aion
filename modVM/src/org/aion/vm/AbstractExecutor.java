@@ -39,7 +39,6 @@ import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {
-
     protected static Logger LOGGER;
     protected static Object lock = new Object();
     protected IRepository repo;
@@ -49,8 +48,8 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
-    public AbstractExecutor(IRepository _repo,
-        boolean _localCall, long _blkRemainingNrg, Logger _logger) {
+    public AbstractExecutor(IRepository _repo, boolean _localCall, long _blkRemainingNrg,
+        Logger _logger) {
         this.repo = _repo;
         this.repoTrack = repo.startTracking();
         this.isLocalCall = _localCall;
@@ -93,13 +92,28 @@ public abstract class AbstractExecutor {
         }
     }
 
-    private boolean prepare(ITransaction tx, long contextNrgLmit) {
+    /**
+     * Checks that the transaction passes the basic validation criteria. These criteria are:
+     *   1. the transaction energy limit is within the acceptable limit range and is larger than the
+     *      remaining energy in the block that contains the transaction.
+     *   2. contextNrgLimit is non-negative.
+     *   3. the transaction nonce is equal to the transaction sender's nonce.
+     *   4. the transaction sender has enough funds to cover the cost of the transaction.
+     *
+     * Returns true if all crtieria are met or if the call is local.
+     * Returns false if the call is not local and at least one criterion is not met. In this case,
+     *   the execution result has its result code and energy left set appropriately.
+     *
+     * @param tx The transaction to check.
+     * @param contextNrgLmit The execution context's energy limit.
+     * @return true if call is local or if all criteria listed above are met.
+     */
+    protected final boolean prepare(ITransaction tx, long contextNrgLmit) {
         if (isLocalCall) {
             return true;
         }
 
-        // check nrg limit
-        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice());
+        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice()).abs();
         long txNrgLimit = tx.getNrg();
 
         if (tx.isContractCreation()) {
@@ -151,45 +165,72 @@ public abstract class AbstractExecutor {
     protected abstract void create();
 
     /**
-     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is
-     * called.
+     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is called.
      */
     public void setBypassNonce() {
         this.askNonce = false;
     }
 
     /**
-     * Returns the nrg left after execution.
+     * Returns the energy remaining after the transaction was executed. Prior to execution this
+     * method simply returns the energy limit for the transaction.
+     *
+     * @return The energy left after the transaction executes or its energy limit prior to execution.
      */
     protected long getNrgLeft() {
         return exeResult.getNrgLeft();
     }
 
     /**
-     * Returns the nrg used after execution.
+     * Returns the energy remaining after the amount of leftover energy from the transaction
+     * execution is deducted from limit.
+     *
+     * @param limit The upper bound to deduct the transaction energy remainder from.
+     * @return the energy used as defined above.
      */
     private long getNrgUsed(long limit) {
         return limit - exeResult.getNrgLeft();
     }
 
     /**
-     * Returns the transaction receipt.
+     * Builds a new transaction receipt on top of receipt out of tx and logs.
+     *
+     * @param receipt The receipt to build off of.
+     * @param tx The transaction to which this receipt corresponds.
+     * @param logs The logs relating to the transaction execution.
+     * @return receipt with the new receipt added to it.
      */
     @SuppressWarnings("unchecked")
     protected ITxReceipt buildReceipt(ITxReceipt receipt, ITransaction tx, List logs) {
+        //TODO probably remove receipt and instantiate a new empty one here?
         receipt.setTransaction(tx);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(getNrgUsed(tx.getNrg()));
-        receipt.setExecutionResult(exeResult.getOutput());
-        receipt
-            .setError(exeResult.getCode() == ResultCode.SUCCESS.toInt() ? ""
-                : ResultCode.fromInt(exeResult.getCode()).name());
+        receipt.setNrgUsed(getNrgUsed(tx.getNrg()));    // amount of energy used to execute tx
+        receipt.setExecutionResult(exeResult.getOutput());  // misnomer -> output is named result
+        receipt.setError(exeResult.getCode() == ResultCode.SUCCESS.toInt() ? ""
+            : ResultCode.fromInt(exeResult.getCode()).name());
 
         return receipt;
     }
 
-    protected void updateRepo(ITxExecSummary summary, ITransaction tx,
-        Address coinbase, List<Address> deleteAccounts) {
+    /**
+     * Updates the repository only if the call is not local and the transaction summary was not
+     * marked as rejected.
+     *
+     * If the repository qualifies for an update then it is updated as follows:
+     *   1. The transaction sender is refunded for whatever outstanding energy was not consumed.
+     *   2. The transaction energy consumption amount is set accordingly.
+     *   3. The fee is transferred to the coinbase account.
+     *   4. All accounts marked for deletion (given that the transaction was successful) are deleted.
+     *
+     * @param summary The transaction summary.
+     * @param tx The transaction.
+     * @param coinbase The coinbase for the block in which the transaction was sealed.
+     * @param deleteAccounts The list of accounts to be deleted if tx was successful.
+     */
+    protected void updateRepo(ITxExecSummary summary, ITransaction tx, Address coinbase,
+        List<Address> deleteAccounts) {
+
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
             // refund nrg left
@@ -217,4 +258,9 @@ public abstract class AbstractExecutor {
             LOGGER.debug("Transaction logs: {}", summary.getLogs());
         }
     }
+
+    protected void setExecutionResult(IExecutionResult result) {
+        exeResult = result;
+    }
+
 }
