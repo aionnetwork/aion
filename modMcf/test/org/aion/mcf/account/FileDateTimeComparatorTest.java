@@ -71,16 +71,6 @@ public class FileDateTimeComparatorTest {
         return new File(fileName);
     }
 
-    private File generateFileWithInvalidMonthFormat(int timeOffset, String timeZoneSymbol){
-        long time = System.currentTimeMillis();
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmm:ss.SSS'Z'");
-        df.setTimeZone(tz);
-        String date = df.format(new Date(time - timeOffset));
-        String fileName = timeZoneSymbol + "--" + date + "--" + "blah";
-        return new File(fileName);
-    }
-
     @Test
     public void testComparator() {
         List<File> l = generateValidFiles();
@@ -181,7 +171,7 @@ public class FileDateTimeComparatorTest {
                 String a = l.get(i).getName();
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
-                System.out.println("Expected: " + b + "     Generated: " + a);
+                //System.out.println("Expected: " + b + "     Generated: " + a);
             }
         }
     }
@@ -299,7 +289,7 @@ public class FileDateTimeComparatorTest {
                 String a = generatedFiles.get(i).getName();
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
-                System.out.println("Expected: " + b + "     Generated: " + a);
+               // System.out.println("Expected: " + b + "     Generated: " + a);
             }
         }
     }
