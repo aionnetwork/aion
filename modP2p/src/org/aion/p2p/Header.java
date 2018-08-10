@@ -23,7 +23,6 @@
 
 package org.aion.p2p;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -101,7 +100,6 @@ public class Header {
     /**
      * @param _headerBytes byte[]
      * @return Header
-     * @throws IOException when exeeds MAX_BODY_LEN_BYTES
      */
     public static Header decode(final byte[] _headerBytes) {
         if (_headerBytes == null || _headerBytes.length != LEN) {
