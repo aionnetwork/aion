@@ -87,7 +87,6 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
             put(HeaderPaneControls.class, () -> new HeaderPaneControls(
                     new BalanceRetriever(kernelConnection)));
             put(SendController.class, () -> new SendController(
-                    kernelConnection,
                     accountManager,
                     transactionProcessor,
                     consoleManager,

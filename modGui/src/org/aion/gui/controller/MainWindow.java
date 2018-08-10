@@ -223,22 +223,6 @@ public class MainWindow extends Application {
         return loader;
     }
 
-    private void initLogger(CfgAion cfg) {
-        // Initialize logging.  Borrowed from Aion CLI program.
-        ServiceLoader.load(AionLoggerFactory.class);
-        // Outputs relevant logger configuration
-        // TODO the info/error println messages should be presented via GUI
-        if (!cfg.getLog().getLogFile()) {
-            System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
-        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("File path is invalid; please check log setting in config.xml\n");
-            System.exit(1);
-        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
-        }
-        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
-    }
-
     private void registerEventBusConsumer() {
         EventBusRegistry.INSTANCE.getBus(WindowControlsEvent.ID).register(this);
         EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
@@ -292,9 +276,6 @@ public class MainWindow extends Application {
         ((Stage) event.getSource().getScene().getWindow()).setIconified(true);
     }
 
-    public Scene getScene() {
-        return stage.getScene();
-    }
 
     private void registerIdleMonitor(AccountManager accountManager) {
         if (scene == null || lockDelayDuration == null) {

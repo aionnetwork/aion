@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import java.util.Set;
 
 public class EventPublisher {
-    public static final String ACCOUNT_CHANGE_EVENT_ID = "account.changed";
 
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 

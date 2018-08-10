@@ -26,7 +26,12 @@ import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import org.aion.api.impl.internal.Message;
 import org.aion.base.util.TypeConverter;
@@ -35,7 +40,6 @@ import org.aion.gui.events.EventPublisher;
 import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.gui.model.BalanceRetriever;
-import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.util.AionConstants;
 import org.aion.gui.util.BalanceUtils;
@@ -93,18 +97,15 @@ public class SendController extends AbstractController {
     private final TransactionResubmissionDialog transactionResubmissionDialog;
     private SendTransactionDTO transactionToResubmit;
 
-    private final KernelConnection kernelConnection;
     private final AccountManager accountManager;
     private final TransactionProcessor transactionProcessor;
     private final ConsoleManager consoleManager;
 
-    public SendController(KernelConnection kernelConnection,
-                          AccountManager accountManager,
+    public SendController(AccountManager accountManager,
                           TransactionProcessor transactionProcessor,
                           ConsoleManager consoleManager,
                           BalanceRetriever balanceRetriever) {
         super();
-        this.kernelConnection = kernelConnection;
         this.accountManager = accountManager;
         this.transactionProcessor = transactionProcessor;
         this.transactionResubmissionDialog = new TransactionResubmissionDialog(

@@ -73,26 +73,6 @@ public class LightAppSettings {
         return address;
     }
 
-    public final String getPort() {
-        return port;
-    }
-
-    public final String getProtocol() {
-        return protocol;
-    }
-
-    public ApiType getType() {
-        return type;
-    }
-
-    public Integer getUnlockTimeout() {
-        return lockTimeout;
-    }
-
-    public String getLockTimeoutMeasurementUnit() {
-        return lockTimeoutMeasurementUnit;
-    }
-
     public final Properties getSettingsProperties() {
         final Properties properties = new Properties();
         properties.setProperty(type + ADDRESS, address);
