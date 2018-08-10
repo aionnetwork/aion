@@ -32,6 +32,7 @@
         <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${test.report.dir}"/>
+        <delete dir="${native.dir}"/>
         <delete file="${dir.mod}/modApiServer.jar"/>
     </target>
 
