@@ -122,11 +122,13 @@ public class ExecutionHelper {
     }
 
     /**
-     * Adds an internal transaction, tx, to the internal transactions list.
+     * Adds an internal transaction, tx, to the internal transactions list.cd
      *
      * @param tx The internal transaction to add.
      */
-    public void addInternalTransaction(AionInternalTx tx) { internalTxs.add(tx); }
+    public void addInternalTransaction(AionInternalTx tx) {
+        internalTxs.add(tx);
+    }
 
     /**
      * Adds a collection of internal transactions, txs, to the internal transactions list.
