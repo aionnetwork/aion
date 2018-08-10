@@ -117,7 +117,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -137,7 +137,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -168,7 +168,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -199,7 +199,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -230,7 +230,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -252,7 +252,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 }

@@ -44,7 +44,6 @@ public class MsgOutTest {
     @Before
     public void Setup() {
         MockitoAnnotations.initMocks(this);
-
     }
 
     @Test

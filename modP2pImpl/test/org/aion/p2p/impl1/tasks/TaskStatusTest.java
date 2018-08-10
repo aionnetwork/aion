@@ -23,6 +23,7 @@
 package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -65,14 +66,14 @@ public class TaskStatusTest {
     public void testRun() throws InterruptedException {
 
         TaskStatus ts = new TaskStatus(nodeMgr, "1", msgOutQue, msgInQue);
-
+        assertNotNull(ts);
         when(nodeMgr.dumpNodeInfo(anyString(), anyBoolean())).thenReturn("get Status");
 
         Thread t = new Thread(ts);
         t.start();
         assertTrue(t.isAlive());
 
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 }

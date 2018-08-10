@@ -106,7 +106,7 @@ public class TaskRecvTest {
         when(handler.get(route)).thenReturn(hdlr);
 
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -135,7 +135,7 @@ public class TaskRecvTest {
         doThrow(new Exception("test exception!")).when(h).receive(anyInt(), anyString(), any());
 
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 

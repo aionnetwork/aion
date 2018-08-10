@@ -22,6 +22,7 @@
 
 package org.aion.p2p.impl;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
@@ -62,6 +63,7 @@ public class TaskRequestActiveNodesTest {
         when(mgr.getRandom()).thenReturn(node);
 
         TaskRequestActiveNodes tran = new TaskRequestActiveNodes(mgr, p2pLOG);
+        assertNotNull(tran);
         tran.run();
     }
 }

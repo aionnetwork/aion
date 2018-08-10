@@ -34,28 +34,21 @@ public class TestUtilities {
      * @return
      */
     public static int getFreePort() {
-        ServerSocket socket = null;
-        try {
-            socket = new ServerSocket(0);
+        try (ServerSocket socket = new ServerSocket(0)) {
             socket.setReuseAddress(true);
             int port = socket.getLocalPort();
             try {
                 socket.close();
-            } catch (IOException e) {}
-            return port;
-        } catch (IOException e) {
-
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {}
+            } catch (IOException ignored) {
             }
+            return port;
+        } catch (IOException ignored) {
+
         }
         throw new IllegalStateException("could not find tree TCP/IP port");
     }
 
-    public static String formatAddr(String id, String ip, int port) {
+    static String formatAddr(String id, String ip, int port) {
         return id + "@" + ip + ":" + port;
     }
 }

@@ -39,6 +39,7 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
@@ -77,6 +78,10 @@ public class TaskConnectPeersTest {
     private Thread listen;
 
     private Selector selector;
+
+    private final Random r = new Random();
+
+    private int port;
 
     public class ThreadTCPServer extends Thread {
 
@@ -144,7 +149,8 @@ public class TaskConnectPeersTest {
         assertNotNull(ssc);
         ssc.configureBlocking(false);
         ssc.socket().setReuseAddress(true);
-        ssc.socket().bind(new InetSocketAddress(60606));
+        port = 50000 + r.nextInt(15535);
+        ssc.socket().bind(new InetSocketAddress(port));
         // Create the selector
         selector = Selector.open();
         assertNotNull(selector);
@@ -190,7 +196,7 @@ public class TaskConnectPeersTest {
         when(nodeMgr.tempNodesTake()).thenReturn(null);
 
         when(node.getIdHash()).thenReturn(1);
-        when(node.getPort()).thenReturn(60606);
+        when(node.getPort()).thenReturn(port);
         when(node.getIpStr()).thenReturn("127.0.0.1");
         when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
         when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
@@ -226,7 +232,7 @@ public class TaskConnectPeersTest {
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
-        when(node.getPort()).thenReturn(60606);
+        when(node.getPort()).thenReturn(port);
         when(node.getIpStr()).thenReturn("127.0.0.1");
         when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
         when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
@@ -263,7 +269,7 @@ public class TaskConnectPeersTest {
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
-        when(node.getPort()).thenReturn(60606);
+        when(node.getPort()).thenReturn(port);
         when(node.getIpStr()).thenReturn("127.0.0.1");
         when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
         when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
