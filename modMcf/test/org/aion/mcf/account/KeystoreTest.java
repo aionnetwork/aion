@@ -1,5 +1,4 @@
 /*
- ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -18,21 +17,8 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- *****************************************************************************
  */
 package org.aion.mcf.account;
 
@@ -48,7 +34,6 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.matchers.Null;
 
 import static org.junit.Assert.*;
 
@@ -62,6 +47,16 @@ public class KeystoreTest {
             if (Character.isDefined(c)) sb.append(c);
         }
         return sb.toString();
+    }
+
+    private static final String KEYSTORE_PATH;
+
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        KEYSTORE_PATH = storageDir + "/keystore";
     }
 
     @Before
@@ -79,6 +74,7 @@ public class KeystoreTest {
         System.out.println("new addr: " + address);
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
+        cleanFiles(address);
     }
 
     @Test
@@ -91,6 +87,7 @@ public class KeystoreTest {
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
         assertEquals("0x", (Keystore.create(password, key)));
+        cleanFiles(address);
     }
 
     @Test
@@ -102,6 +99,7 @@ public class KeystoreTest {
 
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
+        cleanFiles(addr);
     }
 
     @Test
@@ -114,6 +112,7 @@ public class KeystoreTest {
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
         assertTrue(Keystore.exist(address));
+        cleanFiles(address);
     }
 
     @Test
@@ -141,6 +140,7 @@ public class KeystoreTest {
 
         assertTrue(export.containsKey(Address.wrap(addr)));
         assertTrue(export.containsValue(ByteArrayWrapper.wrap(key.getPrivKeyBytes())));
+        cleanFiles(addr);
     }
 
     @Test
@@ -168,6 +168,7 @@ public class KeystoreTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        cleanFiles(addr);
     }
 
     @Test
@@ -192,6 +193,7 @@ public class KeystoreTest {
         }
 
         assertTrue(hasAddr);
+        cleanFiles(addr);
     }
 
     @Test (expected = NullPointerException.class)
@@ -216,8 +218,9 @@ public class KeystoreTest {
     @Test
     public void testAccountSorted(){
         List<String> res = Keystore.accountsSorted();
-        for(String addr: res)
+        for(String addr: res){
             System.out.println(addr);
+        }
     }
 
     @Test
@@ -231,5 +234,36 @@ public class KeystoreTest {
         assertEquals("test-id", keystoreItem.getId());
         assertEquals(Integer.valueOf(5), keystoreItem.getVersion());
         assertEquals("fake-address", keystoreItem.getAddress());
+    }
+
+    private static void cleanFiles(String address){
+        // get a list of all the files in keystore directory
+        File folder = new File(KEYSTORE_PATH);
+        File[] AllFilesInDirectory = folder.listFiles();
+        List<String> allFileNames = new ArrayList<>();
+        List<String> filesToBeDeleted = new ArrayList<>();
+
+        // check for invalid or wrong path - should not happen
+        if(AllFilesInDirectory == null)
+            return;
+
+        for(File file: AllFilesInDirectory){
+            allFileNames.add(file.getName());
+        }
+
+        // get a list of the files needed to be deleted, check the ending of file names with corresponding addresses
+        for(String name: allFileNames){
+            String ending = name.substring(name.length()-64);
+
+            if(ending.equals(address.substring(2))) {
+                filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);
+            }
+        }
+
+        // iterate and delete those files
+        for (String name: filesToBeDeleted){
+            File file = new File(name);
+            file.delete();
+        }
     }
 }
