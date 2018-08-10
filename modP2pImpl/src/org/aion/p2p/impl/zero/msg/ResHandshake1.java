@@ -28,6 +28,7 @@ import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import javax.annotation.Nonnull;
 
 /**
  * @author chris
@@ -39,7 +40,7 @@ public final class ResHandshake1 extends ResHandshake {
 
     private String binaryVersion;
 
-    public ResHandshake1(boolean _success, String _binaryVersion) {
+    public ResHandshake1(boolean _success, @Nonnull final String _binaryVersion) {
         super(_success);
 
         // truncate string when byte length large then 127
