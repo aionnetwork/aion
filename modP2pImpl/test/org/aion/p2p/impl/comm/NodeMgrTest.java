@@ -97,8 +97,12 @@ public class NodeMgrTest {
         r = new Random();
     }
 
-    private String randomIP() {
-        return r.nextInt(256) + "." + r.nextInt(256) + "." + r.nextInt(256) + "." + r.nextInt(256);
+    private byte[] randomIP() {
+        byte[] ip = new byte[8];
+        for (int i = 1; i<8; i+=2) {
+            ip[i] = (byte) r.nextInt(256);
+        }
+        return ip;
     }
 
     private void addActiveNode() {
@@ -605,7 +609,7 @@ public class NodeMgrTest {
 
             private INode genNode() {
                 INode n = new Node(false, UUID.randomUUID().toString().getBytes(),
-                    randomIP().getBytes(), r.nextInt(65535) + 1);
+                    randomIP(), r.nextInt(65535) + 1);
 
                 SocketChannel ch = mock(SocketChannel.class);
                 n.setChannel(ch);

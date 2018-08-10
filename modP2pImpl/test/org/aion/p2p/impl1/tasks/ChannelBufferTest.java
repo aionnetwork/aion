@@ -52,8 +52,7 @@ public class ChannelBufferTest {
     private Random r;
 
     @Mock
-    private
-    Header header;
+    private Header header;
 
     private Header expectHeader;
 
