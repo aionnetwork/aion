@@ -42,8 +42,6 @@ import static org.junit.Assert.assertEquals;
 
 public class ByteArrayWrapperTest {
 
-    private final int size = 7;
-
     private final String[] inputString = {
             null,
             "",
@@ -74,7 +72,7 @@ public class ByteArrayWrapperTest {
         ByteArrayWrapper tempArray;
 
         System.out.println("\nWrap test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < inputByte.length; a++) {
             try {
                 tempArray = ByteArrayWrapper.wrap(inputByte[a]);
                 assertEquals(tempArray.toString(), inputString[a].toLowerCase());

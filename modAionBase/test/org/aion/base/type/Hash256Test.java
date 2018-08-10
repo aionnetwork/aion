@@ -8,8 +8,6 @@ import static org.junit.Assert.*;
 
 public class Hash256Test {
 
-    private final int size = 7;
-
     private final String[] hashHex = {
             null,                                                                   // 0 - Null
             "",                                                                     // 1 - Empty
@@ -55,7 +53,7 @@ public class Hash256Test {
         Hash256 tempArray;
 
         System.out.println("\nHex hash test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < hashHex.length; a++) {
             try {
                 tempHex = Hash256.wrap(hashHex[a]);
                 tempByte = Hash256.wrap(tempHex.toBytes());
@@ -73,7 +71,7 @@ public class Hash256Test {
         }
 
         System.out.println("\nByte hash test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < hashByte.length; a++) {
             try {
                 tempByte = Hash256.wrap(hashByte[a]);
                 tempArray = Hash256.wrap(tempByte.toByteArrayWrapper());
@@ -91,7 +89,7 @@ public class Hash256Test {
         }
 
         System.out.println("\nArray hash test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < hashArray.length; a++) {
             try {
                 tempArray = Hash256.wrap(hashArray[a]);
                 tempHex = Hash256.wrap(tempArray.toString());

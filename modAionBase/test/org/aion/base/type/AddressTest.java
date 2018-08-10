@@ -8,8 +8,6 @@ import static org.junit.Assert.*;
 
 public class AddressTest {
 
-    private final int size = 7;
-
     private final String[] addrHex = {
             null,                                                                   // 0 - Null
             "",                                                                     // 1 - Empty
@@ -56,7 +54,7 @@ public class AddressTest {
         Address tempArray;
 
         System.out.println("\nHex address test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < addrHex.length; a++) {
             try {
                 tempHex = Address.wrap(addrHex[a]);
                 tempByte = Address.wrap(tempHex.clone().toBytes());
@@ -74,7 +72,7 @@ public class AddressTest {
         }
 
         System.out.println("\nByte address test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < addrByte.length; a++) {
             try {
                 tempByte = Address.wrap(addrByte[a]);
                 tempArray = Address.wrap(tempByte.clone().toByteArrayWrapper());
@@ -92,7 +90,7 @@ public class AddressTest {
         }
 
         System.out.println("\nArray address test:");
-        for(int a = 0; a < size; a++) {
+        for(int a = 0; a < addrArray.length; a++) {
             try {
                 tempArray = Address.wrap(addrArray[a]);
                 tempHex = Address.wrap(tempArray.clone().toString());
