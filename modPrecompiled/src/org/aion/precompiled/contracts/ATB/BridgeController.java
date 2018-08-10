@@ -267,7 +267,8 @@ public class BridgeController {
         // an event indicating the transactionHash that the bundle was
         // previously successfully broadcast in.
         if (bundleProcessed(hash)) {
-            emitSuccessfulTransactionHash(transactionHash);
+            // ATB 6-1, fixed bug: emit stored transactionHash instead of input transaction Hash
+            emitSuccessfulTransactionHash(this.connector.getBundle(hash));
             return processSuccess(ErrCode.NO_ERROR,
                     Collections.emptyList());
         }
