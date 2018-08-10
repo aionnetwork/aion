@@ -24,6 +24,7 @@ package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -38,6 +39,7 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
@@ -57,8 +59,7 @@ import org.mockito.MockitoAnnotations;
 public class TaskConnectPeersTest {
 
     @Mock
-    private
-    INodeMgr nodeMgr;
+    private INodeMgr nodeMgr;
 
     @Mock
     private IP2pMgr p2pMgr;
@@ -77,6 +78,10 @@ public class TaskConnectPeersTest {
     private Thread listen;
 
     private Selector selector;
+
+    private final Random r = new Random();
+
+    private int port;
 
     public class ThreadTCPServer extends Thread {
 
@@ -133,7 +138,7 @@ public class TaskConnectPeersTest {
     }
 
     @Before
-    public void Setup() throws IOException {
+    public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
@@ -141,14 +146,18 @@ public class TaskConnectPeersTest {
 
         System.setProperty("java.net.preferIPv4Stack", "true");
         ssc = ServerSocketChannel.open();
+        assertNotNull(ssc);
         ssc.configureBlocking(false);
         ssc.socket().setReuseAddress(true);
-        ssc.socket().bind(new InetSocketAddress(60606));
+        port = 50000 + r.nextInt(15535);
+        ssc.socket().bind(new InetSocketAddress(port));
         // Create the selector
         selector = Selector.open();
+        assertNotNull(selector);
         ssc.register(selector, SelectionKey.OP_ACCEPT);
 
         listen = new ThreadTCPServer(selector);
+        assertNotNull(listen);
         listen.start();
     }
 
@@ -165,6 +174,7 @@ public class TaskConnectPeersTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         Thread t = new Thread(tcp);
         t.start();
@@ -180,12 +190,13 @@ public class TaskConnectPeersTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         when(nodeMgr.activeNodesSize()).thenReturn(128);
         when(nodeMgr.tempNodesTake()).thenReturn(null);
 
         when(node.getIdHash()).thenReturn(1);
-        when(node.getPort()).thenReturn(60606);
+        when(node.getPort()).thenReturn(port);
         when(node.getIpStr()).thenReturn("127.0.0.1");
         when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
         when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
@@ -218,9 +229,10 @@ public class TaskConnectPeersTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
-        when(node.getPort()).thenReturn(60606);
+        when(node.getPort()).thenReturn(port);
         when(node.getIpStr()).thenReturn("127.0.0.1");
         when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
         when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);
@@ -251,15 +263,13 @@ public class TaskConnectPeersTest {
 
     @Test
     public void testRunException2() throws InterruptedException {
-
-        listen.interrupt();
-
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
-        when(node.getPort()).thenReturn(60606);
+        when(node.getPort()).thenReturn(port);
         when(node.getIpStr()).thenReturn("127.0.0.1");
         when(nodeMgr.notAtOutboundList(node.getIdHash())).thenReturn(true);
         when(nodeMgr.notActiveNode(node.getIdHash())).thenReturn(true);

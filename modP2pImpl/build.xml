@@ -28,10 +28,11 @@
 	<path id="cp">
 		<pathelement location="${dir.mod}/modP2p.jar" />
                 <pathelement location="${dir.mod}/modLogger.jar" />		
-		<pathelement location="${dir.lib}/libminiupnp/miniupnpc_linux.jar" />
+		<pathelement location="${dir.lib}/miniupnpc_linux.jar" />
 		<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.mod}/modAionBase.jar" />
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
+                <pathelement location="${dir.lib}/jsr305-3.0.2.jar" />		
 	</path>
 
 	<target name="clean_build" depends="clean">
@@ -77,6 +78,7 @@
 			<classpath>
 				<path refid="classpath.test" />
 				<pathelement location="${dir.test}" />
+                                <pathelement location="${test.resources}" />
 			</classpath>
 			<formatter type="plain" usefile="false" />
 			<formatter type="xml" />

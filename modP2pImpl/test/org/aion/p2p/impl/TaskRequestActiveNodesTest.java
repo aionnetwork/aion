@@ -22,10 +22,14 @@
 
 package org.aion.p2p.impl;
 
+<<<<<<< HEAD
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
+=======
+import static org.junit.Assert.assertNotNull;
+>>>>>>> a93938be65ca8ef991580689c3601006775a2f44
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
@@ -53,7 +57,7 @@ public class TaskRequestActiveNodesTest {
     private Logger p2pLOG;
 
     @Before
-    public void Setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
@@ -68,6 +72,7 @@ public class TaskRequestActiveNodesTest {
         when(node.getIdShort()).thenReturn("inode");
 
         TaskRequestActiveNodes tran = new TaskRequestActiveNodes(mgr, p2pLOG);
+        assertNotNull(tran);
         tran.run();
         Thread.sleep(10);
         verify(mgr).send(anyInt(), anyString(), any(ReqActiveNodes.class));

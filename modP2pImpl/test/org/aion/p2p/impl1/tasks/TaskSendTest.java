@@ -23,6 +23,7 @@
 package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +44,6 @@ import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl1.P2pMgr.Dest;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -74,7 +74,7 @@ public class TaskSendTest {
     private Random r = new Random();
 
     @Before
-    public void Setup() throws IOException {
+    public void setup() throws IOException {
         lane = Math
             .min(Runtime.getRuntime().availableProcessors() << 1, 32);
         MockitoAnnotations.initMocks(this);
@@ -83,17 +83,14 @@ public class TaskSendTest {
         AionLoggerFactory.init(logMap);
 
         selector = Selector.open();
+        assertNotNull(selector);
     }
-
-    @After
-    public void tearDown() {
-    }
-
 
     @Test
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, r.nextInt(lane), sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         Thread t = new Thread(ts);
         t.start();
@@ -108,8 +105,10 @@ public class TaskSendTest {
     public void testRunMsgOutTimeout() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, r.nextInt(lane), sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         MsgOut mo = new MsgOut(r.nextInt(), "1", msg, Dest.OUTBOUND);
+        assertNotNull(mo);
         when(sendMsgQue.take()).thenReturn(mo);
         Thread.sleep(5000);
 
@@ -118,7 +117,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -126,8 +125,11 @@ public class TaskSendTest {
     public void testRunLane() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, 0, sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         MsgOut mo = new MsgOut(1, "1", msg, Dest.OUTBOUND);
+        assertNotNull(mo);
+
         when(sendMsgQue.take()).thenReturn(mo);
 
         Thread t = new Thread(ts);
@@ -135,7 +137,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -143,13 +145,18 @@ public class TaskSendTest {
     public void testRun2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, 0, sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         MsgOut mo = new MsgOut(0, "1", msg, Dest.OUTBOUND);
+        assertNotNull(mo);
+
         when(sendMsgQue.take()).thenReturn(mo);
         when(nodeMgr.getOutboundNode(0)).thenReturn(node);
 
         ChannelBuffer cb = new ChannelBuffer();
         SocketChannel ch = SocketChannel.open();
+        assertNotNull(ch);
+
         ch.configureBlocking(false);
         ch.register(selector, SelectionKey.OP_WRITE, cb);
 
@@ -161,7 +168,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -169,13 +176,18 @@ public class TaskSendTest {
     public void testRun3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, 0, sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         MsgOut mo = new MsgOut(0, "1", msg, Dest.ACTIVE);
+        assertNotNull(mo);
+
         when(sendMsgQue.take()).thenReturn(mo);
         when(nodeMgr.getActiveNode(0)).thenReturn(node);
 
         ChannelBuffer cb = new ChannelBuffer();
         SocketChannel ch = SocketChannel.open();
+        assertNotNull(ch);
+
         ch.configureBlocking(false);
         ch.register(selector, SelectionKey.OP_WRITE, cb);
 
@@ -187,7 +199,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -195,13 +207,18 @@ public class TaskSendTest {
     public void testRun4() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, 0, sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         MsgOut mo = new MsgOut(0, "1", msg, Dest.INBOUND);
+        assertNotNull(mo);
+
         when(sendMsgQue.take()).thenReturn(mo);
         when(nodeMgr.getInboundNode(0)).thenReturn(node);
 
         ChannelBuffer cb = new ChannelBuffer();
         SocketChannel ch = SocketChannel.open();
+        assertNotNull(ch);
+
         ch.configureBlocking(false);
         ch.register(selector, SelectionKey.OP_WRITE, cb);
 
@@ -213,7 +230,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -221,8 +238,11 @@ public class TaskSendTest {
     public void testRunNullNode() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskSend ts = new TaskSend(p2pMgr, 0, sendMsgQue, atb, nodeMgr, selector);
+        assertNotNull(ts);
 
         MsgOut mo = new MsgOut(0, "1", msg, Dest.INBOUND);
+        assertNotNull(mo);
+
         when(sendMsgQue.take()).thenReturn(mo);
         when(nodeMgr.getInboundNode(0)).thenReturn(null);
 
@@ -232,7 +252,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 }

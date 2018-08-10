@@ -37,38 +37,37 @@ import org.mockito.MockitoAnnotations;
 public class MsgOutTest {
 
     @Mock
-    Msg msg;
+    private Msg msg;
 
-    Random r = new Random();
+    private Random r = new Random();
 
     @Before
     public void Setup() {
         MockitoAnnotations.initMocks(this);
-
     }
 
     @Test
-    public void TestGetNodeId() {
+    public void testGetNodeId() {
         int id = r.nextInt();
         MsgOut msgOut = new MsgOut(id, "", msg, Dest.ACTIVE);
         assertEquals(id, msgOut.getNodeId());
     }
 
     @Test
-    public void TestGetDisPlayId() {
+    public void testGetDisPlayId() {
         String dsp = UUID.randomUUID().toString();
         MsgOut msgOut = new MsgOut(1, dsp, msg, Dest.ACTIVE);
         assertEquals(dsp, msgOut.getDisplayId());
     }
 
     @Test
-    public void TestGetMsg() {
+    public void testGetMsg() {
         MsgOut msgOut = new MsgOut(1, "", msg, Dest.ACTIVE);
         assertEquals(msg, msgOut.getMsg());
     }
 
     @Test
-    public void TestGetDest() {
+    public void testGetDest() {
         MsgOut msgOut = new MsgOut(1, "", msg, Dest.ACTIVE);
         assertEquals(Dest.ACTIVE, msgOut.getDest());
 
@@ -80,15 +79,15 @@ public class MsgOutTest {
     }
 
     @Test
-    public void TestGetTimeStamp() {
+    public void testGetTimeStamp() {
         MsgOut msgOut = new MsgOut(1, "", msg, Dest.ACTIVE);
         assertTrue(msgOut.getTimestamp() <= System.currentTimeMillis());
         assertTrue(0 < msgOut.getTimestamp());
     }
 
     @Test
-    public void TestGetLane() {
-        for (int i=0 ; i<1000 ; i++) {
+    public void testGetLane() {
+        for (int i = 0; i < 1000; i++) {
             int id = r.nextInt();
             MsgOut msgOut = new MsgOut(id, "", msg, Dest.ACTIVE);
             assertEquals(TaskSend.hash2Lane(id), msgOut.getLane());

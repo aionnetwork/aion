@@ -56,7 +56,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
-
 /**
  * @author sridevi
  */
@@ -92,7 +91,7 @@ public class NodeMgrTest {
     private Random r;
 
     @Before
-    public void Setup() {
+    public void setup() {
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);

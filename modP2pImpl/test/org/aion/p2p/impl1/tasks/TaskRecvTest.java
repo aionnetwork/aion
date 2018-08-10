@@ -23,32 +23,24 @@
 package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyByte;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 import org.aion.p2p.Handler;
-import org.aion.p2p.INode;
-import org.aion.p2p.INodeMgr;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.Msg;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -65,28 +57,21 @@ public class TaskRecvTest {
     @Mock
     private Map<Integer, List<Handler>> handler;
 
-
-    private Random r = new Random();
-
     @Before
-    public void Setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
-
     }
 
-    @After
-    public void teardown() {
-
-    }
 
     @Test
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
+        assertNotNull(ts);
 
         Thread t = new Thread(ts);
         t.start();
@@ -101,9 +86,11 @@ public class TaskRecvTest {
     public void testRunMsgIn() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
+        assertNotNull(ts);
 
         int route = 1;
         MsgIn mi = new MsgIn(1, "1", route, new byte[0]);
+        assertNotNull(mi);
         when(recvMsgQue.take()).thenReturn(mi);
         when(handler.get(route)).thenReturn(null);
 
@@ -119,7 +106,7 @@ public class TaskRecvTest {
         when(handler.get(route)).thenReturn(hdlr);
 
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -127,9 +114,11 @@ public class TaskRecvTest {
     public void testRunMsgIn2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
+        assertNotNull(ts);
 
         int route = 1;
         MsgIn mi = new MsgIn(1, "1", route, new byte[0]);
+        assertNotNull(mi);
         when(recvMsgQue.take()).thenReturn(mi);
         when(handler.get(route)).thenReturn(null);
 
@@ -146,7 +135,7 @@ public class TaskRecvTest {
         doThrow(new Exception("test exception!")).when(h).receive(anyInt(), anyString(), any());
 
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(30);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
