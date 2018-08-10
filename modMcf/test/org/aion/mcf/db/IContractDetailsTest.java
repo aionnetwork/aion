@@ -1,13 +1,37 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.mcf.db;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IContractDetails;
+import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
@@ -23,10 +47,8 @@ public class IContractDetailsTest {
 
     @Before
     public void setup() {
-        IContractDetails<IDataWord> details = new AionContractDetailsImpl();
-        cache1 = new ContractDetailsCacheImpl(details);
-        details = new ContractDetailsCacheImpl(details);
-        cache2 = new ContractDetailsCacheImpl(details);
+        cache1 = new AionContractDetailsImpl();
+        cache2 = new ContractDetailsCacheImpl(new AionContractDetailsImpl());
     }
 
     @After
@@ -50,23 +72,23 @@ public class IContractDetailsTest {
     @Test
     public void testPutSingleZeroValue() {
         IDataWord key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES));
-        doPutSingleZeroValueTest(cache1, key);
-        doPutSingleZeroValueTest(cache2, key);
+        checkGetNonExistentPairing(cache1, key);
+        checkGetNonExistentPairing(cache2, key);
 
         key = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
-        doPutSingleZeroValueTest(cache1, key);
-        doPutSingleZeroValueTest(cache2, key);
+        checkGetNonExistentPairing(cache1, key);
+        checkGetNonExistentPairing(cache2, key);
     }
 
     @Test
     public void testPutDoubleZeroValue() {
         IDataWord key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES));
-        doPutDoubleZeroValueTest(cache1, key);
-        doPutDoubleZeroValueTest(cache2, key);
+        checkGetNonExistentPairing(cache1, key);
+        checkGetNonExistentPairing(cache2, key);
 
         key = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
-        doPutDoubleZeroValueTest(cache1, key);
-        doPutDoubleZeroValueTest(cache2, key);
+        checkGetNonExistentPairing(cache1, key);
+        checkGetNonExistentPairing(cache2, key);
     }
 
     @Test
@@ -95,25 +117,33 @@ public class IContractDetailsTest {
     public void testPutZeroKeyAndValue() {
         // Try single-single
         cache1.put(DataWord.ZERO, DataWord.ZERO);
-        assertNull(cache1.get(DataWord.ZERO));
+        IDataWord result = cache1.get(DataWord.ZERO);
+        assertTrue(result.isZero());
+        assertTrue(result instanceof DataWord);
         cache2.put(DataWord.ZERO, DataWord.ZERO);
         assertNull(cache2.get(DataWord.ZERO));
 
         // Try single-double
         cache1.put(DataWord.ZERO, DoubleDataWord.ZERO);
-        assertNull(cache1.get(DataWord.ZERO));
+        result = cache1.get(DataWord.ZERO);
+        assertTrue(result.isZero());
+        assertTrue(result instanceof DataWord);
         cache2.put(DataWord.ZERO, DoubleDataWord.ZERO);
         assertNull(cache2.get(DataWord.ZERO));
 
         // Try double-single
         cache1.put(DoubleDataWord.ZERO, DataWord.ZERO);
-        assertNull(cache1.get(DoubleDataWord.ZERO));
+        result = cache1.get(DoubleDataWord.ZERO);
+        assertTrue(result.isZero());
+        assertTrue(result instanceof DataWord);
         cache2.put(DoubleDataWord.ZERO, DataWord.ZERO);
         assertNull(cache2.get(DoubleDataWord.ZERO));
 
         // Try double-double
         cache1.put(DoubleDataWord.ZERO, DoubleDataWord.ZERO);
-        assertNull(cache1.get(DoubleDataWord.ZERO));
+        result = cache1.get(DoubleDataWord.ZERO);
+        assertTrue(result.isZero());
+        assertTrue(result instanceof DataWord);
         cache2.put(DoubleDataWord.ZERO, DoubleDataWord.ZERO);
         assertNull(cache2.get(DoubleDataWord.ZERO));
     }
@@ -192,48 +222,105 @@ public class IContractDetailsTest {
         checkKeyValueMapping(cache2, storage);
     }
 
+    /**
+     * This test is specific to the ContractDetailsCacheImpl class, which has a commit method. This
+     * test class is not concerned with testing all of the functionality of this method, only with
+     * how this method handles zero-byte values.
+     */
+    @Test
+    public void testCommitEnMassOriginalIsAionContract() {
+        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache1);
+
+        int numEntries = RandomUtils.nextInt(1_000, 5_000);
+        int deleteOdds = 3;
+        List<IDataWord> keys = getKeysInBulk(numEntries);
+        List<IDataWord> values = getValuesInBulk(numEntries);
+        massPutIntoCache(impl, keys, values);
+        deleteEveryNthEntry(impl, keys, deleteOdds);
+
+        Map<IDataWord, IDataWord> storage = impl.getStorage(keys);
+        assertEquals(0, cache1.getStorage(keys).size());
+        impl.commit();
+        assertEquals(storage.size(), cache1.getStorage(keys).size());
+
+        int count = 1;
+        for (IDataWord key : keys) {
+            try {
+                if (count % deleteOdds == 0) {
+                    assertNull(impl.get(key));
+                    assertTrue(cache1.get(key).isZero());
+                    assertTrue(cache1.get(key) instanceof DataWord);
+                } else {
+                    assertEquals(impl.get(key), cache1.get(key));
+                }
+            } catch (AssertionError e) {
+                System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                e.printStackTrace();
+            }
+            count++;
+        }
+    }
+
+    /**
+     * This test is specific to the ContractDetailsCacheImpl class, which has a commit method. This
+     * test class is not concerned with testing all of the functionality of this method, only with
+     * how this method handles zero-byte values.
+     */
+    @Test
+    public void testCommitEnMassOriginalIsContractDetails() {
+        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache2);
+
+        int numEntries = RandomUtils.nextInt(1_000, 5_000);
+        int deleteOdds = 3;
+        List<IDataWord> keys = getKeysInBulk(numEntries);
+        List<IDataWord> values = getValuesInBulk(numEntries);
+        massPutIntoCache(impl, keys, values);
+        deleteEveryNthEntry(impl, keys, deleteOdds);
+
+        Map<IDataWord, IDataWord> storage = impl.getStorage(keys);
+        assertEquals(0, cache2.getStorage(keys).size());
+        impl.commit();
+        assertEquals(storage.size(), cache2.getStorage(keys).size());
+
+        int count = 1;
+        for (IDataWord key : keys) {
+            try {
+                if (count % deleteOdds == 0) {
+                    assertNull(impl.get(key));
+                    assertNull(cache2.get(key));
+                } else {
+                    assertEquals(impl.get(key), cache2.get(key));
+                }
+            } catch (AssertionError e) {
+                System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                e.printStackTrace();
+            }
+            count++;
+        }
+    }
+
     //<------------------------------------------HELPERS------------------------------------------->
 
     /**
-     * Calls cache.get() under assumption that cache has no key-values stored in it.
+     * Tests calling get() on a DataWord key that is not in cache -- first on a zero-byte key and
+     * then on a random key.
      */
     private void doGetNoSuchSingleKeyTest(IContractDetails<IDataWord> cache) {
-        // First try out the zero data word.
-        assertNull(cache.get(DataWord.ZERO));
-
-        // Try a random data word.
-        assertNull(cache.get(new DataWord(RandomUtils.nextBytes(DataWord.BYTES))));
+        checkGetNonExistentPairing(cache, DataWord.ZERO);
+        checkGetNonExistentPairing(cache, new DataWord(RandomUtils.nextBytes(DataWord.BYTES)));
     }
 
     /**
-     * Calls cache.get() under assumption that cache has no key-values stored in it.
+     * Tests calling get() on a DoubleDataWord key that is not in cache -- first on a zero-byte key
+     * and then on a random key.
      */
     private void doGetNoSuchDoubleKeyTest(IContractDetails<IDataWord> cache) {
-        // First try out the zero data word.
-        assertNull(cache.get(DoubleDataWord.ZERO));
-
-        // Try a random data word.
-        assertNull(cache.get(new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES))));
+        checkGetNonExistentPairing(cache, DoubleDataWord.ZERO);
+        checkGetNonExistentPairing(cache, new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)));
     }
 
     /**
-     * Puts a zero data word into cache with key and ensures the entry does not exist.
-     */
-    private void doPutSingleZeroValueTest(IContractDetails<IDataWord> cache, IDataWord key) {
-        cache.put(key, DataWord.ZERO);
-        assertNull(cache.get(key));
-    }
-
-    /**
-     * Puts a zero data word into cache with key and ensures the entry does not exist.
-     */
-    private void doPutDoubleZeroValueTest(IContractDetails<IDataWord> cache, IDataWord key) {
-        cache.put(key, DoubleDataWord.ZERO);
-        assertNull(cache.get(key));
-    }
-
-    /**
-     * Puts value into cache with a zero data word key and ensures the entry does not exist.
+     * Tests putting value into cache with a zero-byte DataWord key.
      */
     private void doPutSingleZeroKeyTest(IContractDetails<IDataWord> cache, IDataWord value) {
         cache.put(DataWord.ZERO, value);
@@ -241,7 +328,7 @@ public class IContractDetailsTest {
     }
 
     /**
-     * Puts value into cache with a zero data word key and ensures the entry does not exist.
+     * Tests putting value into cache with a zero-byte DoubleDataWord key.
      */
     private void doPutDoubleZeroKeyTest(IContractDetails<IDataWord> cache, IDataWord value) {
         cache.put(DoubleDataWord.ZERO, value);
@@ -249,20 +336,23 @@ public class IContractDetailsTest {
     }
 
     /**
-     * Puts the key-value pair key and value into cache and then adds a zero word to the key and
-     * ensures that key-value pair is deleted.
+     * Tests putting key and value into cache and then putting a zero-byte IDataWord into cache
+     * with key and then calling get() on that key.
      */
     private void doPutKeyValueThenOverwriteValueWithZero(IContractDetails<IDataWord> cache,
         IDataWord key, IDataWord value) {
 
+        // Test DataWord.
         cache.put(key, value);
         assertEquals(value, cache.get(key));
         cache.put(key, DataWord.ZERO);
-        assertNull(cache.get(key));
+        checkGetNonExistentPairing(cache, key);
+
+        // Test DoubleDataWord.
         cache.put(key, value);
         assertEquals(value, cache.get(key));
         cache.put(key, DoubleDataWord.ZERO);
-        assertNull(cache.get(key));
+        checkGetNonExistentPairing(cache, key);
     }
 
     /**
@@ -277,7 +367,7 @@ public class IContractDetailsTest {
         int count = 1;
         for (IDataWord key : keys) {
             if (count % n == 0) {
-                assertNull(cache.get(key));
+                checkGetNonExistentPairing(cache, key);
             } else {
                 assertEquals(values.get(count - 1), cache.get(key));
             }
@@ -296,7 +386,12 @@ public class IContractDetailsTest {
         int count = 1;
         for (IDataWord key : keys) {
             if (count % n == 0) {
-                assertNull(storage.get(key));
+                try {
+                    assertNull(storage.get(key));
+                } catch (AssertionError e) {
+                    System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                    e.printStackTrace();
+                }
             } else {
                 assertEquals(values.get(count - 1), storage.get(key));
             }
@@ -375,7 +470,7 @@ public class IContractDetailsTest {
         IDataWord key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES));
         storage.put(key, DataWord.ZERO);
         cache.setStorage(storage);
-        assertNull(cache.get(key));
+        checkGetNonExistentPairing(cache, key);
     }
 
     /**
@@ -387,7 +482,7 @@ public class IContractDetailsTest {
         for (IDataWord key : storage.keySet()) {
             IDataWord value = storage.get(key);
             if (value.isZero()) {
-                assertNull(cache.get(key));
+                checkGetNonExistentPairing(cache, key);
             } else {
                 assertEquals(value, cache.get(key));
             }
@@ -412,6 +507,25 @@ public class IContractDetailsTest {
             }
         }
         return storage;
+    }
+
+    /**
+     * Assumption: key has no valid value mapping in cache.
+     * This method calls cache.get(key) and checks its result.
+     */
+    private void checkGetNonExistentPairing(IContractDetails<IDataWord> cache, IDataWord key) {
+        try {
+            if (cache instanceof AionContractDetailsImpl) {
+                IDataWord result = cache.get(key);
+                assertTrue(result.isZero());
+                assertTrue(result instanceof DataWord);
+            } else {
+                assertNull(cache.get(key));
+            }
+        } catch (AssertionError e) {
+            System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+            e.printStackTrace();
+        }
     }
 
 }
