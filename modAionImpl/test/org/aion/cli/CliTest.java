@@ -40,7 +40,7 @@ public class CliTest {
 
         // Copies config folder recursively
         String BASE_PATH = Cfg.getBasePath();
-        File src = new File(BASE_PATH + "/../config");
+        File src = new File(BASE_PATH + "/../modBoot/resource");
         File dst = new File(BASE_PATH + "/config");
         copyRecursively(src, dst);
 
@@ -58,7 +58,7 @@ public class CliTest {
         File path3 = new File(BASE_PATH + "/abcccccc");
         File path4 = new File(BASE_PATH + "/keystore");
         File path5 = new File(BASE_PATH + "/config");
-        if(path1.exists() && path2.exists() && path3.exists()) {
+        if(path1.exists() || path2.exists() || path3.exists() || path4.exists() || path5.exists()) {
             deleteRecursively(path1);
             deleteRecursively(path2);
             deleteRecursively(path3);

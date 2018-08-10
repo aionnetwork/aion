@@ -58,9 +58,6 @@ public class Cli {
 
     private boolean multiCli = false;
     private static final String BASE_PATH = Cfg.getBasePath();
-    private static final String KEYSTORE_PATH = Keystore.getKeystorePath();
-    private static final String CONFIG_PATH = CfgAion.getConfFilePath();
-    private static final String GENESIS_PATH = CfgAion.getGenesisFilePath();
 
     File keystoreDir = new File(
             System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
@@ -442,9 +439,9 @@ public class Cli {
         System.out.println("  -a export [address]                           export private key of an account");
         System.out.println("  -a import [private_key]                       import private key");
         System.out.println();
-        System.out.println("  -c [network]                                  create config with default values to select network");
+        System.out.println("  -c [network]                                  create config to selected network; mainnet, conquest");
         System.out.println();
-        System.out.println("  -n, --network [network]                       execute kernel with selected network");
+        System.out.println("  -n, --network [network]                       execute kernel with selected network; mainnet, conquest");
         System.out.println();
         System.out.println("  -d, --datadir [directory]                     execute kernel with selected database directory");
         System.out.println();
@@ -650,6 +647,11 @@ public class Cli {
         return RecoveryUtils.revertTo(block);
     }
 
+    /**
+     * Checks for illegal inputs (for datadir && network names)
+     * @param value
+     * @return
+     */
     public static boolean isValid(String value) {
         return !value.isEmpty() && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
