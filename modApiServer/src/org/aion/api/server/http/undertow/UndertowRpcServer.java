@@ -155,7 +155,7 @@ public class UndertowRpcServer extends RpcServer {
             server = undertowBuilder.build();
             server.start();
 
-            LOG.info("<rpc-server - (UNDERTOW) started on {}:{}>", hostName, port);
+            LOG.info("<rpc-server - (UNDERTOW) started on {}://{}:{}>", sslEnabled ? "https" : "http", hostName, port);
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");

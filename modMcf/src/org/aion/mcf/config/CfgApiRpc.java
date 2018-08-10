@@ -54,7 +54,7 @@ public final class CfgApiRpc {
         // using a strings here for the following 2 properties instead of referencing the associated enum value
         // since don't want to add dependency to modApiServer just for this
         this.vendor = "undertow";
-        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum"));
+        this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum", "ops"));
 
         this.ssl = new CfgSsl();
     }
