@@ -26,9 +26,4 @@ public class BalanceUtils {
     public static BigInteger extractBalance(final String formattedBalance) {
         return new BigDecimal(formattedBalance).multiply(WEI_MULTIPLIER).toBigInteger();
     }
-
-    //TODO will be done in future story
-    public static String convertBalance() {
-        return null;
-    }
 }

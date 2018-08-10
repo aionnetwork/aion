@@ -10,7 +10,14 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.slf4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /** Facilitates launching an instance of the Kernel and managing the launched instance. */
 public class KernelLauncher {
@@ -19,11 +26,14 @@ public class KernelLauncher {
     private final EventBusRegistry eventBusRegistry;
     private final UnixProcessTerminator unixProcessTerminator;
     private final UnixKernelProcessHealthChecker healthChecker;
+    private final File storageLocation;
     private final File pidFile;
 
     private KernelInstanceId currentInstance = null;
 
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+    private static final String NOHUP_WRAPPER_STORAGE_LOCATION_ENV = "STORAGE_DIR";
+    private static final String PID_FILENAME = "kernel-pid";
 
     /**
      * Constructor.
@@ -34,15 +44,15 @@ public class KernelLauncher {
     public KernelLauncher(CfgGuiLauncher config,
                           EventBusRegistry eventBusRegistry,
                           UnixProcessTerminator terminator,
-                          UnixKernelProcessHealthChecker healthChecker) {
+                          UnixKernelProcessHealthChecker healthChecker,
+                          File storageLocation) {
         this(config,
                 new KernelLaunchConfigurator(),
                 eventBusRegistry,
                 terminator,
                 healthChecker,
-                (config.getKernelPidFile() != null ?
-                        new File(config.getKernelPidFile()) :
-                        choosePidStorageLocation())
+                storageLocation,
+                choosePidStorageLocation(storageLocation)
         );
     }
 
@@ -52,12 +62,14 @@ public class KernelLauncher {
                                       EventBusRegistry ebr,
                                       UnixProcessTerminator terminator,
                                       UnixKernelProcessHealthChecker healthChecker,
+                                      File storageLocation,
                                       File pidFile) {
         this.config = config;
         this.kernelLaunchConfigurator = klc;
         this.eventBusRegistry = ebr;
         this.unixProcessTerminator = terminator;
         this.healthChecker = healthChecker;
+        this.storageLocation = storageLocation;
         this.pidFile = pidFile;
     }
 
@@ -73,6 +85,8 @@ public class KernelLauncher {
     public Process launch() throws KernelControlException {
         ProcessBuilder processBuilder = new ProcessBuilder();
         kernelLaunchConfigurator.configure(config, processBuilder);
+        processBuilder.environment().put(NOHUP_WRAPPER_STORAGE_LOCATION_ENV,
+                storageLocation.getAbsolutePath());
 
         try {
             Process proc = processBuilder.start();
@@ -155,7 +169,7 @@ public class KernelLauncher {
                 // handle that later.
                 LOGGER.warn(
                         "Found old kernel pid = {} but could not determine if it is really running.  Assuming that it is.",
-                        currentInstance.getPid());
+                        currentInstance != null ? currentInstance.getPid() : "<unknown>");
                 return true;
             } catch (ClassNotFoundException | IOException ex) {
                 LOGGER.error("Found old kernel pid file at {}, but failed to deserialize it, " +
@@ -257,7 +271,10 @@ public class KernelLauncher {
         }
     }
 
-    static File choosePidStorageLocation() {
-        return new File("/tmp/kernel-pid");
+    static File choosePidStorageLocation(File directory) {
+        if(!directory.exists() || !directory.isDirectory()) {
+            throw new IllegalArgumentException("Pid storage location must be a directory that exists");
+        }
+        return new File(directory.getAbsolutePath() + File.separatorChar + PID_FILENAME);
     }
 }

@@ -112,9 +112,15 @@ public class ConfigManipulator {
             return new ApplyConfigResult(false, msg, null);
         }
 
-        ApplyConfigResult result = sendConfigProposal(cfgXml);
-        if (!result.isSucceeded()) {
-            return result;
+        // Not supporting in-flight config changes yet.  For now the logic is reject config
+        // change if kernel is currently running; otherwise, accept it.
+//        ApplyConfigResult result = sendConfigProposal(cfgXml);
+//        if (!result.isSucceeded()) {
+//            return result;
+//        }
+        if(kernelLauncher.hasLaunchedInstance()) {
+            return new ApplyConfigResult(false,
+                    "Cannot update config file while kernel is running.  Please terminate kernel before applying config changes.", null);
         }
 
         try {
@@ -128,7 +134,7 @@ public class ConfigManipulator {
             return new ApplyConfigResult(true, msg, null);
         }
 
-        return new ApplyConfigResult(result.isSucceeded(),
+        return new ApplyConfigResult(true,
                 "Config saved.  Previous copy is backed up at " + backupConfigFilename,
                 null);
     }

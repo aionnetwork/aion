@@ -15,10 +15,10 @@ public class EventBusRegistry {
     private final Map<String, EventBus> busMap = new HashMap<>();
 
     public EventBus getBus(final String identifier) {
-        return INSTANCE.getBusById(identifier);
+        return getBusById(identifier);
     }
 
-    private EventBusRegistry() {}
+    public EventBusRegistry() {}
 
     private EventBus getBusById(final String identifier) {
         return busMap.computeIfAbsent(identifier, EventBus::new);

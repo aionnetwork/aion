@@ -68,46 +68,6 @@ public class ConfigManipulatorTest {
     }
 
     @Test
-    public void testApplyNewConfigWhenProxyReturnsError() throws Exception {
-        String xml = "<anyGoodXml/>";
-        Throwable proxyError = new ArrayIndexOutOfBoundsException();
-        ConfigProposalResult configProposalResult = new ConfigProposalResult(false, proxyError);
-        InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.sendConfigProposal(xml)).thenReturn(configProposalResult);
-
-        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
-        ApplyConfigResult result = unit.applyNewConfig(xml);
-        assertThat(result.isSucceeded(), is(false));
-        assertThat(result.getCause(), is(proxyError));
-    }
-
-    @Test
-    public void testApplyNewConfigWhenProxyThrowsRollbackException() throws Exception {
-        String xml = "<anyGoodXml/>";
-        RollbackException rbe = new RollbackException("the sky is falling",
-                Collections.singletonList(new IOException()));
-        InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
-        when(jmxCaller.sendConfigProposal(xml)).thenThrow(rbe);
-
-        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
-        ApplyConfigResult result = unit.applyNewConfig(xml);
-        assertThat(result.isSucceeded(), is(false));
-        assertThat(result.getCause(), is(rbe));
-    }
-
-    @Test
-    public void testApplyNewConfigWhenJmxConnectionFails() throws Exception {
-        String xml = "<anyGoodXml/>";
-        Exception jmxError = new MalformedObjectNameException();
-        when(jmxCaller.sendConfigProposal(xml)).thenThrow(jmxError);
-
-        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
-        ApplyConfigResult result = unit.applyNewConfig(xml);
-        assertThat(result.isSucceeded(), is(false));
-        assertThat(result.getCause(), is(jmxError));
-    }
-
-    @Test
     public void testApplyNewConfigWhenXmlErrors() {
         ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
         ApplyConfigResult result = unit.applyNewConfig("</not<xml");
@@ -148,4 +108,57 @@ public class ConfigManipulatorTest {
 
         assertThat(result.isSucceeded(), is(true));
     }
+
+    @Test
+    public void testApplyNewConfigRejectedIfKernelRunning() {
+        String xml = "<anyGoodXml/>";
+        when(kernelLauncher.hasLaunchedInstance()).thenReturn(true);
+
+        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
+        ApplyConfigResult result = unit.applyNewConfig(xml);
+        assertThat(result.isSucceeded(), is(false));
+    }
+
+    // test cases below will be used when ConfigManipulator actually sends configs to the kernel
+    // feature is disabled for now, so commenting out the tests.
+
+//    @Test
+//    public void testApplyNewConfigWhenProxyReturnsError() throws Exception {
+//        String xml = "<anyGoodXml/>";
+//        Throwable proxyError = new ArrayIndexOutOfBoundsException();
+//        ConfigProposalResult configProposalResult = new ConfigProposalResult(false, proxyError);
+//        InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
+//        when(jmxCaller.sendConfigProposal(xml)).thenReturn(configProposalResult);
+//
+//        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
+//        ApplyConfigResult result = unit.applyNewConfig(xml);
+//        assertThat(result.isSucceeded(), is(false));
+//        assertThat(result.getCause(), is(proxyError));
+//    }
+//
+//    @Test
+//    public void testApplyNewConfigWhenProxyThrowsRollbackException() throws Exception {
+//        String xml = "<anyGoodXml/>";
+//        RollbackException rbe = new RollbackException("the sky is falling",
+//                Collections.singletonList(new IOException()));
+//        InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);
+//        when(jmxCaller.sendConfigProposal(xml)).thenThrow(rbe);
+//
+//        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
+//        ApplyConfigResult result = unit.applyNewConfig(xml);
+//        assertThat(result.isSucceeded(), is(false));
+//        assertThat(result.getCause(), is(rbe));
+//    }
+//
+//    @Test
+//    public void testApplyNewConfigWhenJmxConnectionFails() throws Exception {
+//        String xml = "<anyGoodXml/>";
+//        Exception jmxError = new MalformedObjectNameException();
+//        when(jmxCaller.sendConfigProposal(xml)).thenThrow(jmxError);
+//
+//        ConfigManipulator unit = new ConfigManipulator(cfg, kernelLauncher, fileLoaderSaver, jmxCaller);
+//        ApplyConfigResult result = unit.applyNewConfig(xml);
+//        assertThat(result.isSucceeded(), is(false));
+//        assertThat(result.getCause(), is(jmxError));
+//    }
 }
