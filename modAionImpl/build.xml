@@ -11,7 +11,6 @@
 
     <path id="classpath.dependency">
         <pathelement location="${dir.mod}/modAionBase.jar"/>
-        <pathelement location="${dir.mod}/modDbImpl.jar"/>
         <!-- pathelement location="${dir.lib}/libnsc.jar" / -->
     </path>
 

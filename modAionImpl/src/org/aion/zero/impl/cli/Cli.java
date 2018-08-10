@@ -28,13 +28,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
-import org.aion.db.utils.FileUtils;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
@@ -52,7 +56,11 @@ import java.util.UUID;
  */
 public class Cli {
 
-    private static String BASE_PATH = Cfg.getBasePath();
+    private boolean multiCli = false;
+    private static final String BASE_PATH = Cfg.getBasePath();
+    private static final String KEYSTORE_PATH = Keystore.getKeystorePath();
+    private static final String CONFIG_PATH = CfgAion.getConfFilePath();
+    private static final String GENESIS_PATH = CfgAion.getGenesisFilePath();
 
     File keystoreDir = new File(
             System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
@@ -105,17 +113,29 @@ public class Cli {
                         switch (args[1].toLowerCase()) {
                             case "mainnet":
                             case "conquest":
+                                System.out.println("TEST1");
+                                File dir = new File(BASE_PATH + "/config/" + args[1]);
+                                if(!dir.exists()) {
+                                    dir.mkdir();
+                                }
                                 CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
                                 System.out.println("\nNew config generated for " + args[1]);
                                 break;
                             default:
-                                System.out.println("\nInvalid network '" + args[1] + "'; Set to default mainnet");
-                                break;
+                                System.out.println("\nInvalid network selected!");
+                                System.out.println("--- Available Networks ---");
+                                System.out.println("    mainnet, conquest");
+                                System.out.println("--------------------------");
+                                return 1;
                         }
                     } else if (args.length == 1) {
-                        System.out.println("\nInvalid arguments; Set to default mainnet");
+                        System.out.println("\nInvalid network selected!");
+                        System.out.println("--- Available Networks ---");
+                        System.out.println("    mainnet, conquest");
+                        System.out.println("--------------------------");
                         return 1;
                     }
+                    System.out.println("TEST1");
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
@@ -183,87 +203,122 @@ public class Cli {
                     }
                     break;
 
-                // Determines network config folder path
                 case "-n":
                 case "--network":
-                    if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
+                    if ( (args.length == 2 || args.length == 4) && isValid(args[1])) {
 
                         switch (args[1].toLowerCase()) {
                             case "mainnet":
                             case "conquest":
 
-                                // Recursively call to change database path
-                                if (args.length == 4 && (args[2].equals("--datadir") || args[2].equals("-d"))) {
-                                    // Modify config path to inside datadir folder
-                                    CfgAion.setNetwork(args[1]);
-                                    CfgAion.setConfFilePath(BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/config.xml");
-                                    CfgAion.setGenesisFilePath(BASE_PATH + "/" + args[3] + "/config/" + args[1] + "/genesis.json");
-                                    Keystore.setKeystorePath(BASE_PATH + "/" + args[3] + "/keystore");
-                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                                    call(newArgs, cfg);
-                                } else {
-                                    // Change to specified network path
+                                // -n [network]
+                                // 2 arguments --> config/genesis
+                                if (args.length == 2) {
+
                                     CfgAion.setNetwork(args[1]);
                                     CfgAion.setConfFilePath(path + "/config/" + args[1] + "/config.xml");
                                     CfgAion.setGenesisFilePath((path + "/config/" + args[1] + "/genesis.json"));
-                                }
-                                break;
-                            default:
-                                System.out.println("Invalid network '" + args[1] + "': Set to default network");
-                                break;
-                        }
-                    } else {
+                                    Keystore.setKeystorePath(path + "/keystore");
+                                    return 2;
 
-                        // Set to default database && log && network
-                        System.out.println("Invalid arguments: Set to default network");
-                        cfg.getDb().setDatabasePath("database");
-                        cfg.getLog().setLogPath("log");
-                        cfg.toXML(null);
+                                }
+
+                                // -n [network] -d [directory]
+                                // 4 arguments --> config folder --> config/genesis --> db/log/keystore
+                                else if (isValid(args[3])) {
+
+                                    multiCli = true;
+                                    checkAndCreateDatadir(args[3]);
+                                    String PATH = BASE_PATH  + "/" + args[3];
+
+                                    CfgAion.setNetwork(args[1]);
+                                    CfgAion.setConfFilePath(PATH + "/config/" + args[1] + "/config.xml");
+                                    CfgAion.setGenesisFilePath((PATH + "/config/" + args[1] + "/genesis.json"));
+                                    Keystore.setKeystorePath(PATH + "/keystore");
+
+                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                                    call(newArgs, cfg);
+
+                                    if(multiCli) {
+                                        cfg.getDb().setDatabasePath(args[3] + "/database");
+                                        cfg.getLog().setLogPath(args[3] + "/log");
+                                    }
+                                    return 2;
+
+                                } else {
+                                    System.out.println("\nInvalid datadir selected!");
+                                    System.out.println("Please choose valid directory name!\n");
+                                    return 1;
+                                }
+
+                            default:
+                                System.out.println("\nInvalid network selected!\n");
+                                System.out.println("--- Available Networks ---");
+                                System.out.println("    mainnet, conquest");
+                                System.out.println("--------------------------\n");
+                                return 1;
+                        }
+
+                    } else {
+                        System.out.println("\nInvalid network selected!");
+                        System.out.println("--- Available Networks ---");
+                        System.out.println("    mainnet , conquest");
+                        System.out.println("--------------------------\n");
                         return 1;
                     }
-                    break;
 
                 // Determines database folder path
                 case "-d":
                 case "--datadir":
-                    if ( (args.length == 2 && isValid(args[1])) || (args.length == 4 && isValid(args[1]) && isValid(args[3])) ) {
+                    if ( (args.length == 2 || args.length == 4) && isValid(args[1]))  {
 
-                        // Check if datadir exist; if not copy configuration files
-                        File dir = new File(BASE_PATH + "/" + args[1]);
-                        if (!dir.exists()) {
-                            File src1 = new File(BASE_PATH + "/config");
-                            File src2 = new File(BASE_PATH + "/keystore");
-                            File dst1 = new File(BASE_PATH + "/" + args[1] + "/config");
-                            File dst2 = new File(BASE_PATH + "/" + args[1] + "/keystore");
-                            FileUtils.copyRecursively(src1, dst1);
-                            FileUtils.copyRecursively(src2, dst2);
+                        // -d [directory]
+                        // 2 arguments --> datadir --> config.xml
+                        if (args.length == 2 && !multiCli) {
+
+                            checkAndCreateDatadir(args[1]);
+
+                            CfgAion.setConfFilePath(path + "/" + args[1] + "/config/mainnet/config.xml" );
+                            CfgAion.setGenesisFilePath(path + "/" + args[1] + "/config/mainnet/genesis.json");
+                            Keystore.setKeystorePath(path + "/" + args[1] + "/keystore");
+
+                            cfg.getDb().setDatabasePath(args[1] + "/database");
+                            cfg.getLog().setLogPath(args[1] + "/log");
+                            cfg.toXML(null);
+                            return 2;
+
                         }
 
-                        // Determine network from inside datadir folder
-                        if (args.length == 4 && (args[2].equals("--network") || args[2].equals("-n"))) {
+                        // -d [directory] -n [network]
+                        // 4 arguments --> config folder --> config/genesis --> db/log/keystore
+                        else if (isValid(args[3])) {
+
+                            multiCli = true;
+                            checkAndCreateDatadir(args[1]);
+                            String PATH = BASE_PATH + "/" + args[1];
+
                             String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                            call(newArgs, cfg, dir.toString());
-                        } else {
-                            CfgAion.setNetwork("mainnet");
-                            CfgAion.setConfFilePath(BASE_PATH + "/" + args[1] + "/config/mainnet/config.xml");
-                            CfgAion.setGenesisFilePath(BASE_PATH + "/" + args[1] + "/config/mainnet/genesis.json");
-                        }
+                            call(newArgs, cfg, PATH);
 
-                        Keystore.setKeystorePath(BASE_PATH + "/" + args[1] + "/keystore");
-                        cfg.getDb().setDatabasePath(args[1] + "/database");
-                        cfg.getLog().setLogPath(args[1] + "/log");
-                        cfg.toXML(null);
+                            Keystore.setKeystorePath(PATH + "/keystore");
+                            cfg.getDb().setDatabasePath(args[1] + "/database");
+                            cfg.getLog().setLogPath(args[1] + "/log");
+                            cfg.toXML(null);
+                            return 2;
+
+                        } else {
+                            System.out.println("\nInvalid network selected!");
+                            System.out.println("--- Available Networks ---");
+                            System.out.println("    mainnet , conquest");
+                            System.out.println("--------------------------\n");
+                            return 1;
+                        }
 
                     } else {
-
-                        // Set to default database && log
-                        System.out.println("Invalid arguments; Set to default database path");
-                        cfg.getDb().setDatabasePath("database");
-                        cfg.getLog().setLogPath("log");
-                        cfg.toXML(null);
+                        System.out.println("\nInvalid datadir selected!");
+                        System.out.println("Please choose valid directory name!\n");
                         return 1;
                     }
-                    break;
 
                 case "--state": {
                     String pruning_type = "full";
@@ -364,6 +419,7 @@ public class Cli {
                     printHelp();
                     return 1;
             }
+
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
@@ -401,6 +457,18 @@ public class Cli {
         System.out.println("  -r [block_number]                             revert db up to specific block number");
         System.out.println();
         System.out.println("  -v                                            show version");
+    }
+
+    private void checkAndCreateDatadir(String path) {
+        File dir = new File(BASE_PATH + "/" + path);
+        if (!dir.exists()) {
+            File src1 = new File(BASE_PATH + "/config");
+            File src2 = new File(BASE_PATH + "/keystore");
+            File dst1 = new File(BASE_PATH + "/" + path + "/config");
+            File dst2 = new File(BASE_PATH + "/" + path + "/keystore");
+            copyRecursively(src1, dst1);
+            copyRecursively(src2, dst2);
+        }
     }
 
     /**
@@ -631,6 +699,69 @@ public class Cli {
             System.exit(1);
         }
         return certPass;
+    }
+
+    // Methods below taken from FileUtils class
+    private static boolean copyRecursively(File src, File target)
+    {
+        if (src.isDirectory()) {
+            return copyDirectoryContents(src, target);
+        }
+        else {
+            try {
+                Files.copy(src, target);
+                return true;
+            }
+            catch (IOException e) {
+                return false;
+            }
+        }
+    }
+
+    private static boolean copyDirectoryContents(File src, File target)
+    {
+        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
+
+        // Don't delete symbolic link directories
+        if (isSymbolicLink(src)) {
+            return false;
+        }
+
+        target.mkdirs();
+        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
+
+        boolean success = true;
+        for (File file : listFiles(src)) {
+            success = copyRecursively(file, new File(target, file.getName())) && success;
+        }
+        return success;
+    }
+
+    private static boolean isSymbolicLink(File file)
+    {
+        try {
+            File canonicalFile = file.getCanonicalFile();
+            File absoluteFile = file.getAbsoluteFile();
+            File parentFile = file.getParentFile();
+            // a symbolic link has a different name between the canonical and absolute path
+            return !canonicalFile.getName().equals(absoluteFile.getName()) ||
+                    // or the canonical parent path is not the same as the file's parent path,
+                    // provided the file has a parent path
+                    parentFile != null && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
+        }
+        catch (IOException e) {
+            // error on the side of caution
+            return true;
+        }
+    }
+
+    private static ImmutableList<File> listFiles(File dir)
+    {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(files);
     }
 
 }

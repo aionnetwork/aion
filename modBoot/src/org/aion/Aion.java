@@ -20,9 +20,8 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion;
-
-
 
 import java.io.Console;
 import java.util.ServiceLoader;
@@ -43,6 +42,7 @@ import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
@@ -73,7 +73,7 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            if (!args[0].matches("-n|--network|-d|--datadir")) {
+            if (ret != 2) {
                 exit(ret);
             }
         }
@@ -100,21 +100,6 @@ public class Aion {
             exit(-1);
         }
 
-        // Log/Database path
-        if (!cfg.getLog().getLogFile()) {
-            System.out
-                .println("Logger disabled; to enable please check log settings in config.xml\n");
-        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("File path is invalid; please check log setting in config.xml\n");
-            return;
-        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger path: '" + cfg.getLog().getLogPath() + "'");
-        }
-        System.out.println("Database path: '" + cfg.getDb().getPath() + "'");
-        System.out.println("Config path: '" + CfgAion.getConfFilePath() + "'");
-        System.out.println("Genesis path: '" + CfgAion.getGenesisFilePath() + "'");
-        System.out.println("Keystore path: '" + Keystore.getKeystorePath() + "'");
-
         // get the ssl password synchronously from the console, only if required
         // do this here, before writes to logger because if we don't do this here, then
         // it gets presented to console out of order with the rest of the logging ...
@@ -129,6 +114,30 @@ public class Aion {
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
+        String[] filePath = new String[5];
+        // Log/Database path
+        if (!cfg.getLog().getLogFile()) {
+            System.out.println("Logger disabled; to enable please check log settings in config.xml");
+        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("File path is invalid; please check log setting in config.xml");
+            return;
+        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            filePath[0] = Cfg.getBasePath() + "/" + cfg.getLog().getLogPath();
+        }
+        filePath[1] = Cfg.getBasePath() + "/" + cfg.getDb().getPath();
+        filePath[2] = Keystore.getKeystorePath();
+        filePath[3] = CfgAion.getConfFilePath();
+        filePath[4] = CfgAion.getGenesisFilePath();
+
+        String path =
+                "\n---------------------------- USED PATHS ----------------------------" +
+                "\n> Logger path:   " + filePath[0] +
+                "\n> Database path: " + filePath[1] +
+                "\n> Keystore path: " + filePath[2] +
+                "\n> Config path:   " + filePath[3] +
+                "\n> Genesis path:  " + filePath[4] +
+                "\n--------------------------------------------------------------------\n\n";
+
         String logo =
               "\n                     _____                  \n" +
                 "      .'.       |  .~     ~.  |..          |\n" +
@@ -142,6 +151,7 @@ public class Aion {
         logo = appendLogo(logo, versionStr);
         logo = appendLogo(logo, networkStr);
 
+        genLog.info(path);
         genLog.info(logo);
 
         IAionChain ac = AionFactory.create();
