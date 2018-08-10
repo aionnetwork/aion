@@ -3,6 +3,7 @@ package org.aion.gui.model;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
@@ -13,6 +14,8 @@ import org.slf4j.Logger;
 public abstract class AbstractAionApiClient {
     private final IAionAPI api;
     private final IApiMsgErrorHandler errorHandler;
+
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     /**
      * Constructor
@@ -45,6 +48,7 @@ public abstract class AbstractAionApiClient {
      * @return object returned by Aion API.
      * @throws ApiDataRetrievalException if error handler decides to throw it
      */
+
     protected ApiMsg callApi(ApiFunction func) throws ApiDataRetrievalException {
         final ApiMsg msg;
         synchronized (api) {

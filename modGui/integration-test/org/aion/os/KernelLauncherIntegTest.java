@@ -7,7 +7,9 @@ import org.aion.gui.events.EventPublisher;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,6 +35,9 @@ public class KernelLauncherIntegTest {
     private static final long POLL_TERMINATION_INTERVAL_MILLIS = 3000;
     private static final long POLL_TERMINATION_MAX_MILLIS = 300_000;
 
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
     @Before
     public void before() {
         cleanupPids = new LinkedList<>();
@@ -52,8 +57,6 @@ public class KernelLauncherIntegTest {
                         ex.printStackTrace();
                     }
                 });
-        File maybePidFile = new File("/tmp/kernel-pid");
-        maybePidFile.delete();
     }
 
     @Test
@@ -67,9 +70,12 @@ public class KernelLauncherIntegTest {
         List<Long> aionPidsInitial = pgrep("Aion$");
         System.out.println("Before kernel launch, PIDs for Aion kernel process: " + aionPidsInitial);
 
+        File tempLocalStorageDir = tempFolder.newFolder("localStorageDir");
+        System.out.println("Using temp folder: " + tempLocalStorageDir.getAbsolutePath());
+
         // launch a kernel instance
         KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker());
+                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker(), tempLocalStorageDir);
         Process kernelProc = kl.launch();
         Long nohupWrapperPid = kernelProc.pid();
 
@@ -88,7 +94,7 @@ public class KernelLauncherIntegTest {
         // terminate the kernel instance using a different launcher (simulates exit GUI / reopen GUI case)
         // and make sure that PID went away
         KernelLauncher kl2 = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker());
+                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker(), tempLocalStorageDir);
         kl2.tryResume();
         kl2.terminate();
 
@@ -123,8 +129,10 @@ public class KernelLauncherIntegTest {
         // a launched kernel that got killed
         UnixKernelProcessHealthChecker healthChecker = mock(UnixKernelProcessHealthChecker.class);
         when(healthChecker.checkIfKernelRunning(1)).thenReturn(false);
+        File tempLocalStorageDir = tempFolder.newFolder("localStorageDir");
+        System.out.println("Using temp folder: " + tempLocalStorageDir.getAbsolutePath());
         KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(), healthChecker);
+                new UnixProcessTerminator(), healthChecker, tempLocalStorageDir);
         kl.setAndPersistPid(1);
         kl.setCurrentInstance(null);
 

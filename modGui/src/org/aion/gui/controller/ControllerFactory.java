@@ -1,14 +1,29 @@
 package org.aion.gui.controller;
 
 import javafx.util.Callback;
+import org.aion.gui.controller.partials.AccountsController;
+import org.aion.gui.controller.partials.ConsoleTailController;
+import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.model.BalanceRetriever;
 import org.aion.gui.model.ConfigManipulator;
+import org.aion.gui.model.ConsoleTail;
 import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.gui.model.TransactionProcessor;
 import org.aion.gui.model.dto.SyncInfoDto;
-import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.aion.os.UnixKernelProcessHealthChecker;
+import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.console.ConsoleManager;
+import org.aion.wallet.storage.WalletStorage;
+import org.aion.wallet.ui.components.partials.AddAccountDialog;
+import org.aion.wallet.ui.components.partials.ConnectivityStatusController;
+import org.aion.wallet.ui.components.partials.ImportAccountDialog;
+import org.aion.wallet.ui.components.partials.SaveKeystoreDialog;
+import org.aion.wallet.ui.components.partials.TransactionResubmissionDialog;
+import org.aion.wallet.ui.components.partials.UnlockAccountDialog;
+import org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog;
 import org.slf4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
@@ -26,7 +41,7 @@ import java.util.Map;
  */
 public class ControllerFactory implements Callback<Class<?>, Object> {
     /** maps a class to a method that constructs an instance of it */
-    private final Map<Class, BuildMethod> builderChooser;
+    protected final Map<Class, BuildMethod> builderChooser;
 
     private KernelConnection kernelConnection;
     private KernelLauncher kernelLauncher;
@@ -34,14 +49,20 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private SyncInfoDto syncInfoDto;
     private ConfigManipulator configManipulator;
+    private AccountManager accountManager;
+    private WalletStorage walletStorage;
+    private TransactionProcessor transactionProcessor;
+    private ConsoleManager consoleManager;
     private UnixKernelProcessHealthChecker healthChecker;
+    private EventBusRegistry eventBusRegistry;
+    private BalanceRetriever balanceRetriever;
 
     private static final Logger LOG = org.aion.log.AionLoggerFactory
             .getLogger(org.aion.log.LogEnum.GUI.name());
 
     @FunctionalInterface
     protected interface BuildMethod {
-        AbstractController build();
+        Object build();
     }
 
     /**
@@ -51,13 +72,38 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     public ControllerFactory() {
         this.builderChooser = new HashMap<>() {{
             put(DashboardController.class, () -> new DashboardController(
+                    eventBusRegistry,
                     kernelLauncher,
                     kernelConnection,
                     kernelUpdateTimer,
                     generalKernelInfoRetriever,
-                    healthChecker,
-                    syncInfoDto
-            ));
+                    syncInfoDto,
+                    consoleManager,
+                    healthChecker));
+            put(SettingsController.class, () -> new SettingsController(
+                    configManipulator));
+            put(AccountsController.class, () -> new AccountsController(
+                    accountManager, walletStorage, consoleManager));
+            put(HeaderPaneControls.class, () -> new HeaderPaneControls(
+                    new BalanceRetriever(kernelConnection)));
+            put(SendController.class, () -> new SendController(
+                    accountManager,
+                    transactionProcessor,
+                    consoleManager,
+                    balanceRetriever));
+            put(HistoryController.class, () -> new HistoryController(
+                    transactionProcessor,
+                    accountManager,
+                    new SyncInfoDto(kernelConnection)));
+            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager, consoleManager));
+            put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager, consoleManager));
+            put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager, consoleManager));
+            put(UnlockAccountDialog.class, () -> new UnlockAccountDialog(accountManager, consoleManager));
+            put(TransactionResubmissionDialog.class, () -> new TransactionResubmissionDialog(
+                    accountManager, consoleManager));
+            put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager, consoleManager));
+            put(ConsoleTailController.class, () -> new ConsoleTailController(new ConsoleTail(), consoleManager));
+            put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(kernelConnection));
             put(SettingsController.class, () -> new SettingsController(
                     configManipulator
             ));
@@ -197,12 +243,67 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return configManipulator;
     }
 
+
+    public AccountManager getAccountManager() {
+        return accountManager;
+    }
+
+    public WalletStorage getWalletStorage() {
+        return walletStorage;
+    }
+
+    public ControllerFactory withAccountManager(AccountManager accountManager) {
+        this.accountManager = accountManager;
+        return this;
+    }
+
+    public ControllerFactory withWalletStorage(WalletStorage walletStorage) {
+        this.walletStorage = walletStorage;
+        return this;
+    }
+
+    public TransactionProcessor getTransactionProcessor() {
+        return this.transactionProcessor;
+    }
+
+    public ControllerFactory withBlockTransactionProcessor(TransactionProcessor transactionProcessor) {
+        this.transactionProcessor = transactionProcessor;
+        return this;
+    }
+
+    public ConsoleManager getConsoleManager() {
+        return consoleManager;
+    }
+
+    public ControllerFactory withConsoleManager(ConsoleManager consoleManager) {
+        this.consoleManager = consoleManager;
+        return this;
+    }
+
     public UnixKernelProcessHealthChecker getHealthChecker() {
         return this.healthChecker;
     }
 
     public ControllerFactory withHealthChecker(UnixKernelProcessHealthChecker healthChecker) {
         this.healthChecker = healthChecker;
+        return this;
+    }
+
+    public EventBusRegistry getEventBusRegistry() {
+        return this.eventBusRegistry;
+    }
+
+    public ControllerFactory withEventBusRegistry(EventBusRegistry eventBusRegistry) {
+        this.eventBusRegistry = eventBusRegistry;
+        return this;
+    }
+
+    public BalanceRetriever getBalanceRetriever() {
+        return this.balanceRetriever;
+    }
+
+    public ControllerFactory withBalanceRetriever(BalanceRetriever balanceRetriever) {
+        this.balanceRetriever = balanceRetriever;
         return this;
     }
 }

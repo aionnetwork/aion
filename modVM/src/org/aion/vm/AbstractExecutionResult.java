@@ -31,131 +31,13 @@ import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
+/**
+ * An abstract class representing the result of either a transaction or contract execution.
+ */
 public abstract class AbstractExecutionResult implements IExecutionResult {
-
-    private ResultCode code;
-    private long nrgLeft;
-    private byte[] output;
-    public AbstractExecutionResult(byte[] result) {
-        ByteBuffer buffer = ByteBuffer.wrap(result);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-
-        ResultCode code = ResultCode.fromInt(buffer.getInt());
-        long nrgLeft = buffer.getLong();
-        byte[] output = new byte[buffer.getInt()];
-        buffer.get(output);
-
-        this.code = code;
-        this.nrgLeft = nrgLeft;
-        this.output = output;
-    }
-    /**
-     * Constructs a new ExecutionResult with output.
-     *
-     * @param code The result code.
-     * @param nrgLeft The energy left after execution.
-     * @param output The output of the execution.
-     */
-    public AbstractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
-        this.code = code;
-        this.nrgLeft = nrgLeft;
-        this.output = output;
-    }
-
-    /**
-     * Constructs a new ContractExecutionResult with no output.
-     *
-     * @param code The result code.
-     * @param nrgLeft The energy left after execution.
-     */
-    public AbstractExecutionResult(ResultCode code, long nrgLeft) {
-        this(code, nrgLeft, ByteUtil.EMPTY_BYTE_ARRAY);
-    }
-
-    /**
-     * Encode execution resul tinto byte array.
-     */
-    public byte[] toBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 8 + 4 + (output == null ? 0 : output.length));
-        buffer.order(ByteOrder.BIG_ENDIAN);
-
-        buffer.putInt(code.toInt());
-        buffer.putLong(nrgLeft);
-        buffer.putInt(output == null ? 0 : output.length);
-        if (output != null) {
-            buffer.put(output);
-        }
-
-        return buffer.array();
-    }
-
-    /**
-     * Returns this ContractExecutionResult's result code.
-     *
-     * @return the result code.
-     */
-    public int getCode() {
-        return code.toInt();
-    }
-
-    /**
-     * Sets the code.
-     */
-    public void setCode(int code) {
-        this.code = ResultCode.fromInt(code);
-    }
-
-    public ResultCode getResultCode() {
-        return code;
-    }
-
-    /**
-     * Returns this ContractExecutionResult's energy left.
-     *
-     * @return the energy left.
-     */
-    public long getNrgLeft() {
-        return nrgLeft;
-    }
-
-    /**
-     * Sets nrg left.
-     */
-    public void setNrgLeft(long nrgLeft) {
-        this.nrgLeft = nrgLeft;
-    }
-
-    /**
-     * Sets this ContractExecutionResult's code to code and its energy left to nrgLeft.
-     *
-     * @param code The new code.
-     * @param nrgLeft The new nrgLeft.
-     */
-    public void setCodeAndNrgLeft(int code, long nrgLeft) {
-        setCode(code);
-        this.nrgLeft = nrgLeft;
-    }
-
-    /**
-     * Returns this ContractExecutionResult's output.
-     *
-     * @return the result output.
-     */
-    public byte[] getOutput() {
-        return output;
-    }
-
-    /**
-     * Sets the output.
-     */
-    public void setOutput(byte[] output) {
-        this.output = output;
-    }
-
-    public String toString() {
-        return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + Hex
-            .toHexString(output) + "]";
-    }
+    ResultCode code;
+    long nrgLeft;
+    byte[] output;
 
     public enum ResultCode {
         SUCCESS(0),
@@ -194,4 +76,136 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
             return val;
         }
     }
+
+    /**
+     * Constructs a new AbstractExecutionResult with the specified output.
+     *
+     * @param code The result code.
+     * @param nrgLeft The energy left after execution.
+     * @param output The output of the execution.
+     * @throws NullPointerException if code is null.
+     */
+    public AbstractExecutionResult(ResultCode code, long nrgLeft, byte[] output) {
+        this.code = code;
+        this.nrgLeft = nrgLeft;
+        this.output = (output == null) ? ByteUtil.EMPTY_BYTE_ARRAY : output;
+    }
+
+    /**
+     * Constructs a new ContractExecutionResult with no specified output. The output for this
+     * AbstractExecutionResult is a zero-length byte array.
+     *
+     * @param code The result code.
+     * @param nrgLeft The energy left after execution.
+     * @throws NullPointerException if code is null.
+     * @throws IllegalArgumentException if nrgLeft is negative.
+     */
+    public AbstractExecutionResult(ResultCode code, long nrgLeft) {
+        this(code, nrgLeft, ByteUtil.EMPTY_BYTE_ARRAY);
+    }
+
+    /**
+     * Returns a big-endian binary encoding of the AbstractExecutionResult.
+     *
+     * @return a big-endian binary encoding of the AbstractExecutionResult.
+     */
+    public byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 8 + 4 + (output == null ? 0 : output.length));
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.putInt(code.toInt());
+        buffer.putLong(nrgLeft);
+        buffer.putInt(output == null ? 0 : output.length);
+        if (output != null) {
+            buffer.put(output);
+        }
+        return buffer.array();
+    }
+
+    /**
+     * Returns an integer representation of the AbstractExecutionResult's code.
+     *
+     * @return an integer representation of the code.
+     */
+    public int getCode() {
+        return code.toInt();
+    }
+
+    /**
+     * Returns the AbstractExecutionResult's result code.
+     *
+     * @return the result code.
+     */
+    public ResultCode getResultCode() { return code; }
+
+    /**
+     * Returns the AbstractExecutionResult's remaining energy.
+     *
+     * @return the energy left.
+     */
+    public long getNrgLeft() {
+        return nrgLeft;
+    }
+
+    /**
+     * Returns the AbstractExecutionResult's output.
+     *
+     * @return the output.
+     */
+    public byte[] getOutput() {
+        return output;
+    }
+
+    /**
+     * Sets the AbstractExecutionResult's code to the code whose integer representation is code.
+     *
+     * @param code the integer representation of the code to be set.
+     */
+    public void setCode(int code) {
+        ResultCode resCode = ResultCode.fromInt(code);
+        this.code = (resCode == null) ? this.code : resCode;
+    }
+
+    /**
+     * Sets the energy left for the AbstractExecutionResult to nrgLeft.
+     *
+     * @param nrgLeft The energy remaining.
+     */
+    public void setNrgLeft(long nrgLeft) {
+        this.nrgLeft = nrgLeft;
+    }
+
+    /**
+     * Sets the AbstractExecutionResult's result code to the code whose integer representation is
+     * code and its remaining energy to nrgLeft.
+     *
+     * @param code The integer representation of the new code to be set.
+     * @param nrgLeft The new remaining energy.
+     * @throws IllegalArgumentException if code does not correspond to a ResultCode or nrgLeft is
+     * negative.
+     */
+    public void setCodeAndNrgLeft(int code, long nrgLeft) {
+        setCode(code);
+        setNrgLeft(nrgLeft);
+    }
+
+    /**
+     * Sets the AbstractExecutionResult's output to output.
+     *
+     * @param output The new output.
+     */
+    public void setOutput(byte[] output) {
+        this.output = output;
+    }
+
+    /**
+     * Returns a string representation of the AbstractExecutionResult.
+     *
+     * @return a string representation of the AbstractExecutionResult.
+     */
+    @Override
+    public String toString() {
+        String out = (output == null) ? "" : Hex.toHexString(output);
+        return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + out + "]";
+    }
+
 }
