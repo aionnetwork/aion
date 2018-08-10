@@ -183,6 +183,7 @@ public class SendController extends AbstractController {
             displayStatus(e.getMessage(), true);
             return;
         }
+        sendButton.setDisable(true);
         displayStatus(PENDING_MESSAGE, false);
 
         final Task<TransactionResponseDTO> sendTransactionTask = getApiTask(this::sendTransaction, dto);
@@ -200,6 +201,7 @@ public class SendController extends AbstractController {
     }
 
     private void handleTransactionFinished(final TransactionResponseDTO response) {
+        sendButton.setDisable(false);
         setTimedoutTransactionsLabelText();
         final String error = response.getError();
         if (error != null) {

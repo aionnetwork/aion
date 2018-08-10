@@ -56,30 +56,16 @@ public class DashboardControllerIntegTest extends ApplicationTest {
     private Parent dashboardView;
     private EventBusRegistry ebr;
 
-    /**
-     * Not using Mockito's @Before because JavaFX's start() runs first and that needs member
-     * vars already set up.
-     */
     @Override
-    public void init() {
+    public void start(Stage stage) throws Exception {
+        ebr = new EventBusRegistry();
         kernelLauncher = mock(KernelLauncher.class);
         kernelConnection = mock(KernelConnection.class);
         kernelUpdateTimer = mock(KernelUpdateTimer.class);
         generalKernelInfoRetriever = mock(GeneralKernelInfoRetriever.class);
         syncInfoDto = mock(SyncInfoDto.class);
         healthChecker = mock(UnixKernelProcessHealthChecker.class);
-    }
-
-    @Override
-    public void start(Stage stage) throws Exception {
-        ebr = new EventBusRegistry();
-            kernelLauncher = mock(KernelLauncher.class);
-            kernelConnection = mock(KernelConnection.class);
-            kernelUpdateTimer = mock(KernelUpdateTimer.class);
-            generalKernelInfoRetriever = mock(GeneralKernelInfoRetriever.class);
-            syncInfoDto = mock(SyncInfoDto.class);
-            healthChecker = mock(UnixKernelProcessHealthChecker.class);
-            consoleManager = mock(ConsoleManager.class);
+        consoleManager = mock(ConsoleManager.class);
 
             cf = new ControllerFactory()
                     .withKernelConnection(kernelConnection)
