@@ -32,25 +32,29 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class ApiUtilTests {
+public class ApiUtilTest {
 
     private byte vers, retCode;
 
     private byte errorLength;
-    private byte resultLength;
 
     private byte[] hash;
     private byte[] error;
     private byte[] result;
 
-    public ApiUtilTests() {
+    public ApiUtilTest() {
         errorLength = 7;
-        resultLength = 6;
+        byte resultLength = 6;
         vers = RandomUtils.nextBytes(1)[0];
         retCode = RandomUtils.nextBytes(1)[0];
         hash = RandomUtils.nextBytes(ApiUtil.HASH_LEN);
         error = RandomUtils.nextBytes(errorLength);
         result = RandomUtils.nextBytes(resultLength);
+        System.out.println("vers set to " + vers);
+        System.out.println("retCode set to " + retCode);
+        System.out.println("hash set to " + hash.toString());
+        System.out.println("error set to " + error.toString());
+        System.out.println("result set to " + result.toString());
     }
 
     @Test

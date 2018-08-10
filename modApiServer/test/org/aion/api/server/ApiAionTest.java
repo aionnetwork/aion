@@ -42,8 +42,10 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +54,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class ApiAionTests {
+public class ApiAionTest {
 
     private class ApiAionImpl extends ApiAion {
 
@@ -75,19 +77,19 @@ public class ApiAionTests {
             pendingUpdateFlag = true;
         }
 
-        public boolean allFlagsSet() {
+        private boolean allFlagsSet() {
             return (onBlockFlag && pendingRcvdFlag && pendingUpdateFlag);
         }
 
 
-        public ApiAionImpl(AionImpl impl) {
+        private ApiAionImpl(AionImpl impl) {
             super(impl);
             onBlockFlag = false;
             pendingRcvdFlag = false;
             pendingUpdateFlag = false;
         }
 
-        public void addEvents() {
+        private void addEvents() {
             EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             AionTransaction tx = new AionTransaction(null);
             List l1 = new ArrayList<ITransaction>();
@@ -119,18 +121,67 @@ public class ApiAionTests {
 
     }
 
+    private static final String KEYSTORE_PATH;
+    private String addressString;
+
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        KEYSTORE_PATH = storageDir + "/keystore";
+    }
+
+    private ApiAionImpl api;
+    private AionImpl impl = AionImpl.inst();
+    private AionRepositoryImpl repo = AionRepositoryImpl.inst();
+
+    @Before
+    public void setup() {
+        api = new ApiAionImpl(impl);
+    }
+
+    private void tearDown() {
+        // get a list of all the files in keystore directory
+        File folder = new File(KEYSTORE_PATH);
+        File[] AllFilesInDirectory = folder.listFiles();
+        List<String> allFileNames = new ArrayList<>();
+        List<String> filesToBeDeleted = new ArrayList<>();
+
+        // check for invalid or wrong path - should not happen
+        if (AllFilesInDirectory == null)
+            return;
+
+        for (File file : AllFilesInDirectory) {
+            allFileNames.add(file.getName());
+        }
+
+        // get a list of the files needed to be deleted, check the ending of file names
+        // with corresponding addresses
+        for (String name : allFileNames) {
+            String ending = name.substring(name.length() - 64);
+
+            if (ending.equals(addressString)) {
+                filesToBeDeleted.add(KEYSTORE_PATH + "/" + name);
+            }
+        }
+
+        // iterate and delete those files
+        for (String name : filesToBeDeleted) {
+            File file = new File(name);
+            if (file.delete())
+                System.out.println("Deleted file: " + name);
+        }
+    }
+
     @Test
     public void testCreate() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         System.out.println("API Version = " + api.getApiVersion());
         assertNotNull(api.getInstalledFltrs());
     }
 
     @Test
     public void testInitNrgOracle() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         api.initNrgOracle(impl);
         assertNotNull(api.getNrgOracle());
         // Initing a second time should not create a new NrgOracle
@@ -139,24 +190,16 @@ public class ApiAionTests {
     }
 
     @Test
-    public void testStartES() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
+    public void testStartES() throws Exception {
         api.startES("thName");
         api.addEvents();
-        try
-        {
-            Thread.sleep(5000);
-        }
-        catch(InterruptedException ex) {}
+        Thread.sleep(2000);
         api.shutDownES();
         assertTrue(api.allFlagsSet());
     }
 
     @Test
     public void testGetBlock() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         assertNotNull(api.getBlockTemplate());
 
         AionBlock blk = impl.getBlockchain().getBestBlock();
@@ -179,9 +222,8 @@ public class ApiAionTests {
         assertEquals(rslt.getKey().toString(), blk.toString());
 
         // check because blk might be the genesis block
-        if (!blk.isGenesis())
-            assertEquals(rslt.getValue(),
-                    ((AionBlockStore)impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
+        assertEquals(rslt.getValue(),
+                ((AionBlockStore) impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
         assertEquals(api.getBlockWithTotalDifficulty(0).getValue(), CfgAion.inst().getGenesis().getDifficultyBI());
@@ -190,30 +232,24 @@ public class ApiAionTests {
 
     @Test
     public void testGetSync() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         SyncInfo sync = api.getSync();
         assertNotNull(sync);
         assertEquals(sync.done, impl.isSyncComplete());
         if (impl.getInitialStartingBlockNumber().isPresent())
             assertEquals(sync.chainStartingBlkNumber, (long) impl.getInitialStartingBlockNumber().get());
-        if (impl.getInitialStartingBlockNumber().isPresent())
+        if (impl.getNetworkBestBlockNumber().isPresent())
             assertEquals(sync.networkBestBlkNumber, (long) impl.getNetworkBestBlockNumber().get());
-        if (impl.getInitialStartingBlockNumber().isPresent())
+        if (impl.getLocalBestBlockNumber().isPresent())
             assertEquals(sync.chainBestBlkNumber, (long) impl.getLocalBestBlockNumber().get());
     }
 
     @Test
     public void testGetTransactions() {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
         byte[] msg = "test message".getBytes();
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                 Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                    msg,100000, 100000);
+                msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
         AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
@@ -242,85 +278,77 @@ public class ApiAionTests {
 
     @Test
     public void testDoCall() {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         byte[] msg = "test message".getBytes();
 
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString = addr.toString();
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                 addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg,100000, 100000);
+                msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.doCall(txcall));
+        tearDown();
     }
 
     @Test
     public void testEstimates() {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         byte[] msg = "test message".getBytes();
 
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString = addr.toString();
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                 addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg,100000, 100000);
+                msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotEquals(0, api.estimateGas(txcall));
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
+        tearDown();
     }
 
     @Test
     public void testCreateContract() {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         byte[] msg = "test message".getBytes();
 
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString = addr.toString();
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.createContract(txcall).transId);
         assertNotNull(api.createContract(txcall).address);
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.createContract(txcall));
 
         txcall = new ArgTxCall(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.createContract(txcall));
+        tearDown();
     }
 
     @Test
     public void testAccountGetters() {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS()));
         assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS()));
         assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS().toString()));
@@ -329,51 +357,47 @@ public class ApiAionTests {
 
     @Test
     public void testSendTransaction() {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         byte[] msg = "test message".getBytes();
 
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString = addr.toString();
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.sendTransaction(txcall));
 
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                 addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg,100000, 100000);
+                msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
         assertNotNull(api.sendTransaction(tx.getEncoded()));
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.sendTransaction(txcall));
 
         txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE,100000, 100000);
+                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.sendTransaction(txcall));
+        tearDown();
     }
 
     @Test
     public void testSimpleGetters() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         assertEquals(CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
-            api.getRecommendedNrgPrice());
+                api.getRecommendedNrgPrice());
         api.initNrgOracle(impl);
         assertEquals(api.getNrgOracle().getNrgPrice(),
                 api.getRecommendedNrgPrice());
 
         assertNotNull(api.getCoinbase());
-        assertEquals(impl.getAionHub().getRepository().getCode(Address.ZERO_ADDRESS()),
+        assertEquals(repo.getCode(Address.ZERO_ADDRESS()),
                 api.getCode(Address.ZERO_ADDRESS()));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
@@ -385,9 +409,6 @@ public class ApiAionTests {
 
     @Test
     public void testHashRate() {
-        AionImpl impl = AionImpl.inst();
-        ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
-
         double hashRate = 1000;
 
         assertTrue(api.setReportedHashrate(Double.toString(hashRate), ""));

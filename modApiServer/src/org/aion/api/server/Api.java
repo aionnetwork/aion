@@ -23,6 +23,7 @@
  ******************************************************************************/
 package org.aion.api.server;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.api.server.types.CompiContrInfo;
@@ -58,11 +59,9 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     }
 
     // Only for testing purposes
-    Api(boolean test) {
-        if (!test)
-            pendingState = AionPendingStateImpl.inst();
-        else
-            pendingState = null;
+    @VisibleForTesting
+    Api(AionPendingStateImpl ps) {
+            pendingState = ps;
     }
 
     public abstract String getCoinbase();

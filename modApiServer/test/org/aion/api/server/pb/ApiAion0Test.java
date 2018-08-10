@@ -36,34 +36,51 @@ import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class ApiAion0Tests {
+public class ApiAion0Test {
 
     private byte[] msg, socketId, hash, rsp;
 
     private ApiAion0 api;
-
 
     private static final int MSG_HASH_LEN = 8;
     private static final int RSP_HEADER_NOHASH_LEN = 3;
     private static final int REQ_HEADER_NOHASH_LEN = 4;
     private static final int RSP_HEADER_LEN = RSP_HEADER_NOHASH_LEN + MSG_HASH_LEN;
 
-    public ApiAion0Tests() {
+    private static final String KEYSTORE_PATH;
+    private String addressString1;
+    private String addressString2;
+    private boolean keyCreated;
+
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        KEYSTORE_PATH = storageDir + "/keystore";
+    }
+    public ApiAion0Test() {
         msg = "test message".getBytes();
         socketId = RandomUtils.nextBytes(5);
         hash = RandomUtils.nextBytes(ApiUtil.HASH_LEN);
+        System.out.println("socketId set to " + socketId.toString());
+        System.out.println("hash set to " + hash.toString());
         rsp = null;
     }
 
@@ -101,19 +118,53 @@ public class ApiAion0Tests {
         return api.process(request, socketId);
     }
 
-    private void setup() {
+    @Before
+    public void setup() {
         api = new ApiAion0(AionImpl.inst());
+        keyCreated = false;
     }
 
-    private void tearDown() {
+    @After
+    public void tearDown() {
         api.shutDown();
         rsp = null;
+
+        if(keyCreated) {
+            // get a list of all the files in keystore directory
+            File folder = new File(KEYSTORE_PATH);
+            File[] AllFilesInDirectory = folder.listFiles();
+            List<String> allFileNames = new ArrayList<>();
+            List<String> filesToBeDeleted = new ArrayList<>();
+
+            // check for invalid or wrong path - should not happen
+            if (AllFilesInDirectory == null)
+                return;
+
+            for (File file : AllFilesInDirectory) {
+                allFileNames.add(file.getName());
+            }
+
+            // get a list of the files needed to be deleted, check the ending of file names
+            // with corresponding addresses
+            for (String name : allFileNames) {
+                String ending = name.substring(name.length() - 64);
+
+                if (ending.equals(addressString1) || ending.equals(addressString2)) {
+                    filesToBeDeleted.add(KEYSTORE_PATH + "/" + name);
+                }
+            }
+
+            // iterate and delete those files
+            for (String name : filesToBeDeleted) {
+                File file = new File(name);
+                if (file.delete())
+                    System.out.println("Deleted file: " + name);
+            }
+        }
     }
 
     @Test
     public void testHeartBeatMsg() {
-        setup();
-
         byte[] msg = ByteBuffer.allocate(api.getApiHeaderLen()).put(api.getApiVersion())
                 .put((byte) Message.Servs.s_hb_VALUE).array();
         assertTrue(ApiAion0.heartBeatMsg(msg));
@@ -121,14 +172,10 @@ public class ApiAion0Tests {
 
         msg[0] = 0;
         assertFalse(ApiAion0.heartBeatMsg(msg));
-
-        tearDown();
     }
 
     @Test
     public void testProcessProtocolVersion() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_protocolVersion_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -141,14 +188,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_protocolVersion_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessMinerAddress() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_minerAddress_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -161,15 +204,14 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_minerAddress_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessContractDeploy() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         byte[] val = {50, 30};
@@ -193,14 +235,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_contractDeploy_VALUE, reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessAccountsValue() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_accounts_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -215,14 +253,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accounts_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessBlockNumber() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_blockNumber_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -234,14 +268,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_blockNumber_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessUnlockAccount() {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -258,15 +288,14 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_unlockAccount_VALUE, reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetBalance() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getBalance reqBody = Message.req_getBalance.newBuilder()
@@ -284,15 +313,14 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBalance_VALUE, reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetNonce() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getNonce reqBody = Message.req_getNonce.newBuilder()
@@ -310,14 +338,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getNonce_VALUE, reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetNrgPrice() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_getNrgPrice_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -328,14 +352,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getNrgPrice_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessCompilePass() throws Exception {
-        setup();
-
         // Taken from FastVM CompilerTest.java
         String contract = "pragma solidity ^0.4.0;\n" + //
                 "\n" + //
@@ -367,8 +387,6 @@ public class ApiAion0Tests {
 
     @Test
     public void testProcessCompileFail() {
-        setup();
-
         Message.req_compileSolidity reqBody = Message.req_compileSolidity.newBuilder()
                 .setSource("This should fail")
                 .build();
@@ -380,15 +398,14 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_compile_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessSendTransaction() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_sendTransaction reqBody = Message.req_sendTransaction.newBuilder()
@@ -411,15 +428,14 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_sendTransaction_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetCode() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getCode reqBody = Message.req_getCode.newBuilder()
@@ -436,14 +452,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getCode_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetTR() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -473,15 +485,14 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionReceipt_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessCall() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_call reqBody = Message.req_call.newBuilder()
@@ -501,14 +512,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_call_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetBlockByNumber() throws Exception {
-        setup();
-
         Message.req_getBlockByNumber reqBody = Message.req_getBlockByNumber.newBuilder()
                 .setBlockNumber(api.getBestBlock().getNumber())
                 .build();
@@ -524,14 +531,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockByNumber_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetBlockByHash() throws Exception {
-        setup();
-
         Message.req_getBlockByHash reqBody = Message.req_getBlockByHash.newBuilder()
                 .setBlockHash(ByteString.copyFrom(api.getBestBlock().getHash()))
                 .build();
@@ -547,14 +550,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockByHash_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetTxByBlockHashAndIndex() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -587,14 +586,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionByBlockHashAndIndex_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetTxByBlockNumberAndIndex() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -627,14 +622,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionByBlockNumberAndIndex_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetBlockTxCountByNumber() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -664,14 +655,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockTransactionCountByNumber_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetBlockTxCountByHash() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -701,14 +688,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockTransactionCountByHash_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetTxByHash() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -740,8 +723,6 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionByHash_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
@@ -780,14 +761,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionCount_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetActiveNodes() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_getActiveNodes_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -798,14 +775,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getActiveNodes_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetStaticNodes() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_getStaticNodes_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -816,14 +789,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getStaticNodes_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessGetSolcVersion() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_getSolcVersion_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -834,14 +803,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getSolcVersion_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessIsSyncing() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_isSyncing_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -852,8 +817,6 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_isSyncing_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
@@ -874,14 +837,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_syncInfo_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessAccountCreateAndLock() throws Exception {
-        setup();
-
         Message.req_accountCreate reqBody = Message.req_accountCreate.newBuilder()
                 .addPassword("passwd0")
                 .addPassword("passwd1")
@@ -917,14 +876,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accountLock_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessUserPrivilege() {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_privilege_VALUE, Message.Funcs.f_userPrivilege_VALUE);
 
         assertEquals(Message.Retcode.r_fail_unsupport_api_VALUE, rsp[1]);
@@ -932,14 +887,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_userPrivilege_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessMiningValue() throws Exception {
-        setup();
-
         rsp = sendRequest(Message.Servs.s_mine_VALUE, Message.Funcs.f_mining_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -950,14 +901,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_mining_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessEstimateNrg() throws Exception {
-        setup();
-
         byte[] val = {50, 30};
 
         Message.req_estimateNrg reqBody = Message.req_estimateNrg.newBuilder()
@@ -977,19 +924,19 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_estimateNrg_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessExportAccounts() throws Exception {
-        setup();
-
         Address addr1 = new Address(Keystore.create("testPwd1"));
         AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
 
         Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
+
+        addressString1 = addr1.toString();
+        addressString1 = addr2.toString();
+        keyCreated = true;
 
         Message.t_Key tkey1 = Message.t_Key.newBuilder()
                 .setAddress(ByteString.copyFrom(addr1.toBytes()))
@@ -1016,14 +963,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_exportAccounts_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessImportAccounts() throws Exception {
-        setup();
-
         Message.t_PrivateKey tpkey1 = Message.t_PrivateKey.newBuilder()
                 .setPassword("testPwd1")
                 .setPrivateKey("pkey1")
@@ -1049,14 +992,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_importAccounts_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessRawTransactions() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
@@ -1086,19 +1025,19 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_rawTransaction_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessEventRegister() throws Exception {
-        setup();
-
         Address addr1 = new Address(Keystore.create("testPwd1"));
         AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
 
         Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
+
+        addressString1 = addr1.toString();
+        addressString1 = addr2.toString();
+        keyCreated = true;
 
         Message.t_FilterCt fil1 = Message.t_FilterCt.newBuilder()
                 .addAddresses(ByteString.copyFrom(addr1.toBytes()))
@@ -1120,14 +1059,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_eventRegister_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessEventDeregister() throws Exception {
-        setup();
-
         Message.req_eventDeregister reqBody = Message.req_eventDeregister.newBuilder()
                 .addEvents("event1")
                 .build();
@@ -1142,14 +1077,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_eventDeregister_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessBlockDetails() throws Exception {
-        setup();
-
         Message.req_getBlockDetailsByNumber reqBody = Message.req_getBlockDetailsByNumber.newBuilder()
                 .addBlkNumbers(api.getBestBlock().getNumber())
                 .build();
@@ -1167,14 +1098,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockDetailsByNumber_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessBlockSqlRange() throws Exception {
-        setup();
-
         long bestBlkNum = api.getBestBlock().getNumber();
 
         Message.req_getBlockSqlByRange reqBody = Message.req_getBlockSqlByRange.newBuilder()
@@ -1194,14 +1121,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockSqlByRange_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessBlockDetailsRange() throws Exception {
-        setup();
-
         long bestBlkNum = api.getBestBlock().getNumber();
 
         Message.req_getBlockDetailsByRange reqBody = Message.req_getBlockDetailsByRange.newBuilder()
@@ -1221,14 +1144,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockDetailsByRange_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessBlockDetailsLatest() throws Exception {
-        setup();
-
         Message.req_getBlockDetailsByLatest reqBody = Message.req_getBlockDetailsByLatest.newBuilder()
                 .setCount(20)
                 .build();
@@ -1245,14 +1164,10 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockDetailsByLatest_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessBlocksLatest() throws Exception {
-        setup();
-
         Message.req_getBlocksByLatest reqBody = Message.req_getBlocksByLatest.newBuilder()
                 .setCount(20)
                 .build();
@@ -1269,16 +1184,15 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlocksByLatest_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 
     @Test
     public void testProcessAccountDetails() throws Exception {
-        setup();
-
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        addressString1 = addr.toString();
+        keyCreated = true;
 
         Message.req_getAccountDetailsByAddressList reqBody = Message.req_getAccountDetailsByAddressList.newBuilder()
                 .addAddresses(ByteString.copyFrom(addr.toBytes()))
@@ -1298,7 +1212,5 @@ public class ApiAion0Tests {
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getAccountDetailsByAddressList_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-
-        tearDown();
     }
 }

@@ -28,15 +28,19 @@ import org.aion.base.type.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
+import org.junit.Before;
 import org.junit.Test;
 
 
+import java.io.File;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class ApiTests {
+public class ApiTest {
 
     private class ApiImpl extends Api {
 
@@ -66,55 +70,97 @@ public class ApiTests {
         }
 
         @Override
-        public BigInteger getBalance(String _address) throws Exception {
+        public BigInteger getBalance(String _address) {
             return null;
         }
 
-        public ApiImpl() {
-            super(true);
+        private ApiImpl() {
+            super(null);
         }
     }
 
-    @Test
-    public void testCreate() {
-        ApiImpl api = new ApiImpl();
-        api.solcVersion();
-        assertNotNull(api.LOG);
+    private ApiImpl api;
+
+    @Before
+    public void setup() {
+        api = new ApiImpl();
+    }
+
+    private static final String KEYSTORE_PATH;
+    private String addr;
+
+
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        KEYSTORE_PATH = storageDir + "/keystore";
+    }
+
+    private void tearDown() {
+        // get a list of all the files in keystore directory
+        File folder = new File(KEYSTORE_PATH);
+        File[] AllFilesInDirectory = folder.listFiles();
+        List<String> allFileNames = new ArrayList<>();
+        List<String> filesToBeDeleted = new ArrayList<>();
+
+        // check for invalid or wrong path - should not happen
+        if(AllFilesInDirectory == null)
+            return;
+
+        for(File file: AllFilesInDirectory){
+            allFileNames.add(file.getName());
+        }
+
+        // get a list of the files needed to be deleted, check the ending of file names
+        // with corresponding addresses
+        for(String name: allFileNames){
+            String ending = name.substring(name.length()-64);
+
+            if(ending.equals(addr)) {
+                filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);
+            }
+        }
+
+        // iterate and delete those files
+        for (String name: filesToBeDeleted){
+            File file = new File(name);
+            if (file.delete())
+                System.out.println("Deleted file: " + name);
+        }
     }
 
     @Test
     public void testLockAndUnlock() {
-        ApiImpl api = new ApiImpl();
         assertFalse(api.unlockAccount(Address.ZERO_ADDRESS(), "testPassword", 0));
         assertFalse(api.unlockAccount(Address.ZERO_ADDRESS().toString(), "testPassword", 0));
         assertFalse(api.lockAccount(Address.ZERO_ADDRESS(), "testPassword"));
 
-        Address addr = new Address(Keystore.create("testPwd"));
+        addr = Keystore.create("testPwd");
         assertTrue(api.unlockAccount(addr, "testPwd", 50000));
+        tearDown();
     }
 
     @Test
     public void testAccountRetrieval() {
-        ApiImpl api = new ApiImpl();
         assertNull(api.getAccountKey(Address.ZERO_ADDRESS().toString()));
 
-        String addr = Keystore.create("testPwd");
+        addr = Keystore.create("testPwd");
         assertEquals(AccountManager.inst().getKey(Address.wrap(addr)), api.getAccountKey(addr));
 
         assertTrue(api.getAccounts().contains(addr));
+        tearDown();
     }
 
     @Test
     public void testCompileFail() {
-        ApiImpl api = new ApiImpl();
         String contract = "This should fail\n";
         assertNotNull(api.contract_compileSolidity(contract).get("compile-error"));
     }
 
     @Test
     public void testCompilePass1() {
-        ApiImpl api = new ApiImpl();
-
         // Taken from FastVM CompilerTest.java
         String contract = "pragma solidity ^0.4.0;\n" + //
                 "\n" + //
@@ -136,7 +182,6 @@ public class ApiTests {
 
     @Test
     public void testContractCreateResult() {
-        ApiImpl api = new ApiImpl();
         ApiImpl.ContractCreateResult ccr = api.new ContractCreateResult();
         assertNull(ccr.address);
         assertNull(ccr.transId);
