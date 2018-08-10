@@ -1,6 +1,5 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
