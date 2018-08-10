@@ -120,8 +120,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestCreate() {
-        System.out.println("run TestCreate.");
+    public void testCreate() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         System.out.println("API Version = " + api.getApiVersion());
@@ -129,8 +128,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestInitNrgOracle() {
-        System.out.println("run TestInitNrgOracle.");
+    public void testInitNrgOracle() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         api.initNrgOracle(impl);
@@ -141,8 +139,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestStartES() {
-        System.out.println("run TestStartES.");
+    public void testStartES() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         api.startES("thName");
@@ -157,8 +154,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestGetBlock() {
-        System.out.println("run TestGetBlock.");
+    public void testGetBlock() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         assertNotNull(api.getBlockTemplate());
@@ -182,8 +178,7 @@ public class ApiAionTests {
 
 
     @Test
-    public void TestGetSync() {
-        System.out.println("run TestGetSync.");
+    public void testGetSync() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
         SyncInfo sync = api.getSync();
@@ -198,8 +193,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestGetTransactions() {
-        System.out.println("run TestGetTransactions.");
+    public void testGetTransactions() {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
@@ -236,8 +230,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestDoCall() {
-        System.out.println("run TestDoCall.");
+    public void testDoCall() {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
@@ -260,8 +253,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestEstimates() {
-        System.out.println("run TestEstimates.");
+    public void testEstimates() {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
@@ -285,8 +277,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestCreateContract() {
-        System.out.println("run TestCreateContract.");
+    public void testCreateContract() {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
@@ -314,8 +305,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestAccountGetters() {
-        System.out.println("run TestTransactionGetters.");
+    public void testAccountGetters() {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
@@ -327,8 +317,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestSendTransaction() {
-        System.out.println("run TestSendTransaction.");
+    public void testSendTransaction() {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
@@ -362,8 +351,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestSimpleGetters() {
-        System.out.println("run TestSimpleGetters.");
+    public void testSimpleGetters() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
 
@@ -385,8 +373,7 @@ public class ApiAionTests {
     }
 
     @Test
-    public void TestHashRate() {
-        System.out.println("run TestSendTransaction.");
+    public void testHashRate() {
         AionImpl impl = AionImpl.inst();
         ApiAionTests.ApiAionImpl api = new ApiAionTests.ApiAionImpl(impl);
 

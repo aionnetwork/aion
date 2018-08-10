@@ -76,16 +76,14 @@ public class ApiTests {
     }
 
     @Test
-    public void TestCreate() {
-        System.out.println("run TestCreate.");
+    public void testCreate() {
         ApiImpl api = new ApiImpl();
         api.solcVersion();
         assertNotNull(api.LOG);
     }
 
     @Test
-    public void TestLockAndUnlock() {
-        System.out.println("run TestLockAndUnlock.");
+    public void testLockAndUnlock() {
         ApiImpl api = new ApiImpl();
         assertFalse(api.unlockAccount(Address.ZERO_ADDRESS(), "testPassword", 0));
         assertFalse(api.unlockAccount(Address.ZERO_ADDRESS().toString(), "testPassword", 0));
@@ -96,8 +94,7 @@ public class ApiTests {
     }
 
     @Test
-    public void TestAccountRetrieval() {
-        System.out.println("run TestAccountRetrieval.");
+    public void testAccountRetrieval() {
         ApiImpl api = new ApiImpl();
         assertNull(api.getAccountKey(Address.ZERO_ADDRESS().toString()));
 
@@ -108,16 +105,14 @@ public class ApiTests {
     }
 
     @Test
-    public void TestCompileFail() {
-        System.out.println("run TestCompileFail.");
+    public void testCompileFail() {
         ApiImpl api = new ApiImpl();
         String contract = "This should fail\n";
         assertNotNull(api.contract_compileSolidity(contract).get("compile-error"));
     }
 
     @Test
-    public void TestCompilePass1() {
-        System.out.println("run TestCompilePass1.");
+    public void testCompilePass1() {
         ApiImpl api = new ApiImpl();
 
         // Taken from FastVM CompilerTest.java
@@ -140,8 +135,7 @@ public class ApiTests {
     }
 
     @Test
-    public void TestContractCreateResult() {
-        System.out.println("run TestContractCreateResult.");
+    public void testContractCreateResult() {
         ApiImpl api = new ApiImpl();
         ApiImpl.ContractCreateResult ccr = api.new ContractCreateResult();
         assertNull(ccr.address);

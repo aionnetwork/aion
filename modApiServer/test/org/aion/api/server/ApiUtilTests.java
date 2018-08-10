@@ -54,8 +54,7 @@ public class ApiUtilTests {
     }
 
     @Test
-    public void TestNulls() {
-        System.out.println("run TestNulls.");
+    public void testNulls() {
 
         assertNull(ApiUtil.toReturnHeader(vers, retCode, null));
         assertNull(ApiUtil.toReturnHeader(vers, retCode, null, null));
@@ -66,8 +65,7 @@ public class ApiUtilTests {
     }
 
     @Test
-    public void TestHeader() {
-        System.out.println("run TestHeader.");
+    public void testHeader() {
 
         byte[] header = ApiUtil.toReturnHeader(vers, retCode);
         assertEquals(vers, header[0]);
@@ -77,8 +75,7 @@ public class ApiUtilTests {
 
 
     @Test
-    public void TestHeaderHash() {
-        System.out.println("run TestHeaderHash.");
+    public void testHeaderHash() {
 
         byte[] header = ApiUtil.toReturnHeader(vers, retCode, hash);
         assertEquals(vers, header[0]);
@@ -89,8 +86,7 @@ public class ApiUtilTests {
     }
 
     @Test
-    public void TestHeaderHashError() {
-        System.out.println("run TestHeaderHashError.");
+    public void testHeaderHashError() {
 
         byte[] header = ApiUtil.toReturnHeader(vers, retCode, hash, error);
         assertEquals(vers, header[0]);
@@ -111,8 +107,7 @@ public class ApiUtilTests {
     }
 
     @Test
-    public void TestHeaderHashErrorResult() {
-        System.out.println("run TestHeaderHashErrorResult.");
+    public void testHeaderHashErrorResult() {
 
         byte[] header = ApiUtil.toReturnHeader(vers, retCode, hash, error, result);
         assertEquals(vers, header[0]);
@@ -134,8 +129,7 @@ public class ApiUtilTests {
     }
 
     @Test
-    public void TestReturnEvtHeader() {
-        System.out.println("run TestReturnEvtHeader.");
+    public void testReturnEvtHeader() {
 
         byte[] header = ApiUtil.toReturnEvtHeader(vers, result);
         assertEquals(vers, header[0]);
@@ -145,8 +139,7 @@ public class ApiUtilTests {
     }
 
     @Test
-    public void TestCombineRetMsg() {
-        System.out.println("run TestCombineRetMsg.");
+    public void testCombineRetMsg() {
 
         byte[] header = ApiUtil.combineRetMsg(hash, (byte) 5);
         assertArrayEquals(hash, Arrays.copyOfRange(header, 0, hash.length));
