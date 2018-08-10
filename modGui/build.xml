@@ -10,16 +10,25 @@
     <property name="dir.integtest" value="./build/integration-test"/>
     <property name="test.report.dir" value="report"/>
     <property name="dir.javaAPIlib" value="../javaAPIlib"/>
+	<property name="native.src.dir" value="../native" />
+	<property name="native.dir" value="native" />
 
     <!-- Dependencies for building production code (i.e. non-test files) -->
     <path id="classpath.dependency">
         <pathelement location="${dir.mod}/modLogger.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionImpl.jar"/>
-        <pathelement location="${dir.lib}/../aion_api/pack/modAionApi.jar" />
+        <pathelement location="${dir.mod}/modCrypto.jar"/>
+        <pathelement location="${dir.mod}/modAionBase.jar"/>
+        <pathelement location="${dir.mod}/modAionApi.jar" />
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
         <pathelement location="${dir.lib}/guava-19.0.jar" />
         <pathelement location="${dir.lib}/richtextfx-fat-0.9.0.jar" />
+        <pathelement location="${dir.lib}/BIP39-0.1.9.jar" />
+        <pathelement location="${dir.lib}/SHA256-0.0.1.jar" />
+        <pathelement location="${dir.lib}/ToRuntime-0.9.0.jar" />
+        <pathelement location="${dir.lib}/core-3.3.3.jar" />
+        <pathelement location="${dir.lib}/libnsc.jar" />
     </path>
 
     <!-- Test dependencies -->
@@ -43,8 +52,7 @@
         <pathelement location="${dir.lib}/../aion_api/lib/gson-2.7.jar" /> <!-- hmm... -->
         <pathelement location="${dir.mod}/modAion.jar"/>
         <pathelement location="${dir.mod}/modDbImpl.jar"/>
-        <pathelement location="${dir.mod}/modDbImpl.jar"/>
-
+        <pathelement location="${dir.mod}/modRlp.jar"/>
     </path>
 
     <target name="clean_build" depends="clean">
@@ -58,11 +66,16 @@
         <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${test.report.dir}"/>
         <delete file="${dir.mod}/modGui.jar"/>
+		<delete dir="${native.dir}" />
     </target>
 
 
     <target name="test" depends="test_build">
         <mkdir dir="${test.report.dir}"/>
+		<mkdir dir="${native.dir}" />
+		<copy todir="${native.dir}">
+			<fileset dir="${native.src.dir}" />
+		</copy>
         <junit printsummary="on" haltonfailure="yes" fork="true">
             <classpath>
                 <path refid="classpath.test"/>
@@ -81,6 +94,10 @@
         <echo message="user.dir = ${user.dir}" />
         <echo message="basedir = ${basedir}" />
         <mkdir dir="${test.report.dir}"/>
+		<mkdir dir="${native.dir}" />
+		<copy todir="${native.dir}">
+			<fileset dir="${native.src.dir}" />
+		</copy>
         <junit printsummary="on" haltonfailure="yes" fork="yes">
 
             <!-- hack to make KernelLauncher use the correct path regardless of 
@@ -106,10 +123,10 @@
     </target>
 
     <target name="build">
-        <echo message="compiling with debug=${compile.debug}" />
+        <echo message="compiling with debug=on" />
         <mkdir dir="${dir.dest}"/>
         <javac
-                debug="${compile.debug}"
+                debug="on"
                 debuglevel="source,lines,vars"
                 includeantruntime="false"
                 release="10"

@@ -1,13 +1,19 @@
 package org.aion.gui.events;
 
-public class RefreshEvent extends AbstractUIEvent<Enum>{
+import org.aion.wallet.events.AbstractEvent;
 
-    public RefreshEvent(Enum eventType) {
+public class RefreshEvent extends AbstractEvent<RefreshEvent.Type> {
+
+    public static final String ID = "ui.data_refresh";
+
+    public RefreshEvent(final Type eventType) {
         super(eventType);
     }
 
     public enum Type {
-        TIMER, OPERATION_FINISHED
+        CONNECTED,
+        DISCONNECTED,
+        TRANSACTION_FINISHED,
+        TIMER
     }
-
 }

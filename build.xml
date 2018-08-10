@@ -97,6 +97,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionBase/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="ci_build" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
         <ant inheritAll="false" dir="${dir.workspace}/modGui" antfile="build.xml" target="integtest" />
@@ -322,20 +323,16 @@
 			<property name="compile.debug" value="${compile.debug}" />
         </ant>
 
-        <echo message="building aion_api" />
-		<ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-			<property name="compile.debug" value="${compile.debug}" />
+        <echo message="building modApi" />
+        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
+                <property name="compile.debug" value="${compile.debug}" />
         </ant>
+        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
 
         <echo message="building modGui" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
-
-                <echo message="building modApi" />
-                <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-                        <property name="compile.debug" value="${compile.debug}" />
-                </ant>
 	</target>
 
 	<target name="build" depends="3rd_build, mod_build">
@@ -459,6 +456,7 @@
 			</tarfileset>
 			<tarfileset dir="${dir.workspace}" filemode="755" prefix="${project.name}">
 				<include name="aion.sh" />
+				<include name="aion_gui.sh" />
 			</tarfileset>
 			<tarfileset dir="${dir.pack}/config" filemode="755" prefix="${project.name}/config">
 				<include name="**" />

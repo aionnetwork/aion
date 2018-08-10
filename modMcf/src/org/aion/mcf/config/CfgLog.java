@@ -44,7 +44,7 @@ public class CfgLog {
 
     public CfgLog() {
         modules = new HashMap<>();
-        modules.put(LogEnum.ROOT.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.ROOT.name(), LogLevel.WARN.name());
         modules.put(LogEnum.CONS.name(), LogLevel.INFO.name());
         modules.put(LogEnum.GEN.name(), LogLevel.INFO.name());
         modules.put(LogEnum.VM.name(), LogLevel.ERROR.name());
