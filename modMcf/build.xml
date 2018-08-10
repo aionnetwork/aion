@@ -22,17 +22,18 @@
 		<pathelement location="${dir.lib}/junit_4/junit-4.12.jar" />
 		<pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar" />
 		<pathelement location="${dir.lib}/mockito-core-2.12.0.jar" />
-                <pathelement location="${dir.lib}/truth-0.36.jar" />
+		<pathelement location="${dir.lib}/truth-0.36.jar" />
 		<pathelement location="${dir.lib}/libnsc.jar" />
 		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar" />
 		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
 		<pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
-                <pathelement location="${dir.lib}/JUnitParams-1.1.1.jar" />
+		<pathelement location="${dir.lib}/JUnitParams-1.1.1.jar" />
 		<pathelement location="${dir.lib}/commons-collections4-4.0.jar" />
+		<pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
 		<pathelement location="${dir.lib}/guava-19.0.jar" />
 		<pathelement location="${dir.lib}/byte-buddy-1.7.9.jar" />
-                <pathelement location="${dir.lib}/libJson.jar" />
-                <pathelement location="${dir.lib}/objenesis-2.6.jar" />
+		<pathelement location="${dir.lib}/libJson.jar" />
+		<pathelement location="${dir.lib}/objenesis-2.6.jar" />
 
 		<pathelement location="${dir.mod}/modRlp.jar" />
 		<pathelement location="${dir.mod}/modMcf.jar" />
