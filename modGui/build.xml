@@ -20,7 +20,7 @@
         <pathelement location="${dir.mod}/modAionImpl.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
-        <pathelement location="${dir.lib}/../aion_api/pack/modAionApi.jar" />
+        <pathelement location="${dir.mod}/modAionApi.jar" />
         <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
         <pathelement location="${dir.lib}/guava-19.0.jar" />
         <pathelement location="${dir.lib}/richtextfx-fat-0.9.0.jar" />

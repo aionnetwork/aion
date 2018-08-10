@@ -13,9 +13,9 @@ public class AddressUtils {
     }
 
     private static boolean isAionAddress(final String address) {
-        final boolean isFull = address.startsWith("0xa") && address.length() == 66;
-        final boolean isStripped = address.startsWith("a") && address.length() == 64;
+        final boolean isFull = address.startsWith("0xa0") && address.length() == 66;
+        final boolean isStripped = address.startsWith("a0") && address.length() == 64;
         final String strippedAddress = isFull ? address.substring(2) : (isStripped ? address : "");
-        return strippedAddress.matches("[0-9a-fA-F]+");
+        return strippedAddress.matches("[0-9a-f]+");
     }
 }

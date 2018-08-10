@@ -32,8 +32,14 @@ public class MasterKey {
     }
 
     private byte[] getChild(final int pathElement, final byte[] keyHash) throws ValidationException {
-        byte[] parentPrivateKey = Arrays.copyOfRange(keyHash, 0, 32);
-        byte[] parentChainCode = Arrays.copyOfRange(keyHash, 32, 64);
+        byte[] parentPrivateKey;
+        byte[] parentChainCode;
+        try {
+            parentPrivateKey = Arrays.copyOfRange(keyHash, 0, 32);
+            parentChainCode = Arrays.copyOfRange(keyHash, 32, 64);
+        } catch (ArrayIndexOutOfBoundsException oob) {
+            throw new ValidationException(oob);
+        }
 
         // ed25519 supports ONLY hardened keys
         final byte[] offset = CryptoUtils.hardenedNumber(pathElement);

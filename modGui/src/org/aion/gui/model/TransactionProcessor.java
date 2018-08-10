@@ -152,8 +152,6 @@ public class TransactionProcessor extends AbstractAionApiClient {
                 final TransactionDTO t = iterator.next();
                 if (t.getBlockNumber() > previousSafe) {
                     oldTxs.add(t);
-                } else {
-                    continue;
                 }
             }
             accountManager.removeTransactions(address, oldTxs);

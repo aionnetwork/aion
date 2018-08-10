@@ -303,20 +303,16 @@
 			<property name="compile.debug" value="${compile.debug}" />
         </ant>
 
-        <echo message="building aion_api" />
-		<ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-			<property name="compile.debug" value="${compile.debug}" />
+        <echo message="building modApi" />
+        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
+                <property name="compile.debug" value="${compile.debug}" />
         </ant>
+        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
 
         <echo message="building modGui" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
-
-                <echo message="building modApi" />
-                <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-                        <property name="compile.debug" value="${compile.debug}" />
-                </ant>
 	</target>
 
 	<target name="build" depends="mod_build">
@@ -438,6 +434,7 @@
 			</tarfileset>
 			<tarfileset dir="${dir.workspace}" filemode="755" prefix="${project.name}">
 				<include name="aion.sh" />
+				<include name="aion_gui.sh" />
 			</tarfileset>
 			<tarfileset dir="${dir.pack}/config" filemode="755" prefix="${project.name}/config">
 				<include name="**" />

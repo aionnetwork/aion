@@ -26,7 +26,7 @@ public class ConsoleTail {
         this.message = null;
         this.lastStatusTime = null;
 
-        timer.scheduleAtFixedRate(() -> makeStatus(), 0, 1, TimeUnit.MINUTES);
+        this.timer.scheduleAtFixedRate(() -> makeStatus(), 0, 1, TimeUnit.MINUTES);
     }
 
     public void setMessage(String message) {
@@ -35,16 +35,14 @@ public class ConsoleTail {
     }
 
     /**
-     * Create a user-friendly string representing a time interval.  The string will be as follows:
+     * Create a user-friendly string representing the time interval between now and the last status update
+     *
+     * The string will be as follows:
      *
      * if interval is larger than 1 day: "YYYY-mm-dd HH:mm AM/PM"
      * if interval is between 1 hour and 1 day: "today HH:mm AM/PM"
      * if interval is between 1 minute and 1 hour: "x minutes ago"
      * if interval is between 1 second and 1 minute: "less than a minute ago"
-     *
-     * @param start
-     * @param end
-     * @return
      */
     @VisibleForTesting
     String makeTimeIntervalString(LocalDateTime now) {
@@ -60,7 +58,17 @@ public class ConsoleTail {
         }
     }
 
-    public String makeTimeIntervalString() {
+    /**
+     * Create a user-friendly string representing the time interval between now and the last status update
+     *
+     * The string will be as follows:
+     *
+     * if interval is larger than 1 day: "YYYY-mm-dd HH:mm AM/PM"
+     * if interval is between 1 hour and 1 day: "today HH:mm AM/PM"
+     * if interval is between 1 minute and 1 hour: "x minutes ago"
+     * if interval is between 1 second and 1 minute: "less than a minute ago"
+     */
+    private String makeTimeIntervalString() {
         return makeTimeIntervalString(LocalDateTime.now());
     }
 

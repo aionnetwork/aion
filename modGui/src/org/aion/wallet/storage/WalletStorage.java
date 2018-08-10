@@ -75,7 +75,7 @@ public class WalletStorage {
 
     public void save() {
         saveAccounts();
-        saveSettings();
+        saveWalletSettings();
     }
 
     private void saveAccounts() {
@@ -86,7 +86,7 @@ public class WalletStorage {
         }
     }
 
-    private void saveSettings() {
+    private void saveWalletSettings() {
         try (final OutputStream writer = Files.newOutputStream(Paths.get(walletFile))) {
             lightAppProperties.store(writer, LocalDateTime.now().toString());
         } catch (IOException e) {
@@ -125,7 +125,7 @@ public class WalletStorage {
         try {
             if (mnemonic != null) {
                 accountsProperties.setProperty(MASTER_MNEMONIC_PROP, encryptMnemonic(mnemonic, password));
-                saveSettings();
+                saveWalletSettings();
             }
         } catch (Exception e) {
             throw new ValidationException("Cannot encode master account key");
@@ -138,12 +138,13 @@ public class WalletStorage {
     }
 
     public int getMasterAccountDerivations() {
+
         return Optional.ofNullable(accountsProperties.getProperty(MASTER_DERIVATIONS_PROP)).map(Integer::parseInt).orElse(0);
     }
 
     public void incrementMasterAccountDerivations() {
         accountsProperties.setProperty(MASTER_DERIVATIONS_PROP, getMasterAccountDerivations() + 1 + "");
-        saveSettings();
+        saveAccounts();
     }
 
     public final LightAppSettings getLightAppSettings(final ApiType type) {
@@ -153,7 +154,7 @@ public class WalletStorage {
     public final void saveLightAppSettings(final LightAppSettings lightAppSettings) {
         if (lightAppSettings != null) {
             lightAppProperties.putAll(lightAppSettings.getSettingsProperties());
-            saveSettings();
+            saveWalletSettings();
         }
     }
 
