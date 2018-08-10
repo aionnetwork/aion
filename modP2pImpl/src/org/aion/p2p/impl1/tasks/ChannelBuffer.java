@@ -136,7 +136,7 @@ class ChannelBuffer {
         buf.get(bsHead);
         try {
             header = Header.decode(bsHead);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             if (p2pLOG.isDebugEnabled()) {
                 p2pLOG
                     .debug("ChannelBuffer readHead exception. {}", e.toString());
