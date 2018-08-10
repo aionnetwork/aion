@@ -24,6 +24,7 @@ package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -140,14 +141,17 @@ public class TaskConnectPeersTest {
 
         System.setProperty("java.net.preferIPv4Stack", "true");
         ssc = ServerSocketChannel.open();
+        assertNotNull(ssc);
         ssc.configureBlocking(false);
         ssc.socket().setReuseAddress(true);
         ssc.socket().bind(new InetSocketAddress(60606));
         // Create the selector
         selector = Selector.open();
+        assertNotNull(selector);
         ssc.register(selector, SelectionKey.OP_ACCEPT);
 
         listen = new ThreadTCPServer(selector);
+        assertNotNull(listen);
         listen.start();
     }
 
@@ -164,6 +168,7 @@ public class TaskConnectPeersTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         Thread t = new Thread(tcp);
         t.start();
@@ -179,6 +184,7 @@ public class TaskConnectPeersTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         when(nodeMgr.activeNodesSize()).thenReturn(128);
         when(nodeMgr.tempNodesTake()).thenReturn(null);
@@ -217,6 +223,7 @@ public class TaskConnectPeersTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
         when(node.getPort()).thenReturn(60606);
@@ -250,12 +257,10 @@ public class TaskConnectPeersTest {
 
     @Test
     public void testRunException2() throws InterruptedException {
-
-        listen.interrupt();
-
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
             rhs);
+        assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
         when(node.getPort()).thenReturn(60606);

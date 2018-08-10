@@ -23,6 +23,7 @@
 package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -53,6 +54,7 @@ public class TaskClearTest {
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskClear tc = new TaskClear(nodeMgr, atb);
+        assertNotNull(tc);
 
         Thread t = new Thread(tc);
         t.start();

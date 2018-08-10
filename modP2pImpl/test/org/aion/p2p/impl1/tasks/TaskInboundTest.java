@@ -23,6 +23,7 @@
 package org.aion.p2p.impl1.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -57,7 +58,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl.zero.msg.ResHandshake1;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -179,6 +179,7 @@ public class TaskInboundTest {
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+        assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(0);
 
@@ -195,6 +196,7 @@ public class TaskInboundTest {
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+        assertNotNull(ti);
 
         doThrow(ClosedSelectorException.class).when(selector).selectNow();
 
@@ -213,6 +215,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(1);
         when(selector.selectedKeys()).thenThrow(ClosedSelectorException.class);
@@ -231,6 +234,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(false);
 
@@ -243,6 +247,7 @@ public class TaskInboundTest {
         when(sk3.isAcceptable()).thenReturn(true);
         when(sk3.isReadable()).thenReturn(true);
         ChannelBuffer cb = new ChannelBuffer();
+
         when(sk3.attachment()).thenReturn(cb);
 
         when(selector.selectNow()).thenReturn(1);
@@ -267,6 +272,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
         when(sk2.isAcceptable()).thenReturn(true);
@@ -299,6 +305,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
         when(sk2.isAcceptable()).thenReturn(true);
@@ -332,6 +339,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(true);
         when(sk.isAcceptable()).thenReturn(true);
@@ -371,6 +379,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         // settings for readBuffer
         when(sk.channel()).thenReturn(sc);
@@ -401,6 +410,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         // settings for readBuffer
         when(sk.channel()).thenReturn(sc);
@@ -436,6 +446,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
             rhs1, msgInQue);
+        assertNotNull(ti);
 
         // settings for readBuffer
         when(sk.channel()).thenReturn(sc);
