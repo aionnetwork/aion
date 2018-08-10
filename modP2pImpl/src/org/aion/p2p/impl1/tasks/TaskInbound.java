@@ -175,14 +175,20 @@ public class TaskInbound implements Runnable {
             }
 
             int port = channel.socket().getPort();
-            INode node = this.nodeMgr.allocNode(ip, port);
+            INode node;
+            try {
+                node = this.nodeMgr.allocNode(ip, port);
+            } catch (IllegalArgumentException e) {
+                p2pLOG.error("illegal ip / port : {} {}", ip , port);
+                channel.close();
+                return;
+            }
 
             if (p2pLOG.isTraceEnabled()) {
                 p2pLOG.trace("new-node : {}", node.toString());
             }
 
             node.setChannel(channel);
-
             SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
             sk.attach(new ChannelBuffer());
             this.nodeMgr.addInboundNode(node);

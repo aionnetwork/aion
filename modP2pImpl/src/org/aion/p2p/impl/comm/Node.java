@@ -77,11 +77,15 @@ public final class Node implements INode {
      * constructor for initial stage of connections from network
      */
     Node(String _ipStr, int port) {
+        if (port > 65535 || port < 1) {
+            throw new IllegalArgumentException();
+        }
+
         this.fromBootList = false;
         this.idHash = 0;
         this.ip = ipStrToBytes(_ipStr);
         this.ipStr = _ipStr;
-        this.port = ((port > 65535 || port < 1) ? 0 : port);
+        this.port = port;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
         this.peerhash = 0;

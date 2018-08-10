@@ -22,14 +22,11 @@
 
 package org.aion.p2p.impl;
 
-<<<<<<< HEAD
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
-=======
-import static org.junit.Assert.assertNotNull;
->>>>>>> a93938be65ca8ef991580689c3601006775a2f44
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
