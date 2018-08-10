@@ -11,28 +11,19 @@ public class TestUtilities {
      * @return
      */
     public static int getFreePort() {
-        ServerSocket socket = null;
         try {
-            socket = new ServerSocket(0);
+            ServerSocket socket = new ServerSocket(0);
             socket.setReuseAddress(true);
             int port = socket.getLocalPort();
-            try {
-                socket.close();
-            } catch (IOException e) {}
+            socket.close();
+
             return port;
         } catch (IOException e) {
-
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {}
-            }
+            throw new IllegalStateException("could not find tree TCP/IP port");
         }
-        throw new IllegalStateException("could not find tree TCP/IP port");
     }
 
-    public static String formatAddr(String id, String ip, int port) {
+    static String formatAddr(String id, String ip, int port) {
         return id + "@" + ip + ":" + port;
     }
 }
