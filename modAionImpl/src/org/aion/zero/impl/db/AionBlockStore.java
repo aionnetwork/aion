@@ -27,13 +27,13 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.zero.db.AbstractPowBlockstore;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.zero.db.IBlockStorePow;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
@@ -51,7 +51,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static java.math.BigInteger.ZERO;
 import static org.aion.crypto.HashUtil.shortHash;
 
-public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHeader> {
+public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     private static final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.name());
@@ -155,6 +155,19 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    @Override
+    public byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash) {
+        AionBlock branchBlock = getBlockByHash(branchBlockHash);
+        if (branchBlock.getNumber() < blockNumber) {
+            throw new IllegalArgumentException(
+                    "Requested block number > branch hash number: " + blockNumber + " < " + branchBlock.getNumber());
+        }
+        while (branchBlock.getNumber() > blockNumber) {
+            branchBlock = getBlockByHash(branchBlock.getParentHash());
+        }
+        return branchBlock.getHash();
     }
 
     /**
