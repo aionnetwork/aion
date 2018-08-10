@@ -161,18 +161,29 @@ public class ApiAionTests {
 
         AionBlock blk = impl.getBlockchain().getBestBlock();
 
+        // sanity check
         assertEquals(blk, api.getBestBlock());
 
+        // getBlock() returns the bestBlock if given -1
         assertEquals(blk, api.getBlock(-1));
 
+        // retrieval based on block hash
         assertEquals(blk.toString(), api.getBlockByHash(blk.getHash()).toString());
+
+        // retrieval based on block number
         assertEquals(blk.toString(), api.getBlock(blk.getNumber()).toString());
 
+
+        // retrieval based on block number that also gives total difficulty
         Map.Entry rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
         assertEquals(rslt.getKey().toString(), blk.toString());
+
+        // check because blk might be the genesis block
         if (!blk.isGenesis())
             assertEquals(rslt.getValue(),
                     ((AionBlockStore)impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
+
+        // retrieving genesis block's difficulty
         assertEquals(api.getBlockWithTotalDifficulty(0).getValue(), CfgAion.inst().getGenesis().getDifficultyBI());
     }
 
