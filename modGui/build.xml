@@ -40,14 +40,14 @@
         <pathelement location="${dir.lib}/byte-buddy-1.8.17.jar"/>
         <pathelement location="${dir.lib}/byte-buddy-agent-1.8.17.jar"/>
         <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
-		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
+	<pathelement location="${dir.lib}/logback-classic-1.2.3.jar" />
         <pathelement location="${dir.lib}/logback-core-1.2.3.jar" />
         <pathelement location="${dir.mod}/modGui.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
 
         <!-- only used by integration-test -->
-		<pathelement location="${dir.lib}/testfx-core-4.0.13-alpha.jar" />
-		<pathelement location="${dir.lib}/testfx-junit-4.0.13-alpha.jar" />
+	<pathelement location="${dir.lib}/testfx-core-4.0.13-alpha.jar" />
+	<pathelement location="${dir.lib}/testfx-junit-4.0.13-alpha.jar" />
         <pathelement location="${dir.lib}/openjfx-monocle-jdk-9+181.jar" /> 
         <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar" />
         <pathelement location="${dir.lib}/../aion_api/lib/gson-2.7.jar" /> <!-- hmm... -->
@@ -67,9 +67,8 @@
         <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${test.report.dir}"/>
         <delete file="${dir.mod}/modGui.jar"/>
-		<delete dir="${native.dir}" />
+	<delete dir="${native.dir}" />
     </target>
-
 
     <target name="test" depends="test_build">
         <mkdir dir="${test.report.dir}"/>
