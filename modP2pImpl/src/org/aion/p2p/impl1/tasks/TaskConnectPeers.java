@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
@@ -81,6 +82,10 @@ public class TaskConnectPeers implements Runnable {
                 }
 
                 node = this.nodeMgr.tempNodesTake();
+                if (node == null) {
+                    p2pLOG.debug("no temp node can take.");
+                    continue;
+                }
 
                 if (node.getIfFromBootList()) {
                     this.nodeMgr.addTempNode(node);
@@ -99,7 +104,6 @@ public class TaskConnectPeers implements Runnable {
                 SocketChannel channel = null;
                 try {
                     channel = SocketChannel.open();
-
                     channel.socket()
                         .connect(
                             new InetSocketAddress(node.getIpStr(), _port),
@@ -107,12 +111,12 @@ public class TaskConnectPeers implements Runnable {
                     this.mgr.configChannel(channel);
 
                     if (channel.isConnected()) {
-
                         if (p2pLOG.isDebugEnabled()) {
                             p2pLOG.debug("success-connect node-id={} ip={}", node.getIdShort(),
                                 node.getIpStr());
                         }
 
+                        channel.configureBlocking(false);
                         SelectionKey sk = channel.register(this.selector, SelectionKey.OP_READ);
                         ChannelBuffer rb = new ChannelBuffer();
                         rb.setDisplayId(node.getIdShort());
@@ -146,24 +150,6 @@ public class TaskConnectPeers implements Runnable {
                         channel.close();
                         // node.peerMetric.incFailedCount();
                     }
-                } catch (IOException e) {
-                    if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("connect-outbound io-exception addr={}:{} reason={}",
-                            node.getIpStr(), _port, e.toString());
-                    }
-
-                    if (channel != null) {
-                        if (p2pLOG.isTraceEnabled()) {
-                            p2pLOG.trace("close channel {}", node.toString());
-                        }
-                        try {
-                            channel.close();
-                        } catch (IOException e1) {
-                            p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
-                        }
-                    }
-
-                    // node.peerMetric.incFailedCount();
                 } catch (Exception e) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG

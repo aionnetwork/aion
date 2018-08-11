@@ -38,11 +38,15 @@ ARG=$@
 chmod +x ./rt/bin/*
 
 # prepare jvm params
-# use default xms if not set
+# default to minimum 4gb heap if Xms not set.
 JAVA_OPTS="$JAVA_OPTS"
 if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
-  JAVA_OPTS="-Xms4g"
+  JAVA_OPTS+=" -Xms4g"
 fi
+
+# to suppress illegal reflective access warning out of xnio
+# (we depend on xnio transitively via undertow-core)
+JAVA_OPTS+=" --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
 
 ####### WATCHGUARD IMPLEMENTATION #######
 #				    	#
@@ -175,7 +179,6 @@ if $guard; then
 			fi
 
 		done
-
 		# Shutsdown Aion kernel
 		echo "## Killing Kernel ##"
 		kill $kPID
@@ -200,9 +203,7 @@ if $guard; then
 		echo "############################## REBOUNCE COUNT [$countRebounce] ##############################"
 
 	done
-
 else
-
 	JAVA_CMD=java
 	if [ -d "./rt" ]; then
 			JAVA_CMD="./rt/bin/java"

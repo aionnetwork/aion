@@ -1,27 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2017-2018 Aion foundation.
 
-<!-- tidy up these things -->
-<?import java.net.*?>
-<?import javafx.geometry.*?>
+    This file is part of the aion network project.
+
+    The aion network project is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or any later version.
+
+    The aion network project is distributed in the hope that it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied
+    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the aion network project source files.
+    If not, see <https://www.gnu.org/licenses/>.
+
+Contributors:
+    Aion foundation.
+-->
+
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.*?>
-<!--<AnchorPane id="overviewPane"
-            xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="org.aion.gui.controller.DashboardController" fx:id="parent">-->
-
 <GridPane id="overviewPane"
-    xmlns:fx="http://javafx.com/fxml" 
-    fx:controller="org.aion.gui.controller.DashboardController" 
-    fx:id="parent"
-    alignment="center" hgap="10" vgap="10">
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="org.aion.gui.controller.DashboardController"
+          fx:id="parent"
+          alignment="center" hgap="10" vgap="10">
     <padding>
         <Insets top="25" right="25" bottom="25" left="25"/>
     </padding>
@@ -65,8 +73,4 @@
         <Label fx:id="blocksLabel" text="--" alignment="CENTER"
             GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="1"/>
     </GridPane>
-
-
 </GridPane>
-<!--</AnchorPane>-->
-

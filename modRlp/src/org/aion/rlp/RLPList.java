@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,25 +31,21 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
 import java.util.ArrayList;
-
 import org.aion.base.util.ByteUtil;
 
 /**
  * @author Roman Mandeleil
  * @since 21.04.14
  */
-
 public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = -2855280911054117106L;
-	byte[] rlpData;
+    private static final long serialVersionUID = -2855280911054117106L;
+
+    byte[] rlpData;
 
     public void setRLPData(byte[] rlpData) {
         this.rlpData = rlpData;
@@ -65,7 +61,6 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
             throw new RuntimeException("RLPElement object can't be null");
         }
         if (element instanceof RLPList) {
-
             RLPList rlpList = (RLPList) element;
             System.out.print("[");
             for (RLPElement singleElement : rlpList) {

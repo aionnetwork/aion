@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,17 +19,16 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 package org.aion.equihash;
 
 import static org.aion.base.util.ByteUtil.intToBytes;
 
-public class FullStepRow extends StepRow {
+class FullStepRow extends StepRow {
 
     public FullStepRow(int width, byte[] hashIn, int hInLen, int hLen, int cBitLen, int index)
             throws NullPointerException {
-        super(width, hashIn, hInLen, hLen, cBitLen);
+        super(width, hashIn, hInLen, cBitLen);
 
         byte[] indexBytes = intToBytes(index);
         System.arraycopy(indexBytes, 0, this.getHash(), hLen, indexBytes.length);

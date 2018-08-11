@@ -1,10 +1,10 @@
 package org.aion.gui.controller;
 
-import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import org.aion.gui.events.EventBusRegistry;
@@ -16,7 +16,6 @@ import org.aion.log.AionLoggerFactory;
 import org.slf4j.Logger;
 
 import java.net.URL;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class SettingsController extends AbstractController {
@@ -24,6 +23,8 @@ public class SettingsController extends AbstractController {
 
     @FXML
     private XmlArea xmlArea;
+    @FXML
+    private Label editingFileLabel;
 
     private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
@@ -34,17 +35,13 @@ public class SettingsController extends AbstractController {
     @Override
     protected void internalInit(final URL location, final ResourceBundle resources) {
         xmlArea.setText(configManip.loadFromConfigFile());
+        editingFileLabel.setText("Editing " + configManip.configFile().getAbsolutePath());
     }
 
     @Override
     protected void registerEventBusConsumer() {
         EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
     }
-
-//    @Subscribe
-//    private void handleHeaderPaneButtonEvent(final HeaderPaneButtonEvent event) {
-//
-//    }
 
     public void resetXml(MouseEvent mouseEvent) {
         Platform.runLater(() -> xmlArea.setText(configManip.getLastLoadedContent()));

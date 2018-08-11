@@ -65,6 +65,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
                 return null;
             }
             value = origContract.get(key);
+            value = (value == null) ? DataWord.ZERO : value;
             storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
         }
 

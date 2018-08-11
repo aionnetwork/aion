@@ -1,6 +1,5 @@
 package org.aion.gui.controller;
 
-import com.google.common.eventbus.Subscribe;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -9,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -17,11 +17,16 @@ import org.aion.gui.events.HeaderPaneButtonEvent;
 import org.aion.gui.events.WindowControlsEvent;
 import org.aion.gui.model.ApplyConfigResult;
 import org.aion.gui.model.ConfigManipulator;
+import org.aion.gui.model.KernelConnection;
 import org.aion.gui.views.XmlArea;
+import org.aion.wallet.account.AccountManager;
+import org.aion.wallet.console.ConsoleManager;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,22 +36,26 @@ import java.util.List;
 import java.util.Map;
 
 import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testfx.api.FxAssert.verifyThat;
 
 public class SettingsControllerIntegTest extends ApplicationTest {
     private ControllerFactory cf;
     private ConfigManipulator configManipulator;
     private SettingsController controller;
+    private KernelConnection kc;
     private String configFileContents = "<fake><config><content><here>";
+    private String configFileName = "/tmp/absolute/path/to/the/Config/File/Name";
     private Stage stage;
+    private EventBusRegistry ebr;
     private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
+    private AccountManager accountManager;
+    private ConsoleManager consoleManager;
 
     /**
      * Not using Mockito's @Before because JavaFX's start() runs first and that needs member
@@ -57,6 +66,9 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         configManipulator = mock(ConfigManipulator.class);
         when(configManipulator.loadFromConfigFile()).thenReturn(configFileContents);
         when(configManipulator.getLastLoadedContent()).thenReturn(configFileContents);
+        when(configManipulator.configFile()).thenReturn(new File(configFileName));
+        kc = mock(KernelConnection.class);
+        ebr = new EventBusRegistry();
     }
 
     @Override
@@ -64,22 +76,32 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         this.stage = stage;
 
         cf = new ControllerFactory()
-                .withConfigManipulator(configManipulator);
+                .withConfigManipulator(configManipulator)
+                .withKernelConnection(kc)
+                .withEventBusRegistry(ebr);
         FXMLLoader loader = new FXMLLoader(
-//                SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
-                SettingsController.class.getResource("MainWindow.fxml"),
+                SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
                 null,
                 null,
                 cf,
                 Charset.forName(DEFAULT_CHARSET_NAME),
                 new LinkedList<>());
+        loader.setBuilderFactory(new UiSubcomponentsFactory()
+                .withAccountManager(accountManager)
+                .withConsoleManager(consoleManager)
+        );
         Parent root = loader.load();
         controller = loader.getController();
-        stage.setScene(new Scene(root));
+
+        AnchorPane ap = new AnchorPane(root);
+        ap.setPrefWidth(860);
+        ap.setPrefHeight(570);
+
+        stage.setScene(new Scene(ap));
         stage.show();
         stage.toFront();
 
-        panes.put(HeaderPaneButtonEvent.Type.SETTINGS, stage.getScene().lookup("#settingsPane"));
+        lookup("#settingsPane").query().setVisible(true);
 
         EventBusRegistry.INSTANCE.getBus(WindowControlsEvent.ID).register(this);
         EventBusRegistry.INSTANCE.getBus(HeaderPaneButtonEvent.ID).register(this);
@@ -95,6 +117,8 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     public void testInitialState() throws Exception {
         XmlArea xml = lookup("#xmlArea").query();
         assertThat(xml.getText(), is(configFileContents));
+        verifyThat(lookup("#editingFileLabel"),
+                LabeledMatchers.hasText("Editing " + new File(configFileName).getAbsolutePath()));
     }
 
     /**
@@ -107,8 +131,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
      */
     @Test
     public void testReset() throws Exception {
-        clickOn("#settingsButton");
-
         XmlArea xml = lookup("#xmlArea").query();
         Platform.runLater( () -> xml.setText("something new") );
         WaitForAsyncUtils.waitForFxEvents();
@@ -133,8 +155,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         when(configManipulator.applyNewConfig(anyString()))
                 .thenReturn(new ApplyConfigResult(false, errorMsg, null));
 
-        clickOn("#settingsButton");
-
         XmlArea xml = lookup("#xmlArea").query();
         Platform.runLater( () -> xml.setText("anyText") );
 
@@ -158,8 +178,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         when(configManipulator.applyNewConfig(anyString()))
                 .thenReturn(new ApplyConfigResult(true, msg, null));
 
-        clickOn("#settingsButton");
-
         XmlArea xml = lookup("#xmlArea").query();
         Platform.runLater( () -> xml.setText("anyText") );
         WaitForAsyncUtils.waitForFxEvents();
@@ -172,20 +190,6 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         assertThat(alertDialog.getHeaderText(), is("Confirmation"));
         assertThat(alertDialog.getContentText(), is(msg));
         Platform.runLater(() -> ((Button)alertDialog.lookupButton(ButtonType.OK)).fire());
-    }
-
-    @Subscribe
-    private void handleHeaderPaneButtonEvent(final org.aion.gui.events.HeaderPaneButtonEvent event) {
-        if(stage.getScene() == null) {
-            return;
-        }
-        for(Map.Entry<HeaderPaneButtonEvent.Type, Node> entry: panes.entrySet()) {
-            if(event.getType().equals(entry.getKey())) {
-                entry.getValue().setVisible(true);
-            } else {
-                entry.getValue().setVisible(false);
-            }
-        }
     }
 
     private DialogPane dialogPaneOfAlertBox(Stage alertBox) {

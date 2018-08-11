@@ -1,14 +1,47 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.p2p.impl.comm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import org.aion.p2p.IPeerMetric;
 import org.junit.Test;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public class NodeTest {
 
     private String validId = UUID.randomUUID().toString();
@@ -16,13 +49,13 @@ public class NodeTest {
     private String invalidId = UUID.randomUUID().toString().substring(0, 34);
 
     private String validIp =
-            ThreadLocalRandom.current().nextInt(0, 256)
-                    + "."
-                    + ThreadLocalRandom.current().nextInt(0, 256)
-                    + "."
-                    + ThreadLocalRandom.current().nextInt(0, 256)
-                    + "."
-                    + ThreadLocalRandom.current().nextInt(0, 256);
+        ThreadLocalRandom.current().nextInt(0, 256)
+            + "."
+            + ThreadLocalRandom.current().nextInt(0, 256)
+            + "."
+            + ThreadLocalRandom.current().nextInt(0, 256)
+            + "."
+            + ThreadLocalRandom.current().nextInt(0, 256);
 
     private int validPort = 12345;
 
@@ -32,13 +65,13 @@ public class NodeTest {
         int port = 30303;
         Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + port);
 
-        assertTrue(n.getId().length == 36);
+        assert n != null;
+        assertEquals(36, n.getId().length);
 
-        String targetIdStr = new String(n.getId());
-        assertTrue(validId.equals(new String(n.getId())));
-        assertTrue(n.getIp().length == 8);
-        assertTrue(validIp.equals(n.getIpStr()));
-        assertTrue(n.getPort() == port);
+        assertEquals(validId, new String(n.getId()));
+        assertEquals(8, n.getIp().length);
+        assertEquals(validIp, n.getIpStr());
+        assertEquals(n.getPort(), port);
 
         n = Node.parseP2p("p2p://" + invalidId + "@" + validIp + ":" + port);
         assertNull(n);
@@ -58,22 +91,39 @@ public class NodeTest {
         assertNotNull(ipBytes);
         assertEquals(ipBytes.length, 8);
         ipVerify = Node.ipBytesToStr(ipBytes);
-        assertTrue(ipSource.equals(ipVerify));
+        assertEquals(ipSource, ipVerify);
 
         ipSource = "000.000.000.000";
         ipBytes = Node.ipStrToBytes(ipSource);
         assertNotNull(ipBytes);
         assertEquals(ipBytes.length, 8);
         ipVerify = Node.ipBytesToStr(ipBytes);
-        assertFalse(ipSource.equals(ipVerify));
-        assertTrue("0.0.0.0".equals(ipVerify));
+        assertNotEquals(ipSource, ipVerify);
+        assertEquals("0.0.0.0", ipVerify);
 
         ipSource = "256.256.256.256";
         ipBytes = Node.ipStrToBytes(ipSource);
         assertNotNull(ipBytes);
         assertEquals(ipBytes.length, 8);
         ipVerify = Node.ipBytesToStr(ipBytes);
-        assertTrue("256.256.256.256".equals(ipVerify));
+        assertEquals("256.256.256.256", ipVerify);
+    }
+
+    @Test
+    public void testIpByteStrConversionHandle() {
+        String ipSource;
+        byte[] ipBytes;
+
+        ipSource = "0.0.0.a";
+        ipBytes = Node.ipStrToBytes(ipSource);
+        assertEquals(ipBytes.length, 0);
+    }
+
+    @Test
+    public void testIpByteStrConversionHandle2() {
+        byte[] ipBytes = new byte[9];
+        assertTrue(Node.ipBytesToStr(null).isEmpty());
+        assertTrue(Node.ipBytesToStr(ipBytes).isEmpty());
     }
 
     @Test
@@ -117,8 +167,18 @@ public class NodeTest {
     }
 
     @Test
-    public void testInValidNode() {
-        //TODO
+    public void testNodeConnection() {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+        String output = n.toString();
+        assertNotNull(output);
+    }
+
+    @Test
+    public void testNodeToString() {
+        int port = 30303;
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + port);
+        assertNotNull(n);
     }
 
     @Test
@@ -137,5 +197,38 @@ public class NodeTest {
 
         assertTrue((curr_time < validNode.getTimestamp()));
 
+    }
+
+    @Test
+    public void testGetPeerMetric() {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+
+        IPeerMetric pm = n.getPeerMetric();
+        assertNotNull(pm);
+        assertTrue(pm.notBan());
+        assertFalse(pm.shouldNotConn());
+    }
+
+    @Test
+    public void testChannel() throws IOException {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+
+        SocketChannel sc = SocketChannel.open();
+        n.setChannel(sc);
+        assertNotNull(n.getChannel());
+        assertEquals(sc, n.getChannel());
+    }
+
+    @Test
+    public void testConnection() {
+        Node n = Node.parseP2p("p2p://" + validId + "@" + validIp + ":" + validPort);
+        assertNotNull(n);
+
+        String cn = "inbound";
+        n.setConnection(cn);
+        assertNotNull(n.getConnection());
+        assertEquals(cn, n.getConnection());
     }
 }

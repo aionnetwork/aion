@@ -112,7 +112,7 @@
         <junit
             printsummary="yes"
             haltonfailure="yes"
-            fork="true"
+            fork="yes"
             >
         <classpath>
             <path refid="classpath.test" />
@@ -132,7 +132,7 @@
         <junit
             printsummary="yes"
             haltonfailure="no"
-            fork="true"
+            fork="yes"
             >
         <classpath>
             <path refid="classpath.test" />

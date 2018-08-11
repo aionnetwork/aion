@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
 import java.io.Serializable;
@@ -40,7 +40,6 @@ import java.io.Serializable;
  * @author Roman Mandeleil 2014
  * @author modified by aion 2017
  */
-
 public interface RLPElement extends Serializable {
 
     byte[] getRLPData();

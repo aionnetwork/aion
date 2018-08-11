@@ -108,7 +108,7 @@ public final class P2pMgr implements IP2pMgr {
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
 
-    private String outGoingIP = "0.0.0.0";
+    private String outGoingIP;
 
     public enum Dest {
         INBOUND,
