@@ -263,7 +263,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -296,7 +296,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -330,7 +330,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -370,7 +370,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -401,7 +401,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -437,7 +437,7 @@ public class TaskInboundTest {
 
 
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 
@@ -483,7 +483,7 @@ public class TaskInboundTest {
         Thread.sleep(100);
 
         atb.set(false);
-        Thread.sleep(50);
+        Thread.sleep(100);
         assertEquals("TERMINATED", t.getState().toString());
     }
 }
