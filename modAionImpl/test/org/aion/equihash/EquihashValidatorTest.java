@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,20 +31,22 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.equihash;
 
-import org.aion.equihash.EquiUtils;
-import org.aion.equihash.EquiValidator;
-import org.aion.equihash.Equihash;
-//import org.aion.equihash.SimpleEquiValidator;
-import org.aion.equihash.OptimizedEquiValidator;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import org.aion.util.TestResources;
+import org.aion.zero.types.A0BlockHeader;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import static org.junit.Assert.assertEquals;
-
+@RunWith(JUnitParamsRunner.class)
 public class EquihashValidatorTest {
 
     @Test
@@ -1648,4 +1650,31 @@ public class EquihashValidatorTest {
         assertEquals(true, isValidNative);
     }
 
+    @Test
+    @Parameters(method = "blockHeaders")
+    public void testIsValidSolution_wBlockData(A0BlockHeader blockHeader) {
+
+        byte[] solution = blockHeader.getSolution();
+        byte[] header = blockHeader.getMineHash();
+        byte[] nonce = blockHeader.getNonce();
+
+        OptimizedEquiValidator ov = new OptimizedEquiValidator(210, 9);
+        assertTrue(ov.isValidSolution(solution, header, nonce));
+        assertTrue(ov.isValidSolutionNative(solution, header, nonce));
+
+        EquiValidator v = new EquiValidator(210, 9);
+        assertTrue(v.isValidSolution(solution, header, nonce));
+
+        // break original solution
+        solution[solution.length - 1] += 1;
+
+        // validate broken solution
+        assertFalse(ov.isValidSolution(solution, header, nonce));
+        assertFalse(ov.isValidSolutionNative(solution, header, nonce));
+        assertFalse(v.isValidSolution(solution, header, nonce));
+    }
+
+    public static Object blockHeaders() {
+        return TestResources.blockHeaders();
+    }
 }
