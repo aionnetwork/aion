@@ -82,6 +82,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public int getPeerId() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void updateStatus(
             long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {
         }
@@ -264,6 +269,11 @@ public class BlockPropagationTest {
 
         @Override
         public int getSelfNetId() {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public String getOutGoingIP() {
             throw new IllegalStateException("not implemented.");
         }
 

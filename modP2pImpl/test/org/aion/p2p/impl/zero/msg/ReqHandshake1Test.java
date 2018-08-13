@@ -1,31 +1,32 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
 
 package org.aion.p2p.impl.zero.msg;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class ReqHandshake1Test {
     private List<Short> randomVersions;
 
     @Before
-    public void ReqHandshake2Test() {
+    public void reqHandshake2Test() {
 
         randomRevision = new byte[Byte.MAX_VALUE];
         ThreadLocalRandom.current().nextBytes(randomRevision);
@@ -122,5 +123,22 @@ public class ReqHandshake1Test {
             testInvalidEncodeDecode();
             testRoute();
         }
+    }
+
+    @Test
+    public void testdecode() {
+        ReqHandshake rhs = ReqHandshake.decode(null);
+        assertNull(rhs);
+
+        rhs = ReqHandshake.decode(new byte[ReqHandshake.LEN-1]);
+        assertNull(rhs);
+    }
+
+    @Test
+    public void testdecodeException() {
+        byte[] msg = new byte [ReqHandshake1.LEN+2];
+        msg[ReqHandshake1.LEN+1] = 2; // versions Length
+        ReqHandshake rhs1 = ReqHandshake1.decode(msg);
+        assertNull(rhs1);
     }
 }

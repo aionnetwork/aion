@@ -24,6 +24,8 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -196,5 +198,26 @@ public final class CfgNetP2p {
 
     public boolean inSyncOnlyMode() {
         return syncOnlyMode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgNetP2p cfgNetP2p = (CfgNetP2p) o;
+        return port == cfgNetP2p.port &&
+                discover == cfgNetP2p.discover &&
+                clusterNodeMode == cfgNetP2p.clusterNodeMode &&
+                bootlistSyncOnly == cfgNetP2p.bootlistSyncOnly &&
+                syncOnlyMode == cfgNetP2p.syncOnlyMode &&
+                maxTempNodes == cfgNetP2p.maxTempNodes &&
+                maxActiveNodes == cfgNetP2p.maxActiveNodes &&
+                errorTolerance == cfgNetP2p.errorTolerance &&
+                Objects.equal(ip, cfgNetP2p.ip);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(ip, port, discover, clusterNodeMode, bootlistSyncOnly, syncOnlyMode, maxTempNodes, maxActiveNodes, errorTolerance);
     }
 }

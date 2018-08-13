@@ -152,6 +152,7 @@ public class AionHub {
         String reportsFolder = "";
         if (cfg.getReports().isEnabled()) {
             File rpf = new File(cfg.getBasePath(), cfg.getReports().getPath());
+            //noinspection ResultOfMethodCallIgnored
             rpf.mkdirs();
             reportsFolder = rpf.getAbsolutePath();
         }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
 import org.aion.base.util.ByteUtil;
@@ -42,16 +42,14 @@ import org.aion.base.util.ByteUtil;
  */
 public class RLPItem implements RLPElement {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4456602029225251666L;
+
     private final byte[] rlpData;
 
     /**
-     * @Jay inside the RLP encode/decode logic, there is no difference between
-     *      null obj and zero-byte array Therefore, put empty array when we see
-     *      the input data is null
+     * @Jay inside the RLP encode/decode logic, there is no difference between null obj and
+     * zero-byte array Therefore, put empty array when we see the input data is null
+     *
      * @param rlpData
      */
     public RLPItem(byte[] rlpData) {

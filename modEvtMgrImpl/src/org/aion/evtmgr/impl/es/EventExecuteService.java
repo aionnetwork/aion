@@ -65,6 +65,11 @@ public class EventExecuteService {
         return null;
     }
 
+    /** Clear all events from queue */
+    public void clear() {
+        callbackEvt.clear();
+    }
+
     public boolean add(IEvent event) {
         if (event == null) {
             throw new NullPointerException();

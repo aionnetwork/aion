@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,11 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 
 package org.aion.mcf.types;
 
@@ -29,15 +27,16 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.Bytesable;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.Log;
 
-public abstract class AbstractTxReceipt<Tx extends ITransaction> implements Bytesable<Object> {
+public abstract class AbstractTxReceipt<TX extends ITransaction> implements Bytesable<Object>,
+    ITxReceipt<TX, Log> {
 
-    protected Tx transaction;
+    protected TX transaction;
 
     protected byte[] postTxState = EMPTY_BYTE_ARRAY;
 
@@ -46,7 +45,7 @@ public abstract class AbstractTxReceipt<Tx extends ITransaction> implements Byte
 
     protected byte[] executionResult = EMPTY_BYTE_ARRAY;
     protected String error = "";
-    /* Tx Receipt in encoded form */
+    /* TX Receipt in encoded form */
     protected byte[] rlpEncoded;
 
     public byte[] getPostTxState() {
@@ -86,10 +85,8 @@ public abstract class AbstractTxReceipt<Tx extends ITransaction> implements Byte
     }
 
     /**
-     * Tx recepit 's error is empty when constructed. it use empty to identify
-     * if there are error msgs instead of null.
-     *
-     * @param error
+     * TX recepit 's error is empty when constructed. it use empty to identify if there are error
+     * msgs instead of null.
      */
     public void setError(String error) {
         if (error == null) {
@@ -110,14 +107,14 @@ public abstract class AbstractTxReceipt<Tx extends ITransaction> implements Byte
         rlpEncoded = null;
     }
 
-    public void setTransaction(Tx transaction) {
+    public void setTransaction(TX transaction) {
         this.transaction = transaction;
     }
 
-    public Tx getTransaction() {
+    public TX getTransaction() {
         if (transaction == null) {
             throw new NullPointerException(
-                    "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
+                "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
         }
         return transaction;
     }
