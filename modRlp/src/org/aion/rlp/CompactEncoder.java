@@ -39,7 +39,6 @@ import static java.util.Arrays.copyOfRange;
 import static org.aion.base.util.ByteUtil.appendByte;
 import static org.aion.rlp.Utils.hexEncode;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,8 +62,9 @@ import java.util.Map;
  * <p>To solve both of these issues, we force the first nibble of the final byte-stream to encode
  * two flags, specifying oddness of length (ignoring the 'T' symbol) and terminator status; these
  * are placed, respectively, into the two lowest significant bits of the first nibble. In the case
- * of an even-length hex string, we must introduce a second nibble (of value zero) to ensure the
- * hex-string is even in length and thus is representable by a whole number of bytes.
+ * of an even-length hex string, we must introduce a second nibble (of value zero), in addition to
+ * the encoded flags added as a first nibble, to ensure the resulting hex-string is still even in
+ * length and thus is representable by a whole number of bytes.
  *
  * <p>Examples:
  *
@@ -104,49 +104,37 @@ public class CompactEncoder {
      *
      * @param nibbles sequence. may have a terminator
      * @return hex-encoded byte array
+     * @throws NullPointerException when given a null input
      */
     public static byte[] packNibbles(byte[] nibbles) {
         int terminator = 0;
 
-        if (nibbles[nibbles.length - 1] == TERMINATOR) {
+        if (nibbles.length > 0 && nibbles[nibbles.length - 1] == TERMINATOR) {
             terminator = 1;
         }
         int oddlen = (nibbles.length - terminator) % 2;
         int flag = 2 * terminator + oddlen;
+
+        int len = terminator == 0 ? nibbles.length : nibbles.length - 1;
+        int start;
+        byte[] output = new byte[len / 2 + 1];
+
         if (oddlen != 0) {
-            byte[] ret;
-            if (terminator == 0) {
-                ret = new byte[nibbles.length + 1];
-                ret[0] = (byte) flag;
-                System.arraycopy(nibbles, 0, ret, 1, nibbles.length);
-            } else { // terminator == 1
-                ret = new byte[nibbles.length];
-                ret[0] = (byte) flag;
-                System.arraycopy(nibbles, 0, ret, 1, nibbles.length - 1);
-            }
-            nibbles = ret;
+            output[0] = (byte) (16 * flag + nibbles[0]);
+            start = 1;
         } else {
-            byte[] ret;
-            if (terminator == 0) {
-                ret = new byte[nibbles.length + 2];
-                ret[0] = (byte) flag;
-                ret[1] = 0;
-                System.arraycopy(nibbles, 0, ret, 2, nibbles.length);
-            } else { // terminator == 1
-                ret = new byte[nibbles.length + 1];
-                ret[0] = (byte) flag;
-                ret[1] = 0;
-                System.arraycopy(nibbles, 0, ret, 2, nibbles.length - 1);
-            }
-            nibbles = ret;
+            output[0] = (byte) (16 * flag);
+            start = 0;
         }
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        for (int i = 0; i < nibbles.length; i += 2) {
-            buffer.write(16 * nibbles[i] + nibbles[i + 1]);
+
+        for (int i = start, index = 1; i < len; i += 2, index++) {
+            output[index] = (byte) (16 * nibbles[i] + nibbles[i + 1]);
         }
-        return buffer.toByteArray();
+
+        return output;
     }
 
+    /** @throws NullPointerException when given a null input */
     public static boolean hasTerminator(byte[] packedKey) {
         return ((packedKey[0] >> 4) & 2) != 0;
     }
