@@ -31,8 +31,5 @@ import org.aion.zero.impl.core.IAionBlockchain;
  * Chain instance pow interface.
  */
 public interface IChainInstancePOW extends IAionChain{
-
-    IAionBlockchain getBlockchain();
-
     IMineRunner getBlockMiner();
 }
