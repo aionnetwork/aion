@@ -50,7 +50,7 @@
 	<pathelement location="${dir.lib}/testfx-junit-4.0.13-alpha.jar" />
         <pathelement location="${dir.lib}/openjfx-monocle-jdk-9+181.jar" /> 
         <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar" />
-	<pathelement location="${dir.lib}/gson-2.7.jar" />
+	<pathelement location="${dir.lib}/../aion_api/lib/gson-2.7.jar" /> <!-- hmm... -->
         <pathelement location="${dir.mod}/modAion.jar"/>
         <pathelement location="${dir.mod}/modDbImpl.jar"/>
         <pathelement location="${dir.mod}/modRlp.jar"/>
