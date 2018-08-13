@@ -473,6 +473,10 @@
                         <tarfileset dir="${dir.pack}/clientAPI" filemode="755" prefix="${project.name}/clientAPI">
                                 <include name="**" />
                         </tarfileset>
+                        <tarfileset dir="${dir.pack}/script" filemode="755" prefix="${project.name}/script">
+                                <include name="generateSslCert.sh" />
+                                <include name="nohup_wrapper.sh" />
+                        </tarfileset>
 		</tar>
 		<exec executable="/bin/bash">
 			<arg value="${dir.workspace}/script/postpack.sh" />
