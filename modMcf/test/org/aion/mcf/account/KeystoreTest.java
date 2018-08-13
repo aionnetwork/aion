@@ -206,34 +206,6 @@ public class KeystoreTest {
         Keystore.importAccount(null);
     }
 
-    @Test
-    public void testAccountSorted(){
-        String addr1 = Keystore.create("p1", ECKeyFac.inst().create());
-        String addr2 = Keystore.create("p2", ECKeyFac.inst().create());
-
-        List<String> res = Keystore.accountsSorted();
-
-        assertEquals(2, res.size());
-        assertEquals(addr1, res.get(0));
-        assertEquals(addr2, res.get(1));
-
-        cleanFiles(addr1);
-        cleanFiles(addr2);
-    }
-
-    @Test
-    public void testKeystoreItem(){
-        KeystoreItem keystoreItem = new KeystoreItem();
-        keystoreItem.setId("test-id");
-        keystoreItem.setVersion(5);
-        keystoreItem.setAddress("fake-address");
-
-        // test get id
-        assertEquals("test-id", keystoreItem.getId());
-        assertEquals(Integer.valueOf(5), keystoreItem.getVersion());
-        assertEquals("fake-address", keystoreItem.getAddress());
-    }
-
     private static void cleanFiles(String address){
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
