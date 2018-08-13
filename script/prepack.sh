@@ -59,3 +59,5 @@ if [ ! -d "$API_PATH" ]; then
   mkdir $API_PATH
   cp aion_api/pack/libAionApi-*.tar.gz $API_PATH
 fi
+
+cp aion_api/lib/gson-2.7.jar ./lib

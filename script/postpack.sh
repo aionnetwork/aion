@@ -10,3 +10,4 @@ cp ${BIN_NAME} "aion-v${VER}-$(date +%Y-%m-%d).tar.bz2"
 rm -fr aion
 
 cd ..
+rm ./lib/gson-2.7.jar
