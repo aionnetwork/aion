@@ -40,7 +40,7 @@ import static org.junit.Assert.*;
 public class AccountManagerTest {
     private static AccountManager accountManager = AccountManager.inst();
     private Address notRegistered = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
-    private final int DEFAULT_TEST_TIMEOUT = 1;
+    private final int DEFAULT_TEST_TIMEOUT = 10;
 
     private static ECKey k1;
     private static ECKey k2;
@@ -119,10 +119,10 @@ public class AccountManagerTest {
     public void testUnlockAccountUpdateTimeout(){
         // update the timeout from 1s to 2s
         assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 2));
+        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 20));
 
         // check that the timeout is updated
-        assertThat(accountManager.getAccounts().get(0).getTimeout()).isEqualTo(Instant.now().getEpochSecond() + 2);
+        assertThat(accountManager.getAccounts().get(0).getTimeout()).isEqualTo(Instant.now().getEpochSecond() + 20);
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
     }
 
