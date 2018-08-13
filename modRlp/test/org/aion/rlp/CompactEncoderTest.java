@@ -45,6 +45,24 @@ public class CompactEncoderTest {
     private static final byte T = 16; // terminator
 
     @Test
+    public void testCompactEncode_wEmptyArray() {
+        byte[] test = new byte[] {};
+        byte[] expectedData = new byte[] {0x00};
+        byte[] actualData = CompactEncoder.packNibbles(test);
+        assertArrayEquals("odd terminated compact encode fail", expectedData, actualData);
+        assertThat(CompactEncoder.hasTerminator(actualData)).isFalse();
+    }
+
+    @Test
+    public void testCompactEncode_wSingleValueArray() {
+        byte[] test = new byte[] {1};
+        byte[] expectedData = new byte[] {0x11};
+        byte[] actualData = CompactEncoder.packNibbles(test);
+        assertArrayEquals("odd terminated compact encode fail", expectedData, actualData);
+        assertThat(CompactEncoder.hasTerminator(actualData)).isFalse();
+    }
+
+    @Test
     public void testCompactEncodeOddCompact() {
         byte[] test = new byte[] {1, 2, 3, 4, 5};
         byte[] expectedData = new byte[] {0x11, 0x23, 0x45};
@@ -63,6 +81,24 @@ public class CompactEncoderTest {
     }
 
     @Test
+    public void testCompactEncode_wEmptyTerminatedArray() {
+        byte[] test = new byte[] {T};
+        byte[] expectedData = new byte[] {0x20};
+        byte[] actualData = CompactEncoder.packNibbles(test);
+        assertArrayEquals("odd terminated compact encode fail", expectedData, actualData);
+        assertThat(CompactEncoder.hasTerminator(actualData)).isTrue();
+    }
+
+    @Test
+    public void testCompactEncode_wSingleValueTerminatedArray() {
+        byte[] test = new byte[] {2, T};
+        byte[] expectedData = new byte[] {0x32};
+        byte[] actualData = CompactEncoder.packNibbles(test);
+        assertArrayEquals("odd terminated compact encode fail", expectedData, actualData);
+        assertThat(CompactEncoder.hasTerminator(actualData)).isTrue();
+    }
+
+    @Test
     public void testCompactEncodeEvenTerminated() {
         byte[] test = new byte[] {0, 15, 1, 12, 11, 8, T};
         byte[] expectedData = new byte[] {0x20, 0x0f, 0x1c, (byte) 0xb8};
@@ -78,6 +114,16 @@ public class CompactEncoderTest {
         byte[] actualData = CompactEncoder.packNibbles(test);
         assertArrayEquals("odd terminated compact encode fail", expectedData, actualData);
         assertThat(CompactEncoder.hasTerminator(actualData)).isTrue();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCompactEncode_wNullArray() {
+        CompactEncoder.packNibbles(null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testHasTerminator_wNullArray() {
+        CompactEncoder.hasTerminator(null);
     }
 
     @Test
