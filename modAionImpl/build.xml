@@ -23,6 +23,7 @@
         <pathelement location="${dir.lib}/libnsc.jar"/>
         <pathelement location="${dir.lib}/truth-0.42.jar"/>
         <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
+        <pathelement location="${dir.lib}/diffutils-1.3.0.jar"/>
         <pathelement location="${dir.lib}/byte-buddy-1.8.17.jar"/>
         <pathelement location="${dir.lib}/byte-buddy-agent-1.8.17.jar"/>
         <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
