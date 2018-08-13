@@ -210,11 +210,12 @@ public class KeystoreTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
         File[] AllFilesInDirectory = folder.listFiles();
+        List<String> allFileNames = new ArrayList<>();
 
         // check for invalid or wrong path - should not happen
         if(AllFilesInDirectory == null)
             return;
-
+        
 
         for (File file: AllFilesInDirectory){
             String ending = file.getName().substring(file.getName().length()-64);
