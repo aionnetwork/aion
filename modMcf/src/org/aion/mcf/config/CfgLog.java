@@ -40,7 +40,7 @@ public class CfgLog {
 
     private Map<String, String> modules;
     boolean logFile;
-    String logPath;
+    static String logPath;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -162,8 +162,8 @@ public class CfgLog {
     }
 
     /** Method returns user input folder path of logger */
-    public String getLogPath() {
-        return this.logPath;
+    public static String getLogPath() {
+        return logPath;
     }
 
     /** Method checks folder path for illegal inputs */

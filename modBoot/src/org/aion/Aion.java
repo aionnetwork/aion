@@ -71,12 +71,6 @@ public class Aion {
         ServiceLoader.load(EventMgrModule.class);
 
         CfgAion cfg = CfgAion.inst();
-        if (args != null && args.length > 0) {
-            int ret = new Cli().call(args, cfg);
-            if (ret != 2) {
-                exit(ret);
-            }
-        }
 
         /*
          * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]
@@ -86,11 +80,12 @@ public class Aion {
             cfg.toXML(new String[]{"--id=" + cfg.getId()});
         }
 
-        try {
-            ServiceLoader.load(AionLoggerFactory.class);
-        } catch (Exception e) {
-            System.out.println("load AionLoggerFactory service fail!" + e.toString());
-            throw e;
+        // Reads CLI
+        if (args != null && args.length > 0) {
+            int ret = new Cli().call(args, cfg);
+            if (ret != 2) {
+                exit(ret);
+            }
         }
 
         // UUID check
@@ -98,6 +93,13 @@ public class Aion {
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
             exit(-1);
+        }
+
+        try {
+            ServiceLoader.load(AionLoggerFactory.class);
+        } catch (Exception e) {
+            System.out.println("load AionLoggerFactory service fail!" + e.toString());
+            throw e;
         }
 
         // get the ssl password synchronously from the console, only if required
@@ -114,7 +116,7 @@ public class Aion {
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
-        String[] filePath = new String[5];
+        String[] filePath = new String[7];
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out.println("Logger disabled; to enable please check log settings in config.xml");
@@ -126,17 +128,22 @@ public class Aion {
         }
         filePath[1] = Cfg.getBasePath() + "/" + cfg.getDb().getPath();
         filePath[2] = Keystore.getKeystorePath();
-        filePath[3] = CfgAion.getConfFilePath();
-        filePath[4] = CfgAion.getGenesisFilePath();
+        filePath[3] = Cli.getDstConfig();
+        filePath[4] = Cli.getDstGenesis();
+        filePath[5] = CfgAion.getConfFilePath();
+        filePath[6] = CfgAion.getGenesisFilePath();
 
         String path =
-                "\n---------------------------- USED PATHS ----------------------------" +
+                "\n-------------------------------- USED PATHS --------------------------------" +
                 "\n> Logger path:   " + filePath[0] +
                 "\n> Database path: " + filePath[1] +
                 "\n> Keystore path: " + filePath[2] +
-                "\n> Config path:   " + filePath[3] +
-                "\n> Genesis path:  " + filePath[4] +
-                "\n--------------------------------------------------------------------\n\n";
+                "\n> Config write:  " + filePath[3] +
+                "\n> Genesis write: " + filePath[4] +
+                "\n----------------------------------------------------------------------------" +
+                "\n> Config read:   " + filePath[5] +
+                "\n> Genesis read:  " + filePath[6] +
+                "\n----------------------------------------------------------------------------\n\n";
 
         String logo =
               "\n                     _____                  \n" +

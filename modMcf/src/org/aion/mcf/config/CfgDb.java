@@ -59,7 +59,7 @@ public class CfgDb {
         public static final String TX_POOL = "pendingtxPool";
     }
 
-    private String path;
+    private static String path;
     private String vendor;
     private boolean compression;
     private boolean check_integrity;
@@ -278,8 +278,8 @@ public class CfgDb {
         }
     }
 
-    public String getPath() {
-        return this.path;
+    public static String getPath() {
+        return path;
     }
 
     public void setPath(String path) {
