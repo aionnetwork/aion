@@ -89,6 +89,13 @@ public class Cli {
                     printHelp();
                     break;
                 case "-a":
+
+                    // Switches datadir && network
+                    if(args.length > 2 && (args[2].equals("-d")||args[2].equals("-n")||args[2].equals("--datadir")||args[2].equals("--network"))) {
+                        String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                        call(newArgs, cfg);
+                    }
+
                     if (args.length < 2) {
                         printHelp();
                         return 1;
