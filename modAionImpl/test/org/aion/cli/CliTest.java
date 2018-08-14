@@ -49,7 +49,7 @@ public class CliTest {
         Keystore.setKeystorePath(BASE_PATH + "/keystore");
     }
 
-    //@After
+    @After
     public void shutdown() {
         // Deletes created folders recursively
         String BASE_PATH = Cfg.getBasePath();

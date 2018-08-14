@@ -28,7 +28,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.security.Key;
 import java.util.*;
 
 import com.google.common.base.Preconditions;
@@ -123,12 +122,16 @@ public class Cli {
                     break;
                 case "-c":
                     if (args.length == 2 && isValid(args[1])) {
-                        switch (args[1].toLowerCase()) {
-                            case "mainnet":
-                            case "conquest":
-                                File dir = new File(BASE_PATH + "/config/" + args[1]);
+
+                        net = determineNetwork(args[1].toLowerCase());
+
+                        switch (net) {
+                            case MAINNET:
+                            case CONQUEST:
+                                CfgAion.setNetwork(net.toString());
+                                File dir = new File(BASE_PATH + "/config/" + net);
                                 if(!dir.exists()) {
-                                    dir.mkdir();
+                                    dir.mkdirs();
                                 }
                                 CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
                                 System.out.println("\nNew config generated for " + args[1]);
@@ -147,7 +150,6 @@ public class Cli {
                         System.out.println("--------------------------");
                         return 1;
                     }
-                    System.out.println("TEST1");
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
@@ -233,6 +235,7 @@ public class Cli {
                                     CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
                                     CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK + "/genesis.json"));
 
+                                    System.out.println(net);
                                     copyNetwork(path, net);
                                     cfg.getLog().setLogPath(net.toString() + "/log");
                                     cfg.getDb().setDatabasePath(net.toString() + "/database");
@@ -283,6 +286,7 @@ public class Cli {
                         // -d [directory]
                         if (args.length == 2) {
 
+                            System.out.println(net);
                             copyNetwork(path + "/" + args[1], net);
                             cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
@@ -297,6 +301,7 @@ public class Cli {
                             String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                             call(newArgs, cfg);
 
+                            System.out.println(net);
                             copyNetwork(path + "/" + args[1], net);
                             cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
@@ -490,10 +495,8 @@ public class Cli {
 
         File dir1 = new File(path + "/" + net + "/config");
         File dir2 = new File(path + "/" + net + "/keystore");
-        if(!dir1.exists() || !dir2.exists()) {
-            dir1.mkdir();
-            dir2.mkdir();
-        }
+        dir1.mkdirs();
+        dir2.mkdirs();
 
         File src1 = new File(BASE_PATH + "/config/" + net + "/config.xml");
         File src2 = new File(BASE_PATH + "/config/" + net + "/genesis.json");
