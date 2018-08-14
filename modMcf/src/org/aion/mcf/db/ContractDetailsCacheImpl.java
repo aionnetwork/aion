@@ -51,7 +51,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
     }
 
     public static ContractDetailsCacheImpl copy(ContractDetailsCacheImpl cache) {
-        // todo get parent's contract
         ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
         copy.setCodes(new HashMap<>(cache.getCodes()));
         copy.storage = new HashMap<>(cache.storage);
