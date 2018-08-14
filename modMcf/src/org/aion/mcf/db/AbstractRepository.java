@@ -192,7 +192,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STATE_DB);
             this.stateDatabase = connectAndOpen(sharedProps);
-            databaseGroup.add(stateDatabase); // XXX happens even if stateDatabae is null
+            databaseGroup.add(stateDatabase);
 
             // getting transaction specific properties
             sharedProps = cfg.getDatabaseConfig(TRANSACTION_DB);
@@ -250,8 +250,6 @@ public abstract class AbstractRepository<
             this.pendingTxCacheDatabase = connectAndOpen(sharedProps);
             databaseGroup.add(pendingTxCacheDatabase);
 
-            // XXX All those connectAndOpen calls above continue even if it fails to actually open
-
             // Setup the cache for transaction data source.
             this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
 
@@ -288,9 +286,6 @@ public abstract class AbstractRepository<
 
             stateDSPrune.setPruneEnabled(pruneEnabled);
         } catch (Exception e) { // Setting up databases and caches went wrong.
-
-            // XXX in error case, eventually falls into here
-
             throw e;
         }
     }
@@ -310,10 +305,10 @@ public abstract class AbstractRepository<
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
 
         // open the database connection
-        db.open(); // XXX this returns a value for whether it actually opened but we never check it
+        db.open();
 
         // check object status
-        if (db == null) { // XXX
+        if (db == null) {
             LOG.error(
                     "Database <{}> connection could not be established for <{}>.",
                     info.getProperty(Props.DB_TYPE),

@@ -76,18 +76,7 @@ public class AionImpl implements IAionChain {
 
     private AionImpl() {
         this.cfg = CfgAion.inst();
-
-
         aionHub = new AionHub();
-
-//        try {
-//            aionHub = new AionHub();
-//        } catch(RuntimeException rte) {
-//            System.out.println("XXXX Hmmm");
-//            System.exit(110);
-//            return;
-//        }
-
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
 

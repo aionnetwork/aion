@@ -33,12 +33,7 @@ public class AionFactory {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
 
     public static IAionChain create() {
-        try {
-            return AionImpl.inst();
-        }catch(RuntimeException r) {
-            System.exit(130);
-            return null;
-        }
+        return AionImpl.inst();
     }
 
     public static Logger getLog() {

@@ -1,16 +1,13 @@
 package org.aion.gui.model;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.io.CharSource;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.EventPublisher;
-import org.aion.gui.events.RefreshEvent;
 import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
@@ -18,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.aion.gui.events.RefreshEvent.Type.CONNECTED;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -26,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,7 +52,7 @@ public class KernelConnectionTest {
 
     @Test
     public void testConnect() {
-        boolean expectedReconnect = true;
+        boolean expectedReconnect = false;
         String expectedConnectionString = "tcp://someIpAddress:12345";
         ApiMsg msg = mock(ApiMsg.class);
         when(api.connect(anyString(), anyBoolean())).thenReturn(msg);
@@ -68,6 +65,49 @@ public class KernelConnectionTest {
         }
         verify(api).connect(expectedConnectionString, expectedReconnect);
         verify(eventPublisher).fireConnectionEstablished();
+    }
+
+    @Test
+    public void testConnectWhenApiFailsFirstTime() {
+        boolean expectedReconnect = false;
+        String expectedConnectionString = "tcp://someIpAddress:12345";
+        ApiMsg failMsg = mock(ApiMsg.class);
+        when(failMsg.isError()).thenReturn(true);
+        when(failMsg.getErrorCode()).thenReturn(31337); // any number
+        when(failMsg.getErrString()).thenReturn("anyString");
+        ApiMsg successMsg = mock(ApiMsg.class);
+        when(successMsg.isError()).thenReturn(false);
+        when(api.connect(anyString(), anyBoolean())).thenReturn(failMsg).thenReturn(successMsg);
+
+        unit.connect();
+        try {
+            executorService.awaitTermination(EXECUTOR_SERVICE_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            fail("Execution took too long.");
+        }
+        verify(api, times(2)).connect(expectedConnectionString, expectedReconnect);
+        verify(eventPublisher).fireConnectionEstablished();
+    }
+
+    @Test
+    public void testConnectWhenRetryAttemptsExceeded() {
+        boolean expectedReconnect = false;
+        String expectedConnectionString = "tcp://someIpAddress:12345";
+        ApiMsg failMsg = mock(ApiMsg.class);
+        when(failMsg.isError()).thenReturn(true);
+        when(failMsg.getErrorCode()).thenReturn(31337); // any number
+        when(failMsg.getErrString()).thenReturn("anyString");
+        when(api.connect(anyString(), anyBoolean())).thenReturn(failMsg);
+
+        unit.connect();
+        try {
+            executorService.awaitTermination(EXECUTOR_SERVICE_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            fail("Execution took too long.");
+        }
+        verify(api, times(2)).connect(expectedConnectionString, expectedReconnect);
+        verify(eventPublisher, never()).fireConnectionEstablished();
+        verify(eventPublisher).fireUnexpectedApiDisconnection();
     }
 
     @Test

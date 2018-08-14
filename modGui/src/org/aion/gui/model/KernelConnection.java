@@ -32,6 +32,7 @@ public class KernelConnection {
     private Future<?> connectionFuture;
     private Future<?> disconnectionFuture;
 
+    private static final int CONNECTION_ATTEMPTS = 2;
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     /**
@@ -71,21 +72,27 @@ public class KernelConnection {
             connectionFuture.cancel(true);
         }
         connectionFuture = backgroundExecutor.submit(() -> {
-            synchronized (api) {
-                LOG.trace("About to connect to API");
-                ApiMsg msg =  api.connect(getConnectionString(), true);
-                if(msg.isError()) {
-                    // since api.connect called with reconnect = true, it should
-                    // block until msg is not error so this shouldn't happen, but
-                    // log if it does.
-                    LOG.error("Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
-                            msg.getErrorCode(), msg.getErrString());
-                    consoleManager.addLog("Error connecting to kernel", KERNEL);
-                } else {
-                    consoleManager.addLog("Connected to kernel", KERNEL);
-                    eventPublisher.fireConnectionEstablished();
+            int attempts = 0;
+            while(attempts++ < CONNECTION_ATTEMPTS) {
+                synchronized (api) {
+                    LOG.trace("About to connect to API");
+                    ApiMsg msg = api.connect(getConnectionString(), false);
+                    if (msg.isError()) {
+                        // since api.connect called with reconnect = true, it should
+                        // block until msg is not error so this shouldn't happen, but
+                        // log if it does.
+                        LOG.warn("Error connecting to API; will retry.  ErrorCode = {}.  ErrString = {}",
+                                msg.getErrorCode(), msg.getErrString());
+                    } else {
+                        consoleManager.addLog("Connected to kernel", KERNEL);
+                        eventPublisher.fireConnectionEstablished();
+                        return;
+                    }
                 }
             }
+            LOG.error("Ran out of retries connecting to kernel.");
+            consoleManager.addLog("Error connecting to kernel", KERNEL);
+            eventPublisher.fireUnexpectedApiDisconnection();
         });
     }
 
